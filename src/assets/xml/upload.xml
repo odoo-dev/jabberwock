@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+
+<!--===================-->
+<!-- Image Modal Panel -->
+<!--===================-->
+
+<t t-name="we3.modal.media.image">
+    
+</t>
+
+<!--=============-->
+<!-- Upload form -->
+<!--=============-->
+
+<!-- Image choosing part of the Media Dialog -->
+<form class="we3-upload" t-name="we3.modal.media.upload" method="POST" enctype="multipart/form-data">
+    <iframe class="o_file_upload_iframe d-none"/>
+    <input type="hidden" name="filters"/>
+    <we3-buttons>
+        <we3-group name="upload">
+            <input type="file" name="upload" style="display: none;" multiple="multiple" data-method="_onUploadFileInput"/>
+            <we3-button class="we3-primary" data-method="_onUpload">Upload</we3-button>
+        </we3-group>
+        <we3-group name="url">
+            <input type="text" name="url" data-method="_onURLInputChange"/>
+            <we3-button data-method="_onURLButtonClick" disabled="disabled">
+                Add document
+                <span class="we3-color-success fa fa-lg fa-check" title="The URL seems valid"></span>
+                <span class="we3-color-danger fa fa-lg fa-times" title="The URL does not seem to work"></span>
+            </we3-button>
+        </we3-group>
+        <we3-group name="search">
+            <input type="text" name="search" placeholder="Search a document"/>
+            <we3-button data-method="_onSearch"><i class="fa fa-search" title="Search" aria-label="Search"/></we3-button>
+        </we3-group>
+    </we3-buttons>
+    <we3-message-error style="display: none;"/>
+    <we3-group>
+        <we3-documents data-method="_onSelectDocument"/>
+        <we3-button data-method="_onLoadMore" style="display: none;">Load more...</we3-button>
+        <we3-message-loaded>All documents have been loaded</we3-message-loaded>
+    </we3-group>
+</form>
+
+<!--===================-->
+<!-- Upload form image -->
+<!--===================-->
+
+<we3-dropdown t-name="we3.modal.media.upload.buttons.uploadWithoutOptimization">
+    <we3-toggler>Alternate Upload</we3-toggler>
+    <we3-vertical-items>
+        <we3-button data-method="uploadWithoutOptimization">Upload image without optimization</we3-button>
+    </we3-vertical-items>
+</we3-dropdown>
+
+<!--===================-->
+
+
+
+<t t-name="wysiwyg.widgets.image.existing">
+    <div role="dialog" class="modal">
+        <div class="modal-dialog select-image">
+            <div class="modal-content">
+                <header class="modal-header">
+                    <h3 class="modal-title">Select a Picture</h3>
+                    <button class="close" data-dismiss="modal" aria-label="Close">×</button>
+                </header>
+                <main class="modal-body o_has_error">
+                    <div class="existing-attachments"/>
+                    <div class="form-text"/>
+                </main>
+                <footer class="modal-footer">
+                    <button data-dismiss="modal" aria-label="Discard">Discard</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+</t>
+<t t-name="wysiwyg.widgets.files.existing.content">
+    <div class="existing-attachments">
+        <div class="row mt16 ml-auto" t-as="row" t-foreach="rows">
+            <div class="col-2 o_existing_attachment_cell" t-as="attachment" t-foreach="row">
+                <i t-if="attachment.res_model === 'ir.ui.view'" class="fa fa-trash o_existing_attachment_remove" title="This file is a public view attachment" role="img" aria-label="This file is a public view attachment" t-att-data-id="attachment.id"/>
+                <i t-else="" class="fa fa-trash o_existing_attachment_remove" title="This file is attached to the current record" role="img" aria-label="This file is attached to the current record" t-att-data-id="attachment.id"/>
+                <div class="o_attachment_border" t-att-style="attachment.res_model === 'ir.ui.view' ? null : 'border: 1px solid #5cb85c;'"><div t-att-data-src="attachment.src" t-att-data-url="attachment.url" role="img" t-att-aria-label="attachment.name" t-att-title="attachment.name" t-att-data-id="attachment.id" t-att-data-mimetype="attachment.mimetype" t-attf-class="o_image {{withEffect ? 'o_image_loading' : ''}}"/></div>
+                <t t-if="isDocument">
+                    <small class="o_file_name"><t t-esc="attachment.name"/></small>
+                </t>
+            </div>
+        </div>
+    </div>
+</t>
+<div t-name="wysiwyg.widgets.image.existing.error">
+    <p>The image could not be deleted because it is used the following pages or views:</p>
+    <ul t-as="view" t-foreach="views">
+        <li>
+            <a t-attf-href="/web#model=ir.ui.view&amp;id=#{view.id}">
+                <t t-esc="view.name"/>
+            </a>
+        </li>
+    </ul>
+</div>
+
+</templates>

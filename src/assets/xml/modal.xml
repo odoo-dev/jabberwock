@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <we3-modal-container t-name="we3.modal">
+        <we3-header>
+        	<we3-title></we3-title>
+            <we3-modal-close aria-label="Close">×</we3-modal-close>
+        </we3-header>
+        <we3-body>
+        	<!-- <we3-modal-content></we3-modal-content> -->
+        </we3-body>
+        <we3-footer></we3-footer>
+    </we3-modal-container>
+</templates>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="we3.buttons.test">
+        <we3-dropdown name="Test">
+            <we3-toggler title="Test">Test</we3-toggler>
+            <we3-vertical-items direction="vertical">
+                <we3-button name="all-Test" data-method="loadTest">
+                    Launch all available tests
+                </we3-button>
+            </we3-vertical-items>
+        </we3-dropdown>
+    </t>
+</templates>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <we3-group t-name="wysiwyg.buttons.contextmenu">
+        <we3-button name="undo" data-method="undo"><i class="fa fa-undo"></i>Undo</we3-button>
+        <we3-button name="redo" data-method="redo"><i class="fa fa-undo"></i>Redo</we3-button>
+        <we3-separator/>
+        <we3-button name="select-all" data-method="selectAll">Select all</we3-button>
+    </we3-group>
+</templates>

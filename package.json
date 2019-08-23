@@ -1,0 +1,19 @@
+{
+  "name": "strong_editor",
+  "version": "0.0.1",
+  "description": "The best web editor of the world.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Web",
+    "editor",
+    "strong"
+  ],
+  "author": "Nicolas Bayet",
+  "license": "ISC"
+}

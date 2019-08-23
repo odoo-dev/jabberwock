@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+    <we3-group t-name="wysiwyg.buttons.history">
+        <we3-button name="undo" data-method="undo" data-check-on-change="enabled" title="Undo"><i class="fa fa-undo"></i></we3-button>
+        <we3-button name="redo" data-method="redo" data-check-on-change="enabled" title="Redo"><i class="fa fa-repeat"></i></we3-button>
+    </we3-group>
+</templates>
