@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
+    "module": "amd",
     "esModuleInterop": true,
-    "jsx": "react"
+    "jsx": "react",
+    "target": "ES6",
+    "outFile": "./build/build.js",
   }
 }
