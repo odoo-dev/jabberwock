@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "incremental": true
+    },
+    "exclude": [
+        "./tests/**/*",
+    ]
+}
