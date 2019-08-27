@@ -18,9 +18,9 @@
   },
   "homepage": "https://github.com/Goaman/jabberwock#readme",
   "dependencies": {
-    "parcel": "^1.12.3"
   },
   "devDependencies": {
+    "parcel": "^1.12.3",
     "typescript": "^3.5.3"
   }
 }
