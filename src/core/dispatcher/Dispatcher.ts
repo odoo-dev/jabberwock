@@ -1,6 +1,6 @@
 import { Action } from '../actions/Action';
 
-export class Dispatcher<TPayload> {
+export class Dispatcher<Action> {
     dispatch (action: Action) {
         // TODO
     }
@@ -9,7 +9,7 @@ export class Dispatcher<TPayload> {
         return false;
     }
 
-    register (callback: (payload: TPayload) => void) {
+    register (callback: (action: Action) => void) {
         return '';
     }
 

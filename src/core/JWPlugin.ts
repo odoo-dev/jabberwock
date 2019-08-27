@@ -1,4 +1,4 @@
-import { Action, ActionType } from './actions/Action';
+import { Action } from './actions/Action';
 import { Dispatcher } from './dispatcher/Dispatcher';
 
 export interface JWPluginConfiguration {

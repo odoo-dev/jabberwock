@@ -1,4 +1,4 @@
-import { Action } from '../core/actions/Action';
+import { Action, ActionType } from '../core/actions/Action';
 import { InsertAction } from '../core/actions/InsertAction';
 import { Dispatcher } from '../core/dispatcher/Dispatcher';
 import { JWPlugin, JWPluginConfiguration } from '../core/JWPlugin';
@@ -12,8 +12,13 @@ export class Awesome extends JWPlugin {
         super(dispatcher, options);
     }
 
-    init () {
+    init (): Action {
         super.init();
-        return new InsertAction(null, null, {});
+        return {
+            type: ActionType.INSERT,
+            value: 42,
+            position: 8,
+            origin: {},
+        };
     }
 };
