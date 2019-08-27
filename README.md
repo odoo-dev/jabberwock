@@ -34,6 +34,8 @@
 - Free canvas
 - Zoom
 - Visual configurator
+- Word count
+- Syntax highlighting
 
 ## Alternate name suggestions
 - Vorpal
