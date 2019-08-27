@@ -1,4 +1,6 @@
 
+import { Range } from '../stores/Range'
+
 const navigationKey = [
     'ArrowUp',
     'ArrowDown',
@@ -9,13 +11,6 @@ const navigationKey = [
     'End',
     'Home',
 ];
-interface Range {
-    sc: any
-    so: number
-    ec: any
-    eo: number
-    ltr: boolean
-};
 interface CompiledEvent {
     type: string,
     key: string,
@@ -38,7 +33,6 @@ interface NormalizedEvent {
     ctrlKey?: boolean
     altKey?: boolean
     previous?: string
-    targetID?: number
     preventDefault: Function
     defaultPrevented: boolean
 };
@@ -135,7 +129,7 @@ export class EventManager {
      * with their respective node (`dom`).
      *
      * FIXME the event delegation does not work... do we really want to
-     * implement that ourself ?
+     * implement that ourselves ?
      *
      * @private
      * @param {Node} dom
@@ -175,7 +169,7 @@ export class EventManager {
             return;
         }
         var range = this._getRange()
-        var format = range.sc;
+        var format = range.startContainer;
         while (format.parentNode && format !== this.editable && window.getComputedStyle(format).display !== 'block') {
             format = format.parentNode;
         }
@@ -232,7 +226,6 @@ export class EventManager {
             data: data,
             shiftKey: shiftKey,
             altKey: altKey,
-            targetID: targetID,
             previous: previous,
             preventDefault: function () {
                 param.defaultPrevented = true;
@@ -292,11 +285,11 @@ export class EventManager {
         var selection = this.editable.ownerDocument.getSelection();
         if (!selection || selection.rangeCount === 0) {
             var range: Range = {
-                sc: this.editable,
-                so: 0,
-                ec: this.editable,
-                eo: 0,
-                ltr: false,
+                startContainer: this.editable,
+                startOffset: 0,
+                endContainer: this.editable,
+                endOffset: 0,
+                direction: 'rtl',
             };
             return range;
         }
@@ -308,36 +301,36 @@ export class EventManager {
             ltr = selection.anchorNode === nativeRange.startContainer;
         }
         var range: Range = {
-            sc: nativeRange.startContainer,
-            so: nativeRange.startOffset,
-            ec: nativeRange.endContainer,
-            eo: nativeRange.endOffset,
-            ltr: ltr,
+            startContainer: nativeRange.startContainer,
+            startOffset: nativeRange.startOffset,
+            endContainer: nativeRange.endContainer,
+            endOffset: nativeRange.endOffset,
+            direction: ltr ? 'ltr' : 'rtl',
         };
         return range;
     }
     _isSelectAll (rangeDOM) {
-        var sc = rangeDOM.sc;
-        var so = rangeDOM.so;
-        var ec = rangeDOM.ec;
-        var eo = rangeDOM.eo;
+        var startContainer = rangeDOM.startContainer;
+        var startOffset = rangeDOM.startOffset;
+        var endContainer = rangeDOM.endContainer;
+        var endOffset = rangeDOM.endOffset;
 
-        if (rangeDOM.isCollapsed() || !sc || !ec) {
+        if (rangeDOM.isCollapsed() || !startContainer || !endContainer) {
             return false;
         }
 
         var body = this.editable.ownerDocument.body;
-        if (!body.contains(sc) || !body.contains(ec)) {
+        if (!body.contains(startContainer) || !body.contains(endContainer)) {
             return false;
         }
-        if (sc.childNodes[so]) {
-            sc = sc.childNodes[so];
-            so = 0;
+        if (startContainer.childNodes[startOffset]) {
+            startContainer = startContainer.childNodes[startOffset];
+            startOffset = 0;
         }
-        if (ec.childNodes[eo]) {
-            ec = ec.childNodes[eo];
+        if (endContainer.childNodes[endOffset]) {
+            endContainer = endContainer.childNodes[endOffset];
         }
-        if (so !== 0 || ec.nodeType === 3 && eo !== ec.textContent.length) {
+        if (startOffset !== 0 || endContainer.nodeType === 3 && endOffset !== endContainer.textContent.length) {
             return false;
         }
 
@@ -353,10 +346,10 @@ export class EventManager {
         }
 
         var el;
-        if (this.editable.contains(sc)) {
+        if (this.editable.contains(startContainer)) {
             el = this.editable;
             while (el) {
-                if (el === sc) {
+                if (el === startContainer) {
                     break;
                 }
                 if (el.nodeType === 3 && isVisible(el.parentNode)) {
@@ -374,10 +367,10 @@ export class EventManager {
             }
         }
 
-        if (this.editable.contains(ec)) {
+        if (this.editable.contains(endContainer)) {
             el = this.editable;
             while (el) {
-                if (el === ec) {
+                if (el === endContainer) {
                     break;
                 }
                 if (el.nodeType === 3 && isVisible(el)) {
@@ -564,11 +557,6 @@ export class EventManager {
                 moveLeft: isLeftish,
                 moveRight: !isLeftish,
             });
-        } else if (param.targetID) {
-            console.log('trigger Action: setRange', {
-                scID: param.targetID,
-                so: 0,
-            });
         } else {
             console.log('trigger Action: setRangeFromDom', {});
         }
@@ -721,7 +709,7 @@ export class EventManager {
             }
         }
         if (mousedown === e.target) {
-            console.log('trigger Action: setRange', {sc: e.target});
+            console.log('trigger Action: setRange', {startContainer: e.target});
         } else {
             console.log('trigger Action: setRangeFromDom');
         }
