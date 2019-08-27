@@ -1,25 +1,41 @@
 import { Action, ActionType } from './actions/Action';
 import { Dispatcher } from './dispatcher/Dispatcher';
 import { JWPlugin } from './JWPlugin';
+import VDocument from './stores/VDocument';
+import utils from './utils/utils';
 
 export interface JWEditorConfig {
     theme: string;
 };
 
 export class JWEditor {
-    el: HTMLElement;
+    el: Element;
     dispatcher: Dispatcher<Action>;
     pluginsRegistry: JWPlugin[];
+    vDocument: VDocument;
 
     constructor (el = document.body) {
         this.el = el;
         this.dispatcher = new Dispatcher();
         this.pluginsRegistry = [];
+        let startContent: DocumentFragment;
+        if (el.childNodes.length) {
+            startContent = document.createDocumentFragment();
+            let contents = utils._collectionToArray(el.childNodes);
+            contents.forEach(child => startContent.appendChild(child));
+        } else {
+            startContent = this._placeholderContent;
+        }
+        this.vDocument = new VDocument(startContent);
+        // todo: move to Renderer
+        this.el.childNodes.forEach(child => child.remove());
+        utils._collectionToArray(startContent.childNodes).forEach(node => {
+            this.el.appendChild(node);
+        });
     }
 
     start () {
         this.el.setAttribute('contenteditable', 'true');
-        this._placeholderContent.forEach(node => this.el.appendChild(node));
     }
 
     addPlugin(plugin: typeof JWPlugin) {
@@ -27,10 +43,10 @@ export class JWEditor {
     }
 
     loadConfig(config: JWEditorConfig) {
-        console.log(config.theme);
+        // console.log(config.theme);
     }
 
-    get _placeholderContent (): HTMLElement [] {
+    get _placeholderContent (): DocumentFragment {
         let title = document.createElement('h1');
         title.appendChild(document.createTextNode('Jabberwocky'));
         let subtitle = document.createElement('h3');
@@ -44,7 +60,11 @@ export class JWEditor {
             i.appendChild(textNode);
             i.appendChild(br);
         });
-        return [title, subtitle, p];
+        let fragment = document.createDocumentFragment();
+        fragment.appendChild(title);
+        fragment.appendChild(subtitle);
+        fragment.appendChild(p);
+        return fragment;
     }
     get _jabberwocky (): string {
         return `’Twas brillig, and the slithy toves
