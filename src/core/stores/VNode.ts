@@ -7,10 +7,10 @@ export enum VNodeType {
 
 export class VNode {
     readonly type: VNodeType;
-    readonly children: VNode [];
-    readonly index: number;
-    readonly parent: VNode | null;
-    readonly value: char | undefined;
+    children: VNode [];
+    index: number;
+    parent: VNode | null;
+    value: string | undefined;
 
     constructor (type: VNodeType, value?: string) {
         this.type = type;
@@ -82,5 +82,6 @@ export class VNode {
         this.parent.children.splice(index, 0, this);
         this.index = index;
         this.children = children || this.children;
+        return this;
     }
 }

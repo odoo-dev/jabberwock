@@ -5,8 +5,7 @@ const utils = {
      */
     _collectionToArray: (
         collection: NodeListOf<any> |
-            HTMLCollection |
-            HTMLCOllectionOf<any>
+            HTMLCollection
         ): Element [] => {
         return Array.prototype.slice.call(collection);
     }
