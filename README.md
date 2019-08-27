@@ -33,6 +33,7 @@
 - Playground
 - Free canvas
 - Zoom
+- Visual configurator
 
 ## Alternate name suggestions
 - Vorpal
