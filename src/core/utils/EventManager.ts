@@ -35,6 +35,7 @@ interface NormalizedEvent {
     previous?: string
     preventDefault: Function
     defaultPrevented: boolean
+    elements: Array<Element>,
 };
 
 export class EventManager {
@@ -177,7 +178,7 @@ export class EventManager {
         this._compiledEvent.clone = format.cloneNode(true);
     }
     _eventsNormalization (param) {
-        var name, data, shiftKey, ctrlKey, altKey, targetID, previous;
+        var name, data, shiftKey, ctrlKey, altKey, previous;
 
         if (navigationKey.indexOf(param.key) !== -1) {
             name = 'move';
@@ -188,7 +189,6 @@ export class EventManager {
         } else if (param.type === 'move') {
             name = 'move';
             data = param.data;
-            targetID = param.targetID;
         } else if (param.type === 'composition') {
             data = param.data;
             // previous.update = audroid update for each char
@@ -217,9 +217,34 @@ export class EventManager {
             }
         }
 
-        if (!name) {
-            name = 'default';
+        if (!name && param.type === "keydown") {
+            name = param.type;
+            data = param.key;
+            shiftKey = param.shiftKey;
+            ctrlKey = param.ctrlKey;
+            altKey = param.altKey;
         }
+
+        // mark as dirty the new nodes to re-render it
+        // because the browser can split other than our arch and we must fix the errors
+        var elements = [];
+        param.mutationsList.forEach(function (mutation) {
+            if (mutation.type === 'characterData' && elements.indexOf(mutation.target) === -1) {
+                elements.push(mutation.target);
+            }
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(function (target) {
+                    if (elements.indexOf(target) === -1) {
+                        elements.push(target);
+                    }
+                });
+                mutation.removedNodes.forEach(function (target) {
+                    if (elements.indexOf(target) === -1) {
+                        elements.push(target);
+                    }
+                });
+            }
+        });
 
         var ev: NormalizedEvent = {
             name: name,
@@ -227,6 +252,7 @@ export class EventManager {
             shiftKey: shiftKey,
             altKey: altKey,
             previous: previous,
+            elements: elements,
             preventDefault: function () {
                 param.defaultPrevented = true;
             },
@@ -236,7 +262,7 @@ export class EventManager {
         };
         return ev;
     }
-    _eventsdDispatcher (ev, mutationsList) {
+    _eventsdDispatcher (ev) {
         if (ev.defaultPrevented && ev.name !== 'move') {
             console.log('trigger Action: nothing');
         }
@@ -255,6 +281,8 @@ export class EventManager {
             this._pressInsertChar(ev);
         } else if (ev.name === 'move') {
             this._pressMove(ev);
+        } else {
+            console.log('trigger Action: ???', ev);
         }
     }
     _findOffsetInsertion (text, offset, insert) {
@@ -576,11 +604,7 @@ export class EventManager {
         this._previousEvent = param;
         this._compiledEvent = null;
         var ev = this._eventsNormalization(param);
-        if (ev.name === 'default') {
-            console.log('trigger Action: ???', param);
-        } else {
-            this._eventsdDispatcher(ev, param.mutationsList);
-        }
+        this._eventsdDispatcher(ev);
     }
 
     //--------------------------------------------------------------------------
