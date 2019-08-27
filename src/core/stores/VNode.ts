@@ -1,8 +1,8 @@
 export enum VNodeType {
-    ROOT,
-    PARAGRAPH,
-    HEADER,
-    CHAR,
+    ROOT = 'ROOT',
+    PARAGRAPH = 'PARAGRAPH',
+    HEADER = 'HEADER',
+    CHAR = 'CHAR',
 }
 
 export class VNode {
@@ -10,12 +10,14 @@ export class VNode {
     readonly children: VNode [];
     readonly index: number;
     readonly parent: VNode | null;
+    readonly value: char | undefined;
 
-    constructor (type: VNodeType, parent?: VNode, children?: VNode []) {
+    constructor (type: VNodeType, value?: string) {
         this.type = type;
-        this.parent = parent;
-        this.children = children || [];
+        this.parent = null;
+        this.children = [];
         this.index = 0;
+        this.value = value;
     }
 
     //--------------------------------------------------------------------------

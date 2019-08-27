@@ -30,8 +30,8 @@ export default class VDocument {
         const contents: NodeListOf<ChildNode> = fragment.childNodes;
         const children: Element [] = utils._collectionToArray(contents);
         children.forEach(child => {
-            let parsedChild: VNode = this._parseOne(child);
-            parsedNodes.push(parsedChild);
+            let parsedChildren: VNode [] = this._parseOne(child);
+            parsedNodes = parsedNodes.concat(parsedChildren);
         });
         return parsedNodes;
     }
@@ -55,8 +55,6 @@ export default class VDocument {
 
     _getNodeType (node: Element): VNodeType {
         switch (node.tagName) {
-            case undefined:
-                return VNodeType.CHAR;
             case 'P':
                 return VNodeType.PARAGRAPH;
             case 'H1':
@@ -71,13 +69,25 @@ export default class VDocument {
     /**
      * Parse a DOM fragment or its representation as a string.
      */
-    _parseOne (node: Element): VNode {
-        let parent: VNode = new VNode(this._getNodeType(node));
+    _parseOne (node: Element): VNode [] {
+        let parsedNode: VNode;
+        if (!node.tagName) { // node is a textNode
+            let parsedNodes: VNode [] = [];
+            for (let i = 0; i < node.textContent.length; i++) {
+                let char: string = node.textContent.charAt(i);
+                parsedNode = new VNode(VNodeType.CHAR, char);
+                parsedNodes.push(parsedNode);
+            }
+            return parsedNodes;
+        }
+        parsedNode = new VNode(this._getNodeType(node));
         let children: Element [] = utils._collectionToArray(node.childNodes);
         children.forEach(child => {
-            let parsedChild: VNode = this._parseOne(child);
-            parent.append(parsedChild)
+            let parsedChildren: VNode [] = this._parseOne(child);
+            parsedChildren.forEach(parsedChild => {
+                parsedNode.append(parsedChild);
+            });
         });
-        return parent;
+        return [parsedNode];
     }
 }
