@@ -1,5 +1,5 @@
-import JWEditor from './src/core/JWEditor';
-import { Awesome } from './src/plugins/Awesome';
+import JWEditor from './core/JWEditor';
+import { Awesome } from './plugins/Awesome';
 
 const editor = new JWEditor(document.querySelector('jw-editor'));
 editor.addPlugin(Awesome);

@@ -1,5 +1,28 @@
 # ![jabberwock](https://upload.wikimedia.org/wikipedia/commons/8/8a/Jabberwock_insignia.png) Jabberwock
 
+## Install
+Install the dev dependencies (parcel, tests, ...)
+```bash
+npm install
+```
+
+## dev
+This command launch Parcel development mode. This mode will reload the web page on code change.
+Some times, you might need to restart the server if you have strange bug in the javascript.
+```bash
+npm run dev
+```
+See the "dev" scripn in [package.json](./package.json)
+
+## build
+This command launch Parcel builder.
+We will have differents builder on the future.
+```bash
+npm run build
+```
+See [package.json](./package.json)
+See the "run" scripn in [package.json](./package.json)
+
 ## Vision
 - Code quality
   - Document everything

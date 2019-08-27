@@ -1,0 +1,26 @@
+{
+  "name": "jabberwock",
+  "version": "0.0.1",
+  "description": "The best editor in the world",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "parcel src/index.html",
+    "build": "parcel build src/index.html build/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Goaman/jabberwock.git"
+  },
+  "author": "MultiAuthor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Goaman/jabberwock/issues"
+  },
+  "homepage": "https://github.com/Goaman/jabberwock#readme",
+  "dependencies": {
+    "parcel": "^1.12.3"
+  },
+  "devDependencies": {
+    "typescript": "^3.5.3"
+  }
+}

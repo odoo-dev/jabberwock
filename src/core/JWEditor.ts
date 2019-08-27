@@ -1,6 +1,6 @@
-import { Action } from 'core/actions/Action';
-import { Dispatcher } from 'core/dispatcher/Dispatcher';
-import { JWPlugin, JWPluginConfiguration } from 'JWPlugin';
+import { Action } from './actions/Action';
+import { Dispatcher } from './dispatcher/Dispatcher';
+import { JWPlugin } from './JWPlugin';
 
 export interface JWEditorConfig {
     theme: string;
