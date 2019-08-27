@@ -11,5 +11,4 @@ yarn.lock
 ehthumbs.db
 Thumbs.db
 data/
-
-
+build/
