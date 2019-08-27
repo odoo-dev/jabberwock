@@ -1,15 +1,23 @@
-import {Action} from '../actions/Actions';
+import { Action } from '../actions/Action';
 
-export default function Dispatcher<TPayload>() {
-    return {
-        dispatch: (action: Action): void => {},
-        isDispatching: (): boolean => {
-            return false;
-        },
-        register: (callback: (payload: TPayload) => void): string => {
-            return '';
-        },
-        unregister: (id: string): void => {},
-        waitFor: (ids: string[]): void => {},
+export class Dispatcher<TPayload> {
+    dispatch (action: Action) {
+        // TODO
+    }
+
+    isDispatching () {
+        return false;
+    }
+
+    register (callback: (payload: TPayload) => void) {
+        return '';
+    }
+
+    unregister (id: string) {
+
+    }
+
+    waitFor (ids: string[]) {
+
     }
 }

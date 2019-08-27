@@ -1,21 +1,33 @@
-interface Config {
-    theme: string,
+import { Action } from 'core/actions/Action';
+import { Dispatcher } from 'core/dispatcher/Dispatcher';
+import { JWPlugin, JWPluginConfiguration } from 'JWPlugin';
+
+export interface JWEditorConfig {
+    theme: string;
 };
 
-export default function JWEditor(el = document.body) {
-    const pluginsRegistry: object[] = [];
-    return {
-        start: (): void => {
-            el.setAttribute('contenteditable', 'true');
-        },
-        addPlugin: (plugin: object): void => {
-            pluginsRegistry.push(plugin);
-        },
-        addPlugins: (plugins: object[]): void => {
-            plugins.forEach(plugin => pluginsRegistry.push(plugin));
-        },
-        loadConfig: (config: Config): void => {
-            console.log(config.theme);
-        },
-    };
-}
+export class JWEditor {
+    el: HTMLElement;
+    dispatcher: Dispatcher<Action>;
+    pluginsRegistry: JWPlugin[];
+
+    constructor (el = document.body) {
+        this.el = el;
+        this.dispatcher = new Dispatcher();
+        this.pluginsRegistry = [];
+    }
+
+    start () {
+        this.el.setAttribute('contenteditable', 'true');
+    }
+
+    addPlugin(plugin: typeof JWPlugin) {
+        this.pluginsRegistry.push(new plugin(this.dispatcher));
+    }
+
+    loadConfig(config: JWEditorConfig) {
+        console.log(config.theme);
+    }
+};
+
+export default JWEditor;
