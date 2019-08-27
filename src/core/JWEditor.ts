@@ -1,5 +1,6 @@
 import { Action, ActionType } from './actions/Action';
 import { Dispatcher } from './dispatcher/Dispatcher';
+import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
 import VDocument from './stores/VDocument';
 import utils from './utils/utils';
@@ -11,12 +12,19 @@ export interface JWEditorConfig {
 export class JWEditor {
     el: Element;
     dispatcher: Dispatcher<Action>;
+    eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
     vDocument: VDocument;
 
     constructor (el = document.body) {
         this.el = el;
         this.dispatcher = new Dispatcher();
+        this.eventManager = new EventManager(this.el, this.el, {
+            dispatch: action => {
+                action.origin = 'User';
+                this.dispatcher.dispatch(action);
+            }
+        });
         this.pluginsRegistry = [];
         let startContent: DocumentFragment;
         if (el.childNodes.length) {
