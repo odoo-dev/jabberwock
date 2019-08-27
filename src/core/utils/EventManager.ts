@@ -588,7 +588,11 @@ export class EventManager {
         this._previousEvent = param;
         this._compiledEvent = null;
         var ev = this._eventsNormalization(param);
-        this._eventsdDispatcher(ev, param.mutationsList);
+        if (ev.name === 'default') {
+            console.log('trigger Action: ???', param);
+        } else {
+            this._eventsdDispatcher(ev, param.mutationsList);
+        }
     }
 
     //--------------------------------------------------------------------------
