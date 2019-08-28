@@ -12,7 +12,7 @@
     "url": "git+https://github.com/Goaman/jabberwock.git"
   },
   "author": "MultiAuthor",
-  "license": "ISC",
+  "license": "GPLv3",
   "bugs": {
     "url": "https://github.com/Goaman/jabberwock/issues"
   },
