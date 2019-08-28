@@ -11,6 +11,7 @@ const navigationKey = [
     'End',
     'Home',
 ];
+
 interface CompiledEvent {
     type: string,
     key: string,
@@ -18,7 +19,7 @@ interface CompiledEvent {
     shiftKey: boolean,
     ctrlKey: boolean,
     altKey?: boolean
-    mutationsList: Array<MutationEvent>,
+    mutationsList: Array<MutationRecord>,
     defaultPrevented: boolean,
     events: Array<Event>,
     update?: boolean,
@@ -26,17 +27,13 @@ interface CompiledEvent {
     node?: ParentNode | HTMLElement
     clone?: any
 };
-interface NormalizedEvent {
-    name: string
-    data?: string
-    shiftKey?: boolean
-    ctrlKey?: boolean
-    altKey?: boolean
-    previous?: string
-    preventDefault: Function
-    defaultPrevented: boolean
-    elements: Array<Element>,
-};
+
+interface EventNormalizerOptions {
+    tab: {
+        enabled: boolean
+        size: number
+    }
+}
 
 export class EventManager {
     editor: HTMLElement
@@ -78,7 +75,7 @@ export class EventManager {
     _addLine () {
         this.triggerEvent('trigger Action: addLine');
     }
-    _beginToStackEventDataForNextTick (e) {
+    _beginToStackEventDataForNextTick (e: Event) {
         if (this._compiledEvent) {
             this._compiledEvent.events.push(e);
             return this._compiledEvent;
@@ -97,7 +94,7 @@ export class EventManager {
         return this._compiledEvent;
     }
     _bindEvents () {
-        this._bindDOMEvents(window.top.document, {
+        this._bindDOMEvents(window.top.document.documentElement, {
             selectionchange: '_onSelectionChange',
             click: '_onClick',
             touchend: '_onClick',
@@ -133,70 +130,72 @@ export class EventManager {
      * implement that ourselves ?
      *
      * @private
-     * @param {Node} dom
+     * @param {Node} element
      * @param {Object []} events {[name]: {String}}
      */
-    _bindDOMEvents (dom, events) {
-        var self = this;
+    _bindDOMEvents(element: Element, events) {
+        const self = this;
         Object.keys(events || {}).forEach(function (event) {
-            var value = events[event];
+            let value = events[event];
             if (!value) {
                 return;
             }
-            var eventName = event.split(' ')[0];
-            var selector = event.split(' ').slice(1).join(' ');
+            const eventName = event.split(' ')[0];
+            const selector = event.split(' ').slice(1).join(' ');
             if (typeof value === 'string') {
                 value = self[value];
             }
             value = value.bind(self);
             if (selector) {
-                var _value = value;
+                const _value = value;
                 value = function (ev) {
-                    if ([].indexOf.call(dom.querySelectorAll(selector), ev.target || ev.relatedNode) !== -1) {
+                    if ([].indexOf.call(element.querySelectorAll(selector), ev.target || ev.relatedNode) !== -1) {
                         _value(ev);
                     }
                 };
             }
             self._eventToRemoveOnDestroy.push({
-                target: dom,
+                target: element,
                 name: eventName,
                 value: value,
             });
-            dom.addEventListener(eventName, value, false);
+            element.addEventListener(eventName, value, false);
         });
     }
-    _cloneForComposition () {
+    _cloneForComposition (): void {
+        // Check if already cloned earlier
         if (this._compiledEvent.clone) {
             return;
         }
-        var range = this._getRange();
-        var format = range.startContainer;
+
+        const range = this._getRange();
+        let format = range.startContainer;
         while (format.parentNode && format !== this.editable && window.getComputedStyle(format).display !== 'block') {
             format = format.parentNode;
         }
         this._compiledEvent.node = format;
         this._compiledEvent.clone = format.cloneNode(true);
     }
-    _eventsNormalization (param) {
-        if (param.defaultPrevented && param.name !== 'move') {
+    _eventsNormalization(param: CompiledEvent) {
+        if (param.defaultPrevented && param.type !== 'move') {
             this.triggerEvent('trigger Action: nothing');
             return;
         }
 
         // mark as dirty the new nodes to re-render it
         // because the browser can split other than our arch and we must fix the errors
-        var elements = [];
-        param.mutationsList.forEach(function (mutation) {
+        const elements = [];
+        param.mutationsList.forEach(mutation => {
             if (mutation.type === 'characterData' && elements.indexOf(mutation.target) === -1) {
                 elements.push(mutation.target);
             }
             if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach(function (target) {
+                mutation.addedNodes.forEach(target => {
                     if (elements.indexOf(target) === -1) {
                         elements.push(target);
                     }
                 });
-                mutation.removedNodes.forEach(function (target) {
+                mutation.removedNodes.forEach(target => {
                     if (elements.indexOf(target) === -1) {
                         elements.push(target);
                     }
@@ -247,9 +246,9 @@ export class EventManager {
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
             });
-        } else if ((!param.ctrlKey && !param.altKey || param.inputType === 'insertText') &&
+        } else if ((!param.ctrlKey && !param.altKey) &&
                 (param.data && param.data.length === 1 || param.key && param.key.length === 1 || param.key === 'Space')) {
-            var data = param.data && param.data.length === 1 ? param.data : param.key;
+            let data = param.data && param.data.length === 1 ? param.data : param.key;
             if (param.data === 'Space') {
                 data = ' ';
             }
@@ -269,10 +268,10 @@ export class EventManager {
      *
      * @returns {Range}
      */
-    _getRange () {
-        var selection = this.editable.ownerDocument.getSelection();
+    _getRange (): Range {
+        const selection = this.editable.ownerDocument.getSelection();
         if (!selection || selection.rangeCount === 0) {
-            var range: Range = {
+            const range: Range = {
                 startContainer: this.editable,
                 startOffset: 0,
                 endContainer: this.editable,
@@ -281,14 +280,14 @@ export class EventManager {
             };
             return range;
         }
-        var nativeRange = selection.getRangeAt(0);
-        var ltr;
+        const nativeRange = selection.getRangeAt(0);
+        let ltr: boolean;
         if (selection.anchorNode === selection.focusNode) {
             ltr = selection.anchorOffset <= selection.focusOffset;
         } else {
             ltr = selection.anchorNode === nativeRange.startContainer;
         }
-        var range: Range = {
+        const range: Range = {
             startContainer: nativeRange.startContainer,
             startOffset: nativeRange.startOffset,
             endContainer: nativeRange.endContainer,
@@ -297,17 +296,18 @@ export class EventManager {
         };
         return range;
     }
-    _isSelectAll (rangeDOM) {
-        var startContainer = rangeDOM.startContainer;
-        var startOffset = rangeDOM.startOffset;
-        var endContainer = rangeDOM.endContainer;
-        var endOffset = rangeDOM.endOffset;
+    _isSelectAll (rangeDOM: Range) {
+        let startContainer = rangeDOM.startContainer;
+        let startOffset = rangeDOM.startOffset;
+        let endContainer = rangeDOM.endContainer;
+        let endOffset = rangeDOM.endOffset;
 
-        if (rangeDOM.isCollapsed() || !startContainer || !endContainer) {
+        const isRangeCollapsed = startContainer === endContainer && startOffset === endOffset;
+        if (!startContainer || !endContainer || isRangeCollapsed) {
             return false;
         }
 
-        var body = this.editable.ownerDocument.body;
+        const body = this.editable.ownerDocument.body;
         if (!body.contains(startContainer) || !body.contains(endContainer)) {
             return false;
         }
@@ -326,14 +326,14 @@ export class EventManager {
             if (el.tagName === 'WE3-EDITABLE') {
                 return true;
             }
-            var style = window.getComputedStyle(el.parentNode);
+            const style = window.getComputedStyle(el.parentNode);
             if (style.display === 'none' || style.visibility === 'hidden') {
                 return false;
             }
             return isVisible(el.parentNode);
         }
 
-        var el;
+        let el: Element;
         if (this.editable.contains(startContainer)) {
             el = this.editable;
             while (el) {
@@ -344,11 +344,11 @@ export class EventManager {
                     return false;
                 }
                 if (el.firstChild) {
-                    el = el.firstChild;
+                    el = <Element>el.firstChild;
                 } else if (el.nextSibling) {
-                    el = el.nextSibling;
+                    el = <Element>el.nextSibling;
                 } else if (el.parentNode !== this.editable) {
-                    el = el.parentNode.nextSibling;
+                    el = <Element>el.parentNode.nextSibling;
                 } else {
                     el = null;
                 }
@@ -365,11 +365,11 @@ export class EventManager {
                     return false;
                 }
                 if (el.lastChild) {
-                    el = el.lastChild;
+                    el = <Element>el.lastChild;
                 } else if (el.previousSibling) {
-                    el = el.previousSibling;
+                    el = <Element>el.previousSibling;
                 } else if (el.parentNode !== this.editable) {
-                    el = el.parentNode.previousSibling;
+                    el = <Element>el.parentNode.previousSibling;
                 } else {
                     el = null;
                 }
@@ -400,9 +400,9 @@ export class EventManager {
         //     return;
         // }
 
-        // var data = param.data.replace(/\u00A0/g, ' ');
-        // var range = this._getRange();
-        // var origin = {
+        // const data = param.data.replace(/\u00A0/g, ' ');
+        // const range = this._getRange();
+        // const origin = {
         //     startContainer: null,
         //     startOffset: null,
         //     endContainer: null,
@@ -419,16 +419,16 @@ export class EventManager {
         //     }
         //     return textNodes;
         // }
-        // var cloneTextNodes = findTextNode([], param.clone);
-        // var textNodes = findTextNode([], param.node);
+        // const cloneTextNodes = findTextNode([], param.clone);
+        // const textNodes = findTextNode([], param.node);
 
         // this.triggerEvent(cloneTextNodes.map(a => a.nodeValue).join('|'));
         // this.triggerEvent(textNodes.map(a => a.nodeValue).join('|'));
 
         // // find the original start range
 
-        // var node, clone;
-        // for (var index = 0; index < textNodes.length; index++) {
+        // const node, clone;
+        // for (const index = 0; index < textNodes.length; index++) {
         //     node = textNodes[index];
         //     clone = cloneTextNodes[index];
         //     if (clone.tagName !== node.tagName || clone.nodeValue !== node.nodeValue) {
@@ -441,7 +441,7 @@ export class EventManager {
         // }
 
         // if (clone.nodeType === 3) {
-        //     var beforeRange = '';
+        //     const beforeRange = '';
         //     if (range.startContainer === node && param.previous) {
         //         // eg: 'paaa' from replacement of 'a' in 'aa' ==> must be 'paa'
         //         let previous = param.previous ? param.previous.replace(/\u00A0/g, ' ') : '';
@@ -464,8 +464,8 @@ export class EventManager {
 
         // // find the original end range
 
-        // var node, clone;
-        // for (var indexBis = textNodes.length - 1; indexBis > index; indexBis++) {
+        // const node, clone;
+        // for (const indexBis = textNodes.length - 1; indexBis > index; indexBis++) {
         //     node = textNodes[indexBis];
         //     clone = cloneTextNodes[indexBis];
         //     if (clone.tagName !== node.tagName || clone.nodeValue !== node.nodeValue) {
@@ -479,7 +479,7 @@ export class EventManager {
 
         // if (clone.nodeType === 3) {
         //     origin.startContainer = clone; // TODO: clone.origin
-        //     for(var offset = 0; offset < clone.nodeValue.length; offset++) {
+        //     for(const offset = 0; offset < clone.nodeValue.length; offset++) {
         //         if (clone.nodeValue[offset] !== node.nodeValue[offset]) {
         //             break;
         //         }
@@ -493,12 +493,12 @@ export class EventManager {
         // }
 
         // if (lastTextNode) {
-        //     var lastTextNodeNewValue = lastTextNode.nodeValue.replace(/\u00A0/g, ' ');
-        //     var newOffset = lastTextNodeNewValue.length;
+        //     const lastTextNodeNewValue = lastTextNode.nodeValue.replace(/\u00A0/g, ' ');
+        //     const newOffset = lastTextNodeNewValue.length;
 
         //     param.data = param.data.replace(/\u00A0/g, ' ');
         //     if (lastTextNode.id === range.scID) {
-        //         var offset = 0;
+        //         const offset = 0;
         //         if (lastTextNode.id === range.scID) {
         //             offset = range.so;
         //             if (lastTextNodeOldValue.length > lastTextNodeNewValue.length) {
@@ -536,9 +536,9 @@ export class EventManager {
             this.triggerEvent('trigger Action: enter, or outdent');
 
             /*
-            var range = BaseRange.getRange();
-            var liAncestor = range.scArch.ancestor('isLi');
-            var isInEmptyLi = range.isCollapsed() && liAncestor && liAncestor.isDeepEmpty();
+            const range = BaseRange.getRange();
+            const liAncestor = range.scArch.ancestor('isLi');
+            const isInEmptyLi = range.isCollapsed() && liAncestor && liAncestor.isDeepEmpty();
             if (isInEmptyLi) {
                 return BaseArch.outdent();
             } else {
@@ -562,8 +562,8 @@ export class EventManager {
             this.triggerEvent('trigger Action: nothing');
             return;
         }
-        var tabSize = this.options.tab && this.options.tab.size || 0;
-        var tab = new Array(tabSize).fill('\u00A0').join('');
+        const tabSize = this.options.tab && this.options.tab.size || 0;
+        const tab = new Array(tabSize).fill('\u00A0').join('');
 
         this.triggerEvent('trigger Action: insert', [tab]);
     }
@@ -574,7 +574,7 @@ export class EventManager {
         if (param.data === 'SelectAll') {
             this.triggerEvent('trigger Action: selectAll');
         } else if (navigationKey.indexOf(param.data) !== -1) {
-            var isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
+            const isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
             this.triggerEvent('trigger Action: setRangeFromDom', {
                 moveLeft: isLeftish,
                 moveRight: !isLeftish,
@@ -593,14 +593,14 @@ export class EventManager {
         this.triggerEvent('trigger Action: remove', param.key === 'Backspace' ? 'left' : 'right', param);
     }
     _tickAfterUserInteraction () {
-        var param = this._compiledEvent;
+        const param = this._compiledEvent;
         param.previous = this._previousEvent;
         this._previousEvent = param;
         this._compiledEvent = null;
         this._eventsNormalization(param);
     }
     triggerEvent (truc, a=null, b=null) {
-        var d = document.createElement('div');
+        const d = document.createElement('div');
         d.textContent = truc + ' ' + (a ? JSON.stringify(a) : '');
         document.body.appendChild(d);
 
@@ -619,7 +619,7 @@ export class EventManager {
         if (this.editable.style.display === 'none') {
             return;
         }
-        var param = this._beginToStackEventDataForNextTick(e);
+        const param = this._beginToStackEventDataForNextTick(e);
         this._cloneForComposition();
         param.type = 'composition';
         param.update = false;
@@ -652,7 +652,7 @@ export class EventManager {
         if (this.editable.style.display === 'none') {
             return;
         }
-        var param = this._beginToStackEventDataForNextTick(e);
+        const param = this._beginToStackEventDataForNextTick(e);
 
         if (!param.type) {
             param.type = e.type;
@@ -696,7 +696,7 @@ export class EventManager {
         if (e.type === 'keydown' && e.key === 'Dead') {
             return;
         }
-        var param = this._beginToStackEventDataForNextTick(e);
+        const param = this._beginToStackEventDataForNextTick(e);
         param.defaultPrevented = param.defaultPrevented || e.defaultPrevented;
         param.type = param.type || e.type;
         param.shiftKey = e.shiftKey;
@@ -723,7 +723,7 @@ export class EventManager {
         setTimeout(this.__onClick.bind(this, 0));
     }
     __onClick (e) {
-        var mousedown = this._mousedownInEditable.target;
+        const mousedown = this._mousedownInEditable.target;
         this._mousedownInEditable = false;
 
         if (this.editor.contains(e.target) && this.editable !== e.target && !this.editable.contains(e.target)) {
