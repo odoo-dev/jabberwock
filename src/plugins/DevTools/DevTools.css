@@ -1,0 +1,46 @@
+jw-devtools {
+    position: fixed;
+    resize: vertical;
+    bottom: 0;
+    height: 300px;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border-top: 1px solid black;
+    -webkit-box-shadow: 3px -1px 5px -2px rgba(0,0,0,0.51);
+    -moz-box-shadow: 3px -1px 5px -2px rgba(0,0,0,0.51);
+    box-shadow: 3px -1px 5px -2px rgba(0,0,0,0.51);
+    padding: 10px;
+}
+
+jw-devtools > jw-tabs {
+    display: block;
+    height: 30px;
+    width: 100%;
+    border-bottom: 1px solid black;
+}
+jw-devtools > jw-tabs > jw-tab {
+    padding: 10px;
+}
+
+jw-devtools > main {
+    overflow: auto;
+    height: 270px;
+    width: 100%;
+}
+
+jw-devtools > main ol {
+    list-style: none;
+}
+
+jw-devtools > main li {
+    padding-left: 10px;
+}
+
+jw-devtools > main li:nth-child(odd) {
+    background-color: aliceblue;
+}
+
+jw-devtools > main li:nth-child(even) {
+    background-color: white;
+}

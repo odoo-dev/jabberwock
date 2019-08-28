@@ -12,6 +12,8 @@ const _getNodeType = (node: Element): VNodeType => {
         case 'H5':
         case 'H6':
             return VNodeType.HEADER;
+        case 'BR':
+            return VNodeType.LINE_BREAK;
     }
 };
 /**

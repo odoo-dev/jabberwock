@@ -3,6 +3,7 @@ export enum VNodeType {
     PARAGRAPH = 'PARAGRAPH',
     HEADER = 'HEADER',
     CHAR = 'CHAR',
+    LINE_BREAK = 'LINE_BREAK',
 }
 
 export class VNode {

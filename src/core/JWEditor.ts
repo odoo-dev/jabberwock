@@ -47,7 +47,7 @@ export class JWEditor {
     }
 
     addPlugin(plugin: typeof JWPlugin) {
-        this.pluginsRegistry.push(new plugin(this.dispatcher));
+        this.pluginsRegistry.push(new plugin(this.dispatcher, this.vDocument)); // todo: use state
     }
 
     loadConfig(config: JWEditorConfig) {
