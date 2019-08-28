@@ -76,7 +76,7 @@ export class EventManager {
      * removing the selection if needed.
      */
     _addLine () {
-        console.log('trigger Action: addLine');
+        this.triggerEvent('trigger Action: addLine');
     }
     _beginToStackEventDataForNextTick (e) {
         if (this._compiledEvent) {
@@ -169,7 +169,7 @@ export class EventManager {
         if (this._compiledEvent.clone) {
             return;
         }
-        var range = this._getRange()
+        var range = this._getRange();
         var format = range.startContainer;
         while (format.parentNode && format !== this.editable && window.getComputedStyle(format).display !== 'block') {
             format = format.parentNode;
@@ -178,51 +178,9 @@ export class EventManager {
         this._compiledEvent.clone = format.cloneNode(true);
     }
     _eventsNormalization (param) {
-        var name, data, shiftKey, ctrlKey, altKey, previous;
-
-        if (navigationKey.indexOf(param.key) !== -1) {
-            name = 'move';
-            data = param.key;
-            shiftKey = param.shiftKey;
-            ctrlKey = param.ctrlKey;
-            altKey = param.altKey;
-        } else if (param.type === 'move') {
-            name = 'move';
-            data = param.data;
-        } else if (param.type === 'composition') {
-            data = param.data;
-            // previous.update = audroid update for each char
-            // param.data[0] !== ' ' = audio insertion
-            previous = param.data[0] !== ' ' && param.previous && param.previous.update ? param.previous.data : false;
-            name = 'composition';
-        } else {
-            shiftKey = param.shiftKey;
-            ctrlKey = param.ctrlKey;
-            altKey = param.altKey;
-            if (param.key === 'Backspace') {
-                name = 'Backspace';
-            } else if (param.key === 'Delete') {
-                name = 'Delete';
-            } else if (param.key === 'Tab') {
-                name = 'Tab';
-            } else if (param.key === 'Enter') {
-                name = 'Enter';
-            } else if ((!param.ctrlKey && !param.altKey || param.inputType === 'insertText') &&
-                    (param.data && param.data.length === 1 || param.key && param.key.length === 1 || param.key === 'Space')) {
-                data = param.data && param.data.length === 1 ? param.data : param.key;
-                if (param.data === 'Space') {
-                    param.data = ' ';
-                }
-                name = 'char';
-            }
-        }
-
-        if (!name && param.type === "keydown") {
-            name = param.type;
-            data = param.key;
-            shiftKey = param.shiftKey;
-            ctrlKey = param.ctrlKey;
-            altKey = param.altKey;
+        if (param.defaultPrevented && param.name !== 'move') {
+            this.triggerEvent('trigger Action: nothing');
+            return;
         }
 
         // mark as dirty the new nodes to re-render it
@@ -246,62 +204,64 @@ export class EventManager {
             }
         });
 
-        var ev: NormalizedEvent = {
-            name: name,
-            data: data,
-            shiftKey: shiftKey,
-            altKey: altKey,
-            previous: previous,
-            elements: elements,
-            preventDefault: function () {
-                param.defaultPrevented = true;
-            },
-            get defaultPrevented () {
-                return param.defaultPrevented;
+        if (navigationKey.indexOf(param.key) !== -1) {
+            this._pressMove({
+                name: 'move',
+                data: param.key,
+                shiftKey: param.shiftKey,
+                ctrlKey: param.ctrlKey,
+                altKey: param.altKey,
+            });
+        } else if (param.type === 'move') {
+            this._pressMove({
+                name: 'move',
+            });
+        } else if (param.type === 'composition') {
+            // previous.update = audroid update for each char
+            // param.data[0] !== ' ' = audio insertion
+            this._pressInsertComposition({
+                previous: param.data[0] !== ' ' && param.previous && param.previous.update ? param.previous.data : false,
+                name: 'composition',
+                data: param.data,
+                node: param.node,
+                clone: param.clone,
+            });
+        } else if (param.key === 'Backspace' || param.key === 'Delete') {
+            this._pressRemoveSide({
+                name: param.key,
+                shiftKey: param.shiftKey,
+                ctrlKey: param.ctrlKey,
+                altKey: param.altKey,
+            });
+        } else if (param.key === 'Tab') {
+            this._pressInsertTab({
+                name: 'Tab',
+                shiftKey: param.shiftKey,
+                ctrlKey: param.ctrlKey,
+                altKey: param.altKey,
+            });
+        } else if (param.key === 'Enter') {
+            this._pressInsertTab({
+                name: 'Enter',
+                shiftKey: param.shiftKey,
+                ctrlKey: param.ctrlKey,
+                altKey: param.altKey,
+            });
+        } else if ((!param.ctrlKey && !param.altKey || param.inputType === 'insertText') &&
+                (param.data && param.data.length === 1 || param.key && param.key.length === 1 || param.key === 'Space')) {
+            var data = param.data && param.data.length === 1 ? param.data : param.key;
+            if (param.data === 'Space') {
+                data = ' ';
             }
-        };
-        return ev;
-    }
-    _eventsdDispatcher (ev) {
-        if (ev.defaultPrevented && ev.name !== 'move') {
-            console.log('trigger Action: nothing');
-        }
-
-        if (ev.name === 'composition') {
-            this._pressInsertComposition(ev);
-        } else if (ev.name === 'Backspace') {
-            this._pressRemoveSide(true);
-        } else if (ev.name === 'Delete') {
-            this._pressRemoveSide(false);
-        } else if (ev.name === 'Tab') {
-            this._pressInsertTab(ev);
-        } else if (ev.name === 'Enter') {
-            this._pressInsertEnter(ev);
-        } else if (ev.name === 'char') {
-            this._pressInsertChar(ev);
-        } else if (ev.name === 'move') {
-            this._pressMove(ev);
+            this._pressInsertChar({
+                name: 'char',
+                data: data,
+            });
+        } else if (param.type === "keydown") {
+            this.triggerEvent('trigger Action: keydown', param);
         } else {
-            console.log('trigger Action: ???', ev);
+            this.triggerEvent('trigger Action: ???', param);
         }
-    }
-    _findOffsetInsertion (text, offset, insert) {
-        var prevIndex = offset;
-        var globalIndex = 0;
-        do {
-            var index = text.substring(globalIndex).indexOf(insert);
-            if (index === -1) {
-                break;
-            }
-            index += globalIndex;
-            globalIndex = index + 1;
-
-            if (prevIndex >= index && prevIndex <= index + insert.length) {
-                return index + insert.length;
-            }
-        } while (globalIndex < text.length);
-
-        return -1;
     }
     /**
      * Move the current range to the current selection in the DOM
@@ -423,11 +383,11 @@ export class EventManager {
      */
     _pressInsertChar (param) {
         if (param.data === ' ') {
-            console.log('trigger Action: insert', ['\u00A0']);
+            this.triggerEvent('trigger Action: insert', ['\u00A0']);
         } else if (param.data.charCodeAt(0) === 10) {
-            console.log('trigger Action: insert', ['<br/>']);
+            this.triggerEvent('trigger Action: insert', ['<br/>']);
         } else {
-            console.log('trigger Action: insert', [param.data]);
+            this.triggerEvent('trigger Action: insert', [param.data]);
         }
     }
     /**
@@ -435,101 +395,135 @@ export class EventManager {
      * @param {object} param
      */
     _pressInsertComposition (param) {
-        // var self = this;
-        // var BaseArch = this.dependencies.BaseArch;
-        // var BaseRenderer = this.dependencies.BaseRenderer;
-        // var BaseRange = this.dependencies.BaseRange;
+        // if (!this.editable.contains(param.node)) {
+        //     this.triggerEvent('trigger Action: ??? wtf ???');
+        //     return;
+        // }
 
-        // return BaseArch.do(function () {
-        //     var range = BaseRange.getRange();
-        //     var archNode = range.scArch;
-        //     var arch = archNode.ancestor('isFormatNode') || archNode.ancestor('isUnbreakable');
-        //     var formatNode = BaseRenderer.getElement(arch);
+        // var data = param.data.replace(/\u00A0/g, ' ');
+        // var range = this._getRange();
+        // var origin = {
+        //     startContainer: null,
+        //     startOffset: null,
+        //     endContainer: null,
+        //     endOffset: null,
+        // };
 
-        //     if (!formatNode) {
-        //         return false; // default behavior of range from `Arch._processChanges`
+        // function findTextNode (textNodes, node) {
+        //     if (node.nodeType === 3) {
+        //         textNodes.push(node);
+        //     } else if (node.tagName === 'BR') {
+        //         textNodes.push(node);
+        //     } else {
+        //         node.childNodes.forEach(n => findTextNode(textNodes, n));
         //     }
+        //     return textNodes;
+        // }
+        // var cloneTextNodes = findTextNode([], param.clone);
+        // var textNodes = findTextNode([], param.node);
 
-        //     var lastTextNode;
-        //     var lastTextNodeOldValue;
-        //     var newArch = BaseArch.parse(formatNode.cloneNode(true));
-        //     newArch.nextUntil(function (archNode) {
-        //         if (!archNode.isText()) {
-        //             return;
+        // this.triggerEvent(cloneTextNodes.map(a => a.nodeValue).join('|'));
+        // this.triggerEvent(textNodes.map(a => a.nodeValue).join('|'));
+
+        // // find the original start range
+
+        // var node, clone;
+        // for (var index = 0; index < textNodes.length; index++) {
+        //     node = textNodes[index];
+        //     clone = cloneTextNodes[index];
+        //     if (clone.tagName !== node.tagName || clone.nodeValue !== node.nodeValue) {
+        //         break;
+        //     }
+        // }
+        // if (index === textNodes.length) {
+        //     this.triggerEvent('trigger Action: nothing');
+        //     return;
+        // }
+
+        // if (clone.nodeType === 3) {
+        //     var beforeRange = '';
+        //     if (range.startContainer === node && param.previous) {
+        //         // eg: 'paaa' from replacement of 'a' in 'aa' ==> must be 'paa'
+        //         let previous = param.previous ? param.previous.replace(/\u00A0/g, ' ') : '';
+        //         beforeRange = clone.nodeValue.replace(/\u00A0/g, ' ').slice(0, range.so);
+        //         // let afterRange = clone.nodeValue.replace(/\u00A0/g, ' ').slice(range.so);
+        //         if (previous && beforeRange.slice(-previous.length) === previous) {
+        //             beforeRange = beforeRange.slice(0, -previous.length);
         //         }
-        //         var target = arch.applyPath(archNode.path(newArch));
-        //         if (target && target.isText()) {
-        //             lastTextNodeOldValue = target.nodeValue;
-        //             lastTextNode = target;
+        //     }
+        //     if (!origin.startContainer) {
+        //         origin.startContainer = clone; // TODO: clone.origin
+        //         origin.startOffset = beforeRange.length;
+        //     }
+        // } else {
+        //     if (!origin.startContainer) {
+        //         origin.startContainer = clone; // TODO: clone.origin
+        //         origin.startOffset = 0;
+        //     }
+        // }
 
-        //             if (range.scID === lastTextNode.id && param.previous) {
-        //                 // eg: 'paaa' from replacement of 'a' in 'aa' ==> must be 'paa'
-        //                 var previous = param.previous ? param.previous.replace(/\u00A0/g, ' ') : '';
-        //                 var beforeRange = lastTextNodeOldValue.replace(/\u00A0/g, ' ').slice(0, range.so);
-        //                 var afterRange = lastTextNodeOldValue.replace(/\u00A0/g, ' ').slice(range.so);
-        //                 if (previous && beforeRange.slice(-previous.length) === previous) {
-        //                     beforeRange = beforeRange.slice(0, -previous.length);
-        //                 }
-        //                 archNode.nodeValue = beforeRange + param.data + afterRange;
-        //             }
+        // // find the original end range
 
-        //             target.setNodeValue(archNode.nodeValue);
-        //         } else if (target && target.isBR()) {
-        //             var res = target.insert(archNode.params.create(null, null, archNode.nodeValue));
-        //             lastTextNodeOldValue = archNode.nodeValue;
-        //             lastTextNode = res[0];
+        // var node, clone;
+        // for (var indexBis = textNodes.length - 1; indexBis > index; indexBis++) {
+        //     node = textNodes[indexBis];
+        //     clone = cloneTextNodes[indexBis];
+        //     if (clone.tagName !== node.tagName || clone.nodeValue !== node.nodeValue) {
+        //         break;
+        //     }
+        // }
+        // if (indexBis === index) {
+        //     origin.endContainer = origin.startContainer;
+        //     origin.endOffset = origin.startContainer;
+        // }
+
+        // if (clone.nodeType === 3) {
+        //     origin.startContainer = clone; // TODO: clone.origin
+        //     for(var offset = 0; offset < clone.nodeValue.length; offset++) {
+        //         if (clone.nodeValue[offset] !== node.nodeValue[offset]) {
+        //             break;
         //         }
-        //     }, {doNotLeaveNode: true});
+        //     }
+        //     origin.startOffset = offset;
+        // } else {
+        //     if (!origin.startContainer) {
+        //         origin.startContainer = clone; // TODO: clone.origin
+        //         origin.startOffset = 0;
+        //     }
+        // }
 
-        //     if (lastTextNode) {
-        //         var lastTextNodeNewValue = lastTextNode.nodeValue.replace(/\u00A0/g, ' ');
-        //         var newOffset = lastTextNodeNewValue.length;
+        // if (lastTextNode) {
+        //     var lastTextNodeNewValue = lastTextNode.nodeValue.replace(/\u00A0/g, ' ');
+        //     var newOffset = lastTextNodeNewValue.length;
 
-        //         param.data = param.data.replace(/\u00A0/g, ' ');
+        //     param.data = param.data.replace(/\u00A0/g, ' ');
+        //     if (lastTextNode.id === range.scID) {
+        //         var offset = 0;
         //         if (lastTextNode.id === range.scID) {
-        //             var offset = 0;
-        //             if (lastTextNode.id === range.scID) {
-        //                 offset = range.so;
-        //                 if (lastTextNodeOldValue.length > lastTextNodeNewValue.length) {
-        //                     offset -= lastTextNodeOldValue.length - lastTextNodeNewValue.length;
-        //                     if (offset < 0) {
-        //                         offset = 0;
-        //                     }
+        //             offset = range.so;
+        //             if (lastTextNodeOldValue.length > lastTextNodeNewValue.length) {
+        //                 offset -= lastTextNodeOldValue.length - lastTextNodeNewValue.length;
+        //                 if (offset < 0) {
+        //                     offset = 0;
         //                 }
-        //             }
-
-        //             newOffset = self._findOffsetInsertion(lastTextNodeNewValue, offset, param.data);
-        //             newOffset = newOffset !== -1 ? newOffset : offset;
-
-        //             if (lastTextNodeNewValue[newOffset] === ' ') {
-        //                 newOffset++;
         //             }
         //         }
 
-        //         newOffset = Math.min(newOffset, lastTextNode.nodeValue.length);
-        //         return {
-        //             scID: lastTextNode.id,
-        //             so: newOffset,
-        //         };
+        //         newOffset = self._findOffsetInsertion(lastTextNodeNewValue, offset, param.data);
+        //         newOffset = newOffset !== -1 ? newOffset : offset;
+
+        //         if (lastTextNodeNewValue[newOffset] === ' ') {
+        //             newOffset++;
+        //         }
         //     }
 
-        //     var lastLeaf = formatNode.lastLeaf();
-        //     if (lastLeaf) {
-        //         return {
-        //             scID: lastLeaf.id,
-        //             so: lastLeaf.length(),
-        //         };
-        //     }
+        //     newOffset = Math.min(newOffset, lastTextNode.nodeValue.length);
+        //     return {
+        //         scID: lastTextNode.id,
+        //         so: newOffset,
+        //     };
+        // }
 
-        //     var rangeDOM = BaseRange.getRangeFromDOM();
-        //     if (rangeDOM && rangeDOM.scID && rangeDOM.scArch.length() <= rangeDOM.so) {
-        //         return {
-        //             scID: rangeDOM.scID,
-        //             so: rangeDOM.so,
-        //         };
-        //     }
-        //     return false; // default behavior of range from `Arch._processChanges`
-        // });
     }
     /**
      * @private
@@ -537,9 +531,9 @@ export class EventManager {
      */
     _pressInsertEnter (param) {
         if (param.shiftKey) {
-            console.log('trigger Action: insert', ['<br/>']);
+            this.triggerEvent('trigger Action: insert', ['<br/>']);
         } else {
-            console.log('trigger Action: enter, or outdent');
+            this.triggerEvent('trigger Action: enter, or outdent');
 
             /*
             var range = BaseRange.getRange();
@@ -561,32 +555,32 @@ export class EventManager {
      */
     _pressInsertTab (param) {
         if (this.options.tab && !this.options.tab.enabled) {
-            console.log('trigger Action: nothing');
+            this.triggerEvent('trigger Action: nothing');
             return;
         }
         if (param.shiftKey || param.ctrlKey || param.altKey) {
-            console.log('trigger Action: nothing');
+            this.triggerEvent('trigger Action: nothing');
             return;
         }
         var tabSize = this.options.tab && this.options.tab.size || 0;
         var tab = new Array(tabSize).fill('\u00A0').join('');
 
-        console.log('trigger Action: insert', [tab]);
+        this.triggerEvent('trigger Action: insert', [tab]);
     }
     _pressMove (param) {
         if (param.defaultPrevented) {
-            console.log('trigger Action: restore range');
+            this.triggerEvent('trigger Action: restore range');
         }
         if (param.data === 'SelectAll') {
-            console.log('trigger Action: selectAll');
+            this.triggerEvent('trigger Action: selectAll');
         } else if (navigationKey.indexOf(param.data) !== -1) {
             var isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
-            console.log('trigger Action: setRangeFromDom', {
+            this.triggerEvent('trigger Action: setRangeFromDom', {
                 moveLeft: isLeftish,
                 moveRight: !isLeftish,
             });
         } else {
-            console.log('trigger Action: setRangeFromDom', {});
+            this.triggerEvent('trigger Action: setRangeFromDom', {});
         }
     }
     /**
@@ -595,16 +589,22 @@ export class EventManager {
      * @private
      * @param {Boolean} isLeft true to remove to the left
      */
-    _pressRemoveSide (isLeft) {
-        console.log('trigger Action: remove', isLeft ? 'left' : 'right');
+    _pressRemoveSide (param) {
+        this.triggerEvent('trigger Action: remove', param.key === 'Backspace' ? 'left' : 'right', param);
     }
     _tickAfterUserInteraction () {
         var param = this._compiledEvent;
         param.previous = this._previousEvent;
         this._previousEvent = param;
         this._compiledEvent = null;
-        var ev = this._eventsNormalization(param);
-        this._eventsdDispatcher(ev);
+        this._eventsNormalization(param);
+    }
+    triggerEvent (truc, a=null, b=null) {
+        var d = document.createElement('div');
+        d.textContent = truc + ' ' + (a ? JSON.stringify(a) : '');
+        document.body.appendChild(d);
+
+        console.log(truc, a, b);
     }
 
     //--------------------------------------------------------------------------
@@ -728,14 +728,14 @@ export class EventManager {
 
         if (this.editor.contains(e.target) && this.editable !== e.target && !this.editable.contains(e.target)) {
             if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                console.log('trigger Action: restore range');
+                this.triggerEvent('trigger Action: restore range');
                 return;
             }
         }
         if (mousedown === e.target) {
-            console.log('trigger Action: setRange', {startContainer: e.target});
+            this.triggerEvent('trigger Action: setRange', {startContainer: e.target});
         } else {
-            console.log('trigger Action: setRangeFromDom');
+            this.triggerEvent('trigger Action: setRangeFromDom');
         }
     }
     /**
@@ -747,7 +747,7 @@ export class EventManager {
             return;
         }
         if (this._isSelectAll(this._getRange())) {
-            console.log('trigger Action: selectAll');
+            this.triggerEvent('trigger Action: selectAll');
         }
     }
 };
