@@ -1,13 +1,22 @@
 export enum VNodeType {
     ROOT = 'ROOT',
     PARAGRAPH = 'PARAGRAPH',
-    HEADER = 'HEADER',
+    HEADING1 = 'HEADING1',
+    HEADING2 = 'HEADING2',
+    HEADING3 = 'HEADING3',
+    HEADING4 = 'HEADING4',
+    HEADING5 = 'HEADING5',
+    HEADING6 = 'HEADING6',
     CHAR = 'CHAR',
+    LINE_BREAK = 'LINE_BREAK',
 }
+
+let id = 0;
 
 export class VNode {
     readonly type: VNodeType;
     children: VNode[];
+    id: number;
     index: number;
     parent: VNode | null;
     value: string | undefined;
@@ -16,6 +25,8 @@ export class VNode {
         this.type = type;
         this.parent = null;
         this.children = [];
+        this.id = id;
+        id++;
         this.index = 0;
         this.value = value;
     }

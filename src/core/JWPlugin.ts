@@ -1,5 +1,6 @@
-import { Action } from './actions/Action.js';
-import { Dispatcher } from './dispatcher/Dispatcher.js';
+import { Action } from './actions/Action';
+import { Dispatcher } from './dispatcher/Dispatcher';
+import VDocument from './stores/VDocument'; // todo: use state
 
 export interface JWPluginConfiguration {
     name: string;
@@ -7,9 +8,11 @@ export interface JWPluginConfiguration {
 
 export class JWPlugin {
     dispatcher: Dispatcher<Action>;
+    vDocument: VDocument;
 
-    constructor (dispatcher: Dispatcher<Action>, options?: JWPluginConfiguration) {
+    constructor (dispatcher: Dispatcher<Action>, vDocument: VDocument, options?: JWPluginConfiguration) {
         this.dispatcher = dispatcher;
+        this.vDocument = vDocument;
     }
 
     init(): void {

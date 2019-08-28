@@ -11,6 +11,7 @@ export interface JWEditorConfig {
 
 export class JWEditor {
     el: HTMLElement;
+    editable: HTMLElement;
     dispatcher: Dispatcher<Action>;
     eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
@@ -25,9 +26,11 @@ export class JWEditor {
                 this.dispatcher.dispatch(action);
             },
         });
+        this.editable = document.createElement('jw-editable');
+        this.el.appendChild(this.editable);
         this.pluginsRegistry = [];
         let startContent: DocumentFragment;
-        if (el.children.length) {
+        if (this.editable.children.length) {
             startContent = document.createDocumentFragment();
             const contents = utils._collectionToArray(el.childNodes);
             contents.forEach(child => startContent.appendChild(child));
@@ -36,18 +39,22 @@ export class JWEditor {
         }
         this.vDocument = new VDocument(startContent);
         // todo: move to Renderer
-        this.el.childNodes.forEach(child => child.remove());
+        this.editable.childNodes.forEach(child => child.remove());
         utils._collectionToArray(startContent.childNodes).forEach(node => {
-            this.el.appendChild(node);
+            this.editable.appendChild(node);
         });
     }
 
     start(): void {
-        this.el.setAttribute('contenteditable', 'true');
+        this.editable.setAttribute('contenteditable', 'true');
+        const currentStyle: string = this.el.getAttribute('style');
+        const newStyle: string = currentStyle + ' text-align: center;';
+        this.editable.setAttribute('style', newStyle);
     }
 
-    addPlugin(plugin: typeof JWPlugin) {
-        this.pluginsRegistry.push(new plugin(this.dispatcher));
+    addPlugin(pluginClass: typeof JWPlugin): void {
+        const pluginInstance: JWPlugin = new pluginClass(this.dispatcher, this.vDocument);
+        this.pluginsRegistry.push(pluginInstance); // todo: use state
     }
 
     loadConfig(config: JWEditorConfig): void {
