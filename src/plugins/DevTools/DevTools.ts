@@ -90,6 +90,11 @@ export class DevTools extends JWPlugin {
     get _template (): string {
         return `<jw-tabs>
                     <button>Inspector</button>
+                    <button
+                        style="position: absolute; right: 10px;"
+                        onclick="document.body.querySelector('jw-devtools').remove()">
+                        X
+                    </button>
                 </jw-tabs>
                 <main></main>`;
     }
