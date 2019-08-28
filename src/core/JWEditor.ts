@@ -1,4 +1,4 @@
-import { Action, ActionType } from './actions/Action';
+import { Action } from './actions/Action';
 import { Dispatcher } from './dispatcher/Dispatcher';
 import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
@@ -10,36 +10,23 @@ export interface JWEditorConfig {
 };
 
 export class JWEditor {
-    el: Element;
-    dispatcher: Dispatcher<Action>;
-    eventManager: EventManager;
-    pluginsRegistry: JWPlugin[];
-    vDocument: VDocument;
+    el: HTMLElement;
+    pluginsRegistry: JWPlugin[] = [];
+    dispatcher : Dispatcher = new Dispatcher();
 
     constructor (el = document.body) {
         this.el = el;
-        this.dispatcher = new Dispatcher();
-        this.eventManager = new EventManager(this.el, this.el, {
-            dispatch: action => {
-                action.origin = 'User';
-                this.dispatcher.dispatch(action);
-            }
-        });
-        this.pluginsRegistry = [];
-        let startContent: DocumentFragment;
-        if (el.childNodes.length) {
-            startContent = document.createDocumentFragment();
-            let contents = utils._collectionToArray(el.childNodes);
-            contents.forEach(child => startContent.appendChild(child));
-        } else {
-            startContent = this._placeholderContent;
-        }
-        this.vDocument = new VDocument(startContent);
-        // todo: move to Renderer
-        this.el.childNodes.forEach(child => child.remove());
-        utils._collectionToArray(startContent.childNodes).forEach(node => {
-            this.el.appendChild(node);
-        });
+
+        // hook events
+        this.pluginsRegistry
+        this._initPlugins();
+        // this.el.addEventListener('keyup', ()=> {
+        //     const action : Action = {
+
+        //     }
+        //     this.dispatcher.dispatch(this.plugins, action);
+        // })
+
     }
 
     start () {
@@ -47,7 +34,7 @@ export class JWEditor {
     }
 
     addPlugin(plugin: typeof JWPlugin) {
-        this.pluginsRegistry.push(new plugin(this.dispatcher, this.vDocument)); // todo: use state
+        this.pluginsRegistry.push(new plugin((ac)=>this.dispatcher));
     }
 
     loadConfig(config: JWEditorConfig) {

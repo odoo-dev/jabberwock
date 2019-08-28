@@ -18,4 +18,10 @@ export class JWPlugin {
     init () {
         // TODO
     }
+    start () {
+
+    }
+    stop () {
+
+    }
 };
