@@ -1,7 +1,12 @@
 export enum VNodeType {
     ROOT = 'ROOT',
     PARAGRAPH = 'PARAGRAPH',
-    HEADER = 'HEADER',
+    HEADING1 = 'HEADING1',
+    HEADING2 = 'HEADING2',
+    HEADING3 = 'HEADING3',
+    HEADING4 = 'HEADING4',
+    HEADING5 = 'HEADING5',
+    HEADING6 = 'HEADING6',
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
 }

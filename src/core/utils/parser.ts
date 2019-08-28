@@ -6,12 +6,17 @@ const _getNodeType = (node: Element): VNodeType => {
         case 'P':
             return VNodeType.PARAGRAPH;
         case 'H1':
+            return VNodeType.HEADING1;
         case 'H2':
+            return VNodeType.HEADING2;
         case 'H3':
+            return VNodeType.HEADING3;
         case 'H4':
+            return VNodeType.HEADING4;
         case 'H5':
+            return VNodeType.HEADING5;
         case 'H6':
-            return VNodeType.HEADER;
+            return VNodeType.HEADING6;
         case 'BR':
             return VNodeType.LINE_BREAK;
     }
