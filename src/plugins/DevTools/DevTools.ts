@@ -83,6 +83,7 @@ export class DevTools extends JWPlugin {
     }
     _renderUI (): Element {
         let devTools: Element = document.createElement('jw-devtools');
+        devTools.setAttribute('class', 'closed');
         devTools.innerHTML = this._template;
         document.body.appendChild(devTools);
         return devTools;
@@ -92,9 +93,12 @@ export class DevTools extends JWPlugin {
                     <button>Inspector</button>
                     <button
                         style="position: absolute; right: 10px;"
-                        onclick="document.body.querySelector('jw-devtools').remove()">
-                        X
-                    </button>
+                        onclick="var devtools = document.body.querySelector('jw-devtools');
+                                if (devtools.getAttribute('class').indexOf('closed') !== -1) {
+                                    devtools.setAttribute('class', '')
+                                } else {
+                                    devtools.setAttribute('class', 'closed');
+                                }">⏼</button>
                 </jw-tabs>
                 <main></main>`;
     }
