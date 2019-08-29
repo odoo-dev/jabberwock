@@ -1,6 +1,7 @@
+/* GLOBAL */
+
 jw-devtools {
     position: fixed;
-    resize: vertical;
     bottom: 0;
     max-height: 100%;
     height: 300px;
@@ -20,7 +21,16 @@ jw-devtools {
 	transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
 }
 
-jw-devtools > jw-tabs {
+jw-devtools.closed {
+    max-height: 31px;
+}
+jw-devtools .folded .children, jw-devtools .folded .closing {
+    display: none;
+}
+
+/* NAVBAR */
+
+devtools-navbar {
     background-color: #f3f3f3;
     position: static;
     display: flex;
@@ -35,23 +45,31 @@ jw-devtools > jw-tabs {
     box-sizing: border-box;
     vertical-align: baseline;
 }
-jw-devtools > jw-tabs > button {
+
+devtools-navbar > button {
     padding: 10px;
     background: none;
-    align-self: stretch;
     border: 0;
 }
 
-jw-devtools > main {
+/* CONTENTS */
+
+devtools-contents {
     display: flex;
     flex-direction: row;
+}
+
+/* main */
+
+devtools-main {
     overflow: auto;
     height: 270px;
     padding: 1em;
     user-select: none;
+    width: 70%;
 }
 
-jw-devtools > main div.children {
+devtools-main div.children {
     position: static;
     box-sizing: border-box;
     width: auto;
@@ -59,31 +77,48 @@ jw-devtools > main div.children {
     border-left: 1px solid #d0d0d0;
 }
 
-jw-devtools > main div > span:hover {
+devtools-main div > span:hover {
     background-color: lightblue;
 }
 
-jw-devtools > main div {
+devtools-main div {
     width: 100%;
 }
 
-jw-devtools > main span.element-name {
+devtools-main span.element-name {
     width: 100%;
     display: inline-block;
     color: #76526c;
 }
 
-jw-devtools > main div:not(.folded) > span.element-name.opening:before {
+devtools-main div:not(.folded) > span.element-name.opening:before {
     content: '⌄';
 }
 
-jw-devtools > main div.folded > span.element-name.opening:before {
+devtools-main div.folded > span.element-name.opening:before {
     content: '› ';
 }
 
-.closed {
-    max-height: 31px;
+/* sidepane */
+
+devtools-sidepane {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    box-sizing: border-box;
+    width: 30%;
+    height: 100%;
+    background-color: white;
+    border-left: 1px solid #d0d0d0;
 }
-.folded .children, .folded .closing {
-    display: none;
+
+devtools-sidepane .about {
+    border-bottom: 1px solid #d0d0d0;
+    padding: 10px;
+}
+devtools-sidepane .about .type {
+}
+
+devtools-sidepane .properties {
+    font-size: 12px;
+    padding: 10px;
 }

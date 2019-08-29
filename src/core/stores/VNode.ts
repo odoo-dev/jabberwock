@@ -36,6 +36,9 @@ export class VNode {
     get lastChild (): VNode | undefined {
         return this.nthChild(this.children.length - 1);
     }
+    get length (): number {
+        return this.value ? this.value.length : this.children.length;
+    }
     get nextSibling (): VNode | undefined {
         return this.parent && this.parent.nthChild(this.index + 1);
     }

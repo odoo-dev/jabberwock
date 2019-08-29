@@ -11,20 +11,28 @@ interface DevToolsUI {
     el: Element;
     main: Element;
     toolbar: Element;
+    sidepane: Element;
+    about: Element;
+    properties: Element;
 }
 
 export class DevTools extends JWPlugin {
     ui: DevToolsUI;
+    _inspectedNode: VNode;
 
     constructor (dispatcher: Dispatcher<Action>, vDocument: VDocument, options?: JWPluginConfiguration) {
         super(dispatcher, vDocument, options);
         let uiEl: Element = this._renderUI();
         this.ui = {
             el: uiEl,
-            main: uiEl.querySelector('main'),
-            toolbar: uiEl.querySelector('jw-tabs'),
+            main: uiEl.querySelector('devtools-main'),
+            toolbar: uiEl.querySelector('devtools-navbar'),
+            sidepane: uiEl.querySelector('devtools-sidepane'),
+            about: uiEl.querySelector('devtools-sidepane .about'),
+            properties: uiEl.querySelector('devtools-sidepane .properties'),
         };
-        this._fillUI();
+        this._fillMainTree();
+        this._updateInspectedNode(vDocument.contents);
     }
 
     _addChildren (node: VNode): Element {
@@ -49,6 +57,11 @@ export class DevTools extends JWPlugin {
         li.appendChild(document.createTextNode(contents));
         return li;
     }
+    _bindEventToNode (node: VNode, element: Element): void {
+        element.addEventListener('click', () => {
+            this._updateInspectedNode(node);
+        });
+    }
     _createElement (node: VNode): Element {
         let element: Element;
         const hasChildren: boolean = node.children.length > 0;
@@ -56,6 +69,7 @@ export class DevTools extends JWPlugin {
         if (node.type === VNodeType.CHAR) {
             element = document.createElement('span');
             element.appendChild(document.createTextNode(node.value));
+            this._bindEventToNode(node, element);
         } else {
             element = document.createElement('div');
             let openingTag: Element = document.createElement('span');
@@ -64,6 +78,7 @@ export class DevTools extends JWPlugin {
             openingTag.setAttribute('class', 'element-name ' +
                 (hasChildren ? 'opening' : 'self-closing'));
             element.appendChild(openingTag);
+            this._bindEventToNode(node, openingTag);
         }
         if (hasChildren) {
             let childrenDiv: Element = document.createElement('div');
@@ -80,7 +95,7 @@ export class DevTools extends JWPlugin {
         }
         return element;
     }
-    _fillUI (): void {
+    _fillMainTree (): void {
         const root: VNode = this.vDocument.contents;
         let div: Element = this._createElement(root);
         this.ui.main.appendChild(div);
@@ -88,7 +103,7 @@ export class DevTools extends JWPlugin {
     }
     _foldableElements (): void {
         const elements: Element [] = utils._collectionToArray(
-            this.ui.main.querySelectorAll('.element-name');
+            this.ui.main.querySelectorAll('.element-name')
         );
         elements.slice().forEach((element: Element) => {
             element.addEventListener('click', () => {
@@ -101,6 +116,13 @@ export class DevTools extends JWPlugin {
         });
         this._toggleClass(this.ui.el, 'closed');
     }
+    _getTypeInfo (node: VNode): string {
+        if (node.type === VNodeType.CHAR) {
+            return node.type + ': "' + node.value + '"';
+        }
+        let typeInfo: string = node.type.toLowerCase().replace('_', ' ');
+        return typeInfo.charAt(0).toUpperCase() + typeInfo.substring(1);
+    }
     _renderUI (): Element {
         let devTools: Element = document.createElement('jw-devtools');
         devTools.innerHTML = this._template;
@@ -108,10 +130,18 @@ export class DevTools extends JWPlugin {
         return devTools;
     }
     get _template (): string {
-        return `<jw-tabs>
+        return `<devtools-navbar>
                     <button>Inspector</button>
-                </jw-tabs>
-                <main></main>`;
+                </devtools-navbar>
+                <devtools-contents>
+                    <devtools-main></devtools-main>
+                    <devtools-sidepane>
+                        <div class="about">
+                            <div class="type"></div>
+                        </div>
+                        <div class="properties"></div>
+                    </devtools-sidepane>
+                </devtools-contents>`;
     }
     _toggleClass (node: Element, className: string): void {
         const currentClass: string = node.getAttribute('class') || '';
@@ -120,6 +150,15 @@ export class DevTools extends JWPlugin {
             node.setAttribute('class', currentClass.replace(regex, ''));
         } else {
             node.setAttribute('class', currentClass + ' ' + className);
+        }
+    }
+    _updateInspectedNode (node: VNode) {
+        this._inspectedNode = node;
+        let typeContainer: Element = this.ui.about.querySelector('.type');
+        typeContainer.innerHTML = this._getTypeInfo(node);
+        this.ui.properties.innerHTML = '<div>Length: ' + node.length + '</div>';
+        if (node.parent) {
+            this.ui.properties.innerHTML += '<div>Parent: ' + node.parent.type + '</div>';
         }
     }
 };
