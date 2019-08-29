@@ -10,6 +10,7 @@ import utils from '../../core/utils/utils';
 interface DevToolsUI {
     el: Element;
     main: Element;
+    toolbar: Element;
 }
 
 export class DevTools extends JWPlugin {
@@ -21,6 +22,7 @@ export class DevTools extends JWPlugin {
         this.ui = {
             el: uiEl,
             main: uiEl.querySelector('main'),
+            toolbar: uiEl.querySelector('jw-tabs'),
         };
         this._fillUI();
     }
@@ -86,16 +88,21 @@ export class DevTools extends JWPlugin {
     }
     _foldableElements (): void {
         const elements: Element [] = utils._collectionToArray(
-            this.ui.main.querySelectorAll('.element-name')
+            this.ui.main.querySelectorAll('.element-name');
         );
-        elements.slice().forEach(element => {
-            element.addEventListener('click', this._toggleFold.bind(this));
-            element.parentNode.setAttribute('class', 'folded');
+        elements.slice().forEach((element: Element) => {
+            element.addEventListener('click', () => {
+                this._toggleClass(element.parentElement, 'folded');
+            });
+            this._toggleClass(element.parentElement, 'folded');
         });
+        this.ui.toolbar.addEventListener('click', () => {
+            this._toggleClass(this.ui.el, 'closed');
+        });
+        this._toggleClass(this.ui.el, 'closed');
     }
     _renderUI (): Element {
         let devTools: Element = document.createElement('jw-devtools');
-        devTools.setAttribute('class', 'closed');
         devTools.innerHTML = this._template;
         document.body.appendChild(devTools);
         return devTools;
@@ -103,29 +110,16 @@ export class DevTools extends JWPlugin {
     get _template (): string {
         return `<jw-tabs>
                     <button>Inspector</button>
-                    <button
-                        style="position: absolute; right: 10px;"
-                        onclick="var devtools = document.body.querySelector('jw-devtools');
-                                if (devtools.getAttribute('class').indexOf('closed') !== -1) {
-                                    devtools.setAttribute('class', '')
-                                } else {
-                                    devtools.setAttribute('class', 'closed');
-                                }">⏼</button>
                 </jw-tabs>
                 <main></main>`;
     }
-    _toggleClass (node: any, className: string): void {
+    _toggleClass (node: Element, className: string): void {
         const currentClass: string = node.getAttribute('class') || '';
         if (currentClass.indexOf(className) !== -1) {
             const regex: RegExp = new RegExp('\\s*' + className + '\\s*');
             node.setAttribute('class', currentClass.replace(regex, ''));
         } else {
-            node.setAttribute('class', currentClass + ' folded');
-        }
-    }
-    _toggleFold (event: Event): void {
-        if (event.target.parentNode) {
-            this._toggleClass(event.target.parentNode, 'folded');
+            node.setAttribute('class', currentClass + ' ' + className);
         }
     }
 };
