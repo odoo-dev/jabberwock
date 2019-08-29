@@ -13,18 +13,18 @@ const navigationKey = [
 ];
 
 interface CompiledEvent {
-    type: string,
-    key: string,
-    data: string,
-    shiftKey: boolean,
-    ctrlKey: boolean,
+    type: string
+    key?: string
+    shiftKey?: boolean
+    ctrlKey?: boolean
     altKey?: boolean
-    mutationsList: Array<MutationRecord>,
-    defaultPrevented: boolean,
-    events: Array<Event>,
-    update?: boolean,
-    previous?: CompiledEvent
-    node?: ParentNode | HTMLElement
+    data?: string
+    mutationsList?: Array<MutationRecord>
+    defaultPrevented?: boolean
+    events?: Array<Event>
+    update?: boolean
+    previous?: any
+    node?: DOMElement
     clone?: any
 };
 
@@ -35,9 +35,19 @@ interface EventNormalizerOptions {
     }
 }
 
+interface FilteredOutElement extends Omit<Omit<Omit<Omit<Omit<HTMLElement, 'parentNode'>, 'firstChild'>, 'lastChild'>, 'previousSibling'>, 'previousSibling'> {};
+
+interface DOMElement extends FilteredOutElement {
+    parentNode: DOMElement
+    firstChild: DOMElement
+    lastChild: DOMElement
+    nextSibling: DOMElement
+    previousSibling: DOMElement
+}
+
 export class EventManager {
-    editor: HTMLElement
-    editable: HTMLElement
+    editor: DOMElement
+    editable: DOMElement
     options: any
     _compiledEvent: CompiledEvent
     _observer: MutationObserver
@@ -47,20 +57,21 @@ export class EventManager {
     _editorFocused: boolean
     _clonedNodeFormComposition: HTMLElement
 
-    constructor (editor, editable, options) {
-        this.editor = editor;
-        this.editable = editable;
+    constructor (editor: HTMLElement, editable: HTMLElement, options: EventNormalizerOptions) {
+        this.editor = <DOMElement>editor;
+        this.editable = <DOMElement>editable;
         this.options = options;
         this._eventToRemoveOnDestroy = [];
         this._bindEvents();
     }
     blurEditor () {
         this._editorFocused = false;
+        this.destroy(this.editable);
     }
     focusEditor () {
         this._editorFocused = true;
     }
-    destroy () {
+    destroy (el: HTMLElement) {
         this._observer.disconnect();
     }
 
@@ -75,9 +86,9 @@ export class EventManager {
     _addLine () {
         this.triggerEvent('trigger Action: addLine');
     }
-    _beginToStackEventDataForNextTick (e: Event) {
+    _beginToStackEventDataForNextTick (event: Event) {
         if (this._compiledEvent) {
-            this._compiledEvent.events.push(e);
+            this._compiledEvent.events.push(event);
             return this._compiledEvent;
         }
         this._compiledEvent = {
@@ -88,7 +99,7 @@ export class EventManager {
             ctrlKey: false,
             mutationsList: [],
             defaultPrevented: false,
-            events: [e],
+            events: [event],
         };
         setTimeout(this._tickAfterUserInteraction.bind(this));
         return this._compiledEvent;
@@ -205,43 +216,43 @@ export class EventManager {
 
         if (navigationKey.indexOf(param.key) !== -1) {
             this._pressMove({
-                name: 'move',
-                data: param.key,
+                type: 'move',
+                key: param.key,
                 shiftKey: param.shiftKey,
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
             });
         } else if (param.type === 'move') {
             this._pressMove({
-                name: 'move',
+                type: 'move',
             });
         } else if (param.type === 'composition') {
             // previous.update = audroid update for each char
             // param.data[0] !== ' ' = audio insertion
             this._pressInsertComposition({
                 previous: param.data[0] !== ' ' && param.previous && param.previous.update ? param.previous.data : false,
-                name: 'composition',
+                type: 'composition',
                 data: param.data,
                 node: param.node,
                 clone: param.clone,
             });
         } else if (param.key === 'Backspace' || param.key === 'Delete') {
             this._pressRemoveSide({
-                name: param.key,
+                type: param.key,
                 shiftKey: param.shiftKey,
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
             });
         } else if (param.key === 'Tab') {
             this._pressInsertTab({
-                name: 'Tab',
+                type: 'Tab',
                 shiftKey: param.shiftKey,
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
             });
         } else if (param.key === 'Enter') {
             this._pressInsertTab({
-                name: 'Enter',
+                type: 'Enter',
                 shiftKey: param.shiftKey,
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
@@ -252,10 +263,7 @@ export class EventManager {
             if (param.data === 'Space') {
                 data = ' ';
             }
-            this._pressInsertChar({
-                name: 'char',
-                data: data,
-            });
+            this._pressInsertChar({type: 'char', data: data});
         } else if (param.type === "keydown") {
             this.triggerEvent('trigger Action: keydown', param);
         } else {
@@ -322,7 +330,7 @@ export class EventManager {
             return false;
         }
 
-        function isVisible (el) {
+        function isVisible (el: DOMElement) {
             if (el.tagName === 'WE3-EDITABLE') {
                 return true;
             }
@@ -333,7 +341,7 @@ export class EventManager {
             return isVisible(el.parentNode);
         }
 
-        let el: Element;
+        let el: DOMElement;
         if (this.editable.contains(startContainer)) {
             el = this.editable;
             while (el) {
@@ -344,11 +352,11 @@ export class EventManager {
                     return false;
                 }
                 if (el.firstChild) {
-                    el = <Element>el.firstChild;
+                    el = el.firstChild;
                 } else if (el.nextSibling) {
-                    el = <Element>el.nextSibling;
+                    el = el.nextSibling;
                 } else if (el.parentNode !== this.editable) {
-                    el = <Element>el.parentNode.nextSibling;
+                    el = el.parentNode.nextSibling;
                 } else {
                     el = null;
                 }
@@ -365,11 +373,11 @@ export class EventManager {
                     return false;
                 }
                 if (el.lastChild) {
-                    el = <Element>el.lastChild;
+                    el = el.lastChild;
                 } else if (el.previousSibling) {
-                    el = <Element>el.previousSibling;
+                    el = el.previousSibling;
                 } else if (el.parentNode !== this.editable) {
-                    el = <Element>el.parentNode.previousSibling;
+                    el = el.parentNode.previousSibling;
                 } else {
                     el = null;
                 }
@@ -379,9 +387,9 @@ export class EventManager {
     }
     /**
      * @private
-     * @param {object} param
+     * @param {string} param
      */
-    _pressInsertChar (param) {
+    _pressInsertChar (param: CompiledEvent) {
         if (param.data === ' ') {
             this.triggerEvent('trigger Action: insert', ['\u00A0']);
         } else if (param.data.charCodeAt(0) === 10) {
@@ -394,7 +402,7 @@ export class EventManager {
      * @private
      * @param {object} param
      */
-    _pressInsertComposition (param) {
+    _pressInsertComposition (param: CompiledEvent) {
         // if (!this.editable.contains(param.node)) {
         //     this.triggerEvent('trigger Action: ??? wtf ???');
         //     return;
@@ -529,7 +537,7 @@ export class EventManager {
      * @private
      * @param {object} param
      */
-    _pressInsertEnter (param) {
+    _pressInsertEnter (param: CompiledEvent) {
         if (param.shiftKey) {
             this.triggerEvent('trigger Action: insert', ['<br/>']);
         } else {
@@ -553,7 +561,7 @@ export class EventManager {
      * @private
      * @param {object} param
      */
-    _pressInsertTab (param) {
+    _pressInsertTab(param: CompiledEvent) {
         if (this.options.tab && !this.options.tab.enabled) {
             this.triggerEvent('trigger Action: nothing');
             return;
@@ -567,7 +575,7 @@ export class EventManager {
 
         this.triggerEvent('trigger Action: insert', [tab]);
     }
-    _pressMove (param) {
+    _pressMove (param: CompiledEvent) {
         if (param.defaultPrevented) {
             this.triggerEvent('trigger Action: restore range');
         }
@@ -589,7 +597,7 @@ export class EventManager {
      * @private
      * @param {Boolean} isLeft true to remove to the left
      */
-    _pressRemoveSide (param) {
+    _pressRemoveSide (param: CompiledEvent) {
         this.triggerEvent('trigger Action: remove', param.key === 'Backspace' ? 'left' : 'right', param);
     }
     _tickAfterUserInteraction () {
@@ -599,7 +607,7 @@ export class EventManager {
         this._compiledEvent = null;
         this._eventsNormalization(param);
     }
-    triggerEvent (truc, a=null, b=null) {
+    triggerEvent (truc: string, a: any = null, b: any = null) {
         const d = document.createElement('div');
         d.textContent = truc + ' ' + (a ? JSON.stringify(a) : '');
         document.body.appendChild(d);
@@ -613,136 +621,138 @@ export class EventManager {
 
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {CompositionEvent} event
      */
-    _onCompositionEnd (e) {
+    _onCompositionEnd(event: CompositionEvent) {
         if (this.editable.style.display === 'none') {
             return;
         }
-        const param = this._beginToStackEventDataForNextTick(e);
+        const param = this._beginToStackEventDataForNextTick(event);
         this._cloneForComposition();
         param.type = 'composition';
         param.update = false;
-        param.data = e.data;
+        param.data = event.data;
     }
-    _onCompositionStart (e) {
+    _onCompositionStart (event: CompositionEvent) {
         if (this.editable.style.display !== 'none') {
-            this._beginToStackEventDataForNextTick(e);
+            this._beginToStackEventDataForNextTick(event);
             this._cloneForComposition();
         }
     }
-    _onCompositionUpdate (e) {
+    _onCompositionUpdate (event: CompositionEvent) {
         if (this.editable.style.display !== 'none') {
-            this._beginToStackEventDataForNextTick(e);
+            this._beginToStackEventDataForNextTick(event);
             this._cloneForComposition();
         }
     }
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {MouseEvent} event
      */
-    _onContextMenu (e) {
+    _onContextMenu (event: MouseEvent) {
         this._mousedownInEditable = false;
     }
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {InputEvent} event
      */
-    _onInput (e) {
+    _onInput (event: any) {
         if (this.editable.style.display === 'none') {
             return;
         }
-        const param = this._beginToStackEventDataForNextTick(e);
+        const param = this._beginToStackEventDataForNextTick(event);
 
         if (!param.type) {
-            param.type = e.type;
-            param.data = e.data;
+            param.type = event.type;
+            param.data = event.data;
         }
 
         // todo: delete word <=> composition
 
-        if (e.inputType === 'insertCompositionText' || e.inputType === 'insertReplacementText') {
+        if (event.inputType === 'insertCompositionText' || event.inputType === 'insertReplacementText') {
             param.update = param.update || param.type !== 'composition';
             param.type = 'composition';
-            param.data = e.data;
+            param.data = event.data;
             this._cloneForComposition();
-        } else if (e.inputType === 'insertParagraph' && param.key === 'Unidentified') {
+        } else if (event.inputType === 'insertParagraph' && param.key === 'Unidentified') {
             param.key = 'Enter';
-        } else if (e.inputType === 'deleteContentBackwards' && param.key === 'Unidentified') {
+        } else if (event.inputType === 'deleteContentBackwards' && param.key === 'Unidentified') {
             param.key = 'Backspace';
-        } else if (e.inputType === 'deleteContentForward' && param.key === 'Unidentified') {
+        } else if (event.inputType === 'deleteContentForward' && param.key === 'Unidentified') {
             param.key = 'Delete';
         } else if (!param.data) {
-            param.data = e.data;
-        } else if (e.inputType === "insertText") {
-            if (param.type.indexOf('key') === 0 && param.key.length === 1 && e.data.length === 1) {
-                param.key = e.data; // keep accent
-            } else if (e.data && e.data.length === 1 && e.data !== param.data && param.type === 'composition') {
+            param.data = event.data;
+        } else if (event.inputType === "insertText") {
+            if (param.type.indexOf('key') === 0 && param.key.length === 1 && event.data.length === 1) {
+                param.key = event.data; // keep accent
+            } else if (event.data && event.data.length === 1 && event.data !== param.data && param.type === 'composition') {
                 // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
-                param.data += e.data;
+                param.data += event.data;
             } else if (param.key === 'Unidentified') {
-                param.key = e.data;
+                param.key = event.data;
             }
         }
     }
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {KeyboardEvent} event
      */
-    _onKeyDown (e) {
+    _onKeyDown (event: KeyboardEvent) {
         if (this.editable.style.display === 'none') {
             return;
         }
-        if (e.type === 'keydown' && e.key === 'Dead') {
+        if (event.type === 'keydown' && event.key === 'Dead') {
             return;
         }
-        const param = this._beginToStackEventDataForNextTick(e);
-        param.defaultPrevented = param.defaultPrevented || e.defaultPrevented;
-        param.type = param.type || e.type;
-        param.shiftKey = e.shiftKey;
-        param.ctrlKey = e.ctrlKey;
-        param.altKey = e.altKey;
-        param.key = e.key;
+        const param = this._beginToStackEventDataForNextTick(event);
+        param.defaultPrevented = param.defaultPrevented || event.defaultPrevented;
+        param.type = param.type || event.type;
+        param.shiftKey = event.shiftKey;
+        param.ctrlKey = event.ctrlKey;
+        param.altKey = event.altKey;
+        param.key = event.key;
     }
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {MouseEvent} event
      */
-    _onMouseDown (e) {
+    _onMouseDown (event: MouseEvent) {
         this._previousEvent = null;
-        this._mousedownInEditable = e;
+        this._mousedownInEditable = event;
     }
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {MouseEvent} event
      */
-    _onClick (e) {
+    _onClick (event: MouseEvent) {
         if (!this._mousedownInEditable) {
             return;
         }
-        setTimeout(this.__onClick.bind(this, 0));
+        setTimeout(this.__onClick.bind(this, event), 0);
     }
-    __onClick (e) {
-        const mousedown = this._mousedownInEditable.target;
+    __onClick (event: MouseEvent) {
+        const mousedownTarget = this._mousedownInEditable.target;
         this._mousedownInEditable = false;
 
-        if (this.editor.contains(e.target) && this.editable !== e.target && !this.editable.contains(e.target)) {
-            if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                this.triggerEvent('trigger Action: restore range');
-                return;
+        if (event.target instanceof Element) {
+            if (this.editor.contains(event.target) && this.editable !== event.target && !this.editable.contains(event.target)) {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    this.triggerEvent('trigger Action: restore range');
+                    return;
+                }
             }
-        }
-        if (mousedown === e.target) {
-            this.triggerEvent('trigger Action: setRange', {startContainer: e.target});
-        } else {
-            this.triggerEvent('trigger Action: setRangeFromDom');
+            if (mousedownTarget === event.target) {
+                this.triggerEvent('trigger Action: setRange', {startContainer: event.target});
+            } else {
+                this.triggerEvent('trigger Action: setRangeFromDom');
+            }
         }
     }
     /**
      * @private
-     * @param {MouseEvent} e
+     * @param {Event} event
      */
-    _onSelectionChange (e) {
+    _onSelectionChange (event: Event) {
         if (!this._editorFocused || this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
