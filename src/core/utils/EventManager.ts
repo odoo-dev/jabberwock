@@ -1,5 +1,6 @@
 
 import { Range } from '../stores/Range'
+import { DOMElement } from '../types/DOMHTMLElement'
 
 const navigationKey = [
     'ArrowUp',
@@ -11,6 +12,18 @@ const navigationKey = [
     'End',
     'Home',
 ];
+
+// As of August 29th 2019, InputEvent is considered experimental by MDN as some
+// of its properties are said to be unsupported by Edge and Safari. This is
+// probably the reason why its type definition is not included in the basic
+// TypeScript distribution. However, these properties actually appear to be
+// working perfectly fine on these browser after some manual testing on MacOS.
+interface InputEvent extends UIEvent {
+    readonly data: string
+    readonly dataTransfer: DataTransfer
+    readonly inputType: string
+    readonly isComposing: boolean
+}
 
 interface CompiledEvent {
     type: string
@@ -33,16 +46,6 @@ interface EventNormalizerOptions {
         enabled: boolean
         size: number
     }
-}
-
-interface FilteredOutElement extends Omit<Omit<Omit<Omit<Omit<HTMLElement, 'parentNode'>, 'firstChild'>, 'lastChild'>, 'previousSibling'>, 'previousSibling'> {};
-
-interface DOMElement extends FilteredOutElement {
-    parentNode: DOMElement
-    firstChild: DOMElement
-    lastChild: DOMElement
-    nextSibling: DOMElement
-    previousSibling: DOMElement
 }
 
 export class EventManager {
@@ -195,7 +198,7 @@ export class EventManager {
 
         // mark as dirty the new nodes to re-render it
         // because the browser can split other than our arch and we must fix the errors
-        const elements = [];
+        const elements: Node[] = [];
         param.mutationsList.forEach(mutation => {
             if (mutation.type === 'characterData' && elements.indexOf(mutation.target) === -1) {
                 elements.push(mutation.target);
@@ -656,7 +659,7 @@ export class EventManager {
      * @private
      * @param {InputEvent} event
      */
-    _onInput (event: any) {
+    _onInput (event: InputEvent) {
         if (this.editable.style.display === 'none') {
             return;
         }
