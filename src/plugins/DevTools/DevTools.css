@@ -19,9 +19,6 @@ jw-devtools {
 	transition-duration: .5s;
 	transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
 }
-.closed {
-    max-height: 31px;
-}
 
 jw-devtools > jw-tabs {
     background-color: #f3f3f3;
@@ -74,4 +71,19 @@ jw-devtools > main span.element-name {
     width: 100%;
     display: inline-block;
     color: #76526c;
+}
+
+jw-devtools > main div:not(.folded) > span.element-name.opening:before {
+    content: '⌄';
+}
+
+jw-devtools > main div.folded > span.element-name.opening:before {
+    content: '› ';
+}
+
+.closed {
+    max-height: 31px;
+}
+.folded .children, .folded .closing {
+    display: none;
 }

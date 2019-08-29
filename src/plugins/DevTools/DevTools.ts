@@ -4,6 +4,7 @@ import { JWPlugin } from '../../core/JWPlugin';
 import VDocument from '../../core/stores/VDocument';
 import './DevTools.css';
 import { VNode, VNodeType } from '../../core/stores/VNode';
+import utils from '../../core/utils/utils';
 
                                 // todo: use API //
 interface DevToolsUI {
@@ -58,7 +59,8 @@ export class DevTools extends JWPlugin {
             let openingTag: Element = document.createElement('span');
             const value: string = '<' + type + (hasChildren ? '>' : '/>');
             openingTag.appendChild(document.createTextNode(value));
-            openingTag.setAttribute('class', 'element-name');
+            openingTag.setAttribute('class', 'element-name ' +
+                (hasChildren ? 'opening' : 'self-closing'));
             element.appendChild(openingTag);
         }
         if (hasChildren) {
@@ -71,7 +73,7 @@ export class DevTools extends JWPlugin {
             let closingTag: Element = document.createElement('span');
             let value: string = '</' + type + '>';
             closingTag.appendChild(document.createTextNode(value));
-            closingTag.setAttribute('class', 'element-name');
+            closingTag.setAttribute('class', 'element-name closing');
             element.appendChild(closingTag);
         }
         return element;
@@ -80,6 +82,16 @@ export class DevTools extends JWPlugin {
         const root: VNode = this.vDocument.contents;
         let div: Element = this._createElement(root);
         this.ui.main.appendChild(div);
+        this._foldableElements();
+    }
+    _foldableElements (): void {
+        const elements: Element [] = utils._collectionToArray(
+            this.ui.main.querySelectorAll('.element-name')
+        );
+        elements.slice().forEach(element => {
+            element.addEventListener('click', this._toggleFold.bind(this));
+            element.parentNode.setAttribute('class', 'folded');
+        });
     }
     _renderUI (): Element {
         let devTools: Element = document.createElement('jw-devtools');
@@ -101,5 +113,19 @@ export class DevTools extends JWPlugin {
                                 }">⏼</button>
                 </jw-tabs>
                 <main></main>`;
+    }
+    _toggleClass (node: any, className: string): void {
+        const currentClass: string = node.getAttribute('class') || '';
+        if (currentClass.indexOf(className) !== -1) {
+            const regex: RegExp = new RegExp('\\s*' + className + '\\s*');
+            node.setAttribute('class', currentClass.replace(regex, ''));
+        } else {
+            node.setAttribute('class', currentClass + ' folded');
+        }
+    }
+    _toggleFold (event: Event): void {
+        if (event.target.parentNode) {
+            this._toggleClass(event.target.parentNode, 'folded');
+        }
     }
 };
