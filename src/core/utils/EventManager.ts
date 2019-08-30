@@ -1,6 +1,6 @@
 
 import { Range } from '../stores/Range'
-import { DOMElement } from '../types/DOMHTMLElement'
+import { DOMElement } from '../types/DOMElement'
 
 const navigationKey = [
     'ArrowUp',
@@ -333,7 +333,7 @@ export class EventManager {
             return false;
         }
 
-        function isVisible (el: DOMElement) {
+        function isVisible (el: DOMElement): boolean {
             if (el.tagName === 'WE3-EDITABLE') {
                 return true;
             }
