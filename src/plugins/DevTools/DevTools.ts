@@ -105,9 +105,11 @@ export class DevTools extends JWPlugin {
         const elements: Element [] = utils._collectionToArray(
             this.ui.main.querySelectorAll('.element-name')
         );
-        elements.slice().forEach((element: Element) => {
-            element.addEventListener('click', () => {
-                this._toggleClass(element.parentElement, 'folded');
+        elements.slice().forEach((element: HTMLElement) => {
+            element.addEventListener('click', (event: MouseEvent) => {
+                if (event.offsetX < 10) { // only toggle on click caret
+                    this._toggleClass(element.parentElement, 'folded');
+                }
             });
             this._toggleClass(element.parentElement, 'folded');
         });
@@ -117,6 +119,9 @@ export class DevTools extends JWPlugin {
         this._toggleClass(this.ui.el, 'closed');
     }
     _getTypeInfo (node: VNode): string {
+        if (!node.type) {
+            return 'Unknown node type';
+        }
         if (node.type === VNodeType.CHAR) {
             return node.type + ': "' + node.value + '"';
         }
