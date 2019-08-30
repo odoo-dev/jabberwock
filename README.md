@@ -59,6 +59,7 @@ See the "run" scripn in [package.json](./package.json)
 - Visual configurator
 - Word count
 - Syntax highlighting
+- Change the documentation with direct modification
 
 ## Alternate name suggestions
 - Vorpal
