@@ -184,11 +184,23 @@ export class EventManager {
 
         const range = this._getRange();
         let format = range.startContainer;
-        while (format.parentNode && format !== this.editable && window.getComputedStyle(format).display !== 'block') {
+        while (format.parentNode && format !== this.editable && (format.nodeType === 3 || window.getComputedStyle(format).display !== 'block')) {
             format = format.parentNode;
         }
-        this._compiledEvent.node = format;
-        this._compiledEvent.clone = format.cloneNode(true);
+        var clone: ClonedNode = format.cloneNode(true);
+        clone.origin = format;
+        this._compiledEvent.clone = clone;
+
+        (function addChildOrigin (clone: ClonedNode) {
+            if (clone.nodeType !== 1) {
+                return;
+            }
+            var childNodes = <NodeListOf<Element>>clone.origin.childNodes;
+            clone.childNodes.forEach((child: ClonedNode, index) => {
+                child.origin = childNodes[index];
+                addChildOrigin(child);
+            });
+        })(clone);
     }
     _eventsNormalization(param: CompiledEvent) {
         if (param.defaultPrevented && param.type !== 'move') {
@@ -272,6 +284,70 @@ export class EventManager {
         } else {
             this.triggerEvent('trigger Action: ???', param);
         }
+    }
+    _extractChars(textNodes: Array<Element>) {
+        var chars = [];
+        var nodes = [];
+        var offsets = [];
+        textNodes.forEach(function (node) {
+            if (node.nodeValue) {
+                node.nodeValue.split('').forEach(function (char, index) {
+                    chars.push(char);
+                    nodes.push(node);
+                    offsets.push(index);
+                });
+            } else {
+                chars.push(null);
+                nodes.push(node);
+                offsets.push(0);
+            }
+        });
+        return {
+            chars: chars,
+            nodes: nodes,
+            offsets: offsets,
+        };
+    }
+    _findTextNode (textNodes: Array<Element>, node) {
+        if (node.nodeType === 3) {
+            textNodes.push(node);
+        } else if (node.tagName === 'BR') {
+            textNodes.push(node);
+        } else {
+            node.childNodes.forEach(n => this._findTextNode(textNodes, n));
+        }
+        return textNodes;
+    }
+    _findOriginChanges(extractedCloneChars, extractedChars) {
+        const cloneLength = extractedCloneChars.chars.length - 1;
+        const length = extractedChars.chars.length - 1;
+
+        let startClone = 0,
+            endClone = cloneLength,
+            start = 0,
+            end = length;
+
+        for (start; start <= cloneLength; start++) {
+            if (extractedCloneChars.chars[start] !== extractedChars.chars[start]) {
+                startClone = start;
+                break;
+            }
+        }
+
+        for (endClone; endClone >= 0; endClone--) {
+            if (extractedCloneChars.chars[endClone] !== extractedChars.chars[length + endClone - cloneLength]) {
+                endClone++;
+                end = length + endClone - cloneLength;
+                break;
+            }
+        }
+
+        return {
+            startClone: startClone,
+            endClone: endClone,
+            start: start,
+            end: end,
+        };
     }
     /**
      * Move the current range to the current selection in the DOM
@@ -405,136 +481,51 @@ export class EventManager {
      * @private
      * @param {object} param
      */
-    _pressInsertComposition (param: CompiledEvent) {
-        // if (!this.editable.contains(param.node)) {
-        //     this.triggerEvent('trigger Action: ??? wtf ???');
-        //     return;
-        // }
+    _pressInsertComposition (param) {
+        if (!this.editable.contains(param.clone.origin)) {
+            this.triggerEvent('trigger Action: ??? wtf ???');
+            return;
+        }
 
-        // const data = param.data.replace(/\u00A0/g, ' ');
-        // const range = this._getRange();
-        // const origin = {
-        //     startContainer: null,
-        //     startOffset: null,
-        //     endContainer: null,
-        //     endOffset: null,
-        // };
+        const cloneTextNodes = this._findTextNode([], param.clone);
+        const extractedCloneChars = this._extractChars(cloneTextNodes);
 
-        // function findTextNode (textNodes, node) {
-        //     if (node.nodeType === 3) {
-        //         textNodes.push(node);
-        //     } else if (node.tagName === 'BR') {
-        //         textNodes.push(node);
-        //     } else {
-        //         node.childNodes.forEach(n => findTextNode(textNodes, n));
-        //     }
-        //     return textNodes;
-        // }
-        // const cloneTextNodes = findTextNode([], param.clone);
-        // const textNodes = findTextNode([], param.node);
+        const textNodes = this._findTextNode([], param.clone.origin);
+        const extractedChars = this._extractChars(textNodes);
 
-        // this.triggerEvent(cloneTextNodes.map(a => a.nodeValue).join('|'));
-        // this.triggerEvent(textNodes.map(a => a.nodeValue).join('|'));
+        const originChanges = this._findOriginChanges(extractedCloneChars, extractedChars);
+        let text = param.data && param.data.replace(/\u00A0/g, ' ') || '';
 
-        // // find the original start range
+        // specify the change from the range and data
 
-        // const node, clone;
-        // for (const index = 0; index < textNodes.length; index++) {
-        //     node = textNodes[index];
-        //     clone = cloneTextNodes[index];
-        //     if (clone.tagName !== node.tagName || clone.nodeValue !== node.nodeValue) {
-        //         break;
-        //     }
-        // }
-        // if (index === textNodes.length) {
-        //     this.triggerEvent('trigger Action: nothing');
-        //     return;
-        // }
+        const range = this._getRange();
+        const cloneLength = extractedCloneChars.nodes.length;
+        const length = extractedChars.nodes.length;
+        let endChanged;
+        for (let index = 0, ; index <= length; index++) {
+            if (extractedChars.nodes[index] === range.startContainer) {
+                endChanged = index + range.startOffset;
+                break;
+            }
+        }
+        let startChanged = endChanged - text.length;
 
-        // if (clone.nodeType === 3) {
-        //     const beforeRange = '';
-        //     if (range.startContainer === node && param.previous) {
-        //         // eg: 'paaa' from replacement of 'a' in 'aa' ==> must be 'paa'
-        //         let previous = param.previous ? param.previous.replace(/\u00A0/g, ' ') : '';
-        //         beforeRange = clone.nodeValue.replace(/\u00A0/g, ' ').slice(0, range.so);
-        //         // let afterRange = clone.nodeValue.replace(/\u00A0/g, ' ').slice(range.so);
-        //         if (previous && beforeRange.slice(-previous.length) === previous) {
-        //             beforeRange = beforeRange.slice(0, -previous.length);
-        //         }
-        //     }
-        //     if (!origin.startContainer) {
-        //         origin.startContainer = clone; // TODO: clone.origin
-        //         origin.startOffset = beforeRange.length;
-        //     }
-        // } else {
-        //     if (!origin.startContainer) {
-        //         origin.startContainer = clone; // TODO: clone.origin
-        //         origin.startOffset = 0;
-        //     }
-        // }
+        endChanged = Math.max(endChanged, Math.min(originChanges.start, originChanges.end));
+        startChanged = Math.min(startChanged, Math.max(originChanges.start, originChanges.end));
+        text = extractedChars.chars.slice(startChanged, endChanged).join('');
 
-        // // find the original end range
+        let origin = {
+            startContainer: extractedCloneChars.nodes[startChanged].origin,
+            startOffset: extractedCloneChars.offsets[startChanged],
+            endContainer: extractedCloneChars.nodes[cloneLength - length + endChanged].origin,
+            endOffset: extractedCloneChars.offsets[cloneLength - length + endChanged],
+        };
+        let textBefore = extractedCloneChars.nodes[startChanged].nodeValue.slice(0, origin.endOffset).slice(origin.startOffset);
 
-        // const node, clone;
-        // for (const indexBis = textNodes.length - 1; indexBis > index; indexBis++) {
-        //     node = textNodes[indexBis];
-        //     clone = cloneTextNodes[indexBis];
-        //     if (clone.tagName !== node.tagName || clone.nodeValue !== node.nodeValue) {
-        //         break;
-        //     }
-        // }
-        // if (indexBis === index) {
-        //     origin.endContainer = origin.startContainer;
-        //     origin.endOffset = origin.startContainer;
-        // }
+        // end
 
-        // if (clone.nodeType === 3) {
-        //     origin.startContainer = clone; // TODO: clone.origin
-        //     for(const offset = 0; offset < clone.nodeValue.length; offset++) {
-        //         if (clone.nodeValue[offset] !== node.nodeValue[offset]) {
-        //             break;
-        //         }
-        //     }
-        //     origin.startOffset = offset;
-        // } else {
-        //     if (!origin.startContainer) {
-        //         origin.startContainer = clone; // TODO: clone.origin
-        //         origin.startOffset = 0;
-        //     }
-        // }
-
-        // if (lastTextNode) {
-        //     const lastTextNodeNewValue = lastTextNode.nodeValue.replace(/\u00A0/g, ' ');
-        //     const newOffset = lastTextNodeNewValue.length;
-
-        //     param.data = param.data.replace(/\u00A0/g, ' ');
-        //     if (lastTextNode.id === range.scID) {
-        //         const offset = 0;
-        //         if (lastTextNode.id === range.scID) {
-        //             offset = range.so;
-        //             if (lastTextNodeOldValue.length > lastTextNodeNewValue.length) {
-        //                 offset -= lastTextNodeOldValue.length - lastTextNodeNewValue.length;
-        //                 if (offset < 0) {
-        //                     offset = 0;
-        //                 }
-        //             }
-        //         }
-
-        //         newOffset = self._findOffsetInsertion(lastTextNodeNewValue, offset, param.data);
-        //         newOffset = newOffset !== -1 ? newOffset : offset;
-
-        //         if (lastTextNodeNewValue[newOffset] === ' ') {
-        //             newOffset++;
-        //         }
-        //     }
-
-        //     newOffset = Math.min(newOffset, lastTextNode.nodeValue.length);
-        //     return {
-        //         scID: lastTextNode.id,
-        //         so: newOffset,
-        //     };
-        // }
-
+        this.triggerEvent('trigger Action: setRange', origin, textBefore);
+        this.triggerEvent('trigger Action: insert', text);
     }
     /**
      * @private
@@ -611,10 +602,6 @@ export class EventManager {
         this._eventsNormalization(param);
     }
     triggerEvent (truc: string, a: any = null, b: any = null) {
-        const d = document.createElement('div');
-        d.textContent = truc + ' ' + (a ? JSON.stringify(a) : '');
-        document.body.appendChild(d);
-
         console.log(truc, a, b);
     }
 
@@ -689,6 +676,7 @@ export class EventManager {
             if (param.type.indexOf('key') === 0 && param.key.length === 1 && event.data.length === 1) {
                 param.key = event.data; // keep accent
             } else if (event.data && event.data.length === 1 && event.data !== param.data && param.type === 'composition') {
+                this._cloneForComposition();
                 // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
                 param.data += event.data;
             } else if (param.key === 'Unidentified') {
