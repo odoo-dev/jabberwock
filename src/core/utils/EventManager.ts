@@ -1,10 +1,18 @@
-import { EventNormalizer } from './EventNormalizer';
+import { DOMElement } from '../types/DOMElement.js';
+import { EventNormalizer } from './EventNormalizer.js';
+
+export interface EventManagerOptions {
+    dispatch: Function
+}
 
 export class EventManager {
+    editor: DOMElement
     editable: DOMElement
+    options: EventManagerOptions
     eventNormalizer: EventNormalizer;
 
-    constructor (editable: HTMLElement, options: EventNormalizerOptions) {
+    constructor(editor: HTMLElement, editable: HTMLElement, options: EventManagerOptions) {
+        this.editor = <DOMElement>editor;
         this.editable = <DOMElement>editable;
         this.options = options;
         this.eventNormalizer = new EventNormalizer(editable, this._triggerEvent.bind(this));

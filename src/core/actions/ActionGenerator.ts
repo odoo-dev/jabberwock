@@ -1,10 +1,14 @@
-import { ActionType } from './Action'
+import { Dispatcher } from '../dispatcher/Dispatcher';
+import { Action, ActionType } from './Action'
 
-const Dispatcher = JWEditor.Dispatcher;
 
-export default class ActionGenerator {
+export class ActionGenerator {
+    dispatcher: Dispatcher<Action>
+    constructor (dispatcher: Dispatcher<Action>) {
+        this.dispatcher = dispatcher;
+    }
     insert (value: any, position: any): void {
-        Dispatcher.dispatch({
+        this.dispatcher.dispatch({
             type: ActionType.INSERT,
             value: value,
             position: position,
@@ -12,14 +16,14 @@ export default class ActionGenerator {
         });
     }
     remove (target?: any): void {
-        Dispatcher.dispatch({
+        this.dispatcher.dispatch({
             type: ActionType.REMOVE,
             target: target,
             origin: arguments.callee.caller.name,
         });
     }
     update (value: any, target?: any): void {
-        Dispatcher.dispatch({
+        this.dispatcher.dispatch({
             type: ActionType.UPDATE,
             value: value,
             target: target,
