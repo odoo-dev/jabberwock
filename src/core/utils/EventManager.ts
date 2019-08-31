@@ -42,7 +42,8 @@ interface CompiledEvent {
 };
 
 interface EventNormalizerOptions {
-    tab: {
+    dispatch: Function
+    tab?: {
         enabled: boolean
         size: number
     }
@@ -202,7 +203,7 @@ export class EventManager {
     }
     /**
      * Called when we the CompiledEvent is ready by _tickAfterUserInteraction
-     * Trigger the different actions according to the event analysis performed. 
+     * Trigger the different actions according to the event analysis performed.
      *
      * @see _tickAfterUserInteraction
      * @private
