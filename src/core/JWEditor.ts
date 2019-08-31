@@ -10,7 +10,7 @@ export interface JWEditorConfig {
 };
 
 export class JWEditor {
-    el: Element;
+    el: HTMLElement;
     dispatcher: Dispatcher<Action>;
     eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
@@ -20,7 +20,7 @@ export class JWEditor {
         this.el = el;
         this.dispatcher = new Dispatcher();
         this.eventManager = new EventManager(this.el, this.el, {
-            dispatch: action => {
+            dispatch: (action: Action) => {
                 action.origin = 'User';
                 this.dispatcher.dispatch(action);
             }

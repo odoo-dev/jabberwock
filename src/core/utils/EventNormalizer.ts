@@ -1,6 +1,6 @@
 
-import { Range } from '../stores/Range'
-import { DOMElement } from '../types/DOMElement'
+import { Range } from '../stores/Range.js'
+import { DOMElement } from '../types/DOMElement.js'
 
 const navigationKey = [
     'ArrowUp',
@@ -41,11 +41,13 @@ interface CompiledEvent {
     clone?: any
 };
 
-interface EventNormalizerOptions {
-    tab: {
-        enabled: boolean
-        size: number
-    }
+interface ClonedNode extends Element {
+    origin: Element
+}
+
+interface SelectRange extends Range {
+    moveLeft?: boolean
+    moveRight?: boolean
 }
 
 export class EventNormalizer {
@@ -58,11 +60,12 @@ export class EventNormalizer {
     _mousedownInEditable: any
     _editorFocused: boolean
     _clonedNodeFormComposition: HTMLElement
+    _triggerEvent: Function
 
     constructor (editable: HTMLElement, triggerEvent: Function) {
         this.editable = <DOMElement>editable;
         this._triggerEvent = triggerEvent;
-        this._bindDOMEvents(window.top.document.documentElement, {
+        this._bindDOMEvents(window.top.document, {
             selectionchange: this._onSelectionChange.bind(this),
             click: this._onClick.bind(this),
             touchend: this._onClick.bind(this),
@@ -150,7 +153,7 @@ export class EventNormalizer {
      * @param {Node} element
      * @param {Object []} events {[eventName]: {Function}}
      */
-    _bindDOMEvents(element: Element, events) {
+    _bindDOMEvents(element: EventTarget, events: any) {
         if (!this._eventToRemoveOnDestroy) {
             this._eventToRemoveOnDestroy = [];
         }
@@ -200,7 +203,7 @@ export class EventNormalizer {
     }
     /**
      * Called when we the CompiledEvent is ready by _tickAfterUserInteraction
-     * Trigger the different actions according to the event analysis performed. 
+     * Trigger the different actions according to the event analysis performed.
      *
      * @see _tickAfterUserInteraction
      * @private
@@ -298,7 +301,7 @@ export class EventNormalizer {
      */
     _extractChars(textNodes: Array<Element>) {
         let chars: Array<string> = [];
-        let nodes: Array<DOMElement> = [];
+        let nodes: Array<Element> = [];
         let offsets: Array<number> = [];
         textNodes.forEach(function (node) {
             if (node.nodeValue) {
@@ -315,7 +318,7 @@ export class EventNormalizer {
         });
         return {
             chars: chars,
-            nodes: nodes,
+            nodes: <ClonedNode[]>nodes,
             offsets: offsets,
         };
     }
@@ -326,16 +329,13 @@ export class EventNormalizer {
      * @param {Element} node
      * @returns {Element[]}
      */
-    _findTextNode (node, textNodes: Array<Element>) {
-        if (!textNodes) {
-            textNodes = [];
-        }
+    _findTextNode (node: DOMElement, textNodes: Array<Element> = []) {
         if (node.nodeType === 3) {
             textNodes.push(node);
         } else if (node.tagName === 'BR') {
             textNodes.push(node);
         } else {
-            node.childNodes.forEach(n => this._findTextNode(n, textNodes));
+            node.childNodes.forEach(n => this._findTextNode(<DOMElement>n, textNodes));
         }
         return textNodes;
     }
@@ -349,7 +349,7 @@ export class EventNormalizer {
      * @param {Object} extractedChars
      * @returns {Object} {startClone, endClone, start, end}
      */
-    _findOriginChanges(extractedCloneChars, extractedChars) {
+    _findOriginChanges(extractedCloneChars:any, extractedChars:any) {
         const cloneLength = extractedCloneChars.chars.length - 1;
         const length = extractedChars.chars.length - 1;
 
@@ -384,9 +384,9 @@ export class EventNormalizer {
      * Move the current range to the current selection in the DOM
      * (the native range).
      *
-     * @returns {Range}
+     * @returns {SelectRange}
      */
-    _getRange (): Range {
+    _getRange (): SelectRange {
         const selection = this.editable.ownerDocument.getSelection();
         if (!selection || selection.rangeCount === 0) {
             const range: Range = {
@@ -405,7 +405,7 @@ export class EventNormalizer {
         } else {
             ltr = selection.anchorNode === nativeRange.startContainer;
         }
-        const range: Range = {
+        const range: SelectRange = {
             startContainer: nativeRange.startContainer,
             startOffset: nativeRange.startOffset,
             endContainer: nativeRange.endContainer,
@@ -512,7 +512,7 @@ export class EventNormalizer {
      * @private
      * @param {object} param
      */
-    _pressInsertComposition (param) {
+    _pressInsertComposition (param: CompiledEvent) {
         if (!this.editable.contains(param.clone.origin)) {
             this._triggerEvent('unknown', param);
             return;
@@ -533,7 +533,7 @@ export class EventNormalizer {
         const cloneLength = extractedCloneChars.nodes.length;
         const length = extractedChars.nodes.length;
         let endChanged;
-        for (let index = 0, ; index <= length; index++) {
+        for (let index = 0 ; index <= length; index++) {
             if (extractedChars.nodes[index] === range.startContainer) {
                 endChanged = index + range.startOffset;
                 break;

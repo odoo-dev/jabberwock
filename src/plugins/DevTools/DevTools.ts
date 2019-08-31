@@ -1,6 +1,6 @@
 import { Action, ActionType } from '../../core/actions/Action';
 import { Dispatcher } from '../../core/dispatcher/Dispatcher';
-import { JWPlugin } from '../../core/JWPlugin';
+import { JWPlugin, JWPluginConfiguration } from '../../core/JWPlugin';
 import VDocument from '../../core/stores/VDocument';
 import './DevTools.css';
 import { VNode, VNodeType } from '../../core/stores/VNode';
