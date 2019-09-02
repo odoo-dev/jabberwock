@@ -64,65 +64,21 @@ export class EventManager {
         this.editor = <DOMElement>editor;
         this.editable = <DOMElement>editable;
         this.options = options;
-        this._eventToRemoveOnDestroy = [];
-        this._bindEvents();
-    }
-    blurEditor () {
-        this._editorFocused = false;
-        this.destroy(this.editable);
-    }
-    focusEditor () {
-        this._editorFocused = true;
-    }
-    destroy (el: HTMLElement) {
-        this._observer.disconnect();
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Add a newline at range: split a paragraph if possible, after
-     * removing the selection if needed.
-     */
-    _addLine () {
-        this.triggerEvent('trigger Action: addLine');
-    }
-    _beginToStackEventDataForNextTick (event: Event) {
-        if (this._compiledEvent) {
-            this._compiledEvent.events.push(event);
-            return this._compiledEvent;
-        }
-        this._compiledEvent = {
-            type: null,
-            key: 'Unidentified',
-            data: '',
-            shiftKey: false,
-            ctrlKey: false,
-            mutationsList: [],
-            defaultPrevented: false,
-            events: [event],
-        };
-        setTimeout(this._tickAfterUserInteraction.bind(this));
-        return this._compiledEvent;
-    }
-    _bindEvents () {
         this._bindDOMEvents(window.top.document.documentElement, {
-            selectionchange: '_onSelectionChange',
-            click: '_onClick',
-            touchend: '_onClick',
-            contextmenu: '_onContextMenu',
+            selectionchange: this._onSelectionChange.bind(this),
+            click: this._onClick.bind(this),
+            touchend: this._onClick.bind(this),
+            contextmenu: this._onContextMenu.bind(this),
         });
         this._bindDOMEvents(this.editable, {
-            keydown: '_onKeyDown',
-            keypress: '_onKeyDown',
-            input: '_onInput',
-            compositionend: '_onCompositionEnd',
-            compositionstart: '_onCompositionStart',
-            compositionupdate: '_onCompositionUpdate',
-            mousedown: '_onMouseDown',
-            touchstart: '_onMouseDown',
+            keydown: this._onKeyDown.bind(this),
+            keypress: this._onKeyDown.bind(this),
+            input: this._onInput.bind(this),
+            compositionend: this._onCompositionEnd.bind(this),
+            compositionstart: this._onCompositionStart.bind(this),
+            compositionupdate: this._onCompositionUpdate.bind(this),
+            mousedown: this._onMouseDown.bind(this),
+            touchstart: this._onMouseDown.bind(this),
         });
         this._observer = new MutationObserver((mutationsList: any) => {
             if (this._compiledEvent) {
@@ -135,47 +91,89 @@ export class EventManager {
             subtree: true,
         });
     }
+    /** todo */
+    blurEditor () {
+        this._editorFocused = false;
+        this.destroy(this.editable);
+    }
+    /** todo */
+    focusEditor () {
+        this._editorFocused = true;
+    }
     /**
-     * Bind DOM events declared in the plugin
-     * (`editableDomEvents`, `documentDomEvents`)
-     * with their respective node (`dom`).
+     * Called when destroy the editor.
+     * Remove all added handlers.
      *
-     * FIXME the event delegation does not work... do we really want to
-     * implement that ourselves ?
+     */
+    destroy (el: HTMLElement) {
+        this._observer.disconnect();
+        this._eventToRemoveOnDestroy.forEach(function (eventObject) {
+            eventObject.target.removeEventListener(eventObject.name, eventObject.method);
+        });
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * This method is called by each event handler and create a CompiledEvent.
+     * After a tick (setTimeout 0ms) the method '_tickAfterUserInteraction' is
+     * called.
+     * All events during a tick are caught and the CompiledEvent object is
+     * complete. This analysis removes most of the action desired by the user.
+     * Actions such as special character insertion, delete, backspace,
+     * spellcheckers...
+     * User events are received per packet, corresponding to an action.
+     *
+     * @see _tickAfterUserInteraction
+     * @returns {CompiledEvent}
+     */
+    _beginToStackEventDataForNextTick () {
+        if (this._compiledEvent) {
+            return this._compiledEvent;
+        }
+        this._compiledEvent = {
+            type: null,
+            key: 'Unidentified',
+            data: '',
+            shiftKey: false,
+            ctrlKey: false,
+            mutationsList: [],
+            defaultPrevented: false,
+        };
+        setTimeout(this._tickAfterUserInteraction.bind(this));
+        return this._compiledEvent;
+    }
+    /**
+     * Add handler event on DOM elements
      *
      * @private
      * @param {Node} element
-     * @param {Object []} events {[name]: {String}}
+     * @param {Object []} events {[eventName]: {Function}}
      */
     _bindDOMEvents(element: Element, events) {
-        const self = this;
-        Object.keys(events || {}).forEach(function (event) {
-            let value = events[event];
-            if (!value) {
-                return;
-            }
-            const eventName = event.split(' ')[0];
-            const selector = event.split(' ').slice(1).join(' ');
-            if (typeof value === 'string') {
-                value = self[value];
-            }
-            value = value.bind(self);
-            if (selector) {
-                const _value = value;
-                value = function (ev) {
-                    if ([].indexOf.call(element.querySelectorAll(selector), ev.target || ev.relatedNode) !== -1) {
-                        _value(ev);
-                    }
-                };
-            }
-            self._eventToRemoveOnDestroy.push({
+        if (!this._eventToRemoveOnDestroy) {
+            this._eventToRemoveOnDestroy = [];
+        }
+        for (let eventName in events) {
+            this._eventToRemoveOnDestroy.push({
                 target: element,
                 name: eventName,
-                value: value,
+                method: events[eventName],
             });
-            element.addEventListener(eventName, value, false);
-        });
+            element.addEventListener(eventName, events[eventName], false);
+        }
     }
+    /**
+     * Called when we detect a composition user action.
+     * Create a clone of the DOM (block parent of the range) will used to
+     * analyse and extract the real insertion and the range on which the
+     * change applies.
+     * The clone is added to the CompiledEvent
+     *
+     * @private
+     */
     _cloneForComposition (): void {
         // Check if already cloned earlier
         if (this._compiledEvent.clone) {
@@ -202,6 +200,14 @@ export class EventManager {
             });
         })(clone);
     }
+    /**
+     * Called when we the CompiledEvent is ready by _tickAfterUserInteraction
+     * Trigger the different actions according to the event analysis performed. 
+     *
+     * @see _tickAfterUserInteraction
+     * @private
+     * @param {CompiledEvent} param
+     */
     _eventsNormalization(param: CompiledEvent) {
         if (param.defaultPrevented && param.type !== 'move') {
             this.triggerEvent('trigger Action: nothing');
@@ -285,10 +291,19 @@ export class EventManager {
             this.triggerEvent('trigger Action: ???', param);
         }
     }
+    /**
+     * Convert a node list of node into a list of char linked to an element
+     * and offset.
+     * Two lists can then be compared to know where they diverge.
+     *
+     * @private
+     * @param {Element[]} textNodes
+     * @returns {Object} {chars, nodes, offsets}
+     */
     _extractChars(textNodes: Array<Element>) {
-        var chars = [];
-        var nodes = [];
-        var offsets = [];
+        let chars: Array<string> = [];
+        let nodes: Array<DOMElement> = [];
+        let offsets: Array<number> = [];
         textNodes.forEach(function (node) {
             if (node.nodeValue) {
                 node.nodeValue.split('').forEach(function (char, index) {
@@ -308,16 +323,36 @@ export class EventManager {
             offsets: offsets,
         };
     }
-    _findTextNode (textNodes: Array<Element>, node) {
+    /**
+     * Return the list of text node and BR contained in an element.
+     *
+     * @private
+     * @param {Element} node
+     * @returns {Element[]}
+     */
+    _findTextNode (node, textNodes: Array<Element>) {
+        if (!textNodes) {
+            textNodes = [];
+        }
         if (node.nodeType === 3) {
             textNodes.push(node);
         } else if (node.tagName === 'BR') {
             textNodes.push(node);
         } else {
-            node.childNodes.forEach(n => this._findTextNode(textNodes, n));
+            node.childNodes.forEach(n => this._findTextNode(n, textNodes));
         }
         return textNodes;
     }
+    /**
+     * Compare to extracted list of char to define the start and the end
+     * of the changes. Return the indexes from each list.
+     *
+     * @see _extractChars
+     * @private
+     * @param {Object} extractedCloneChars
+     * @param {Object} extractedChars
+     * @returns {Object} {startClone, endClone, start, end}
+     */
     _findOriginChanges(extractedCloneChars, extractedChars) {
         const cloneLength = extractedCloneChars.chars.length - 1;
         const length = extractedChars.chars.length - 1;
@@ -487,10 +522,10 @@ export class EventManager {
             return;
         }
 
-        const cloneTextNodes = this._findTextNode([], param.clone);
+        const cloneTextNodes = this._findTextNode(param.clone);
         const extractedCloneChars = this._extractChars(cloneTextNodes);
 
-        const textNodes = this._findTextNode([], param.clone.origin);
+        const textNodes = this._findTextNode(param.clone.origin);
         const extractedChars = this._extractChars(textNodes);
 
         const originChanges = this._findOriginChanges(extractedCloneChars, extractedChars);
@@ -542,9 +577,9 @@ export class EventManager {
             const liAncestor = range.scArch.ancestor('isLi');
             const isInEmptyLi = range.isCollapsed() && liAncestor && liAncestor.isDeepEmpty();
             if (isInEmptyLi) {
-                return BaseArch.outdent();
+                BaseArch.outdent();
             } else {
-                return this._addLine();
+                BaseArch.addLine();
             }
             */
         }
@@ -610,6 +645,8 @@ export class EventManager {
     //--------------------------------------------------------------------------
 
     /**
+     * Catch composition action
+     *
      * @private
      * @param {CompositionEvent} event
      */
@@ -617,25 +654,39 @@ export class EventManager {
         if (this.editable.style.display === 'none') {
             return;
         }
-        const param = this._beginToStackEventDataForNextTick(event);
+        const param = this._beginToStackEventDataForNextTick();
         this._cloneForComposition();
         param.type = 'composition';
         param.update = false;
         param.data = event.data;
     }
+    /**
+     * Catch composition action
+     *
+     * @private
+     * @param {CompositionEvent} event
+     */
     _onCompositionStart (event: CompositionEvent) {
         if (this.editable.style.display !== 'none') {
-            this._beginToStackEventDataForNextTick(event);
-            this._cloneForComposition();
-        }
-    }
-    _onCompositionUpdate (event: CompositionEvent) {
-        if (this.editable.style.display !== 'none') {
-            this._beginToStackEventDataForNextTick(event);
+            this._beginToStackEventDataForNextTick();
             this._cloneForComposition();
         }
     }
     /**
+     * Catch composition action
+     *
+     * @private
+     * @param {CompositionEvent} event
+     */
+    _onCompositionUpdate (event: CompositionEvent) {
+        if (this.editable.style.display !== 'none') {
+            this._beginToStackEventDataForNextTick();
+            this._cloneForComposition();
+        }
+    }
+    /**
+     * Catch setRange, setRangeFromDom and selectAll actions
+     *
      * @private
      * @param {MouseEvent} event
      */
@@ -643,6 +694,8 @@ export class EventManager {
         this._mousedownInEditable = false;
     }
     /**
+     * Catch composition, Enter, Backspace, Delete and insert actions
+     *
      * @private
      * @param {InputEvent} event
      */
@@ -650,7 +703,7 @@ export class EventManager {
         if (this.editable.style.display === 'none') {
             return;
         }
-        const param = this._beginToStackEventDataForNextTick(event);
+        const param = this._beginToStackEventDataForNextTick();
 
         if (!param.type) {
             param.type = event.type;
@@ -685,6 +738,8 @@ export class EventManager {
         }
     }
     /**
+     * Catch Enter, Backspace, Delete and insert actions
+     *
      * @private
      * @param {KeyboardEvent} event
      */
@@ -695,7 +750,7 @@ export class EventManager {
         if (event.type === 'keydown' && event.key === 'Dead') {
             return;
         }
-        const param = this._beginToStackEventDataForNextTick(event);
+        const param = this._beginToStackEventDataForNextTick();
         param.defaultPrevented = param.defaultPrevented || event.defaultPrevented;
         param.type = param.type || event.type;
         param.shiftKey = event.shiftKey;
@@ -704,6 +759,8 @@ export class EventManager {
         param.key = event.key;
     }
     /**
+     * Catch setRange, setRangeFromDom and selectAll actions
+     *
      * @private
      * @param {MouseEvent} event
      */
@@ -712,6 +769,10 @@ export class EventManager {
         this._mousedownInEditable = event;
     }
     /**
+     * Catch setRange, setRangeFromDom actions
+     * After a tick (setTimeout 0) to have the new selection/range in the DOM
+     *
+     * @see __onClick
      * @private
      * @param {MouseEvent} event
      */
@@ -719,27 +780,29 @@ export class EventManager {
         if (!this._mousedownInEditable) {
             return;
         }
-        setTimeout(this.__onClick.bind(this, event), 0);
-    }
-    __onClick (event: MouseEvent) {
         const mousedownTarget = this._mousedownInEditable.target;
-        this._mousedownInEditable = false;
-
-        if (event.target instanceof Element) {
-            if (this.editor.contains(event.target) && this.editable !== event.target && !this.editable.contains(event.target)) {
+        const target = event.target;
+        setTimeout(() => {
+            this._mousedownInEditable = false;
+            if (!(target instanceof Element)) {
+                return;
+            }
+            if (this.editor.contains(target) && this.editable !== target && !this.editable.contains(target)) {
                 if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                     this.triggerEvent('trigger Action: restore range');
                     return;
                 }
             }
-            if (mousedownTarget === event.target) {
-                this.triggerEvent('trigger Action: setRange', {startContainer: event.target});
+            if (mousedownTarget === target) {
+                this.triggerEvent('trigger Action: setRange', {startContainer: target});
             } else {
                 this.triggerEvent('trigger Action: setRangeFromDom');
             }
-        }
+        }, 0);
     }
     /**
+     * Catch selectAll action
+     *
      * @private
      * @param {Event} event
      */
