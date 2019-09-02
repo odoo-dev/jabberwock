@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <title>Jabberwock Editor</title>
+    </head>
+    <body>
+        <jw-editor style="position: absolute; padding: 10px; text-align: center; top: 0; left: 0; bottom: 0; right: 0;">
+        </jw-editor>
+        <link rel="stylesheet" type="text/css" href="src/plugins/DevTools/DevTools.css" />
+
+        <!-- User custom script which will use the editor -->
+        <script>
+            Promise.all([
+                import('./build/native/core/JWEditor.js'),
+                import('./build/native/plugins/Awesome.js'),
+                import('./build/native/plugins/DevTools/DevTools.js'),
+            ]).then(([JWEditor, Awesome, DevTools]) => {
+                const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
+                editor.addPlugin(Awesome.Awesome);
+                editor.addPlugin(DevTools.DevTools);
+                editor.loadConfig({
+                    theme: 'CoolTheme',
+                });
+                editor.start();
+            });
+        </script>
+    </body>
+</html>

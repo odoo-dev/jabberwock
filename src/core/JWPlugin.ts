@@ -1,5 +1,5 @@
-import { Action } from './actions/Action';
-import { Dispatcher } from './dispatcher/Dispatcher';
+import { Action } from './actions/Action.js';
+import { Dispatcher } from './dispatcher/Dispatcher.js';
 
 export interface JWPluginConfiguration {
     name: string,

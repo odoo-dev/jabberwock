@@ -1,9 +1,9 @@
-import { Action, ActionType } from './actions/Action';
-import { Dispatcher } from './dispatcher/Dispatcher';
-import { EventManager } from './utils/EventManager';
-import { JWPlugin } from './JWPlugin';
-import VDocument from './stores/VDocument';
-import utils from './utils/utils';
+import { Action, ActionType } from './actions/Action.js';
+import { Dispatcher } from './dispatcher/Dispatcher.js';
+import { EventManager } from './utils/EventManager.js';
+import { JWPlugin } from './JWPlugin.js';
+import VDocument from './stores/VDocument.js';
+import utils from './utils/utils.js';
 
 export interface JWEditorConfig {
     theme: string;
@@ -27,7 +27,7 @@ export class JWEditor {
         });
         this.pluginsRegistry = [];
         let startContent: DocumentFragment;
-        if (el.childNodes.length) {
+        if (el.children.length) {
             startContent = document.createDocumentFragment();
             let contents = utils._collectionToArray(el.childNodes);
             contents.forEach(child => startContent.appendChild(child));

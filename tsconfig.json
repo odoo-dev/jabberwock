@@ -1,8 +1,7 @@
 {
+  "extends": "./tsconfig-base.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react",
-    "target": "ES6",
-    "noImplicitAny": true,
-  }
+    "module": "AMD",
+    "outFile": "./build/bundle.js"
+  },
 }
