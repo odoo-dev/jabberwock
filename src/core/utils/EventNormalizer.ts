@@ -26,23 +26,23 @@ interface InputEvent extends UIEvent {
 }
 
 interface CompiledEvent {
-    type: string
-    key?: string
+    type: string // main event type, e.g. 'keydown', 'composition', 'move', ...
+    key?: string // the key pressed for keyboard events
     shiftKey?: boolean
     ctrlKey?: boolean
     altKey?: boolean
-    data?: string
-    mutationsList?: Array<MutationRecord>
+    data?: string // specific data for input events
+    mutationsList?: Array<MutationRecord> // mutations observed by the observer
     defaultPrevented?: boolean
-    events?: Array<Event>
-    update?: boolean
-    previous?: any
-    node?: DOMElement
-    clone?: any
+    clone?: ClonedNode // clone of closest block node containing modified selection during composition
 };
 
-interface ClonedNode extends Element {
-    origin: Element
+interface EventFunctionMapping {
+    [keyof: string]: EventListener
+}
+
+interface ClonedNode extends DOMElement {
+    origin: DOMElement
 }
 
 interface SelectRange extends Range {
@@ -52,15 +52,11 @@ interface SelectRange extends Range {
 
 export class EventNormalizer {
     editable: DOMElement
-    options: any
     _compiledEvent: CompiledEvent
     _observer: MutationObserver
     _eventToRemoveOnDestroy: Array<any>
-    _previousEvent: any
-    _mousedownInEditable: any
-    _editorFocused: boolean
-    _clonedNodeFormComposition: HTMLElement
-    _triggerEvent: Function
+    _mousedownInEditable: MouseEvent // original mousedown event when starting selection in editable zone
+    _triggerEvent: Function // callback to trigger on events
 
     constructor (editable: HTMLElement, triggerEvent: Function) {
         this.editable = <DOMElement>editable;
@@ -91,15 +87,6 @@ export class EventNormalizer {
             childList: true,
             subtree: true,
         });
-    }
-    /** todo */
-    blurEditor () {
-        this._editorFocused = false;
-        this.destroy(this.editable);
-    }
-    /** todo */
-    focusEditor () {
-        this._editorFocused = true;
     }
     /**
      * Called when destroy the editor.
@@ -153,7 +140,7 @@ export class EventNormalizer {
      * @param {Node} element
      * @param {Object []} events {[eventName]: {Function}}
      */
-    _bindDOMEvents(element: EventTarget, events: any) {
+    _bindDOMEvents(element: EventTarget, events: EventFunctionMapping) {
         if (!this._eventToRemoveOnDestroy) {
             this._eventToRemoveOnDestroy = [];
         }
@@ -194,7 +181,7 @@ export class EventNormalizer {
             if (clone.nodeType !== 1) {
                 return;
             }
-            var childNodes = <NodeListOf<Element>>clone.origin.childNodes;
+            var childNodes = <NodeListOf<DOMElement>>clone.origin.childNodes;
             clone.childNodes.forEach((child: ClonedNode, index) => {
                 child.origin = childNodes[index];
                 addChildOrigin(child);
@@ -252,10 +239,8 @@ export class EventNormalizer {
             // previous.update = audroid update for each char
             // param.data[0] !== ' ' = audio insertion
             this._pressInsertComposition({
-                previous: param.data[0] !== ' ' && param.previous && param.previous.update ? param.previous.data : false,
                 type: 'composition',
                 data: param.data,
-                node: param.node,
                 clone: param.clone,
             });
         } else if (param.key === 'Backspace' || param.key === 'Delete') {
@@ -589,8 +574,6 @@ export class EventNormalizer {
      */
     _tickAfterUserInteraction () {
         const param = this._compiledEvent;
-        param.previous = this._previousEvent;
-        this._previousEvent = param;
         this._compiledEvent = null;
         this._eventsNormalization(param);
     }
@@ -612,7 +595,6 @@ export class EventNormalizer {
         const param = this._beginToStackEventDataForNextTick();
         this._cloneForComposition();
         param.type = 'composition';
-        param.update = false;
         param.data = event.data;
     }
     /**
@@ -646,7 +628,7 @@ export class EventNormalizer {
      * @param {MouseEvent} event
      */
     _onContextMenu (event: MouseEvent) {
-        this._mousedownInEditable = false;
+        this._mousedownInEditable = null;
     }
     /**
      * Catch composition, Enter, Backspace, Delete and insert actions
@@ -668,7 +650,6 @@ export class EventNormalizer {
         // todo: delete word <=> composition
 
         if (event.inputType === 'insertCompositionText' || event.inputType === 'insertReplacementText') {
-            param.update = param.update || param.type !== 'composition';
             param.type = 'composition';
             param.data = event.data;
             this._cloneForComposition();
@@ -720,7 +701,6 @@ export class EventNormalizer {
      * @param {MouseEvent} event
      */
     _onMouseDown (event: MouseEvent) {
-        this._previousEvent = null;
         this._mousedownInEditable = event;
     }
     /**
@@ -738,7 +718,7 @@ export class EventNormalizer {
         const mousedownTarget = this._mousedownInEditable.target;
         const target = event.target;
         setTimeout(() => {
-            this._mousedownInEditable = false;
+            this._mousedownInEditable = null;
             if (target instanceof Element) {
                 this._triggerEvent('setRange', this._getRange());
             }
@@ -751,7 +731,7 @@ export class EventNormalizer {
      * @param {Event} event
      */
     _onSelectionChange (event: Event) {
-        if (/*todo ? !this._editorFocused || */this._mousedownInEditable || this.editable.style.display === 'none') {
+        if (this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
         if (this._isSelectAll(this._getRange())) {
