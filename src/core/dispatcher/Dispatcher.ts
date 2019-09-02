@@ -1,23 +1,19 @@
 import { Action } from '../actions/Action.js';
 
 export class Dispatcher<Action> {
-    dispatch (action: Action) {
+    dispatch(action: Action) {
         // TODO
     }
 
-    isDispatching () {
+    isDispatching() {
         return false;
     }
 
-    register (callback: (action: Action) => void) {
+    register(callback: (action: Action) => void) {
         return '';
     }
 
-    unregister (id: string) {
+    unregister(id: string) {}
 
-    }
-
-    waitFor (ids: string[]) {
-
-    }
+    waitFor(ids: string[]) {}
 }

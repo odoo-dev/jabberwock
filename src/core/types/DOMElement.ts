@@ -20,9 +20,9 @@ type HTMLElementOmit4 = Omit<HTMLElementOmit3, 'nextSibling'>;
 type HTMLElementOmit5 = Omit<HTMLElementOmit4, 'previousSibling'>;
 
 export interface DOMElement extends HTMLElementOmit5 {
-    parentNode: DOMElement
-    firstChild: DOMElement
-    lastChild: DOMElement
-    nextSibling: DOMElement
-    previousSibling: DOMElement
+    parentNode: DOMElement;
+    firstChild: DOMElement;
+    lastChild: DOMElement;
+    nextSibling: DOMElement;
+    previousSibling: DOMElement;
 }

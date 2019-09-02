@@ -13,12 +13,12 @@ export enum VNodeType {
 
 export class VNode {
     readonly type: VNodeType;
-    children: VNode [];
+    children: VNode[];
     index: number;
     parent: VNode | null;
     value: string | undefined;
 
-    constructor (type: VNodeType, value?: string) {
+    constructor(type: VNodeType, value?: string) {
         this.type = type;
         this.parent = null;
         this.children = [];
@@ -30,26 +30,26 @@ export class VNode {
     // Getters
     //--------------------------------------------------------------------------
 
-    get firstChild (): VNode | undefined {
+    get firstChild(): VNode | undefined {
         return this.nthChild(0);
     }
-    get lastChild (): VNode | undefined {
+    get lastChild(): VNode | undefined {
         return this.nthChild(this.children.length - 1);
     }
-    get length (): number {
+    get length(): number {
         return this.value ? this.value.length : this.children.length;
     }
-    get nextSibling (): VNode | undefined {
+    get nextSibling(): VNode | undefined {
         return this.parent && this.parent.nthChild(this.index + 1);
     }
-    nthChild (index: number): VNode | undefined {
-        return index >= 0 && this.children[index] || undefined;
+    nthChild(index: number): VNode | undefined {
+        return (index >= 0 && this.children[index]) || undefined;
     }
-    get previousSibling (): VNode | undefined {
+    get previousSibling(): VNode | undefined {
         return this.parent && this.parent.nthChild(this.index - 1);
     }
-    get siblings (): VNode [] {
-        return this.parent && this.parent.children || [];
+    get siblings(): VNode[] {
+        return (this.parent && this.parent.children) || [];
     }
 
     //--------------------------------------------------------------------------
@@ -59,22 +59,22 @@ export class VNode {
     /**
      * Append a child to this node. Return self.
      */
-    append (child: VNode): VNode {
-        var index = this.children.length > 0 ? this.children.length : 0;
+    append(child: VNode): VNode {
+        const index = this.children.length > 0 ? this.children.length : 0;
         child.setPosition(this, index);
         return this;
     }
     /**
      * Prepend a child to this node. Return self.
      */
-    prepend (child: VNode) : VNode {
+    prepend(child: VNode): VNode {
         child.setPosition(this, 0);
         return this;
     }
     /**
      * Remove the nth child from this node. Return self.
      */
-    removeChild (index: number): VNode {
+    removeChild(index: number): VNode {
         delete this.children[index];
         this.children.splice(index);
         return this;
@@ -83,8 +83,9 @@ export class VNode {
      * Set the position of this node in the document: update references to other
      * nodes in this node, and to this node in other nodes.
      */
-    setPosition (parent: VNode, index: number, children?: VNode []): VNode {
-        if (this.parent) { // remove this from old parent
+    setPosition(parent: VNode, index: number, children?: VNode[]): VNode {
+        if (this.parent) {
+            // remove this from old parent
             this.parent.children.splice(this.index);
         }
         this.parent = parent;
