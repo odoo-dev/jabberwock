@@ -4,7 +4,7 @@
   "description": "The best editor in the world",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsc -w & node dev/server.js dev/index.html",
+    "dev": "tsc -w --inlineSourceMap & node dev/server.js dev/index.html",
     "build": "tsc",
     "dev-native": "tsc -w -p tsconfig-native.json & node dev/server.js dev/index-native.html",
     "build-native": "tsc -p tsconfig-native.json"
