@@ -604,6 +604,12 @@ export class EventManager {
 
         this.triggerEvent('trigger Action: insert', [tab]);
     }
+    /**
+     * Move the selection/range
+     *
+     * @private
+     * @param {object} param
+     */
     _pressMove (param: CompiledEvent) {
         if (param.defaultPrevented) {
             this.triggerEvent('trigger Action: restore range');
@@ -629,6 +635,13 @@ export class EventManager {
     _pressRemoveSide (param: CompiledEvent) {
         this.triggerEvent('trigger Action: remove', param.key === 'Backspace' ? 'left' : 'right', param);
     }
+    /**
+     * Called when we the CompiledEvent is ready
+     * (when all event are received and the event thread is finished)
+     *
+     * @see _beginToStackEventDataForNextTick
+     * @see _eventsNormalization
+     */
     _tickAfterUserInteraction () {
         const param = this._compiledEvent;
         param.previous = this._previousEvent;
@@ -636,6 +649,9 @@ export class EventManager {
         this._compiledEvent = null;
         this._eventsNormalization(param);
     }
+    /**
+     * todo: Trigger the action.
+     */
     triggerEvent (truc: string, a: any = null, b: any = null) {
         console.log(truc, a, b);
     }
