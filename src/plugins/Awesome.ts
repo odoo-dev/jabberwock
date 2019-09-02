@@ -12,7 +12,7 @@ export class Awesome extends JWPlugin {
         super(dispatcher, vDocument, options);
     }
 
-    init (): Action {
+    init(): Action {
         super.init();
         return {
             type: ActionType.INSERT,
@@ -21,4 +21,4 @@ export class Awesome extends JWPlugin {
             origin: '',
         };
     }
-};
+}

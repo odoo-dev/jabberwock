@@ -2,8 +2,8 @@ import { Action } from './actions/Action.js';
 import { Dispatcher } from './dispatcher/Dispatcher.js';
 
 export interface JWPluginConfiguration {
-    name: string,
-};
+    name: string;
+}
 
 export class JWPlugin {
     dispatcher: Dispatcher<Action>;
@@ -12,7 +12,7 @@ export class JWPlugin {
         this.dispatcher = dispatcher;
     }
 
-    init () {
+    init() {
         // TODO
     }
-};
+}

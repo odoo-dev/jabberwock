@@ -1,17 +1,7 @@
+import { Range } from '../stores/Range.js';
+import { DOMElement } from '../types/DOMElement.js';
 
-import { Range } from '../stores/Range.js'
-import { DOMElement } from '../types/DOMElement.js'
-
-const navigationKey = [
-    'ArrowUp',
-    'ArrowDown',
-    'ArrowLeft',
-    'ArrowRight',
-    'PageUp',
-    'PageDown',
-    'End',
-    'Home',
-];
+const navigationKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'End', 'Home'];
 
 // As of August 29th 2019, InputEvent is considered experimental by MDN as some
 // of its properties are said to be unsupported by Edge and Safari. This is
@@ -19,46 +9,46 @@ const navigationKey = [
 // TypeScript distribution. However, these properties actually appear to be
 // working perfectly fine on these browser after some manual testing on MacOS.
 interface InputEvent extends UIEvent {
-    readonly data: string
-    readonly dataTransfer: DataTransfer
-    readonly inputType: string
-    readonly isComposing: boolean
+    readonly data: string;
+    readonly dataTransfer: DataTransfer;
+    readonly inputType: string;
+    readonly isComposing: boolean;
 }
 
 interface CompiledEvent {
-    type: string // main event type, e.g. 'keydown', 'composition', 'move', ...
-    key?: string // the key pressed for keyboard events
-    shiftKey?: boolean
-    ctrlKey?: boolean
-    altKey?: boolean
-    data?: string // specific data for input events
-    mutationsList?: Array<MutationRecord> // mutations observed by the observer
-    defaultPrevented?: boolean
-    clone?: ClonedNode // clone of closest block node containing modified selection during composition
-};
+    type: string; // main event type, e.g. 'keydown', 'composition', 'move', ...
+    key?: string; // the key pressed for keyboard events
+    shiftKey?: boolean;
+    ctrlKey?: boolean;
+    altKey?: boolean;
+    data?: string; // specific data for input events
+    mutationsList?: Array<MutationRecord>; // mutations observed by the observer
+    defaultPrevented?: boolean;
+    clone?: ClonedNode; // clone of closest block node containing modified selection during composition
+}
 
 interface EventFunctionMapping {
-    [keyof: string]: EventListener
+    [keyof: string]: EventListener;
 }
 
 interface ClonedNode extends DOMElement {
-    origin: DOMElement
+    origin: DOMElement;
 }
 
 interface SelectRange extends Range {
-    moveLeft?: boolean
-    moveRight?: boolean
+    moveLeft?: boolean;
+    moveRight?: boolean;
 }
 
 export class EventNormalizer {
-    editable: DOMElement
-    _compiledEvent: CompiledEvent
-    _observer: MutationObserver
-    _eventToRemoveOnDestroy: Array<any>
-    _mousedownInEditable: MouseEvent // original mousedown event when starting selection in editable zone
-    _triggerEvent: Function // callback to trigger on events
+    editable: DOMElement;
+    _compiledEvent: CompiledEvent;
+    _observer: MutationObserver;
+    _eventToRemoveOnDestroy: Array<any>;
+    _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
+    _triggerEvent: Function; // callback to trigger on events
 
-    constructor (editable: HTMLElement, triggerEvent: Function) {
+    constructor(editable: HTMLElement, triggerEvent: Function) {
         this.editable = <DOMElement>editable;
         this._triggerEvent = triggerEvent;
         this._bindDOMEvents(window.top.document, {
@@ -93,9 +83,9 @@ export class EventNormalizer {
      * Remove all added handlers.
      *
      */
-    destroy (el: HTMLElement) {
+    destroy(el: HTMLElement) {
         this._observer.disconnect();
-        this._eventToRemoveOnDestroy.forEach(function (eventObject) {
+        this._eventToRemoveOnDestroy.forEach(function(eventObject) {
             eventObject.target.removeEventListener(eventObject.name, eventObject.method);
         });
     }
@@ -117,7 +107,7 @@ export class EventNormalizer {
      * @see _tickAfterUserInteraction
      * @returns {CompiledEvent}
      */
-    _beginToStackEventDataForNextTick () {
+    _beginToStackEventDataForNextTick() {
         if (this._compiledEvent) {
             return this._compiledEvent;
         }
@@ -144,7 +134,7 @@ export class EventNormalizer {
         if (!this._eventToRemoveOnDestroy) {
             this._eventToRemoveOnDestroy = [];
         }
-        for (let eventName in events) {
+        for (const eventName in events) {
             this._eventToRemoveOnDestroy.push({
                 target: element,
                 name: eventName,
@@ -162,7 +152,7 @@ export class EventNormalizer {
      *
      * @private
      */
-    _cloneForComposition (): void {
+    _cloneForComposition(): void {
         // Check if already cloned earlier
         if (this._compiledEvent.clone) {
             return;
@@ -170,18 +160,22 @@ export class EventNormalizer {
 
         const range = this._getRange();
         let format = range.startContainer;
-        while (format.parentNode && format !== this.editable && (format.nodeType === 3 || window.getComputedStyle(format).display !== 'block')) {
+        while (
+            format.parentNode &&
+            format !== this.editable &&
+            (format.nodeType === 3 || window.getComputedStyle(format).display !== 'block')
+        ) {
             format = format.parentNode;
         }
-        var clone: ClonedNode = format.cloneNode(true);
+        let clone: ClonedNode = format.cloneNode(true);
         clone.origin = format;
         this._compiledEvent.clone = clone;
 
-        (function addChildOrigin (clone: ClonedNode) {
+        (function addChildOrigin(clone: ClonedNode) {
             if (clone.nodeType !== 1) {
                 return;
             }
-            var childNodes = <NodeListOf<DOMElement>>clone.origin.childNodes;
+            let childNodes = <NodeListOf<DOMElement>>clone.origin.childNodes;
             clone.childNodes.forEach((child: ClonedNode, index) => {
                 child.origin = childNodes[index];
                 addChildOrigin(child);
@@ -262,14 +256,17 @@ export class EventNormalizer {
             } else {
                 this._triggerEvent('insert', 'addLine');
             }
-        } else if ((!param.ctrlKey && !param.altKey) &&
-                (param.data && param.data.length === 1 || param.key && param.key.length === 1 || param.key === 'Space')) {
+        } else if (
+            !param.ctrlKey &&
+            !param.altKey &&
+            ((param.data && param.data.length === 1) || (param.key && param.key.length === 1) || param.key === 'Space')
+        ) {
             let data = param.data && param.data.length === 1 ? param.data : param.key;
             if (param.data === 'Space') {
                 data = ' ';
             }
-            this._pressInsertChar({type: 'char', data: data});
-        } else if (param.type === "keydown") {
+            this._pressInsertChar({ type: 'char', data: data });
+        } else if (param.type === 'keydown') {
             this._triggerEvent('keydown', param);
         } else {
             this._triggerEvent('unknown', param);
@@ -285,12 +282,12 @@ export class EventNormalizer {
      * @returns {Object} {chars, nodes, offsets}
      */
     _extractChars(textNodes: Array<Element>) {
-        let chars: Array<string> = [];
-        let nodes: Array<Element> = [];
-        let offsets: Array<number> = [];
-        textNodes.forEach(function (node) {
+        const chars: Array<string> = [];
+        const nodes: Array<Element> = [];
+        const offsets: Array<number> = [];
+        textNodes.forEach(function(node) {
             if (node.nodeValue) {
-                node.nodeValue.split('').forEach(function (char, index) {
+                node.nodeValue.split('').forEach(function(char, index) {
                     chars.push(char);
                     nodes.push(node);
                     offsets.push(index);
@@ -314,7 +311,7 @@ export class EventNormalizer {
      * @param {Element} node
      * @returns {Element[]}
      */
-    _findTextNode (node: DOMElement, textNodes: Array<Element> = []) {
+    _findTextNode(node: DOMElement, textNodes: Array<Element> = []) {
         if (node.nodeType === 3) {
             textNodes.push(node);
         } else if (node.tagName === 'BR') {
@@ -334,7 +331,7 @@ export class EventNormalizer {
      * @param {Object} extractedChars
      * @returns {Object} {startClone, endClone, start, end}
      */
-    _findOriginChanges(extractedCloneChars:any, extractedChars:any) {
+    _findOriginChanges(extractedCloneChars: any, extractedChars: any) {
         const cloneLength = extractedCloneChars.chars.length - 1;
         const length = extractedChars.chars.length - 1;
 
@@ -371,7 +368,7 @@ export class EventNormalizer {
      *
      * @returns {SelectRange}
      */
-    _getRange (): SelectRange {
+    _getRange(): SelectRange {
         const selection = this.editable.ownerDocument.getSelection();
         if (!selection || selection.rangeCount === 0) {
             const range: Range = {
@@ -399,11 +396,11 @@ export class EventNormalizer {
         };
         return range;
     }
-    _isSelectAll (rangeDOM: Range) {
+    _isSelectAll(rangeDOM: Range) {
         let startContainer = rangeDOM.startContainer;
         let startOffset = rangeDOM.startOffset;
         let endContainer = rangeDOM.endContainer;
-        let endOffset = rangeDOM.endOffset;
+        const endOffset = rangeDOM.endOffset;
 
         const isRangeCollapsed = startContainer === endContainer && startOffset === endOffset;
         if (!startContainer || !endContainer || isRangeCollapsed) {
@@ -421,11 +418,11 @@ export class EventNormalizer {
         if (endContainer.childNodes[endOffset]) {
             endContainer = endContainer.childNodes[endOffset];
         }
-        if (startOffset !== 0 || endContainer.nodeType === 3 && endOffset !== endContainer.textContent.length) {
+        if (startOffset !== 0 || (endContainer.nodeType === 3 && endOffset !== endContainer.textContent.length)) {
             return false;
         }
 
-        function isVisible (el: DOMElement): boolean {
+        function isVisible(el: DOMElement): boolean {
             if (el.tagName === 'WE3-EDITABLE') {
                 return true;
             }
@@ -484,7 +481,7 @@ export class EventNormalizer {
      * @private
      * @param {string} param
      */
-    _pressInsertChar (param: CompiledEvent) {
+    _pressInsertChar(param: CompiledEvent) {
         if (param.data === ' ') {
             this._triggerEvent('insert', '\u00A0');
         } else if (param.data.charCodeAt(0) === 10) {
@@ -497,7 +494,7 @@ export class EventNormalizer {
      * @private
      * @param {object} param
      */
-    _pressInsertComposition (param: CompiledEvent) {
+    _pressInsertComposition(param: CompiledEvent) {
         if (!this.editable.contains(param.clone.origin)) {
             this._triggerEvent('unknown', param);
             return;
@@ -510,7 +507,7 @@ export class EventNormalizer {
         const extractedChars = this._extractChars(textNodes);
 
         const originChanges = this._findOriginChanges(extractedCloneChars, extractedChars);
-        let text = param.data && param.data.replace(/\u00A0/g, ' ') || '';
+        let text = (param.data && param.data.replace(/\u00A0/g, ' ')) || '';
 
         // specify the change from the range and data
 
@@ -518,7 +515,7 @@ export class EventNormalizer {
         const cloneLength = extractedCloneChars.nodes.length;
         const length = extractedChars.nodes.length;
         let endChanged;
-        for (let index = 0 ; index <= length; index++) {
+        for (let index = 0; index <= length; index++) {
             if (extractedChars.nodes[index] === range.startContainer) {
                 endChanged = index + range.startOffset;
                 break;
@@ -530,13 +527,15 @@ export class EventNormalizer {
         startChanged = Math.min(startChanged, Math.max(originChanges.start, originChanges.end));
         text = extractedChars.chars.slice(startChanged, endChanged).join('');
 
-        let origin = {
+        const origin = {
             startContainer: extractedCloneChars.nodes[startChanged].origin,
             startOffset: extractedCloneChars.offsets[startChanged],
             endContainer: extractedCloneChars.nodes[cloneLength - length + endChanged].origin,
             endOffset: extractedCloneChars.offsets[cloneLength - length + endChanged],
         };
-        let textBefore = extractedCloneChars.nodes[startChanged].nodeValue.slice(0, origin.endOffset).slice(origin.startOffset);
+        const textBefore = extractedCloneChars.nodes[startChanged].nodeValue
+            .slice(0, origin.endOffset)
+            .slice(origin.startOffset);
 
         // end
 
@@ -549,7 +548,7 @@ export class EventNormalizer {
      * @private
      * @param {object} param
      */
-    _pressMove (param: CompiledEvent) {
+    _pressMove(param: CompiledEvent) {
         if (param.defaultPrevented) {
             this._triggerEvent('restoreRange');
         }
@@ -557,7 +556,7 @@ export class EventNormalizer {
             this._triggerEvent('selectAll');
         } else if (navigationKey.indexOf(param.data) !== -1) {
             const isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
-            let range = this._getRange();
+            const range = this._getRange();
             range.moveLeft = isLeftish;
             range.moveRight = !isLeftish;
             this._triggerEvent('setRange', range);
@@ -572,7 +571,7 @@ export class EventNormalizer {
      * @see _beginToStackEventDataForNextTick
      * @see _eventsNormalization
      */
-    _tickAfterUserInteraction () {
+    _tickAfterUserInteraction() {
         const param = this._compiledEvent;
         this._compiledEvent = null;
         this._eventsNormalization(param);
@@ -603,7 +602,7 @@ export class EventNormalizer {
      * @private
      * @param {CompositionEvent} event
      */
-    _onCompositionStart (event: CompositionEvent) {
+    _onCompositionStart(event: CompositionEvent) {
         if (this.editable.style.display !== 'none') {
             this._beginToStackEventDataForNextTick();
             this._cloneForComposition();
@@ -615,7 +614,7 @@ export class EventNormalizer {
      * @private
      * @param {CompositionEvent} event
      */
-    _onCompositionUpdate (event: CompositionEvent) {
+    _onCompositionUpdate(event: CompositionEvent) {
         if (this.editable.style.display !== 'none') {
             this._beginToStackEventDataForNextTick();
             this._cloneForComposition();
@@ -627,7 +626,7 @@ export class EventNormalizer {
      * @private
      * @param {MouseEvent} event
      */
-    _onContextMenu (event: MouseEvent) {
+    _onContextMenu(event: MouseEvent) {
         this._mousedownInEditable = null;
     }
     /**
@@ -636,7 +635,7 @@ export class EventNormalizer {
      * @private
      * @param {InputEvent} event
      */
-    _onInput (event: InputEvent) {
+    _onInput(event: InputEvent) {
         if (this.editable.style.display === 'none') {
             return;
         }
@@ -661,10 +660,15 @@ export class EventNormalizer {
             param.key = 'Delete';
         } else if (!param.data) {
             param.data = event.data;
-        } else if (event.inputType === "insertText") {
+        } else if (event.inputType === 'insertText') {
             if (param.type.indexOf('key') === 0 && param.key.length === 1 && event.data.length === 1) {
                 param.key = event.data; // keep accent
-            } else if (event.data && event.data.length === 1 && event.data !== param.data && param.type === 'composition') {
+            } else if (
+                event.data &&
+                event.data.length === 1 &&
+                event.data !== param.data &&
+                param.type === 'composition'
+            ) {
                 this._cloneForComposition();
                 // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
                 param.data += event.data;
@@ -679,7 +683,7 @@ export class EventNormalizer {
      * @private
      * @param {KeyboardEvent} event
      */
-    _onKeyDown (event: KeyboardEvent) {
+    _onKeyDown(event: KeyboardEvent) {
         if (this.editable.style.display === 'none') {
             return;
         }
@@ -700,7 +704,7 @@ export class EventNormalizer {
      * @private
      * @param {MouseEvent} event
      */
-    _onMouseDown (event: MouseEvent) {
+    _onMouseDown(event: MouseEvent) {
         this._mousedownInEditable = event;
     }
     /**
@@ -711,7 +715,7 @@ export class EventNormalizer {
      * @private
      * @param {MouseEvent} event
      */
-    _onClick (event: MouseEvent) {
+    _onClick(event: MouseEvent) {
         if (!this._mousedownInEditable) {
             return;
         }
@@ -730,7 +734,7 @@ export class EventNormalizer {
      * @private
      * @param {Event} event
      */
-    _onSelectionChange (event: Event) {
+    _onSelectionChange(event: Event) {
         if (this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
@@ -738,4 +742,4 @@ export class EventNormalizer {
             this._triggerEvent('selectAll');
         }
     }
-};
+}

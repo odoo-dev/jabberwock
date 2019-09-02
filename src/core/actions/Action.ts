@@ -2,7 +2,7 @@ export enum ActionType {
     INSERT,
     UPDATE,
     REMOVE,
-};
+}
 
 export interface Action {
     type: ActionType;

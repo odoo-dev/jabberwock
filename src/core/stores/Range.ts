@@ -5,4 +5,4 @@ export interface Range {
     endContainer: any;
     endOffset: number;
     direction: Direction;
-};
+}
