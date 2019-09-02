@@ -4,9 +4,9 @@
   "description": "The best editor in the world",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsc -w --inlineSourceMap & node dev/server.js dev/index.html",
+    "dev": "concurrently \"tsc -w \" \"node dev/server.js dev/index.html\"",
     "build": "tsc",
-    "dev-native": "tsc -w -p tsconfig-native.json & node dev/server.js dev/index-native.html",
+    "dev-native": "concurrently \"tsc -w -p tsconfig-native.json\" \"node dev/server.js dev/index-native.html\"",
     "build-native": "tsc -p tsconfig-native.json"
   },
   "repository": {
@@ -25,6 +25,7 @@
     "typescript": "^3.5.3",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
+    "concurrently": "^4.1.2",
     "eslint": "^6.2.2",
     "eslint-config-prettier": "^6.1.0",
     "eslint-plugin-prettier": "^3.1.0",
