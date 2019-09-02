@@ -1,10 +1,9 @@
-import { Action, ActionType } from '../../core/actions/Action';
-import { Dispatcher } from '../../core/dispatcher/Dispatcher';
-import { JWPlugin, JWPluginConfiguration } from '../../core/JWPlugin';
-import VDocument from '../../core/stores/VDocument';
-import './DevTools.css';
-import { VNode, VNodeType } from '../../core/stores/VNode';
-import utils from '../../core/utils/utils';
+import { Action, ActionType } from '../../core/actions/Action.js';
+import { Dispatcher } from '../../core/dispatcher/Dispatcher.js';
+import { JWPlugin, JWPluginConfiguration } from '../../core/JWPlugin.js';
+import VDocument from '../../core/stores/VDocument.js';
+import { VNode, VNodeType } from '../../core/stores/VNode.js';
+import utils from '../../core/utils/utils.js';
 
                                 // todo: use API //
 interface DevToolsUI {

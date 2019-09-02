@@ -4,8 +4,10 @@
   "description": "The best editor in the world",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "parcel src/index.html",
-    "build": "parcel build src/index.html build/"
+    "dev": "tsc -w & node dev/server.js dev/index.html",
+    "build": "tsc",
+    "dev-native": "tsc -w -p tsconfig-native.json & node dev/server.js dev/index-native.html",
+    "build-native": "tsc -p tsconfig-native.json"
   },
   "repository": {
     "type": "git",
@@ -26,7 +28,8 @@
     "prettier": "^1.18.2"
   },
   "devDependencies": {
-    "parcel": "^1.12.3",
-    "typescript": "^3.5.3"
+    "typescript": "^3.5.3",
+    "serve-static": "^1.14.1",
+    "finalhandler": "^1.1.2"
   }
 }

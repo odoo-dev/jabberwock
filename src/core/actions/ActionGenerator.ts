@@ -1,5 +1,5 @@
-import { Dispatcher } from '../dispatcher/Dispatcher';
-import { Action, ActionType } from './Action'
+import { Dispatcher } from '../dispatcher/Dispatcher.js';
+import { Action, ActionType } from './Action.js'
 
 
 export class ActionGenerator {
