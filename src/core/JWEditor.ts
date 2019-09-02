@@ -1,6 +1,6 @@
 import { Action, ActionType } from './actions/Action';
 import { Dispatcher } from './dispatcher/Dispatcher';
-import { EventManager } from './utils/EventManager';
+import { EventNormalizer } from './utils/EventNormalizer';
 import { JWPlugin } from './JWPlugin';
 import VDocument from './stores/VDocument';
 import utils from './utils/utils';
@@ -12,14 +12,14 @@ export interface JWEditorConfig {
 export class JWEditor {
     el: Element;
     dispatcher: Dispatcher<Action>;
-    eventManager: EventManager;
+    eventNormalizer: EventNormalizer;
     pluginsRegistry: JWPlugin[];
     vDocument: VDocument;
 
     constructor (el = document.body) {
         this.el = el;
         this.dispatcher = new Dispatcher();
-        this.eventManager = new EventManager(this.el, this.el, {
+        this.eventNormalizer = new EventNormalizer(this.el, {
             dispatch: action => {
                 action.origin = 'User';
                 this.dispatcher.dispatch(action);

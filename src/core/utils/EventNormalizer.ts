@@ -48,8 +48,7 @@ interface EventNormalizerOptions {
     }
 }
 
-export class EventManager {
-    editor: DOMElement
+export class EventNormalizer {
     editable: DOMElement
     options: any
     _compiledEvent: CompiledEvent
@@ -60,8 +59,7 @@ export class EventManager {
     _editorFocused: boolean
     _clonedNodeFormComposition: HTMLElement
 
-    constructor (editor: HTMLElement, editable: HTMLElement, options: EventNormalizerOptions) {
-        this.editor = <DOMElement>editor;
+    constructor (editable: HTMLElement, options: EventNormalizerOptions) {
         this.editable = <DOMElement>editable;
         this.options = options;
         this._bindDOMEvents(window.top.document.documentElement, {
@@ -800,19 +798,12 @@ export class EventManager {
         const target = event.target;
         setTimeout(() => {
             this._mousedownInEditable = false;
-            if (!(target instanceof Element)) {
-                return;
-            }
-            if (this.editor.contains(target) && this.editable !== target && !this.editable.contains(target)) {
-                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                    this.triggerEvent('trigger Action: restore range');
-                    return;
+            if (target instanceof Element) {
+                if (mousedownTarget === target) {
+                    this.triggerEvent('trigger Action: setRange', {startContainer: target});
+                } else {
+                    this.triggerEvent('trigger Action: setRangeFromDom');
                 }
-            }
-            if (mousedownTarget === target) {
-                this.triggerEvent('trigger Action: setRange', {startContainer: target});
-            } else {
-                this.triggerEvent('trigger Action: setRangeFromDom');
             }
         }, 0);
     }
