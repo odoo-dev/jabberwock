@@ -49,6 +49,10 @@ interface EventNormalizerOptions {
     }
 }
 
+interface ClonedNode extends Element {
+    origin: Element
+}
+
 export class EventManager {
     editor: DOMElement
     editable: DOMElement
@@ -153,7 +157,7 @@ export class EventManager {
      * @param {Node} element
      * @param {Object []} events {[eventName]: {Function}}
      */
-    _bindDOMEvents(element: Element, events) {
+    _bindDOMEvents(element: Element, events: any) {
         if (!this._eventToRemoveOnDestroy) {
             this._eventToRemoveOnDestroy = [];
         }
@@ -303,7 +307,7 @@ export class EventManager {
      */
     _extractChars(textNodes: Array<Element>) {
         let chars: Array<string> = [];
-        let nodes: Array<DOMElement> = [];
+        let nodes: Array<Element> = [];
         let offsets: Array<number> = [];
         textNodes.forEach(function (node) {
             if (node.nodeValue) {
@@ -320,7 +324,7 @@ export class EventManager {
         });
         return {
             chars: chars,
-            nodes: nodes,
+            nodes: <ClonedNode[]>nodes,
             offsets: offsets,
         };
     }
@@ -331,16 +335,13 @@ export class EventManager {
      * @param {Element} node
      * @returns {Element[]}
      */
-    _findTextNode (node, textNodes: Array<Element>) {
-        if (!textNodes) {
-            textNodes = [];
-        }
+    _findTextNode (node: DOMElement, textNodes: Array<Element> = []) {
         if (node.nodeType === 3) {
             textNodes.push(node);
         } else if (node.tagName === 'BR') {
             textNodes.push(node);
         } else {
-            node.childNodes.forEach(n => this._findTextNode(n, textNodes));
+            node.childNodes.forEach(n => this._findTextNode(<DOMElement>n, textNodes));
         }
         return textNodes;
     }
@@ -354,7 +355,7 @@ export class EventManager {
      * @param {Object} extractedChars
      * @returns {Object} {startClone, endClone, start, end}
      */
-    _findOriginChanges(extractedCloneChars, extractedChars) {
+    _findOriginChanges(extractedCloneChars:any, extractedChars:any) {
         const cloneLength = extractedCloneChars.chars.length - 1;
         const length = extractedChars.chars.length - 1;
 
@@ -517,7 +518,7 @@ export class EventManager {
      * @private
      * @param {object} param
      */
-    _pressInsertComposition (param) {
+    _pressInsertComposition (param: CompiledEvent) {
         if (!this.editable.contains(param.clone.origin)) {
             this.triggerEvent('trigger Action: ??? wtf ???');
             return;
@@ -538,7 +539,7 @@ export class EventManager {
         const cloneLength = extractedCloneChars.nodes.length;
         const length = extractedChars.nodes.length;
         let endChanged;
-        for (let index = 0, ; index <= length; index++) {
+        for (let index = 0 ; index <= length; index++) {
             if (extractedChars.nodes[index] === range.startContainer) {
                 endChanged = index + range.startOffset;
                 break;
