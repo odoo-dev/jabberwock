@@ -59,9 +59,9 @@ export class EventNormalizer {
     _editorFocused: boolean
     _clonedNodeFormComposition: HTMLElement
 
-    constructor (editable: HTMLElement, options: EventNormalizerOptions) {
+    constructor (editable: HTMLElement, triggerEvent: Function) {
         this.editable = <DOMElement>editable;
-        this.options = options;
+        this._triggerEvent = triggerEvent;
         this._bindDOMEvents(window.top.document.documentElement, {
             selectionchange: this._onSelectionChange.bind(this),
             click: this._onClick.bind(this),
@@ -208,7 +208,7 @@ export class EventNormalizer {
      */
     _eventsNormalization(param: CompiledEvent) {
         if (param.defaultPrevented && param.type !== 'move') {
-            this.triggerEvent('trigger Action: nothing');
+            this._triggerEvent('nothing');
             return;
         }
 
@@ -256,26 +256,24 @@ export class EventNormalizer {
                 clone: param.clone,
             });
         } else if (param.key === 'Backspace' || param.key === 'Delete') {
-            this._pressRemoveSide({
-                type: param.key,
+            this._triggerEvent('delete', {
+                side: param.key === 'Backspace' ? 'left' : 'right',
                 shiftKey: param.shiftKey,
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
             });
         } else if (param.key === 'Tab') {
-            this._pressInsertTab({
-                type: 'Tab',
+            this._triggerEvent('tab', {
                 shiftKey: param.shiftKey,
                 ctrlKey: param.ctrlKey,
                 altKey: param.altKey,
             });
         } else if (param.key === 'Enter') {
-            this._pressInsertTab({
-                type: 'Enter',
-                shiftKey: param.shiftKey,
-                ctrlKey: param.ctrlKey,
-                altKey: param.altKey,
-            });
+            if (param.shiftKey) {
+                this._triggerEvent('insert', '<br/>');
+            } else {
+                this._triggerEvent('insert', 'addLine');
+            }
         } else if ((!param.ctrlKey && !param.altKey) &&
                 (param.data && param.data.length === 1 || param.key && param.key.length === 1 || param.key === 'Space')) {
             let data = param.data && param.data.length === 1 ? param.data : param.key;
@@ -284,9 +282,9 @@ export class EventNormalizer {
             }
             this._pressInsertChar({type: 'char', data: data});
         } else if (param.type === "keydown") {
-            this.triggerEvent('trigger Action: keydown', param);
+            this._triggerEvent('keydown', param);
         } else {
-            this.triggerEvent('trigger Action: ???', param);
+            this._triggerEvent('unknown', param);
         }
     }
     /**
@@ -503,11 +501,11 @@ export class EventNormalizer {
      */
     _pressInsertChar (param: CompiledEvent) {
         if (param.data === ' ') {
-            this.triggerEvent('trigger Action: insert', ['\u00A0']);
+            this._triggerEvent('insert', '\u00A0');
         } else if (param.data.charCodeAt(0) === 10) {
-            this.triggerEvent('trigger Action: insert', ['<br/>']);
+            this._triggerEvent('insert', '<br/>');
         } else {
-            this.triggerEvent('trigger Action: insert', [param.data]);
+            this._triggerEvent('insert', param.data);
         }
     }
     /**
@@ -516,7 +514,7 @@ export class EventNormalizer {
      */
     _pressInsertComposition (param) {
         if (!this.editable.contains(param.clone.origin)) {
-            this.triggerEvent('trigger Action: ??? wtf ???');
+            this._triggerEvent('unknown', param);
             return;
         }
 
@@ -557,50 +555,8 @@ export class EventNormalizer {
 
         // end
 
-        this.triggerEvent('trigger Action: setRange', origin, textBefore);
-        this.triggerEvent('trigger Action: insert', text);
-    }
-    /**
-     * @private
-     * @param {object} param
-     */
-    _pressInsertEnter (param: CompiledEvent) {
-        if (param.shiftKey) {
-            this.triggerEvent('trigger Action: insert', ['<br/>']);
-        } else {
-            this.triggerEvent('trigger Action: enter, or outdent');
-
-            /*
-            const range = BaseRange.getRange();
-            const liAncestor = range.scArch.ancestor('isLi');
-            const isInEmptyLi = range.isCollapsed() && liAncestor && liAncestor.isDeepEmpty();
-            if (isInEmptyLi) {
-                BaseArch.outdent();
-            } else {
-                BaseArch.addLine();
-            }
-            */
-        }
-    }
-    /**
-     * Insert a TAB (4 non-breakable spaces).
-     *
-     * @private
-     * @param {object} param
-     */
-    _pressInsertTab(param: CompiledEvent) {
-        if (this.options.tab && !this.options.tab.enabled) {
-            this.triggerEvent('trigger Action: nothing');
-            return;
-        }
-        if (param.shiftKey || param.ctrlKey || param.altKey) {
-            this.triggerEvent('trigger Action: nothing');
-            return;
-        }
-        const tabSize = this.options.tab && this.options.tab.size || 0;
-        const tab = new Array(tabSize).fill('\u00A0').join('');
-
-        this.triggerEvent('trigger Action: insert', [tab]);
+        this._triggerEvent('setRange', origin, textBefore);
+        this._triggerEvent('insert', text);
     }
     /**
      * Move the selection/range
@@ -610,28 +566,19 @@ export class EventNormalizer {
      */
     _pressMove (param: CompiledEvent) {
         if (param.defaultPrevented) {
-            this.triggerEvent('trigger Action: restore range');
+            this._triggerEvent('restoreRange');
         }
         if (param.data === 'SelectAll') {
-            this.triggerEvent('trigger Action: selectAll');
+            this._triggerEvent('selectAll');
         } else if (navigationKey.indexOf(param.data) !== -1) {
             const isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
-            this.triggerEvent('trigger Action: setRangeFromDom', {
-                moveLeft: isLeftish,
-                moveRight: !isLeftish,
-            });
+            let range = this._getRange();
+            range.moveLeft = isLeftish;
+            range.moveRight = !isLeftish;
+            this._triggerEvent('setRange', range);
         } else {
-            this.triggerEvent('trigger Action: setRangeFromDom', {});
+            this._triggerEvent('setRange', this._getRange());
         }
-    }
-    /**
-     * Remove to the side of the current range.
-     *
-     * @private
-     * @param {Boolean} isLeft true to remove to the left
-     */
-    _pressRemoveSide (param: CompiledEvent) {
-        this.triggerEvent('trigger Action: remove', param.key === 'Backspace' ? 'left' : 'right', param);
     }
     /**
      * Called when we the CompiledEvent is ready
@@ -646,12 +593,6 @@ export class EventNormalizer {
         this._previousEvent = param;
         this._compiledEvent = null;
         this._eventsNormalization(param);
-    }
-    /**
-     * todo: Trigger the action.
-     */
-    triggerEvent (truc: string, a: any = null, b: any = null) {
-        console.log(truc, a, b);
     }
 
     //--------------------------------------------------------------------------
@@ -733,7 +674,7 @@ export class EventNormalizer {
             this._cloneForComposition();
         } else if (event.inputType === 'insertParagraph' && param.key === 'Unidentified') {
             param.key = 'Enter';
-        } else if (event.inputType === 'deleteContentBackwards' && param.key === 'Unidentified') {
+        } else if (event.inputType === 'deleteContentBackward' && param.key === 'Unidentified') {
             param.key = 'Backspace';
         } else if (event.inputType === 'deleteContentForward' && param.key === 'Unidentified') {
             param.key = 'Delete';
@@ -799,11 +740,7 @@ export class EventNormalizer {
         setTimeout(() => {
             this._mousedownInEditable = false;
             if (target instanceof Element) {
-                if (mousedownTarget === target) {
-                    this.triggerEvent('trigger Action: setRange', {startContainer: target});
-                } else {
-                    this.triggerEvent('trigger Action: setRangeFromDom');
-                }
+                this._triggerEvent('setRange', this._getRange());
             }
         }, 0);
     }
@@ -818,7 +755,7 @@ export class EventNormalizer {
             return;
         }
         if (this._isSelectAll(this._getRange())) {
-            this.triggerEvent('trigger Action: selectAll');
+            this._triggerEvent('selectAll');
         }
     }
 };
