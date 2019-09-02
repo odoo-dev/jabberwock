@@ -3,7 +3,7 @@
         <title>Jabberwock Editor</title>
     </head>
     <body>
-        <jw-editor style="position: absolute; padding: 10px; text-align: center; top: 0; left: 0; bottom: 0; right: 0;">
+        <jw-editor style="position: absolute; padding: 10px; top: 0; left: 0; bottom: 0; right: 0;">
         </jw-editor>
         <link rel="stylesheet" type="text/css" href="src/plugins/DevTools/DevTools.css" />
 
@@ -11,12 +11,14 @@
         <script>
             Promise.all([
                 import('./build/es-modules/core/JWEditor.js'),
+                import('./build/es-modules/ui/OwlUI.js'),
                 import('./build/es-modules/plugins/Awesome.js'),
                 import('./build/es-modules/plugins/DevTools/DevTools.js'),
-            ]).then(([JWEditor, Awesome, DevTools]) => {
+            ]).then(([JWEditor, OwlUI, Awesome, DevTools]) => {
                 const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
+                const ui = new OwlUI.OwlUI(editor);
                 editor.addPlugin(Awesome.Awesome);
-                editor.addPlugin(DevTools.DevTools);
+                ui.addPlugin(DevTools.DevTools);
                 editor.loadConfig({
                     theme: 'CoolTheme',
                 });

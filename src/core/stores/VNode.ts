@@ -11,9 +11,12 @@ export enum VNodeType {
     LINE_BREAK = 'LINE_BREAK',
 }
 
+let id = 0;
+
 export class VNode {
     readonly type: VNodeType;
-    children: VNode[];
+    children: VNode [];
+    id: number;
     index: number;
     parent: VNode | null;
     value: string | undefined;
@@ -22,6 +25,8 @@ export class VNode {
         this.type = type;
         this.parent = null;
         this.children = [];
+        this.id = id;
+        id++;
         this.index = 0;
         this.value = value;
     }

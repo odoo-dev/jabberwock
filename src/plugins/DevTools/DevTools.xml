@@ -1,0 +1,32 @@
+<templates>
+    <devtools-tree t-name="TreeComponent">
+        <t class="element-name" t-foreach="tree" t-as="treeNode">
+            <t t-if="treeNode.node.value">
+                <span t-key="treeNode.id">
+                    <t t-esc="treeNode.node.value"></t>
+                </span>
+            </t>
+            <t t-else="">
+                <div t-key="treeNode.id" t-attf-style="margin-left: {{treeNode.level * 3}}em;">
+                    <t t-esc="treeNode.node.type"></t>
+                </div>
+            </t>
+        </t>
+    </devtools-tree>
+
+
+    <jw-devtools t-name="devtools">
+        <devtools-navbar class="closed">
+            <button>Inspector</button>
+        </devtools-navbar>
+        <devtools-contents>
+            <TreeComponent/>
+            <devtools-sidepane>
+                <div class="about">
+                    <div class="type"></div>
+                </div>
+                <div class="properties"></div>
+            </devtools-sidepane>
+        </devtools-contents>
+    </jw-devtools>
+</templates>

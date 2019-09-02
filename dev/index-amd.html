@@ -3,7 +3,7 @@
         <title>Jabberwock Editor</title>
     </head>
     <body>
-        <jw-editor style="position: absolute; padding: 10px; text-align: center; top: 0; left: 0; bottom: 0; right: 0;">
+        <jw-editor style="position: absolute; padding: 10px; top: 0; left: 0; bottom: 0; right: 0;">
         </jw-editor>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
         <script type="text/javascript" src="./build/amd/bundle.js"></script>
@@ -14,12 +14,14 @@
             requirejs([
                 "core/JWEditor",
                 "plugins/Awesome",
-                "plugins/DevTools/DevTools"
-            ], function (JWEditor, Awesome, DevTools) {
+                "plugins/DevTools/DevTools",
+                "ui/OwlUI"
+            ], function (JWEditor, Awesome, DevTools, OwlUI) {
 
                 const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
+                const ui = new OwlUI.OwlUI(editor);
                 editor.addPlugin(Awesome.Awesome);
-                editor.addPlugin(DevTools.DevTools);
+                ui.addPlugin(DevTools);
                 editor.loadConfig({
                     theme: 'CoolTheme',
                 });
