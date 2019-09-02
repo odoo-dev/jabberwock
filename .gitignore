@@ -12,4 +12,6 @@ ehthumbs.db
 Thumbs.db
 data/
 build/
+build-native/
+lib/owl
 package-lock.json
