@@ -751,7 +751,7 @@ export class EventNormalizer {
      * @param {Event} event
      */
     _onSelectionChange (event: Event) {
-        if (!this._editorFocused || this._mousedownInEditable || this.editable.style.display === 'none') {
+        if (/*todo ? !this._editorFocused || */this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
         if (this._isSelectAll(this._getRange())) {
