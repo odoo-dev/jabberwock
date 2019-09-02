@@ -1,5 +1,5 @@
-import { VNode, VNodeType } from '../stores/VNode';
-import utils from './utils';
+import { VNode, VNodeType } from '../stores/VNode.js';
+import utils from './utils.js';
 
 const _getNodeType = (node: Element): VNodeType => {
     switch (node.tagName) {
