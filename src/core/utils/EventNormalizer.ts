@@ -1,7 +1,7 @@
 import { Range } from '../stores/Range.js';
 import { DOMElement } from '../types/DOMElement.js';
 
-const navigationKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'End', 'Home'];
+const navigationKey = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'End', 'Home']);
 
 // As of August 29th 2019, InputEvent is considered experimental by MDN as some
 // of its properties are said to be unsupported by Edge and Safari. This is
@@ -18,9 +18,10 @@ interface InputEvent extends UIEvent {
 interface CompiledEvent {
     type: string; // main event type, e.g. 'keydown', 'composition', 'move', ...
     key?: string; // the key pressed for keyboard events
-    shiftKey?: boolean;
-    ctrlKey?: boolean;
     altKey?: boolean;
+    ctrlKey?: boolean;
+    metaKey?: boolean;
+    shiftKey?: boolean;
     data?: string; // specific data for input events
     mutationsList?: Array<MutationRecord>; // mutations observed by the observer
     defaultPrevented?: boolean;
@@ -40,16 +41,29 @@ interface SelectRange extends Range {
     moveRight?: boolean;
 }
 
+interface ExtractedCharList {
+    chars: string[];
+    nodes: ClonedNode[];
+    offsets: number[];
+}
+
+interface ChangeOffsets {
+    cloneStart: number;
+    cloneEnd: number;
+    originalStart: number;
+    originalEnd: number;
+}
+
 export class EventNormalizer {
     editable: DOMElement;
     _compiledEvent: CompiledEvent;
     _observer: MutationObserver;
-    _eventToRemoveOnDestroy: Array<any>;
+    _eventToRemoveOnDestroy: Array<any>; // TODO: remove
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
     _triggerEvent: Function; // callback to trigger on events
 
     constructor(editable: HTMLElement, triggerEvent: Function) {
-        this.editable = <DOMElement>editable;
+        this.editable = editable as DOMElement;
         this._triggerEvent = triggerEvent;
         this._bindDOMEvents(window.top.document, {
             selectionchange: this._onSelectionChange.bind(this),
@@ -58,8 +72,8 @@ export class EventNormalizer {
             contextmenu: this._onContextMenu.bind(this),
         });
         this._bindDOMEvents(this.editable, {
-            keydown: this._onKeyDown.bind(this),
-            keypress: this._onKeyDown.bind(this),
+            keydown: this._onKeyDownOrKeyPress.bind(this),
+            keypress: this._onKeyDownOrKeyPress.bind(this),
             input: this._onInput.bind(this),
             compositionend: this._onCompositionEnd.bind(this),
             compositionstart: this._onCompositionStart.bind(this),
@@ -67,23 +81,23 @@ export class EventNormalizer {
             mousedown: this._onMouseDown.bind(this),
             touchstart: this._onMouseDown.bind(this),
         });
-        this._observer = new MutationObserver((mutationsList: any) => {
+        this._observer = new MutationObserver((mutationsList: Array<MutationRecord>): void => {
             if (this._compiledEvent) {
                 this._compiledEvent.mutationsList = this._compiledEvent.mutationsList.concat(mutationsList);
             }
         });
         this._observer.observe(this.editable, {
-            characterData: true,
-            childList: true,
-            subtree: true,
+            characterData: true, // text changes
+            childList: true, // child changes
+            subtree: true, // extend the obervation to the target children
         });
     }
     /**
-     * Called when destroy the editor.
+     * Called when destroy the event normalizer.
      * Remove all added handlers.
      *
      */
-    destroy(el: HTMLElement) {
+    destroy(): void {
         this._observer.disconnect();
         this._eventToRemoveOnDestroy.forEach(function(eventObject) {
             eventObject.target.removeEventListener(eventObject.name, eventObject.method);
@@ -99,15 +113,15 @@ export class EventNormalizer {
      * After a tick (setTimeout 0ms) the method '_tickAfterUserInteraction' is
      * called.
      * All events during a tick are caught and the CompiledEvent object is
-     * complete. This analysis removes most of the action desired by the user.
+     * complete. This analysis tries to extract the actions desired by the user.
      * Actions such as special character insertion, delete, backspace,
      * spellcheckers...
-     * User events are received per packet, corresponding to an action.
+     * User events are received per batch, corresponding to an action.
      *
      * @see _tickAfterUserInteraction
      * @returns {CompiledEvent}
      */
-    _beginToStackEventDataForNextTick() {
+    _beginToStackEventDataForNextTick(): CompiledEvent {
         if (this._compiledEvent) {
             return this._compiledEvent;
         }
@@ -115,8 +129,10 @@ export class EventNormalizer {
             type: null,
             key: 'Unidentified',
             data: '',
-            shiftKey: false,
+            altKey: false,
             ctrlKey: false,
+            metaKey: false,
+            shiftKey: false,
             mutationsList: [],
             defaultPrevented: false,
         };
@@ -130,7 +146,7 @@ export class EventNormalizer {
      * @param {Node} element
      * @param {Object []} events {[eventName]: {Function}}
      */
-    _bindDOMEvents(element: EventTarget, events: EventFunctionMapping) {
+    _bindDOMEvents(element: EventTarget, events: EventFunctionMapping): void {
         if (!this._eventToRemoveOnDestroy) {
             this._eventToRemoveOnDestroy = [];
         }
@@ -159,23 +175,26 @@ export class EventNormalizer {
         }
 
         const range = this._getRange();
+        // Look for closest block node starting from current text node
         let format = range.startContainer;
         while (
             format.parentNode &&
             format !== this.editable &&
-            (format.nodeType === 3 || window.getComputedStyle(format).display !== 'block')
+            (format.nodeType === 3 || // text node can't be block => look for parent
+                window.getComputedStyle(format).display !== 'block')
         ) {
             format = format.parentNode;
         }
-        let clone: ClonedNode = format.cloneNode(true);
+        const clone: ClonedNode = format.cloneNode(true);
         clone.origin = format;
         this._compiledEvent.clone = clone;
 
-        (function addChildOrigin(clone: ClonedNode) {
+        (function addChildOrigin(clone: ClonedNode): void {
+            // only mark DOM elements (type 1)
             if (clone.nodeType !== 1) {
                 return;
             }
-            let childNodes = <NodeListOf<DOMElement>>clone.origin.childNodes;
+            const childNodes = clone.origin.childNodes as NodeListOf<DOMElement>;
             clone.childNodes.forEach((child: ClonedNode, index) => {
                 child.origin = childNodes[index];
                 addChildOrigin(child);
@@ -183,93 +202,89 @@ export class EventNormalizer {
         })(clone);
     }
     /**
-     * Called when we the CompiledEvent is ready by _tickAfterUserInteraction
+     * Called when the CompiledEvent is ready by _tickAfterUserInteraction
      * Trigger the different actions according to the event analysis performed.
      *
      * @see _tickAfterUserInteraction
      * @private
-     * @param {CompiledEvent} param
+     * @compiledEvent {CompiledEvent} compiledEvent
      */
-    _eventsNormalization(param: CompiledEvent) {
-        if (param.defaultPrevented && param.type !== 'move') {
-            this._triggerEvent('nothing');
+    _processCompiledEvent(compiledEvent: CompiledEvent): void {
+        // TODO: transfer defaultPrevented information
+        if (compiledEvent.defaultPrevented) {
+            this._triggerEvent('nothing'); // suggest a flush / reset from editor
             return;
         }
 
-        // mark as dirty the new nodes to re-render it
-        // because the browser can split other than our arch and we must fix the errors
-        const elements: Node[] = [];
-        param.mutationsList.forEach(mutation => {
-            if (mutation.type === 'characterData' && elements.indexOf(mutation.target) === -1) {
-                elements.push(mutation.target);
+        // gather dirty nodes as they will have to be re-rendered
+        const elements: Set<HTMLElement> = new Set();
+        compiledEvent.mutationsList.forEach(mutation => {
+            if (mutation.type === 'characterData') {
+                elements.add(mutation.target as HTMLElement);
             }
             if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach(target => {
-                    if (elements.indexOf(target) === -1) {
-                        elements.push(target);
-                    }
-                });
-                mutation.removedNodes.forEach(target => {
-                    if (elements.indexOf(target) === -1) {
-                        elements.push(target);
-                    }
-                });
+                mutation.addedNodes.forEach(target => elements.add(target as HTMLElement));
+                mutation.removedNodes.forEach(target => elements.add(target as HTMLElement));
             }
         });
 
-        if (navigationKey.indexOf(param.key) !== -1) {
-            this._pressMove({
-                type: 'move',
-                key: param.key,
-                shiftKey: param.shiftKey,
-                ctrlKey: param.ctrlKey,
-                altKey: param.altKey,
-            });
-        } else if (param.type === 'move') {
-            this._pressMove({
-                type: 'move',
-            });
-        } else if (param.type === 'composition') {
-            // previous.update = audroid update for each char
-            // param.data[0] !== ' ' = audio insertion
-            this._pressInsertComposition({
-                type: 'composition',
-                data: param.data,
-                clone: param.clone,
-            });
-        } else if (param.key === 'Backspace' || param.key === 'Delete') {
-            this._triggerEvent('delete', {
-                side: param.key === 'Backspace' ? 'left' : 'right',
-                shiftKey: param.shiftKey,
-                ctrlKey: param.ctrlKey,
-                altKey: param.altKey,
-            });
-        } else if (param.key === 'Tab') {
-            this._triggerEvent('tab', {
-                shiftKey: param.shiftKey,
-                ctrlKey: param.ctrlKey,
-                altKey: param.altKey,
-            });
-        } else if (param.key === 'Enter') {
-            if (param.shiftKey) {
-                this._triggerEvent('insert', '<br/>');
-            } else {
-                this._triggerEvent('insert', 'addLine');
-            }
+        if (navigationKey.has(compiledEvent.key)) {
+            this._pressMove(compiledEvent, elements);
+        } else if (compiledEvent.type === 'composition') {
+            this._pressInsertComposition(compiledEvent, elements);
+        } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
+            const deleteEventPayload = {
+                direction: compiledEvent.key === 'Backspace' ? 'left' : 'right',
+                altKey: compiledEvent.altKey,
+                ctrlKey: compiledEvent.ctrlKey,
+                metaKey: compiledEvent.metaKey,
+                shiftKey: compiledEvent.shiftKey,
+            };
+            this._triggerEvent('delete', deleteEventPayload, elements);
+        } else if (compiledEvent.key === 'Tab') {
+            const tabEventPayload = {
+                altKey: compiledEvent.altKey,
+                ctrlKey: compiledEvent.ctrlKey,
+                metaKey: compiledEvent.metaKey,
+                shiftKey: compiledEvent.shiftKey,
+            };
+            this._triggerEvent('tab', tabEventPayload, elements);
+        } else if (compiledEvent.key === 'Enter') {
+            const enterEventPayload = {
+                altKey: compiledEvent.altKey,
+                ctrlKey: compiledEvent.ctrlKey,
+                metaKey: compiledEvent.metaKey,
+                shiftKey: compiledEvent.shiftKey,
+            };
+            this._triggerEvent('enter', enterEventPayload, elements);
         } else if (
-            !param.ctrlKey &&
-            !param.altKey &&
-            ((param.data && param.data.length === 1) || (param.key && param.key.length === 1) || param.key === 'Space')
+            !compiledEvent.ctrlKey &&
+            !compiledEvent.altKey &&
+            ((compiledEvent.data && compiledEvent.data.length === 1) ||
+                (compiledEvent.key && compiledEvent.key.length === 1) ||
+                compiledEvent.key === 'Space')
         ) {
-            let data = param.data && param.data.length === 1 ? param.data : param.key;
-            if (param.data === 'Space') {
-                data = ' ';
+            // Different browsers handle the same action differently using
+            // triggering different events with different payloads. We listen
+            // to input events which uses data and keypress event which uses key.
+            // In some browsers, input event data is empty (empty string) which
+            // is wrong, hence we have to look at the keypress event.
+            // When we have data, data has more value than key.
+            // TODO comment: input > keypress > keydown
+            const data = compiledEvent.data && compiledEvent.data.length === 1 ? compiledEvent.data : compiledEvent.key;
+            if (data === ' ' || data === 'Space') {
+                // Some send space as ' ' and some send 'Space'.
+                this._triggerEvent('insert', '\u00A0', elements); // nbsp
+            } else if (data.charCodeAt(0) === 10) {
+                // enter on some mobile keyboards do not trigger keypress so we need to catch it here
+                this._triggerEvent('insert', '<br/>', elements);
+            } else {
+                this._triggerEvent('insert', data, elements);
             }
-            this._pressInsertChar({ type: 'char', data: data });
-        } else if (param.type === 'keydown') {
-            this._triggerEvent('keydown', param);
+        } else if (compiledEvent.type === 'keydown') {
+            this._triggerEvent('keydown', compiledEvent);
         } else {
-            this._triggerEvent('unknown', param);
+            this._triggerEvent('unknown', compiledEvent);
         }
     }
     /**
@@ -278,14 +293,15 @@ export class EventNormalizer {
      * Two lists can then be compared to know where they diverge.
      *
      * @private
-     * @param {Element[]} textNodes
+     * @param {Element[]} nodesToExtract text nodes or <br/> nodes
      * @returns {Object} {chars, nodes, offsets}
      */
-    _extractChars(textNodes: Array<Element>) {
+    _extractChars(node: Element): ExtractedCharList {
+        const nodesToExtract = this._findTextNode(node as DOMElement);
         const chars: Array<string> = [];
         const nodes: Array<Element> = [];
         const offsets: Array<number> = [];
-        textNodes.forEach(function(node) {
+        nodesToExtract.forEach(function(node) {
             if (node.nodeValue) {
                 node.nodeValue.split('').forEach(function(char, index) {
                     chars.push(char);
@@ -300,7 +316,7 @@ export class EventNormalizer {
         });
         return {
             chars: chars,
-            nodes: <ClonedNode[]>nodes,
+            nodes: nodes as ClonedNode[],
             offsets: offsets,
         };
     }
@@ -311,13 +327,13 @@ export class EventNormalizer {
      * @param {Element} node
      * @returns {Element[]}
      */
-    _findTextNode(node: DOMElement, textNodes: Array<Element> = []) {
+    _findTextNode(node: DOMElement, textNodes: Array<Element> = []): Element[] {
         if (node.nodeType === 3) {
             textNodes.push(node);
         } else if (node.tagName === 'BR') {
             textNodes.push(node);
         } else {
-            node.childNodes.forEach(n => this._findTextNode(<DOMElement>n, textNodes));
+            node.childNodes.forEach(n => this._findTextNode(n as DOMElement, textNodes));
         }
         return textNodes;
     }
@@ -327,48 +343,47 @@ export class EventNormalizer {
      *
      * @see _extractChars
      * @private
-     * @param {Object} extractedCloneChars
-     * @param {Object} extractedChars
+     * @param {Object} cloneChars
+     * @param {Object} originalChars
      * @returns {Object} {startClone, endClone, start, end}
      */
-    _findOriginChanges(extractedCloneChars: any, extractedChars: any) {
-        const cloneLength = extractedCloneChars.chars.length - 1;
-        const length = extractedChars.chars.length - 1;
+    _findChangeOffsets(cloneChars: ExtractedCharList, originalChars: ExtractedCharList): ChangeOffsets {
+        const cloneLength = cloneChars.chars.length - 1;
+        const originalLength = originalChars.chars.length - 1;
 
-        let startClone = 0,
-            endClone = cloneLength,
-            start = 0,
-            end = length;
+        let cloneStart = 0,
+            cloneEnd = cloneLength,
+            originalStart = 0,
+            originalEnd = originalLength;
 
-        for (start; start <= cloneLength; start++) {
-            if (extractedCloneChars.chars[start] !== extractedChars.chars[start]) {
-                startClone = start;
+        for (originalStart; originalStart <= cloneLength; originalStart++) {
+            if (cloneChars.chars[originalStart] !== originalChars.chars[originalStart]) {
+                cloneStart = originalStart;
                 break;
             }
         }
 
-        for (endClone; endClone >= 0; endClone--) {
-            if (extractedCloneChars.chars[endClone] !== extractedChars.chars[length + endClone - cloneLength]) {
-                endClone++;
-                end = length + endClone - cloneLength;
+        for (cloneEnd; cloneEnd >= 0; cloneEnd--) {
+            if (cloneChars.chars[cloneEnd] !== originalChars.chars[originalLength + cloneEnd - cloneLength]) {
+                cloneEnd = cloneEnd + 1; // end of range is inclusive
+                originalEnd = originalLength + cloneEnd - cloneLength;
                 break;
             }
         }
 
         return {
-            startClone: startClone,
-            endClone: endClone,
-            start: start,
-            end: end,
+            cloneStart: cloneStart,
+            cloneEnd: cloneEnd,
+            originalStart: originalStart,
+            originalEnd: originalEnd,
         };
     }
     /**
-     * Move the current range to the current selection in the DOM
-     * (the native range).
+     * Get the current range and selection from the DOM
      *
-     * @returns {SelectRange}
+     * @returns {Range}
      */
-    _getRange(): SelectRange {
+    _getRange(): Range {
         const selection = this.editable.ownerDocument.getSelection();
         if (!selection || selection.rangeCount === 0) {
             const range: Range = {
@@ -387,7 +402,7 @@ export class EventNormalizer {
         } else {
             ltr = selection.anchorNode === nativeRange.startContainer;
         }
-        const range: SelectRange = {
+        const range: Range = {
             startContainer: nativeRange.startContainer,
             startOffset: nativeRange.startOffset,
             endContainer: nativeRange.endContainer,
@@ -396,11 +411,11 @@ export class EventNormalizer {
         };
         return range;
     }
-    _isSelectAll(rangeDOM: Range) {
+    _isSelectAll(rangeDOM: Range): boolean {
         let startContainer = rangeDOM.startContainer;
         let startOffset = rangeDOM.startOffset;
         let endContainer = rangeDOM.endContainer;
-        const endOffset = rangeDOM.endOffset;
+        let endOffset = rangeDOM.endOffset;
 
         const isRangeCollapsed = startContainer === endContainer && startOffset === endOffset;
         if (!startContainer || !endContainer || isRangeCollapsed) {
@@ -409,6 +424,7 @@ export class EventNormalizer {
 
         const body = this.editable.ownerDocument.body;
         if (!body.contains(startContainer) || !body.contains(endContainer)) {
+            // The selection might be in a node which has since been removed from DOM
             return false;
         }
         if (startContainer.childNodes[startOffset]) {
@@ -417,13 +433,15 @@ export class EventNormalizer {
         }
         if (endContainer.childNodes[endOffset]) {
             endContainer = endContainer.childNodes[endOffset];
+            endOffset = 0;
         }
         if (startOffset !== 0 || (endContainer.nodeType === 3 && endOffset !== endContainer.textContent.length)) {
             return false;
         }
 
+        const editable = this.editable;
         function isVisible(el: DOMElement): boolean {
-            if (el.tagName === 'WE3-EDITABLE') {
+            if (el === editable) {
                 return true;
             }
             const style = window.getComputedStyle(el.parentNode);
@@ -433,14 +451,16 @@ export class EventNormalizer {
             return isVisible(el.parentNode);
         }
 
-        let el: DOMElement;
+        // Look for nodes in editable that would be before startContainer
         if (this.editable.contains(startContainer)) {
-            el = this.editable;
+            let el = this.editable;
             while (el) {
                 if (el === startContainer) {
                     break;
                 }
-                if (el.nodeType === 3 && isVisible(el.parentNode)) {
+                if ((el.nodeType === 3 || el.tagName === 'BR') && isVisible(el)) {
+                    // We found a node in editable before startContainer so,
+                    // clearly, we did not do a select all
                     return false;
                 }
                 if (el.firstChild) {
@@ -450,18 +470,21 @@ export class EventNormalizer {
                 } else if (el.parentNode !== this.editable) {
                     el = el.parentNode.nextSibling;
                 } else {
-                    el = null;
+                    // We looked at all the nodes in editable
+                    break;
                 }
             }
         }
 
         if (this.editable.contains(endContainer)) {
-            el = this.editable;
+            let el = this.editable;
             while (el) {
                 if (el === endContainer) {
                     break;
                 }
-                if (el.nodeType === 3 && isVisible(el)) {
+                if ((el.nodeType === 3 || el.tagName === 'BR') && isVisible(el)) {
+                    // We found a node in editable before startContainer so,
+                    // clearly, we did not do a select all
                     return false;
                 }
                 if (el.lastChild) {
@@ -471,7 +494,8 @@ export class EventNormalizer {
                 } else if (el.parentNode !== this.editable) {
                     el = el.parentNode.previousSibling;
                 } else {
-                    el = null;
+                    // We looked at all the nodes in editable
+                    break;
                 }
             }
         }
@@ -479,68 +503,73 @@ export class EventNormalizer {
     }
     /**
      * @private
-     * @param {string} param
-     */
-    _pressInsertChar(param: CompiledEvent) {
-        if (param.data === ' ') {
-            this._triggerEvent('insert', '\u00A0');
-        } else if (param.data.charCodeAt(0) === 10) {
-            this._triggerEvent('insert', '<br/>');
-        } else {
-            this._triggerEvent('insert', param.data);
-        }
-    }
-    /**
-     * @private
      * @param {object} param
      */
-    _pressInsertComposition(param: CompiledEvent) {
+    _pressInsertComposition(param: CompiledEvent, elements: Set<HTMLElement>): void {
         if (!this.editable.contains(param.clone.origin)) {
-            this._triggerEvent('unknown', param);
+            // Some weird keyboards might replace the entire block element rather
+            // than the text inside of it. This is currently unsupported.
+            this._triggerEvent('unknown', param, elements); // suggest reset / flush from renderer
             return;
         }
 
-        const cloneTextNodes = this._findTextNode(param.clone);
-        const extractedCloneChars = this._extractChars(cloneTextNodes);
+        const extractedCloneChars = this._extractChars(param.clone);
+        const extractedOriginalChars = this._extractChars(param.clone.origin);
+        const changeOffsets = this._findChangeOffsets(extractedCloneChars, extractedOriginalChars);
 
-        const textNodes = this._findTextNode(param.clone.origin);
-        const extractedChars = this._extractChars(textNodes);
-
-        const originChanges = this._findOriginChanges(extractedCloneChars, extractedChars);
-        let text = (param.data && param.data.replace(/\u00A0/g, ' ')) || '';
-
-        // specify the change from the range and data
-
+        // extend the range of the change to match the text that was inserted
+        // example:
+        // original: 'this is a sentance'
+        // word corrected by the system: sentance => sentence
+        // new: 'this is a sentence'
+        // change we observe: 'this is a sent[a => e]nce'
+        // We want to find back the proper corrected word, not just the change
         const range = this._getRange();
-        const cloneLength = extractedCloneChars.nodes.length;
-        const length = extractedChars.nodes.length;
-        let endChanged;
-        for (let index = 0; index <= length; index++) {
-            if (extractedChars.nodes[index] === range.startContainer) {
+        const cloneLength = extractedCloneChars.chars.length;
+        const originalLength = extractedOriginalChars.chars.length;
+        let endChanged: number;
+        // Extend the change offset up to the current position of therange, which
+        // is necessarily right after the change after a correction.
+        for (let index = 0; index <= originalLength; index++) {
+            if (extractedOriginalChars.nodes[index] === range.startContainer) {
                 endChanged = index + range.startOffset;
                 break;
             }
         }
-        let startChanged = endChanged - text.length;
+        // If we have data, we know the length of the corrected word, so we can
+        // construct the range offsets by going backward from the end we just got
+        let startChanged = param.data ? endChanged - param.data.length : endChanged;
 
-        endChanged = Math.max(endChanged, Math.min(originChanges.start, originChanges.end));
-        startChanged = Math.min(startChanged, Math.max(originChanges.start, originChanges.end));
-        text = extractedChars.chars.slice(startChanged, endChanged).join('');
+        // TODO: original => new, cloned => old
+        // The offsets of the change might have endChanged < startChanged if
+        // original: 'aa aa aa aa aa'
+        // new:      'aa aa aa aa aa aa'
+        // change we observe: 'aa] aa aa aa aa [aa'
+        // We use min max to find the first offset, regardless of whether it's
+        // supposed to be the start or end offset then use min/max to avoid
+        // restraining the endChanged and startChanged computed earlier. It's ok
+        // to extend the range firther with this second analysis but not restrain
+        // it. We have the assurance to have AT LEAST the change in the range.
+        endChanged = Math.max(endChanged, Math.min(changeOffsets.originalStart, changeOffsets.originalEnd));
+        startChanged = Math.min(startChanged, Math.max(changeOffsets.originalStart, changeOffsets.originalEnd));
 
+        // Reconstruct the correction
+        const text = extractedOriginalChars.chars.slice(startChanged, endChanged).join('');
+        // Compute the range in old DOM corresponding to range of the correction in new DOM
         const origin = {
             startContainer: extractedCloneChars.nodes[startChanged].origin,
             startOffset: extractedCloneChars.offsets[startChanged],
-            endContainer: extractedCloneChars.nodes[cloneLength - length + endChanged].origin,
-            endOffset: extractedCloneChars.offsets[cloneLength - length + endChanged],
+            endContainer: extractedCloneChars.nodes[cloneLength - originalLength + endChanged].origin,
+            endOffset: extractedCloneChars.offsets[cloneLength - originalLength + endChanged],
         };
-        const textBefore = extractedCloneChars.nodes[startChanged].nodeValue
-            .slice(0, origin.endOffset)
-            .slice(origin.startOffset);
 
-        // end
+        // We can get the original text before composition if we would like to
+        // const textBefore = extractedCloneChars.nodes[startChanged].nodeValue
+        //     .slice(0, origin.endOffset)
+        //     .slice(origin.startOffset);
 
-        this._triggerEvent('setRange', origin, textBefore);
-        this._triggerEvent('insert', text);
+        this._triggerEvent('setRange', origin, []);
+        this._triggerEvent('insert', text, elements);
     }
     /**
      * Move the selection/range
@@ -548,164 +577,205 @@ export class EventNormalizer {
      * @private
      * @param {object} param
      */
-    _pressMove(param: CompiledEvent) {
+    _pressMove(param: CompiledEvent, elements: Set<HTMLElement>): void {
         if (param.defaultPrevented) {
             this._triggerEvent('restoreRange');
         }
-        if (param.data === 'SelectAll') {
-            this._triggerEvent('selectAll');
-        } else if (navigationKey.indexOf(param.data) !== -1) {
+        // TODO: shouldn't it be key rather than data here ?
+        const range = this._getRange();
+        if (navigationKey.has(param.data)) {
             const isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
-            const range = this._getRange();
+            const range = this._getRange() as SelectRange;
+            // TODO: set origin (click, end, home, arrowLeft, whatever)
             range.moveLeft = isLeftish;
             range.moveRight = !isLeftish;
-            this._triggerEvent('setRange', range);
-        } else {
-            this._triggerEvent('setRange', this._getRange());
         }
+        this._triggerEvent('setRange', range, elements);
     }
     /**
-     * Called when we the CompiledEvent is ready
-     * (when all event are received and the event thread is finished)
+     * Called when the CompiledEvent is ready, that is when all events have
+     * been received and the event thread is finished then process the CompiledEvent.
      *
      * @see _beginToStackEventDataForNextTick
      * @see _eventsNormalization
      */
-    _tickAfterUserInteraction() {
+    _tickAfterUserInteraction(): void {
         const param = this._compiledEvent;
         this._compiledEvent = null;
-        this._eventsNormalization(param);
+        this._processCompiledEvent(param);
     }
 
     //--------------------------------------------------------------------------
-    // Handle
+    // Handlers
     //--------------------------------------------------------------------------
 
     /**
      * Catch composition action
      *
      * @private
-     * @param {CompositionEvent} event
+     * @param {CompositionEvent} ev
      */
-    _onCompositionEnd(event: CompositionEvent) {
-        if (this.editable.style.display === 'none') {
-            return;
-        }
-        const param = this._beginToStackEventDataForNextTick();
+    _onCompositionStart(): void {
+        // Consider a spell checking keyboard that is being displayed following
+        // a focus event into the editable zone. If some other code on the page
+        // ends up hiding the editable zone for some functional reason, there is
+        // no guarantee the spell checking keyboard will be updated accordingly.
+        // In this case, if the user goes on to click on one of the proposition
+        // from his spell checking keyboard, it will trigger a CompositionEvent
+        // but, since the editable zone has since been hidden, we ignore it.
+        if (this.editable.style.display === 'none') return;
+        // TODO: what if we got detached from the DOM (beware of iframes) ?
+
+        // Initialize the CompiledEvent and clone the current block node to be
+        // able to analyze the change later on to reconstruct the composition.
+        this._beginToStackEventDataForNextTick();
         this._cloneForComposition();
-        param.type = 'composition';
-        param.data = event.data;
     }
     /**
      * Catch composition action
      *
      * @private
-     * @param {CompositionEvent} event
+     * @param {CompositionEvent} ev
      */
-    _onCompositionStart(event: CompositionEvent) {
-        if (this.editable.style.display !== 'none') {
-            this._beginToStackEventDataForNextTick();
-            this._cloneForComposition();
-        }
+    _onCompositionUpdate(ev: CompositionEvent): void {
+        // See comment on the same line in _onCompositionStart handler.
+        if (this.editable.style.display === 'none') return;
+
+        // Spell checking keyboards handle composition events inconsistently.
+        // Because of this, we cannot count on compositionstart being triggered
+        // before compositionupdate, so we might want to start compiling events
+        // on a compositionupdate event.
+        const compiledEvent = this._beginToStackEventDataForNextTick();
+        this._cloneForComposition();
+
+        // At least we have some data in the compositionupdate event.
+        compiledEvent.type = 'composition';
+        compiledEvent.data = ev.data;
     }
     /**
      * Catch composition action
      *
      * @private
-     * @param {CompositionEvent} event
+     * @param {CompositionEvent} ev
      */
-    _onCompositionUpdate(event: CompositionEvent) {
-        if (this.editable.style.display !== 'none') {
-            this._beginToStackEventDataForNextTick();
-            this._cloneForComposition();
-        }
+    _onCompositionEnd(ev: CompositionEvent): void {
+        // See comment on the same line in _onCompositionStart handler.
+        if (this.editable.style.display === 'none') return;
+
+        // Spell checking keyboards handle composition events inconsistently.
+        // Because of this, we cannot count on either start or update events
+        // occuring before the end one, so we might want to start compiling
+        // events on a compositionend event.
+        const compiledEvent = this._beginToStackEventDataForNextTick();
+        this._cloneForComposition();
+
+        // At least, we have some data in the compositionend event.
+        compiledEvent.type = 'composition';
+        compiledEvent.data = ev.data;
     }
     /**
      * Catch setRange, setRangeFromDom and selectAll actions
      *
      * @private
-     * @param {MouseEvent} event
+     * @param {MouseEvent} ev
      */
-    _onContextMenu(event: MouseEvent) {
+    _onContextMenu(): void {
+        // The _mousedownInEditable property is used to assess whether the user
+        // is currently changing the selection by using the mouse. If the
+        // context menu ends up opening, the user is definitely not selecting.
         this._mousedownInEditable = null;
     }
     /**
      * Catch composition, Enter, Backspace, Delete and insert actions
      *
      * @private
-     * @param {InputEvent} event
+     * @param {InputEvent} ev
      */
-    _onInput(event: InputEvent) {
-        if (this.editable.style.display === 'none') {
-            return;
+    _onInput(ev: InputEvent): void {
+        // See comment on the same line in _onCompositionStart handler.
+        if (this.editable.style.display === 'none') return;
+
+        const compiledEvent = this._beginToStackEventDataForNextTick();
+
+        // TODO comment: insert input data has more value than any other event
+        // type, but 'input' type has nearly no value since we don't know if it's
+        // a composition or something else, so we want to keep the original type
+        // but use the data from the input event.
+        if (!compiledEvent.type) {
+            compiledEvent.type = ev.type;
+            compiledEvent.data = ev.data;
         }
-        const param = this._beginToStackEventDataForNextTick();
 
-        if (!param.type) {
-            param.type = event.type;
-            param.data = event.data;
-        }
-
-        // todo: delete word <=> composition
-
-        if (event.inputType === 'insertCompositionText' || event.inputType === 'insertReplacementText') {
-            param.type = 'composition';
-            param.data = event.data;
+        if (
+            (ev.inputType === 'insertCompositionText' || ev.inputType === 'insertReplacementText') &&
+            compiledEvent.type === 'composition'
+        ) {
+            // TODO comment: sometimes data won't be in compositionend (or it won't be triggered at all)
+            // so, if we can catch this one, let's use it instead
+            compiledEvent.type = 'composition';
+            compiledEvent.data = ev.data;
             this._cloneForComposition();
-        } else if (event.inputType === 'insertParagraph' && param.key === 'Unidentified') {
-            param.key = 'Enter';
-        } else if (event.inputType === 'deleteContentBackward' && param.key === 'Unidentified') {
-            param.key = 'Backspace';
-        } else if (event.inputType === 'deleteContentForward' && param.key === 'Unidentified') {
-            param.key = 'Delete';
-        } else if (!param.data) {
-            param.data = event.data;
-        } else if (event.inputType === 'insertText') {
-            if (param.type.indexOf('key') === 0 && param.key.length === 1 && event.data.length === 1) {
-                param.key = event.data; // keep accent
+        } else if (ev.inputType === 'insertParagraph' && compiledEvent.key === 'Unidentified') {
+            compiledEvent.key = 'Enter';
+        } else if (ev.inputType === 'deleteContentBackward' && compiledEvent.key === 'Unidentified') {
+            compiledEvent.key = 'Backspace';
+            // TODO comment: safari mac for accents
+            this._cloneForComposition();
+        } else if (ev.inputType === 'deleteContentForward' && compiledEvent.key === 'Unidentified') {
+            compiledEvent.key = 'Delete';
+        } else if (ev.inputType === 'insertText') {
+            // update the key which does not have the accent with the data which contains the accent
+            if (compiledEvent.type.indexOf('key') === 0 && compiledEvent.key.length === 1 && ev.data.length === 1) {
+                compiledEvent.key = ev.data; // keep accent
             } else if (
-                event.data &&
-                event.data.length === 1 &&
-                event.data !== param.data &&
-                param.type === 'composition'
+                ev.data &&
+                ev.data.length === 1 &&
+                ev.data !== compiledEvent.data &&
+                compiledEvent.type === 'composition'
             ) {
-                this._cloneForComposition();
                 // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
-                param.data += event.data;
-            } else if (param.key === 'Unidentified') {
-                param.key = event.data;
+                // remember that ev.data and compiledEvent.data are from the same event stack !
+                compiledEvent.data += ev.data;
+            } else if (compiledEvent.key === 'Unidentified') {
+                // data contains the accentuated character, which is an "Unidentified" key for some browsers so let's update the key
+                compiledEvent.key = ev.data;
             }
+        } else if (!compiledEvent.data) {
+            // TODO comment: input data > other events data
+            compiledEvent.data = ev.data;
         }
     }
     /**
      * Catch Enter, Backspace, Delete and insert actions
      *
      * @private
-     * @param {KeyboardEvent} event
+     * @param {KeyboardEvent} ev
      */
-    _onKeyDown(event: KeyboardEvent) {
-        if (this.editable.style.display === 'none') {
-            return;
-        }
-        if (event.type === 'keydown' && event.key === 'Dead') {
-            return;
-        }
-        const param = this._beginToStackEventDataForNextTick();
-        param.defaultPrevented = param.defaultPrevented || event.defaultPrevented;
-        param.type = param.type || event.type;
-        param.shiftKey = event.shiftKey;
-        param.ctrlKey = event.ctrlKey;
-        param.altKey = event.altKey;
-        param.key = event.key;
+    _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
+        // See comment on the same line in _onCompositionStart handler.
+        if (this.editable.style.display === 'none') return;
+
+        // Dead keys will trigger composition and input events later
+        if (ev.type === 'keydown' && ev.key === 'Dead') return;
+
+        const compiledEvent = this._beginToStackEventDataForNextTick();
+        compiledEvent.defaultPrevented = compiledEvent.defaultPrevented || ev.defaultPrevented;
+        compiledEvent.type = compiledEvent.type || ev.type;
+        compiledEvent.key = ev.key;
+        compiledEvent.altKey = ev.altKey;
+        compiledEvent.ctrlKey = ev.ctrlKey;
+        compiledEvent.metaKey = ev.metaKey;
+        compiledEvent.shiftKey = ev.shiftKey;
     }
     /**
      * Catch setRange, setRangeFromDom and selectAll actions
      *
      * @private
-     * @param {MouseEvent} event
+     * @param {MouseEvent} ev
      */
-    _onMouseDown(event: MouseEvent) {
-        this._mousedownInEditable = event;
+    _onMouseDown(ev: MouseEvent): void {
+        // store mousedown event to detect range change from mouse selection
+        this._mousedownInEditable = ev;
     }
     /**
      * Catch setRange, setRangeFromDom actions
@@ -713,17 +783,16 @@ export class EventNormalizer {
      *
      * @see __onClick
      * @private
-     * @param {MouseEvent} event
+     * @param {MouseEvent} ev
      */
-    _onClick(event: MouseEvent) {
+    _onClick(ev: MouseEvent): void {
         if (!this._mousedownInEditable) {
             return;
         }
-        const mousedownTarget = this._mousedownInEditable.target;
-        const target = event.target;
         setTimeout(() => {
             this._mousedownInEditable = null;
-            if (target instanceof Element) {
+            if (ev.target instanceof Element) {
+                // TODO: trigger setRange 'click', 'target' (mouseup.target === mousedown.target) etc.
                 this._triggerEvent('setRange', this._getRange());
             }
         }, 0);
@@ -732,9 +801,10 @@ export class EventNormalizer {
      * Catch selectAll action
      *
      * @private
-     * @param {Event} event
+     * @param {Event} ev
      */
-    _onSelectionChange(event: Event) {
+    _onSelectionChange(): void {
+        // do nothing, wait for mouseup !
         if (this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
