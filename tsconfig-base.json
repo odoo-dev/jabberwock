@@ -3,7 +3,4 @@
         "target": "es5",
         "incremental": true
     },
-    "exclude": [
-        "./tests/**/*",
-    ]
 }
