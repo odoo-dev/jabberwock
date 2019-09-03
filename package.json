@@ -4,9 +4,9 @@
   "description": "The best editor in the world",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "concurrently \"tsc -w -p tsconfig-amd.json \" \"node dev/server.js dev/index.html\"",
+    "dev": "concurrently \"tsc -w -p tsconfig-amd.json --inlineSourceMap\" \"node dev/server.js dev/index.html\"",
     "build": "tsc -p tsconfig-amd.json",
-    "dev-native": "concurrently \"tsc -w -p tsconfig-es6.json\" \"node dev/server.js dev/index-native.html\"",
+    "dev-native": "concurrently \"tsc -w -p tsconfig-es6.json --inlineSourceMap\" \"node dev/server.js dev/index-native.html\"",
     "build-native": "tsc -p tsconfig-es6.json",
     "test": "jest"
   },

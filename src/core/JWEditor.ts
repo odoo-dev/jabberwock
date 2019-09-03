@@ -1,9 +1,12 @@
-import { Action, ActionType } from './actions/Action.js';
+import { Action } from './actions/Action.js';
 import { Dispatcher } from './dispatcher/Dispatcher.js';
-import { EventManager } from './utils/EventManager.js';
 import { JWPlugin } from './JWPlugin.js';
+import { Batch } from './operations/Batch';
+import { OperationInsertChar } from './operations/OprerationInsertChar';
 import VDocument from './stores/VDocument.js';
+import { EventManager } from './utils/EventManager.js';
 import utils from './utils/utils.js';
+import { ActionType } from './actions/Action';
 
 export interface JWEditorConfig {
     theme: string;
@@ -20,11 +23,24 @@ export class JWEditor {
         this.el = el;
         this.dispatcher = new Dispatcher();
         this.eventManager = new EventManager(this.el, this.el, {
-            dispatch: (action: Action) => {
-                action.origin = 'User';
-                this.dispatcher.dispatch(action);
+            dispatch: (action: Action): void => {
+                // make an operation
+                if (action.type === ActionType.INSERT) {
+                    console.log('new insert operation');
+                    const batch = new Batch([new OperationInsertChar(1)]);
+                    this.vDocument.processBatch(batch);
+                } else {
+                    console.log('another action than insert :', action);
+                }
             },
         });
+
+        // eventNormalizer
+        // eventManager
+        // dispatch
+        // update model
+        // update render (with minimal diff)
+
         this.pluginsRegistry = [];
         let startContent: DocumentFragment;
         if (el.children.length) {

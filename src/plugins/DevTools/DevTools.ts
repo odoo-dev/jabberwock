@@ -30,8 +30,8 @@ export class DevTools extends JWPlugin {
             about: uiEl.querySelector('devtools-sidepane .about'),
             properties: uiEl.querySelector('devtools-sidepane .properties'),
         };
-        this._fillMainTree();
-        this._updateInspectedNode(vDocument.contents);
+        // this._fillMainTree();
+        // this._updateInspectedNode(vDocument.contents);
     }
 
     _addChildren(node: VNode): Element {
@@ -94,10 +94,10 @@ export class DevTools extends JWPlugin {
         return element;
     }
     _fillMainTree(): void {
-        const root: VNode = this.vDocument.contents;
-        const div: Element = this._createElement(root);
-        this.ui.main.appendChild(div);
-        this._foldableElements();
+        // const root: VNode = this.vDocument.contents;
+        // const div: Element = this._createElement(root);
+        // this.ui.main.appendChild(div);
+        // this._foldableElements();
     }
     _foldableElements(): void {
         const elements: Element[] = utils._collectionToArray(this.ui.main.querySelectorAll('.element-name'));
