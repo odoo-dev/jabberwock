@@ -56,6 +56,7 @@ See the "run" script in [package.json](./package.json)
 - Word count
 - Syntax highlighting
 - Change the documentation with direct modification
+- Flowcharts and other graphs
 
 ## Alternate name suggestions
 - Vorpal
