@@ -37,8 +37,7 @@ interface ClonedNode extends DOMElement {
 }
 
 interface SelectRange extends Range {
-    moveLeft?: boolean;
-    moveRight?: boolean;
+    origin: string;
 }
 
 interface ExtractedCharList {
@@ -58,29 +57,38 @@ export class EventNormalizer {
     editable: DOMElement;
     _compiledEvent: CompiledEvent;
     _observer: MutationObserver;
-    _eventToRemoveOnDestroy: Array<any>; // TODO: remove
+    _selectAllOriginElement: DOMElement; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
     _triggerEvent: Function; // callback to trigger on events
 
     constructor(editable: HTMLElement, triggerEvent: Function) {
         this.editable = editable as DOMElement;
         this._triggerEvent = triggerEvent;
-        this._bindDOMEvents(window.top.document, {
-            selectionchange: this._onSelectionChange.bind(this),
-            click: this._onClick.bind(this),
-            touchend: this._onClick.bind(this),
-            contextmenu: this._onContextMenu.bind(this),
-        });
-        this._bindDOMEvents(this.editable, {
-            keydown: this._onKeyDownOrKeyPress.bind(this),
-            keypress: this._onKeyDownOrKeyPress.bind(this),
-            input: this._onInput.bind(this),
-            compositionend: this._onCompositionEnd.bind(this),
-            compositionstart: this._onCompositionStart.bind(this),
-            compositionupdate: this._onCompositionUpdate.bind(this),
-            mousedown: this._onMouseDown.bind(this),
-            touchstart: this._onMouseDown.bind(this),
-        });
+
+        this._onSelectionChange = this._onSelectionChange.bind(this);
+        this._onClick = this._onClick.bind(this);
+        this._onContextMenu = this._onContextMenu.bind(this);
+        this._onKeyDownOrKeyPress = this._onKeyDownOrKeyPress.bind(this);
+        this._onInput = this._onInput.bind(this);
+        this._onCompositionEnd = this._onCompositionEnd.bind(this);
+        this._onCompositionStart = this._onCompositionStart.bind(this);
+        this._onCompositionUpdate = this._onCompositionUpdate.bind(this);
+        this._onMouseDown = this._onMouseDown.bind(this);
+
+        window.top.document.addEventListener('selectionchange', this._onSelectionChange, false);
+        window.top.document.addEventListener('click', this._onClick, false);
+        window.top.document.addEventListener('touchend', this._onClick, false);
+        window.top.document.addEventListener('contextmenu', this._onContextMenu, false);
+
+        this.editable.addEventListener('keydown', this._onKeyDownOrKeyPress, false);
+        this.editable.addEventListener('keypress', this._onKeyDownOrKeyPress, false);
+        this.editable.addEventListener('input', this._onInput, false);
+        this.editable.addEventListener('compositionend', this._onCompositionEnd, false);
+        this.editable.addEventListener('compositionstart', this._onCompositionStart, false);
+        this.editable.addEventListener('compositionupdate', this._onCompositionUpdate, false);
+        this.editable.addEventListener('mousedown', this._onMouseDown, false);
+        this.editable.addEventListener('touchstart', this._onMouseDown, false);
+
         this._observer = new MutationObserver((mutationsList: Array<MutationRecord>): void => {
             if (this._compiledEvent) {
                 this._compiledEvent.mutationsList = this._compiledEvent.mutationsList.concat(mutationsList);
@@ -99,9 +107,20 @@ export class EventNormalizer {
      */
     destroy(): void {
         this._observer.disconnect();
-        this._eventToRemoveOnDestroy.forEach(function(eventObject) {
-            eventObject.target.removeEventListener(eventObject.name, eventObject.method);
-        });
+
+        window.top.document.removeEventListener('selectionchange', this._onSelectionChange);
+        window.top.document.removeEventListener('click', this._onClick);
+        window.top.document.removeEventListener('touchend', this._onClick);
+        window.top.document.removeEventListener('contextmenu', this._onContextMenu);
+
+        this.editable.removeEventListener('keydown', this._onKeyDownOrKeyPress);
+        this.editable.removeEventListener('keypress', this._onKeyDownOrKeyPress);
+        this.editable.removeEventListener('input', this._onInput);
+        this.editable.removeEventListener('compositionend', this._onCompositionEnd);
+        this.editable.removeEventListener('compositionstart', this._onCompositionStart);
+        this.editable.removeEventListener('compositionupdate', this._onCompositionUpdate);
+        this.editable.removeEventListener('mousedown', this._onMouseDown);
+        this.editable.removeEventListener('touchstart', this._onMouseDown);
     }
 
     //--------------------------------------------------------------------------
@@ -138,26 +157,6 @@ export class EventNormalizer {
         };
         setTimeout(this._tickAfterUserInteraction.bind(this));
         return this._compiledEvent;
-    }
-    /**
-     * Add handler event on DOM elements
-     *
-     * @private
-     * @param {Node} element
-     * @param {Object []} events {[eventName]: {Function}}
-     */
-    _bindDOMEvents(element: EventTarget, events: EventFunctionMapping): void {
-        if (!this._eventToRemoveOnDestroy) {
-            this._eventToRemoveOnDestroy = [];
-        }
-        for (const eventName in events) {
-            this._eventToRemoveOnDestroy.push({
-                target: element,
-                name: eventName,
-                method: events[eventName],
-            });
-            element.addEventListener(eventName, events[eventName], false);
-        }
     }
     /**
      * Called when we detect a composition user action.
@@ -351,10 +350,10 @@ export class EventNormalizer {
         const cloneLength = cloneChars.chars.length - 1;
         const originalLength = originalChars.chars.length - 1;
 
-        let cloneStart = 0,
-            cloneEnd = cloneLength,
-            originalStart = 0,
-            originalEnd = originalLength;
+        let cloneStart = 0;
+        let cloneEnd = cloneLength;
+        let originalStart = 0;
+        let originalEnd = originalLength;
 
         for (originalStart; originalStart <= cloneLength; originalStart++) {
             if (cloneChars.chars[originalStart] !== originalChars.chars[originalStart]) {
@@ -482,7 +481,11 @@ export class EventNormalizer {
                 if (el === endContainer) {
                     break;
                 }
-                if ((el.nodeType === 3 || el.tagName === 'BR') && isVisible(el)) {
+                if (
+                    (el.nodeType === 3 || (el.tagName === 'BR' && (el.nextSibling || !el.previousSibling))) &&
+                    isVisible(el)
+                ) {
+                    // br is not selected if it's the last element and is not alone
                     // We found a node in editable before startContainer so,
                     // clearly, we did not do a select all
                     return false;
@@ -556,11 +559,13 @@ export class EventNormalizer {
         // Reconstruct the correction
         const text = extractedOriginalChars.chars.slice(startChanged, endChanged).join('');
         // Compute the range in old DOM corresponding to range of the correction in new DOM
-        const origin = {
+        const origin: SelectRange = {
             startContainer: extractedCloneChars.nodes[startChanged].origin,
             startOffset: extractedCloneChars.offsets[startChanged],
             endContainer: extractedCloneChars.nodes[cloneLength - originalLength + endChanged].origin,
             endOffset: extractedCloneChars.offsets[cloneLength - originalLength + endChanged],
+            direction: 'rtl',
+            origin: 'composition',
         };
 
         // We can get the original text before composition if we would like to
@@ -581,15 +586,8 @@ export class EventNormalizer {
         if (param.defaultPrevented) {
             this._triggerEvent('restoreRange');
         }
-        // TODO: shouldn't it be key rather than data here ?
-        const range = this._getRange();
-        if (navigationKey.has(param.data)) {
-            const isLeftish = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].indexOf(param.data) !== -1;
-            const range = this._getRange() as SelectRange;
-            // TODO: set origin (click, end, home, arrowLeft, whatever)
-            range.moveLeft = isLeftish;
-            range.moveRight = !isLeftish;
-        }
+        const range = this._getRange() as SelectRange;
+        range.origin = param.key;
         this._triggerEvent('setRange', range, elements);
     }
     /**
@@ -674,7 +672,7 @@ export class EventNormalizer {
         compiledEvent.data = ev.data;
     }
     /**
-     * Catch setRange, setRangeFromDom and selectAll actions
+     * Catch setRange and selectAll actions
      *
      * @private
      * @param {MouseEvent} ev
@@ -752,6 +750,8 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
+        this._selectAllOriginElement = this._getRange().startContainer;
+
         // See comment on the same line in _onCompositionStart handler.
         if (this.editable.style.display === 'none') return;
 
@@ -768,7 +768,7 @@ export class EventNormalizer {
         compiledEvent.shiftKey = ev.shiftKey;
     }
     /**
-     * Catch setRange, setRangeFromDom and selectAll actions
+     * Catch setRange and selectAll actions
      *
      * @private
      * @param {MouseEvent} ev
@@ -776,9 +776,13 @@ export class EventNormalizer {
     _onMouseDown(ev: MouseEvent): void {
         // store mousedown event to detect range change from mouse selection
         this._mousedownInEditable = ev;
+        this._selectAllOriginElement = ev.target as DOMElement;
+        setTimeout(() => {
+            this._selectAllOriginElement = this._getRange().startContainer;
+        }, 0);
     }
     /**
-     * Catch setRange, setRangeFromDom actions
+     * Catch setRange actions
      * After a tick (setTimeout 0) to have the new selection/range in the DOM
      *
      * @see __onClick
@@ -790,10 +794,26 @@ export class EventNormalizer {
             return;
         }
         setTimeout(() => {
+            this._selectAllOriginElement = ev.target as DOMElement;
+            const target = this._mousedownInEditable.target as Element;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
+                let range: SelectRange;
+                if (target === ev.target) {
+                    range = {
+                        startContainer: target,
+                        startOffset: 0,
+                        endContainer: target,
+                        endOffset: target.nodeType === 1 ? target.childNodes.length : target.nodeValue.length,
+                        direction: 'rtl',
+                        origin: 'click',
+                    };
+                } else {
+                    range = this._getRange() as SelectRange;
+                    range.origin = 'click';
+                }
                 // TODO: trigger setRange 'click', 'target' (mouseup.target === mousedown.target) etc.
-                this._triggerEvent('setRange', this._getRange());
+                this._triggerEvent('setRange', range);
             }
         }, 0);
     }
@@ -808,8 +828,11 @@ export class EventNormalizer {
         if (this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
-        if (this._isSelectAll(this._getRange())) {
-            this._triggerEvent('selectAll');
+        if ((!this._compiledEvent || this._compiledEvent.key === 'a') && this._isSelectAll(this._getRange())) {
+            this._triggerEvent('selectAll', {
+                origin: this._compiledEvent ? 'keypress' : 'click',
+                target: this._selectAllOriginElement,
+            });
         }
     }
 }
