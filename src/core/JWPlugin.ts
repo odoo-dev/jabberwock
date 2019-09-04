@@ -12,7 +12,7 @@ export class JWPlugin {
         this.dispatcher = dispatcher;
     }
 
-    init() {
+    init(): void {
         // TODO
     }
 }

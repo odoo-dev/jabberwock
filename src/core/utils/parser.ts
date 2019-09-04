@@ -17,36 +17,37 @@ const _getNodeType = (node: Element): VNodeType => {
 /**
  * Parse a DOM fragment or its representation as a string.
  */
-const _parseOne = (node: Element): VNode [] => {
+const _parseOne = (node: Element): VNode[] => {
     let parsedNode: VNode;
-    if (!node.tagName) { // node is a textNode
-        let parsedNodes: VNode [] = [];
+    if (!node.tagName) {
+        // node is a textNode
+        const parsedNodes: VNode[] = [];
         for (let i = 0; i < node.textContent.length; i++) {
-            let char: string = node.textContent.charAt(i);
+            const char: string = node.textContent.charAt(i);
             parsedNode = new VNode(VNodeType.CHAR, char);
             parsedNodes.push(parsedNode);
         }
         return parsedNodes;
     }
     parsedNode = new VNode(_getNodeType(node));
-    let children: Element [] = utils._collectionToArray(node.childNodes);
+    const children: Element[] = utils._collectionToArray(node.childNodes);
     children.forEach(child => {
-        let parsedChildren: VNode [] = _parseOne(child);
+        const parsedChildren: VNode[] = _parseOne(child);
         parsedChildren.forEach(parsedChild => {
             parsedNode.append(parsedChild);
         });
     });
     return [parsedNode];
-}
+};
 /**
  * Parse a DOM fragment or its representation as a string.
  */
-const parse = (fragment: DocumentFragment): VNode [] => {
-    let parsedNodes: VNode [] = [];
+const parse = (fragment: DocumentFragment): VNode[] => {
+    let parsedNodes: VNode[] = [];
     const contents: NodeListOf<ChildNode> = fragment.childNodes;
-    const children: Element [] = utils._collectionToArray(contents);
+    const children: Element[] = utils._collectionToArray(contents);
     children.forEach(child => {
-        let parsedChildren: VNode [] = _parseOne(child);
+        const parsedChildren: VNode[] = _parseOne(child);
         parsedNodes = parsedNodes.concat(parsedChildren);
     });
     return parsedNodes;

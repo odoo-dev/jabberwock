@@ -12,15 +12,15 @@ export class EventManager {
     eventNormalizer: EventNormalizer;
 
     constructor(editor: HTMLElement, editable: HTMLElement, options: EventManagerOptions) {
-        this.editor = <DOMElement>editor;
-        this.editable = <DOMElement>editable;
+        this.editor = editor as DOMElement;
+        this.editable = editable as DOMElement;
         this.options = options;
         this.eventNormalizer = new EventNormalizer(editable, this._triggerEvent.bind(this));
     }
     /**
      * todo: Trigger the action.
      */
-    _triggerEvent(type: string, param: any = null) {
+    _triggerEvent(type: string, param: object = {}): void {
         console.log(type, param);
     }
 }
