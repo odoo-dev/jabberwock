@@ -9,13 +9,15 @@ export interface JWPluginConfiguration {
 export class JWPlugin {
     dispatcher: Dispatcher<Action>;
     vDocument: VDocument;
+    options: JWPluginConfiguration;
 
     constructor(dispatcher: Dispatcher<Action>, vDocument: VDocument, options?: JWPluginConfiguration) {
         this.dispatcher = dispatcher;
         this.vDocument = vDocument;
+        this.options = options;
     }
 
-    init() {
+    init(): void {
         // TODO
     }
 }

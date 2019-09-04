@@ -1,4 +1,4 @@
-import { Action, ActionType } from './actions/Action.js';
+import { Action } from './actions/Action.js';
 import { Dispatcher } from './dispatcher/Dispatcher.js';
 import { EventManager } from './utils/EventManager.js';
 import { JWPlugin } from './JWPlugin.js';
@@ -20,7 +20,7 @@ export class JWEditor {
         this.el = el;
         this.dispatcher = new Dispatcher();
         this.eventManager = new EventManager(this.el, this.el, {
-            dispatch: (action: Action) => {
+            dispatch: (action: Action): void => {
                 action.origin = 'User';
                 this.dispatcher.dispatch(action);
             },
@@ -42,16 +42,16 @@ export class JWEditor {
         });
     }
 
-    start() {
+    start(): void {
         this.el.setAttribute('contenteditable', 'true');
     }
 
-    addPlugin(plugin: typeof JWPlugin) {
+    addPlugin(plugin: typeof JWPlugin): void {
         this.pluginsRegistry.push(new plugin(this.dispatcher, this.vDocument)); // todo: use state
     }
 
-    loadConfig(config: JWEditorConfig) {
-        // console.log(config.theme);
+    loadConfig(config: JWEditorConfig): void {
+        console.log(config.theme);
     }
 
     get _placeholderContent(): DocumentFragment {
