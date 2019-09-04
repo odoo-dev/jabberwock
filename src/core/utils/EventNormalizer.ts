@@ -213,7 +213,7 @@ export class EventNormalizer {
     _processCompiledEvent(compiledEvent: CompiledEvent): void {
         // TODO: transfer defaultPrevented information
         if (compiledEvent.defaultPrevented) {
-            this._triggerEvent('nothing'); // suggest a flush / reset from editor
+            this._triggerEvent('inconsistentState'); // suggest a flush / reset from editor
             return;
         }
 
@@ -243,6 +243,7 @@ export class EventNormalizer {
             };
             this._triggerEvent('delete', deleteEventPayload, elements);
         } else if (compiledEvent.key === 'Tab') {
+            // TODO: maybe like keydown, there is no normalization proper here
             const tabEventPayload = {
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
@@ -277,15 +278,27 @@ export class EventNormalizer {
                 // Some send space as ' ' and some send 'Space'.
                 this._triggerEvent('insert', '\u00A0', elements); // nbsp
             } else if (data.charCodeAt(0) === 10) {
+                // LINE FEED (LF) (u000A)
                 // enter on some mobile keyboards do not trigger keypress so we need to catch it here
                 this._triggerEvent('insert', '<br/>', elements);
             } else {
                 this._triggerEvent('insert', data, elements);
             }
         } else if (compiledEvent.type === 'keydown') {
+            // Maybe the normalizer should not trigger keydown events because:
+            // - they do not need to be normalized per se (they are consistent accross browsers)
+            // - they won't be able to be defaultPrevented when triggered here anyway
             this._triggerEvent('keydown', compiledEvent);
         } else {
-            this._triggerEvent('unknown', compiledEvent);
+            // Something definitely happened (otherwise we wouldn't have caught
+            // up events related to it and we wouldn't have ended up here) BUT
+            // it seems to be an event we did not support properly since it did
+            // not fall into one of the above cases. Since something happened
+            // in the DOM but we did not understand it, we trigger an
+            // inconsistentState event. It is the responsibility of the listener
+            // to know what to do in such a case, probably reset the DOM to the
+            // last known consistent state.
+            this._triggerEvent('inconsistentState', compiledEvent);
         }
     }
     /**
@@ -514,7 +527,7 @@ export class EventNormalizer {
         if (!this.editable.contains(param.clone.origin)) {
             // Some weird keyboards might replace the entire block element rather
             // than the text inside of it. This is currently unsupported.
-            this._triggerEvent('unknown', param, elements); // suggest reset / flush from renderer
+            this._triggerEvent('inconsistentState', param, elements); // suggest reset / flush from renderer
             return;
         }
 
@@ -590,6 +603,7 @@ export class EventNormalizer {
         }
         const range = this._getRange() as SelectRange;
         range.origin = param.key;
+        // TODO: nagivation word/line ?
         this._triggerEvent('setRange', range, elements);
     }
     /**
