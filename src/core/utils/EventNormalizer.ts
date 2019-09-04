@@ -60,6 +60,7 @@ export class EventNormalizer {
     _selectAllOriginElement: DOMElement; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
     _triggerEvent: Function; // callback to trigger on events
+    _rangeHasChanged: boolean;
 
     constructor(editable: HTMLElement, triggerEvent: Function) {
         this.editable = editable as DOMElement;
@@ -144,6 +145,7 @@ export class EventNormalizer {
         if (this._compiledEvent) {
             return this._compiledEvent;
         }
+        this._rangeHasChanged = false;
         this._compiledEvent = {
             type: null,
             key: 'Unidentified',
@@ -774,6 +776,7 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onMouseDown(ev: MouseEvent): void {
+        this._rangeHasChanged = false;
         // store mousedown event to detect range change from mouse selection
         this._mousedownInEditable = ev;
         this._selectAllOriginElement = ev.target as DOMElement;
@@ -806,14 +809,15 @@ export class EventNormalizer {
                         endContainer: target,
                         endOffset: target.nodeType === 1 ? target.childNodes.length : target.nodeValue.length,
                         direction: 'rtl',
-                        origin: 'click',
+                        origin: 'pointer',
                     };
                 } else {
                     range = this._getRange() as SelectRange;
-                    range.origin = 'click';
+                    range.origin = 'pointer';
                 }
-                // TODO: trigger setRange 'click', 'target' (mouseup.target === mousedown.target) etc.
-                this._triggerEvent('setRange', range);
+                if (this._rangeHasChanged) {
+                    this._triggerEvent('setRange', range);
+                }
             }
         }, 0);
     }
@@ -824,13 +828,14 @@ export class EventNormalizer {
      * @param {Event} ev
      */
     _onSelectionChange(): void {
+        this._rangeHasChanged = true;
         // do nothing, wait for mouseup !
         if (this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
         if ((!this._compiledEvent || this._compiledEvent.key === 'a') && this._isSelectAll(this._getRange())) {
             this._triggerEvent('selectAll', {
-                origin: this._compiledEvent ? 'keypress' : 'click',
+                origin: this._compiledEvent ? 'keypress' : 'pointer',
                 target: this._selectAllOriginElement,
             });
         }
