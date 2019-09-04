@@ -2,9 +2,6 @@
   "extends": "./tsconfig-base.json",
   "compilerOptions": {
     "module": "AMD",
-    "outFile": "./build/bundle.js"
+    "outFile": "./build/amd/bundle.js"
   },
-  "exclude": [
-    "./tests/**/*",
-  ]
 }

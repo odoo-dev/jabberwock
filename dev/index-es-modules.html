@@ -10,9 +10,9 @@
         <!-- User custom script which will use the editor -->
         <script>
             Promise.all([
-                import('./build/native/core/JWEditor.js'),
-                import('./build/native/plugins/Awesome.js'),
-                import('./build/native/plugins/DevTools/DevTools.js'),
+                import('./build/es-modules/core/JWEditor.js'),
+                import('./build/es-modules/plugins/Awesome.js'),
+                import('./build/es-modules/plugins/DevTools/DevTools.js'),
             ]).then(([JWEditor, Awesome, DevTools]) => {
                 const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
                 editor.addPlugin(Awesome.Awesome);
