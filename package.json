@@ -4,10 +4,10 @@
   "description": "The best editor in the world",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "concurrently \"tsc -w -p tsconfig-amd.json \" \"node dev/server.js dev/index.html\"",
+    "dev": "concurrently \"tsc -w -p tsconfig-amd.json \" \"node dev/server.js dev/index-amd.html\"",
     "build": "tsc -p tsconfig-amd.json",
-    "dev-native": "concurrently \"tsc -w -p tsconfig-es6.json\" \"node dev/server.js dev/index-native.html\"",
-    "build-native": "tsc -p tsconfig-es6.json",
+    "dev-esm": "concurrently \"tsc -w -p tsconfig-es-modules.json\" \"node dev/server.js dev/index-es-modules.html\"",
+    "build-esm": "tsc -p tsconfig-es-modules.json",
     "test": "jest"
   },
   "repository": {

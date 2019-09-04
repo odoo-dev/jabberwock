@@ -5,18 +5,15 @@
     <body>
         <jw-editor style="position: absolute; padding: 10px; text-align: center; top: 0; left: 0; bottom: 0; right: 0;">
         </jw-editor>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
-        <script type="text/javascript" src="./build/bundle.js"></script>
-        <link rel="stylesheet" type="text/css" href="./src/plugins/DevTools/DevTools.css"/>
+        <link rel="stylesheet" type="text/css" href="src/plugins/DevTools/DevTools.css" />
 
         <!-- User custom script which will use the editor -->
         <script>
-            requirejs([
-                "core/JWEditor",
-                "plugins/Awesome",
-                "plugins/DevTools/DevTools"
-            ], function (JWEditor, Awesome, DevTools) {
-
+            Promise.all([
+                import('./build/es-modules/core/JWEditor.js'),
+                import('./build/es-modules/plugins/Awesome.js'),
+                import('./build/es-modules/plugins/DevTools/DevTools.js'),
+            ]).then(([JWEditor, Awesome, DevTools]) => {
                 const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
                 editor.addPlugin(Awesome.Awesome);
                 editor.addPlugin(DevTools.DevTools);
@@ -24,7 +21,6 @@
                     theme: 'CoolTheme',
                 });
                 editor.start();
-
             });
         </script>
     </body>
