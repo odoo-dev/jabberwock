@@ -1,28 +1,34 @@
-import { Component } from '../../../lib/owl/dist/owl.js';
-import { DOMElement } from '../../core/types/DOMElement.js';
-import { VNode } from '../../core/stores/VNode.js';
+import { Component } from '../../../../lib/owl/dist/owl.js';
+import { VNode } from '../../../core/stores/VNode.js';
 
-export class TreeComponent extends Component<any, any, any> {
-    parent: Component<any, any, any>;
-    root: VNode;
-    constructor(parent) {
-        super(parent);
-        this.parent = parent;
-        this.root = parent.env.editor.vDocument.contents;
-    }
+interface NodeState {
+    folded: boolean;
+}
+
+export class TreeComponent extends Component<any, any, NodeState> {
+    components = { TreeComponent };
+    name = this._getNodeName(this.props.vNode);
+    state = {
+        folded: !this.props.isRoot,
+    };
 
     onClickElement(event: MouseEvent): void {
-        const target = event.target as DOMElement;
         if (event.offsetX < 10) {
             // only toggle on click caret
-            this.toggleFold(target);
+            this.toggleFold();
         }
     }
-    toggleFold(target: DOMElement): void {
-        const parent: HTMLElement | undefined = target.parentElement;
-        if (parent) {
-            this.parent.toggleClass(parent, 'folded');
+    toggleFold(): void {
+        this.state.folded = !this.state.folded;
+    }
+    _getNodeName(node: VNode): string {
+        if (node.value) {
+            return node.value;
         }
+        if (node.type) {
+            return node.type.toLowerCase();
+        }
+        return '?';
     }
     // /* _bindEventToNode (node: VNode, element: Element): void {
     //     element.addEventListener('click', () => {

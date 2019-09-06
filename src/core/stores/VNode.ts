@@ -15,7 +15,7 @@ let id = 0;
 
 export class VNode {
     readonly type: VNodeType;
-    children: VNode [];
+    children: VNode[];
     id: number;
     index: number;
     parent: VNode | null;

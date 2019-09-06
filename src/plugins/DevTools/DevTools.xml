@@ -1,39 +1,44 @@
 <templates>
-    <devtools-tree t-name="TreeComponent">
-        <div class="element root">
+    <devtools-node t-name="TreeComponent"
+        t-att-class="{
+            element: props.vNode.length and !props.vNode.value,
+            folded: state.folded,
+            root: props.isRoot,
+            &quot;self-closing&quot;: props.vNode.length == 0
+        }">
+        <t t-if="props.isRoot">
             <span class="element-name">root</span>
             <div class="children">
-                <t t-foreach="root.children" t-as="child">
-                    <t t-call="childrenTemplate"/>
-                </t>
+                <TreeComponent
+                    t-foreach="props.vNode.children" t-as="child"
+                    t-key="child.id"
+                    vNode="child"/>
             </div>
-        </div>
-    </devtools-tree>
-
-    <t t-name="childrenTemplate" class="children">
-        <t t-if="child.value">
-            <span><t t-esc="child.value"/></span>
         </t>
         <t t-else="">
-            <div class="element folded">
-                <span class="element-name" t-on-click="onClickElement">
-                    <t t-esc="child.type and child.type.toLowerCase()"/>
+            <span t-if="props.vNode.value"><t t-esc="name"/></span>
+            <t t-else="">
+                <span t-attf-class="element-name" t-on-click="onClickElement">
+                    <t t-esc="name"/>
                 </span>
                 <div class="children">
-                    <t t-foreach="child.children" t-as="child">
-                        <t t-call="childrenTemplate"/>
-                    </t>
+                    <TreeComponent
+                        t-foreach="props.vNode.children" t-as="child"
+                        t-key="child.id"
+                        vNode="child"/>
                 </div>
-            </div>
+            </t>
         </t>
-    </t>
+    </devtools-node>
 
     <jw-devtools t-name="devtools" class="closed">
         <devtools-navbar t-on-click="toggleOpen">
             <button>Inspector</button>
         </devtools-navbar>
         <devtools-contents>
-            <TreeComponent/>
+            <devtools-tree>
+                <TreeComponent vNode="env.editor.vDocument.contents" isRoot="true"/>
+            </devtools-tree>
             <devtools-sidepane>
                 <div class="about">
                     <div class="type"></div>
