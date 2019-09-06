@@ -52,12 +52,6 @@ export class TreeComponent extends Component<any, any, any> {
     //     }
     //     return element;
     // }
-    // _createTree (): Element {
-    //     const root: VNode = this.env.editor.vDocument.contents;
-    //     let div: Element = this._createElement(root);
-    //     this.ui.main.appendChild(div);
-    //     this._foldableElements();
-    // }
     // _foldableElements (): void {
     //     const elements: Element [] = utils._collectionToArray(
     //         this.ui.main.querySelectorAll('.element-name')

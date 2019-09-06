@@ -24,8 +24,8 @@
         </t>
     </t>
 
-    <jw-devtools t-name="devtools">
-        <devtools-navbar class="closed">
+    <jw-devtools t-name="devtools" class="closed">
+        <devtools-navbar t-on-click="toggleOpen">
             <button>Inspector</button>
         </devtools-navbar>
         <devtools-contents>
