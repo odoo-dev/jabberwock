@@ -7,21 +7,17 @@
         </jw-editor>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
         <script type="text/javascript" src="./bundle/bundle.js"></script>
-        <link rel="stylesheet" type="text/css" href="./src/plugins/DevTools/DevTools.css"/>
 
         <!-- User custom script which will use the editor -->
         <script>
             requirejs([
                 "core/JWEditor",
                 "plugins/Awesome",
-                "plugins/DevTools/DevTools",
                 "ui/OwlUI"
-            ], function (JWEditor, Awesome, DevTools, OwlUI) {
+            ], function (JWEditor, Awesome, OwlUI) {
 
                 const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
-                const ui = new OwlUI.OwlUI(editor);
                 editor.addPlugin(Awesome.Awesome);
-                ui.addPlugin(DevTools);
                 editor.loadConfig({
                     theme: 'CoolTheme',
                 });

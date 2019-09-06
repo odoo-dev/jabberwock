@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Goaman/jabberwock.git"
+    "url": "git+https://github.com/odoo/jabberwock.git"
   },
   "author": "MultiAuthor",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/Goaman/jabberwock/issues"
+    "url": "https://github.com/odoo/jabberwock/issues"
   },
-  "homepage": "https://github.com/Goaman/jabberwock#readme",
+  "homepage": "https://github.com/odoo/jabberwock#readme",
   "devDependencies": {
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.2",

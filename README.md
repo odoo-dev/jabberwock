@@ -1,23 +1,45 @@
 # ![jabberwock](https://upload.wikimedia.org/wikipedia/commons/8/8a/Jabberwock_insignia.png) Jabberwock
 
-## Install
+## Get started
+### Install
 Install the dev dependencies
 ```bash
 npm install
 ```
 
-## dev
+### dev
 ```bash
 npm run dev
 ```
 See the "dev" script in [package.json](./package.json)
 
-## build
+### build
 ```bash
 npm run build
 ```
 See [package.json](./package.json)
 See the "run" script in [package.json](./package.json)
+
+### use dev tools
+1. Get permissions to access odoo/owl
+2. In the root folder:
+```bash
+git clone git@github.com:odoo/owl.git lib/owl
+```
+3. In `lib/owl/package.json`, in `scripts`, add:
+```json
+"buildesm": "npm run build:js && npm run build:bundle -- -f esm --outro ''",
+```
+4. In `lib/owl`:
+```bash
+npm install
+npm run buildesm
+```
+5. In the root folder:
+```bash
+npm install
+npm run dev-esm
+```
 
 ## Vision
 - Code quality
