@@ -1,10 +1,12 @@
 <templates>
     <devtools-tree t-name="TreeComponent">
-        <span class="element-name root">root</span>
-        <div class="children">
-            <t t-foreach="root.children" t-as="child">
-                <t t-call="childrenTemplate"/>
-            </t>
+        <div class="element root">
+            <span class="element-name">root</span>
+            <div class="children">
+                <t t-foreach="root.children" t-as="child">
+                    <t t-call="childrenTemplate"/>
+                </t>
+            </div>
         </div>
     </devtools-tree>
 
@@ -13,13 +15,15 @@
             <span><t t-esc="child.value"/></span>
         </t>
         <t t-else="">
-            <span class="element-name">
-                <t t-esc="child.type and child.type.toLowerCase()"/>
-            </span>
-            <div class="children">
-                <t t-foreach="child.children" t-as="child">
-                    <t t-call="childrenTemplate"/>
-                </t>
+            <div class="element folded">
+                <span class="element-name" t-on-click="onClickElement">
+                    <t t-esc="child.type and child.type.toLowerCase()"/>
+                </span>
+                <div class="children">
+                    <t t-foreach="child.children" t-as="child">
+                        <t t-call="childrenTemplate"/>
+                    </t>
+                </div>
             </div>
         </t>
     </t>

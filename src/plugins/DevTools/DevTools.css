@@ -24,7 +24,7 @@ jw-devtools {
 jw-devtools.closed {
     max-height: 31px;
 }
-jw-devtools .folded .children, jw-devtools .folded .closing {
+jw-devtools .folded .children {
     display: none;
 }
 
@@ -85,7 +85,7 @@ devtools-tree div {
     width: 100%;
 }
 
-devtools-tree .element-name.root {
+devtools-tree .root > .element-name {
     background-color: #76526c;
     color: white;
     padding-left: 5px;
@@ -97,11 +97,11 @@ devtools-tree span.element-name {
     color: #76526c;
 }
 
-devtools-tree div:not(.folded) > span.element-name.opening:before {
+devtools-tree div:not(.folded):not(.root) > span.element-name:before {
     content: '⌄';
 }
 
-devtools-tree div.folded > span.element-name.opening:before {
+devtools-tree div.folded > span.element-name:before {
     content: '› ';
 }
 

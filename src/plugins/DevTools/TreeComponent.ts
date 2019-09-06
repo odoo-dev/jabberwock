@@ -1,18 +1,28 @@
 import { Component } from '../../../lib/owl/dist/owl.js';
+import { DOMElement } from '../../core/types/DOMElement.js';
 import { VNode } from '../../core/stores/VNode.js';
 
 export class TreeComponent extends Component<any, any, any> {
+    parent: Component<any, any, any>;
     root: VNode;
-    __uniqueID = 0;
     constructor(parent) {
         super(parent);
+        this.parent = parent;
         this.root = parent.env.editor.vDocument.contents;
     }
 
-    get _uniqueID(): number {
-        const id = this.__uniqueID;
-        this.__uniqueID += 1;
-        return id;
+    onClickElement(event: MouseEvent): void {
+        const target = event.target as DOMElement;
+        if (event.offsetX < 10) {
+            // only toggle on click caret
+            this.toggleFold(target);
+        }
+    }
+    toggleFold(target: DOMElement): void {
+        const parent: HTMLElement | undefined = target.parentElement;
+        if (parent) {
+            this.parent.toggleClass(parent, 'folded');
+        }
     }
     // /* _bindEventToNode (node: VNode, element: Element): void {
     //     element.addEventListener('click', () => {
