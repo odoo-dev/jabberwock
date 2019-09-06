@@ -1,17 +1,26 @@
 import { Component } from '../../../../lib/owl/dist/owl.js';
 import { DOMElement } from '../../../core/types/DOMElement.js';
+import { InfoComponent } from './InfoComponent.js';
 import { TreeComponent } from './TreeComponent.js';
+import { VNode } from '../../../core/stores/VNode.js';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
 export class DevToolsComponent extends Component<any, any, any> {
-    components = { TreeComponent };
+    components = { InfoComponent, TreeComponent };
+    state = {
+        selectedNode: this.env.editor.vDocument.contents,
+    };
     template = 'devtools';
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
+    selectNode(event: SelectedNodeEvent): void {
+        const vNode: VNode = event.detail.vNode;
+        this.state.selectedNode = vNode;
+    }
     toggleClass(element: Element, className: string): void {
         const currentClass: string = element.getAttribute('class') || '';
         if (currentClass.indexOf(className) !== -1) {

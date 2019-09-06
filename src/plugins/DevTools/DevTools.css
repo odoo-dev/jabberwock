@@ -60,6 +60,7 @@ devtools-contents {
 /* tree */
 
 devtools-tree {
+    display: block;
     overflow: auto;
     padding: 1em;
     user-select: none;
@@ -68,25 +69,21 @@ devtools-tree {
 }
 
 devtools-tree div.children {
-    position: static;
+    position: relative;
     box-sizing: border-box;
-    width: auto;
     padding: 1px 0 1px 1.5em;
     border-left: 1px solid #d0d0d0;
-}
-
-devtools-tree div > span:hover {
-    background-color: lightblue;
 }
 
 devtools-tree div {
     width: 100%;
 }
 
-devtools-tree .root > .element-name {
+devtools-tree > devtools-node.root > span.element-name {
     background-color: #76526c;
     color: white;
     padding-left: 5px;
+    box-sizing: border-box;
 }
 
 devtools-tree span.element-name {
@@ -95,8 +92,15 @@ devtools-tree span.element-name {
     color: #76526c;
 }
 
+devtools-node > span:hover {
+    background-color: rgba(118, 82, 108, 0.2);
+}
+
 devtools-node:not(.element) {
     display: inline;
+}
+devtools-node.element {
+    display: block;
 }
 
 devtools-node:not(.folded):not(.self-closing):not(.root) > span.element-name:before {
@@ -109,6 +113,10 @@ devtools-node.folded:not(.self-closing) > span.element-name:before {
 
 devtools-node.folded .children {
     display: none;
+}
+
+devtools-node.selected > span {
+    background-color: rgba(118, 82, 108, 0.3);
 }
 
 /* sidepane */
