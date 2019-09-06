@@ -1,19 +1,28 @@
 <templates>
     <devtools-tree t-name="TreeComponent">
-        <t class="element-name" t-foreach="tree" t-as="treeNode">
-            <t t-if="treeNode.node.value">
-                <span t-key="treeNode.id">
-                    <t t-esc="treeNode.node.value"></t>
-                </span>
+        <span class="element-name root">root</span>
+        <div class="children">
+            <t t-foreach="root.children" t-as="child">
+                <t t-call="childrenTemplate"/>
             </t>
-            <t t-else="">
-                <div t-key="treeNode.id" t-attf-style="margin-left: {{treeNode.level * 3}}em;">
-                    <t t-esc="treeNode.node.type"></t>
-                </div>
-            </t>
-        </t>
+        </div>
     </devtools-tree>
 
+    <t t-name="childrenTemplate" class="children">
+        <t t-if="child.value">
+            <span><t t-esc="child.value"/></span>
+        </t>
+        <t t-else="">
+            <span class="element-name">
+                <t t-esc="child.type and child.type.toLowerCase()"/>
+            </span>
+            <div class="children">
+                <t t-foreach="child.children" t-as="child">
+                    <t t-call="childrenTemplate"/>
+                </t>
+            </div>
+        </t>
+    </t>
 
     <jw-devtools t-name="devtools">
         <devtools-navbar class="closed">

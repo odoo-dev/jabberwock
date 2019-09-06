@@ -1,36 +1,16 @@
 import { Component } from '../../../lib/owl/dist/owl.js';
 import { VNode } from '../../core/stores/VNode.js';
 
-interface TreeNode {
-    node: VNode
-    level: number
-    id: number
-}
-
-type Tree = TreeNode[];
-
 export class TreeComponent extends Component<any, any, any> {
-    tree: Tree
-    __uniqueID = 0
-    constructor (parent) {
+    root: VNode;
+    __uniqueID = 0;
+    constructor(parent) {
         super(parent);
-        this.tree = this._getFlatTree(parent.env.editor.vDocument.contents);
+        this.root = parent.env.editor.vDocument.contents;
     }
 
-    _getFlatTree (node: VNode, level = 0): Tree {
-        let tree: Tree = [{
-            node: node,
-            level: level,
-            id: this._uniqueID,
-        }];
-        level += 1;
-        node.children.forEach((node: VNode) => {
-            tree = tree.concat(this._getFlatTree(node, level));
-        });
-        return tree;
-    }
-    get _uniqueID (): number {
-        let id = this.__uniqueID;
+    get _uniqueID(): number {
+        const id = this.__uniqueID;
         this.__uniqueID += 1;
         return id;
     }
