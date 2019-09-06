@@ -4,46 +4,66 @@
             element: props.vNode.length and !props.vNode.value,
             folded: state.folded,
             root: props.isRoot,
-            &quot;self-closing&quot;: props.vNode.length == 0
+            &quot;self-closing&quot;: props.vNode.length == 0,
+            selected: props.selectedID == props.vNode.id,
         }">
         <t t-if="props.isRoot">
-            <span class="element-name">root</span>
-            <div class="children">
-                <TreeComponent
-                    t-foreach="props.vNode.children" t-as="child"
-                    t-key="child.id"
-                    vNode="child"/>
-            </div>
+            <span class="element-name" t-on-click="onClickElement">root</span>
+            <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <span t-if="props.vNode.value"><t t-esc="name"/></span>
+            <span t-if="props.vNode.value" t-on-click="onClickElement">
+                <t t-esc="name"/>
+            </span>
             <t t-else="">
-                <span t-attf-class="element-name" t-on-click="onClickElement">
+                <span class="element-name" t-on-click="onClickElement">
                     <t t-esc="name"/>
                 </span>
-                <div class="children">
-                    <TreeComponent
-                        t-foreach="props.vNode.children" t-as="child"
-                        t-key="child.id"
-                        vNode="child"/>
-                </div>
+                <t t-call="treeChildren"/>
             </t>
         </t>
     </devtools-node>
+
+    <t t-name="treeChildren">
+        <div class="children">
+            <TreeComponent t-if="!state.folded"
+                t-foreach="props.vNode.children" t-as="child"
+                t-key="child.id"
+                vNode="child"
+                selectedID="props.selectedID"/>
+        </div>
+    </t>
+
+    <devtools-info t-name="InfoComponent">
+        <div class="about">
+            <div class="type">
+                <t t-esc="props.vNode and props.vNode.type or &quot;?&quot;"/>
+                <t t-if="props.vNode and props.vNode.value">:
+                    "<t t-esc="props.vNode.value"/>"
+                </t>
+            </div>
+        </div>
+        <div class="properties">
+            <div>Length: <t t-esc="props.vNode.length"/></div>
+            <div t-if="props.vNode.parent" t-on-click="clickParent(props.vNode)">
+                Parent: <t t-esc="props.vNode.parent.type or &quot;?&quot;"/>
+            </div>
+        </div>
+    </devtools-info>
 
     <jw-devtools t-name="devtools" class="closed">
         <devtools-navbar t-on-click="toggleOpen">
             <button>Inspector</button>
         </devtools-navbar>
         <devtools-contents>
-            <devtools-tree>
-                <TreeComponent vNode="env.editor.vDocument.contents" isRoot="true"/>
+            <devtools-tree t-on-node-selected="selectNode">
+                <TreeComponent
+                    vNode="env.editor.vDocument.contents"
+                    isRoot="true"
+                    selectedID="state.selectedNode.id"/>
             </devtools-tree>
-            <devtools-sidepane>
-                <div class="about">
-                    <div class="type"></div>
-                </div>
-                <div class="properties"></div>
+            <devtools-sidepane t-on-node-selected="selectNode">
+                <InfoComponent vNode="state.selectedNode"/>
             </devtools-sidepane>
         </devtools-contents>
     </jw-devtools>
