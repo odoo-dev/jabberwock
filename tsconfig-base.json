@@ -1,9 +1,10 @@
 {
     "compilerOptions": {
-        "target": "esnext",
+        "target": "es6",
         "incremental": true
     },
     "exclude": [
         "./tests/**/*",
-    ]
+    ],
+    "types": ["chai"]
 }

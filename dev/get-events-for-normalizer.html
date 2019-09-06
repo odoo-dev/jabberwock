@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <title>Jabberwock Editor - Get the event for the normalizer</title>
+    </head>
+    <body>
+        <div id="contenteditable" contenteditable="true" style="height: 10vh;">contenteditable</div>
+        <button id="clear">clear</button>
+        <textarea id="textarea" style="width: 100vw; height: 80vh;">
+
+        </textarea>
+        <!-- User custom script which will use the editor -->
+        <script>
+            const contenteditable = document.getElementById('contenteditable');
+            const textarea = document.getElementById('textarea');
+            const inputs = [];
+            const nextTickStack = [];
+            const currentIndex = 0;
+            document.getElementById('clear').addEventListener('click', function(){
+                inputs.splice(0, inputs.length);
+                resetTextarea();
+            })
+            function resetTextarea() {
+                textarea.value = JSON.stringify(inputs);
+            }
+            function attachInput(el, inputName) {
+                el.addEventListener(inputName, function(e) {
+                    nextTickStack.push({
+                        inputName: inputName,
+                        key: e.key,
+                        charCode: e.charCode,
+                        keyCode: e.keyCode,
+                        data: e.data,
+                        insert: e.insert,
+                        inputType: e.inputType,
+
+                        ctrlkey: e.ctrlkey,
+                    });
+                    resetTextarea();
+                    setTimeout(processNextTick)
+                })
+            }
+            function processNextTick() {
+                if (nextTickStack.length > 0) {
+                    console.log('nextTick', nextTickStack.length, nextTickStack.slice(0))
+                    inputs.push([...nextTickStack])
+                }
+                nextTickStack.splice(0, nextTickStack.length);
+            }
+
+            attachInput(document.body, 'input');
+            //attachInput(document.body, 'keyup');
+            attachInput(document.body, 'keydown');
+            attachInput(document.body, 'keypress');
+
+            attachInput(document.body, 'compositionend');
+            attachInput(document.body, 'compositionstart');
+            attachInput(document.body, 'compositionupdate');
+
+            attachInput(document.body, 'mousedown');
+            attachInput(document.body, 'touchstart');
+
+            attachInput(document.body, 'contextmenu');
+            attachInput(document.body, 'selectionchange');
+            attachInput(document.body, 'touchend');
+            attachInput(document.body, 'click');
+
+            // todo get mutations
+            const _observer = new MutationObserver((mutationsList) => {
+                console.log('mutationlist', mutationsList.slice(0));
+                nextTickStack.push({
+                    inputName: "mutation",
+                })
+            });
+            _observer.observe(contenteditable, {
+                characterData: true, // text changes
+                childList: true, // child changes
+                subtree: true, // extend the obervation to the target children
+            });
+
+
+        </script>
+    </body>
+</html>
