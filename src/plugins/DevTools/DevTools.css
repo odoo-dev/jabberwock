@@ -85,6 +85,12 @@ devtools-tree div {
     width: 100%;
 }
 
+devtools-tree .element-name.root {
+    background-color: #76526c;
+    color: white;
+    padding-left: 5px;
+}
+
 devtools-tree span.element-name {
     width: 100%;
     display: inline-block;
