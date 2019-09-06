@@ -4,8 +4,40 @@ import { Component } from '../../../lib/owl/dist/owl.js';
 ////////////////////////////// todo: use API ///////////////////////////////////
 
 export class DevToolsComponent extends Component<any, any, any> {
-    components = { TreeComponent }
-    template = 'devtools'
+    components = { TreeComponent };
+    template = 'devtools';
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    toggleOpen(event: Event): void {
+        let target: Element = event.target as Element;
+        while (target && !this._isRootElement(target)) {
+            target = target.parentElement;
+        }
+        if (target) {
+            this._toggleClass(target, 'closed');
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _isRootElement(element: Element): boolean {
+        return element.tagName === 'JW-DEVTOOLS';
+    }
+    _toggleClass (element: Element, className: string): void {
+            const currentClass: string = element.getAttribute('class') || '';
+            if (currentClass.indexOf(className) !== -1) {
+                const regex: RegExp = new RegExp('\\s*' + className + '\\s*');
+                element.setAttribute('class', currentClass.replace(regex, ''));
+            } else {
+                element.setAttribute('class', currentClass + ' ' + className);
+            }
+        }
+    }
 
     // constructor (env) {
     //     super(env);
@@ -45,15 +77,6 @@ export class DevToolsComponent extends Component<any, any, any> {
     //     let typeInfo: string = node.type.toLowerCase().replace('_', ' ');
     //     return typeInfo.charAt(0).toUpperCase() + typeInfo.substring(1);
     // }
-    // _toggleClass (node: Element, className: string): void {
-    //     const currentClass: string = node.getAttribute('class') || '';
-    //     if (currentClass.indexOf(className) !== -1) {
-    //         const regex: RegExp = new RegExp('\\s*' + className + '\\s*');
-    //         node.setAttribute('class', currentClass.replace(regex, ''));
-    //     } else {
-    //         node.setAttribute('class', currentClass + ' ' + className);
-    //     }
-    // }
     // _updateInspectedNode (node: VNode) {
     //     this.state.currentNode = node;
     //     let typeContainer: Element = this.ui.about.querySelector('.type');
@@ -63,4 +86,4 @@ export class DevToolsComponent extends Component<any, any, any> {
     //         this.ui.properties.innerHTML += '<div>Parent: ' + node.parent.type + '</div>';
     //     }
     // }
-};
+}
