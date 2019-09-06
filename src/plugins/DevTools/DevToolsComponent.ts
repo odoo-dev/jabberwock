@@ -1,5 +1,6 @@
-import { TreeComponent } from './TreeComponent.js';
 import { Component } from '../../../lib/owl/dist/owl.js';
+import { DOMElement } from '../../core/types/DOMElement.js';
+import { TreeComponent } from './TreeComponent.js';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -11,13 +12,22 @@ export class DevToolsComponent extends Component<any, any, any> {
     // Public
     //--------------------------------------------------------------------------
 
+    toggleClass(element: Element, className: string): void {
+        const currentClass: string = element.getAttribute('class') || '';
+        if (currentClass.indexOf(className) !== -1) {
+            const regex = new RegExp('\\s*' + className + '\\s*');
+            element.setAttribute('class', currentClass.replace(regex, ''));
+        } else {
+            element.setAttribute('class', currentClass + ' ' + className);
+        }
+    }
     toggleOpen(event: Event): void {
-        let target: Element = event.target as Element;
+        let target = event.target as DOMElement;
         while (target && !this._isRootElement(target)) {
-            target = target.parentElement;
+            target = target.parentNode;
         }
         if (target) {
-            this._toggleClass(target, 'closed');
+            this.toggleClass(target, 'closed');
         }
     }
 
@@ -27,16 +37,6 @@ export class DevToolsComponent extends Component<any, any, any> {
 
     _isRootElement(element: Element): boolean {
         return element.tagName === 'JW-DEVTOOLS';
-    }
-    _toggleClass (element: Element, className: string): void {
-            const currentClass: string = element.getAttribute('class') || '';
-            if (currentClass.indexOf(className) !== -1) {
-                const regex: RegExp = new RegExp('\\s*' + className + '\\s*');
-                element.setAttribute('class', currentClass.replace(regex, ''));
-            } else {
-                element.setAttribute('class', currentClass + ' ' + className);
-            }
-        }
     }
 
     // constructor (env) {
