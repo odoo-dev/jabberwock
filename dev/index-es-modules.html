@@ -10,10 +10,10 @@
         <!-- User custom script which will use the editor -->
         <script>
             Promise.all([
-                import('./build/es-modules/core/JWEditor.js'),
-                import('./build/es-modules/ui/OwlUI.js'),
-                import('./build/es-modules/plugins/Awesome.js'),
-                import('./build/es-modules/plugins/DevTools/DevTools.js'),
+                import('./build/core/JWEditor.js'),
+                import('./build/ui/OwlUI.js'),
+                import('./build/plugins/Awesome.js'),
+                import('./build/plugins/DevTools/DevTools.js'),
             ]).then(([JWEditor, OwlUI, Awesome, DevTools]) => {
                 const editor = new JWEditor.JWEditor(document.querySelector('jw-editor'));
                 const ui = new OwlUI.OwlUI(editor);
