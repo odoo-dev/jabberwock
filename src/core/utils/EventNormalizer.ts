@@ -58,8 +58,8 @@ interface CharactersMapping {
 }
 
 interface ChangeOffsets {
-    startOffset: number;
-    endOffset: number;
+    leftOffset: number;
+    rightOffset: number;
 }
 
 interface EventListenerDeclaration {
@@ -379,12 +379,15 @@ export class EventNormalizer {
      * @param acc accumulator array to append to
      */
     _getTextualNodes(node: DOMElement, acc: DOMElement[] = []): DOMElement[] {
-        if (node.nodeType === Node.TEXT_NODE || node.tagName === 'BR') {
+        if (this._isTextualNode(node)) {
             acc.push(node);
         } else {
             node.childNodes.forEach(n => this._getTextualNodes(n, acc));
         }
         return acc;
+    }
+    _isTextualNode(node: HTMLElement): boolean {
+        return node.nodeType === Node.TEXT_NODE || node.tagName === 'BR';
     }
     /**
      * Compare the given previous and current strings and return the offsets in
@@ -419,8 +422,8 @@ export class EventNormalizer {
         }
 
         return {
-            startOffset: startOffset,
-            endOffset: lengthDiff + endOffset,
+            leftOffset: startOffset,
+            rightOffset: lengthDiff + endOffset,
         };
     }
     /**
@@ -457,6 +460,138 @@ export class EventNormalizer {
                 endOffset: nativeRange.endOffset,
                 direction: ltr ? 'ltr' : 'rtl',
             };
+        }
+    }
+    /**
+     * Process the given compiled event as a composition to identify the text
+     * that was inserted and trigger the corresponding events on the listener.
+     *
+     * @private
+     */
+    _processComposition(ev: CompiledEvent, elements: Set<HTMLElement>): void {
+        if (!this.editable.contains(ev.clone.origin)) {
+            // Some weird keyboards might replace the entire block element
+            // rather than the text inside of it. This is currently unsupported.
+            this._triggerEvent('inconsistentState', ev, elements);
+            return;
+        }
+
+        // The goal of this function is to precisely find what was inserted by
+        // a keyboard supporting spell-checking and suggestions.
+        // Example (`|` represents the collapsed selection):
+        //   Previous content: 'My friend Christofe| was here.'
+        //   Current content:  'My friend Christophe Matthieu| was here.'
+        //   Observed change:  'My friend Christo[fe => phe Matthieu] was here.'
+        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
+
+        const previous = this._getCharactersMapping(ev.clone);
+        const current = this._getCharactersMapping(ev.clone.origin);
+        const previousLength = previous.length;
+        const currentLength = current.length;
+        // Since the range has been consistently set right after the change for
+        // all tested spell-checking keyboards, it can be used as a marker to
+        // identify the end of the change and thus extend the change offset.
+        const range = this._getRange();
+        const ltr = this.editable.dir === 'ltr';
+        let insertEnd = ltr ? 0 : currentLength;
+        while (insertEnd >= 0 && insertEnd < currentLength) {
+            if (current.nodes[insertEnd] === range.startContainer) {
+                insertEnd += range.startOffset;
+                break;
+            }
+            if (ltr) {
+                insertEnd++;
+            } else {
+                insertEnd--;
+            }
+        }
+
+        // If a composition event has been observed and its data property was
+        // set, it can be used to compute the start of the change.
+        let insertStart = insertEnd;
+        if (ev.data) {
+            insertStart -= ev.data.length;
+        }
+
+        // The range resulting from this basic analysis strongly depends on the
+        // quality of the data provided in the composition events. Such events
+        // cannot be trusted blindly as they are implemented inconsistently by
+        // different spell-checking keyboards. For example, they might not
+        // provide any data at all, or insert multiple words while providing
+        // only one of them in the event's data property. Because of this, a
+        // second analysis must be performed. This analysis aims at precisely
+        // identifying the offset of the actual change in the text by comparing
+        // the previous content with the current one from left to right to find
+        // the start of the change and from right to left to find its end.
+        const change = this._getChangeOffsets(previous.chars, current.chars);
+
+        // It is possible that the start and end offset of the observed change
+        // are reversed in rtl direction or in some weird cases.
+        // Example (`|` represents the collapsed selection):
+        //   Previous content: 'aa aa aa| aa aa'
+        //   Current content:  'aa aa aa aa| aa aa'
+        //   Observed change:  'aa ]aa aa aa aa[ aa'
+        //   Actual text inserted by the keyboard: 'aa '
+        // In such a case, the second analysis is useless and cannot be used.
+        // Otherwsise, the range from the first analysis can be extended such
+        // that it contains the observed change at the very least.
+        if (change.leftOffset < change.rightOffset) {
+            const changeStart = ltr ? change.leftOffset : change.rightOffset;
+            const changeEnd = ltr ? change.rightOffset : change.leftOffset;
+            const startMost = ltr ? Math.min : Math.max;
+            const endMost = ltr ? Math.max : Math.min;
+            insertStart = startMost(insertStart, changeStart);
+            insertEnd = endMost(insertEnd, changeEnd);
+        }
+
+        // Reconstruct the inserted text from the computed indices.
+        const insertedText = current.chars.slice(insertStart, insertEnd);
+
+        // Compute the range in the previous DOM corresponding to the range of
+        // the observed correction in current DOM. For this purpose, the nodes
+        // in the `previous` mapping were given a reference to their original
+        // self before cloning such that it can be retrieved now.
+        const previousNodes = previous.nodes as ClonedNode[];
+        // The indices in the current DOM must be offset by the difference in
+        // length between the previous and current content in order to compute
+        // their corresponding indices in the previous DOM.
+        let insertPreviousStart = insertStart;
+        let insertPreviousEnd = insertEnd;
+        if (ltr) {
+            insertPreviousEnd = insertEnd + previousLength - currentLength;
+        } else {
+            insertPreviousStart = insertStart + previousLength - currentLength;
+        }
+        const insertionRange: Range = {
+            startContainer: previousNodes[insertPreviousStart].origin,
+            startOffset: previous.offsets[insertPreviousStart],
+            endContainer: previousNodes[insertPreviousEnd].origin,
+            endOffset: previous.offsets[insertPreviousEnd],
+            direction: ltr ? 'rtl' : 'ltr',
+            origin: 'composition',
+        };
+
+        this._triggerEvent('setRange', insertionRange, []);
+        this._triggerEvent('insert', insertedText, elements);
+    }
+    /**
+     * Process the given compiled event as a move and trigger the corresponding
+     * events on the listener.
+     *
+     * @private
+     */
+    _processMove(ev: CompiledEvent, elements: Set<HTMLElement>): void {
+        // The normalizer honors preventDefault for moves. If the range was
+        // moved regardless of the preventDefault setting, it must be restored.
+        if (ev.defaultPrevented) {
+            this._triggerEvent('restoreRange');
+        } else {
+            // Set the range according to the current one. Set the origin key
+            // in order to track the source of the move.
+            const range = this._getRange();
+            range.origin = ev.key;
+            // TODO: nagivation word/line ?
+            this._triggerEvent('setRange', range, elements);
         }
     }
     /**
@@ -504,202 +639,62 @@ export class EventNormalizer {
             return false;
         }
 
-        const editable = this.editable;
-        function isVisible(el: DOMElement): boolean {
-            if (el === editable) {
+        // Look for visible nodes in editable that would be outside the range.
+        return (
+            this._isAtVisibleEdge(startContainer, 'ltr') &&
+            this._isAtVisibleEdge(endContainer, 'rtl')
+        );
+    }
+    /**
+     * Return true if the given element is at the edge of the editable node in
+     * the given direction. An element is considered at the edge of the editable
+     * node if there is no other visible element in editable that is located
+     * beyond it in the given direction.
+     *
+     * @param element to check whether it is at the visible edge
+     * @param direction from which to look for textual nodes ('ltr' or 'rtl')
+     */
+    _isAtVisibleEdge(element: HTMLElement, direction: string): boolean {
+        if (!this.editable.contains(element)) return false;
+        // Start from the top and do a depth-first search trying to find a
+        // visible node that would be in editable and beyond the given element.
+        let node = this.editable;
+        const child = direction === 'ltr' ? 'firstChild' : 'lastChild';
+        const sibling = direction === 'ltr' ? 'nextSibling' : 'previousSibling';
+        while (node) {
+            if (node === element) {
+                // The element was reached without finding another visible node.
                 return true;
             }
-            const style = window.getComputedStyle(el.parentNode);
-            if (style.display === 'none' || style.visibility === 'hidden') {
+            if (this._isTextualNode(node) && this._isVisible(node)) {
+                // There is a textual node in editable beyond the given element.
                 return false;
             }
-            return isVisible(el.parentNode);
-        }
-
-        // Look for nodes in editable that would be before startContainer
-        if (this.editable.contains(startContainer)) {
-            let el = this.editable;
-            while (el) {
-                if (el === startContainer) {
-                    break;
-                }
-                if ((el.nodeType === Node.TEXT_NODE || el.tagName === 'BR') && isVisible(el)) {
-                    // We found a node in editable before startContainer so,
-                    // clearly, we did not do a select all
-                    return false;
-                }
-                if (el.firstChild) {
-                    el = el.firstChild;
-                } else if (el.nextSibling) {
-                    el = el.nextSibling;
-                } else if (el.parentNode !== this.editable) {
-                    el = el.parentNode.nextSibling;
-                } else {
-                    // We looked at all the nodes in editable
-                    break;
-                }
-            }
-        }
-
-        if (this.editable.contains(endContainer)) {
-            let el = this.editable;
-            while (el) {
-                if (el === endContainer) {
-                    break;
-                }
-                if (
-                    (el.nodeType === Node.TEXT_NODE ||
-                        (el.tagName === 'BR' && (el.nextSibling || !el.previousSibling))) &&
-                    isVisible(el)
-                ) {
-                    // br is not selected if it's the last element and is not alone
-                    // We found a node in editable before startContainer so,
-                    // clearly, we did not do a select all
-                    return false;
-                }
-                if (el.lastChild) {
-                    el = el.lastChild;
-                } else if (el.previousSibling) {
-                    el = el.previousSibling;
-                } else if (el.parentNode !== this.editable) {
-                    el = el.parentNode.previousSibling;
-                } else {
-                    // We looked at all the nodes in editable
-                    break;
-                }
+            // Continue the depth-first search.
+            if (node[child]) {
+                node = node[child];
+            } else if (node[sibling]) {
+                node = node[sibling];
+            } else if (node.parentNode === this.editable) {
+                // Depth-first search has checked all elements in editable.
+                return true;
+            } else {
+                node = node.parentNode[sibling];
             }
         }
         return true;
     }
-    /**
-     * Process the given compiled event as a composition to identify the text
-     * that was inserted and trigger the corresponding events on the listener.
-     *
-     * @private
-     */
-    _processComposition(ev: CompiledEvent, elements: Set<HTMLElement>): void {
-        if (!this.editable.contains(ev.clone.origin)) {
-            // Some weird keyboards might replace the entire block element
-            // rather than the text inside of it. This is currently unsupported.
-            this._triggerEvent('inconsistentState', ev, elements);
-            return;
+    _isVisible(el: DOMElement): boolean {
+        if (el === this.editable) {
+            // The editable node was reached without encountering a hidden
+            // container. The editable node is supposed to be visible.
+            return true;
         }
-
-        // The goal of this function is to precisely find what was inserted by
-        // a keyboard supporting spell-checking and suggestions.
-        // Example (`|` represents the collapsed selection):
-        //   Previous content: 'My friend Christofe| was here.'
-        //   Current content:  'My friend Christophe Matthieu| was here.'
-        //   Observed change:  'My friend Christo[fe => phe Matthieu] was here.'
-        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
-
-        const previous = this._getCharactersMapping(ev.clone);
-        const current = this._getCharactersMapping(ev.clone.origin);
-        const previousLength = previous.length;
-        const currentLength = current.length;
-        // Since the range has been consistently set right after the change for
-        // all tested spell-checking keyboards, it can be used as a marker to
-        // identify the end of the change and thus extend the change offset.
-        const range = this._getRange();
-        let insertEnd = range.direction === 'ltr' ? 0 : currentLength;
-        while (insertEnd >= 0 && insertEnd < currentLength) {
-            if (current.nodes[insertEnd] === range.startContainer) {
-                insertEnd += range.startOffset;
-                break;
-            }
-            if (range.direction === 'ltr') {
-                insertEnd++;
-            } else {
-                insertEnd--;
-            }
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+            return false;
         }
-
-        // If a composition event has been observed and its data property was
-        // set, it can be used to compute the start of the change.
-        let insertStart = insertEnd;
-        if (ev.data) {
-            insertStart -= ev.data.length;
-        }
-
-        // The range resulting from this basic analysis strongly depends on the
-        // quality of the data provided in the composition events. Such events
-        // cannot be trusted blindly as they are implemented inconsistently by
-        // different spell-checking keyboards. For example, they might not
-        // provide any data at all, or insert multiple words while providing
-        // only one of them in the event's data property. Because of this, a
-        // second analysis must be performed. This analysis aims at precisely
-        // identifying the offset of the actual change in the text by comparing
-        // the previous content with the current one from left to right to find
-        // the start of the change and from right to left to find its end.
-        const change = this._getChangeOffsets(previous.chars, current.chars);
-
-        const startMost = range.direction === 'ltr' ? Math.min : Math.max;
-        const endMost = range.direction === 'ltr' ? Math.max : Math.min;
-
-        // It is possible that the start and end offset of the observed change
-        // are reversed in rtl direction or in some weird cases.
-        // Example (`|` represents the collapsed selection):
-        //   Previous content: 'aa aa aa| aa aa'
-        //   Current content:  'aa aa aa aa| aa aa'
-        //   Observed change:  'aa ]aa aa aa aa[ aa'
-        //   Actual text inserted by the keyboard: 'aa '
-        const changeStart = startMost(change.startOffset, change.endOffset);
-        const changeEnd = endMost(change.startOffset, change.endOffset);
-
-        // Extend the range from the first analysis such that it contains the
-        // observed changed at the very least.
-        insertStart = startMost(insertStart, changeStart);
-        insertEnd = endMost(insertEnd, changeEnd);
-
-        // Reconstruct the inserted text from the computed indices.
-        const insertedText = current.chars.slice(insertStart, insertEnd);
-
-        // Compute the range in the previous DOM corresponding to the range of
-        // the observed correction in current DOM. For this purpose, the nodes
-        // in the `previous` mapping were given a reference to their original
-        // self before cloning such that it can be retrieved now.
-        const previousNodes = previous.nodes as ClonedNode[];
-        // The indices in the current DOM must be offset by the difference in
-        // length between the previous and current content in order to compute
-        // their corresponding indices in the previous DOM.
-        let insertPreviousStart = insertStart;
-        let insertPreviousEnd = insertEnd;
-        if (document.dir === 'ltr') {
-            insertPreviousEnd = insertEnd + previousLength - currentLength;
-        } else {
-            insertPreviousStart = insertStart + previousLength - currentLength;
-        }
-        const insertionRange: Range = {
-            startContainer: previousNodes[insertPreviousStart].origin,
-            startOffset: previous.offsets[insertPreviousStart],
-            endContainer: previousNodes[insertPreviousEnd].origin,
-            endOffset: previous.offsets[insertPreviousEnd],
-            direction: document.dir as Direction,
-            origin: 'composition',
-        };
-
-        this._triggerEvent('setRange', insertionRange, []);
-        this._triggerEvent('insert', insertedText, elements);
-    }
-    /**
-     * Process the given compiled event as a move and trigger the corresponding
-     * events on the listener.
-     *
-     * @private
-     */
-    _processMove(ev: CompiledEvent, elements: Set<HTMLElement>): void {
-        // The normalizer honors preventDefault for moves. If the range was
-        // moved regardless of the preventDefault setting, it must be restored.
-        if (ev.defaultPrevented) {
-            this._triggerEvent('restoreRange');
-        } else {
-            // Set the range according to the current one. Set the origin key
-            // in order to track the source of the move.
-            const range = this._getRange();
-            range.origin = ev.key;
-            // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', range, elements);
-        }
+        return this._isVisible(el.parentNode);
     }
 
     //--------------------------------------------------------------------------
