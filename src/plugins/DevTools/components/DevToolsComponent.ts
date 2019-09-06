@@ -1,5 +1,5 @@
-import { Component } from '../../../lib/owl/dist/owl.js';
-import { DOMElement } from '../../core/types/DOMElement.js';
+import { Component } from '../../../../lib/owl/dist/owl.js';
+import { DOMElement } from '../../../core/types/DOMElement.js';
 import { TreeComponent } from './TreeComponent.js';
 
 ////////////////////////////// todo: use API ///////////////////////////////////

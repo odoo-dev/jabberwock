@@ -24,20 +24,16 @@ jw-devtools {
 jw-devtools.closed {
     max-height: 31px;
 }
-jw-devtools .folded .children {
-    display: none;
-}
 
 /* NAVBAR */
 
 devtools-navbar {
     background-color: #f3f3f3;
-    position: static;
+    position: relative;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    min-height: 30px;
-    height: auto;
+    height: 30px;
     width: 100%;
     align-items: center;
     border: 0;
@@ -57,16 +53,18 @@ devtools-navbar > button {
 devtools-contents {
     display: flex;
     flex-direction: row;
+    position: relative;
+    height: 100%;
 }
 
 /* tree */
 
 devtools-tree {
     overflow: auto;
-    height: 270px;
     padding: 1em;
     user-select: none;
     width: 70%;
+    font-family: 'Courier New', Courier, monospace;
 }
 
 devtools-tree div.children {
@@ -97,12 +95,20 @@ devtools-tree span.element-name {
     color: #76526c;
 }
 
-devtools-tree div:not(.folded):not(.root) > span.element-name:before {
-    content: '⌄';
+devtools-node:not(.element) {
+    display: inline;
 }
 
-devtools-tree div.folded > span.element-name:before {
+devtools-node:not(.folded):not(.self-closing):not(.root) > span.element-name:before {
+    content: '⌄ ';
+}
+
+devtools-node.folded:not(.self-closing) > span.element-name:before {
     content: '› ';
+}
+
+devtools-node.folded .children {
+    display: none;
 }
 
 /* sidepane */
