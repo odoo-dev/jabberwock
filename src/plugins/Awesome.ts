@@ -1,7 +1,7 @@
-import { Action, ActionType } from '../core/actions/Action.js';
-import VDocument from '../core/stores/VDocument.js';
-import { Dispatcher } from '../core/dispatcher/Dispatcher.js';
-import { JWPlugin, JWPluginConfiguration } from '../core/JWPlugin.js';
+import { Action, ActionType } from '../core/actions/Action';
+import VDocument from '../core/stores/VDocument';
+import { Dispatcher } from '../core/dispatcher/Dispatcher';
+import { JWPlugin, JWPluginConfiguration } from '../core/JWPlugin';
 
 interface AwesomeConfiguration extends JWPluginConfiguration {
     brol: boolean;
