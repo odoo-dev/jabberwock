@@ -1,6 +1,6 @@
-import { Action } from './actions/Action.js';
-import { Dispatcher } from './dispatcher/Dispatcher.js';
-import VDocument from './stores/VDocument.js'; // todo: use state
+import { Action } from './actions/Action';
+import { Dispatcher } from './dispatcher/Dispatcher';
+import VDocument from './stores/VDocument'; // todo: use state
 
 export interface JWPluginConfiguration {
     name: string;

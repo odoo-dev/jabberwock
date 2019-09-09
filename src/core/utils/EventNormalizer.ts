@@ -1,5 +1,5 @@
-import { Range } from '../stores/Range.js';
-import { DOMElement } from '../types/DOMElement.js';
+import { Range } from '../stores/Range';
+import { DOMElement } from '../types/DOMElement';
 
 const navigationKey = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'End', 'Home']);
 
