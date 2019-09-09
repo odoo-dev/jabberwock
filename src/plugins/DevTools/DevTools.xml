@@ -62,8 +62,14 @@
         </div>
     </devtools-info>
 
-    <jw-devtools t-name="devtools" class="closed">
-        <devtools-navbar t-on-click="toggleOpen">
+    <jw-devtools t-name="devtools"
+        t-att-class="{
+            closed: state.closed,
+        }"
+        t-attf-style="height: {{state.height}}px">
+        <devtools-navbar
+            t-on-click="toggleOpen"
+            t-on-mousedown="startResize">
             <button>Inspector</button>
         </devtools-navbar>
         <devtools-contents t-on-node-selected="selectNode">
