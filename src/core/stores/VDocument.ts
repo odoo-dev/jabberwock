@@ -1,5 +1,5 @@
-import { VNode, VNodeType } from './VNode.js';
-import parser from '../utils/parser.js';
+import { VNode, VNodeType } from './VNode';
+import parser from '../utils/parser';
 
 export default class VDocument {
     _root: VNode;

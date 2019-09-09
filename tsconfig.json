@@ -1,5 +1,3 @@
 {
   "extends": "./tsconfig-base.json",
-  "compilerOptions": {
-    "outFile": "./build/ts-base/bundle.js"
 }

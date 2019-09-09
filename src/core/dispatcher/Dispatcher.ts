@@ -1,4 +1,4 @@
-import { Action } from '../actions/Action.js';
+import { Action } from '../actions/Action';
 
 export class Dispatcher<Action> {
     dispatch(action: Action) {
