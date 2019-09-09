@@ -22,23 +22,17 @@ See the "run" script in [package.json](./package.json)
 
 ### use dev tools
 1. Get permissions to access odoo/owl
-2. In the root folder:
+2. Somewhere in your disk:
 ```bash
-git clone git@github.com:odoo/owl.git lib/owl
+git clone git@github.com:odoo/owl.git
 ```
-3. In `lib/owl/package.json`, in `scripts`, add:
-```json
-"buildesm": "npm run build:js && npm run build:bundle -- -f esm --outro ''",
-```
-4. In `lib/owl`:
+3. In the folder where you cloned owl:
 ```bash
-npm install
-npm run buildesm
+npm link
 ```
-5. In the root folder:
+4. In this repository:
 ```bash
-npm install
-npm run dev-esm
+npm link owl-framework
 ```
 
 ## Vision

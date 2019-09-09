@@ -1,10 +1,10 @@
-import { Component } from '../../lib/owl/dist/owl.js';
+import { Component } from 'owl-framework';
 
 export class JWOwlUIPlugin {
-    templates: string
-    componentsRegistry: typeof Component []
+    templates: string;
+    componentsRegistry: any;
 
-    constructor () {
+    constructor() {
         this.componentsRegistry = [];
     }
 }

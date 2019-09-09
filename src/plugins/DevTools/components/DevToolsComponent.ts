@@ -1,8 +1,8 @@
-import { Component } from '../../../../lib/owl/dist/owl.js';
-import { InfoComponent } from './InfoComponent.js';
-import { PathComponent } from './PathComponent.js';
-import { TreeComponent } from './TreeComponent.js';
-import { VNode } from '../../../core/stores/VNode.js';
+import { InfoComponent } from './InfoComponent';
+import { PathComponent } from './PathComponent';
+import { TreeComponent } from './TreeComponent';
+import { VNode } from '../../../core/stores/VNode';
+import { Component } from 'owl-framework';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -45,7 +45,7 @@ export class DevToolsComponent extends Component<any, any, DevToolsState> {
         window.addEventListener('mousemove', doResize);
         window.addEventListener('mouseup', stopResize);
     }
-    selectNode(event: SelectedNodeEvent): void {
+    selectNode(event: any): void {
         const vNode: VNode = event.detail.vNode;
         this.state.selectedNode = vNode;
         this.state.selectedPath = this._getPath(vNode);
