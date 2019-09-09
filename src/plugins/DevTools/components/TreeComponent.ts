@@ -15,12 +15,27 @@ export class TreeComponent extends Component<any, any, NodeState> {
     onClickElement(event: MouseEvent): void {
         const didClickCaret: boolean = event.offsetX < 10;
         if (didClickCaret) {
-            this.state.folded = !this.state.folded;
+            this.toggleFolded();
         } else {
             this.trigger('node-selected', {
                 vNode: this.props.vNode,
             });
         }
+    }
+    onKeydown(event: KeyboardEvent): void {
+        if (event.code === 'Enter') {
+            event.preventDefault();
+            this.toggleFolded();
+            event.stopImmediatePropagation();
+        }
+    }
+    selectNode(event: CustomEvent): void {
+        if (event.detail.vNode.id !== this.props.vNode.id) {
+            this.state.folded = false;
+        }
+    }
+    toggleFolded(): void {
+        this.state.folded = !this.state.folded;
     }
     _getNodeName(node: VNode): string {
         if (node.value) {

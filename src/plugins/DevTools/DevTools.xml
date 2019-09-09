@@ -6,7 +6,10 @@
             root: props.isRoot,
             &quot;self-closing&quot;: props.vNode.length == 0,
             selected: props.selectedID == props.vNode.id,
-        }">
+        }"
+        tabindex="1"
+        t-on-keydown="onKeydown"
+        t-on-node-selected="selectNode">
         <t t-if="props.isRoot">
             <span class="element-name" t-on-click="onClickElement">root</span>
             <t t-call="treeChildren"/>
@@ -117,7 +120,9 @@
         t-att-class="{
             closed: state.closed,
         }"
-        t-attf-style="height: {{state.height}}px">
+        t-attf-style="height: {{state.height}}px"
+        t-on-keydown="onKeydown"
+        tabindex="2">
         <devtools-navbar
             t-on-click="toggleOpen"
             t-on-mousedown="startResize">

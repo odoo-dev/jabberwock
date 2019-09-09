@@ -28,6 +28,28 @@ export class DevToolsComponent extends Component<any, any, DevToolsState> {
     // Public
     //--------------------------------------------------------------------------
 
+    onKeydown(event: KeyboardEvent): void {
+        event.preventDefault();
+        const selected: VNode = this.state.selectedNode;
+        let newSelection: VNode;
+        switch (event.code) {
+            case 'ArrowDown':
+                newSelection = selected.nextSibling || selected.firstChild;
+                break;
+            case 'ArrowUp':
+                newSelection = selected.previousSibling || selected.parent;
+                break;
+            case 'ArrowLeft':
+                newSelection = selected.previousSibling;
+                break;
+            case 'ArrowRight':
+                newSelection = selected.nextSibling;
+                break;
+        }
+        if (newSelection) {
+            this._selectNode(newSelection);
+        }
+    }
     startResize(event: MouseEvent): void {
         if (this.state.closed) {
             return;
@@ -47,8 +69,7 @@ export class DevToolsComponent extends Component<any, any, DevToolsState> {
     }
     selectNode(event: CustomEvent): void {
         const vNode: VNode = event.detail.vNode;
-        this.state.selectedNode = vNode;
-        this.state.selectedPath = this._getPath(vNode);
+        this._selectNode(vNode);
     }
     toggleOpen(): void {
         const didJustResize = this._heightOnLastMousedown === this.state.height;
@@ -69,5 +90,9 @@ export class DevToolsComponent extends Component<any, any, DevToolsState> {
             parent = parent.parent;
         }
         return path;
+    }
+    _selectNode(vNode: VNode): void {
+        this.state.selectedNode = vNode;
+        this.state.selectedPath = this._getPath(vNode);
     }
 }
