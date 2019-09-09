@@ -1,6 +1,6 @@
-import { Component, QWeb, utils } from '../../lib/owl/dist/owl.js';
-import { JWEditor } from '../core/JWEditor.js';
-import { JWOwlUIPlugin } from './JWOwlUIPlugin.js';
+import { JWEditor } from '../core/JWEditor';
+import { JWOwlUIPlugin } from './JWOwlUIPlugin';
+import { Component, utils, QWeb } from 'owl-framework';
 
 export class OwlUI {
     pluginsRegistry: JWOwlUIPlugin[];

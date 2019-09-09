@@ -1,5 +1,5 @@
-import { DevToolsComponent } from './components/DevToolsComponent.js';
-import { JWOwlUIPlugin } from '../../ui/JWOwlUIPlugin.js';
+import { DevToolsComponent } from './components/DevToolsComponent';
+import { JWOwlUIPlugin } from '../../ui/JWOwlUIPlugin';
 
 export class DevTools extends JWOwlUIPlugin {
     constructor() {

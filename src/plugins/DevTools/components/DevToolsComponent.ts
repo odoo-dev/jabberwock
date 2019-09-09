@@ -1,8 +1,8 @@
-import { Component } from '../../../../lib/owl/dist/owl.js';
-import { InfoComponent } from './InfoComponent.js';
-import { PathComponent } from './PathComponent.js';
-import { TreeComponent } from './TreeComponent.js';
-import { VNode } from '../../../core/stores/VNode.js';
+import { InfoComponent } from './InfoComponent';
+import { PathComponent } from './PathComponent';
+import { TreeComponent } from './TreeComponent';
+import { VNode } from '../../../core/stores/VNode';
+import { Component } from 'owl-framework';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 

@@ -1,5 +1,5 @@
-import { Component } from '../../../../lib/owl/dist/owl.js';
-import { VNode } from '../../../core/stores/VNode.js';
+import { VNode } from '../../../core/stores/VNode';
+import { Component } from 'owl-framework';
 
 interface NodeState {
     folded: boolean;
