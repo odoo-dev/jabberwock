@@ -1,15 +1,22 @@
 import { Component } from '../../../../lib/owl/dist/owl.js';
 import { DOMElement } from '../../../core/types/DOMElement.js';
 import { InfoComponent } from './InfoComponent.js';
+import { PathComponent } from './PathComponent.js';
 import { TreeComponent } from './TreeComponent.js';
 import { VNode } from '../../../core/stores/VNode.js';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
-export class DevToolsComponent extends Component<any, any, any> {
-    components = { InfoComponent, TreeComponent };
-    state = {
+interface DevToolsState {
+    selectedNode: VNode;
+    selectedPath: VNode[];
+}
+
+export class DevToolsComponent extends Component<any, any, DevToolsState> {
+    components = { InfoComponent, PathComponent, TreeComponent };
+    state: DevToolsState = {
         selectedNode: this.env.editor.vDocument.contents,
+        selectedPath: this._getPath(this.env.editor.vDocument.contents),
     };
     template = 'devtools';
 
@@ -20,6 +27,7 @@ export class DevToolsComponent extends Component<any, any, any> {
     selectNode(event: SelectedNodeEvent): void {
         const vNode: VNode = event.detail.vNode;
         this.state.selectedNode = vNode;
+        this.state.selectedPath = this._getPath(vNode);
     }
     toggleClass(element: Element, className: string): void {
         const currentClass: string = element.getAttribute('class') || '';
@@ -44,6 +52,15 @@ export class DevToolsComponent extends Component<any, any, any> {
     // Private
     //--------------------------------------------------------------------------
 
+    _getPath(vNode: VNode): VNode[] {
+        const path: VNode[] = [vNode];
+        let parent: VNode = vNode.parent;
+        while (parent) {
+            path.unshift(parent);
+            parent = parent.parent;
+        }
+        return path;
+    }
     _isRootElement(element: Element): boolean {
         return element.tagName === 'JW-DEVTOOLS';
     }
