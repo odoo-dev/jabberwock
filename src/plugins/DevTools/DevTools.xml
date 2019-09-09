@@ -34,6 +34,17 @@
         </div>
     </t>
 
+    <devtools-path t-name="PathComponent">
+        <devtools-pathnode t-foreach="props.path" t-as="vNode"
+            t-key="vNode.id"
+            t-att-class="{
+                selected: vNode.id == props.selectedID
+            }"
+            t-on-click="onClickPathNode(vNode)">
+            <t t-esc="vNode.type and vNode.type.toLowerCase() or &quot;?&quot;"/>
+        </devtools-pathnode>
+    </devtools-path>
+
     <devtools-info t-name="InfoComponent">
         <div class="about">
             <div class="type">
@@ -55,14 +66,19 @@
         <devtools-navbar t-on-click="toggleOpen">
             <button>Inspector</button>
         </devtools-navbar>
-        <devtools-contents>
-            <devtools-tree t-on-node-selected="selectNode">
-                <TreeComponent
-                    vNode="env.editor.vDocument.contents"
-                    isRoot="true"
+        <devtools-contents t-on-node-selected="selectNode">
+            <devtools-mainpane>
+                <devtools-tree>
+                    <TreeComponent
+                        vNode="env.editor.vDocument.contents"
+                        isRoot="true"
+                        selectedID="state.selectedNode.id"/>
+                </devtools-tree>
+                <PathComponent
+                    path="state.selectedPath"
                     selectedID="state.selectedNode.id"/>
-            </devtools-tree>
-            <devtools-sidepane t-on-node-selected="selectNode">
+            </devtools-mainpane>
+            <devtools-sidepane>
                 <InfoComponent vNode="state.selectedNode"/>
             </devtools-sidepane>
         </devtools-contents>

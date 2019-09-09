@@ -55,6 +55,16 @@ devtools-contents {
     flex-direction: row;
     position: relative;
     height: 100%;
+    font-family: 'Courier New', Courier, monospace;
+    user-select: none;
+}
+
+/* mainpane */
+
+devtools-mainpane {
+    display: flex;
+    flex-direction: column;
+    width: 70%;
 }
 
 /* tree */
@@ -62,10 +72,8 @@ devtools-contents {
 devtools-tree {
     display: block;
     overflow: auto;
+    flex-grow: 1;
     padding: 1em;
-    user-select: none;
-    width: 70%;
-    font-family: 'Courier New', Courier, monospace;
 }
 
 devtools-tree div.children {
@@ -99,6 +107,7 @@ devtools-node > span:hover {
 devtools-node:not(.element) {
     display: inline;
 }
+
 devtools-node.element {
     display: block;
 }
@@ -119,10 +128,30 @@ devtools-node.selected > span {
     background-color: rgba(118, 82, 108, 0.3);
 }
 
+devtools-path {
+    display: block;
+    border-top: 1px solid #d0d0d0;
+    background-color: #dddddd;
+}
+
+devtools-pathnode {
+    display: inline-block;
+    padding: .2em 1em .2em 1em;
+    color: #696969;
+    font-size: 13px;
+}
+
+devtools-pathnode:hover {
+    background-color: #d6d6d6;
+}
+
+devtools-pathnode.selected {
+    background-color: #d0d0d0;
+}
+
 /* sidepane */
 
 devtools-sidepane {
-    font-family: 'Courier New', Courier, monospace;
     font-size: 15px;
     box-sizing: border-box;
     width: 30%;
