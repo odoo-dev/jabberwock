@@ -55,10 +55,61 @@
             </div>
         </div>
         <div class="properties">
-            <div>Length: <t t-esc="props.vNode.length"/></div>
-            <div t-if="props.vNode.parent" t-on-click="clickParent(props.vNode)">
-                Parent: <t t-esc="props.vNode.parent.type or &quot;?&quot;"/>
-            </div>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>ID</td>
+                        <td><t t-esc="props.vNode.id"/></td>
+                    </tr>
+                    <tr>
+                        <td>Length</td>
+                        <td><t t-esc="props.vNode.length"/></td>
+                    </tr>
+                    <tr>
+                        <td>Index</td>
+                        <td><t t-esc="props.vNode.index"/></td>
+                    </tr>
+                    <tr t-if="props.vNode.parent">
+                        <td>Parent</td>
+                        <td t-on-click="selectNode(props.vNode.parent)">
+                            <t t-esc="props.vNode.parent.type or &quot;?&quot;"/>
+                        </td>
+                    </tr>
+                    <tr t-if="props.vNode.siblings.length > 1">
+                        <td>Siblings</td>
+                        <td>
+                            <table>
+                                <tbody>
+                                    <tr t-if="props.vNode.previousSibling">
+                                        <td>Previous</td>
+                                        <td t-on-click="selectNode(props.vNode.previousSibling)">
+                                            <t t-esc="props.vNode.previousSibling.type or &quot;?&quot;"/>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="props.vNode.nextSibling">
+                                        <td>Next</td>
+                                        <td t-on-click="selectNode(props.vNode.nextSibling)">
+                                            <t t-esc="props.vNode.nextSibling.type or &quot;?&quot;"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr t-if="props.vNode.children.length">
+                        <td>Children</td>
+                        <td>
+                            <ol>
+                                <li t-foreach="props.vNode.children"
+                                    t-as="child" t-key="child.id"
+                                    t-on-click="selectNode(child)">
+                                    <t t-esc="child.type or &quot;?&quot;"/>
+                                </li>
+                            </ol>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </devtools-info>
 
@@ -72,7 +123,9 @@
             t-on-mousedown="startResize">
             <button>Inspector</button>
         </devtools-navbar>
-        <devtools-contents t-on-node-selected="selectNode">
+        <devtools-contents
+            t-if="!state.closed"
+            t-on-node-selected="selectNode">
             <devtools-mainpane>
                 <devtools-tree>
                     <TreeComponent

@@ -156,22 +156,58 @@ devtools-pathnode.selected {
 /* sidepane */
 
 devtools-sidepane {
+    position: relative;
+    display: block;
     font-size: 15px;
     box-sizing: border-box;
     width: 30%;
     height: 100%;
     background-color: white;
     border-left: 1px solid #d0d0d0;
+    height: 100%;
 }
 
-devtools-sidepane .about {
+devtools-info {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+devtools-info .about {
     border-bottom: 1px solid #d0d0d0;
     padding: 10px;
 }
-/* devtools-sidepane .about .type {
-} */
 
-devtools-sidepane .properties {
+devtools-info .properties {
     font-size: 12px;
     padding: 10px;
+    height: 100%;
+    overflow: auto;
+}
+
+devtools-info .properties table {
+    width: 100%;
+    font-size: inherit;
+}
+
+devtools-info .properties table tbody{
+    vertical-align: top;
+}
+
+devtools-info .properties table td {
+    padding: 0.3em;
+}
+
+devtools-info .properties table td:nth-child(1) {
+    width: 100px;
+}
+
+devtools-info .properties table ol {
+    list-style-position: inside;
+    padding-left: 0;
+    margin: 0;
+}
+
+devtools-info .properties > table > tbody > tr:nth-child(even) {
+    background-color: #f4f4f4;
 }

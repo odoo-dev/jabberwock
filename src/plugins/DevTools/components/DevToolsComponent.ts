@@ -45,7 +45,7 @@ export class DevToolsComponent extends Component<any, any, DevToolsState> {
         window.addEventListener('mousemove', doResize);
         window.addEventListener('mouseup', stopResize);
     }
-    selectNode(event: SelectedNodeEvent): void {
+    selectNode(event: CustomEvent): void {
         const vNode: VNode = event.detail.vNode;
         this.state.selectedNode = vNode;
         this.state.selectedPath = this._getPath(vNode);
