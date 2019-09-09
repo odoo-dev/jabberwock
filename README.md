@@ -58,6 +58,18 @@ See the "run" script in [package.json](./package.json)
 - Change the documentation with direct modification
 - Flowcharts and other graphs
 
-## Alternate name suggestions
-- Vorpal
-- strong_editor
+## Name suggestions
+- Jabberwock
+- Vorpal Editor
+- Kring
+- ** Jubjub
+- * Octavo / In-Octavo
+- * Limerick
+- * Ode (ODoo Editor)
+- * Asgard
+- * Odin
+- * Mjolnir
+- Fenrir
+
+* = name exists on npm
+** = name exists outside of npm
