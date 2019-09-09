@@ -1,9 +1,9 @@
-import { Action } from './actions/Action.js';
-import { Dispatcher } from './dispatcher/Dispatcher.js';
-import { EventManager } from './utils/EventManager.js';
-import { JWPlugin } from './JWPlugin.js';
-import { VDocument } from './stores/VDocument.js';
-import { utils } from './utils/utils.js';
+import { Action } from './actions/Action';
+import { Dispatcher } from './dispatcher/Dispatcher';
+import { EventManager } from './utils/EventManager';
+import { JWPlugin } from './JWPlugin';
+import { VDocument } from './stores/VDocument';
+import { utils } from './utils/utils';
 
 export interface JWEditorConfig {
     theme: string;

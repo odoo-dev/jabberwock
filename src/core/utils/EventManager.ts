@@ -1,5 +1,5 @@
-import { DOMElement } from '../types/DOMElement.js';
-import { EventNormalizer } from './EventNormalizer.js';
+import { DOMElement } from '../types/DOMElement';
+import { EventNormalizer } from './EventNormalizer';
 
 export interface EventManagerOptions {
     dispatch?: Function;

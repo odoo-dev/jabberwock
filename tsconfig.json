@@ -1,7 +1,3 @@
 {
   "extends": "./tsconfig-base.json",
-  "compilerOptions": {
-    "module": "AMD",
-    "outFile": "./build/bundle.js"
-  },
 }

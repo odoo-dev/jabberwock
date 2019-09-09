@@ -1,6 +1,6 @@
-import { ActionType } from './Action.js';
-import { Dispatcher } from '../dispatcher/Dispatcher.js';
-import { DOMElement } from '../types/DOMElement.js';
+import { ActionType } from './Action';
+import { Dispatcher } from '../dispatcher/Dispatcher';
+import { DOMElement } from '../types/DOMElement';
 
 export class ActionGenerator {
     dispatcher: Dispatcher;

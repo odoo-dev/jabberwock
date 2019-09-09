@@ -1,4 +1,4 @@
-import { Action } from '../actions/Action.js';
+import { Action } from '../actions/Action';
 
 export type HandlerToken = string;
 export type ActionHandler = (action: Action) => void;

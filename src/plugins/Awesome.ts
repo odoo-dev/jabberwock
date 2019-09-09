@@ -1,6 +1,6 @@
-import { Action, ActionType } from '../core/actions/Action.js';
-import { Dispatcher } from '../core/dispatcher/Dispatcher.js';
-import { JWPlugin, JWPluginConfig } from '../core/JWPlugin.js';
+import { Action, ActionType } from '../core/actions/Action';
+import { Dispatcher } from '../core/dispatcher/Dispatcher';
+import { JWPlugin, JWPluginConfig } from '../core/JWPlugin';
 
 interface AwesomeConfig extends JWPluginConfig {
     brol: boolean;
