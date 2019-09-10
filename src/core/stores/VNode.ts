@@ -1,23 +1,44 @@
 export enum VNodeType {
     ROOT = 'ROOT',
     PARAGRAPH = 'PARAGRAPH',
-    HEADER = 'HEADER',
+    HEADING1 = 'HEADING1',
+    HEADING2 = 'HEADING2',
+    HEADING3 = 'HEADING3',
+    HEADING4 = 'HEADING4',
+    HEADING5 = 'HEADING5',
+    HEADING6 = 'HEADING6',
     CHAR = 'CHAR',
+    LINE_BREAK = 'LINE_BREAK',
 }
+
+export interface FormatType {
+    bold: boolean;
+    italic: boolean;
+    underlined: boolean;
+}
+
+let id = 0;
 
 export class VNode {
     readonly type: VNodeType;
-    children: VNode[];
-    index: number;
-    parent: VNode | null;
+    children: VNode[] = [];
+    format: FormatType;
+    readonly id = id;
+    index = 0;
+    parent: VNode | null = null;
+    originalTag: string;
     value: string | undefined;
 
-    constructor(type: VNodeType, value?: string) {
+    constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
         this.type = type;
-        this.parent = null;
-        this.children = [];
-        this.index = 0;
+        this.originalTag = originalTag;
         this.value = value;
+        this.format = format || {
+            bold: false,
+            italic: false,
+            underlined: false,
+        };
+        id++;
     }
 
     //--------------------------------------------------------------------------
@@ -42,8 +63,26 @@ export class VNode {
     get previousSibling(): VNode | undefined {
         return this.parent && this.parent.nthChild(this.index - 1);
     }
+    totalLength(current = 0): number {
+        current += this.length;
+        this.children.forEach((child: VNode): void => {
+            if (child.children.length) {
+                current = child.totalLength(current);
+            }
+        });
+        return current;
+    }
     get siblings(): VNode[] {
         return (this.parent && this.parent.children) || [];
+    }
+    text(current = ''): string {
+        if (this.value) {
+            current += this.value;
+        }
+        this.children.forEach((child: VNode): void => {
+            current = child.text(current);
+        });
+        return current;
     }
 
     //--------------------------------------------------------------------------
@@ -57,6 +96,11 @@ export class VNode {
         const index = this.children.length > 0 ? this.children.length : 0;
         child.setPosition(this, index);
         return this;
+    }
+    hasFormat(): boolean {
+        return Object.keys(this.format).some(
+            (key: keyof FormatType): boolean => !!this.format[key],
+        );
     }
     /**
      * Prepend a child to this node. Return self.

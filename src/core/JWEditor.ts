@@ -10,6 +10,7 @@ export interface JWEditorConfig {
 }
 
 export class JWEditor {
+    el: HTMLElement;
     editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
@@ -17,8 +18,9 @@ export class JWEditor {
     vDocument: VDocument;
 
     constructor(el = document.body) {
-        this.editable = el;
-        this.dispatcher = new Dispatcher();
+        this.el = el;
+        this.dispatcher = new Dispatcher(this.el);
+        this.editable = document.createElement('jw-editable');
         this.eventManager = new EventManager(this.editable, {
             dispatch: (action: Action): void => {
                 action.origin = 'User';
@@ -27,9 +29,9 @@ export class JWEditor {
         });
         this.pluginsRegistry = [];
         let startContent: DocumentFragment;
-        if (el.children.length) {
+        if (this.el.children.length) {
             startContent = document.createDocumentFragment();
-            const contents = utils._collectionToArray(el.childNodes);
+            const contents = utils._collectionToArray(this.el.childNodes);
             contents.forEach(child => startContent.appendChild(child));
         } else {
             startContent = this._placeholderContent;
@@ -40,14 +42,19 @@ export class JWEditor {
         utils._collectionToArray(startContent.childNodes).forEach(node => {
             this.editable.appendChild(node);
         });
+        this.el.appendChild(this.editable);
     }
 
     start(): void {
         this.editable.setAttribute('contenteditable', 'true');
+        const currentStyle: string = this.el.getAttribute('style');
+        const newStyle: string = currentStyle + ' text-align: center;';
+        this.editable.setAttribute('style', newStyle);
     }
 
-    addPlugin(plugin: typeof JWPlugin): void {
-        this.pluginsRegistry.push(new plugin(this.dispatcher));
+    addPlugin(pluginClass: typeof JWPlugin): void {
+        const pluginInstance: JWPlugin = new pluginClass(this.dispatcher, this.vDocument);
+        this.pluginsRegistry.push(pluginInstance); // todo: use state
     }
 
     loadConfig(config: JWEditorConfig): void {

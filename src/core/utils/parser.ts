@@ -1,35 +1,43 @@
-import { VNode, VNodeType } from '../stores/VNode';
+import { VNode, VNodeType, FormatType } from '../stores/VNode';
 import { utils } from './utils';
 
-const _getNodeType = (node: Element): VNodeType => {
+function _getNodeType(node: Element): VNodeType {
     switch (node.tagName) {
         case 'P':
             return VNodeType.PARAGRAPH;
         case 'H1':
+            return VNodeType.HEADING1;
         case 'H2':
+            return VNodeType.HEADING2;
         case 'H3':
+            return VNodeType.HEADING3;
         case 'H4':
+            return VNodeType.HEADING4;
         case 'H5':
+            return VNodeType.HEADING5;
         case 'H6':
-            return VNodeType.HEADER;
+            return VNodeType.HEADING6;
+        case 'BR':
+            return VNodeType.LINE_BREAK;
     }
-};
+}
 /**
- * Parse a DOM fragment or its representation as a string.
+ * Parse a text node.
  */
-const _parseOne = (node: Element): VNode[] => {
-    let parsedNode: VNode;
-    if (!node.tagName) {
-        // node is a textNode
-        const parsedNodes: VNode[] = [];
-        for (let i = 0; i < node.textContent.length; i++) {
-            const char: string = node.textContent.charAt(i);
-            parsedNode = new VNode(VNodeType.CHAR, char);
-            parsedNodes.push(parsedNode);
-        }
-        return parsedNodes;
+function _parseTextNode(node: Element, format?: FormatType): VNode[] {
+    const parsedNodes: VNode[] = [];
+    for (let i = 0; i < node.textContent.length; i++) {
+        const char: string = node.textContent.charAt(i);
+        const parsedNode: VNode = new VNode(VNodeType.CHAR, node.tagName, char, format);
+        parsedNodes.push(parsedNode);
     }
-    parsedNode = new VNode(_getNodeType(node));
+    return parsedNodes;
+}
+/**
+ * Parse an (non-text, non-format) element.
+ */
+function _parseElement(node: Element, format?: FormatType): VNode[] {
+    const parsedNode: VNode = new VNode(_getNodeType(node), node.tagName, undefined, format);
     const children: Element[] = utils._collectionToArray(node.childNodes);
     children.forEach(child => {
         const parsedChildren: VNode[] = _parseOne(child);
@@ -38,20 +46,55 @@ const _parseOne = (node: Element): VNode[] => {
         });
     });
     return [parsedNode];
-};
+}
+/**
+ * Parse a format element (i, b, u) by parsing its children, passing the format
+ * to them as an attribute.
+ */
+function _parseFormatElement(node: Element, format?: FormatType): VNode[] {
+    format = {
+        bold: (format && format.bold) || node.tagName === 'B',
+        italic: (format && format.italic) || node.tagName === 'I',
+        underlined: (format && format.underlined) || node.tagName === 'U',
+    };
+    let parsedChildren: VNode[] = [];
+    const children: Element[] = utils._collectionToArray(node.childNodes);
+    children.forEach(child => {
+        const parsedChild: VNode[] = _parseOne(child, format);
+        parsedChildren = parsedChildren.concat(parsedChild);
+    });
+    return parsedChildren;
+}
 /**
  * Parse a DOM fragment or its representation as a string.
  */
-const parse = (fragment: DocumentFragment): VNode[] => {
+function _parseOne(node: Element, format?: FormatType): VNode[] {
+    switch (node.tagName) {
+        case undefined: // Text node
+            return _parseTextNode(node, format);
+        case 'B':
+        case 'I':
+        case 'U':
+            return _parseFormatElement(node, format);
+        default:
+            return _parseElement(node, format);
+    }
+}
+/**
+ * Parse a DOM fragment or its representation as a string.
+ */
+function parse(fragment: DocumentFragment): VNode[] {
     let parsedNodes: VNode[] = [];
     const contents: NodeListOf<ChildNode> = fragment.childNodes;
     const children: Element[] = utils._collectionToArray(contents);
     children.forEach(child => {
         const parsedChildren: VNode[] = _parseOne(child);
-        parsedNodes = parsedNodes.concat(parsedChildren);
+        if (parsedChildren.length) {
+            parsedNodes = parsedNodes.concat(parsedChildren);
+        }
     });
     return parsedNodes;
-};
+}
 
 const parser = {
     parse: parse,

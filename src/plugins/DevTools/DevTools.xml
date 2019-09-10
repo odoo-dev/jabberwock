@@ -1,0 +1,268 @@
+<templates>
+    <!-- INSPECTOR -->
+    <devtools-panel class="inspector" t-name="InspectorComponent" t-att-class="{active: props.isOpen}"
+        t-on-node-selected="selectNode"
+        t-on-keydown="onKeydown">
+        <devtools-contents t-if="props.isOpen">
+            <devtools-mainpane>
+                <devtools-tree>
+                    <TreeComponent
+                        vNode="env.editor.vDocument.contents"
+                        isRoot="true"
+                        selectedID="state.selectedNode.id"/>
+                </devtools-tree>
+                <PathComponent
+                    path="state.selectedPath"
+                    selectedID="state.selectedNode.id"/>
+            </devtools-mainpane>
+            <devtools-sidepane>
+                <InfoComponent vNode="state.selectedNode"/>
+            </devtools-sidepane>
+        </devtools-contents>
+    </devtools-panel>
+
+    <!-- INSPECTOR.Tree -->
+    <devtools-node t-name="TreeComponent"
+        t-att-class="{
+            element: props.vNode.length and !props.vNode.value,
+            folded: state.folded,
+            root: props.isRoot,
+            'self-closing': props.vNode.length == 0,
+        }"
+        tabindex="1"
+        t-on-keydown="onKeydown"
+        t-on-node-selected="selectNode">
+        <t t-if="props.isRoot">
+            <span class="element-name selectable-line"
+                t-on-click="onClickNode" t-att-class="{
+                    selected: props.selectedID == props.vNode.id,
+                }">root</span>
+            <t t-call="treeChildren"/>
+        </t>
+        <t t-else="">
+            <span t-if="props.vNode.value" t-on-click="onClickNode"
+                class="selectable-line" t-att-class="{
+                    bold: props.vNode.format.bold,
+                    italic: props.vNode.format.italic,
+                    underlined: props.vNode.format.underlined,
+                    selected: props.selectedID == props.vNode.id,
+                }">
+                <t t-esc="repr"/>
+            </span>
+            <t t-else="">
+                <span class="element-name selectable-line" t-on-click="onClickNode"
+                    t-att-class="{
+                        bold: props.vNode.format.bold,
+                        italic: props.vNode.format.italic,
+                        underlined: props.vNode.format.underlined,
+                        selected: props.selectedID == props.vNode.id,
+                    }">
+                    <t t-esc="repr"/>
+                </span>
+                <t t-call="treeChildren"/>
+            </t>
+        </t>
+    </devtools-node>
+
+    <t t-name="treeChildren">
+        <div class="children">
+            <TreeComponent t-if="!state.folded"
+                t-foreach="props.vNode.children" t-as="child"
+                t-key="child.id"
+                vNode="child"
+                selectedID="props.selectedID"/>
+        </div>
+    </t>
+
+    <!-- INSPECTOR.Path -->
+    <devtools-path t-name="PathComponent">
+        <devtools-pathnode t-foreach="props.path" t-as="vNode"
+            t-key="vNode.id"
+            t-att-class="{
+                selected: vNode.id == props.selectedID
+            }"
+            t-on-click="selectNode(vNode)">
+            <t t-esc="getNodeRepr(vNode)"/>
+        </devtools-pathnode>
+    </devtools-path>
+
+    <!-- INSPECTOR.Info -->
+    <devtools-info t-name="InfoComponent">
+        <div class="about">
+            <span class="type">VNode</span> <t t-esc="props.vNode.type or &quot;?&quot;"/>
+            <t t-if="props.vNode.value">:
+                "<t t-esc="props.vNode.value"/>"
+            </t>
+            <span class="id"><t t-esc="props.vNode.id"/></span>
+        </div>
+        <div class="properties">
+            <div class="divider">👤 About me</div>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>id</td>
+                        <td><t t-esc="props.vNode.id"/></td>
+                    </tr>
+                    <tr>
+                        <td>type</td>
+                        <td><t t-esc="props.vNode.type or &quot;UNKNOWN&quot;"/></td>
+                    </tr>
+                    <tr t-if="props.vNode.value">
+                        <td>value</td>
+                        <td>"<t t-esc="props.vNode.value"/>"</td>
+                    </tr>
+                    <tr>
+                        <td>length</td>
+                        <td><t t-esc="props.vNode.length"/></td>
+                    </tr>
+                    <tr>
+                        <td>total length</td>
+                        <td><t t-esc="props.vNode.totalLength()"/></td>
+                    </tr>
+                    <tr t-if="props.vNode.hasFormat()">
+                        <td>format</td>
+                        <td>
+                            <ol style="list-style-type: none">
+                                <li t-if="props.vNode.format.bold">Bold</li>
+                                <li t-if="props.vNode.format.italic">Italic</li>
+                                <li t-if="props.vNode.format.underlined">Underlined</li>
+                            </ol>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>original tag</td>
+                        <td><t t-esc="props.vNode.originalTag or &quot;None&quot;"/></td>
+                    </tr>
+                    <tr t-if="props.vNode.text().length">
+                        <td>text</td>
+                        <td>"<t t-esc="props.vNode.text()"/>"</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="divider">👪 My Family</div>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>index</td>
+                        <td><t t-esc="props.vNode.index"/></td>
+                    </tr>
+                    <tr t-if="props.vNode.parent">
+                        <td>parent</td>
+                        <td t-on-click="selectNode(props.vNode.parent)">
+                            <t t-esc="props.vNode.parent.type or &quot;?&quot;"/>
+                        </td>
+                    </tr>
+                    <tr t-if="props.vNode.siblings.length > 1">
+                        <td>siblings</td>
+                        <td>
+                            <ol style="list-style-type: none">
+                                <li t-if="props.vNode.previousSibling"
+                                    t-on-click="selectNode(props.vNode.previousSibling)">
+                                    previous: <t t-esc="props.vNode.previousSibling.type or &quot;?&quot;"/>
+                                </li>
+                                <li t-if="props.vNode.nextSibling"
+                                    t-on-click="selectNode(props.vNode.nextSibling)">
+                                    next: <t t-esc="props.vNode.nextSibling.type or &quot;?&quot;"/>
+                                </li>
+                            </ol>
+                        </td>
+                    </tr>
+                    <tr t-if="props.vNode.children.length">
+                        <td>children</td>
+                        <td>
+                            <ol>
+                                <li t-foreach="props.vNode.children"
+                                    t-as="child" t-key="child.id"
+                                    t-on-click="selectNode(child)">
+                                    <t t-esc="child.type or &quot;?&quot;"/>
+                                </li>
+                            </ol>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </devtools-info>
+
+    <!-- ACTIONS -->
+    <devtools-panel class="actions" t-name="ActionsComponent"
+        t-att-class="{active: props.isOpen}" tabindex="1"
+        t-on-keydown="onKeydown">
+        <devtools-contents t-if="props.isOpen">
+            <devtools-mainpane>
+                <div t-foreach="state.actions" t-as="action"
+                    t-key="action_index" class="selectable-line"
+                    t-att-class="{
+                        selected: state.selectedIndex == action_index,
+                    }"
+                    t-on-click="selectAction(action_index)">
+                    <t t-esc="action.type"/>
+                </div>
+            </devtools-mainpane>
+            <devtools-sidepane>
+                <t t-set="selectedAction" t-value="state.actions[state.selectedIndex] or False"/>
+                <div class="about" t-if="selectedAction !== False">
+                    <span class="type">Action</span> <t t-esc="selectedAction.type"/>
+                </div>
+                <div class="properties" t-if="selectedAction !== False">
+                    <div class="divider">👤 About me</div>
+                    <table>
+                        <tbody>
+                            <t t-foreach="Object.keys(selectedAction)" t-as="key">
+                                <tr t-if="key !== 'value'">
+                                    <td><t t-esc="key"/></td>
+                                    <td><t t-esc="selectedAction[key]"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div class="divider" t-if="selectedAction.value">💎 Value</div>
+                    <table t-if="selectedAction.value">
+                        <tbody>
+                            <tr t-foreach="Object.keys(selectedAction.value)" t-as="key">
+                                <t t-set="value" t-value="selectedAction.value[key]"/>
+                                <td>
+                                    <t t-if="key !== '0'"><t t-esc="key"/></t>
+                                    <t t-else="">value</t>
+                                    </td>
+                                <td>
+                                    <t t-if="value.nodeName">
+                                        &lt;<t t-esc="value.nodeName.toLowerCase()"/>&gt;
+                                    </t>
+                                    <t t-elif="value == true">true</t>
+                                    <t t-elif="value == false and value !== 0">false</t>
+                                    <t t-elif="value == 0">0</t>
+                                    <t t-else=""><t t-esc="value"/></t>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </devtools-sidepane>
+        </devtools-contents>
+    </devtools-panel>
+
+    <!-- MAIN -->
+    <jw-devtools t-name="devtools"
+        t-att-class="{
+            closed: state.closed,
+        }"
+        t-attf-style="height: {{state.height}}px"
+        tabindex="2">
+        <devtools-navbar
+            t-on-click="toggleClosed"
+            t-on-mousedown="startResize">
+            <button t-on-click="openTab('inspector')" t-att-class="{
+                selected: state.openTab == 'inspector',
+            }">Inspector</button>
+            <button t-on-click="openTab('actions')" t-att-class="{
+                selected: state.openTab == 'actions',
+            }">Actions</button>
+        </devtools-navbar>
+        <t t-if="!state.closed">
+            <InspectorComponent isOpen="state.openTab == 'inspector'"/>
+            <ActionsComponent isOpen="state.openTab == 'actions'"/>
+        </t>
+    </jw-devtools>
+
+</templates>

@@ -9,7 +9,6 @@ export class VDocument {
         if (startValue) {
             this.setContents(startValue);
         }
-        console.log(this.contents);
     }
 
     //--------------------------------------------------------------------------
@@ -25,7 +24,7 @@ export class VDocument {
     /**
      * Set the contents of the VDocument.
      */
-    setContents(fragment: DocumentFragment) {
+    setContents(fragment: DocumentFragment): VNode {
         const parsedNodes: VNode[] = parser.parse(fragment);
         while (this._root.children.length) {
             this._root.removeChild(0);

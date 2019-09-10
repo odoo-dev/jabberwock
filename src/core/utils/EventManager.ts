@@ -20,5 +20,10 @@ export class EventManager {
      */
     _triggerEvent(type: string, param: object = {}): void {
         console.log(type, param);
+        this.options.dispatch({
+            type: type,
+            value: param,
+            origin: null,
+        });
     }
 }

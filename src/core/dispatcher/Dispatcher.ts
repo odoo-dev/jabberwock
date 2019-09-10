@@ -4,11 +4,20 @@ export type HandlerToken = string;
 export type ActionHandler = (action: Action) => void;
 
 export class Dispatcher {
-    handlers: Record<string, ActionHandler>;
+    el: Element;
+    handlers: Record<HandlerToken, ActionHandler>;
+
+    constructor(el: Element) {
+        this.el = el;
+    }
 
     // Dispatches a payload to all registered callbacks.
     dispatch(action: Action): void {
-        console.log(action);
+        // TODO
+        const event: CustomEvent = new CustomEvent('jw-action', {
+            detail: action,
+        });
+        this.el.dispatchEvent(event);
     }
 
     // Is this Dispatcher currently dispatching.
