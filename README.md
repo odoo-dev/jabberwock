@@ -62,14 +62,14 @@ See the "run" script in [package.json](./package.json)
 - Jabberwock
 - Vorpal Editor
 - Kring
-- ** Jubjub
-- * Octavo / In-Octavo
-- * Limerick
-- * Ode (ODoo Editor)
-- * Asgard
-- * Odin
-- * Mjolnir
+- °° Jubjub
+- ° Octavo / In-Octavo
+- ° Limerick
+- ° Ode (ODoo Editor)
+- ° Asgard
+- ° Odin
+- ° Mjolnir
 - Fenrir
 
-* = name exists on npm
-** = name exists outside of npm
+° = name exists on npm
+°° = name exists outside of npm
