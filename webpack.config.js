@@ -26,7 +26,7 @@ module.exports = {
         extensions: ['.ts', '.js'],
     },
     devServer: {
-        contentBase: './dev',
+        contentBase: './',
     },
     // optimization
     optimization: {
