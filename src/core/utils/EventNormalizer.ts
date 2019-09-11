@@ -1,7 +1,15 @@
-import { Range } from '../stores/Range';
-import { DOMElement } from '../types/DOMElement';
+import { DOMElement } from '../types/DOMElement.js';
 
-const navigationKey = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'End', 'Home']);
+const navigationKey = new Set([
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'PageUp',
+    'PageDown',
+    'End',
+    'Home',
+]);
 
 // As of August 29th 2019, InputEvent is considered experimental by MDN as some
 // of its properties are said to be unsupported by Edge and Safari. This is
@@ -13,6 +21,16 @@ interface InputEvent extends UIEvent {
     readonly dataTransfer: DataTransfer;
     readonly inputType: string;
     readonly isComposing: boolean;
+}
+
+type Direction = 'ltr' | 'rtl';
+interface Range {
+    readonly startContainer: DOMElement;
+    readonly startOffset: number;
+    readonly endContainer: DOMElement;
+    readonly endOffset: number;
+    readonly direction: Direction;
+    origin?: string; // origin of the Range change
 }
 
 interface CompiledEvent {
@@ -28,33 +46,31 @@ interface CompiledEvent {
     clone?: ClonedNode; // clone of closest block node containing modified selection during composition
 }
 
-interface EventFunctionMapping {
-    [keyof: string]: EventListener;
-}
-
 interface ClonedNode extends DOMElement {
     origin: DOMElement;
 }
 
-interface SelectRange extends Range {
-    origin: string;
-}
-
-interface ExtractedCharList {
-    chars: string[];
-    nodes: ClonedNode[];
-    offsets: number[];
+interface CharactersMapping {
+    length: number;
+    chars: string; // concatenated characters accross multiple nodes
+    nodes: Array<DOMElement | ClonedNode>; // corresponding textual nodes
+    offsets: number[]; // character offsets in their corresponding textual nodes
 }
 
 interface ChangeOffsets {
-    cloneStart: number;
-    cloneEnd: number;
-    originalStart: number;
-    originalEnd: number;
+    leftOffset: number;
+    rightOffset: number;
+}
+
+interface EventListenerDeclaration {
+    readonly target: EventTarget;
+    readonly type: string;
+    readonly listener: EventListener;
 }
 
 export class EventNormalizer {
     editable: DOMElement;
+    _eventListeners: EventListenerDeclaration[] = [];
     _compiledEvent: CompiledEvent;
     _observer: MutationObserver;
     _selectAllOriginElement: DOMElement; // original selection/target before updating selection
@@ -66,39 +82,30 @@ export class EventNormalizer {
         this.editable = editable as DOMElement;
         this._triggerEvent = triggerEvent;
 
-        this._onSelectionChange = this._onSelectionChange.bind(this);
-        this._onClick = this._onClick.bind(this);
-        this._onContextMenu = this._onContextMenu.bind(this);
-        this._onKeyDownOrKeyPress = this._onKeyDownOrKeyPress.bind(this);
-        this._onInput = this._onInput.bind(this);
-        this._onCompositionEnd = this._onCompositionEnd.bind(this);
-        this._onCompositionStart = this._onCompositionStart.bind(this);
-        this._onCompositionUpdate = this._onCompositionUpdate.bind(this);
-        this._onMouseDown = this._onMouseDown.bind(this);
+        const document = window.top.document;
+        this._bindEvent(document, 'selectionchange', this._onSelectionChange);
+        this._bindEvent(document, 'click', this._onClick);
+        this._bindEvent(document, 'touchend', this._onClick);
+        this._bindEvent(document, 'contextmenu', this._onContextMenu);
 
-        window.top.document.addEventListener('selectionchange', this._onSelectionChange, false);
-        window.top.document.addEventListener('click', this._onClick, false);
-        window.top.document.addEventListener('touchend', this._onClick, false);
-        window.top.document.addEventListener('contextmenu', this._onContextMenu, false);
+        this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
+        this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
+        this._bindEvent(editable, 'input', this._onInput);
+        this._bindEvent(editable, 'compositionstart', this._onComposition);
+        this._bindEvent(editable, 'compositionupdate', this._onComposition);
+        this._bindEvent(editable, 'compositionend', this._onComposition);
+        this._bindEvent(editable, 'touchstart', this._onMouseDown);
+        this._bindEvent(editable, 'mousedown', this._onMouseDown);
 
-        this.editable.addEventListener('keydown', this._onKeyDownOrKeyPress, false);
-        this.editable.addEventListener('keypress', this._onKeyDownOrKeyPress, false);
-        this.editable.addEventListener('input', this._onInput, false);
-        this.editable.addEventListener('compositionend', this._onCompositionEnd, false);
-        this.editable.addEventListener('compositionstart', this._onCompositionStart, false);
-        this.editable.addEventListener('compositionupdate', this._onCompositionUpdate, false);
-        this.editable.addEventListener('mousedown', this._onMouseDown, false);
-        this.editable.addEventListener('touchstart', this._onMouseDown, false);
-
-        this._observer = new MutationObserver((mutationsList: Array<MutationRecord>): void => {
+        this._observer = new MutationObserver((mutationsList): void => {
             if (this._compiledEvent) {
-                this._compiledEvent.mutationsList = this._compiledEvent.mutationsList.concat(mutationsList);
+                this._compiledEvent.mutationsList.push(...mutationsList);
             }
         });
         this._observer.observe(this.editable, {
-            characterData: true, // text changes
-            childList: true, // child changes
-            subtree: true, // extend the obervation to the target children
+            characterData: true, // monitor text content changes
+            childList: true, // monitor child nodes addition or removal
+            subtree: true, // extend monitoring to all children of the target
         });
     }
     /**
@@ -108,20 +115,7 @@ export class EventNormalizer {
      */
     destroy(): void {
         this._observer.disconnect();
-
-        window.top.document.removeEventListener('selectionchange', this._onSelectionChange);
-        window.top.document.removeEventListener('click', this._onClick);
-        window.top.document.removeEventListener('touchend', this._onClick);
-        window.top.document.removeEventListener('contextmenu', this._onContextMenu);
-
-        this.editable.removeEventListener('keydown', this._onKeyDownOrKeyPress);
-        this.editable.removeEventListener('keypress', this._onKeyDownOrKeyPress);
-        this.editable.removeEventListener('input', this._onInput);
-        this.editable.removeEventListener('compositionend', this._onCompositionEnd);
-        this.editable.removeEventListener('compositionstart', this._onCompositionStart);
-        this.editable.removeEventListener('compositionupdate', this._onCompositionUpdate);
-        this.editable.removeEventListener('mousedown', this._onMouseDown);
-        this.editable.removeEventListener('touchstart', this._onMouseDown);
+        this._unbindEvents();
     }
 
     //--------------------------------------------------------------------------
@@ -129,7 +123,36 @@ export class EventNormalizer {
     //--------------------------------------------------------------------------
 
     /**
-     * This method is called by each event handler and create a CompiledEvent.
+     * Bind the occurence of given even type on the given target element to the
+     * given listener function. See _unbindEvents to unbind all events bound by
+     * calling this function.
+     *
+     * @private
+     * @param target element on which to listen for events
+     * @param type of the event to listen
+     * @param listener to call when the even occurs on the target
+     */
+    _bindEvent(target: EventTarget, type: string, listener: Function): void {
+        const boundListener = listener.bind(this);
+        this._eventListeners.push({
+            target: target,
+            type: type,
+            listener: boundListener,
+        });
+        target.addEventListener(type, boundListener);
+    }
+    /**
+     * Unbind all events bound by calls to _bindEvent.
+     *
+     * @private
+     */
+    _unbindEvents(): void {
+        this._eventListeners.forEach(({ target, type, listener }) => {
+            target.removeEventListener(type, listener);
+        });
+    }
+    /**
+     * This method creates a CompiledEvent.
      * After a tick (setTimeout 0ms) the method '_tickAfterUserInteraction' is
      * called.
      * All events during a tick are caught and the CompiledEvent object is
@@ -139,9 +162,10 @@ export class EventNormalizer {
      * User events are received per batch, corresponding to an action.
      *
      * @see _tickAfterUserInteraction
+     * @private
      * @returns {CompiledEvent}
      */
-    _beginToStackEventDataForNextTick(): CompiledEvent {
+    _compileEvents(): CompiledEvent {
         if (this._compiledEvent) {
             return this._compiledEvent;
         }
@@ -157,15 +181,14 @@ export class EventNormalizer {
             mutationsList: [],
             defaultPrevented: false,
         };
-        setTimeout(this._tickAfterUserInteraction.bind(this));
+        setTimeout(this._processCompiledEvent.bind(this));
         return this._compiledEvent;
     }
     /**
-     * Called when we detect a composition user action.
-     * Create a clone of the DOM (block parent of the range) will used to
-     * analyse and extract the real insertion and the range on which the
-     * change applies.
-     * The clone is added to the CompiledEvent
+     * Create a partial clone of the DOM starting from the current position of
+     * the range up to its closest display:block parent. This partial clone of
+     * the DOM will be compared later on with the state of the DOM after the
+     * composition has ended in order to indentify the change that was made.
      *
      * @private
      */
@@ -181,18 +204,18 @@ export class EventNormalizer {
         while (
             format.parentNode &&
             format !== this.editable &&
-            (format.nodeType === 3 || // text node can't be block => look for parent
+            (format.nodeType === Node.TEXT_NODE || // text node can't be block => look for parent
                 window.getComputedStyle(format).display !== 'block')
         ) {
             format = format.parentNode;
         }
-        const clone: ClonedNode = format.cloneNode(true);
+        const clone: ClonedNode = format.cloneNode(true) as ClonedNode;
         clone.origin = format;
         this._compiledEvent.clone = clone;
 
         (function addChildOrigin(clone: ClonedNode): void {
             // only mark DOM elements (type 1)
-            if (clone.nodeType !== 1) {
+            if (clone.nodeType !== Node.ELEMENT_NODE) {
                 return;
             }
             const childNodes = clone.origin.childNodes as NodeListOf<DOMElement>;
@@ -203,21 +226,26 @@ export class EventNormalizer {
         })(clone);
     }
     /**
-     * Called when the CompiledEvent is ready by _tickAfterUserInteraction
-     * Trigger the different actions according to the event analysis performed.
+     * Process the compiled event by triggering the corresponding events on the
+     * listener and reset the compiling process for the next stack.
      *
-     * @see _tickAfterUserInteraction
      * @private
-     * @compiledEvent {CompiledEvent} compiledEvent
      */
-    _processCompiledEvent(compiledEvent: CompiledEvent): void {
+    _processCompiledEvent(): void {
+        // Store and reset compiled event for the next stack.
+        const compiledEvent = this._compiledEvent;
+        this._compiledEvent = null;
+
         // TODO: transfer defaultPrevented information
         if (compiledEvent.defaultPrevented) {
-            this._triggerEvent('inconsistentState'); // suggest a flush / reset from editor
+            // The normalizer honors the preventDefault property of events. If
+            // something was changed regardless of that property, the listener
+            // won't know it. Let it know that the state might be inconsistent.
+            this._triggerEvent('inconsistentState');
             return;
         }
 
-        // gather dirty nodes as they will have to be re-rendered
+        // Gather all modified nodes to notify the listener.
         const elements: Set<HTMLElement> = new Set();
         compiledEvent.mutationsList.forEach(mutation => {
             if (mutation.type === 'characterData') {
@@ -230,9 +258,9 @@ export class EventNormalizer {
         });
 
         if (navigationKey.has(compiledEvent.key)) {
-            this._pressMove(compiledEvent, elements);
+            this._processMove(compiledEvent, elements);
         } else if (compiledEvent.type === 'composition') {
-            this._pressInsertComposition(compiledEvent, elements);
+            this._processComposition(compiledEvent, elements);
         } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
             const deleteEventPayload = {
                 direction: compiledEvent.key === 'Backspace' ? 'left' : 'right',
@@ -266,6 +294,7 @@ export class EventNormalizer {
                 (compiledEvent.key && compiledEvent.key.length === 1) ||
                 compiledEvent.key === 'Space')
         ) {
+            // TODO: the above condition is unreadable
             // Different browsers handle the same action differently using
             // triggering different events with different payloads. We listen
             // to input events which uses data and keypress event which uses key.
@@ -273,174 +302,325 @@ export class EventNormalizer {
             // is wrong, hence we have to look at the keypress event.
             // When we have data, data has more value than key.
             // TODO comment: input > keypress > keydown
-            const data = compiledEvent.data && compiledEvent.data.length === 1 ? compiledEvent.data : compiledEvent.key;
+            const data =
+                compiledEvent.data && compiledEvent.data.length === 1
+                    ? compiledEvent.data
+                    : compiledEvent.key;
             if (data === ' ' || data === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
                 this._triggerEvent('insert', '\u00A0', elements); // nbsp
-            } else if (data.charCodeAt(0) === 10) {
-                // LINE FEED (LF) (u000A)
-                // enter on some mobile keyboards do not trigger keypress so we need to catch it here
+            } else if (data && data[0] === '\u000A') {
+                // The enter key on some mobile keyboards do not trigger an
+                // actual keypress event but trigger an input event with the
+                // LINE FEED (LF) (u000A) unicode character instead.
+                // TODO: replace this <br/> by a contextualized 'enter' event
                 this._triggerEvent('insert', '<br/>', elements);
             } else {
                 this._triggerEvent('insert', data, elements);
             }
         } else if (compiledEvent.type === 'keydown') {
-            // Maybe the normalizer should not trigger keydown events because:
-            // - they do not need to be normalized per se (they are consistent accross browsers)
-            // - they won't be able to be defaultPrevented when triggered here anyway
+            // TODO: Maybe the normalizer should not trigger keydown events:
+            // - they are consistent accross browsers so no normalization needed
+            // - they won't be able to be defaultPrevented after being triggered
             this._triggerEvent('keydown', compiledEvent);
         } else {
-            // Something definitely happened (otherwise we wouldn't have caught
-            // up events related to it and we wouldn't have ended up here) BUT
-            // it seems to be an event we did not support properly since it did
-            // not fall into one of the above cases. Since something happened
-            // in the DOM but we did not understand it, we trigger an
-            // inconsistentState event. It is the responsibility of the listener
-            // to know what to do in such a case, probably reset the DOM to the
-            // last known consistent state.
+            // Something definitely happened since some events were compiled,
+            // but it appears to be currently unsupported since it did not fall
+            // in any of the previous conditional branches. The listener has no
+            // way to understand the change in the DOM since the normalizer does
+            // not understand it either. Let it know about the inconsistence.
             this._triggerEvent('inconsistentState', compiledEvent);
         }
     }
     /**
-     * Convert a node list of node into a list of char linked to an element
-     * and offset.
-     * Two lists can then be compared to know where they diverge.
+     * Extract a mapping of the separate characters, their corresponding text
+     * nodes and their offsets in said nodes from the given node's subtree.
      *
      * @private
-     * @param {Element[]} nodesToExtract text nodes or <br/> nodes
-     * @returns {Object} {chars, nodes, offsets}
+     * @param node to extract from
      */
-    _extractChars(node: Element): ExtractedCharList {
-        const nodesToExtract = this._findTextNode(node as DOMElement);
-        const chars: Array<string> = [];
-        const nodes: Array<Element> = [];
-        const offsets: Array<number> = [];
-        nodesToExtract.forEach(function(node) {
+    _getCharactersMapping(node: DOMElement): CharactersMapping {
+        const textualNodes = this._getTextualNodes(node);
+        let length = 0;
+        let characters = '';
+        const correspondingNodes: Array<DOMElement | ClonedNode> = [];
+        const offsets: number[] = [];
+        textualNodes.forEach(function(node) {
             if (node.nodeValue) {
+                // Split text nodes into separate chars
                 node.nodeValue.split('').forEach(function(char, index) {
-                    chars.push(char);
-                    nodes.push(node);
+                    length++;
+                    characters += char;
+                    correspondingNodes.push(node);
                     offsets.push(index);
                 });
             } else {
-                chars.push(null);
-                nodes.push(node);
+                // Push br node directly
+                length++;
+                characters += '\u000A'; // LINE FEED (LF)
+                correspondingNodes.push(node);
                 offsets.push(0);
             }
         });
         return {
-            chars: chars,
-            nodes: nodes as ClonedNode[],
+            length: length,
+            chars: characters,
+            nodes: correspondingNodes,
             offsets: offsets,
         };
     }
     /**
-     * Return the list of text node and BR contained in an element.
+     * Recursively extract the text and br nodes from the given node and its
+     * children and return the given accumulator array after appending into it.
      *
      * @private
-     * @param {Element} node
-     * @returns {Element[]}
+     * @param node to extract from
+     * @param acc accumulator array to append to
      */
-    _findTextNode(node: DOMElement, textNodes: Array<Element> = []): Element[] {
-        if (node.nodeType === 3) {
-            textNodes.push(node);
-        } else if (node.tagName === 'BR') {
-            textNodes.push(node);
+    _getTextualNodes(node: DOMElement, acc: DOMElement[] = []): DOMElement[] {
+        if (this._isTextualNode(node)) {
+            acc.push(node);
         } else {
-            node.childNodes.forEach(n => this._findTextNode(n as DOMElement, textNodes));
+            node.childNodes.forEach(n => this._getTextualNodes(n, acc));
         }
-        return textNodes;
+        return acc;
+    }
+    _isTextualNode(node: HTMLElement): boolean {
+        return node.nodeType === Node.TEXT_NODE || node.tagName === 'BR';
     }
     /**
-     * Compare to extracted list of char to define the start and the end
-     * of the changes. Return the indexes from each list.
+     * Compare the given previous and current strings and return the offsets in
+     * the current string of the range where the content differ between the two.
+     * If they are equal, startOffset = current.length and endOffset = 0.
      *
-     * @see _extractChars
      * @private
-     * @param {Object} cloneChars
-     * @param {Object} originalChars
-     * @returns {Object} {startClone, endClone, start, end}
+     * @param previous
+     * @param current
      */
-    _findChangeOffsets(cloneChars: ExtractedCharList, originalChars: ExtractedCharList): ChangeOffsets {
-        const cloneLength = cloneChars.chars.length - 1;
-        const originalLength = originalChars.chars.length - 1;
+    _getChangeOffsets(previous: string, current: string): ChangeOffsets {
+        let startOffset = 0;
+        let endOffset = previous.length;
+        const lengthDiff = current.length - previous.length;
 
-        let cloneStart = 0;
-        let cloneEnd = cloneLength;
-        let originalStart = 0;
-        let originalEnd = originalLength;
-
-        for (originalStart; originalStart <= cloneLength; originalStart++) {
-            if (cloneChars.chars[originalStart] !== originalChars.chars[originalStart]) {
-                cloneStart = originalStart;
+        // Find the offset where a difference is first observed from the left
+        while (startOffset < previous.length) {
+            if (previous[startOffset] !== current[startOffset]) {
                 break;
             }
+            startOffset++;
         }
 
-        for (cloneEnd; cloneEnd >= 0; cloneEnd--) {
-            if (cloneChars.chars[cloneEnd] !== originalChars.chars[originalLength + cloneEnd - cloneLength]) {
-                cloneEnd = cloneEnd + 1; // end of range is inclusive
-                originalEnd = originalLength + cloneEnd - cloneLength;
+        // Find the offset where a difference is first observed from the right
+        while (endOffset >= 0) {
+            if (previous[endOffset] !== current[lengthDiff + endOffset]) {
+                // Increment the end offset as the end of a range is inclusive
+                endOffset += 1;
                 break;
             }
+            endOffset--;
         }
 
         return {
-            cloneStart: cloneStart,
-            cloneEnd: cloneEnd,
-            originalStart: originalStart,
-            originalEnd: originalEnd,
+            leftOffset: startOffset,
+            rightOffset: lengthDiff + endOffset,
         };
     }
     /**
-     * Get the current range and selection from the DOM
+     * Get the current range from the current selection in DOM. If there is no
+     * range in the DOM, return a fake one at offset 0 of the editable element.
      *
-     * @returns {Range}
+     * @private
      */
     _getRange(): Range {
         const selection = this.editable.ownerDocument.getSelection();
+
         if (!selection || selection.rangeCount === 0) {
-            const range: Range = {
+            // No selection means no range so a fake one is created
+            return {
                 startContainer: this.editable,
                 startOffset: 0,
                 endContainer: this.editable,
                 endOffset: 0,
-                direction: 'rtl',
+                direction: this.editable.dir as Direction,
             };
-            return range;
-        }
-        const nativeRange = selection.getRangeAt(0);
-        let ltr: boolean;
-        if (selection.anchorNode === selection.focusNode) {
-            ltr = selection.anchorOffset <= selection.focusOffset;
         } else {
-            ltr = selection.anchorNode === nativeRange.startContainer;
+            // The direction of the range is sorely missing from the DOM api
+            const nativeRange = selection.getRangeAt(0);
+            let ltr: boolean;
+            if (selection.anchorNode === selection.focusNode) {
+                ltr = selection.anchorOffset <= selection.focusOffset;
+            } else {
+                ltr = selection.anchorNode === nativeRange.startContainer;
+            }
+            return {
+                startContainer: nativeRange.startContainer as DOMElement,
+                startOffset: nativeRange.startOffset,
+                endContainer: nativeRange.endContainer as DOMElement,
+                endOffset: nativeRange.endOffset,
+                direction: ltr ? 'ltr' : 'rtl',
+            };
         }
-        const range: Range = {
-            startContainer: nativeRange.startContainer,
-            startOffset: nativeRange.startOffset,
-            endContainer: nativeRange.endContainer,
-            endOffset: nativeRange.endOffset,
-            direction: ltr ? 'ltr' : 'rtl',
-        };
-        return range;
     }
-    _isSelectAll(rangeDOM: Range): boolean {
-        let startContainer = rangeDOM.startContainer;
-        let startOffset = rangeDOM.startOffset;
-        let endContainer = rangeDOM.endContainer;
-        let endOffset = rangeDOM.endOffset;
-
-        const isRangeCollapsed = startContainer === endContainer && startOffset === endOffset;
-        if (!startContainer || !endContainer || isRangeCollapsed) {
-            return false;
+    /**
+     * Process the given compiled event as a composition to identify the text
+     * that was inserted and trigger the corresponding events on the listener.
+     *
+     * @private
+     */
+    _processComposition(ev: CompiledEvent, elements: Set<HTMLElement>): void {
+        if (!this.editable.contains(ev.clone.origin)) {
+            // Some weird keyboards might replace the entire block element
+            // rather than the text inside of it. This is currently unsupported.
+            this._triggerEvent('inconsistentState', ev, elements);
+            return;
         }
+
+        // The goal of this function is to precisely find what was inserted by
+        // a keyboard supporting spell-checking and suggestions.
+        // Example (`|` represents the text cursor):
+        //   Previous content: 'My friend Christofe| was here.'
+        //   Current content:  'My friend Christophe Matthieu| was here.'
+        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
+
+        const previous = this._getCharactersMapping(ev.clone);
+        const current = this._getCharactersMapping(ev.clone.origin);
+        const previousLength = previous.length;
+        const currentLength = current.length;
+        // In the typical case, that is most spell-checking mobile keyboards,
+        // the range is set right after the inserted text. It can then be used
+        // as a marker to identify the end of the change.
+        const range = this._getRange();
+        let insertEnd = 0;
+        while (insertEnd < currentLength) {
+            if (current.nodes[insertEnd] === range.endContainer) {
+                // The text has been flattened in the characters mapping. When
+                // the index of the node has been found, use the range offset
+                // to find the index of the character proper.
+                insertEnd += range.endOffset;
+                break;
+            }
+            insertEnd++;
+        }
+
+        // If a composition event has been observed and its data property was
+        // set, it can be used to compute the start of the change.
+        let insertStart = insertEnd;
+        if (ev.data) {
+            insertStart -= ev.data.length;
+        }
+
+        // In the optimal case where both the range is correctly placed and the
+        // data property of the composition event is correctly set, the above
+        // analysis is capable of finding the precise text that was inserted.
+        // However, if any of these two conditions are not met, the results
+        // might be spectacularly wrong. For example, spell checking suggestions
+        // on MacOS are displayed while hovering the mispelled word, regardless
+        // of the current position of the range, and the correction does not
+        // trigger an update of the range position either after correcting.
+        // Example (`|` represents the text cursor):
+        //   Previous content: 'My friend Christofe was here.|'
+        //   Current content:  'My friend Christophe Matthieu was here.|'
+        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
+        //   Result if data is set to 'Christophe' (length: 10): 'e was here'
+        //   Result if data is not set (regardless of the range): ''
+        //
+        // Because the first analysis might not be enough in some cases, a
+        // second analysis must be performed. This analysis aims at precisely
+        // identifying the offset of the actual change in the text by comparing
+        // the previous content with the current one from left to right to find
+        // the start of the change and from right to left to find its end.
+        // Example (`|` represents the text cursor):
+        //   Previous content: 'My friend Christofe| was here.'
+        //   Current content:  'My friend Christophe Matthieu| was here.'
+        //   Observed change:  'My friend Christo[fe => phe Matthieu] was here.'
+        //   Change offsets in the current content: {left: 17, right: 29}
+        const change = this._getChangeOffsets(previous.chars, current.chars);
+
+        // It is possible that the left and right offsets of the observed change
+        // are reversed in rtl direction or in some weird cases.
+        // Example (`|` represents the collapsed selection):
+        //   Previous content: 'aa aa aa| aa aa'
+        //   Current content:  'aa aa aa aa| aa aa'
+        //   Actual text inserted by the keyboard: 'aa '
+        //   Observed change:  'aa ]aa aa aa aa[ aa'
+        // TODO CHM: the below min/max does not cover all cases
+        insertStart = Math.min(insertStart, Math.max(change.leftOffset, change.rightOffset));
+        insertEnd = Math.max(insertEnd, Math.min(change.rightOffset, change.leftOffset));
+
+        // Reconstruct the inserted text from the computed indices.
+        const insertedText = current.chars.slice(insertStart, insertEnd);
+
+        // Compute the range in the previous DOM corresponding to the range of
+        // the observed correction in current DOM. For this purpose, the nodes
+        // in the `previous` mapping were given a reference to their original
+        // self before cloning such that it can be retrieved now.
+        const previousNodes = previous.nodes as ClonedNode[];
+        // The indices in the current DOM must be offset by the difference in
+        // length between the previous and current content in order to compute
+        // their corresponding indices in the previous DOM.
+        const insertPreviousStart = insertStart;
+        const insertPreviousEnd = insertEnd + previousLength - currentLength;
+        const insertionRange: Range = {
+            startContainer: previousNodes[insertPreviousStart].origin,
+            startOffset: previous.offsets[insertPreviousStart],
+            endContainer: previousNodes[insertPreviousEnd].origin,
+            endOffset: previous.offsets[insertPreviousEnd],
+            direction: 'rtl',
+            origin: 'composition',
+        };
+
+        this._triggerEvent('setRange', insertionRange, []);
+        this._triggerEvent('insert', insertedText, elements);
+    }
+    /**
+     * Process the given compiled event as a move and trigger the corresponding
+     * events on the listener.
+     *
+     * @private
+     */
+    _processMove(ev: CompiledEvent, elements: Set<HTMLElement>): void {
+        // The normalizer honors preventDefault for moves. If the range was
+        // moved regardless of the preventDefault setting, it must be restored.
+        if (ev.defaultPrevented) {
+            this._triggerEvent('restoreRange');
+        } else {
+            // Set the range according to the current one. Set the origin key
+            // in order to track the source of the move.
+            const range = this._getRange();
+            range.origin = ev.key;
+            // TODO: nagivation word/line ?
+            this._triggerEvent('setRange', range, elements);
+        }
+    }
+    /**
+     * Return true if the given range is interpreted like a
+     *
+     * @param range
+     */
+    _isSelectAll(range: Range): boolean {
+        let startContainer = range.startContainer;
+        let startOffset = range.startOffset;
+        let endContainer = range.endContainer;
+        let endOffset = range.endOffset;
 
         const body = this.editable.ownerDocument.body;
-        if (!body.contains(startContainer) || !body.contains(endContainer)) {
-            // The selection might be in a node which has since been removed from DOM
+        // The selection might still be on a node which has since been removed
+        const invalidStart = !startContainer || !body.contains(startContainer);
+        const invalidEnd = !endContainer || !body.contains(endContainer);
+        const invalidSelection = invalidStart || invalidEnd;
+
+        // The range might be collapsed in which case there is no selection
+        const onlyOneNodeSelected = startContainer === endContainer;
+        const noCharacterSelected = startOffset === endOffset;
+        const collapsedRange = onlyOneNodeSelected && noCharacterSelected;
+
+        // If the selection is invalid or the range is collapsed, it definitely
+        // does not correspond to a select all action.
+        if (invalidSelection || collapsedRange) {
             return false;
         }
+
+        // TODO: browser don't go to lowest possible depth
         if (startContainer.childNodes[startOffset]) {
             startContainer = startContainer.childNodes[startOffset];
             startOffset = 0;
@@ -449,174 +629,70 @@ export class EventNormalizer {
             endContainer = endContainer.childNodes[endOffset];
             endOffset = 0;
         }
-        if (startOffset !== 0 || (endContainer.nodeType === 3 && endOffset !== endContainer.textContent.length)) {
+        if (
+            startOffset !== 0 ||
+            (endContainer.nodeType === Node.TEXT_NODE &&
+                endOffset !== endContainer.textContent.length)
+        ) {
             return false;
         }
 
-        const editable = this.editable;
-        function isVisible(el: DOMElement): boolean {
-            if (el === editable) {
+        // Look for visible nodes in editable that would be outside the range.
+        return (
+            this._isAtVisibleEdge(startContainer, 'left') &&
+            this._isAtVisibleEdge(endContainer, 'right')
+        );
+    }
+    /**
+     * Return true if the given element is at the edge of the editable node in
+     * the given direction. An element is considered at the edge of the editable
+     * node if there is no other visible element in editable that is located
+     * beyond it in the given direction.
+     *
+     * @param element to check whether it is at the visible edge
+     * @param side from which to look for textual nodes ('left' or 'right')
+     */
+    _isAtVisibleEdge(element: HTMLElement, side: string): boolean {
+        if (!this.editable.contains(element)) return false;
+        // Start from the top and do a depth-first search trying to find a
+        // visible node that would be in editable and beyond the given element.
+        let node = this.editable;
+        const child = side === 'left' ? 'firstChild' : 'lastChild';
+        const sibling = side === 'left' ? 'nextSibling' : 'previousSibling';
+        while (node) {
+            if (node === element) {
+                // The element was reached without finding another visible node.
                 return true;
             }
-            const style = window.getComputedStyle(el.parentNode);
-            if (style.display === 'none' || style.visibility === 'hidden') {
+            if (this._isTextualNode(node) && this._isVisible(node)) {
+                // There is a textual node in editable beyond the given element.
                 return false;
             }
-            return isVisible(el.parentNode);
-        }
-
-        // Look for nodes in editable that would be before startContainer
-        if (this.editable.contains(startContainer)) {
-            let el = this.editable;
-            while (el) {
-                if (el === startContainer) {
-                    break;
-                }
-                if ((el.nodeType === 3 || el.tagName === 'BR') && isVisible(el)) {
-                    // We found a node in editable before startContainer so,
-                    // clearly, we did not do a select all
-                    return false;
-                }
-                if (el.firstChild) {
-                    el = el.firstChild;
-                } else if (el.nextSibling) {
-                    el = el.nextSibling;
-                } else if (el.parentNode !== this.editable) {
-                    el = el.parentNode.nextSibling;
-                } else {
-                    // We looked at all the nodes in editable
-                    break;
-                }
-            }
-        }
-
-        if (this.editable.contains(endContainer)) {
-            let el = this.editable;
-            while (el) {
-                if (el === endContainer) {
-                    break;
-                }
-                if (
-                    (el.nodeType === 3 || (el.tagName === 'BR' && (el.nextSibling || !el.previousSibling))) &&
-                    isVisible(el)
-                ) {
-                    // br is not selected if it's the last element and is not alone
-                    // We found a node in editable before startContainer so,
-                    // clearly, we did not do a select all
-                    return false;
-                }
-                if (el.lastChild) {
-                    el = el.lastChild;
-                } else if (el.previousSibling) {
-                    el = el.previousSibling;
-                } else if (el.parentNode !== this.editable) {
-                    el = el.parentNode.previousSibling;
-                } else {
-                    // We looked at all the nodes in editable
-                    break;
-                }
+            // Continue the depth-first search.
+            if (node[child]) {
+                node = node[child];
+            } else if (node[sibling]) {
+                node = node[sibling];
+            } else if (node.parentNode === this.editable) {
+                // Depth-first search has checked all elements in editable.
+                return true;
+            } else {
+                node = node.parentNode[sibling];
             }
         }
         return true;
     }
-    /**
-     * @private
-     * @param {object} param
-     */
-    _pressInsertComposition(param: CompiledEvent, elements: Set<HTMLElement>): void {
-        if (!this.editable.contains(param.clone.origin)) {
-            // Some weird keyboards might replace the entire block element rather
-            // than the text inside of it. This is currently unsupported.
-            this._triggerEvent('inconsistentState', param, elements); // suggest reset / flush from renderer
-            return;
+    _isVisible(el: DOMElement): boolean {
+        if (el === this.editable) {
+            // The editable node was reached without encountering a hidden
+            // container. The editable node is supposed to be visible.
+            return true;
         }
-
-        const extractedCloneChars = this._extractChars(param.clone);
-        const extractedOriginalChars = this._extractChars(param.clone.origin);
-        const changeOffsets = this._findChangeOffsets(extractedCloneChars, extractedOriginalChars);
-
-        // extend the range of the change to match the text that was inserted
-        // example:
-        // original: 'this is a sentance'
-        // word corrected by the system: sentance => sentence
-        // new: 'this is a sentence'
-        // change we observe: 'this is a sent[a => e]nce'
-        // We want to find back the proper corrected word, not just the change
-        const range = this._getRange();
-        const cloneLength = extractedCloneChars.chars.length;
-        const originalLength = extractedOriginalChars.chars.length;
-        let endChanged: number;
-        // Extend the change offset up to the current position of therange, which
-        // is necessarily right after the change after a correction.
-        for (let index = 0; index <= originalLength; index++) {
-            if (extractedOriginalChars.nodes[index] === range.startContainer) {
-                endChanged = index + range.startOffset;
-                break;
-            }
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+            return false;
         }
-        // If we have data, we know the length of the corrected word, so we can
-        // construct the range offsets by going backward from the end we just got
-        let startChanged = param.data ? endChanged - param.data.length : endChanged;
-
-        // TODO: original => new, cloned => old
-        // The offsets of the change might have endChanged < startChanged if
-        // original: 'aa aa aa aa aa'
-        // new:      'aa aa aa aa aa aa'
-        // change we observe: 'aa] aa aa aa aa [aa'
-        // We use min max to find the first offset, regardless of whether it's
-        // supposed to be the start or end offset then use min/max to avoid
-        // restraining the endChanged and startChanged computed earlier. It's ok
-        // to extend the range firther with this second analysis but not restrain
-        // it. We have the assurance to have AT LEAST the change in the range.
-        endChanged = Math.max(endChanged, Math.min(changeOffsets.originalStart, changeOffsets.originalEnd));
-        startChanged = Math.min(startChanged, Math.max(changeOffsets.originalStart, changeOffsets.originalEnd));
-
-        // Reconstruct the correction
-        const text = extractedOriginalChars.chars.slice(startChanged, endChanged).join('');
-        // Compute the range in old DOM corresponding to range of the correction in new DOM
-        const origin: SelectRange = {
-            startContainer: extractedCloneChars.nodes[startChanged].origin,
-            startOffset: extractedCloneChars.offsets[startChanged],
-            endContainer: extractedCloneChars.nodes[cloneLength - originalLength + endChanged].origin,
-            endOffset: extractedCloneChars.offsets[cloneLength - originalLength + endChanged],
-            direction: 'rtl',
-            origin: 'composition',
-        };
-
-        // We can get the original text before composition if we would like to
-        // const textBefore = extractedCloneChars.nodes[startChanged].nodeValue
-        //     .slice(0, origin.endOffset)
-        //     .slice(origin.startOffset);
-
-        this._triggerEvent('setRange', origin, []);
-        this._triggerEvent('insert', text, elements);
-    }
-    /**
-     * Move the selection/range
-     *
-     * @private
-     * @param {object} param
-     */
-    _pressMove(param: CompiledEvent, elements: Set<HTMLElement>): void {
-        if (param.defaultPrevented) {
-            this._triggerEvent('restoreRange');
-        }
-        const range = this._getRange() as SelectRange;
-        range.origin = param.key;
-        // TODO: nagivation word/line ?
-        this._triggerEvent('setRange', range, elements);
-    }
-    /**
-     * Called when the CompiledEvent is ready, that is when all events have
-     * been received and the event thread is finished then process the CompiledEvent.
-     *
-     * @see _beginToStackEventDataForNextTick
-     * @see _eventsNormalization
-     */
-    _tickAfterUserInteraction(): void {
-        const param = this._compiledEvent;
-        this._compiledEvent = null;
-        this._processCompiledEvent(param);
+        return this._isVisible(el.parentNode);
     }
 
     //--------------------------------------------------------------------------
@@ -629,7 +705,7 @@ export class EventNormalizer {
      * @private
      * @param {CompositionEvent} ev
      */
-    _onCompositionStart(): void {
+    _onComposition(ev: CompositionEvent): void {
         // Consider a spell checking keyboard that is being displayed following
         // a focus event into the editable zone. If some other code on the page
         // ends up hiding the editable zone for some functional reason, there is
@@ -640,52 +716,27 @@ export class EventNormalizer {
         if (this.editable.style.display === 'none') return;
         // TODO: what if we got detached from the DOM (beware of iframes) ?
 
-        // Initialize the CompiledEvent and clone the current block node to be
-        // able to analyze the change later on to reconstruct the composition.
-        this._beginToStackEventDataForNextTick();
-        this._cloneForComposition();
-    }
-    /**
-     * Catch composition action
-     *
-     * @private
-     * @param {CompositionEvent} ev
-     */
-    _onCompositionUpdate(ev: CompositionEvent): void {
-        // See comment on the same line in _onCompositionStart handler.
-        if (this.editable.style.display === 'none') return;
-
         // Spell checking keyboards handle composition events inconsistently.
-        // Because of this, we cannot count on compositionstart being triggered
-        // before compositionupdate, so we might want to start compiling events
-        // on a compositionupdate event.
-        const compiledEvent = this._beginToStackEventDataForNextTick();
+        // For example, compositionstart might not be triggered before a
+        // compositionupdate, or compositionend might be triggered without
+        // a prior compositionstart or compositionupdate. Because of this, we
+        // might want to start compiling events on any composition event.
+        const compiledEvent = this._compileEvents();
+
+        // When the composition ends, the DOM is updated with the final result.
+        // Since composition events are handled inconsistently by different
+        // spell checking keyboards, their payload cannot be used to identify
+        // the change they made. Instead, the DOM is cloned before the result
+        // of the composition is applied to be compared later on in order to
+        // properly identify the change that was made.
+        // TODO comment: not all the DOM is cloned, only closest block element
         this._cloneForComposition();
 
-        // At least we have some data in the compositionupdate event.
-        compiledEvent.type = 'composition';
-        compiledEvent.data = ev.data;
-    }
-    /**
-     * Catch composition action
-     *
-     * @private
-     * @param {CompositionEvent} ev
-     */
-    _onCompositionEnd(ev: CompositionEvent): void {
-        // See comment on the same line in _onCompositionStart handler.
-        if (this.editable.style.display === 'none') return;
-
-        // Spell checking keyboards handle composition events inconsistently.
-        // Because of this, we cannot count on either start or update events
-        // occuring before the end one, so we might want to start compiling
-        // events on a compositionend event.
-        const compiledEvent = this._beginToStackEventDataForNextTick();
-        this._cloneForComposition();
-
-        // At least, we have some data in the compositionend event.
-        compiledEvent.type = 'composition';
-        compiledEvent.data = ev.data;
+        // Some composition events have useful information.
+        if (ev.type !== 'compositionstart') {
+            compiledEvent.type = 'composition';
+            compiledEvent.data = ev.data;
+        }
     }
     /**
      * Catch setRange and selectAll actions
@@ -709,7 +760,7 @@ export class EventNormalizer {
         // See comment on the same line in _onCompositionStart handler.
         if (this.editable.style.display === 'none') return;
 
-        const compiledEvent = this._beginToStackEventDataForNextTick();
+        const compiledEvent = this._compileEvents();
 
         // TODO comment: insert input data has more value than any other event
         // type, but 'input' type has nearly no value since we don't know if it's
@@ -721,7 +772,8 @@ export class EventNormalizer {
         }
 
         if (
-            (ev.inputType === 'insertCompositionText' || ev.inputType === 'insertReplacementText') &&
+            (ev.inputType === 'insertCompositionText' ||
+                ev.inputType === 'insertReplacementText') &&
             compiledEvent.type === 'composition'
         ) {
             // TODO comment: sometimes data won't be in compositionend (or it won't be triggered at all)
@@ -731,15 +783,25 @@ export class EventNormalizer {
             this._cloneForComposition();
         } else if (ev.inputType === 'insertParagraph' && compiledEvent.key === 'Unidentified') {
             compiledEvent.key = 'Enter';
-        } else if (ev.inputType === 'deleteContentBackward' && compiledEvent.key === 'Unidentified') {
+        } else if (
+            ev.inputType === 'deleteContentBackward' &&
+            compiledEvent.key === 'Unidentified'
+        ) {
             compiledEvent.key = 'Backspace';
             // TODO comment: safari mac for accents
             this._cloneForComposition();
-        } else if (ev.inputType === 'deleteContentForward' && compiledEvent.key === 'Unidentified') {
+        } else if (
+            ev.inputType === 'deleteContentForward' &&
+            compiledEvent.key === 'Unidentified'
+        ) {
             compiledEvent.key = 'Delete';
         } else if (ev.inputType === 'insertText') {
             // update the key which does not have the accent with the data which contains the accent
-            if (compiledEvent.type.indexOf('key') === 0 && compiledEvent.key.length === 1 && ev.data.length === 1) {
+            if (
+                compiledEvent.type.indexOf('key') === 0 &&
+                compiledEvent.key.length === 1 &&
+                ev.data.length === 1
+            ) {
                 compiledEvent.key = ev.data; // keep accent
             } else if (
                 ev.data &&
@@ -774,7 +836,7 @@ export class EventNormalizer {
         // Dead keys will trigger composition and input events later
         if (ev.type === 'keydown' && ev.key === 'Dead') return;
 
-        const compiledEvent = this._beginToStackEventDataForNextTick();
+        const compiledEvent = this._compileEvents();
         compiledEvent.defaultPrevented = compiledEvent.defaultPrevented || ev.defaultPrevented;
         compiledEvent.type = compiledEvent.type || ev.type;
         compiledEvent.key = ev.key;
@@ -815,18 +877,21 @@ export class EventNormalizer {
             const target = this._mousedownInEditable.target as Element;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let range: SelectRange;
+                let range: Range;
                 if (target === ev.target) {
                     range = {
-                        startContainer: target,
+                        startContainer: target as DOMElement,
                         startOffset: 0,
-                        endContainer: target,
-                        endOffset: target.nodeType === 1 ? target.childNodes.length : target.nodeValue.length,
-                        direction: 'rtl',
+                        endContainer: target as DOMElement,
+                        endOffset:
+                            target.nodeType === Node.ELEMENT_NODE
+                                ? target.childNodes.length
+                                : target.nodeValue.length,
+                        direction: document.dir as Direction,
                         origin: 'pointer',
                     };
                 } else {
-                    range = this._getRange() as SelectRange;
+                    range = this._getRange();
                     range.origin = 'pointer';
                 }
                 if (this._rangeHasChanged) {
@@ -847,7 +912,10 @@ export class EventNormalizer {
         if (this._mousedownInEditable || this.editable.style.display === 'none') {
             return;
         }
-        if ((!this._compiledEvent || this._compiledEvent.key === 'a') && this._isSelectAll(this._getRange())) {
+        if (
+            (!this._compiledEvent || this._compiledEvent.key === 'a') &&
+            this._isSelectAll(this._getRange())
+        ) {
             this._triggerEvent('selectAll', {
                 origin: this._compiledEvent ? 'keypress' : 'pointer',
                 target: this._selectAllOriginElement,

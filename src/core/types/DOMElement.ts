@@ -21,6 +21,7 @@ type HTMLElementOmit5 = Omit<HTMLElementOmit4, 'previousSibling'>;
 
 export interface DOMElement extends HTMLElementOmit5 {
     parentNode: DOMElement;
+    childNodes: NodeListOf<DOMElement>;
     firstChild: DOMElement;
     lastChild: DOMElement;
     nextSibling: DOMElement;
