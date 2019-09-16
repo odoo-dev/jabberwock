@@ -18,7 +18,7 @@ export class DevToolsComponent extends Component<Env, {}, DevToolsState> {
         height: 300,
         openTab: 'inspector',
     };
-    template = 'devtools';
+    static template = 'devtools';
     // For resizing/opening (see toggleClosed)
     _heightOnLastMousedown: number = this.state.height;
 
