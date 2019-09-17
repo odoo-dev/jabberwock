@@ -8,6 +8,7 @@ interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     currentTab: string; // Name of the current tab
+    actions: Action[]; // Stack of all actions performed since init
 }
 
 export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
@@ -17,6 +18,15 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
         closed: true,
         currentTab: 'inspector',
         height: 300,
+        actions: [], // Stack of all actions performed since init
+    };
+    handlers: PluginHandlers = {
+        intents: {
+            '*': 'addAction',
+        },
+    };
+    commands = {
+        addAction: this.addAction.bind(this),
     };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
@@ -26,6 +36,14 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Add an action to the stack
+     *
+     * @param {Action} action
+     */
+    addAction(action: Action): void {
+        this.state.actions.unshift(action);
+    }
     /**
      * Open the tab with the given `tabName`
      *

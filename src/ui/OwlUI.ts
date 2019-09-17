@@ -7,6 +7,7 @@ interface PluginEnv {
     qweb: QWeb;
     editor: JWEditor;
 }
+
 export class OwlUI {
     pluginsRegistry: JWOwlUIPlugin[] = [];
     editor: JWEditor;
@@ -25,9 +26,10 @@ export class OwlUI {
      * @returns {Promise<void>}
      */
     async addPlugin(PluginClass: typeof JWOwlUIPlugin): Promise<void> {
-        const pluginInstance = new PluginClass();
-        this.pluginsRegistry.push(pluginInstance);
-        await this._mountPluginComponents(pluginInstance);
+        const plugin = new PluginClass(this.editor.dispatcher);
+        this.pluginsRegistry.push(plugin);
+        await this._handleComponents(plugin);
+        this.editor.dispatcher.register(plugin.handlers, plugin.commands);
     }
 
     //--------------------------------------------------------------------------
@@ -48,28 +50,42 @@ export class OwlUI {
         };
     }
     /**
-     * Mount all of a plugin's Components
+     * Mount all of a plugin's Components to Owl and register its components'
+     * intents, actions and commands (TODO: this does not work for
+     * sub-components since those are mounted by their parent and we do not have
+     * access to their instantiation).
      *
-     * @param {JWOwlUIPlugin} pluginInstance
+     * @param {JWOwlUIPlugin} plugin
      * @returns {Promise<void>}
      */
-    async _mountPluginComponents(pluginInstance: JWOwlUIPlugin): Promise<void> {
-        const env: PluginEnv = await this._createPluginEnv(pluginInstance);
-        const components = pluginInstance.componentsRegistry.slice();
-        components.forEach((_Component: typeof OwlUIComponent) => {
-            this._mount(_Component, env);
-        });
+    async _handleComponents(plugin: JWOwlUIPlugin): Promise<void> {
+        const env: PluginEnv = await this._createPluginEnv(plugin);
+        const Components = plugin.componentsRegistry.slice();
+        for (let i = 0; i < plugin.componentsRegistry.length; i++) {
+            const component = new Components[i](env);
+            await this._mount(component);
+            this._register(component);
+        }
     }
     /**
-     * Mount a single component with the given `env`
+     * Mount a single component
      *
-     * @param {typeof OwlUIComponent} _Component
-     * @param {PluginEnv} env
+     * @param {OwlUIComponent} component
      * @returns {Promise<void>}
      */
-    async _mount(_Component: typeof OwlUIComponent, env: PluginEnv): Promise<void> {
-        const component = new _Component(env);
+    async _mount(component: OwlUIComponent<{}, {}>): Promise<void> {
         const target: HTMLElement = this.editor.el;
         await component.mount(target);
+    }
+    /**
+     * Register a component's dispatcher registry records ('intents',
+     * 'commands', 'actions') in its plugin so it can in turn register them in
+     * Jabberwock's dispatcher
+     *
+     * @param {OwlUIComponent} component
+     * @param {JWOwlUIPlugin} pluginInstance
+     */
+    _register(component: OwlUIComponent<{}, {}>): void {
+        this.editor.dispatcher.register(component.handlers, component.commands);
     }
 }
