@@ -1,5 +1,4 @@
 import { Dispatcher } from './dispatcher/Dispatcher';
-import { VDocument } from './stores/VDocument'; // todo: use state
 
 export interface JWPluginConfig {
     name?: string;
@@ -8,11 +7,16 @@ export interface JWPluginConfig {
 export class JWPlugin {
     name: string;
     dispatcher: Dispatcher;
-    vDocument: VDocument;
+    handlers: PluginHandlers = {
+        intents: {},
+        // TODO:
+        // preCommands: {},
+        // postCommands: {},
+    };
+    commands: Commands = {};
 
-    constructor(dispatcher: Dispatcher, vDocument: VDocument, options: JWPluginConfig = {}) {
+    constructor(dispatcher: Dispatcher, options: JWPluginConfig = {}) {
         this.dispatcher = dispatcher;
-        this.vDocument = vDocument;
         this.name = options.name;
     }
 

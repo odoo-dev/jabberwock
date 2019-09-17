@@ -2,10 +2,9 @@ import { VNode, VNodeType } from './VNode';
 import parser from '../utils/parser';
 
 export class VDocument {
-    _root: VNode;
+    _root = new VNode(VNodeType.ROOT);
 
     constructor(startValue?: HTMLElement) {
-        this._root = new VNode(VNodeType.ROOT);
         if (startValue) {
             this.setContents(startValue);
         }

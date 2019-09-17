@@ -1,7 +1,8 @@
 import { EventNormalizer } from './EventNormalizer';
+import { DispatchFunction } from '../dispatcher/Dispatcher';
 
 export interface EventManagerOptions {
-    dispatch?: Function;
+    dispatch?: DispatchFunction;
 }
 
 export class EventManager {
@@ -14,15 +15,38 @@ export class EventManager {
         this.options = options;
         this.eventNormalizer = new EventNormalizer(editable, this._triggerEvent.bind(this));
     }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
-     * TODO: Actually generate the actions.
+     * Induce the user's intention from the received signal, based on the user's
+     * configuration and context.
+     * TODO: this is just a stub
+     *
+     * @param {CustomEvent} customEvent
+     * @returns {Action}
      */
-    _triggerEvent(type: string, param: object = {}): void {
-        console.log(type, param);
-        this.options.dispatch({
-            type: type,
-            value: param,
-            origin: null,
-        });
+    _matchIntent(customEvent: CustomEvent): Action {
+        switch (customEvent.type) {
+            case 'remove':
+            // todo: return a 'remove' action of type 'intent', with the right payload
+        }
+        return {
+            id: 'intent.' + customEvent.type, // todo: automize
+            type: 'intent',
+            name: customEvent.type,
+            payload: customEvent.detail,
+            origin: customEvent.detail['origin'],
+        };
+    }
+    /**
+     * Take a signal, induce the user's intention from it, and dispatch that.
+     *
+     * @param {CustomEvent} customEvent
+     */
+    _triggerEvent(customEvent: CustomEvent): void {
+        this.options.dispatch(this._matchIntent(customEvent));
     }
 }
