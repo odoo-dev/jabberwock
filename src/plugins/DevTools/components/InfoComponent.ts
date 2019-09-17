@@ -1,8 +1,7 @@
 import { VNode } from '../../../core/stores/VNode';
-import { Component } from 'owl-framework';
-import { Env } from 'owl-framework/src/component/component';
+import { OwlUIComponent } from '../../../ui/JWOwlUIPlugin';
 
-export class InfoComponent extends Component<Env, {}, {}> {
+export class InfoComponent extends OwlUIComponent {
     /**
      * Trigger a 'node-selected' custom event
      * with the given `vNode` to select it

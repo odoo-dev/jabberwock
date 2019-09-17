@@ -1,7 +1,6 @@
-import { Env } from 'owl-framework/src/component/component';
 import { utils } from '../../../core/utils/utils';
 import { VNode } from '../../../core/stores/VNode';
-import { Component } from 'owl-framework';
+import { OwlUIComponent } from '../../../ui/JWOwlUIPlugin';
 
 interface NodeProps {
     isRoot: boolean;
@@ -19,12 +18,13 @@ interface NodeState {
  *       - isRoot: boolean
  *       - selectedID: number (the ID of the selected VNode)
  */
-export class TreeComponent extends Component<Env, NodeProps, NodeState> {
+export class TreeComponent extends OwlUIComponent {
     // This is a recursive Component: each node of the tree is itself a tree
     static components = { TreeComponent };
+    props: NodeProps;
     // User-friendly representation of the node
     repr: string = this._getNodeRepr(this.props.vNode);
-    state = {
+    state: NodeState = {
         folded: !this.props.isRoot, // Fold everything but the root on init
     };
 

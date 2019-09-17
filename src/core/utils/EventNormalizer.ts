@@ -1,3 +1,5 @@
+import { Signal } from '../types/Flux';
+
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -61,12 +63,12 @@ export class EventNormalizer {
     _observer: MutationObserver;
     _selectAllOriginElement: DOMElement; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
-    _triggerEvent: Function; // callback to trigger on events
+    _sendSignal: (signal: Signal) => void; // callback to trigger on events
     _rangeHasChanged: boolean;
 
-    constructor(editable: HTMLElement, triggerEvent: Function) {
+    constructor(editable: HTMLElement, sendSignal: (signal: Signal) => void) {
         this.editable = editable as DOMElement;
-        this._triggerEvent = triggerEvent;
+        this._sendSignal = sendSignal;
 
         const document = window.top.document;
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
@@ -227,7 +229,7 @@ export class EventNormalizer {
             // The normalizer honors the preventDefault property of events. If
             // something was changed regardless of that property, the listener
             // won't know it. Let it know that the state might be inconsistent.
-            this._triggerEvent('inconsistentState');
+            this._sendSignal(this._formatSignal('inconsistentState'));
             return;
         }
 
@@ -249,13 +251,13 @@ export class EventNormalizer {
             this._processComposition(compiledEvent, elements);
         } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
             const deleteEventPayload = {
-                direction: compiledEvent.key === 'Backspace' ? 'left' : 'right',
+                direction: compiledEvent.key === 'Backspace' ? 'backward' : 'forward',
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
             };
-            this._triggerEvent('delete', deleteEventPayload, elements);
+            this._sendSignal(this._formatSignal('remove', deleteEventPayload, elements));
         } else if (compiledEvent.key === 'Tab') {
             // TODO: maybe like keydown, there is no normalization proper here
             const tabEventPayload = {
@@ -264,7 +266,7 @@ export class EventNormalizer {
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
             };
-            this._triggerEvent('tab', tabEventPayload, elements);
+            this._sendSignal(this._formatSignal('tab', tabEventPayload, elements));
         } else if (compiledEvent.key === 'Enter') {
             const enterEventPayload = {
                 altKey: compiledEvent.altKey,
@@ -272,7 +274,7 @@ export class EventNormalizer {
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
             };
-            this._triggerEvent('enter', enterEventPayload, elements);
+            this._sendSignal(this._formatSignal('enter', enterEventPayload, elements));
         } else if (
             !compiledEvent.ctrlKey &&
             !compiledEvent.altKey &&
@@ -294,29 +296,72 @@ export class EventNormalizer {
                     : compiledEvent.key;
             if (data === ' ' || data === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
-                this._triggerEvent('insert', '\u00A0', elements); // nbsp
+                this._sendSignal(
+                    this._formatSignal(
+                        'insert',
+                        {
+                            value: '\u00A0',
+                        },
+                        elements,
+                    ),
+                ); // nbsp
             } else if (data && data[0] === '\u000A') {
                 // The enter key on some mobile keyboards do not trigger an
                 // actual keypress event but trigger an input event with the
                 // LINE FEED (LF) (u000A) unicode character instead.
                 // TODO: replace this <br/> by a contextualized 'enter' event
-                this._triggerEvent('insert', '<br/>', elements);
+                this._sendSignal(
+                    this._formatSignal(
+                        'insert',
+                        {
+                            value: '<br/>',
+                        },
+                        elements,
+                    ),
+                );
             } else {
-                this._triggerEvent('insert', data, elements);
+                this._sendSignal(
+                    this._formatSignal(
+                        'insert',
+                        {
+                            value: data,
+                        },
+                        elements,
+                    ),
+                );
             }
         } else if (compiledEvent.type === 'keydown') {
             // TODO: Maybe the normalizer should not trigger keydown events:
             // - they are consistent accross browsers so no normalization needed
             // - they won't be able to be defaultPrevented after being triggered
-            this._triggerEvent('keydown', compiledEvent);
+            this._sendSignal(this._formatSignal('keydown', compiledEvent));
         } else {
             // Something definitely happened since some events were compiled,
             // but it appears to be currently unsupported since it did not fall
             // in any of the previous conditional branches. The listener has no
             // way to understand the change in the DOM since the normalizer does
             // not understand it either. Let it know about the inconsistence.
-            this._triggerEvent('inconsistentState', compiledEvent);
+            this._sendSignal(this._formatSignal('inconsistentState', compiledEvent));
         }
+    }
+    /**
+     * Return a properly formatted Signal object, based on the given type
+     * and optional params.
+     *
+     * @param {string} type
+     * @param {object} [params]
+     * @returns {Signal}
+     */
+    _formatSignal(type: string, params = {}, elements?: Set<HTMLElement>): Signal {
+        const signal: Signal = {
+            type: type,
+            params: params,
+            origin: 'EventNormalizer',
+        };
+        if (elements) {
+            signal.elements = elements;
+        }
+        return signal;
     }
     /**
      * Extract a mapping of the separate characters, their corresponding text
@@ -457,7 +502,7 @@ export class EventNormalizer {
         if (!this.editable.contains(ev.clone.origin)) {
             // Some weird keyboards might replace the entire block element
             // rather than the text inside of it. This is currently unsupported.
-            this._triggerEvent('inconsistentState', ev, elements);
+            this._sendSignal(this._formatSignal('inconsistentState', ev, elements));
             return;
         }
 
@@ -555,8 +600,8 @@ export class EventNormalizer {
             origin: 'composition',
         };
 
-        this._triggerEvent('setRange', insertionRange, []);
-        this._triggerEvent('insert', insertedText, elements);
+        this._sendSignal(this._formatSignal('setRange', { value: insertionRange }, new Set()));
+        this._sendSignal(this._formatSignal('insert', { value: insertedText }, elements));
     }
     /**
      * Process the given compiled event as a move and trigger the corresponding
@@ -568,14 +613,14 @@ export class EventNormalizer {
         // The normalizer honors preventDefault for moves. If the range was
         // moved regardless of the preventDefault setting, it must be restored.
         if (ev.defaultPrevented) {
-            this._triggerEvent('restoreRange');
+            this._sendSignal(this._formatSignal('restoreRange'));
         } else {
             // Set the range according to the current one. Set the origin key
             // in order to track the source of the move.
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', range, elements);
+            this._sendSignal(this._formatSignal('setRange', { value: range }, elements));
         }
     }
     /**
@@ -625,8 +670,8 @@ export class EventNormalizer {
 
         // Look for visible nodes in editable that would be outside the range.
         return (
-            this._isAtVisibleEdge(startContainer, 'left') &&
-            this._isAtVisibleEdge(endContainer, 'right')
+            this._isAtVisibleEdge(startContainer, 'start') &&
+            this._isAtVisibleEdge(endContainer, 'end')
         );
     }
     /**
@@ -636,15 +681,15 @@ export class EventNormalizer {
      * beyond it in the given direction.
      *
      * @param element to check whether it is at the visible edge
-     * @param side from which to look for textual nodes ('left' or 'right')
+     * @param side from which to look for textual nodes ('start' or 'end')
      */
-    _isAtVisibleEdge(element: HTMLElement, side: string): boolean {
+    _isAtVisibleEdge(element: HTMLElement, side: 'start' | 'end'): boolean {
         if (!this.editable.contains(element)) return false;
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
         let node = this.editable;
-        const child = side === 'left' ? 'firstChild' : 'lastChild';
-        const sibling = side === 'left' ? 'nextSibling' : 'previousSibling';
+        const child = side === 'start' ? 'firstChild' : 'lastChild';
+        const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
         while (node) {
             if (node === element) {
                 // The element was reached without finding another visible node.
@@ -881,7 +926,7 @@ export class EventNormalizer {
                     range.origin = 'pointer';
                 }
                 if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', range);
+                    this._sendSignal(this._formatSignal('setRange', { value: range }));
                 }
             }
         }, 0);
@@ -902,10 +947,12 @@ export class EventNormalizer {
             (!this._compiledEvent || this._compiledEvent.key === 'a') &&
             this._isSelectAll(this._getRange())
         ) {
-            this._triggerEvent('selectAll', {
-                origin: this._compiledEvent ? 'keypress' : 'pointer',
-                target: this._selectAllOriginElement,
-            });
+            this._sendSignal(
+                this._formatSignal('selectAll', {
+                    origin: this._compiledEvent ? 'keypress' : 'pointer',
+                    target: this._selectAllOriginElement,
+                }),
+            );
         }
     }
 }

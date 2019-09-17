@@ -1,4 +1,4 @@
-import { Action, ActionType } from '../core/actions/Action';
+import { Action } from '../core/types/Flux';
 import { Dispatcher } from '../core/dispatcher/Dispatcher';
 import { JWPlugin, JWPluginConfig } from '../core/JWPlugin';
 import { VDocument } from '../core/stores/VDocument';
@@ -8,15 +8,18 @@ interface AwesomeConfig extends JWPluginConfig {
 }
 
 export class Awesome extends JWPlugin {
-    constructor(dispatcher: Dispatcher, vDocument: VDocument, options?: AwesomeConfig) {
-        super(dispatcher, vDocument, options);
+    constructor(dispatcher: Dispatcher, options?: AwesomeConfig) {
+        super(dispatcher, options);
     }
 
     init(): Action {
         super.init();
         return {
-            type: ActionType.INSERT,
-            value: 42,
+            type: 'primitive',
+            name: 'insert',
+            payload: {
+                value: 42,
+            },
             origin: '',
         };
     }

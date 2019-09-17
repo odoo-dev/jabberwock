@@ -1,5 +1,5 @@
 import { Dispatcher } from './dispatcher/Dispatcher';
-import { VDocument } from './stores/VDocument'; // todo: use state
+import { PluginActions, PluginCommands, PluginIntents } from './types/Flux';
 
 export interface JWPluginConfig {
     name?: string;
@@ -8,11 +8,12 @@ export interface JWPluginConfig {
 export class JWPlugin {
     name: string;
     dispatcher: Dispatcher;
-    vDocument: VDocument;
+    intents: PluginIntents = {};
+    actions: PluginActions = {};
+    commands: PluginCommands = {};
 
-    constructor(dispatcher: Dispatcher, vDocument: VDocument, options: JWPluginConfig = {}) {
+    constructor(dispatcher: Dispatcher, options: JWPluginConfig = {}) {
         this.dispatcher = dispatcher;
-        this.vDocument = vDocument;
         this.name = options.name;
     }
 

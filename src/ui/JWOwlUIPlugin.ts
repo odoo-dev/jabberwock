@@ -1,12 +1,14 @@
 import { Env, Component } from 'owl-framework/src/component/component';
+import { JWPlugin } from '../core/JWPlugin';
+import { PluginIntents, PluginActions, PluginCommands } from '../core/types/Flux';
 
-class OwlUIComponent extends Component<Env, {}, {}> {}
+export class OwlUIComponent extends Component<Env, {}, {}> {
+    intents: PluginIntents = {};
+    actions: PluginActions = {};
+    commands: PluginCommands = {};
+}
 
-export class JWOwlUIPlugin {
+export class JWOwlUIPlugin extends JWPlugin {
     templates: string;
-    componentsRegistry: Array<typeof OwlUIComponent>;
-
-    constructor() {
-        this.componentsRegistry = [];
-    }
+    componentsRegistry: Array<typeof OwlUIComponent> = [];
 }

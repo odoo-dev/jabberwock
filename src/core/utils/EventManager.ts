@@ -1,7 +1,8 @@
 import { EventNormalizer } from './EventNormalizer';
+import { Signal, Action } from '../types/Flux';
 
 export interface EventManagerOptions {
-    dispatch?: Function;
+    dispatch?: (action: Action) => void;
 }
 
 export class EventManager {
@@ -14,15 +15,37 @@ export class EventManager {
         this.options = options;
         this.eventNormalizer = new EventNormalizer(editable, this._triggerEvent.bind(this));
     }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
-     * TODO: Actually generate the actions.
+     * Induce the user's intention from the received signal, based on the user's
+     * configuration and context.
+     * TODO: this is just a stub
+     *
+     * @param {Signal} signal
+     * @returns {Action}
      */
-    _triggerEvent(type: string, param: object = {}): void {
-        console.log(type, param);
-        this.options.dispatch({
-            type: type,
-            value: param,
-            origin: null,
-        });
+    _induceIntent(signal: Signal): Action {
+        switch (signal.type) {
+            case 'remove':
+            // return a 'remove' action of type 'intent', with the right payload
+        }
+        return {
+            type: 'intent',
+            name: signal.type,
+            payload: signal.params,
+            origin: signal.origin,
+        };
+    }
+    /**
+     * Take a signal, induce the user's intention from it, and dispatch that.
+     *
+     * @param {Signal} signal
+     */
+    _triggerEvent(signal: Signal): void {
+        this.options.dispatch(this._induceIntent(signal));
     }
 }

@@ -1,33 +1,15 @@
-import { Action, ActionPayload } from '../../../core/actions/Action';
-import { Env, Component } from 'owl-framework/src/component/component';
+import { ActionPayload } from '../../../core/types/Flux';
+import { OwlUIComponent } from '../../../ui/JWOwlUIPlugin';
 
 interface ActionsState {
-    actions: Action[];
     selectedIndex: number;
 }
 
-export class ActionsComponent extends Component<Env, {}, ActionsState> {
-    state = {
-        actions: [], // Stack of all actions performed since init
+export class ActionsComponent extends OwlUIComponent {
+    state: ActionsState = {
         selectedIndex: 0, // Index of the selected action in the stack
     };
 
-    constructor(env: Env) {
-        super(env);
-        this.env.editor.el.addEventListener('jw-action', (event: CustomEvent) => {
-            const action: Action = event.detail;
-            this.addAction(action);
-        });
-    }
-
-    /**
-     * Add an action to the stack
-     *
-     * @param {Action} action
-     */
-    addAction(action: Action): void {
-        this.state.actions.unshift(action);
-    }
     /**
      * Handle keydown event to navigate in the action stack
      */

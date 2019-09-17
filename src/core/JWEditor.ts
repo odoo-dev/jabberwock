@@ -1,4 +1,5 @@
-import { Action } from './actions/Action';
+import { Action } from './types/Flux';
+import { CorePlugin } from './utils/CorePlugin';
 import { Dispatcher } from './dispatcher/Dispatcher';
 import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
@@ -53,6 +54,9 @@ export class JWEditor {
         this.el.appendChild(this.editable);
         document.body.appendChild(this.el);
 
+        const corePlugin = new CorePlugin(this.dispatcher, this.vDocument);
+        this._addPluginInstance(corePlugin); // CorePlugin is a mandatory plugin
+
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this.editable, {
             dispatch: (action: Action): void => {
@@ -62,19 +66,37 @@ export class JWEditor {
         });
     }
 
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     addPlugin(pluginClass: typeof JWPlugin): void {
-        const pluginInstance: JWPlugin = new pluginClass(this.dispatcher, this.vDocument);
-        this.pluginsRegistry.push(pluginInstance); // todo: use state
+        const pluginInstance: JWPlugin = new pluginClass(this.dispatcher);
+        this._addPluginInstance(pluginInstance);
     }
 
     loadConfig(config: JWEditorConfig): void {
-        console.log(config.theme);
+        // TODO
+        config;
     }
 
     stop(): void {
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _addPluginInstance(pluginInstance: JWPlugin): void {
+        this.pluginsRegistry.push(pluginInstance); // todo: use state
+        this.dispatcher.registerFromPlugin(
+            pluginInstance.actions,
+            pluginInstance.intents,
+            pluginInstance.commands,
+        );
     }
 }
 

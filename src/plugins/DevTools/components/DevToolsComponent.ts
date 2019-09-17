@@ -1,7 +1,7 @@
 import { ActionsComponent } from './ActionsComponent';
-import { Component } from 'owl-framework';
-import { Env } from 'owl-framework/src/component/component';
 import { InspectorComponent } from './InspectorComponent';
+import { OwlUIComponent } from '../../../ui/JWOwlUIPlugin';
+import { Action } from '../../../core/types/Flux';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -9,14 +9,25 @@ interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     openTab: 'inspector' | 'actions';
+    actions: Action[]; // Stack of all actions performed since init
 }
 
-export class DevToolsComponent extends Component<Env, {}, DevToolsState> {
+export class DevToolsComponent extends OwlUIComponent {
     static components = { ActionsComponent, InspectorComponent };
     state: DevToolsState = {
         closed: false,
         height: 300,
         openTab: 'inspector',
+        actions: [], // Stack of all actions performed since init
+    };
+    intents = {
+        '*': 'addAction',
+    };
+    actions = {
+        '*': 'addAction',
+    };
+    commands = {
+        addAction: this.addAction.bind(this),
     };
     static template = 'devtools';
     // For resizing/opening (see toggleClosed)
@@ -26,6 +37,14 @@ export class DevToolsComponent extends Component<Env, {}, DevToolsState> {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Add an action to the stack
+     *
+     * @param {Action} action
+     */
+    addAction(action: Action): void {
+        this.state.actions.unshift(action);
+    }
     /**
      * Open the tab with the given `tabName`
      *
