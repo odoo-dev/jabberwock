@@ -27,6 +27,7 @@ interface CompiledEvent {
     metaKey?: boolean;
     shiftKey?: boolean;
     data?: string; // specific data for input events
+    elements?: Set<HTMLElement>; // the nodes that were mutated, if any
     mutationsList?: Array<MutationRecord>; // mutations observed by the observer
     defaultPrevented?: boolean;
     clone?: ClonedNode; // clone of closest block node containing modified selection during composition
@@ -61,12 +62,12 @@ export class EventNormalizer {
     _observer: MutationObserver;
     _selectAllOriginElement: DOMElement; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
-    _triggerEvent: Function; // callback to trigger on events
+    _eventCallback: (customEvent: CustomEvent) => void; // callback to trigger on events
     _rangeHasChanged: boolean;
 
-    constructor(editable: HTMLElement, triggerEvent: Function) {
+    constructor(editable: HTMLElement, eventCallback: (customEvent: CustomEvent) => void) {
         this.editable = editable as DOMElement;
-        this._triggerEvent = triggerEvent;
+        this._eventCallback = eventCallback;
 
         const document = window.top.document;
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
@@ -242,20 +243,22 @@ export class EventNormalizer {
                 mutation.removedNodes.forEach(target => elements.add(target as HTMLElement));
             }
         });
+        compiledEvent.elements = elements;
 
         if (navigationKey.has(compiledEvent.key)) {
-            this._processMove(compiledEvent, elements);
+            this._processMove(compiledEvent);
         } else if (compiledEvent.type === 'composition') {
-            this._processComposition(compiledEvent, elements);
+            this._processComposition(compiledEvent);
         } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
             const deleteEventPayload = {
-                direction: compiledEvent.key === 'Backspace' ? 'left' : 'right',
+                direction: compiledEvent.key === 'Backspace' ? 'backward' : 'forward',
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
+                elements: elements,
             };
-            this._triggerEvent('delete', deleteEventPayload, elements);
+            this._triggerEvent('remove', deleteEventPayload);
         } else if (compiledEvent.key === 'Tab') {
             // TODO: maybe like keydown, there is no normalization proper here
             const tabEventPayload = {
@@ -263,16 +266,18 @@ export class EventNormalizer {
                 ctrlKey: compiledEvent.ctrlKey,
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
+                elements: elements,
             };
-            this._triggerEvent('tab', tabEventPayload, elements);
+            this._triggerEvent('tab', tabEventPayload);
         } else if (compiledEvent.key === 'Enter') {
             const enterEventPayload = {
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
+                elements: elements,
             };
-            this._triggerEvent('enter', enterEventPayload, elements);
+            this._triggerEvent('enter', enterEventPayload);
         } else if (
             !compiledEvent.ctrlKey &&
             !compiledEvent.altKey &&
@@ -294,15 +299,24 @@ export class EventNormalizer {
                     : compiledEvent.key;
             if (data === ' ' || data === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
-                this._triggerEvent('insert', '\u00A0', elements); // nbsp
+                this._triggerEvent('insert', {
+                    value: '\u00A0',
+                    elements: elements,
+                }); // nbsp
             } else if (data && data[0] === '\u000A') {
                 // The enter key on some mobile keyboards do not trigger an
                 // actual keypress event but trigger an input event with the
                 // LINE FEED (LF) (u000A) unicode character instead.
                 // TODO: replace this <br/> by a contextualized 'enter' event
-                this._triggerEvent('insert', '<br/>', elements);
+                this._triggerEvent('insert', {
+                    value: '<br/>',
+                    elements: elements,
+                });
             } else {
-                this._triggerEvent('insert', data, elements);
+                this._triggerEvent('insert', {
+                    value: data,
+                    elements: elements,
+                });
             }
         } else if (compiledEvent.type === 'keydown') {
             // TODO: Maybe the normalizer should not trigger keydown events:
@@ -317,6 +331,20 @@ export class EventNormalizer {
             // not understand it either. Let it know about the inconsistence.
             this._triggerEvent('inconsistentState', compiledEvent);
         }
+    }
+    /**
+     * Format a custom event and trigger it.
+     *
+     * @param {string} type
+     * @param {object} [params]
+     */
+    _triggerEvent(type: string, params = {}): void {
+        const initDict = {
+            detail: params,
+        };
+        initDict.detail['origin'] = 'EventNormalizer';
+        const event = new CustomEvent(type, initDict);
+        this._eventCallback(event);
     }
     /**
      * Extract a mapping of the separate characters, their corresponding text
@@ -453,11 +481,11 @@ export class EventNormalizer {
      *
      * @private
      */
-    _processComposition(ev: CompiledEvent, elements: Set<HTMLElement>): void {
+    _processComposition(ev: CompiledEvent): void {
         if (!this.editable.contains(ev.clone.origin)) {
             // Some weird keyboards might replace the entire block element
             // rather than the text inside of it. This is currently unsupported.
-            this._triggerEvent('inconsistentState', ev, elements);
+            this._triggerEvent('inconsistentState', ev);
             return;
         }
 
@@ -555,8 +583,8 @@ export class EventNormalizer {
             origin: 'composition',
         };
 
-        this._triggerEvent('setRange', insertionRange, []);
-        this._triggerEvent('insert', insertedText, elements);
+        this._triggerEvent('setRange', { value: insertionRange });
+        this._triggerEvent('insert', { value: insertedText, elements: ev.elements });
     }
     /**
      * Process the given compiled event as a move and trigger the corresponding
@@ -564,7 +592,7 @@ export class EventNormalizer {
      *
      * @private
      */
-    _processMove(ev: CompiledEvent, elements: Set<HTMLElement>): void {
+    _processMove(ev: CompiledEvent): void {
         // The normalizer honors preventDefault for moves. If the range was
         // moved regardless of the preventDefault setting, it must be restored.
         if (ev.defaultPrevented) {
@@ -575,7 +603,7 @@ export class EventNormalizer {
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', range, elements);
+            this._triggerEvent('setRange', { value: range, elements: ev.elements });
         }
     }
     /**
@@ -625,8 +653,8 @@ export class EventNormalizer {
 
         // Look for visible nodes in editable that would be outside the range.
         return (
-            this._isAtVisibleEdge(startContainer, 'left') &&
-            this._isAtVisibleEdge(endContainer, 'right')
+            this._isAtVisibleEdge(startContainer, 'start') &&
+            this._isAtVisibleEdge(endContainer, 'end')
         );
     }
     /**
@@ -636,15 +664,15 @@ export class EventNormalizer {
      * beyond it in the given direction.
      *
      * @param element to check whether it is at the visible edge
-     * @param side from which to look for textual nodes ('left' or 'right')
+     * @param side from which to look for textual nodes ('start' or 'end')
      */
-    _isAtVisibleEdge(element: HTMLElement, side: string): boolean {
+    _isAtVisibleEdge(element: HTMLElement, side: 'start' | 'end'): boolean {
         if (!this.editable.contains(element)) return false;
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
         let node = this.editable;
-        const child = side === 'left' ? 'firstChild' : 'lastChild';
-        const sibling = side === 'left' ? 'nextSibling' : 'previousSibling';
+        const child = side === 'start' ? 'firstChild' : 'lastChild';
+        const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
         while (node) {
             if (node === element) {
                 // The element was reached without finding another visible node.
@@ -881,7 +909,7 @@ export class EventNormalizer {
                     range.origin = 'pointer';
                 }
                 if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', range);
+                    this._triggerEvent('setRange', { value: range });
                 }
             }
         }, 0);
