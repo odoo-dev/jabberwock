@@ -8,6 +8,12 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
     // wrote back to the localStorage whenever the state changes.
     localStorage: string[] = [];
 
+    handlers: PluginHandlers = {
+        intents: {},
+    };
+
+    commands: PluginCommands = {};
+
     /**
      * Owl hook called exactly once before the initial rendering.
      */

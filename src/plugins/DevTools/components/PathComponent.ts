@@ -1,8 +1,7 @@
-import { Component } from 'owl-framework';
 import { VNode } from '../../../core/stores/VNode';
-import { Env } from 'owl-framework/src/component/component';
+import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 
-export class PathComponent extends Component<Env, {}, {}> {
+export class PathComponent extends OwlUIComponent<{}, {}> {
     getNodeRepr(vNode: VNode): string {
         const name: string = (vNode.type && vNode.type.toLowerCase()) || '?';
         let format = '';

@@ -1,4 +1,4 @@
-import { Action } from './actions/Action';
+import { CorePlugin } from './utils/CorePlugin';
 import { Dispatcher } from './dispatcher/Dispatcher';
 import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
@@ -53,6 +53,20 @@ export class JWEditor {
         this.el.appendChild(this.editable);
         document.body.appendChild(this.el);
 
+        // Add the CorePlugin
+        // CorePlugin is a special mandatory plugin. It's the plugin that will
+        // handle matching between the actions and the DOM. We want it to be a
+        // plugin because it needs to behave like one. In other words it must
+        // listen to Actions and react to them within the dispatching loop,
+        // thereby giving a chance to other plugins to react as well.
+        // Given its specificity, it requires that we pass it the vDocument
+        // instance so we instantiate it here to pass that through the
+        // constructor.
+        // TODO: when the memory slice system is introduced, this special case
+        // will not be required anymore.
+        const corePlugin = new CorePlugin(this.dispatcher, this.vDocument);
+        this._registerPlugin(corePlugin);
+
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this.editable, {
             dispatch: (action: Action): void => {
@@ -62,19 +76,33 @@ export class JWEditor {
         });
     }
 
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     addPlugin(pluginClass: typeof JWPlugin): void {
-        const pluginInstance: JWPlugin = new pluginClass(this.dispatcher, this.vDocument);
-        this.pluginsRegistry.push(pluginInstance); // todo: use state
+        const pluginInstance: JWPlugin = new pluginClass(this.dispatcher);
+        this._registerPlugin(pluginInstance);
     }
 
     loadConfig(config: JWEditorConfig): void {
-        console.log(config.theme);
+        // TODO
+        config;
     }
 
     stop(): void {
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _registerPlugin(plugin: JWPlugin): void {
+        this.pluginsRegistry.push(plugin); // todo: use state
+        this.dispatcher.register(plugin.handlers, plugin.commands);
     }
 }
 

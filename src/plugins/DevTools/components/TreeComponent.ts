@@ -1,7 +1,6 @@
-import { Env } from 'owl-framework/src/component/component';
 import { utils } from '../../../core/utils/utils';
 import { VNode } from '../../../core/stores/VNode';
-import { Component } from 'owl-framework';
+import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 
 interface NodeProps {
     isRoot: boolean;
@@ -19,7 +18,7 @@ interface NodeState {
  *       - isRoot: boolean
  *       - selectedID: number (the ID of the selected VNode)
  */
-export class TreeComponent extends Component<Env, NodeProps, NodeState> {
+export class TreeComponent extends OwlUIComponent<NodeProps, NodeState> {
     // This is a recursive Component: each node of the tree is itself a tree
     static components = { TreeComponent };
     // User-friendly representation of the node
