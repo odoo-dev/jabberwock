@@ -1,6 +1,7 @@
-import { Component, QWeb } from 'owl-framework';
+import { QWeb } from 'owl-framework';
 import { JWEditor } from '../core/JWEditor';
 import { JWOwlUIPlugin } from './JWOwlUIPlugin';
+import { OwlUIComponent } from './OwlUIComponent';
 
 interface PluginEnv {
     qweb: QWeb;
@@ -55,7 +56,7 @@ export class OwlUI {
     async _mountPluginComponents(pluginInstance: JWOwlUIPlugin): Promise<void> {
         const env: PluginEnv = await this._createPluginEnv(pluginInstance);
         const components = pluginInstance.componentsRegistry.slice();
-        components.forEach((_Component: typeof Component) => {
+        components.forEach((_Component: typeof OwlUIComponent) => {
             this._mount(_Component, env);
         });
     }
@@ -66,7 +67,7 @@ export class OwlUI {
      * @param {PluginEnv} env
      * @returns {Promise<void>}
      */
-    async _mount(_Component: typeof Component, env: PluginEnv): Promise<void> {
+    async _mount(_Component: typeof OwlUIComponent, env: PluginEnv): Promise<void> {
         const component = new _Component(env);
         const target: HTMLElement = this.editor.el;
         await component.mount(target);

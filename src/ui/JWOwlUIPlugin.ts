@@ -1,12 +1,6 @@
-import { Env, Component } from 'owl-framework/src/component/component';
-
-class OwlUIComponent extends Component<Env, {}, {}> {}
+import { OwlUIComponent } from './OwlUIComponent';
 
 export class JWOwlUIPlugin {
     templates: string;
-    componentsRegistry: Array<typeof OwlUIComponent>;
-
-    constructor() {
-        this.componentsRegistry = [];
-    }
+    componentsRegistry: Array<typeof OwlUIComponent> = [];
 }
