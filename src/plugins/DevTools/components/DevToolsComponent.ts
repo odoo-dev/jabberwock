@@ -9,7 +9,6 @@ interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     openTab: 'inspector' | 'actions';
-    actions: Action[]; // Stack of all actions performed since init
 }
 
 export class DevToolsComponent extends OwlUIComponent {
@@ -18,7 +17,6 @@ export class DevToolsComponent extends OwlUIComponent {
         closed: false,
         height: 300,
         openTab: 'inspector',
-        actions: [], // Stack of all actions performed since init
     };
     intents = {
         '*': 'addAction',
@@ -43,7 +41,10 @@ export class DevToolsComponent extends OwlUIComponent {
      * @param {Action} action
      */
     addAction(action: Action): void {
-        this.state.actions.unshift(action);
+        const actionsComponent = this.refs.ActionsComponent as ActionsComponent;
+        if (actionsComponent) {
+            actionsComponent.addAction(action);
+        }
     }
     /**
      * Open the tab with the given `tabName`
