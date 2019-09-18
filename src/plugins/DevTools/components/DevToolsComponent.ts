@@ -42,12 +42,15 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
      * @param {Action} action
      */
     addAction(action: Action): void {
-        this.state.actions.unshift(action);
+        const actionsComponent = this.refs.ActionsComponent as ActionsComponent;
+        if (actionsComponent) {
+            actionsComponent.addAction(action);
+        }
     }
     /**
      * Open the tab with the given `tabName`
      *
-     * @param {'inspector' | 'actions'} tabName
+     * @param {string} tabName
      */
     openTab(tabName: string): void {
         this.state.currentTab = tabName;
