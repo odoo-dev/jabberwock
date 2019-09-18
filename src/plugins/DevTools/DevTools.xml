@@ -209,7 +209,7 @@
                     <table>
                         <tbody>
                             <t t-foreach="Object.keys(selectedAction)" t-as="key">
-                                <tr t-if="key !== 'value'">
+                                <tr t-if="key !== 'value'" t-key="key_index">
                                     <td><t t-esc="key"/></td>
                                     <td><t t-esc="selectedAction[key]"/></td>
                                 </tr>
@@ -219,7 +219,7 @@
                     <div class="divider" t-if="selectedAction.value">💎 Value</div>
                     <table t-if="selectedAction.value">
                         <tbody>
-                            <tr t-foreach="Object.keys(selectedAction.value)" t-as="key">
+                            <tr t-foreach="Object.keys(selectedAction.value)" t-as="key" t-key="key_index">
                                 <t t-set="value" t-value="selectedAction.value[key]"/>
                                 <td>
                                     <t t-if="key !== '0'"><t t-esc="key"/></t>
