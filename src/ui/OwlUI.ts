@@ -28,8 +28,9 @@ export class OwlUI {
     async addPlugin(PluginClass: typeof JWOwlUIPlugin): Promise<void> {
         const plugin = new PluginClass(this.editor.dispatcher);
         this.pluginsRegistry.push(plugin);
-        await this._handleComponents(plugin);
+        const components: OwlUIComponent<{}, {}>[] = await this._handleComponents(plugin);
         this.editor.dispatcher.register(plugin.handlers, plugin.commands);
+        components.forEach(this._mount.bind(this));
     }
 
     //--------------------------------------------------------------------------
@@ -50,22 +51,25 @@ export class OwlUI {
         };
     }
     /**
-     * Mount all of a plugin's Components to Owl and register its components'
+     * Instantiate all of a plugin's Components to Owl and register its components'
      * intents, actions and commands (TODO: this does not work for
      * sub-components since those are mounted by their parent and we do not have
      * access to their instantiation).
+     * Return the instances of the components.
+     * Note: at this point they are not mounted yet as this should happen last.
      *
      * @param {JWOwlUIPlugin} plugin
-     * @returns {Promise<void>}
+     * @returns {Promise<OwlUIComponent<{}, {}>[]>}
      */
-    async _handleComponents(plugin: JWOwlUIPlugin): Promise<void> {
+    async _handleComponents(plugin: JWOwlUIPlugin): Promise<OwlUIComponent<{}, {}>[]> {
         const env: PluginEnv = await this._createPluginEnv(plugin);
-        const Components = plugin.componentsRegistry.slice();
+        const components: OwlUIComponent<{}, {}>[] = [];
         for (let i = 0; i < plugin.componentsRegistry.length; i++) {
-            const component = new Components[i](env);
-            await this._mount(component);
+            const component = new plugin.componentsRegistry[i](env);
             this._register(component);
+            components.push(component);
         }
+        return components;
     }
     /**
      * Mount a single component
@@ -73,9 +77,9 @@ export class OwlUI {
      * @param {OwlUIComponent} component
      * @returns {Promise<void>}
      */
-    async _mount(component: OwlUIComponent<{}, {}>): Promise<void> {
+    _mount(component: OwlUIComponent<{}, {}>): Promise<void> {
         const target: HTMLElement = this.editor.el;
-        await component.mount(target);
+        return component.mount(target);
     }
     /**
      * Register a component's dispatcher registry records ('intents',

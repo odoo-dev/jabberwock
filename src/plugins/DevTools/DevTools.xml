@@ -5,12 +5,14 @@
         t-on-keydown="onKeydown">
         <devtools-contents t-if="props.isOpen">
             <devtools-mainpane>
-                <devtools-tree>
-                    <TreeComponent
-                        vNode="env.editor.vDocument.contents"
-                        isRoot="true"
-                        selectedID="state.selectedNode.id"/>
-                </devtools-tree>
+                <mainpane-contents>
+                    <devtools-tree>
+                        <TreeComponent
+                            vNode="env.editor.vDocument.contents"
+                            isRoot="true"
+                            selectedID="state.selectedNode.id"/>
+                    </devtools-tree>
+                </mainpane-contents>
                 <PathComponent
                     path="state.selectedPath"
                     selectedID="state.selectedNode.id"/>
@@ -189,58 +191,169 @@
         t-att-class="{active: props.isOpen}" tabindex="1"
         t-on-keydown="onKeydown">
         <devtools-contents t-if="props.isOpen">
-            <devtools-mainpane>
-                <div t-foreach="props.actions" t-as="action"
-                    t-key="action_index" class="selectable-line"
-                    t-att-class="{
-                        selected: state.selectedIndex == action_index,
-                    }"
-                    t-on-click="selectAction(action_index)">
-                    <t t-esc="action.name"/>
-                </div>
-            </devtools-mainpane>
-            <devtools-sidepane>
-                <t t-set="selectedAction" t-value="props.actions[state.selectedIndex] or False"/>
-                <div class="about" t-if="selectedAction !== False">
-                    <span class="type"><t t-esc="selectedAction.type"/></span> <t t-esc="selectedAction.name"/>
-                </div>
-                <div class="properties" t-if="selectedAction !== False">
-                    <div class="divider">👤 About me</div>
-                    <table>
+            <t t-set="selectedRecord" t-value="state.registry[state.selectedRegistryRecordID] or False"/>
+            <devtools-mainpane style="overflow: hidden">
+                <devtools-navbar>
+                    <button t-on-click="openTab('selected')" t-att-class="{
+                        selected: state.currentTab == 'selected',
+                    }">Selected</button>
+                    <button t-on-click="openTab('registry')" t-att-class="{
+                        selected: state.currentTab == 'registry',
+                    }">Registry</button>
+                </devtools-navbar>
+                <mainpane-contents t-if="state.currentTab == 'selected'" style="overflow: auto">
+                    <table style="width: 100%;">
                         <tbody>
-                            <t t-foreach="Object.keys(selectedAction)" t-as="key">
-                                <tr t-if="key !== 'value'" t-key="key_index">
-                                    <td><t t-esc="key"/></td>
-                                    <td><t t-esc="selectedAction[key]"/></td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                    <div class="divider" t-if="selectedAction.value">💎 Value</div>
-                    <table t-if="selectedAction.value">
-                        <tbody>
-                            <tr t-foreach="Object.keys(selectedAction.value)" t-as="key" t-key="key_index">
-                                <t t-set="value" t-value="selectedAction.value[key]"/>
-                                <td>
-                                    <t t-if="key !== '0'"><t t-esc="key"/></t>
-                                    <t t-else="">value</t>
-                                    </td>
-                                <td>
-                                    <t t-if="value.nodeName">
-                                        &lt;<t t-esc="value.nodeName.toLowerCase()"/>&gt;
-                                    </t>
-                                    <t t-elif="value == true">true</t>
-                                    <t t-elif="value == false and value !== 0">false</t>
-                                    <t t-elif="value == 0">0</t>
-                                    <t t-else=""><t t-esc="value"/></t>
-                                </td>
+                            <tr t-foreach="state.actions" t-as="action"
+                                t-key="action_index" class="selectable-line"
+                                t-att-class="{
+                                    selected: state.selectedActionIndex == action_index,
+                                }"
+                                t-on-click="selectAction(action_index)">
+                                <td><t t-esc="action.type"/></td>
+                                <td><t t-esc="action.name"/></td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </mainpane-contents>
+                <mainpane-contents t-elif="state.currentTab == 'registry'" style="overflow: auto">
+                    <div t-foreach="Object.keys(state.registry)" t-as="recordID"
+                        t-key="record_index" class="selectable-line"
+                        t-att-class="{
+                            selected: state.selectedRegistryRecordID == recordID,
+                        }"
+                        t-on-click="selectRegistryRecord(recordID)">
+                        <t t-esc="recordID"/>
+                    </div>
+                </mainpane-contents>
+            </devtools-mainpane>
+            <devtools-sidepane>
+                <devtools-info t-if="state.currentTab == 'selected'">
+                    <t t-set="selectedAction" t-value="state.actions[state.selectedActionIndex] or False"/>
+                    <div class="about" t-if="selectedAction !== False">
+                        <span class="type"><t t-esc="selectedAction.type"/></span> <t t-esc="selectedAction.name"/>
+                    </div>
+                    <div class="properties" t-if="selectedAction !== False">
+                        <div class="divider">👤 About me</div>
+                        <table>
+                            <tbody>
+                                <t t-foreach="Object.keys(selectedAction)" t-as="key">
+                                    <tr t-if="key !== 'payload'" t-key="key_index">
+                                        <td><t t-esc="key"/></td>
+                                        <td><t t-esc="selectedAction[key]"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <t t-if="selectedAction and selectedAction.payload">
+                            <t t-set="payload" t-value="selectedAction.payload"/>
+                            <t t-call="actionPayload"/>
+                        </t>
+                        <t t-call="actionHandlers"/>
+                        <t t-call="selectedActionHandler"/>
+                    </div>
+                </devtools-info>
+                <devtools-info t-elif="state.currentTab == 'registry'">
+                    <div class="about" t-if="selectedRecord !== False">
+                        <span class="type"><t t-esc="selectedRecord.type"/></span> <t t-esc="selectedRecord.name"/>
+                    </div>
+                    <div class="properties" t-if="selectedRecord !== False">
+                        <t t-call="actionHandlers"/>
+                        <t t-call="selectedActionHandler"/>
+                    </div>
+                </devtools-info>
             </devtools-sidepane>
         </devtools-contents>
     </devtools-panel>
+
+    <!-- ACTIONS.Payload-->
+    <t t-name="actionPayload">
+        <div class="divider">💎 Payload</div>
+        <table>
+            <tbody>
+                <tr t-foreach="Object.keys(payload)" t-as="key" t-key="key_index">
+                    <t t-set="value" t-value="payload[key]"/>
+                    <td>
+                        <t t-esc="key"/>
+                    </td>
+                    <td>
+                        <t t-if="value and key == 'range'" t-call="payloadRange"/>
+                        <t t-else="" t-call="payloadValue"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
+
+    <!-- ACTIONS.Payload[key] -->
+    <t t-name="payloadValue">
+        <t t-if="value and value.nodeName">
+            &lt;<t t-esc="value.nodeName.toLowerCase()"/>&gt;
+        </t>
+        <t t-elif="value == true">true</t>
+        <t t-elif="!value and value !== false and value !== 0 and value !== null">undefined</t>
+        <t t-elif="value == false and value !== 0">false</t>
+        <t t-elif="value == 0">0</t>
+        <t t-else=""><t t-esc="value"/></t>
+    </t>
+
+    <!-- ACTIONS.Payload.range -->
+    <t t-name="payloadRange">
+        <table>
+            <tbody>
+                <tr t-foreach="Object.keys(value)" t-as="rangeKey" t-key="rangeKey_index">
+                    <t t-set="value" t-value="value[rangeKey]"/>
+                    <td>
+                        <t t-esc="rangeKey"/>
+                    </td>
+                    <td>
+                        <t t-call="payloadValue"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
+
+    <!-- ACTIONS.Handlers -->
+    <t t-name="actionHandlers">
+        <div class="divider" t-if="selectedRecord !== False">🎬 Action Handlers</div>
+        <table t-if="selectedRecord !== False">
+            <tbody>
+                <tr t-foreach="Object.keys(selectedRecord)"
+                    t-as="handlerToken" t-key="handlerToken_index"
+                    class="selectable-line" t-on-click="selectHandler(handlerToken)"
+                    t-att-class="{
+                        selected: state.selectedHandlerToken == handlerToken,
+                    }">
+                    <t t-set="handler" t-value="selectedRecord[handlerToken]"/>
+                    <td><t t-esc="handlerToken"/></td>
+                    <td><t t-esc="handler.name"/></td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
+
+    <!-- ACTIONS.SelectedHandler -->
+    <t t-name="selectedActionHandler">
+        <div t-if="state.selectedHandlerToken" class="divider">🎯 Selected Handler</div>
+        <table t-if="state.selectedHandlerToken">
+            <t t-set="handler" t-value="getHandler(state.selectedHandlerToken)"/>
+            <tbody>
+                <tr>
+                    <td>token</td>
+                    <td><t t-esc="state.selectedHandlerToken"/></td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td><t t-esc="handler.name"/></td>
+                </tr>
+                <tr t-if="!handler.name.startsWith('bound ')">
+                    <td>code</td>
+                    <td><t t-esc="handler"/></td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
 
     <!-- MAIN -->
     <jw-devtools t-name="devtools"
@@ -261,7 +374,8 @@
         </devtools-navbar>
         <t t-if="!state.closed">
             <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
-            <ActionsComponent isOpen="state.currentTab == 'actions'" actions="state.actions"/>
+            <ActionsComponent isOpen="state.currentTab == 'actions'"
+                t-ref="ActionsComponent"/>
         </t>
     </jw-devtools>
 
