@@ -83,9 +83,9 @@ function _parseOne(node: Element, format?: FormatType): VNode[] {
 /**
  * Parse a DOM fragment or its representation as a string.
  */
-function parse(fragment: DocumentFragment): VNode[] {
+function parse(element: HTMLElement): VNode[] {
     let parsedNodes: VNode[] = [];
-    const contents: NodeListOf<ChildNode> = fragment.childNodes;
+    const contents: NodeListOf<ChildNode> = element.childNodes;
     const children: Element[] = utils._collectionToArray(contents);
     children.forEach(child => {
         const parsedChildren: VNode[] = _parseOne(child);

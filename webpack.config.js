@@ -1,17 +1,16 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 
 module.exports = {
     mode: 'development',
     entry: {
-        globals: './examples/globals.js',
-        index: './examples/index.ts',
-        devTools: './examples/devtools.ts',
+        'index': './examples/index/index.ts',
+        'devtools-example': './examples/devtools/devtools.ts',
     },
     devtool: 'inline-source-map',
     output: {
         path: path.resolve(__dirname, 'build/webpack'),
         filename: '[name].js',
-        chunkFilename: '[name].chunk.js',
     },
     module: {
         rules: [
@@ -20,9 +19,17 @@ module.exports = {
                 use: [
                     {
                         loader: 'ts-loader',
-                        options: { configFile: 'tsconfig-base.json' },
+                        options: { configFile: 'tsconfig.json' },
                     },
                 ],
+            },
+            {
+                test: /\.css$/i,
+                use: ['style-loader', 'css-loader'],
+            },
+            {
+                test: /\.xml$/i,
+                use: ['text-loader'],
             },
         ],
     },
@@ -30,30 +37,28 @@ module.exports = {
         extensions: ['.ts', '.js'],
     },
     devServer: {
-        contentBase: './',
+        contentBase: './examples',
     },
-    // optimization
-    optimization: {
-        splitChunks: {
-            cacheGroups: {
-                default: false,
-                vendors: false,
-                // owl chunk
-                owl: {
-                    name: 'owl.lib',
-                    // sync + async chunks
-                    chunks: 'all',
-                    // import file path containing node_modules
-                    test: /owl/,
-                },
-                core: {
-                    name: 'core',
-                    // sync + async chunks
-                    chunks: 'all',
-                    // import file path containing node_modules
-                    test: /core/,
-                },
-            },
-        },
-    },
+    // We might require this configuration in the future to
+    // bundle the differents parts of the editor.
+    // We do not need the following configuration now.
+    //
+    // optimization: {
+    //     splitChunks: {
+    //         cacheGroups: {
+    //             default: false,
+    //             vendors: false,
+    //             owl: {
+    //                 name: 'owl.lib',
+    //                 chunks: 'all',
+    //                 test: /owl/,
+    //             },
+    //             core: {
+    //                 name: 'core',
+    //                 chunks: 'all',
+    //                 test: /core/,
+    //             },
+    //         },
+    //     },
+    // },
 };

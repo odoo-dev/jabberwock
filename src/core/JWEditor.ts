@@ -3,7 +3,6 @@ import { Dispatcher } from './dispatcher/Dispatcher';
 import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './stores/VDocument';
-import { utils } from './utils/utils';
 
 export interface JWEditorConfig {
     theme: string;
@@ -11,45 +10,56 @@ export interface JWEditorConfig {
 
 export class JWEditor {
     el: HTMLElement;
+    _originalEditable: HTMLElement;
     editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
     vDocument: VDocument;
 
-    constructor(el = document.body) {
-        this.el = el;
+    constructor(editable?: HTMLElement) {
+        this.el = document.createElement('jw-editor');
         this.dispatcher = new Dispatcher(this.el);
-        this.editable = document.createElement('jw-editable');
+        this.pluginsRegistry = [];
+
+        if (!editable) {
+            editable = document.createElement('jw-editable');
+        }
+        this._originalEditable = editable;
+
+        // The editable property of the editor is the original editable element
+        // before start is called, and becomes the clone after start is called.
+        this.editable = editable;
+    }
+
+    start(): void {
+        // Deep clone the given editable node in order to break free of any
+        // handler that might have been previously registered.
+        this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
+
+        // Parse the editable in the internal format of the editor.
+        this.vDocument = new VDocument(this.editable);
+
+        // The original editable node is hidden until the editor stops.
+        this._originalEditable.style.display = 'none';
+        // Cloning the editable node might lead to duplicated id.
+        this.editable.id = this._originalEditable.id;
+        this._originalEditable.removeAttribute('id');
+
+        // The cloned editable element is then added to the main editor element
+        // which is itself added to the DOM.
+        this.editable.classList.add('jw-editable');
+        this.editable.setAttribute('contenteditable', 'true');
+        this.el.appendChild(this.editable);
+        document.body.appendChild(this.el);
+
+        // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this.editable, {
             dispatch: (action: Action): void => {
                 action.origin = 'User';
                 this.dispatcher.dispatch(action);
             },
         });
-        this.pluginsRegistry = [];
-        let startContent: DocumentFragment;
-        if (this.el.children.length) {
-            startContent = document.createDocumentFragment();
-            const contents = utils._collectionToArray(this.el.childNodes);
-            contents.forEach(child => startContent.appendChild(child));
-        } else {
-            startContent = this._placeholderContent;
-        }
-        this.vDocument = new VDocument(startContent);
-        // todo: move to Renderer
-        this.editable.childNodes.forEach(child => child.remove());
-        utils._collectionToArray(startContent.childNodes).forEach(node => {
-            this.editable.appendChild(node);
-        });
-        this.el.appendChild(this.editable);
-    }
-
-    start(): void {
-        this.editable.setAttribute('contenteditable', 'true');
-        const currentStyle: string = this.el.getAttribute('style');
-        const newStyle: string = currentStyle + ' text-align: center;';
-        this.editable.setAttribute('style', newStyle);
     }
 
     addPlugin(pluginClass: typeof JWPlugin): void {
@@ -61,61 +71,10 @@ export class JWEditor {
         console.log(config.theme);
     }
 
-    get _placeholderContent(): DocumentFragment {
-        const title = document.createElement('h1');
-        title.appendChild(document.createTextNode('Jabberwocky'));
-        const subtitle = document.createElement('h3');
-        subtitle.appendChild(document.createTextNode('by Lewis Carroll'));
-        const p = document.createElement('p');
-        const i = document.createElement('i');
-        p.appendChild(i);
-        this._jabberwocky.split('\n').forEach(text => {
-            const textNode = document.createTextNode(text);
-            const br = document.createElement('br');
-            i.appendChild(textNode);
-            i.appendChild(br);
-        });
-        const fragment = document.createDocumentFragment();
-        fragment.appendChild(title);
-        fragment.appendChild(subtitle);
-        fragment.appendChild(p);
-        return fragment;
-    }
-    get _jabberwocky(): string {
-        return `’Twas brillig, and the slithy toves
-        Did gyre and gimble in the wabe:
-        All mimsy were the borogoves,
-        And the mome raths outgrabe.
-
-        “Beware the Jabberwock, my son!
-        The jaws that bite, the claws that catch!
-        Beware the Jubjub bird, and shun
-        The frumious Bandersnatch!”
-
-        He took his vorpal sword in hand;
-        Long time the manxome foe he sought—
-        So rested he by the Tumtum tree
-        And stood awhile in thought.
-
-        And, as in uffish thought he stood,
-        The Jabberwock, with eyes of flame,
-        Came whiffling through the tulgey wood,
-        And burbled as it came!
-
-        One, two! One, two! And through and through
-        The vorpal blade went snicker-snack!
-        He left it dead, and with its head
-        He went galumphing back.
-
-        “And hast thou slain the Jabberwock?
-        Come to my arms, my beamish boy!
-        O frabjous day! Callooh! Callay!”
-        He chortled in his joy.
-
-        ’Twas brillig, and the slithy toves
-        Did gyre and gimble in the wabe:
-        All mimsy were the borogoves,
-        And the mome raths outgrabe.`;
+    stop(): void {
+        this._originalEditable.id = this.editable.id;
+        this._originalEditable.style.display = this.editable.style.display;
+        this.el.remove();
     }
 }
 

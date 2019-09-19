@@ -21,5 +21,6 @@ module.exports = {
         "browser": true,
     },
     "globals": {
+        "__dirname": true,
     }
 };
