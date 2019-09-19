@@ -1,5 +1,3 @@
-import { DOMElement } from '../types/DOMElement.js';
-
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -10,18 +8,6 @@ const navigationKey = new Set([
     'End',
     'Home',
 ]);
-
-// As of August 29th 2019, InputEvent is considered experimental by MDN as some
-// of its properties are said to be unsupported by Edge and Safari. This is
-// probably the reason why its type definition is not included in the basic
-// TypeScript distribution. However, these properties actually appear to be
-// working perfectly fine on these browser after some manual testing on MacOS.
-interface InputEvent extends UIEvent {
-    readonly data: string;
-    readonly dataTransfer: DataTransfer;
-    readonly inputType: string;
-    readonly isComposing: boolean;
-}
 
 type Direction = 'ltr' | 'rtl';
 interface Range {

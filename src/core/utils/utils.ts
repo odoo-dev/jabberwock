@@ -1,5 +1,3 @@
-import { DOMElement } from '../types/DOMElement';
-
 export const utils = {
     /**
      * Convert certain special characters to unicode.

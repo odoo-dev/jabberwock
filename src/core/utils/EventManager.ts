@@ -1,4 +1,3 @@
-import { DOMElement } from '../types/DOMElement';
 import { EventNormalizer } from './EventNormalizer';
 
 export interface EventManagerOptions {

@@ -1,6 +1,5 @@
 import { ActionType } from './Action';
 import { Dispatcher } from '../dispatcher/Dispatcher';
-import { DOMElement } from '../types/DOMElement';
 
 export class ActionGenerator {
     dispatcher: Dispatcher;
