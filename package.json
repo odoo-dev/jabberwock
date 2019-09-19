@@ -11,6 +11,7 @@
     "tsc:build": "tsc --preserveSymlinks -p tsconfig-amd.json",
     "tsc:dev-esm": "concurrently \"tsc -w -p tsconfig-es-modules.json\" \"node dev/server.js dev/index-es-modules.html\"",
     "tsc:build-esm": "tsc -p tsconfig-es-modules.json",
+    "postinstall": "npm link owl-framework",
     "test": "karma start"
   },
   "repository": {
