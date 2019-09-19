@@ -1,4 +1,4 @@
-import { Component, utils, QWeb } from 'owl-framework';
+import { Component, QWeb } from 'owl-framework';
 import { JWEditor } from '../core/JWEditor';
 import { JWOwlUIPlugin } from './JWOwlUIPlugin';
 
@@ -41,10 +41,8 @@ export class OwlUI {
      * @returns {Promise<PluginEnv>}
      */
     async _createPluginEnv(pluginInstance: JWOwlUIPlugin): Promise<PluginEnv> {
-        const templatePath: string = pluginInstance.templates;
-        const templates: string = await utils.loadTemplates(templatePath);
         return {
-            qweb: new QWeb(templates),
+            qweb: new QWeb(pluginInstance.templates),
             editor: this.editor,
         };
     }
