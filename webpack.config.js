@@ -5,6 +5,7 @@ module.exports = {
     mode: 'development',
     entry: {
         'index': './examples/index/index.ts',
+        'koi-example': './examples/koi/koi.ts',
         'devtools-example': './examples/devtools/devtools.ts',
     },
     devtool: 'inline-source-map',
