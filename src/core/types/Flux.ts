@@ -1,3 +1,5 @@
+import { VRange } from '../stores/VRange';
+
 export interface Signal {
     type: string; // ex.: 'keydown'
     params: object; // ex.: {ctrlKey: true}
@@ -13,12 +15,12 @@ export interface Action {
     type: ActionType;
     subActions?: Action[];
     payload?: ActionPayload;
-    position?: Range;
+    position?: VRange;
     target?: DOMElement;
     origin: string;
 }
 
-export type ActionHandler = (action: Action) => void;
+export type ActionHandler = (action?: Action, intent?: Action) => Action | void;
 
 export interface PluginIntents {
     [key: string]: string;

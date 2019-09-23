@@ -8,7 +8,7 @@ import {
     ActionType,
 } from './types/Flux';
 import { ActionGenerator } from './actions/ActionGenerator';
-import { Range } from './stores/Range';
+import { VRange } from './stores/VRange';
 
 export interface JWPluginConfig {
     name?: string;
@@ -38,10 +38,10 @@ export class JWPlugin {
      * @param {ActionType} type
      * @param {string} name
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Action}
      */
-    action(type: ActionType, name: string, payload?: ActionPayload, position?: Range): Action {
+    action(type: ActionType, name: string, payload?: ActionPayload, position?: VRange): Action {
         return ActionGenerator.make(type, name, this.name, payload, position);
     }
     /**
@@ -49,10 +49,10 @@ export class JWPlugin {
      *
      * @param {string} name
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Action}
      */
-    intent(name: string, payload?: ActionPayload, position?: Range): Action {
+    intent(name: string, payload?: ActionPayload, position?: VRange): Action {
         return ActionGenerator.make('intent', name, this.name, payload, position);
     }
 }

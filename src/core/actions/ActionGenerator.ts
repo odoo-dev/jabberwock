@@ -1,6 +1,6 @@
 import { Dispatcher } from '../dispatcher/Dispatcher';
 import { ActionType, ActionPayload, Action } from '../types/Flux';
-import { Range } from '../stores/Range';
+import { VRange } from '../stores/VRange';
 
 export class ActionGenerator {
     dispatcher: Dispatcher;
@@ -14,7 +14,7 @@ export class ActionGenerator {
      * @param {string} name
      * @param {string} origin
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Action}
      */
     static make(
@@ -22,7 +22,7 @@ export class ActionGenerator {
         name: string,
         origin: string,
         payload?: ActionPayload,
-        position?: Range,
+        position?: VRange,
     ): Action {
         const action: Action = {
             type: type,
