@@ -731,7 +731,7 @@ export class EventNormalizer {
             // container. The editable node is supposed to be visible.
             return true;
         }
-        const style = window.getComputedStyle(el);
+        const style = window.getComputedStyle(el.tagName ? el : el.parentElement);
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
