@@ -31,5 +31,6 @@ export class VRangeStore {
         this.endContainer = range.endContainer;
         this.endOffset = range.endOffset;
         this.direction = range.direction;
+        // todo: set in DOM?
     }
 }

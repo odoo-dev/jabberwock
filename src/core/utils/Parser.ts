@@ -60,15 +60,15 @@ export class Parser {
      *
      * @param {Element} node the node to parse
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
+     * @param {Element} [matchWith] the DOM node to match it with (default: `node`)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseElement(node: Element, format?: FormatType): VNode[] {
-        const parsedNode: VNode = new VNode(
-            this._getNodeType(node),
-            node.tagName,
-            undefined,
-            format,
-        );
+    static _parseElement(node: Element, format?: FormatType, matchWith?: Element): VNode[] {
+        const domMatch: DOMElement[] = [node as DOMElement];
+        if (matchWith) {
+            domMatch.push(matchWith as DOMElement);
+        }
+        const parsedNode: VNode = new VNode(this._getNodeType(node), domMatch, undefined, format);
         const children: Element[] = utils._collectionToArray(node.childNodes);
         children.forEach(child => {
             const parsedChildren: VNode[] = this._parseOne(child);
@@ -84,9 +84,10 @@ export class Parser {
      *
      * @param {Element} node the node to parse
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
+     * @param {Element} [matchWith] the DOM node to match it with (default: `node`)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseFormatElement(node: Element, format?: FormatType): VNode[] {
+    static _parseFormatElement(node: Element, format?: FormatType, matchWith?: Element): VNode[] {
         format = {
             bold: (format && format.bold) || node.tagName === 'B',
             italic: (format && format.italic) || node.tagName === 'I',
@@ -95,7 +96,7 @@ export class Parser {
         let parsedChildren: VNode[] = [];
         const children: Element[] = utils._collectionToArray(node.childNodes);
         children.forEach(child => {
-            const parsedChild: VNode[] = this._parseOne(child, format);
+            const parsedChild: VNode[] = this._parseOne(child, format, matchWith || node);
             parsedChildren = parsedChildren.concat(parsedChild);
         });
         return parsedChildren;
@@ -105,18 +106,19 @@ export class Parser {
      *
      * @param {Element} node the node to parse
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
+     * @param {Element} [matchWith] the DOM node to match it with (default: `node`)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseOne(node: Element, format?: FormatType): VNode[] {
+    static _parseOne(node: Element, format?: FormatType, matchWith?: Element): VNode[] {
         switch (node.tagName) {
             case undefined: // Text node
-                return this._parseTextNode(node, format);
+                return this._parseTextNode(node, format, matchWith);
             case 'B':
             case 'I':
             case 'U':
-                return this._parseFormatElement(node, format);
+                return this._parseFormatElement(node, format, matchWith);
             default:
-                return this._parseElement(node, format);
+                return this._parseElement(node, format, matchWith);
         }
     }
     /**
@@ -124,13 +126,18 @@ export class Parser {
      *
      * @param {Element} node the node to parse
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
+     * @param {Element} [matchWith] the DOM node to match it with (default: `node`)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseTextNode(node: Element, format?: FormatType): VNode[] {
+    static _parseTextNode(node: Element, format?: FormatType, matchWith?: Element): VNode[] {
         const parsedNodes: VNode[] = [];
         for (let i = 0; i < node.textContent.length; i++) {
             const char: string = node.textContent.charAt(i);
-            const parsedNode: VNode = new VNode(VNodeType.CHAR, node.tagName, char, format);
+            const domMatch: DOMElement[] = [node as DOMElement];
+            if (matchWith) {
+                domMatch.push(matchWith as DOMElement);
+            }
+            const parsedNode: VNode = new VNode(VNodeType.CHAR, domMatch, char, format);
             parsedNodes.push(parsedNode);
         }
         return parsedNodes;

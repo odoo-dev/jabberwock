@@ -27,6 +27,7 @@ export class Dispatcher {
      * @param {Action} action
      */
     dispatch(action: Action): void {
+        const followUpActions: Action[] = [];
         // TODO: manage the 3 types of action (intent/primitive/composite instead of intent/action)
         const type =
             action.type === 'composite' || action.type === 'primitive' ? 'action' : 'intent';
@@ -35,12 +36,19 @@ export class Dispatcher {
             .filter((item: DispatcherRegistryRecord): boolean => !!item); // remove undefined items
         records.forEach((record: DispatcherRegistryRecord): void => {
             Object.keys(record.handlers).forEach((handlerToken: HandlerToken): void => {
-                record.handlers[handlerToken](action);
+                const handler: ActionHandler = record.handlers[handlerToken];
+                const newAction: Action | void = handler(action);
+                if (newAction) {
+                    followUpActions.push(newAction);
+                }
             });
         });
         if (!records.length) {
             console.warn('No plugin is listening to the ' + type + ' "' + action.name + '".');
         }
+        followUpActions.forEach((followUpAction: Action): void => {
+            this.dispatch(followUpAction);
+        });
     }
 
     // Is this Dispatcher currently dispatching.

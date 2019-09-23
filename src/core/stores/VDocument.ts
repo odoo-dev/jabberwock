@@ -21,6 +21,15 @@ export class VDocument {
         return this._root;
     }
     /**
+     * Find a DOM Node in the `VDocument`, as a `VNode`.
+     *
+     * @param {DOMElement} element
+     * @returns {VNode}
+     */
+    find(element: DOMElement): VNode {
+        return this._root.find(element);
+    }
+    /**
      * Set the contents of the VDocument.
      */
     setContents(element: HTMLElement): VNode {
