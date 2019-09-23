@@ -1,4 +1,6 @@
 import { Action, ActionHandler, PluginIntents, PluginActions, PluginCommands } from '../types/Flux';
+import { Renderer } from '../utils/Renderer';
+import { VDocument } from '../stores/VDocument';
 
 export type HandlerToken = string;
 
@@ -12,9 +14,11 @@ export class Dispatcher {
     __id = 0;
     el: Element;
     registry: DispatcherRegistryRecord[] = [];
+    vDocument: VDocument;
 
-    constructor(el: Element) {
+    constructor(el: Element, vDocument: VDocument) {
         this.el = el;
+        this.vDocument = vDocument;
     }
 
     //--------------------------------------------------------------------------

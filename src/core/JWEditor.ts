@@ -20,7 +20,6 @@ export class JWEditor {
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
-        this.dispatcher = new Dispatcher(this.el);
         this.pluginsRegistry = [];
 
         if (!editable) {
@@ -40,6 +39,7 @@ export class JWEditor {
 
         // Parse the editable in the internal format of the editor.
         this.vDocument = new VDocument(this.editable);
+        this.dispatcher = new Dispatcher(this.el, this.vDocument);
 
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';

@@ -1,13 +1,14 @@
 import { VNode, VNodeType } from './VNode';
 import { Parser } from '../utils/Parser';
+import { Renderer } from '../utils/Renderer';
 
 export class VDocument {
     _root = new VNode(VNodeType.ROOT);
+    editable: HTMLElement;
 
-    constructor(startValue?: HTMLElement) {
-        if (startValue) {
-            this.setContents(startValue);
-        }
+    constructor(editable: HTMLElement) {
+        this.editable = editable;
+        this.setContents(this.editable);
     }
 
     //--------------------------------------------------------------------------
@@ -41,6 +42,10 @@ export class VDocument {
         parsedNodes.forEach(parsedNode => {
             this._root.append(parsedNode);
         });
+
+        // Render the contents of this.editable
+        Renderer.render(this, this.editable);
+
         return this._root;
     }
 }

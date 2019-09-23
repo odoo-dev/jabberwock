@@ -296,7 +296,7 @@
         <t t-if="value and value.nodeName">
             &lt;<t t-esc="value.nodeName.toLowerCase()"/>&gt;
         </t>
-        <t t-elif="value == true">true</t>
+        <t t-elif="value == true and value !== 1">true</t>
         <t t-elif="!value and value !== false and value !== 0 and value !== null">undefined</t>
         <t t-elif="value == false and value !== 0">false</t>
         <t t-elif="value == 0">0</t>

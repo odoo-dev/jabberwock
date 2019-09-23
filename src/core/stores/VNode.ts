@@ -19,21 +19,21 @@ export interface FormatType {
 
 let id = 0;
 
+type DomMatch = Array<DOMElement | Element | Node>;
+
 export class VNode {
     readonly type: VNodeType;
     children: VNode[] = [];
-    domMatch: DOMElement[]; // the DOM element to match this VNode
+    domMatch: DomMatch; // the DOM element to match this VNode
     format: FormatType;
     readonly id = id;
     index = 0;
     parent: VNode | null = null;
-    originalTag: string;
     value: string | undefined;
 
-    constructor(type: VNodeType, domMatch?: DOMElement[], value?: string, format?: FormatType) {
+    constructor(type: VNodeType, domMatch?: DomMatch, value?: string, format?: FormatType) {
         this.type = type;
         this.domMatch = domMatch || [];
-        this.originalTag = (this.domMatch.length && this.domMatch[0].tagName) || '';
         this.value = value;
         this.format = format || {
             bold: false,
@@ -82,6 +82,12 @@ export class VNode {
     }
     nthChild(index: number): VNode | undefined {
         return (index >= 0 && this.children[index]) || undefined;
+    }
+    get originalTag(): string {
+        if (this.domMatch.length) {
+            return this.domMatch[0]['tagName'] || '#text';
+        }
+        return '';
     }
     get previousSibling(): VNode | undefined {
         return this.parent && this.parent.nthChild(this.index - 1);
