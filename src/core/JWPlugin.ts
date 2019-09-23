@@ -1,5 +1,14 @@
 import { Dispatcher } from './dispatcher/Dispatcher';
-import { PluginActions, PluginCommands, PluginIntents } from './types/Flux';
+import {
+    PluginActions,
+    PluginCommands,
+    PluginIntents,
+    Action,
+    ActionPayload,
+    ActionType,
+} from './types/Flux';
+import { ActionGenerator } from './actions/ActionGenerator';
+import { Range } from './stores/Range';
 
 export interface JWPluginConfig {
     name?: string;
@@ -14,10 +23,36 @@ export class JWPlugin {
 
     constructor(dispatcher: Dispatcher, options: JWPluginConfig = {}) {
         this.dispatcher = dispatcher;
-        this.name = options.name;
+        // by default the name is that of its constructor (eg.: 'JWPlugin')
+        // todo: namespace
+        this.name = options.name || this.constructor.name;
     }
 
     init(): void {
         // TODO
+    }
+
+    /**
+     * Shorthand to generate an action of type `type`.
+     *
+     * @param {ActionType} type
+     * @param {string} name
+     * @param {ActionPayload} [payload]
+     * @param {Range} [position]
+     * @returns {Action}
+     */
+    action(type: ActionType, name: string, payload?: ActionPayload, position?: Range): Action {
+        return ActionGenerator.make(type, name, this.name, payload, position);
+    }
+    /**
+     * Shorthad to generate an action of type 'intent'.
+     *
+     * @param {string} name
+     * @param {ActionPayload} [payload]
+     * @param {Range} [position]
+     * @returns {Action}
+     */
+    intent(name: string, payload?: ActionPayload, position?: Range): Action {
+        return ActionGenerator.make('intent', name, this.name, payload, position);
     }
 }

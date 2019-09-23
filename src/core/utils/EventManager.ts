@@ -1,5 +1,6 @@
 import { EventNormalizer } from './EventNormalizer';
 import { Signal, Action } from '../types/Flux';
+import { ActionGenerator } from '../actions/ActionGenerator';
 
 export interface EventManagerOptions {
     dispatch?: (action: Action) => void;
@@ -33,12 +34,7 @@ export class EventManager {
             case 'remove':
             // return a 'remove' action of type 'intent', with the right payload
         }
-        return {
-            type: 'intent',
-            name: signal.type,
-            payload: signal.params,
-            origin: signal.origin,
-        };
+        return ActionGenerator.make('intent', signal.type, 'EventManager', signal.params);
     }
     /**
      * Take a signal, induce the user's intention from it, and dispatch that.

@@ -5,11 +5,12 @@ export interface Signal {
     origin: string;
 }
 
+export type ActionType = 'intent' | 'primitive' | 'composite';
 export type ActionPayload = {};
 
 export interface Action {
-    name?: string;
-    type: 'intent' | 'primitive' | 'composite';
+    name: string;
+    type: ActionType;
     subActions?: Action[];
     payload?: ActionPayload;
     position?: Range;
