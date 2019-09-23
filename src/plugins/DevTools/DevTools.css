@@ -55,6 +55,20 @@ devtools-panel .selectable-line.selected {
     background-color: rgba(118, 82, 108, 0.3);
 }
 
+devtools-panel button.logger {
+    float: right;
+    border: none;
+    background-color: transparent;
+    color: #666666;
+    padding: 0;
+    margin: 0;
+    display: none;
+}
+
+devtools-panel .selectable-line:hover button.logger, devtools-panel .selected button.logger {
+    display: inline;
+}
+
 /* NAVBAR */
 
 jw-devtools:not(.closed) > devtools-navbar {

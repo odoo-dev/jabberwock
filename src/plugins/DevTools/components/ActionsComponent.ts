@@ -47,6 +47,14 @@ export class ActionsComponent extends OwlUIComponent {
         return (record && record.handlers[handlerToken]) || null;
     }
     /**
+     * Log an `ActionHandler` to the console.
+     *
+     * @param {ActionHandler} handler
+     */
+    logHandler(handler: ActionHandler): void {
+        console.log(handler);
+    }
+    /**
      * Handle keydown event to navigate in the action stack
      */
     onKeydown(event: KeyboardEvent): void {

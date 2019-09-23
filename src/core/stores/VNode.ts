@@ -50,16 +50,20 @@ export class VNode {
     /**
      * Find a DOM Node in the `VDocument`, as a `VNode`.
      *
-     * @param {DOMElement} element
+     * @param {DOMElement|number} elementOrID
      * @returns {VNode}
      */
-    find(element: DOMElement): VNode {
-        if (this.domMatch.some((match: DOMElement): boolean => match === element)) {
+    find(elementOrID: DOMElement | number): VNode {
+        if (typeof elementOrID === 'number') {
+            if (this.id === elementOrID) {
+                return this;
+            }
+        } else if (this.domMatch.some((match: DOMElement): boolean => match === elementOrID)) {
             return this;
         }
         let res;
         this.children.find((child: VNode): boolean => {
-            res = child.find(element);
+            res = child.find(elementOrID);
             return !!res;
         });
         return res;

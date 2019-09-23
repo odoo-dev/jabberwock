@@ -95,6 +95,7 @@
             <t t-if="props.vNode.value">:
                 "<t t-esc="props.vNode.value"/>"
             </t>
+            <button class="logger" t-on-click="logVNode(props.vNode)" style="display: inline; padding-left: 1em;">&gt;_</button>
             <span class="id"><t t-esc="props.vNode.id"/></span>
         </div>
         <div class="properties">
@@ -332,7 +333,7 @@
                     }">
                     <t t-set="handler" t-value="selectedRecord.handlers[handlerToken]"/>
                     <td><t t-esc="handlerToken"/></td>
-                    <td><t t-esc="handler.name"/></td>
+                    <td><t t-esc="handler.name"/><button class="logger" t-on-click="logHandler(handler)">&gt;_</button></td>
                 </tr>
             </tbody>
         </table>

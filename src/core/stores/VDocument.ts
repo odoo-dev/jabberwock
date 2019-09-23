@@ -22,12 +22,13 @@ export class VDocument {
     }
     /**
      * Find a DOM Node in the `VDocument`, as a `VNode`.
+     * If an ID is passed, find the `VNode` matching that ID.
      *
-     * @param {DOMElement} element
+     * @param {DOMElement|number} elementOrID
      * @returns {VNode}
      */
-    find(element: DOMElement): VNode {
-        return this._root.find(element);
+    find(elementOrID: DOMElement | number): VNode {
+        return this._root.find(elementOrID);
     }
     /**
      * Set the contents of the VDocument.
