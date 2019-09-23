@@ -12,6 +12,15 @@ interface Action {
     target?: DOMElement;
     origin: string;
 }
+interface Intent extends Action {
+    type: 'intent';
+}
+interface Primitive extends Action {
+    type: 'primitive';
+}
+interface Command extends Action {
+    type: 'command';
+}
 
 type ActionHandler = (action: Action) => void;
 type CommandIdentifier = string;

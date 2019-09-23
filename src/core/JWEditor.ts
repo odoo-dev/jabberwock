@@ -68,7 +68,6 @@ export class JWEditor {
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this.editable, {
             dispatch: (action: Action): void => {
-                action.origin = 'User';
                 this.dispatcher.dispatch(action);
             },
         });
