@@ -22,6 +22,7 @@ let id = 0;
 export class VNode implements VNode {
     readonly type: VNodeType;
     children: VNode[] = [];
+    domMatch: DOMElement[]; // the DOM element to match this VNode
     format: FormatType;
     readonly id = id;
     index = 0;
@@ -29,9 +30,10 @@ export class VNode implements VNode {
     originalTag: string;
     value: string | undefined;
 
-    constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
+    constructor(type: VNodeType, domMatch?: DOMElement[], value?: string, format?: FormatType) {
         this.type = type;
-        this.originalTag = originalTag;
+        this.domMatch = domMatch || [];
+        this.originalTag = (this.domMatch.length && this.domMatch[0].tagName) || '';
         this.value = value;
         this.format = format || {
             bold: false,
@@ -45,6 +47,23 @@ export class VNode implements VNode {
     // Getters
     //--------------------------------------------------------------------------
 
+    /**
+     * Find a DOM Node in the `VDocument`, as a `VNode`.
+     *
+     * @param {DOMElement} element
+     * @returns {VNode}
+     */
+    find(element: DOMElement): VNode {
+        if (this.domMatch.some((match: DOMElement): boolean => match === element)) {
+            return this;
+        }
+        let res;
+        this.children.find((child: VNode): boolean => {
+            res = child.find(element);
+            return !!res;
+        });
+        return res;
+    }
     get firstChild(): VNode | undefined {
         return this.nthChild(0);
     }
@@ -71,6 +90,9 @@ export class VNode implements VNode {
             }
         });
         return current;
+    }
+    toString(): string {
+        return 'VNode[' + this.type + ']';
     }
     get siblings(): VNode[] {
         return (this.parent && this.parent.children) || [];

@@ -85,6 +85,7 @@ export class ActionGenerator {
             id: this._makeID(type, name),
             type: type,
             name: name,
+            subActions: [],
             origin: origin,
         };
         if (payload) {

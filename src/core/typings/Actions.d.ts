@@ -4,9 +4,9 @@ type ActionPayload = {};
 
 interface Action {
     readonly id: ActionIdentifier; // = type.name
-    name?: string;
+    name: string;
     type: ActionType;
-    subActions?: Action[];
+    subActions: Action[];
     payload?: ActionPayload;
     position?: VRange;
     target?: DOMElement;
@@ -30,8 +30,7 @@ type ActionHandler = (
 type CommandIdentifier = string;
 interface PluginHandlers {
     intents?: Record<string, CommandIdentifier>;
-    // TODO:
-    // preCommands?: Record<CommandIdentifier, CommandIdentifier>;
-    // postCommands?: Record<CommandIdentifier, CommandIdentifier>;
+    preCommands?: Record<CommandIdentifier, CommandIdentifier>;
+    postCommands?: Record<CommandIdentifier, CommandIdentifier>;
 }
 type Commands = Record<CommandIdentifier, ActionHandler>;

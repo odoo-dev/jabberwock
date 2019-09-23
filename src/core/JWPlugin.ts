@@ -10,9 +10,8 @@ export class JWPlugin {
     dispatcher: Dispatcher;
     handlers: PluginHandlers = {
         intents: {},
-        // TODO:
-        // preCommands: {},
-        // postCommands: {},
+        preCommands: {},
+        postCommands: {},
     };
     commands: Commands = {};
 

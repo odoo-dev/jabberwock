@@ -22,13 +22,36 @@ export class Dispatcher {
      * @param {Action} action
      */
     dispatch(action: Action): void {
+        // Get the handlers
+        const preHandlers: Handlers = this._getHandlers('pre-' + action.id) || {};
         const handlers: Handlers = this._getHandlers(action.id);
-        Object.keys(handlers).forEach((handlerToken: HandlerToken): void => {
-            handlers[handlerToken](action); // TODO: use return value to retrigger
-        });
-        if (!Object.keys(handlers).length) {
+        const postHandlers: Handlers = this._getHandlers('post-' + action.id) || {};
+
+        // Call the pre handlers and the handlers
+        let followUpActions: Action[] = this._callHandlers(preHandlers, action).concat(
+            this._callHandlers(handlers, action),
+        );
+
+        if (
+            !Object.keys(preHandlers).length &&
+            !Object.keys(handlers).length &&
+            !Object.keys(postHandlers).length
+        ) {
             console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
         }
+
+        // Dispatch sub actions
+        action.subActions.forEach((subAction: Action): void => {
+            this.dispatch(subAction);
+        });
+
+        // Call the post handlers (after sub actions)
+        followUpActions = followUpActions.concat(this._callHandlers(postHandlers, action));
+
+        // Dispatch actions resulting from all the dispatched actions
+        followUpActions.forEach((followUpAction: Action): void => {
+            this.dispatch(followUpAction);
+        });
     }
     // Is this Dispatcher currently dispatching.
     isDispatching(): boolean {
@@ -38,16 +61,26 @@ export class Dispatcher {
      * Register all handlers declared in a plugin, and match them with their
      * corresponding command.
      *
-     * @param {PluginIntents} intents
-     * @param {PluginActions} actions
+     * @param {PluginHandlers} handlers
      * @param {Commands} commands
      */
     register(handlers: PluginHandlers, commands: Commands): void {
         Object.keys(handlers).forEach((handlerType: string): void => {
             Object.keys(handlers[handlerType]).forEach((actionName: string): void => {
-                const type = 'intent'; // todo: use handlerType (right now only one)
+                let type: string;
+                switch (handlerType) {
+                    case 'intents':
+                        type = 'intent';
+                        break;
+                    case 'preCommands':
+                        type = 'pre-command';
+                        break;
+                    case 'postCommands':
+                        type = 'post-command';
+                        break;
+                }
                 const id: ActionIdentifier = type + '.' + actionName;
-                const commandIdentifier: CommandIdentifier = handlers.intents[actionName];
+                const commandIdentifier: CommandIdentifier = handlers[handlerType][actionName];
                 const command = commands[commandIdentifier];
                 if (command) {
                     this._register(id, command);
@@ -80,6 +113,17 @@ export class Dispatcher {
     // Private
     //--------------------------------------------------------------------------
 
+    _callHandlers(handlers: Handlers = {}, action: Action) {
+        const followUpActions: Action[] = [];
+        Object.keys(handlers).forEach((handlerToken: HandlerToken): void => {
+            const handler: ActionHandler = handlers[handlerToken];
+            const newAction: Action | void = handler(action);
+            if (newAction) {
+                followUpActions.push(newAction);
+            }
+        });
+        return followUpActions;
+    }
     /**
      * Return the `ActionHandler` corresponding to the given `handlerToken` in
      * the registry.
