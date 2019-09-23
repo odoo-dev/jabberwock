@@ -5,37 +5,57 @@ export class ActionGenerator {
     constructor(dispatcher: Dispatcher) {
         this.dispatcher = dispatcher;
     }
-    insert(value: DOMElement, position: Range): void {
-        this.dispatcher.dispatch({
-            id: 'primitive.insert', // todo: automize
-            name: 'insert',
-            type: 'primitive',
-            payload: {
-                element: value,
-            },
-            position: position,
-            origin: arguments.callee.caller.name,
-        });
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Shorthand to generate an action of type 'intent'.
+     *
+     * @param {ActionInit} actionInit
+     * @returns {Intent}
+     */
+    static intent(actionInit: ActionInit): Intent {
+        return this.make('intent', actionInit);
     }
-    remove(target?: DOMElement): void {
-        this.dispatcher.dispatch({
-            id: 'primitive.remove', // todo: automize
-            name: 'remove',
-            type: 'primitive',
-            target: target,
-            origin: arguments.callee.caller.name,
-        });
+    /**
+     * Shorthand to generate an action of type 'primitive'.
+     *
+     * @param {ActionInit} actionInit
+     * @returns {Primitive}
+     */
+    static primitive(actionInit: ActionInit): Primitive {
+        return this.make('primitive', actionInit);
     }
-    update(value: DOMElement, target?: DOMElement): void {
-        this.dispatcher.dispatch({
-            id: 'primitive.update', // todo: automize
-            name: 'update',
-            type: 'primitive',
-            payload: {
-                element: value,
-            },
-            target: target,
-            origin: arguments.callee.caller.name,
-        });
+    /**
+     * Shorthand to generate an action of type 'command'.
+     *
+     * @param {ActionInit} actionInit
+     * @returns {Command}
+     */
+    static command(actionInit: ActionInit): Command {
+        return this.make('command', actionInit);
+    }
+    /**
+     * Return a properly formatted Action.
+     *
+     * @param {ActionType} type
+     * @param {ActionInit} actionInit
+     * @returns {Intent|Primitive|Command}
+     */
+    static make<T extends Action>(type: ActionType, actionInit: ActionInit): T {
+        return Object.assign(actionInit, {
+            id: this._makeID(type, actionInit.name),
+            type: type,
+        }) as T;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    static _makeID(type, name): ActionIdentifier {
+        return type + '.' + name;
     }
 }

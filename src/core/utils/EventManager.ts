@@ -1,5 +1,6 @@
 import { EventNormalizer } from './EventNormalizer';
 import { DispatchFunction } from '../dispatcher/Dispatcher';
+import { ActionGenerator } from '../actions/ActionGenerator';
 
 export interface EventManagerOptions {
     dispatch?: DispatchFunction;
@@ -28,18 +29,16 @@ export class EventManager {
      * @param {CustomEvent} customEvent
      * @returns {Action}
      */
-    _matchIntent(customEvent: CustomEvent): Action {
+    _matchIntent(customEvent: CustomEvent): Intent {
         switch (customEvent.type) {
             case 'remove':
             // todo: return a 'remove' action of type 'intent', with the right payload
         }
-        return {
-            id: 'intent.' + customEvent.type, // todo: automize
-            type: 'intent',
+        return ActionGenerator.intent({
             name: customEvent.type,
+            origin: 'EventManager',
             payload: customEvent.detail,
-            origin: customEvent.detail['origin'],
-        };
+        });
     }
     /**
      * Take a signal, match it with the corresponding user intention,
