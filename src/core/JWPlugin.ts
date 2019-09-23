@@ -32,10 +32,10 @@ export class JWPlugin {
      *
      * @param {string} name
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Intent}
      */
-    intent(name: string, payload?: ActionPayload, position?: Range): Intent {
+    intent(name: string, payload?: ActionPayload, position?: VRange): Intent {
         return ActionGenerator.intent(name, this.name, payload, position);
     }
     /**
@@ -43,10 +43,10 @@ export class JWPlugin {
      *
      * @param {string} name
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Primitive}
      */
-    primitive(name: string, payload?: ActionPayload, position?: Range): Primitive {
+    primitive(name: string, payload?: ActionPayload, position?: VRange): Primitive {
         return ActionGenerator.primitive(name, this.name, payload, position);
     }
     /**
@@ -54,10 +54,10 @@ export class JWPlugin {
      *
      * @param {string} name
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Command}
      */
-    command(name: string, payload?: ActionPayload, position?: Range): Command {
+    command(name: string, payload?: ActionPayload, position?: VRange): Command {
         return ActionGenerator.command(name, this.name, payload, position);
     }
 }

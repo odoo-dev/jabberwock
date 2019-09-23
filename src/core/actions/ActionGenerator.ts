@@ -17,10 +17,15 @@ export class ActionGenerator {
      * @param {string} name
      * @param {string} origin
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Intent}
      */
-    static intent(name: string, origin: string, payload?: ActionPayload, position?: Range): Intent {
+    static intent(
+        name: string,
+        origin: string,
+        payload?: ActionPayload,
+        position?: VRange,
+    ): Intent {
         return this.make('intent', name, origin, payload, position) as Intent;
     }
     /**
@@ -30,14 +35,14 @@ export class ActionGenerator {
      * @param {string} name
      * @param {string} origin
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Primitive}
      */
     static primitive(
         name: string,
         origin: string,
         payload?: ActionPayload,
-        position?: Range,
+        position?: VRange,
     ): Primitive {
         return this.make('primitive', name, origin, payload, position) as Primitive;
     }
@@ -48,14 +53,14 @@ export class ActionGenerator {
      * @param {string} name
      * @param {string} origin
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
+     * @param {VRange} [position]
      * @returns {Command}
      */
     static command(
         name: string,
         origin: string,
         payload?: ActionPayload,
-        position?: Range,
+        position?: VRange,
     ): Command {
         return this.make('command', name, origin, payload, position) as Command;
     }
@@ -66,15 +71,15 @@ export class ActionGenerator {
      * @param {string} name
      * @param {string} origin
      * @param {ActionPayload} [payload]
-     * @param {Range} [position]
-     * @returns {Intent|Primitive|Command}
+     * @param {VRange} [position]
+     * @returns {Action}
      */
     static make(
         type: ActionType,
         name: string,
         origin: string,
         payload?: ActionPayload,
-        position?: Range,
+        position?: VRange,
     ): Action {
         const action: Action = {
             id: this._makeID(type, name),

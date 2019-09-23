@@ -1,5 +1,5 @@
-import { VNode, VNodeType, FormatType } from '../stores/VNode';
 import { utils } from './utils';
+import { VNode, VNodeType, FormatType } from '../stores/VNode';
 
 function _getNodeType(node: Element): VNodeType {
     switch (node.tagName) {

@@ -19,7 +19,7 @@ export interface FormatType {
 
 let id = 0;
 
-export class VNode {
+export class VNode implements VNode {
     readonly type: VNodeType;
     children: VNode[] = [];
     format: FormatType;

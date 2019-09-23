@@ -9,8 +9,19 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-type Direction = 'ltr' | 'rtl';
-interface Range {
+// As of August 29th 2019, InputEvent is considered experimental by MDN as some
+// of its properties are said to be unsupported by Edge and Safari. This is
+// probably the reason why its type definition is not included in the basic
+// TypeScript distribution. However, these properties actually appear to be
+// working perfectly fine on these browser after some manual testing on MacOS.
+interface InputEvent extends UIEvent {
+    readonly data: string;
+    readonly dataTransfer: DataTransfer;
+    readonly inputType: string;
+    readonly isComposing: boolean;
+}
+
+export interface Range {
     readonly startContainer: DOMElement;
     readonly startOffset: number;
     readonly endContainer: DOMElement;
@@ -496,7 +507,7 @@ export class EventNormalizer {
                 startOffset: nativeRange.startOffset,
                 endContainer: nativeRange.endContainer as DOMElement,
                 endOffset: nativeRange.endOffset,
-                direction: ltr ? 'ltr' : 'rtl',
+                direction: ltr ? 'forward' : 'backward',
             };
         }
     }
@@ -604,13 +615,11 @@ export class EventNormalizer {
             startOffset: previous.offsets[insertPreviousStart],
             endContainer: previousNodes[insertPreviousEnd].origin,
             endOffset: previous.offsets[insertPreviousEnd],
-            direction: 'rtl',
+            direction: 'backward',
             origin: 'composition',
         };
 
-        this._triggerEvent(
-            this._formatCustomEvent('setRange', { value: insertionRange }, new Set()),
-        );
+        this._formatAndTriggerEvent('setRange', { range: insertionRange }, new Set());
         this._formatAndTriggerEvent('insert', { value: insertedText }, elements);
     }
     /**
@@ -630,7 +639,7 @@ export class EventNormalizer {
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._formatAndTriggerEvent('setRange', { value: range }, elements);
+            this._formatAndTriggerEvent('setRange', { range: range }, elements);
         }
     }
     /**
@@ -928,12 +937,14 @@ export class EventNormalizer {
                             target.nodeType === Node.ELEMENT_NODE
                                 ? target.childNodes.length
                                 : target.nodeValue.length,
-                        direction: document.dir as Direction,
-                        origin: 'pointer',
+                        direction:
+                            document.dir === 'ltr'
+                                ? ('forward' as Direction)
+                                : ('backward' as Direction),
                     };
                 }
                 if (this._rangeHasChanged) {
-                    this._formatAndTriggerEvent('setRange', { value: range });
+                    this._formatAndTriggerEvent('setRange', { range: range, origin: 'pointer' });
                 }
             }
         }, 0);

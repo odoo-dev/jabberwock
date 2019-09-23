@@ -8,7 +8,7 @@ interface Action {
     type: ActionType;
     subActions?: Action[];
     payload?: ActionPayload;
-    position?: Range;
+    position?: VRange;
     target?: DOMElement;
     origin: string;
 }
@@ -22,7 +22,11 @@ interface Command extends Action {
     type: 'command';
 }
 
-type ActionHandler = (action: Action) => void;
+type ActionHandler = (
+    command?: Command | Intent | Primitive,
+    intent?: Intent | Primitive,
+    primitive?: Primitive,
+) => Command | void;
 type CommandIdentifier = string;
 interface PluginHandlers {
     intents?: Record<string, CommandIdentifier>;
