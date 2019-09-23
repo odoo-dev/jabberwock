@@ -3,15 +3,28 @@ type ActionIdentifier = string;
 type ActionType = 'intent' | 'primitive' | 'command';
 type ActionPayload = {};
 
-interface Action {
-    readonly id: ActionIdentifier;
-    name?: string;
-    type: ActionType;
-    subActions?: Action[];
+interface ActionInit {
+    name: string;
+    origin?: string;
     payload?: ActionPayload;
     position?: Range;
-    target?: DOMElement;
+}
+
+interface Action extends ActionInit {
+    readonly id: ActionIdentifier;
+    type: ActionType;
     origin: string;
+    subActions?: Action[];
+    target?: DOMElement;
+}
+interface Intent extends Action {
+    type: 'intent';
+}
+interface Primitive extends Action {
+    type: 'primitive';
+}
+interface Command extends Action {
+    type: 'command';
 }
 
 type ActionHandler = (action: Action) => void;
