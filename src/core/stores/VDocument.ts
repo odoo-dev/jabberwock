@@ -1,5 +1,5 @@
 import { VNode, VNodeType } from './VNode';
-import parser from '../utils/parser';
+import { Parser } from '../utils/Parser';
 
 export class VDocument {
     _root = new VNode(VNodeType.ROOT);
@@ -24,7 +24,7 @@ export class VDocument {
      * Set the contents of the VDocument.
      */
     setContents(element: HTMLElement): VNode {
-        const parsedNodes: VNode[] = parser.parse(element);
+        const parsedNodes: VNode[] = Parser.parse(element);
         while (this._root.children.length) {
             this._root.removeChild(0);
         }
