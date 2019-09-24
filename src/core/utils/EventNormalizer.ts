@@ -891,8 +891,8 @@ export class EventNormalizer {
             const target = this._mousedownInEditable.target as Element;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let range: Range;
-                if (target === ev.target) {
+                let range: Range = this._getRange();
+                if (!target.contains(range.startContainer) && target === ev.target) {
                     range = {
                         startContainer: target as DOMElement,
                         startOffset: 0,
@@ -904,9 +904,6 @@ export class EventNormalizer {
                         direction: document.dir as Direction,
                         origin: 'pointer',
                     };
-                } else {
-                    range = this._getRange();
-                    range.origin = 'pointer';
                 }
                 if (this._rangeHasChanged) {
                     this._triggerEvent('setRange', { value: range });
