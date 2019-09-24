@@ -142,11 +142,19 @@ export class VNode {
         return this;
     }
     /**
+     * Remove a node from the VDocument
+     *
+     * @returns {VNode} the parent of the removed node
+     */
+    remove(): VNode {
+        return this.parent.removeChild(this.index);
+    }
+    /**
      * Remove the nth child from this node. Return self.
      */
     removeChild(index: number): VNode {
         delete this.children[index];
-        this.children.splice(index);
+        this.children.splice(index, 1);
         return this;
     }
     /**

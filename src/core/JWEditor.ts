@@ -54,7 +54,7 @@ export class JWEditor {
         this.el.appendChild(this.editable);
         document.body.appendChild(this.el);
 
-        const corePlugin = new CorePlugin(this.dispatcher, this.vDocument);
+        const corePlugin = new CorePlugin(this.dispatcher, this.vDocument, this.editable);
         this._addPluginInstance(corePlugin); // CorePlugin is a mandatory plugin
 
         // Init the event manager now that the cloned editable is in the DOM.

@@ -4,8 +4,10 @@ import { VDocument } from '../stores/VDocument';
 import { VNode } from '../stores/VNode';
 import { Action } from '../types/Flux';
 import { Range } from './EventNormalizer';
+import { Renderer } from './Renderer';
 
 export class CorePlugin extends JWPlugin {
+    editable: HTMLElement;
     range = new VRangeStore();
     vDocument: VDocument;
     _root: VNode;
@@ -14,17 +16,20 @@ export class CorePlugin extends JWPlugin {
         setRange: 'onSetRange',
     };
     commands = {
-        onRemoveIntent: this.removeSide,
+        onRemoveIntent: this.removeSide.bind(this),
         onSetRange: this.onSetRange.bind(this),
+        remove: this.remove.bind(this),
         setRange: this.setRange.bind(this),
     };
     actions = {
         navigate: 'setRange',
+        remove: 'remove',
     };
-    constructor(dispatcher, vDocument) {
+    constructor(dispatcher, vDocument: VDocument, editable: HTMLElement) {
         super(dispatcher);
         this.vDocument = vDocument;
         this._root = this.vDocument._root;
+        this.editable = editable;
     }
 
     //--------------------------------------------------------------------------
@@ -43,8 +48,19 @@ export class CorePlugin extends JWPlugin {
         const range: VRange = this._findFromDOM(intentRange);
         return this.action('primitive', 'navigate', { range: range });
     }
-    removeSide(intent: Action): void {
+    remove(action: Action): void {
+        console.log('REMOVE:' + action);
+        action.payload['nodes'].forEach((vNode: VNode): void => {
+            this.vDocument.find(vNode.id).remove();
+        });
+        Renderer.render(this.vDocument, this.editable);
+    }
+    removeSide(intent: Action): Action {
         console.log('REMOVE SIDE:' + intent);
+        // stub
+        return this.action('primitive', 'remove', {
+            nodes: [this.range.startContainer],
+        });
     }
     /**
      * Set a new VRange, based on a 'navigate' primitive action.
