@@ -253,15 +253,15 @@
             t-on-click="toggleClosed"
             t-on-mousedown="startResize">
             <button t-on-click="openTab('inspector')" t-att-class="{
-                selected: state.openTab == 'inspector',
+                selected: state.currentTab == 'inspector',
             }">Inspector</button>
             <button t-on-click="openTab('actions')" t-att-class="{
-                selected: state.openTab == 'actions',
+                selected: state.currentTab == 'actions',
             }">Actions</button>
         </devtools-navbar>
         <t t-if="!state.closed">
-            <InspectorComponent isOpen="state.openTab == 'inspector'"/>
-            <ActionsComponent isOpen="state.openTab == 'actions'"/>
+            <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
+            <ActionsComponent isOpen="state.currentTab == 'actions'"/>
         </t>
     </jw-devtools>
 

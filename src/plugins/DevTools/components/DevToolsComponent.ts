@@ -1,23 +1,25 @@
 import { ActionsComponent } from './ActionsComponent';
+import { Component } from 'owl-framework';
+import { Env } from 'owl-framework/src/component/component';
 import { InspectorComponent } from './InspectorComponent';
-import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
 interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
-    openTab: 'inspector' | 'actions';
+    currentTab: string; // Name of the current tab
 }
 
-export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
+export class DevToolsComponent extends Component<Env, {}, DevToolsState> {
     static components = { ActionsComponent, InspectorComponent };
-    state: DevToolsState = {
-        closed: false,
-        height: 300,
-        openTab: 'inspector',
-    };
     static template = 'devtools';
+    state = {
+        closed: true,
+        currentTab: 'inspector',
+        height: 300,
+    };
+    localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
     _heightOnLastMousedown: number = this.state.height;
 
@@ -30,8 +32,8 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
      *
      * @param {'inspector' | 'actions'} tabName
      */
-    openTab(tabName: 'inspector' | 'actions'): void {
-        this.state.openTab = tabName;
+    openTab(tabName: string): void {
+        this.state.currentTab = tabName;
     }
     /**
      * Drag the DevTools to resize them
