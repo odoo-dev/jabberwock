@@ -1,7 +1,6 @@
 import { ActionsComponent } from './ActionsComponent';
-import { Component } from 'owl-framework';
-import { Env } from 'owl-framework/src/component/component';
 import { InspectorComponent } from './InspectorComponent';
+import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -11,7 +10,7 @@ interface DevToolsState {
     openTab: 'inspector' | 'actions';
 }
 
-export class DevToolsComponent extends Component<Env, {}, DevToolsState> {
+export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
     static components = { ActionsComponent, InspectorComponent };
     state: DevToolsState = {
         closed: false,
