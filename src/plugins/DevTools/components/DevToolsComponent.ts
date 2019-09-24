@@ -5,10 +5,11 @@ import { Action } from '../../../core/types/Flux';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
+type TabName = 'inspector' | 'actions';
 interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
-    openTab: 'inspector' | 'actions';
+    openTab: TabName;
 }
 
 export class DevToolsComponent extends OwlUIComponent {
@@ -47,12 +48,25 @@ export class DevToolsComponent extends OwlUIComponent {
         }
     }
     /**
-     * Open the tab with the given `tabName`
+     * Open the tab with the given tabName
      *
-     * @param {'inspector' | 'actions'} tabName
+     * @param {CustomEvent|TabName} eventOrTabName
      */
-    openTab(tabName: 'inspector' | 'actions'): void {
+    openTab(eventOrTabName: CustomEvent | TabName): void {
+        const tabName =
+            eventOrTabName instanceof CustomEvent ? eventOrTabName.detail.tabName : eventOrTabName;
         this.state.openTab = tabName;
+    }
+    /**
+     * Select a node in the Inspector
+     *
+     * @param {CustomEvent} event
+     */
+    selectNode(event: CustomEvent): void {
+        const inspectorComponent = this.refs.InspectorComponent as InspectorComponent;
+        if (inspectorComponent) {
+            inspectorComponent.selectNode(event.detail.vNode);
+        }
     }
     /**
      * Drag the DevTools to resize them

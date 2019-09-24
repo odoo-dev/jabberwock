@@ -1,6 +1,7 @@
 import { ActionPayload, ActionHandler, Action } from '../../../core/types/Flux';
 import { OwlUIComponent } from '../../../ui/JWOwlUIPlugin';
 import { HandlerToken, DispatcherRegistryRecord } from '../../../core/dispatcher/Dispatcher';
+import { VNode } from '../../../core/stores/VNode';
 
 interface ActionsState {
     actions: Action[]; // Stack of all actions performed since init
@@ -117,6 +118,19 @@ export class ActionsComponent extends OwlUIComponent {
      */
     valueToString(value: ActionPayload): string {
         return value ? JSON.stringify(value) : '';
+    }
+    /**
+     * Open the Inspector tab and select the given VNode to view it.
+     *
+     * @param {VNode} vNode
+     */
+    viewNode(vNode: VNode): void {
+        this.trigger('open-tab', {
+            tabName: 'inspector',
+        });
+        this.trigger('node-selected', {
+            vNode: vNode,
+        });
     }
 
     //--------------------------------------------------------------------------

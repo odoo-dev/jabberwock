@@ -13,7 +13,7 @@ interface InspectorState {
 
 export class InspectorComponent extends OwlUIComponent {
     static components = { InfoComponent, PathComponent, TreeComponent };
-    state = {
+    state: InspectorState = {
         selectedNode: this.env.editor.vDocument.contents,
         selectedPath: this._getPath(this.env.editor.vDocument.contents),
     };
@@ -51,11 +51,12 @@ export class InspectorComponent extends OwlUIComponent {
      * passes in its `detail` key, and modifies its state to account for the
      * change in selection.
      *
-     * @param {CustomEvent} event
-     * @param {VNode} event.detail.vNode
+     * @param {CustomEvent|VNode} eventOrVNode
+     * @param {VNode} [eventOrVNode.detail.vNode]
      */
-    selectNode(event: CustomEvent): void {
-        const vNode: VNode = event.detail.vNode;
+    selectNode(eventOrVNode: CustomEvent | VNode): void {
+        const vNode: VNode =
+            eventOrVNode instanceof CustomEvent ? eventOrVNode.detail.vNode : eventOrVNode;
         this._selectNode(vNode);
     }
 

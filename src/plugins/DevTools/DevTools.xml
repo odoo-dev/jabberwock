@@ -312,7 +312,11 @@
                     <td>
                         <t t-esc="rangeKey"/>
                     </td>
-                    <td>
+                    <td t-if="rangeKey == 'startContainer' or rangeKey == 'endContainer'"
+                        t-on-click="viewNode(value)">
+                        <t t-call="payloadValue"/>
+                    </td>
+                    <td t-else="">
                         <t t-call="payloadValue"/>
                     </td>
                 </tr>
@@ -367,7 +371,7 @@
             closed: state.closed,
         }"
         t-attf-style="height: {{state.height}}px"
-        tabindex="2">
+        tabindex="2" t-on-open-tab="openTab" t-on-node-selected="selectNode">
         <devtools-navbar
             t-on-click="toggleClosed"
             t-on-mousedown="startResize">
@@ -379,7 +383,8 @@
             }">Actions</button>
         </devtools-navbar>
         <t t-if="!state.closed">
-            <InspectorComponent isOpen="state.openTab == 'inspector'"/>
+            <InspectorComponent isOpen="state.openTab == 'inspector'"
+                t-ref="InspectorComponent"/>
             <ActionsComponent isOpen="state.openTab == 'actions'"
                 t-ref="ActionsComponent"/>
         </t>
