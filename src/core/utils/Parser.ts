@@ -56,6 +56,49 @@ export class Parser {
         }
     }
     /**
+     * Return true if the given node is immediately preceding (`side` === 'end')
+     * or following (`side` === 'start') a segment break, to see if its edge
+     * space must be removed.
+     *
+     * @param {Element} node
+     * @param {'start'|'end'} side
+     * @returns {boolean}
+     */
+    static _isAgainstSegmentBreak(node: Element, side: 'start' | 'end'): boolean {
+        const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
+        let childOfBlockAncestor = node;
+        while (
+            childOfBlockAncestor &&
+            childOfBlockAncestor.parentElement &&
+            !this._isBlock(childOfBlockAncestor.parentElement as DOMElement)
+        ) {
+            childOfBlockAncestor = childOfBlockAncestor.parentElement;
+        }
+        let checkingNode = node;
+        let isEdgeOfBlock = !!checkingNode;
+        while (checkingNode && checkingNode !== childOfBlockAncestor) {
+            if (checkingNode[siblingSide]) {
+                isEdgeOfBlock = false;
+                break;
+            }
+            checkingNode = checkingNode.parentElement;
+        }
+        const sibling = node && (node[siblingSide] as DOMElement);
+        return (sibling && this._isBlock(sibling)) || isEdgeOfBlock;
+    }
+    /**
+     * Return true if the node is a block.
+     * Is considered a block, every node that is displayed as a block, and `BR`
+     * elements.
+     *
+     * @param {DOMElement} node
+     * @returns {boolean}
+     */
+    static _isBlock(node: DOMElement): boolean {
+        const display = window.getComputedStyle(node, null).display;
+        return display === 'block' || node.tagName === 'BR';
+    }
+    /**
      * Parse an (non-text, non-format) element.
      *
      * @param {Element} node the node to parse
@@ -131,8 +174,9 @@ export class Parser {
      */
     static _parseTextNode(node: Element, format?: FormatType, matchWith?: Element): VNode[] {
         const parsedNodes: VNode[] = [];
-        for (let i = 0; i < node.textContent.length; i++) {
-            const char: string = node.textContent.charAt(i);
+        const text: string = this._removeFormatSpace(node);
+        for (let i = 0; i < text.length; i++) {
+            const char: string = text.charAt(i);
             const domMatch: DOMElement[] = [node as DOMElement];
             if (matchWith) {
                 domMatch.push(matchWith as DOMElement);
@@ -141,5 +185,66 @@ export class Parser {
             parsedNodes.push(parsedNode);
         }
         return parsedNodes;
+    }
+    /**
+     * Return a string with the value of a text node stripped of its format space,
+     * applying the w3 rules for white space processing
+     *
+     * @see https://www.w3.org/TR/css-text-3/#white-space-processing
+     * @returns {string}
+     */
+    static _removeFormatSpace(node: Element): string {
+        // TODO: check the value of the `white-space` property
+        const text: string = node.textContent;
+        const spaceBeforeNewline = /([ \t])*(\n)/g;
+        const spaceAfterNewline = /(\n)([ \t])*/g;
+        const tabs = /\t/g;
+        const newlines = /\n/g;
+        const consecutiveSpace = /  */g;
+
+        // (Comments refer to the w3 link provided above.)
+        // Phase I: Collapsing and Transformation
+        let newText = text
+            // 1. All spaces and tabs immediately preceding or following a
+            //    segment break are removed.
+            .replace(spaceBeforeNewline, '$2')
+            .replace(spaceAfterNewline, '$1')
+            // 2. Segment breaks are transformed for rendering according to the
+            //    segment break transformation rules.
+            .replace(newlines, ' ')
+            // 3. Every tab is converted to a space (U+0020).
+            .replace(tabs, ' ')
+            // 4. Any space immediately following another collapsible space —
+            //    even one outside the boundary of the inline containing that
+            //    space, provided both spaces are within the same inline
+            //    formatting context—is collapsed to have zero advance width.
+            //    (It is invisible, but retains its soft wrap opportunity, if
+            //    any.)
+            .replace(consecutiveSpace, ' ');
+
+        // Phase II: Trimming and Positioning
+        // 1. A sequence of collapsible spaces at the beginning of a line
+        //    (ignoring any intervening inline box boundaries) is removed.
+        if (this._isAgainstSegmentBreak(node, 'start')) {
+            const startSpace = /^ */g;
+            newText = newText.replace(startSpace, '');
+        }
+        // 2. If the tab size is zero, tabs are not rendered. Otherwise, each
+        //    tab is rendered as a horizontal shift that lines up the start edge
+        //    of the next glyph with the next tab stop. If this distance is less
+        //    than 0.5ch, then the subsequent tab stop is used instead. Tab
+        //    stops occur at points that are multiples of the tab size from the
+        //    block’s starting content edge. The tab size is given by the
+        //    tab-size property.
+        // TODO
+        // 3. A sequence at the end of a line (ignoring any intervening inline
+        //    box boundaries) of collapsible spaces (U+0020) and/or ideographic
+        //    spaces (U+3000) whose white-space value collapses spaces is
+        //    removed.
+        if (this._isAgainstSegmentBreak(node, 'end')) {
+            const endSpace = /[ \u3000]*$/g;
+            newText = newText.replace(endSpace, '');
+        }
+        return newText;
     }
 }

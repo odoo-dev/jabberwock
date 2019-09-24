@@ -37,10 +37,6 @@ export class JWEditor {
         // handler that might have been previously registered.
         this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
 
-        // Parse the editable in the internal format of the editor.
-        this.vDocument = new VDocument(this.editable);
-        this.dispatcher = new Dispatcher(this.el, this.vDocument);
-
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';
         // Cloning the editable node might lead to duplicated id.
@@ -53,6 +49,10 @@ export class JWEditor {
         this.editable.setAttribute('contenteditable', 'true');
         this.el.appendChild(this.editable);
         document.body.appendChild(this.el);
+
+        // Parse the editable in the internal format of the editor.
+        this.vDocument = new VDocument(this.editable);
+        this.dispatcher = new Dispatcher(this.el, this.vDocument);
 
         const corePlugin = new CorePlugin(this.dispatcher, this.vDocument, this.editable);
         this._addPluginInstance(corePlugin); // CorePlugin is a mandatory plugin
