@@ -1,6 +1,7 @@
 import { VNode, VNodeType, FormatType, FORMAT_TYPES } from './VNode';
 import { VRange } from './VRange';
 import { isChar } from '../../utils/src/Predicates';
+import { makeVersionable } from './Memory/Versionable';
 
 export let withRange = false;
 
@@ -148,7 +149,7 @@ export class VDocument {
     applyFormat(formatName: string): void {
         if (this.range.isCollapsed()) {
             if (!this.formatCache) {
-                this.formatCache = this._getCurrentFormat();
+                this.formatCache = makeVersionable(this._getCurrentFormat());
             }
             this.formatCache[formatName] = !this.formatCache[formatName];
         } else {

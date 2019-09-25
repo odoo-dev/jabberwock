@@ -3,6 +3,10 @@ import { withRange, VDocument } from './VDocument';
 import { Predicate, isRange, isLeaf, not } from './../../utils/src/Predicates';
 import { RelativePosition } from './VRange';
 import { utils } from './../../utils/src/utils';
+import { markNotVersionable, makeVersionable } from './Memory/Versionable';
+import { VersionableObject } from './Memory/VersionableObject';
+import { VersionableArray } from './Memory/VersionableArray';
+import { markAsDiffRoot } from './Memory/Memory';
 
 export enum VNodeType {
     ROOT = 'ROOT',
@@ -38,32 +42,41 @@ const atomicTypes = [
 ];
 let id = 0;
 
-export class VNode {
+export class VNode extends VersionableObject {
     readonly type: VNodeType;
     format: FormatType;
     readonly id = id;
     parent: VNode | null = null;
-    renderingEngines: Record<string, RenderingEngine> = {
-        html: BasicHtmlRenderingEngine,
-    };
+    renderingEngines: Record<string, RenderingEngine>;
     originalTag: string;
     value: string;
-    properties: VNodeProperties = {
+    properties: VNodeProperties = makeVersionable({
         atomic: false,
-    };
-    _children: VNode[] = [];
+    });
+    _children: VNode[];
 
     constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
+        super();
         this.type = type;
         this.originalTag = originalTag;
         this.value = value;
-        this.format = format || {
-            bold: false,
-            italic: false,
-            underline: false,
-        };
+        try {
+            format = makeVersionable(
+                format || {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                },
+            );
+            // eslint-disable-next-line no-empty
+        } catch (e) {}
+        this.format = format;
         this._updateProperties();
         id++;
+        if (type !== VNodeType.CHAR && type !== VNodeType.LINE_BREAK) {
+            this._children = new VersionableArray() as VNode[];
+        }
+        markAsDiffRoot(this);
     }
     /**
      * @override
@@ -669,11 +682,12 @@ export class VNode {
      * @param child
      */
     splitAt(child: VNode): VNode {
-        const nodesToMove = [child];
-        nodesToMove.push(...VDocument.withRange(() => child.nextSiblings()));
+        const index = this._children.indexOf(child);
+        const nodesToMove = this._children.splice(index);
         const duplicate = new VNode(this.type, this.originalTag, this.value, this.format);
         this.after(duplicate);
-        nodesToMove.forEach(sibling => duplicate.append(sibling));
+        duplicate._children.push(...nodesToMove);
+        nodesToMove.forEach(sibling => (sibling.parent = duplicate));
         return duplicate;
     }
 
@@ -734,3 +748,11 @@ export class VNode {
         return path;
     }
 }
+
+VNode.prototype.renderingEngines = {
+    html: BasicHtmlRenderingEngine,
+};
+const frozenChildren = [] as VNode[];
+markNotVersionable(frozenChildren);
+Object.freeze(frozenChildren);
+VNode.prototype._children = frozenChildren;

@@ -50,6 +50,7 @@ export interface VersionableParams {
     proxy: AllowedObject;
     object: AllowedObject;
     linkCallback: (memory: MemoryVersionable) => void;
+    willBeRootDiff?: true;
 }
 let objectStackToProxifyIsPull = false;
 const objectStackToProxify = new Map<AllowedMemory, Array<(proxy: AllowedMemory) => void>>();
@@ -85,8 +86,8 @@ export function proxify<T extends AllowedMemory>(customClass: T): T {
         return customClass;
     }
     const params = customClass[memoryProxyPramsKey];
-    if (params && params.proxy === customClass) {
-        return customClass;
+    if (params && (params.proxy === customClass || params.object === customClass)) {
+        return params.proxy;
     }
     if (!applyMakeVersionableOnDeepObject) {
         NotVersionableErrorMessage();

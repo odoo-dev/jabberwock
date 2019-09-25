@@ -7,6 +7,8 @@ import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
+import { Memory } from './Memory/Memory';
+import { makeVersionable } from './Memory/Versionable';
 
 export interface JWEditorConfig {
     debug?: boolean;
@@ -22,6 +24,8 @@ export class JWEditor {
     pluginsRegistry: JWPlugin[];
     renderer: Renderer;
     vDocument: VDocument;
+    memory: Memory;
+    _memoryID: number;
     debugger: OwlUI;
 
     constructor(editable?: HTMLElement) {
@@ -52,8 +56,19 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
+        this.memory = new Memory();
+        this._memoryID = 0;
+
         // Parse the editable in the internal format of the editor.
-        this.vDocument = Parser.parse(this._originalEditable);
+        const vDocument = Parser.parse(this._originalEditable);
+        this.vDocument = makeVersionable(vDocument);
+        this.memory.linkToMemory(this.vDocument);
+        this.vDocument.root.next(vNode => {
+            this.memory.linkToMemory(vNode);
+            return false;
+        });
+        this.memory.linkToMemory(this.vDocument.range._tail);
+        this.memory.linkToMemory(this.vDocument.range._head);
 
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
@@ -127,7 +142,24 @@ export class JWEditor {
      * @param args arguments object of the command to execute
      */
     execCommand(id: CommandIdentifier, args?: CommandArgs): void {
+        const oldMasterSliceKey = this._memoryID.toString();
+        this._memoryID++;
+        const newMasterSliceKey = this._memoryID.toString();
+        const intermediateSliceKey = oldMasterSliceKey + '<>' + newMasterSliceKey;
+
+        this.memory.create(newMasterSliceKey);
+        this.memory.create(intermediateSliceKey).switchTo(intermediateSliceKey);
+        this.origin.isMaster = false;
+
+        // in dispatcher: eg:
+        const winnerSliceKey = intermediateSliceKey + ':pluginA';
+        this.memory.create(winnerSliceKey).switchTo(winnerSliceKey);
+
         this.dispatcher.dispatch(id, args);
+
+        this.memory.snapshotIntoExistingSlice(winnerSliceKey, winnerSliceKey, newMasterSliceKey);
+        this.memory.switchTo(newMasterSliceKey);
+
         this.renderer.render(this.vDocument, this.editable);
     }
 
