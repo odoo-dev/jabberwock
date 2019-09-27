@@ -3,6 +3,9 @@ import { Env } from 'owl-framework/src/component/component';
 
 export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
     _storageKeyPrefix = 'OwlUI' + this.constructor.name + ':';
+    // State items which names are listed in the localStorage property will be
+    // read from the localStorage during the willStart of the component, and
+    // wrote back to the localStorage whenever the state changes.
     localStorage: string[] = [];
 
     /**
