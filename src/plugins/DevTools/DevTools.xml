@@ -10,6 +10,7 @@
                         <TreeComponent
                             vNode="env.editor.vDocument.contents"
                             isRoot="true"
+                            selectedPath="state.selectedPath"
                             selectedID="state.selectedNode.id"/>
                     </devtools-tree>
                 </mainpane-contents>
@@ -72,6 +73,7 @@
                 t-foreach="props.vNode.children" t-as="child"
                 t-key="child.id"
                 vNode="child"
+                selectedPath="props.selectedPath"
                 selectedID="props.selectedID"/>
         </div>
     </t>

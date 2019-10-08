@@ -5,6 +5,7 @@ import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 interface NodeProps {
     isRoot: boolean;
     vNode: VNode;
+    selectedPath: VNode[];
 }
 
 interface NodeState {
@@ -30,6 +31,21 @@ export class TreeComponent extends OwlUIComponent<NodeProps, NodeState> {
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
+
+    /**
+     * Update `state.folded` when `props.selectedPath` changes if `props.vNode`
+     * is in `props.selectedPath`, unless it is the last item.
+     */
+    async willUpdateProps(nextProps: NodeProps): Promise<void> {
+        // The selected node itself should stay folded even when selected. Only
+        // the nodes in the path leading to it should actually be unfolded. By
+        // construction, the last item of `selected path` is always the selected
+        // node itself so it can safely be omitted from the check.
+        const path = nextProps.selectedPath.slice(0, -1);
+        if (path.some(node => node.id === nextProps.vNode.id)) {
+            this.state.folded = false;
+        }
+    }
 
     /**
      * Handle a click event on a node of the tree: toggle its fold on click its
