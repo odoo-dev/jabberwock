@@ -1,4 +1,4 @@
-import { VNode, VNodeType, FormatType } from '../stores/VNode';
+import { VNode, VNodeType } from '../stores/VNode';
 import { VDocument } from '../stores/VDocument';
 
 // TODO: centralize
@@ -39,14 +39,14 @@ export class Renderer {
      * Take a node's formats, create the relevant format nodes and append them
      * to the given parent and each other (parent > 1st-format > 2d-format ...)
      *
-     * @param format the node's formats
+     * @param vNode the node to format
      * @param parent the parent in which to append the first format node
      */
-    _createFormatNodes(format: FormatType, parent: Element | DocumentFragment): Element[] {
-        const formatsToApply: string[] = Object.keys(format).filter(
-            (key: string): boolean => format[key],
+    _createFormatNodes(vNode: VNode, parent: Element | DocumentFragment): Element[] {
+        const formatsToApply: string[] = Object.keys(vNode.format).filter(
+            (key: string): boolean => vNode.format[key],
         );
-        return formatsToApply.map(
+        const formatNodes = formatsToApply.map(
             (key: string): Element => {
                 const tag = formats[key];
                 const formatNode = document.createElement(tag);
@@ -55,6 +55,13 @@ export class Renderer {
                 return formatNode;
             },
         );
+
+        // Ensure proper DOM/VDoc matching
+        formatNodes.forEach(formatNode => {
+            this._setMap(formatNode, vNode);
+        });
+        this._lastCreatedNode = formatNodes[formatNodes.length - 1];
+        return formatNodes;
     }
     /**
      * Return a string containing the aggregated text of all CHAR VNodes that
@@ -99,7 +106,7 @@ export class Renderer {
         /* If the node has a format, render that format node first
            Note: Later we remove the empty ones and do the DomMap matching
                  (see at the bottom of this method). */
-        const formatNodes: Element[] = this._createFormatNodes(vNode.format, parent);
+        const formatNodes: Element[] = this._createFormatNodes(vNode, parent);
         parent = formatNodes.length ? formatNodes[formatNodes.length - 1] : parent;
 
         // If this is the end of a series of characters, render that text
@@ -118,19 +125,6 @@ export class Renderer {
         // Render aggregated text at the end of an element
         if (!vNode.nextSibling && this._currentCharNodes.length) {
             this._renderText(parent);
-        }
-
-        // Remove empty format nodes (due to technical spaces)
-        // and ensure proper DOM/VDoc matching
-        if (formatNodes.length) {
-            formatNodes.forEach((formatNode: Element): void => {
-                if (!formatNode.childNodes.length) {
-                    formatNode.remove();
-                } else {
-                    this._setMap(formatNode, vNode);
-                }
-            });
-            this._lastCreatedNode = formatNodes[formatNodes.length - 1];
         }
     }
     /**
