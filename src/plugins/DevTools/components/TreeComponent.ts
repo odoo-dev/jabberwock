@@ -107,6 +107,9 @@ export class TreeComponent extends OwlUIComponent<NodeProps, NodeState> {
         if (node.value) {
             return utils.toUnicode(node.value);
         }
+        if (node.type && node.type.startsWith('RANGE')) {
+            return node.type.endsWith('START') ? '【' : '】';
+        }
         if (node.type) {
             return node.type.toLowerCase();
         }

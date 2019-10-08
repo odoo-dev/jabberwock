@@ -43,7 +43,12 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <span t-if="props.vNode.value" t-on-click="onClickNode"
+            <span t-if="props.vNode.type == 'RANGE_START' or props.vNode.type == 'RANGE_END'"
+                t-on-click="onClickNode"
+                class="selectable-line range-node">
+                <t t-esc="repr"/>
+            </span>
+            <span t-elif="props.vNode.value" t-on-click="onClickNode"
                 class="selectable-line" t-att-class="{
                     bold: props.vNode.format.bold,
                     italic: props.vNode.format.italic,
