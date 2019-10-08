@@ -114,7 +114,8 @@ export class VNode {
      */
     removeChild(index: number): VNode {
         delete this.children[index];
-        this.children.splice(index);
+        this.children.splice(index, 1);
+        this._updateIndexes();
         return this;
     }
     /**
@@ -122,14 +123,31 @@ export class VNode {
      * nodes in this node, and to this node in other nodes.
      */
     setPosition(parent: VNode, index: number, children?: VNode[]): VNode {
+        const nodeAtIndex = parent.children[index];
         if (this.parent) {
             // remove this from old parent
-            this.parent.children.splice(this.index);
+            this.parent.children.splice(this.index, 1);
+            this.parent._updateIndexes();
+            index = (nodeAtIndex && nodeAtIndex.index) || index; // make sure to still have the right index
         }
         this.parent = parent;
         this.parent.children.splice(index, 0, this);
-        this.index = index;
+        this.parent._updateIndexes();
         this.children = children || this.children;
+        return this;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Recalculate the indexes of this node's children.
+     */
+    _updateIndexes(): VNode {
+        this.children.forEach((child: VNode, i: number) => {
+            child.index = i;
+        });
         return this;
     }
 }
