@@ -1,13 +1,19 @@
 import { VNode, VNodeType } from './VNode';
 import { Parser } from '../utils/Parser';
+import { Renderer } from '../utils/Renderer';
+
+export type DomMap = Map<DOMElement | Node, VNode[]>;
 
 export class VDocument {
     _root = new VNode(VNodeType.ROOT);
+    domMap: DomMap = new Map();
+    editable: HTMLElement;
+    renderer: Renderer = new Renderer(this);
 
-    constructor(startValue?: HTMLElement) {
-        if (startValue) {
-            this.setContents(startValue);
-        }
+    constructor(editable: HTMLElement) {
+        this.editable = editable;
+        this.domMap.set(this.editable, [this._root]);
+        this.setContents(this.editable);
     }
 
     //--------------------------------------------------------------------------
@@ -31,6 +37,10 @@ export class VDocument {
         parsedNodes.forEach(parsedNode => {
             this._root.append(parsedNode);
         });
+
+        // Render the contents of this.editable
+        this.renderer.render(this.editable);
+
         return this._root;
     }
 }
