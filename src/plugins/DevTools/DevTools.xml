@@ -280,7 +280,8 @@
                         <t t-esc="key"/>
                     </td>
                     <td>
-                        <t t-if="value and key == 'range'" t-call="payloadRange"/>
+                        <t t-if="value and key == 'domRangeChange'" t-call="payloadRange"/>
+                        <t t-elif="value and key == 'vRangeLocation'" t-call="payloadVRange"/>
                         <t t-else=""><t t-esc="formatPayloadValue(value)"/></t>
                     </td>
                 </tr>
@@ -288,7 +289,7 @@
         </table>
     </t>
 
-    <!-- ACTIONS.Payload.range -->
+    <!-- ACTIONS.Payload.domRangeChange -->
     <t t-name="payloadRange">
         <table>
             <tbody>
@@ -299,6 +300,33 @@
                     </td>
                     <td>
                         <t t-esc="formatPayloadValue(value)"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
+
+    <!-- ACTIONS.Payload.vRangeLocation -->
+    <t t-name="payloadVRange">
+        <table>
+            <tbody>
+                <tr t-foreach="Object.keys(value)" t-as="rangeKey" t-key="rangeKey_index">
+                    <t t-set="value" t-value="value[rangeKey]"/>
+                    <td>
+                        <t t-esc="rangeKey"/>
+                    </td>
+                    <td>
+                        <t t-if="rangeKey == 'direction'">
+                            <t t-esc="value"/>
+                        </t>
+                        <t t-elif="rangeKey == 'start' or rangeKey == 'end'">
+                            <t t-esc="value.relativePosition"/> <t
+                            t-esc="value.reference.id"/> (<t
+                            t-esc="value.reference.value or value.reference.type"/>)
+                        </t>
+                        <t t-else="">
+                            <t t-esc="formatPayloadValue(value)"/>
+                        </t>
                     </td>
                 </tr>
             </tbody>

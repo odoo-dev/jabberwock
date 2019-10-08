@@ -1,7 +1,11 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../utils/BasicHtmlRenderingEngine';
 
+type TraversalPredicate = (next: VNode, lastSeen: VNode) => boolean;
+
 export enum VNodeType {
     ROOT = 'ROOT',
+    RANGE_START = 'RANGE_START',
+    RANGE_END = 'RANGE_END',
     PARAGRAPH = 'PARAGRAPH',
     HEADING1 = 'HEADING1',
     HEADING2 = 'HEADING2',
@@ -140,6 +144,18 @@ export class VNode {
         return this.nthChild(this.children.length - 1);
     }
     /**
+     * Return this VNode's first deepest descendent.
+     */
+    get firstLeaf(): VNode {
+        return this._getLeaf('first');
+    }
+    /**
+     * Return this VNode's last deepest descendent.
+     */
+    get lastLeaf(): VNode {
+        return this._getLeaf('last');
+    }
+    /**
      * Return the child's previous sibling.
      *
      * @param child
@@ -181,6 +197,24 @@ export class VNode {
      */
     get nextSibling(): VNode {
         return this.parent && this.parent.childAfter(this);
+    }
+    /**
+     * Return the previous node in a depth-first pre-order traversal of the
+     * tree. If a predicate is passed, loop this until it returns true.
+     *
+     * @param [predicate]
+     */
+    previous(predicate?: TraversalPredicate): VNode {
+        return this._traverse('previous', predicate);
+    }
+    /**
+     * Return the next node in a depth-first pre-order traversal of the tree. If
+     * a predicate is passed, loop this until it returns true.
+     *
+     * @param [predicate]
+     */
+    next(predicate?: TraversalPredicate): VNode {
+        return this._traverse('next', predicate);
     }
 
     //--------------------------------------------------------------------------
@@ -261,6 +295,22 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
+     * Return this VNode's first/last deepest descendent.
+     *
+     * @param position
+     */
+    _getLeaf(position: 'first' | 'last'): VNode {
+        if (!this.children.length) {
+            return this;
+        }
+        const methodName = position === 'first' ? 'firstChild' : 'lastChild';
+        let leaf = this[methodName];
+        while (leaf && leaf[methodName]) {
+            leaf = leaf[methodName];
+        }
+        return leaf;
+    }
+    /**
      * Insert a VNode at the given index within this VNode's children.
      * Return self.
      *
@@ -289,6 +339,23 @@ export class VNode {
         return this;
     }
     /**
+     * Return the previous/next node in a depth-first pre-order traversal of the
+     * tree. If a predicate is passed, loop this until it returns true.
+     *
+     * @param direction
+     * @param [predicate]
+     */
+    _traverse(direction: 'previous' | 'next', predicate?: TraversalPredicate): VNode {
+        const methodName = direction === 'previous' ? '_walkPrevious' : '_walkNext';
+        let next = this[methodName]();
+        let lastSeen;
+        while (predicate && next && !predicate(next, lastSeen || this)) {
+            lastSeen = next;
+            next = next[methodName]();
+        }
+        return next;
+    }
+    /**
      * Reset the indices of this node's children.
      */
     _updateIndices(): VNode {
@@ -296,5 +363,32 @@ export class VNode {
             this._childrenMap.set(child, i);
         });
         return this;
+    }
+    /**
+     * Return the next node in a depth-first pre-order traversal of the tree.
+     */
+    _walkNext(): VNode {
+        if (this.firstChild) {
+            return this.firstChild;
+        } else if (this.nextSibling) {
+            return this.nextSibling;
+        } else {
+            let ancestor = this.parent;
+            while (ancestor && !ancestor.nextSibling) {
+                ancestor = ancestor.parent;
+            }
+            return ancestor && ancestor.nextSibling;
+        }
+    }
+    /**
+     * Return the previous node in a depth-first pre-order traversal of the
+     * tree.
+     */
+    _walkPrevious(): VNode {
+        if (this.previousSibling) {
+            return this.previousSibling.lastLeaf;
+        } else {
+            return this.parent;
+        }
     }
 }
