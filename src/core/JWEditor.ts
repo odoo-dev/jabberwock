@@ -3,6 +3,8 @@ import { Dispatcher } from './dispatcher/Dispatcher';
 import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './stores/VDocument';
+import { Parser } from './utils/Parser';
+import { Renderer } from './utils/Renderer';
 
 export interface JWEditorConfig {
     theme: string;
@@ -15,6 +17,7 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
+    renderer: Renderer;
     vDocument: VDocument;
 
     constructor(editable?: HTMLElement) {
@@ -38,7 +41,7 @@ export class JWEditor {
         this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
 
         // Parse the editable in the internal format of the editor.
-        this.vDocument = new VDocument(this.editable);
+        this.vDocument = Parser.parse(this.editable as DOMElement);
 
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';
@@ -73,6 +76,10 @@ export class JWEditor {
                 this.dispatcher.dispatch(action);
             },
         });
+
+        // Render the contents of `vDocument`
+        this.renderer = new Renderer();
+        this.renderer.render(this.vDocument.root, this.editable);
     }
 
     //--------------------------------------------------------------------------

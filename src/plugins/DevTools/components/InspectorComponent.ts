@@ -14,8 +14,8 @@ interface InspectorState {
 export class InspectorComponent extends OwlUIComponent<{}, InspectorState> {
     static components = { InfoComponent, PathComponent, TreeComponent };
     state = {
-        selectedNode: this.env.editor.vDocument.contents,
-        selectedPath: this._getPath(this.env.editor.vDocument.contents),
+        selectedNode: this.env.editor.vDocument.root,
+        selectedPath: this._getPath(this.env.editor.vDocument.root),
     };
 
     /**
