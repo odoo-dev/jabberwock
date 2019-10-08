@@ -26,13 +26,13 @@ export class VNode {
     children: VNode[] = [];
     format: FormatType;
     readonly id = id;
-    index = 0;
     parent: VNode | null = null;
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
     originalTag: string;
-    value: string | undefined;
+    value: string;
+    _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
     constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
         this.type = type;
@@ -60,94 +60,241 @@ export class VNode {
     }
 
     //--------------------------------------------------------------------------
-    // Getters
-    //--------------------------------------------------------------------------
-
-    get firstChild(): VNode | undefined {
-        return this.nthChild(0);
-    }
-    get lastChild(): VNode | undefined {
-        return this.nthChild(this.children.length - 1);
-    }
-    get length(): number {
-        return this.value ? this.value.length : this.children.length;
-    }
-    get nextSibling(): VNode | undefined {
-        return this.parent && this.parent.nthChild(this.index + 1);
-    }
-    nthChild(index: number): VNode | undefined {
-        return (index >= 0 && this.children[index]) || undefined;
-    }
-    get previousSibling(): VNode | undefined {
-        return this.parent && this.parent.nthChild(this.index - 1);
-    }
-    totalLength(current = 0): number {
-        current += this.length;
-        this.children.forEach((child: VNode): void => {
-            if (child.children.length) {
-                current = child.totalLength(current);
-            }
-        });
-        return current;
-    }
-    get siblings(): VNode[] {
-        return (this.parent && this.parent.children) || [];
-    }
-    text(current = ''): string {
-        if (this.value) {
-            current += this.value;
-        }
-        this.children.forEach((child: VNode): void => {
-            current = child.text(current);
-        });
-        return current;
-    }
-
-    //--------------------------------------------------------------------------
-    // Public methods
+    // Properties
     //--------------------------------------------------------------------------
 
     /**
-     * Append a child to this node. Return self.
+     * Return the length of this VNode.
      */
-    append(child: VNode): VNode {
-        const index = this.children.length > 0 ? this.children.length : 0;
-        child.setPosition(this, index);
-        return this;
+    get length(): number {
+        return this.value ? this.value.length : this.children.length;
     }
+    /**
+     * Return the length of this node and all its descendents.
+     *
+     * @param __current
+     */
+    totalLength(__current = 0): number {
+        __current += this.length;
+        this.children.forEach((child: VNode): void => {
+            if (child.children.length) {
+                __current = child.totalLength(__current);
+            }
+        });
+        return __current;
+    }
+    /**
+     * Return the index of this VNode within its parent.
+     */
+    get index(): number {
+        return (this.parent && this.parent.indexOf(this)) || 0;
+    }
+    /**
+     * Return the index of the child within this VNode.
+     * Return -1 if the child was not found.
+     *
+     * @param child
+     */
+    indexOf(child: VNode): number {
+        const index = this._childrenMap.get(child);
+        return typeof index === 'undefined' ? -1 : index;
+    }
+    /**
+     * Return this VNode's inner text (concatenation of all descendent
+     * char nodes values).
+     *
+     * @param __current
+     */
+    text(__current = ''): string {
+        if (this.value) {
+            __current += this.value;
+        }
+        this.children.forEach((child: VNode): void => {
+            __current = child.text(__current);
+        });
+        return __current;
+    }
+    /**
+     * Return true if this VNode has a format property set to true.
+     */
     hasFormat(): boolean {
         return Object.keys(this.format).some(
             (key: keyof FormatType): boolean => !!this.format[key],
         );
     }
+
+    //--------------------------------------------------------------------------
+    // Browsing
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return this VNode's first child.
+     */
+    get firstChild(): VNode {
+        return this.nthChild(0);
+    }
+    /**
+     * Return this VNode's last child.
+     */
+    get lastChild(): VNode {
+        return this.nthChild(this.children.length - 1);
+    }
+    /**
+     * Return the child's previous sibling.
+     *
+     * @param child
+     */
+    childBefore(child: VNode): VNode {
+        return this.nthChild(this.indexOf(child) - 1);
+    }
+    /**
+     * Return the child's next sibling.
+     *
+     * @param child
+     */
+    childAfter(child: VNode): VNode {
+        return this.nthChild(this.indexOf(child) + 1);
+    }
+    /**
+     * Return the child at given index.
+     *
+     * @param index
+     */
+    nthChild(index: number): VNode {
+        return this.children[index];
+    }
+    /**
+     * Return this VNode's siblings.
+     */
+    get siblings(): VNode[] {
+        return (this.parent && this.parent.children) || [];
+    }
+    /**
+     * Return this VNode's next sibling.
+     *
+     */
+    get previousSibling(): VNode {
+        return this.parent && this.parent.childBefore(this);
+    }
+    /**
+     * Return this VNode's next sibling.
+     */
+    get nextSibling(): VNode {
+        return this.parent && this.parent.childAfter(this);
+    }
+
+    //--------------------------------------------------------------------------
+    // Updating
+    //--------------------------------------------------------------------------
+
+    /**
+     * Insert the given VNode before this VNode. Return self.
+     *
+     * @param node
+     */
+    before(node: VNode): VNode {
+        return this.parent.insertBefore(node, this);
+    }
+    /**
+     * Insert the given VNode after this VNode. Return self.
+     *
+     * @param node
+     */
+    after(node: VNode): VNode {
+        return this.parent.insertAfter(node, this);
+    }
     /**
      * Prepend a child to this node. Return self.
      */
     prepend(child: VNode): VNode {
-        child.setPosition(this, 0);
+        return this._insertAtIndex(child, 0);
+    }
+    /**
+     * Append a child to this VNode. Return self.
+     */
+    append(child: VNode): VNode {
+        return this._insertAtIndex(child, this.children.length);
+    }
+    /**
+     * Insert the given node before the given reference (which is a child of
+     * this VNode). Return self.
+     *
+     * @param node
+     * @param reference
+     */
+    insertBefore(node: VNode, reference: VNode): VNode {
+        const index = this.indexOf(reference);
+        if (index < 0) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
+        return this._insertAtIndex(node, index);
+    }
+    /**
+     * Insert the given node after the given reference (which is a child of this
+     * VNode). Return self.
+     *
+     * @param node
+     * @param reference
+     */
+    insertAfter(node: VNode, reference: VNode): VNode {
+        const index = this.indexOf(reference);
+        if (index < 0) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
+        return this._insertAtIndex(node, index + 1);
+    }
+    /**
+     * Remove the given child from this VNode. Return self.
+     *
+     * @param child
+     */
+    removeChild(child: VNode): VNode {
+        const index = this.indexOf(child);
+        if (index < 0) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
+        return this._removeAtIndex(index);
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Insert a VNode at the given index within this VNode's children.
+     * Return self.
+     *
+     * @param child
+     * @param index
+     */
+    _insertAtIndex(child: VNode, index: number): VNode {
+        if (child.parent) {
+            const currentIndex = child.parent.indexOf(child);
+            if (index && child.parent === this && currentIndex < index) {
+                index--;
+            }
+            child.parent.removeChild(child);
+        }
+        this.children.splice(index, 0, child);
+        child.parent = this;
+        this._updateIndices();
         return this;
     }
     /**
      * Remove the nth child from this node. Return self.
      */
-    removeChild(index: number): VNode {
-        delete this.children[index];
-        this.children.splice(index);
+    _removeAtIndex(index: number): VNode {
+        this.children.splice(index, 1);
+        this._updateIndices();
         return this;
     }
     /**
-     * Set the position of this node in the document: update references to other
-     * nodes in this node, and to this node in other nodes.
+     * Reset the indices of this node's children.
      */
-    setPosition(parent: VNode, index: number, children?: VNode[]): VNode {
-        if (this.parent) {
-            // remove this from old parent
-            this.parent.children.splice(this.index);
-        }
-        this.parent = parent;
-        this.parent.children.splice(index, 0, this);
-        this.index = index;
-        this.children = children || this.children;
+    _updateIndices(): VNode {
+        this.children.forEach((child: VNode, i: number) => {
+            this._childrenMap.set(child, i);
+        });
         return this;
     }
 }
