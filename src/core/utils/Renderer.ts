@@ -1,10 +1,12 @@
-import { VNode, VNodeType } from '../stores/VNode';
+import { VNode, VNodeType, TextTypes, RangeTypes, ElementTypes } from '../stores/VNode';
 import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
+import { VRange, RelativePosition } from '../stores/VRange';
+import { VDocument } from '../stores/VDocument';
 
 interface RenderingContext {
-    vNode?: VNode;
-    parentNode?: Node;
+    currentVNode?: VNode; // Current VNode rendered at this step.
+    parentNode?: Node | DocumentFragment; // Node to render the VNode into.
 }
 
 export class Renderer {
@@ -18,14 +20,26 @@ export class Renderer {
      * @param root
      * @param target
      */
-    render(root: VNode, target: Element): void {
+    render(vDocument: VDocument, target: Element): void {
+        const root = vDocument.root;
+        const range = vDocument.range;
         target.innerHTML = ''; // TODO: update instead of recreate
-        VDocumentMap.clear(); // TODO: update instead of recreate
         const fragment: DocumentFragment = document.createDocumentFragment();
-        root.children.forEach(child => {
-            this._renderVNode(child, fragment);
-        });
+        VDocumentMap.clear(); // TODO: update instead of recreate
+        VDocumentMap.set(root, fragment);
+
+        if (root.children.length) {
+            let context: RenderingContext = {
+                currentVNode: root.firstChild(),
+                parentNode: fragment,
+            };
+            do {
+                context = this._renderVNode(context);
+            } while ((context = this._nextRenderingContext(context)));
+        }
         target.appendChild(fragment);
+
+        this._renderRange(range, target);
     }
 
     //--------------------------------------------------------------------------
@@ -33,128 +47,172 @@ export class Renderer {
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if `a` has the same format properties as `b`.
+     * Return true if `a` is part of the same text node as `b`.
      *
      * @param a
      * @param b
      */
-    _isSameFormat(a: VNode, b: VNode): boolean {
-        return Object.keys(a.format).every(k => a.format[k] === b.format[k]);
+    _isSameTextNode(a: VNode, b: VNode): boolean {
+        if (RangeTypes.includes(a.type) || RangeTypes.includes(b.type)) {
+            // A Range node is always considered to be part of the same text
+            // node as another node in the sense that the text node must not
+            // be broken up just because it contains the range.
+            return true;
+        } else if (!TextTypes.includes(a.type) || !TextTypes.includes(b.type)) {
+            // Nodes that are not valid in a text node must end the text node.
+            return false;
+        } else {
+            // Char VNodes are the same text node if they have the same format.
+            return Object.keys(a.format).every(k => a.format[k] == b.format[k]);
+        }
     }
     /**
-     * Return the next rendering context, based on the given vNode. This
+     * Return the next rendering context, based on the given context. This
      * includes the next VNode to render and the next parent element to render
      * it into.
      *
-     * @param vNode
+     * @param context
      */
-    _nextRenderingContext(vNode: VNode): RenderingContext {
+    _nextRenderingContext(context: RenderingContext): RenderingContext {
+        const vNode = context.currentVNode;
         if (vNode.children.length) {
-            // Render the first child with the current node as parent, if any.
-            return {
-                vNode: vNode.children[0],
-                // Text node cannot have children, therefore parent is Element, not Node
-                parentNode: VDocumentMap.toDom(vNode),
-            };
-        } else if (vNode.nextSibling) {
-            // Render the siblings of the current node with the same parent, if any.
-            return {
-                vNode: vNode.nextSibling,
-                // Text node cannot have children, therefore parent is Element, not Node
-                parentNode: VDocumentMap.toDom(vNode.parent),
-            };
+            // Render the first child with the current node as parent.
+            context.currentVNode = context.currentVNode.children[0];
+            context.parentNode = VDocumentMap.toDom(vNode) as Element;
+        } else if (vNode.nextSibling()) {
+            // Render the siblings of the current node with the same parent.
+            context.currentVNode = context.currentVNode.nextSibling();
+            context.parentNode = VDocumentMap.toDom(vNode.parent) as Element;
         } else {
-            // Render the next ancestor sibling in the ancestor tree, if any.
+            // Render the next ancestor sibling in the ancestor tree.
             let ancestor = vNode.parent;
-            // Climb back the ancestor tree to the first parent having a sibling.
-            while (ancestor && !ancestor.nextSibling) {
+            // Climb up the ancestor tree to the first parent having a sibling.
+            while (ancestor && !ancestor.nextSibling()) {
                 ancestor = ancestor.parent;
             }
-            // At this point, the found ancestor has a sibling. If no ancestor
-            // having a sibling could be found, the tree has been fully rendered.
             if (ancestor) {
-                return {
-                    vNode: ancestor.nextSibling,
-                    // Text node cannot have children, therefore parent is Element, not Node
-                    parentNode: VDocumentMap.toDom(ancestor.parent),
-                };
+                // At this point, the found ancestor has a sibling.
+                context.currentVNode = ancestor.nextSibling();
+                context.parentNode = VDocumentMap.toDom(ancestor.parent) as Element;
+            } else {
+                // If no next ancestor having a sibling could be found then the
+                // tree has been fully rendered.
+                return;
             }
         }
-        return {};
+        return context;
     }
     /**
-     * Create the element matching this vNode and append it.
+     * Render the element matching the current vNode and append it.
      *
-     * @param vNode
-     * @param parent
+     * @param context
      */
-    _renderElement(vNode: VNode, parent: Node): RenderingContext {
-        const element = vNode.render<HTMLElement>('html');
-        parent.appendChild(element);
-        VDocumentMap.set(element, vNode);
-        return {
-            vNode: vNode,
-            parentNode: parent,
-        };
+    _renderElement(context: RenderingContext): RenderingContext {
+        const element = context.currentVNode.render<HTMLElement>('html');
+        context.parentNode.appendChild(element);
+        VDocumentMap.set(context.currentVNode, element);
+        return context;
     }
     /**
      * Render a text node, based on consecutive char nodes.
      *
-     * @param vNode
-     * @param parent
+     * @param context
      */
-    _renderTextNode(vNode: VNode, parent: Node): RenderingContext {
+    _renderTextNode(context: RenderingContext): RenderingContext {
         // If the node has a format, render the format nodes first.
         const renderedFormats = [];
-        Object.keys(vNode.format).forEach(type => {
-            if (vNode.format[type]) {
+        const firstChar = context.currentVNode;
+        Object.keys(firstChar.format).forEach(type => {
+            if (firstChar.format[type]) {
                 const formatNode = document.createElement(Format.toTag(type));
                 renderedFormats.push(formatNode);
-                parent.appendChild(formatNode);
+                context.parentNode.appendChild(formatNode);
                 // Update the parent so the text is inside the format node.
-                parent = formatNode;
+                context.parentNode = formatNode;
             }
         });
 
         // Consecutive compatible char nodes are rendered as a single text node.
-        let text = vNode.value;
-        let next = vNode.nextSibling;
-        const charNodes = [vNode];
-        while (next && next.type === VNodeType.CHAR && this._isSameFormat(vNode, next)) {
-            charNodes.push(next);
-            text += next.value;
-            vNode = next;
-            next = vNode.nextSibling;
+        let text = firstChar.value;
+        let next = firstChar.nextSibling();
+        const charNodes = [firstChar];
+        while (next && this._isSameTextNode(firstChar, next)) {
+            context.currentVNode = next;
+            if (next.type === VNodeType.CHAR) {
+                charNodes.push(next);
+                text += next.value;
+            }
+            next = next.nextSibling();
         }
+
+        // Create and append the text node, update the VDocumentMap.
         const renderedNode = document.createTextNode(text);
-        parent.appendChild(renderedNode);
-        charNodes.forEach(charNode => {
-            VDocumentMap.set(renderedNode, charNode);
-            renderedFormats.forEach(formatNode => VDocumentMap.set(formatNode, charNode));
+        context.parentNode.appendChild(renderedNode);
+        charNodes.forEach((charNode, nodeIndex) => {
+            VDocumentMap.set(charNode, renderedNode, nodeIndex);
+            renderedFormats.forEach(formatNode => VDocumentMap.set(charNode, formatNode));
         });
-        return {
-            vNode: vNode,
-            parentNode: parent,
+
+        return context;
+    }
+    /**
+     * Render the given VRange as a selection in the DOM in the given target.
+     *
+     * @param range
+     * @param target
+     */
+    _renderRange(range: VRange, target: Element): void {
+        const [startContainer, startOffset] = this._getDomLocation(range.start);
+        const [endContainer, endOffset] = this._getDomLocation(range.end);
+        const domRange: Range = target.ownerDocument.createRange();
+        domRange.setStart(startContainer, startOffset);
+        domRange.collapse(true);
+        const selection = document.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(domRange);
+        selection.extend(endContainer, endOffset);
+    }
+    /**
+     * Return the location in the DOM corresponding to the location in the
+     * VDocument of the given range VNode. The location in the DOM is expressed
+     * as a tuple containing a reference Node and a relative position with
+     * respect to the reference Node.
+     *
+     * @param rangeNode
+     */
+    _getDomLocation(rangeNode: VNode): [Node, number] {
+        const isValidRangeAnchorNode = (node: VNode): boolean => {
+            return !RangeTypes.includes(node.type);
         };
+        let reference = rangeNode.previousSibling(isValidRangeAnchorNode);
+        let position = RelativePosition.AFTER;
+        if (!reference) {
+            reference = rangeNode.nextSibling(isValidRangeAnchorNode);
+            position = RelativePosition.BEFORE;
+        }
+        if (!reference) {
+            reference = rangeNode.parent;
+            position = RelativePosition.INSIDE;
+        }
+        // The location is a tuple [reference, offset] implemented by an array.
+        const location = VDocumentMap.toDomLocation(reference);
+        if (position === RelativePosition.AFTER) {
+            // Increment the offset to be positioned after the reference node.
+            location[1] += 1;
+        }
+        return location;
     }
     /**
      * Render a VNode and trigger the rendering of the next one, recursively.
      *
-     * @param vNode
-     * @param parent
+     * @param context
      */
-    _renderVNode(vNode: VNode, parent: Node): void {
-        let context: RenderingContext;
-        if (vNode.type === VNodeType.CHAR) {
-            context = this._renderTextNode(vNode, parent);
-        } else {
-            context = this._renderElement(vNode, parent);
+    _renderVNode(context: RenderingContext): RenderingContext {
+        if (context.currentVNode.type === VNodeType.CHAR) {
+            context = this._renderTextNode(context);
+        } else if (ElementTypes.includes(context.currentVNode.type)) {
+            context = this._renderElement(context);
         }
-
-        context = this._nextRenderingContext(context.vNode);
-
-        if (context.vNode && context.parentNode) {
-            this._renderVNode(context.vNode, context.parentNode);
-        }
+        return context;
     }
 }

@@ -1,3 +1,5 @@
+import { Direction } from '../stores/VRange';
+
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -9,8 +11,7 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-type Direction = 'ltr' | 'rtl';
-interface Range {
+export interface DomRangeDescription {
     readonly startContainer: Node;
     readonly startOffset: number;
     readonly endContainer: Node;
@@ -446,33 +447,34 @@ export class EventNormalizer {
      *
      * @private
      */
-    _getRange(): Range {
+    _getRange(): DomRangeDescription {
         const selection = this.editable.ownerDocument.getSelection();
 
+        let ltr: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection means no range so a fake one is created
+            ltr = this.editable.dir === 'ltr';
             return {
                 startContainer: this.editable,
                 startOffset: 0,
                 endContainer: this.editable,
                 endOffset: 0,
-                direction: this.editable.dir as Direction,
+                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
             };
         } else {
             // The direction of the range is sorely missing from the DOM api
             const nativeRange = selection.getRangeAt(0);
-            let ltr: boolean;
             if (selection.anchorNode === selection.focusNode) {
                 ltr = selection.anchorOffset <= selection.focusOffset;
             } else {
                 ltr = selection.anchorNode === nativeRange.startContainer;
             }
             return {
-                startContainer: nativeRange.startContainer as Node,
+                startContainer: nativeRange.startContainer,
                 startOffset: nativeRange.startOffset,
-                endContainer: nativeRange.endContainer as Node,
+                endContainer: nativeRange.endContainer,
                 endOffset: nativeRange.endOffset,
-                direction: ltr ? 'ltr' : 'rtl',
+                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
             };
         }
     }
@@ -575,16 +577,16 @@ export class EventNormalizer {
         // their corresponding indices in the previous DOM.
         const insertPreviousStart = insertStart;
         const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const insertionRange: Range = {
+        const insertionRange: DomRangeDescription = {
             startContainer: previousNodes[insertPreviousStart].origin,
             startOffset: previous.offsets[insertPreviousStart],
             endContainer: previousNodes[insertPreviousEnd].origin,
             endOffset: previous.offsets[insertPreviousEnd],
-            direction: 'rtl',
+            direction: Direction.BACKWARD,
             origin: 'composition',
         };
 
-        this._triggerEvent('setRange', { value: insertionRange });
+        this._triggerEvent('setRange', { domRange: insertionRange });
         this._triggerEvent('insert', { value: insertedText, elements: ev.elements });
     }
     /**
@@ -604,7 +606,7 @@ export class EventNormalizer {
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', { value: range, elements: ev.elements });
+            this._triggerEvent('setRange', { domRange: range, elements: ev.elements });
         }
     }
     /**
@@ -612,7 +614,7 @@ export class EventNormalizer {
      *
      * @param range
      */
-    _isSelectAll(range: Range): boolean {
+    _isSelectAll(range: DomRangeDescription): boolean {
         let startContainer = range.startContainer;
         let startOffset = range.startOffset;
         let endContainer = range.endContainer;
@@ -897,8 +899,9 @@ export class EventNormalizer {
             const target = this._mousedownInEditable.target as Node;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let range: Range = this._getRange();
+                let range: DomRangeDescription = this._getRange();
                 if (!target.contains(range.startContainer) && target === ev.target) {
+                    const ltr = document.dir === 'ltr';
                     range = {
                         startContainer: target,
                         startOffset: 0,
@@ -907,12 +910,12 @@ export class EventNormalizer {
                             target.nodeType === Node.ELEMENT_NODE
                                 ? target.childNodes.length
                                 : target.nodeValue.length,
-                        direction: document.dir as Direction,
+                        direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
                         origin: 'pointer',
                     };
                 }
                 if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', { value: range });
+                    this._triggerEvent('setRange', { domRange: range });
                 }
             }
         }, 0);

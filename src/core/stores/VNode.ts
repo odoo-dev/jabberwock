@@ -4,6 +4,8 @@ export type Predicate = (node: VNode) => boolean;
 
 export enum VNodeType {
     ROOT = 'ROOT',
+    RANGE_START = 'RANGE_START',
+    RANGE_END = 'RANGE_END',
     PARAGRAPH = 'PARAGRAPH',
     HEADING1 = 'HEADING1',
     HEADING2 = 'HEADING2',
@@ -14,6 +16,9 @@ export enum VNodeType {
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
 }
+export const RangeTypes = [VNodeType.RANGE_START, VNodeType.RANGE_END];
+export const TextTypes = [VNodeType.CHAR, VNodeType.RANGE_START, VNodeType.RANGE_END];
+export const ElementTypes = Object.keys(VNodeType).filter(t => !t.startsWith('RANGE'));
 
 export interface FormatType {
     bold?: boolean;
@@ -123,6 +128,30 @@ export class VNode {
         return Object.keys(this.format).some(
             (key: keyof FormatType): boolean => !!this.format[key],
         );
+    }
+    /**
+     * Return true if this VNode comes before the given VNode in the pre-order
+     * traversal.
+     *
+     * TODO: Make a less naive version of this, performing an efficient search
+     * instead of a full traversal.
+     *
+     * @param vNode
+     */
+    isBefore(vNode: VNode): boolean {
+        return !!this.next((node: VNode) => node.id === vNode.id);
+    }
+    /**
+     * Return true if this VNode comes after the given VNode in the pre-order
+     * traversal.
+     *
+     * TODO: Make a less naive version of this, performing an efficient search
+     * instead of a full traversal.
+     *
+     * @param vNode
+     */
+    isAfter(vNode: VNode): boolean {
+        return vNode.isBefore(this);
     }
 
     //--------------------------------------------------------------------------

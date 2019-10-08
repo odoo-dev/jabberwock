@@ -1,3 +1,6 @@
+import { ActionGenerator } from '../actions/ActionGenerator';
+import JWEditor from '../JWEditor';
+
 export type HandlerToken = string;
 export type Handlers = Record<HandlerToken, ActionHandler>;
 export type DispatcherRegistry = Record<ActionIdentifier, Handlers>;
@@ -5,12 +8,14 @@ export type DispatchFunction = (action: Action) => void;
 
 export class Dispatcher {
     __nextHandlerTokenID = 0;
+    editor: JWEditor;
     el: Element;
     handlers: Handlers = {};
     registry: DispatcherRegistry = {};
 
-    constructor(el: Element) {
-        this.el = el;
+    constructor(editor: JWEditor) {
+        this.editor = editor;
+        this.el = editor.el;
     }
 
     //--------------------------------------------------------------------------
@@ -24,11 +29,18 @@ export class Dispatcher {
      */
     dispatch(action: Action): void {
         const handlers: Handlers = this._getHandlers(action.id);
-        Object.keys(handlers).forEach((handlerToken: HandlerToken): void => {
+        const handlerTokens = Object.keys(handlers);
+        handlerTokens.forEach((handlerToken: HandlerToken): void => {
             handlers[handlerToken](action); // TODO: use return value to retrigger
         });
-        if (!Object.keys(handlers).length) {
-            console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
+        if (action.name !== 'render') {
+            if (!handlerTokens.length) {
+                console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
+            }
+            // Render when done dispatching
+            this.editor.renderer.render(this.editor.vDocument, this.editor.editable);
+            // Notify plugins that a render has been trigerred.
+            this.dispatch(ActionGenerator.intent({ name: 'render' }));
         }
     }
     // Is this Dispatcher currently dispatching.
