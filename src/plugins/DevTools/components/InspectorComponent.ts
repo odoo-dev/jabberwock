@@ -14,10 +14,10 @@ interface InspectorState {
 
 export class InspectorComponent extends OwlUIComponent<{}> {
     static components = { InfoComponent, PathComponent, TreeComponent };
-    state: InspectorState = {
+    state: InspectorState = useState({
         selectedNode: this.env.editor.vDocument.root,
         selectedPath: this._getPath(this.env.editor.vDocument.root),
-    };
+    });
 
     /**
      * Handle keyboard navigation in DevTools (arrows to move in the tree)
