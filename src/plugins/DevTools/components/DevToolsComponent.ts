@@ -25,10 +25,14 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
     handlers: PluginHandlers = {
         intents: {
             '*': 'addAction',
+            'render': 'render',
         },
     };
     commands = {
         addAction: this.addAction.bind(this),
+        render: (): void => {
+            this.render();
+        },
     };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
