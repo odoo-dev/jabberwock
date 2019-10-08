@@ -9,6 +9,10 @@ export class VDocument {
     domMap: DomMap = new Map();
     editable: HTMLElement;
     renderer: Renderer = new Renderer(this);
+    rangeNodes = {
+        start: new VNode(VNodeType.RANGE_START),
+        end: new VNode(VNodeType.RANGE_END),
+    };
 
     constructor(editable: HTMLElement) {
         this.editable = editable;
@@ -34,8 +38,9 @@ export class VDocument {
         while (this._root.children.length) {
             this._root.removeChild(0);
         }
-        parsedNodes.forEach(parsedNode => {
-            this._root.append(parsedNode);
+        const rangeNodes: VNode[] = [this.rangeNodes.start, this.rangeNodes.end];
+        rangeNodes.concat(parsedNodes).forEach(vNode => {
+            this._root.append(vNode);
         });
 
         // Render the contents of this.editable

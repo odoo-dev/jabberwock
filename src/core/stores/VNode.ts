@@ -1,5 +1,7 @@
 export enum VNodeType {
     ROOT = 'ROOT',
+    RANGE_START = 'RANGE_START',
+    RANGE_END = 'RANGE_END',
     PARAGRAPH = 'PARAGRAPH',
     HEADING1 = 'HEADING1',
     HEADING2 = 'HEADING2',
@@ -25,6 +27,7 @@ export class VNode {
     format: FormatType;
     readonly id = id;
     index = 0;
+    order?: 0 | 1; // for Range nodes: to determine the direction of the selection
     parent: VNode | null = null;
     originalTag: string;
     value: string | undefined;
@@ -39,6 +42,11 @@ export class VNode {
             underlined: false,
         };
         id++;
+        // The default direction for the range is 'ltr', which is the same
+        // as to say RANGE_START.order === 0 and RANGE_END.order === 1.
+        if (this.type.startsWith('RANGE')) {
+            this.order = this.type.endsWith('START') ? 0 : 1;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -90,11 +98,31 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
+     * Insert a node after this node. Return self.
+     *
+     * @param {VNode} node
+     */
+    after(node: VNode): VNode {
+        const isLast = this.index === this.parent.length - 1;
+        const index = isLast ? this.parent.length : this.index + 1;
+        node.setPosition(this.parent, index);
+        return this;
+    }
+    /**
      * Append a child to this node. Return self.
      */
     append(child: VNode): VNode {
         const index = this.children.length > 0 ? this.children.length : 0;
         child.setPosition(this, index);
+        return this;
+    }
+    /**
+     * Insert a node before this node. Return self.
+     *
+     * @param {VNode} node
+     */
+    before(node: VNode): VNode {
+        node.setPosition(this.parent, this.index);
         return this;
     }
     hasFormat(): boolean {
