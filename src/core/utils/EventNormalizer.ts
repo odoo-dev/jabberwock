@@ -1,3 +1,5 @@
+import { RangeDirection } from '../stores/VRange';
+
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -9,13 +11,12 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-type Direction = 'ltr' | 'rtl';
-interface Range {
+export interface DomRangeChange {
     readonly startContainer: Node;
     readonly startOffset: number;
     readonly endContainer: Node;
     readonly endOffset: number;
-    readonly direction: Direction;
+    readonly direction: RangeDirection;
     origin?: string; // origin of the Range change
 }
 
@@ -445,17 +446,19 @@ export class EventNormalizer {
      *
      * @private
      */
-    _getRange(): Range {
+    _getRange(): DomRangeChange {
         const selection = this.editable.ownerDocument.getSelection();
 
         if (!selection || selection.rangeCount === 0) {
+            const direction =
+                this.editable.dir === 'ltr' ? RangeDirection.FORWARD : RangeDirection.BACKWARD;
             // No selection means no range so a fake one is created
             return {
                 startContainer: this.editable,
                 startOffset: 0,
                 endContainer: this.editable,
                 endOffset: 0,
-                direction: this.editable.dir as Direction,
+                direction: direction,
             };
         } else {
             // The direction of the range is sorely missing from the DOM api
@@ -471,7 +474,7 @@ export class EventNormalizer {
                 startOffset: nativeRange.startOffset,
                 endContainer: nativeRange.endContainer as Node,
                 endOffset: nativeRange.endOffset,
-                direction: ltr ? 'ltr' : 'rtl',
+                direction: ltr ? RangeDirection.FORWARD : RangeDirection.BACKWARD,
             };
         }
     }
@@ -574,16 +577,16 @@ export class EventNormalizer {
         // their corresponding indices in the previous DOM.
         const insertPreviousStart = insertStart;
         const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const insertionRange: Range = {
+        const insertionRange: DomRangeChange = {
             startContainer: previousNodes[insertPreviousStart].origin,
             startOffset: previous.offsets[insertPreviousStart],
             endContainer: previousNodes[insertPreviousEnd].origin,
             endOffset: previous.offsets[insertPreviousEnd],
-            direction: 'rtl',
+            direction: RangeDirection.BACKWARD,
             origin: 'composition',
         };
 
-        this._triggerEvent('setRange', { value: insertionRange });
+        this._triggerEvent('setRange', { domRangeChange: insertionRange });
         this._triggerEvent('insert', { value: insertedText, elements: ev.elements });
     }
     /**
@@ -603,7 +606,7 @@ export class EventNormalizer {
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', { value: range, elements: ev.elements });
+            this._triggerEvent('setRange', { domRangeChange: range, elements: ev.elements });
         }
     }
     /**
@@ -611,7 +614,7 @@ export class EventNormalizer {
      *
      * @param range
      */
-    _isSelectAll(range: Range): boolean {
+    _isSelectAll(range: DomRangeChange): boolean {
         let startContainer = range.startContainer;
         let startOffset = range.startOffset;
         let endContainer = range.endContainer;
@@ -896,8 +899,10 @@ export class EventNormalizer {
             const target = this._mousedownInEditable.target as Node;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let range: Range = this._getRange();
+                let range: DomRangeChange = this._getRange();
                 if (!target.contains(range.startContainer) && target === ev.target) {
+                    const direction =
+                        document.dir === 'ltr' ? RangeDirection.FORWARD : RangeDirection.BACKWARD;
                     range = {
                         startContainer: target,
                         startOffset: 0,
@@ -906,12 +911,12 @@ export class EventNormalizer {
                             target.nodeType === Node.ELEMENT_NODE
                                 ? target.childNodes.length
                                 : target.nodeValue.length,
-                        direction: document.dir as Direction,
+                        direction: direction,
                         origin: 'pointer',
                     };
                 }
                 if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', { value: range });
+                    this._triggerEvent('setRange', { domRangeChange: range });
                 }
             }
         }, 0);
