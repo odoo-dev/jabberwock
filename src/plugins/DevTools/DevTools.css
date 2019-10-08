@@ -143,6 +143,10 @@ devtools-tree > devtools-node.root > span.element-name {
     box-sizing: border-box;
 }
 
+devtools-tree devtools-node > span.range-node {
+    color: red;
+}
+
 devtools-tree span.element-name {
     width: 100%;
     display: inline-block;
