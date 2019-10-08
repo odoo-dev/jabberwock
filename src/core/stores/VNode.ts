@@ -1,3 +1,5 @@
+import { BasicHtmlRenderingEngine, RenderingEngine } from '../utils/BasicHtmlRenderingEngine';
+
 export enum VNodeType {
     ROOT = 'ROOT',
     PARAGRAPH = 'PARAGRAPH',
@@ -26,6 +28,9 @@ export class VNode {
     readonly id = id;
     index = 0;
     parent: VNode | null = null;
+    renderingEngines: Record<string, RenderingEngine> = {
+        html: BasicHtmlRenderingEngine,
+    };
     originalTag: string;
     value: string | undefined;
 
@@ -39,6 +44,19 @@ export class VNode {
             underlined: false,
         };
         id++;
+    }
+
+    //--------------------------------------------------------------------------
+    // Lifecycle
+    //--------------------------------------------------------------------------
+
+    /**
+     * Render the VNode to the given format.
+     *
+     * @param to the name of the format to which we want to render (default: html)
+     */
+    render<T>(to = 'html'): T {
+        return this.renderingEngines[to].render(this) as T;
     }
 
     //--------------------------------------------------------------------------

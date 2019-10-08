@@ -8,7 +8,7 @@
                 <mainpane-contents>
                     <devtools-tree>
                         <TreeComponent
-                            vNode="env.editor.vDocument.contents"
+                            vNode="env.editor.vDocument.root"
                             isRoot="true"
                             selectedPath="state.selectedPath"
                             selectedID="state.selectedNode.id"/>

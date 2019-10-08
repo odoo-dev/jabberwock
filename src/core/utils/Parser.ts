@@ -1,5 +1,6 @@
 import { VNode, VNodeType, FormatType } from '../stores/VNode';
-import { utils } from './utils';
+import { VDocument } from '../stores/VDocument';
+import { Format } from './Format';
 
 export class Parser {
     //--------------------------------------------------------------------------
@@ -12,17 +13,13 @@ export class Parser {
      * @param {Element} element the node to parse
      * @returns {VNode[]} the parsed node(s)
      */
-    static parse(element: HTMLElement): VNode[] {
-        let parsedNodes: VNode[] = [];
-        const contents: NodeListOf<ChildNode> = element.childNodes;
-        const children: Element[] = utils._collectionToArray(contents);
-        children.forEach(child => {
-            const parsedChildren: VNode[] = this._parseOne(child);
-            if (parsedChildren.length) {
-                parsedNodes = parsedNodes.concat(parsedChildren);
-            }
+    static parse(element: DOMElement): VDocument {
+        const root = new VNode(VNodeType.ROOT);
+        Array.from(element.childNodes).forEach(child => {
+            const parsedNodes: VNode[] = this._parseOne(child);
+            parsedNodes.forEach(node => root.append(node));
         });
-        return parsedNodes;
+        return new VDocument(root);
     }
 
     //--------------------------------------------------------------------------
@@ -62,14 +59,14 @@ export class Parser {
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseElement(node: Element, format?: FormatType): VNode[] {
+    static _parseElement(node: DOMElement, format?: FormatType): VNode[] {
         const parsedNode: VNode = new VNode(
             this._getNodeType(node),
             node.tagName,
             undefined,
             format,
         );
-        const children: Element[] = utils._collectionToArray(node.childNodes);
+        const children: DOMElement[] = Array.from(node.childNodes);
         children.forEach(child => {
             const parsedChildren: VNode[] = this._parseOne(child);
             parsedChildren.forEach(parsedChild => {
@@ -86,14 +83,14 @@ export class Parser {
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseFormatElement(node: Element, format?: FormatType): VNode[] {
+    static _parseFormatElement(node: DOMElement, format?: FormatType): VNode[] {
         format = {
             bold: (format && format.bold) || node.tagName === 'B',
             italic: (format && format.italic) || node.tagName === 'I',
             underlined: (format && format.underlined) || node.tagName === 'U',
         };
         let parsedChildren: VNode[] = [];
-        const children: Element[] = utils._collectionToArray(node.childNodes);
+        const children: DOMElement[] = Array.from(node.childNodes);
         children.forEach(child => {
             const parsedChild: VNode[] = this._parseOne(child, format);
             parsedChildren = parsedChildren.concat(parsedChild);
@@ -107,16 +104,16 @@ export class Parser {
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseOne(node: Element, format?: FormatType): VNode[] {
-        switch (node.tagName) {
-            case undefined: // Text node
-                return this._parseTextNode(node, format);
-            case 'B':
-            case 'I':
-            case 'U':
-                return this._parseFormatElement(node, format);
-            default:
-                return this._parseElement(node, format);
+    static _parseOne(node: DOMElement, format?: FormatType): VNode[] {
+        if (node.nodeType === Node.TEXT_NODE) {
+            // Text node
+            return this._parseTextNode(node, format);
+        } else if (Format.tags.includes(node.tagName)) {
+            // Format node
+            return this._parseFormatElement(node, format);
+        } else {
+            // Regular element
+            return this._parseElement(node, format);
         }
     }
     /**
@@ -126,7 +123,7 @@ export class Parser {
      * @param {FormatType} [format] the format to apply to the parsed node (default: none)
      * @returns {VNode[]} the parsed node(s)
      */
-    static _parseTextNode(node: Element, format?: FormatType): VNode[] {
+    static _parseTextNode(node: DOMElement, format?: FormatType): VNode[] {
         const parsedNodes: VNode[] = [];
         for (let i = 0; i < node.textContent.length; i++) {
             const char: string = node.textContent.charAt(i);
