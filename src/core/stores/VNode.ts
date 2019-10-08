@@ -1,7 +1,11 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../utils/BasicHtmlRenderingEngine';
 
+type BrowsingCallback = (sibling: VNode, previous: VNode) => boolean | void;
+
 export enum VNodeType {
     ROOT = 'ROOT',
+    RANGE_START = 'RANGE_START',
+    RANGE_END = 'RANGE_END',
     PARAGRAPH = 'PARAGRAPH',
     HEADING1 = 'HEADING1',
     HEADING2 = 'HEADING2',
@@ -140,6 +144,18 @@ export class VNode {
         return this.nthChild(this.children.length - 1);
     }
     /**
+     * Return this VNode's first deepest descendent.
+     */
+    get firstLeaf(): VNode {
+        return this._leaf('first');
+    }
+    /**
+     * Return this VNode's last deepest descendent.
+     */
+    get lastLeaf(): VNode {
+        return this._leaf('last');
+    }
+    /**
      * Return the child's previous sibling.
      *
      * @param child
@@ -181,6 +197,26 @@ export class VNode {
      */
     get nextSibling(): VNode {
         return this.parent && this.parent.childAfter(this);
+    }
+    /**
+     * Traverse all previous siblings until `callback` returns true. Return the
+     * last encountered sibling.
+     *
+     * @param callback
+     * @param skipRange true to skip range nodes
+     */
+    previousSiblings(callback: BrowsingCallback, skipRange = false): VNode {
+        return this._walkSiblings('previous', callback, skipRange);
+    }
+    /**
+     * Traverse all next siblings until `callback` returns true. Return the last
+     * encountered sibling.
+     *
+     * @param callback
+     * @param skipRange true to skip range nodes
+     */
+    nextSiblings(callback: BrowsingCallback, skipRange = false): VNode {
+        return this._walkSiblings('next', callback, skipRange);
     }
 
     //--------------------------------------------------------------------------
@@ -281,6 +317,19 @@ export class VNode {
         return this;
     }
     /**
+     * Return this VNode's first/last deepest descendent.
+     *
+     * @param position
+     */
+    _leaf(position: 'first' | 'last'): VNode {
+        const methodName = position === 'first' ? 'firstChild' : 'lastChild';
+        let leaf = this[methodName];
+        while (leaf && leaf[methodName]) {
+            leaf = leaf[methodName];
+        }
+        return leaf || this;
+    }
+    /**
      * Remove the nth child from this node. Return self.
      */
     _removeAtIndex(index: number): VNode {
@@ -296,5 +345,32 @@ export class VNode {
             this._childrenMap.set(child, i);
         });
         return this;
+    }
+    /**
+     * Traverse all previous/next siblings until `callback` returns true. Return
+     * the last encountered sibling.
+     *
+     * @param direction
+     * @param callback
+     * @param skipRange true to skip range nodes
+     */
+    _walkSiblings(
+        direction: 'next' | 'previous',
+        callback: BrowsingCallback,
+        skipRange = false,
+    ): VNode {
+        const propName = direction === 'next' ? 'nextSibling' : 'previousSibling';
+        let previous: VNode;
+        let sibling = this[propName];
+        let stop = false;
+        while (sibling && !stop) {
+            if (!skipRange || !sibling.type.startsWith('RANGE')) {
+                stop = !!callback(sibling, previous || this);
+            }
+            if (stop) break;
+            previous = sibling;
+            sibling = sibling[propName];
+        }
+        return previous || this;
     }
 }
