@@ -22,7 +22,7 @@ export class JWEditor {
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
-        this.dispatcher = new Dispatcher(this.el);
+        this.dispatcher = new Dispatcher(this);
         this.pluginsRegistry = [];
 
         if (!editable) {
@@ -62,12 +62,12 @@ export class JWEditor {
         // plugin because it needs to behave like one. In other words it must
         // listen to Actions and react to them within the dispatching loop,
         // thereby giving a chance to other plugins to react as well.
-        // Given its specificity, it requires that we pass it the vDocument
+        // Given its specificity, it requires that we pass it the editor
         // instance so we instantiate it here to pass that through the
         // constructor.
         // TODO: when the memory slice system is introduced, this special case
         // will not be required anymore.
-        const corePlugin = new CorePlugin(this.dispatcher, this.vDocument);
+        const corePlugin = new CorePlugin(this);
         this._registerPlugin(corePlugin);
 
         // Init the event manager now that the cloned editable is in the DOM.
@@ -79,7 +79,7 @@ export class JWEditor {
 
         // Render the contents of `vDocument`
         this.renderer = new Renderer();
-        this.renderer.render(this.vDocument.root, this.editable);
+        this.renderer.render(this.vDocument, this.editable);
     }
 
     //--------------------------------------------------------------------------

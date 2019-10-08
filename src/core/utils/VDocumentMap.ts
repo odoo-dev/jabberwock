@@ -2,37 +2,72 @@ import { VNode } from '../stores/VNode';
 import { Format } from './Format';
 
 const fromDom = new Map<Node, VNode[]>();
-const toDom = new Map<VNode, Node>();
+const toDom = new Map<VNode, [Node, number]>();
 
 export const VDocumentMap = {
+    /**
+     * Clear the map of all correspondances.
+     */
     clear: (): void => {
         fromDom.clear();
         toDom.clear();
     },
-    fromDom: (element: Node): VNode[] => fromDom.get(element),
-    toDom: (vNode): Node => toDom.get(vNode),
     /**
-     * Map an DOM Element/Node to a VNode in `toDom` and vice versa in
-     * `fromDom`.
+     * Return the VNode(s) corresponding to the given DOM Node.
      *
-     * @param element
+     * @param Node
+     */
+    fromDom: (domNode: Node): VNode[] => fromDom.get(domNode),
+    /**
+     * Return the DOM Node corresponding to the given VNode.
+     *
      * @param vNode
      */
-    set(element: Node, vNode: VNode): void {
-        if (fromDom.has(element)) {
-            const matches = fromDom.get(element);
+    toDom: (vNode: VNode): Node => toDom.get(vNode)[0],
+    /**
+     * Return the DOM location corresponding to the given VNode as a tuple
+     * containing a reference DOM Node and the offset of the DOM Node
+     * corresponding to the given VNode within the reference DOM Node.
+     *
+     * @param vNode
+     */
+    toDomLocation: (vNode: VNode): [Node, number] => {
+        let [node, offset] = toDom.get(vNode);
+        if (node.nodeType !== Node.TEXT_NODE) {
+            // Char nodes have their offset in the corresponding text nodes
+            // registered in the map via `set` but other nodes don't. Their
+            // location need to be computed with respect to their parents.
+            const container = node.parentNode;
+            offset = Array.prototype.indexOf.call(container.childNodes, node);
+            node = container;
+        }
+        return [node, offset];
+    },
+    /**
+     * Map the given VNode to its corresponding DOM Node and its offset in it.
+     *
+     * @param domNode
+     * @param vNode
+     * @param [offset]
+     */
+    set(vNode: VNode, domNode: Node, offset?: number): void {
+        if (fromDom.has(domNode)) {
+            const matches = fromDom.get(domNode);
             if (!matches.some((match: VNode) => match.id === vNode.id)) {
                 matches.push(vNode);
             }
         } else {
-            fromDom.set(element, [vNode]);
+            fromDom.set(domNode, [vNode]);
         }
         // Only if element is not a format
-        if (!Format.tags.includes(element.nodeName)) {
-            toDom.set(vNode, element);
+        if (!Format.tags.includes(domNode.nodeName)) {
+            toDom.set(vNode, [domNode, offset]);
         }
     },
-    log(): void {
+    /**
+     * Log the content of the internal maps for debugging purposes.
+     */
+    _log(): void {
         console.log(toDom);
         console.log(fromDom);
     },

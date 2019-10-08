@@ -95,7 +95,7 @@ function parseElementNode(context: ParsingContext): ParsingContext {
             undefined,
             context.format[0],
         );
-        VDocumentMap.set(node, parsedNode);
+        VDocumentMap.set(parsedNode, node);
         context.parentVNode.append(parsedNode);
     }
     return context;
@@ -116,7 +116,7 @@ function parseTextNode(context: ParsingContext): ParsingContext {
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
         const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, format);
-        VDocumentMap.set(node, parsedVNode);
+        VDocumentMap.set(parsedVNode, node, i);
         parentVNode.append(parsedVNode);
     }
     return context;
@@ -309,7 +309,7 @@ export const Parser = {
      */
     parse: (node: Node): VDocument => {
         const root = new VNode(VNodeType.ROOT);
-        VDocumentMap.set(node, root);
+        VDocumentMap.set(root, node);
         // The tree is parsed in depth-first order traversal.
         // Start with the first child and the whole tree will be parsed.
         if (node.childNodes.length) {
