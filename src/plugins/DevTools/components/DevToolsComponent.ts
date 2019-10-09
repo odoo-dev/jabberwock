@@ -23,14 +23,12 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
     handlers: PluginHandlers = {
         intents: {
             '*': 'addAction',
-            'render': 'render',
+            'render': 'onRender',
         },
     };
     commands = {
         addAction: this.addAction.bind(this),
-        render: (): void => {
-            this.render();
-        },
+        onRender: this.onRender.bind(this),
     };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
@@ -49,6 +47,20 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
         const actionsComponent = this.refs.ActionsComponent as ActionsComponent;
         if (actionsComponent) {
             actionsComponent.addAction(action);
+        }
+    }
+    /**
+     * On render the `vDocument`, rerender and select the range nodes.
+     */
+    onRender(): void {
+        this.render();
+        const inspectorComponent = this.refs.InspectorComponent as InspectorComponent;
+        if (inspectorComponent) {
+            const rangeNodes = this.env.editor.vDocument.rangeNodes;
+            inspectorComponent._selectNode(rangeNodes.start);
+            // In order for owl-framework to unfold the parents of start *and*
+            // of end, we need to select both, with a tick in between.
+            setTimeout(() => inspectorComponent._selectNode(rangeNodes.end), 0);
         }
     }
     /**
