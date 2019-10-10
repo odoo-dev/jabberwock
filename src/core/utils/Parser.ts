@@ -92,10 +92,11 @@ export class Parser {
 
         // Move up to the first block ancestor
         let ancestor = node;
-        const isTextNode = ancestor.nodeType === 3;
+        let isTextNode = ancestor.nodeType === 3;
         while (ancestor && (isTextNode || !this._isBlock(ancestor as DOMElement))) {
             ancestorsUpToBlock.push(ancestor);
             ancestor = ancestor.parentElement;
+            isTextNode = ancestor.nodeType === 3;
         }
 
         // Return true if no ancestor up to the first block ancestor has a
