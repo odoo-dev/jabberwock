@@ -69,7 +69,7 @@ export class EventNormalizer {
         this.editable = editable as DOMElement;
         this._eventCallback = eventCallback;
 
-        const document = window.top.document;
+        const document = this.editable.ownerDocument;
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
         this._bindEvent(document, 'click', this._onClick);
         this._bindEvent(document, 'touchend', this._onClick);
