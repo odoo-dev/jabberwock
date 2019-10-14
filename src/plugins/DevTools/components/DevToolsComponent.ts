@@ -32,7 +32,7 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
     };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
-    _heightOnLastMousedown: number = this.state.height;
+    _heightOnLastMousedown: number;
 
     //--------------------------------------------------------------------------
     // Public
@@ -62,11 +62,10 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
      * @param {MouseEvent} event
      */
     startResize(event: MouseEvent): void {
+        this._heightOnLastMousedown = this.state.height;
         if (this.state.closed) {
             return; // Do not resize if the DevTools are closed
         }
-
-        this._heightOnLastMousedown = this.state.height;
         const startY: number = event.pageY; // Y position of the mousedown
 
         /**
