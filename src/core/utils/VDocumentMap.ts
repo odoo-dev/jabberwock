@@ -21,7 +21,7 @@ export const VDocumentMap = {
     set(element: Element | Node, vNode: VNode): void {
         if (fromDom.has(element)) {
             const matches = fromDom.get(element);
-            if (!matches.some((match: VNode): boolean => match.id === vNode.id)) {
+            if (!matches.some((match: VNode) => match.id === vNode.id)) {
                 matches.push(vNode);
             }
         } else {

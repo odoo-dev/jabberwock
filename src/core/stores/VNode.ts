@@ -14,9 +14,9 @@ export enum VNodeType {
 }
 
 export interface FormatType {
-    bold: boolean;
-    italic: boolean;
-    underlined: boolean;
+    bold?: boolean;
+    italic?: boolean;
+    underlined?: boolean;
 }
 
 let id = 0;
