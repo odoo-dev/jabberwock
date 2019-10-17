@@ -41,7 +41,7 @@ export class JWEditor {
         this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
 
         // Parse the editable in the internal format of the editor.
-        this.vDocument = Parser.parse(this.editable as DOMElement);
+        this.vDocument = Parser.parse(this.editable);
 
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';
