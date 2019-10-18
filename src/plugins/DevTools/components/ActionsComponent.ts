@@ -3,17 +3,18 @@ import { HandlerToken, DispatcherRegistry } from '../../../core/dispatcher/Dispa
 import { useState } from 'owl-framework/src/hooks';
 
 interface ActionsState {
-    actions: Action[]; // Stack of all actions performed since init
     currentTab: string;
     registry: DispatcherRegistry;
     selectedActionIndex: number | null;
     selectedHandlerToken: HandlerToken | null;
     selectedActionIdentifier: ActionIdentifier | null;
 }
+interface ActionsProps {
+    actions: Action[]; // Stack of all actions performed since init
+}
 
-export class ActionsComponent extends OwlUIComponent<{}> {
+export class ActionsComponent extends OwlUIComponent<ActionsProps> {
     state: ActionsState = useState({
-        actions: [], // Stack of all actions performed since init
         currentTab: 'selected',
         registry: this.env.editor.dispatcher.registry,
         selectedActionIndex: null, // Index of the selected action in the stack
@@ -26,15 +27,6 @@ export class ActionsComponent extends OwlUIComponent<{}> {
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Add an action to the stack
-     *
-     * @param {Action} action
-     */
-    addAction(action: Action): void {
-        this.state.actions.unshift(action);
-        this.selectAction(0);
-    }
     /**
      * Take a payload value and format it for display (mostly to ensure that
      * we can display it properly as a string).
@@ -99,7 +91,7 @@ export class ActionsComponent extends OwlUIComponent<{}> {
      */
     selectAction(index: number): void {
         this.state.selectedActionIndex = index;
-        const action: Action = this.state.actions[index];
+        const action: Action = this.props.actions[index];
         this.selectRegistryRecord((action && action.id) || null);
     }
     /**
