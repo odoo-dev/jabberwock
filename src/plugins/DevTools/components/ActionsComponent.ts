@@ -1,5 +1,6 @@
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { HandlerToken, DispatcherRegistry } from '../../../core/dispatcher/Dispatcher';
+import { useState } from 'owl-framework/src/hooks';
 
 interface ActionsState {
     actions: Action[]; // Stack of all actions performed since init
@@ -10,15 +11,15 @@ interface ActionsState {
     selectedActionIdentifier: ActionIdentifier | null;
 }
 
-export class ActionsComponent extends OwlUIComponent<{}, ActionsState> {
-    state: ActionsState = {
+export class ActionsComponent extends OwlUIComponent<{}> {
+    state: ActionsState = useState({
         actions: [], // Stack of all actions performed since init
         currentTab: 'selected',
         registry: this.env.editor.dispatcher.registry,
         selectedActionIndex: null, // Index of the selected action in the stack
         selectedHandlerToken: null, // Token of the selected handler
         selectedActionIdentifier: null, // ID of the selected registry record
-    };
+    });
     localStorage = ['currentTab'];
 
     //--------------------------------------------------------------------------

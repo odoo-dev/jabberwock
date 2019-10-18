@@ -1,7 +1,7 @@
 import { VNode } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 
-export class PathComponent extends OwlUIComponent<{}, {}> {
+export class PathComponent extends OwlUIComponent<{}> {
     getNodeRepr(vNode: VNode): string {
         const name: string = (vNode.type && vNode.type.toLowerCase()) || '?';
         let format = '';

@@ -33,14 +33,14 @@ export class JWOwlUIPlugin extends JWPlugin {
      * @param {JWOwlUIPlugin} plugin
      * @returns {Promise<OwlUIComponent<{}, {}>[]>}
      */
-    _instantiateComponents(Components: Array<typeof OwlUIComponent>): OwlUIComponent<{}, {}>[] {
+    _instantiateComponents(Components: Array<typeof OwlUIComponent>): OwlUIComponent<{}>[] {
         return Components.map(
-            (Component: typeof OwlUIComponent): OwlUIComponent<{}, {}> => {
+            (Component: typeof OwlUIComponent): OwlUIComponent<{}> => {
                 return new Component(this.env);
             },
         );
     }
-    async _mountComponents(components: OwlUIComponent<{}, {}>[]): Promise<void> {
+    async _mountComponents(components: OwlUIComponent<{}>[]): Promise<void> {
         const target: HTMLElement = this.env.editor.el;
         for (let i = 0; i < components.length; i++) {
             await components[i].mount(target);

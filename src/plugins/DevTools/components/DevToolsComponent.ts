@@ -1,6 +1,7 @@
 import { ActionsComponent } from './ActionsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
+import { useState, useRef } from 'owl-framework/src/hooks';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -11,15 +12,16 @@ interface DevToolsState {
     actions: Action[]; // Stack of all actions performed since init
 }
 
-export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
+export class DevToolsComponent extends OwlUIComponent<{}> {
     static components = { ActionsComponent, InspectorComponent };
     static template = 'devtools';
-    state = {
+    actionComponentRef = useRef('ActionsComponent');
+    state: DevToolsState = useState({
         closed: true,
         currentTab: 'inspector',
         height: 300,
         actions: [], // Stack of all actions performed since init
-    };
+    });
     handlers: PluginHandlers = {
         intents: {
             '*': 'addAction',
@@ -42,9 +44,8 @@ export class DevToolsComponent extends OwlUIComponent<{}, DevToolsState> {
      * @param {Action} action
      */
     addAction(action: Action): void {
-        const actionsComponent = this.refs.ActionsComponent as ActionsComponent;
-        if (actionsComponent) {
-            actionsComponent.addAction(action);
+        if (this.actionComponentRef.comp) {
+            (this.actionComponentRef.comp as ActionsComponent).addAction(action);
         }
     }
     /**

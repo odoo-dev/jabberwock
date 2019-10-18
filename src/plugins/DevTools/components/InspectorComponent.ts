@@ -3,6 +3,7 @@ import { PathComponent } from './PathComponent';
 import { TreeComponent } from './TreeComponent';
 import { VNode } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
+import { useState } from 'owl-framework/src/hooks';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -11,9 +12,9 @@ interface InspectorState {
     selectedPath: VNode[]; // From highest parent to currently selected node
 }
 
-export class InspectorComponent extends OwlUIComponent<{}, InspectorState> {
+export class InspectorComponent extends OwlUIComponent<{}> {
     static components = { InfoComponent, PathComponent, TreeComponent };
-    state = {
+    state: InspectorState = {
         selectedNode: this.env.editor.vDocument.root,
         selectedPath: this._getPath(this.env.editor.vDocument.root),
     };
