@@ -371,7 +371,8 @@
             }">Actions</button>
         </devtools-navbar>
         <t t-if="!state.closed">
-            <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
+            <InspectorComponent isOpen="state.currentTab == 'inspector'"
+                t-ref="InspectorComponent"/>
             <ActionsComponent isOpen="state.currentTab == 'actions'"
                 t-ref="ActionsComponent"/>
         </t>
