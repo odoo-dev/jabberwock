@@ -1,7 +1,7 @@
 import { VNode } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 
-export class InfoComponent extends OwlUIComponent<{}, {}> {
+export class InfoComponent extends OwlUIComponent<{}> {
     /**
      * Trigger a 'node-selected' custom event
      * with the given `vNode` to select it

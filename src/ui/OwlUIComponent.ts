@@ -1,7 +1,9 @@
 import { Component } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';
 
-export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
+export class OwlUIComponent<Props> extends Component<Env, Props> {
+    state: {};
+
     _storageKeyPrefix = 'OwlUI' + this.constructor.name + ':';
     // State items which names are listed in the localStorage property will be
     // read from the localStorage during the willStart of the component, and
@@ -18,7 +20,9 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
      * Owl hook called exactly once before the initial rendering.
      */
     willStart(): Promise<void> {
-        this._importStateFromStorage(localStorage, this.localStorage);
+        if (this.state) {
+            this._importStateFromStorage(localStorage, this.localStorage);
+        }
         return super.willStart();
     }
 
@@ -28,7 +32,9 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
      * @param force see Owl Component
      */
     render(force = false): Promise<void> {
-        this._exportStateToStorage(localStorage, this.localStorage);
+        if (this.state) {
+            this._exportStateToStorage(localStorage, this.localStorage);
+        }
         return super.render(force);
     }
 

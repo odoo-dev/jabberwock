@@ -20,7 +20,7 @@ export class DevTools extends JWOwlUIPlugin {
      */
     _mountAndRegisterComponents(): void {
         const components = this._instantiateComponents(this.Components);
-        components.forEach((component: OwlUIComponent<{}, {}>) => {
+        components.forEach((component: OwlUIComponent<{}>) => {
             this.env.editor.dispatcher.register(component.handlers, component.commands);
         });
         this._mountComponents(components);
