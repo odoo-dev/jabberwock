@@ -1,7 +1,7 @@
 import { ActionsComponent } from './ActionsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { useState, useRef } from 'owl-framework/src/hooks';
+import { useState } from 'owl-framework/src/hooks';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -15,7 +15,6 @@ interface DevToolsState {
 export class DevToolsComponent extends OwlUIComponent<{}> {
     static components = { ActionsComponent, InspectorComponent };
     static template = 'devtools';
-    actionComponentRef = useRef('ActionsComponent');
     state: DevToolsState = useState({
         closed: true,
         currentTab: 'inspector',
@@ -24,15 +23,12 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
     });
     handlers: PluginHandlers = {
         intents: {
-            '*': 'addAction',
-            'render': 'render',
+            '*': 'refresh',
+            'render': 'refresh',
         },
     };
     commands = {
-        addAction: this.addAction.bind(this),
-        render: (): void => {
-            this.render();
-        },
+        refresh: this.refresh.bind(this),
     };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
@@ -43,22 +39,21 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
     //--------------------------------------------------------------------------
 
     /**
-     * Add an action to the stack
-     *
-     * @param {Action} action
-     */
-    addAction(action: Action): void {
-        if (this.actionComponentRef.comp) {
-            (this.actionComponentRef.comp as ActionsComponent).addAction(action);
-        }
-    }
-    /**
      * Open the tab with the given `tabName`
      *
      * @param {string} tabName
      */
     openTab(tabName: string): void {
         this.state.currentTab = tabName;
+    }
+    /**
+     * On render the `vDocument`, rerender and select the range nodes.
+     */
+    refresh(intent?: Intent): void {
+        if (intent) {
+            this.state.actions.push(intent);
+        }
+        this.render();
     }
     /**
      * Drag the DevTools to resize them

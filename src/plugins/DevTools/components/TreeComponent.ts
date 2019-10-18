@@ -35,7 +35,8 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
 
     /**
      * Update `state.folded` when `props.selectedPath` changes if `props.vNode`
-     * is in `props.selectedPath`, unless it is the last item.
+     * is in `props.selectedPath`, unless it is the last item. Also update
+     * `state.folded` for the ancestors of the range nodes.
      */
     async willUpdateProps(nextProps: NodeProps): Promise<void> {
         // The selected node itself should stay folded even when selected. Only
@@ -44,6 +45,10 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         // node itself so it can safely be omitted from the check.
         const path = nextProps.selectedPath.slice(0, -1);
         if (path.some(node => node.id === nextProps.vNode.id)) {
+            this.state.folded = false;
+        }
+        const rangePath = this._getRangeAncestors();
+        if (rangePath.has(nextProps.vNode.id)) {
             this.state.folded = false;
         }
     }
@@ -118,5 +123,22 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             return node.originalTag.toLowerCase();
         }
         return '?';
+    }
+    /**
+     * Return a set of the IDs of all ancestors of both range nodes.
+     */
+    _getRangeAncestors(): Set<number> {
+        const rangeAncestors = new Set<number>();
+        let ancestor = this.env.editor.vDocument.range._start.parent;
+        while (ancestor) {
+            rangeAncestors.add(ancestor.id);
+            ancestor = ancestor.parent;
+        }
+        ancestor = this.env.editor.vDocument.range._end.parent;
+        while (ancestor) {
+            rangeAncestors.add(ancestor.id);
+            ancestor = ancestor.parent;
+        }
+        return rangeAncestors;
     }
 }
