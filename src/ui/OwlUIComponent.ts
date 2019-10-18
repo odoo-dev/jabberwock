@@ -18,7 +18,7 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
      * Owl hook called exactly once before the initial rendering.
      */
     willStart(): Promise<void> {
-        this._readState(localStorage, this.localStorage);
+        this._importStateFromStorage(localStorage, this.localStorage);
         return super.willStart();
     }
 
@@ -28,7 +28,7 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
      * @param force see Owl Component
      */
     render(force = false): Promise<void> {
-        this._writeState(localStorage, this.localStorage);
+        this._exportStateToStorage(localStorage, this.localStorage);
         return super.render(force);
     }
 
@@ -37,12 +37,13 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
     //--------------------------------------------------------------------------
 
     /**
-     * Read the given storable state items from the given storage.
+     * Read the given storable state items from the given `storage` and write
+     * the items as the key of the `state` property.
      *
      * @param storage from which to read the state items
      * @param storableItems names of the state items to read from storage
      */
-    _readState(storage: Storage, storableItems: string[]): void {
+    _importStateFromStorage(storage: Storage, storableItems: string[]): void {
         storableItems.forEach(itemName => {
             const storageKey = this._storageKeyPrefix + itemName;
             const value = storage.getItem(storageKey);
@@ -66,12 +67,13 @@ export class OwlUIComponent<Props, State> extends Component<Env, Props, State> {
     }
 
     /**
-     * write the given storable state items to the given storage.
+     * For every keys in the property `state`, write it back to `storage`
+     * Write the given storable state items to the given storage.
      *
      * @param storage to write the state items to
      * @param storableItems names of the state items to write to storage
      */
-    _writeState(storage: Storage, storableItems: string[]): void {
+    _exportStateToStorage(storage: Storage, storableItems: string[]): void {
         storableItems.forEach(itemName => {
             const storageKey = this._storageKeyPrefix + itemName;
             // Storage require items to be stored as strings.
