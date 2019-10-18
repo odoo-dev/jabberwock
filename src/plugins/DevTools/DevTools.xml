@@ -213,14 +213,14 @@
                 <mainpane-contents t-if="state.currentTab == 'selected'" style="overflow: auto">
                     <table style="width: 100%;">
                         <tbody>
-                            <tr t-foreach="state.actions" t-as="action"
-                                t-key="action_index" class="selectable-line"
+                            <tr t-foreach="Array.from(props.actions.keys()).reverse()" t-as="actionIndex"
+                                t-key="actionIndex_index" class="selectable-line"
                                 t-att-class="{
-                                    selected: state.selectedActionIndex == action_index,
+                                    selected: state.selectedActionIndex == actionIndex,
                                 }"
-                                t-on-click="selectAction(action_index)">
-                                <td><t t-esc="action.type"/></td>
-                                <td><t t-esc="action.name"/></td>
+                                t-on-click="selectAction(actionIndex)">
+                                <td><t t-esc="props.actions[actionIndex].type"/></td>
+                                <td><t t-esc="props.actions[actionIndex].name"/></td>
                             </tr>
                         </tbody>
                     </table>
@@ -238,7 +238,7 @@
             </devtools-mainpane>
             <devtools-sidepane>
                 <devtools-info t-if="state.currentTab == 'selected'">
-                    <t t-set="selectedAction" t-value="state.actions[state.selectedActionIndex] or False"/>
+                    <t t-set="selectedAction" t-value="props.actions[state.selectedActionIndex] or False"/>
                     <div class="about" t-if="selectedAction !== False">
                         <span class="type"><t t-esc="selectedAction.type"/></span> <t t-esc="selectedAction.name"/>
                     </div>
@@ -406,7 +406,7 @@
         <t t-if="!state.closed">
             <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
             <ActionsComponent isOpen="state.currentTab == 'actions'"
-                t-ref="ActionsComponent"/>
+                actions="state.actions"/>
         </t>
     </jw-devtools>
 
