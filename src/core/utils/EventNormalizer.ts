@@ -940,12 +940,14 @@ export class EventNormalizer {
         const isVisible = this.editable.style.display !== 'none';
         const isCurrentlySelecting = this._mousedownInEditable && isVisible;
         const trigger = !this._compiledEvent || this._compiledEvent.key === 'a';
-        if (!isCurrentlySelecting && trigger && this._isSelectAll(this._getRange())) {
+        const range = this._getRange();
+        if (!isCurrentlySelecting && trigger && this._isSelectAll(range)) {
             if (!this._selectAll) {
                 this._selectAll = true;
                 this._triggerEvent('selectAll', {
                     origin: this._compiledEvent ? 'keypress' : 'pointer',
                     target: this._selectAllOriginElement,
+                    domRange: range,
                 });
             }
         } else {
