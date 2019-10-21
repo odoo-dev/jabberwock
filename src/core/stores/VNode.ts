@@ -234,6 +234,69 @@ export class VNode {
     nextSiblings(callback: BrowsingCallback, skipRange = false): VNode {
         return this._walkSiblings('next', callback, skipRange);
     }
+    /**
+     * Return the previous node in a depth-first pre-order traversal of the
+     * tree.
+     *
+     * @param [__searchChildren]
+     */
+    previous(__searchChildren = false): VNode | null {
+        if (__searchChildren) {
+            return this.children.length ? this.lastChild.previous(true) : this;
+        } else if (this.previousSibling) {
+            return this.previousSibling.previous(true);
+        } else if (this.parent) {
+            return this.parent;
+        } else {
+            return null;
+        }
+    }
+    /**
+     * Return the next node in a depth-first pre-order traversal of the tree.
+     *
+     * @param [__index]
+     */
+    next(__index = 0): VNode | null {
+        if (this.nthChild(__index)) {
+            return this.nthChild(__index);
+        } else if (this.parent) {
+            return this.parent.next(this.index + 1);
+        } else {
+            return null;
+        }
+    }
+    /**
+     * Traverse the tree from this node to the previous, node by node, following
+     * a depth-first pre-order, until the given callback returns true or no next
+     * node could be found. Return the node for which the callback returned
+     * true, if any.
+     *
+     * @param callback
+     */
+    previousUntil(callback: (previous: VNode) => boolean): VNode | null {
+        const previous = this.previous();
+        if (!previous || callback(previous)) {
+            return previous;
+        } else {
+            return previous.previousUntil(callback);
+        }
+    }
+    /**
+     * Traverse the tree from this node to the next, node by node, following a
+     * depth-first pre-order, until the given callback returns true or no next
+     * node could be found. Return the node for which the callback returned
+     * true, if any.
+     *
+     * @param callback
+     */
+    nextUntil(callback: (next: VNode) => boolean): VNode | null {
+        const next = this.next();
+        if (!next || callback(next)) {
+            return next;
+        } else {
+            return next.nextUntil(callback);
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Updating
@@ -294,6 +357,12 @@ export class VNode {
             throw new Error('The given VNode is not a child of this VNode');
         }
         return this._insertAtIndex(node, index + 1);
+    }
+    /**
+     * Remove this node.
+     */
+    remove(): VNode {
+        return this.parent.removeChild(this);
     }
     /**
      * Remove the given child from this VNode. Return self.

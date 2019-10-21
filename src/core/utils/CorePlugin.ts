@@ -1,11 +1,13 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
-import { VRangeLocation, RangeDirection, RelativePosition } from '../stores/VRange';
+import { VRangeLocation, RangeDirection, RelativePosition, VRange } from '../stores/VRange';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
+    range: VRange;
     handlers = {
         intents: {
+            insert: 'insert',
             remove: 'onRemoveIntent', // names are just to show relationships here
             render: 'render',
             selectAll: 'navigate',
@@ -13,6 +15,7 @@ export class CorePlugin extends JWPlugin {
         },
     };
     commands = {
+        insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
         onRemoveIntent: this.removeSide,
         render: this.render.bind(this),
@@ -20,12 +23,21 @@ export class CorePlugin extends JWPlugin {
     constructor(editor) {
         super(editor.dispatcher);
         this.editor = editor;
+        this.range = this.editor.vDocument.range;
     }
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Insert something at range.
+     *
+     * @param intent
+     */
+    insert(intent: Intent): void {
+        this.editor.vDocument.insert(intent.payload['value']);
+    }
     removeSide(intent: Intent): void {
         console.log('REMOVE SIDE:' + intent);
     }
@@ -42,11 +54,11 @@ export class CorePlugin extends JWPlugin {
             range = intent.payload['vRangeToSet'];
         }
         if (range.direction === RangeDirection.FORWARD) {
-            this.editor.vDocument.range.move(range.start, range.end);
+            this.range.move(range.start, range.end);
         } else {
-            this.editor.vDocument.range.move(range.end, range.start);
+            this.range.move(range.end, range.start);
         }
-        this.editor.vDocument.range.setDirection(range.direction);
+        this.range.setDirection(range.direction);
     }
     /**
      * Render the `vDocument`.

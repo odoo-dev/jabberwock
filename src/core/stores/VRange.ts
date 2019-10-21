@@ -25,6 +25,62 @@ export class VRange {
     constructor(direction: RangeDirection = RangeDirection.FORWARD) {
         this.direction = direction;
     }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return true if the range is collapsed.
+     */
+    get collapsed(): boolean {
+        if (this.direction === RangeDirection.FORWARD) {
+            const nextStart = this._start.nextSibling;
+            return nextStart && nextStart.id === this._end.id;
+        } else {
+            const nextEnd = this._end.nextSibling;
+            return nextEnd && nextEnd.id === this._start.id;
+        }
+    }
+    /**
+     * Return the first range node, in a breadth-first pre-order of the tree.
+     */
+    get first(): VNode {
+        if (this.direction === RangeDirection.FORWARD) {
+            return this._start;
+        } else {
+            return this._end;
+        }
+    }
+    /**
+     * Return the last range node, in a breadth-first pre-order of the tree.
+     */
+    get last(): VNode {
+        if (this.direction === RangeDirection.FORWARD) {
+            return this._end;
+        } else {
+            return this._start;
+        }
+    }
+    /**
+     * Return a list of all the nodes implied in the selection between the first
+     * range node to the last (non-included).
+     */
+    get selectedNodes(): VNode[] {
+        const selectedNodes: VNode[] = [];
+        this.first.nextUntil((next: VNode): boolean => {
+            if (next.id === this.last.id) {
+                return true;
+            }
+            selectedNodes.push(next);
+        });
+        return selectedNodes;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
      * Collapse the range. Return self.
      *
@@ -32,10 +88,12 @@ export class VRange {
      */
     collapse(onEnd = false): VRange {
         if (onEnd) {
-            return this.setStart(RelativePosition.BEFORE, this._end);
+            this.setStart(RelativePosition.BEFORE, this._end);
         } else {
-            return this.setEnd(RelativePosition.AFTER, this._start);
+            this.setEnd(RelativePosition.AFTER, this._start);
         }
+        // A collapsed range is always considered a 'FORWARD' selection.
+        return this.setDirection(RangeDirection.FORWARD);
     }
     /**
      * Move the range to the given location. If no end location is given,
