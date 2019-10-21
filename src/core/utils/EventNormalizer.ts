@@ -702,10 +702,12 @@ export class EventNormalizer {
             // container. The editable node is supposed to be visible.
             return true;
         }
-        if (el.nodeType !== Node.ELEMENT_NODE) {
+        // A <br> element with no next sibling is never visible.
+        if (el.nodeName === 'BR' && !el.nextSibling) {
             return false;
         }
-        const style = window.getComputedStyle(el as Element);
+        const element = el.nodeType === Node.TEXT_NODE ? el.parentElement : el;
+        const style = window.getComputedStyle(element as Element);
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
@@ -921,6 +923,13 @@ export class EventNormalizer {
      * @param {Event} ev
      */
     _onSelectionChange(): void {
+        if (this._rangeHasChanged) {
+            // This should disappear once the "diff" system is introduced.
+            // Right now it is required so as to avoid an infinite loop when
+            // selectAll triggers a new range set... and the selection changes
+            // every time.
+            return;
+        }
         this._rangeHasChanged = true;
         // do nothing, wait for mouseup !
         if (this._mousedownInEditable || this.editable.style.display === 'none') {
