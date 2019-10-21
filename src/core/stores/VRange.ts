@@ -30,6 +30,62 @@ export class VRange {
         }
         return this._direction;
     }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return true if the range is collapsed.
+     */
+    get collapsed(): boolean {
+        if (this.direction === RangeDirection.FORWARD) {
+            const nextStart = this._start.nextSibling;
+            return nextStart && nextStart.id === this._end.id;
+        } else {
+            const nextEnd = this._end.nextSibling;
+            return nextEnd && nextEnd.id === this._start.id;
+        }
+    }
+    /**
+     * Return the first range node, in a breadth-first pre-order of the tree.
+     */
+    get first(): VNode {
+        if (this.direction === RangeDirection.FORWARD) {
+            return this._start;
+        } else {
+            return this._end;
+        }
+    }
+    /**
+     * Return the last range node, in a breadth-first pre-order of the tree.
+     */
+    get last(): VNode {
+        if (this.direction === RangeDirection.FORWARD) {
+            return this._end;
+        } else {
+            return this._start;
+        }
+    }
+    /**
+     * Return a list of all the nodes implied in the selection between the first
+     * range node to the last (non-included).
+     */
+    get selectedNodes(): VNode[] {
+        const selectedNodes: VNode[] = [];
+        this.first.next((next: VNode): boolean => {
+            if (next.id === this.last.id) {
+                return true;
+            }
+            selectedNodes.push(next);
+        });
+        return selectedNodes;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
      * Collapse the range. Return self.
      *

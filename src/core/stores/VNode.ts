@@ -331,6 +331,12 @@ export class VNode {
         return this._insertAtIndex(node, index + 1);
     }
     /**
+     * Remove this node.
+     */
+    remove(): VNode {
+        return this.parent.removeChild(this);
+    }
+    /**
      * Remove the given child from this VNode. Return self.
      *
      * @param child
