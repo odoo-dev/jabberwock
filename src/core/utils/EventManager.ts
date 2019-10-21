@@ -77,6 +77,7 @@ export class EventManager {
     _matchIntent(customEvent: CustomEvent): Intent {
         const payload = customEvent.detail;
         switch (customEvent.type) {
+            case 'selectAll':
             case 'setRange':
                 payload['vRange'] = this._convertRange(payload['domRange']);
                 break;
