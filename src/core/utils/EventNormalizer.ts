@@ -64,6 +64,7 @@ export class EventNormalizer {
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
     _eventCallback: (customEvent: CustomEvent) => void; // callback to trigger on events
     _rangeHasChanged: boolean;
+    _selectAll: boolean;
 
     constructor(editable: HTMLElement, eventCallback: (customEvent: CustomEvent) => void) {
         this.editable = editable;
@@ -702,10 +703,12 @@ export class EventNormalizer {
             // container. The editable node is supposed to be visible.
             return true;
         }
-        if (el.nodeType !== Node.ELEMENT_NODE) {
+        // A <br> element with no next sibling is never visible.
+        if (el.nodeName === 'BR' && !el.nextSibling) {
             return false;
         }
-        const style = window.getComputedStyle(el as Element);
+        const element = el.nodeType === Node.TEXT_NODE ? el.parentElement : el;
+        const style = window.getComputedStyle(element as Element);
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
@@ -921,19 +924,29 @@ export class EventNormalizer {
      * @param {Event} ev
      */
     _onSelectionChange(): void {
-        this._rangeHasChanged = true;
-        // do nothing, wait for mouseup !
-        if (this._mousedownInEditable || this.editable.style.display === 'none') {
+        if (this._rangeHasChanged) {
+            // The _rangeHasChanged hook will disappear once the renderer only
+            // re-renders what has changed rather than re-rendering everything.
+            // Right now it is needed to avoid an infinite loop when selectAll
+            // triggers a new range set and the selection changes every time.
             return;
         }
-        if (
-            (!this._compiledEvent || this._compiledEvent.key === 'a') &&
-            this._isSelectAll(this._getRange())
-        ) {
-            this._triggerEvent('selectAll', {
-                origin: this._compiledEvent ? 'keypress' : 'pointer',
-                target: this._selectAllOriginElement,
-            });
+        this._rangeHasChanged = true;
+        // Testing whether the entire document is selected or not is a costly
+        // process, so we use the below heuristics before actually checking.
+        const isVisible = this.editable.style.display !== 'none';
+        const isCurrentlySelecting = this._mousedownInEditable && isVisible;
+        const trigger = !this._compiledEvent || this._compiledEvent.key === 'a';
+        if (!isCurrentlySelecting && trigger && this._isSelectAll(this._getRange())) {
+            if (!this._selectAll) {
+                this._selectAll = true;
+                this._triggerEvent('selectAll', {
+                    origin: this._compiledEvent ? 'keypress' : 'pointer',
+                    target: this._selectAllOriginElement,
+                });
+            }
+        } else {
+            this._selectAll = false;
         }
     }
 }
