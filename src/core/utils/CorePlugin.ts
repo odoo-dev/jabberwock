@@ -1,6 +1,6 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
-import { VRangeLocation } from '../stores/VRange';
+import { VRangeLocation, RangeDirection, RelativePosition } from '../stores/VRange';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -8,6 +8,7 @@ export class CorePlugin extends JWPlugin {
         intents: {
             remove: 'onRemoveIntent', // names are just to show relationships here
             render: 'render',
+            selectAll: 'navigate',
             setRange: 'navigate',
         },
     };
@@ -34,7 +35,12 @@ export class CorePlugin extends JWPlugin {
      * @param intent
      */
     navigate(intent: Intent): void {
-        const range: VRangeLocation = intent.payload['vRangeLocation'];
+        let range: VRangeLocation;
+        if (intent.name === 'selectAll') {
+            range = this._getRangeAll();
+        } else {
+            range = intent.payload['vRangeLocation'];
+        }
         this.editor.vDocument.range.set(range);
     }
     /**
@@ -42,5 +48,19 @@ export class CorePlugin extends JWPlugin {
      */
     render(): void {
         this.editor.renderer.render(this.editor.vDocument.root, this.editor.editable);
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _getRangeAll(): VRangeLocation {
+        return {
+            start: this.editor.vDocument.root.firstLeaf,
+            startPosition: RelativePosition.BEFORE,
+            end: this.editor.vDocument.root.lastLeaf,
+            endPosition: RelativePosition.AFTER,
+            direction: RangeDirection.FORWARD,
+        };
     }
 }
