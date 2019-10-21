@@ -99,6 +99,20 @@
 
     <!-- INSPECTOR.Info -->
     <devtools-info t-name="InfoComponent">
+        <devtools-navbar>
+            <button t-on-click="openTab('vNode')" t-att-class="{
+                selected: state.currentTab == 'vNode',
+            }">VNode</button>
+            <button t-on-click="openTab('selection')" t-att-class="{
+                selected: state.currentTab == 'selection',
+            }">Selection</button>
+        </devtools-navbar>
+        <t t-call="infoVNode" t-if="state.currentTab == 'vNode'"/>
+        <t t-call="infoSelection" t-if="state.currentTab == 'selection'"/>
+    </devtools-info>
+
+    <!-- INSPECTOR.Info.vNode -->
+    <t t-name="infoVNode">
         <div class="about">
             <span class="type">VNode</span> <t t-esc="props.vNode.type or &quot;?&quot;"/>
             <t t-if="props.vNode.value">:
@@ -193,7 +207,33 @@
                 </tbody>
             </table>
         </div>
-    </devtools-info>
+    </t>
+
+    <!-- INSPECTOR.Info.selection -->
+    <t t-name="infoSelection">
+        <div class="about">
+            <span class="type">VRange</span> Selection
+        </div>
+        <div class="properties">
+            <div class="divider">👤 About me</div>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>direction</td>
+                        <td><t t-esc="state.range.direction"/></td>
+                    </tr>
+                    <tr>
+                        <td>start</td>
+                        <td><t t-esc="reprStart"/></td>
+                    </tr>
+                    <tr>
+                        <td>end</td>
+                        <td><t t-esc="reprEnd"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </t>
 
     <!-- ACTIONS -->
     <devtools-panel class="actions" t-name="ActionsComponent"
