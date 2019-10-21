@@ -269,6 +269,18 @@ export class VNode {
     next(predicate?: TraversalPredicate): VNode {
         return this._traverse('next', predicate);
     }
+    /**
+     * Return the first ancestor for which the predicate returns true.
+     *
+     * @param predicate
+     */
+    ancestor(predicate: (ancestor: VNode) => boolean): VNode {
+        let ancestor = this.parent;
+        while (ancestor && !predicate(ancestor)) {
+            ancestor = ancestor.parent;
+        }
+        return ancestor;
+    }
 
     //--------------------------------------------------------------------------
     // Updating

@@ -8,7 +8,7 @@ export class CorePlugin extends JWPlugin {
     handlers = {
         intents: {
             insert: 'insert',
-            remove: 'onRemoveIntent', // names are just to show relationships here
+            remove: 'remove',
             render: 'render',
             selectAll: 'navigate',
             setRange: 'navigate',
@@ -17,7 +17,7 @@ export class CorePlugin extends JWPlugin {
     commands = {
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
-        onRemoveIntent: this.removeSide,
+        remove: this.removeSide.bind(this),
         render: this.render.bind(this),
     };
     constructor(editor) {
@@ -38,8 +38,14 @@ export class CorePlugin extends JWPlugin {
     insert(intent: Intent): void {
         this.editor.vDocument.insert(intent.payload['value']);
     }
+    /**
+     * Remove at range, in the given direction, or remove the selection if there
+     * is one.
+     *
+     * @param intent
+     */
     removeSide(intent: Intent): void {
-        console.log('REMOVE SIDE:' + intent);
+        this.editor.vDocument.removeSide(intent.payload['direction']);
     }
     /**
      * Navigate to a given Range (in the payload of the Intent).

@@ -46,6 +46,19 @@ export class VDocument {
         });
         this.range.collapse(); // Ensure the direction is right.
     }
+    /**
+     * Remove at range, in the given direction, or remove the selection if there
+     * is one.
+     *
+     * @param direction
+     */
+    removeSide(direction: 'backward' | 'forward'): void {
+        if (!this.range.collapsed) {
+            this.removeSelection();
+        } else {
+            this._removeSide(direction);
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Private
@@ -65,5 +78,33 @@ export class VDocument {
             lastPosition.before(vNode);
             lastPosition = vNode;
         });
+    }
+    /**
+     * Remove at range, in the given direction.
+     *
+     * @param direction
+     */
+    _removeSide(direction: 'backward' | 'forward'): void {
+        const isBackward = direction === 'backward';
+        const edge = isBackward ? this.range.first : this.range.last;
+        const siblingName = isBackward ? 'previousSibling' : 'nextSibling';
+        if (edge[siblingName]) {
+            edge[siblingName].remove();
+        } else {
+            const ancestor = edge.ancestor((ancestor: VNode): boolean => {
+                return !!ancestor[siblingName];
+            });
+            let lastPosition = isBackward ? ancestor[siblingName].lastLeaf : edge;
+            const ancestorToRemove = isBackward ? ancestor : ancestor[siblingName];
+            ancestorToRemove.children.slice().forEach(child => {
+                if (lastPosition.properties.atomic) {
+                    lastPosition.after(child);
+                } else {
+                    lastPosition.append(child);
+                }
+                lastPosition = child;
+            });
+            ancestorToRemove.remove();
+        }
     }
 }
