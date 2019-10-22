@@ -5,7 +5,7 @@ const editor = new JWEditor();
 jabberwocky.init(editor.editable);
 
 editor.loadConfig({
-    theme: 'CoolTheme',
+    debug: true,
 });
 
 editor.start();
