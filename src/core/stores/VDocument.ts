@@ -23,6 +23,16 @@ export class VDocument {
     //--------------------------------------------------------------------------
 
     /**
+     * Insert a paragraph break.
+     */
+    insertParagraphBreak(): void {
+        // Remove the contents of the selection if needed.
+        if (!this.range.isCollapsed()) {
+            this.deleteSelection();
+        }
+        this.range.start.parent.splitAt(this.range.start);
+    }
+    /**
      * Insert something at range.
      *
      * @param node

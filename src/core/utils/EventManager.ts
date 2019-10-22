@@ -84,6 +84,9 @@ export class EventManager {
         let payload = customEvent.detail;
         let name;
         switch (customEvent.type) {
+            case 'enter':
+                name = 'insertParagraphBreak';
+                break;
             case 'selectAll':
             case 'setRange':
                 payload.vRange = this._convertRange(payload.domRange);

@@ -476,6 +476,38 @@ export class VNode {
         });
     }
     /**
+     * Return all previous siblings of the current node that satisfy the given
+     * predicate. If no predicate is given return all the previous siblings of
+     * the current node.
+     *
+     * @param [predicate]
+     */
+    previousSiblings(predicate?: Predicate): VNode[] {
+        const previousSiblings: VNode[] = [];
+        let sibling = this.previousSibling();
+        while (sibling && (!predicate || predicate(sibling))) {
+            previousSiblings.push(sibling);
+            sibling = sibling.previousSibling();
+        }
+        return previousSiblings;
+    }
+    /**
+     * Return all next siblings of the current node that satisfy the given
+     * predicate. If no predicate is given return all the next siblings of the
+     * current node.
+     *
+     * @param [predicate]
+     */
+    nextSiblings(predicate?: Predicate): VNode[] {
+        const nextSiblings: VNode[] = [];
+        let sibling = this.nextSibling();
+        while (sibling && (!predicate || predicate(sibling))) {
+            nextSiblings.push(sibling);
+            sibling = sibling.nextSibling();
+        }
+        return nextSiblings;
+    }
+    /**
      * Walk the document tree starting from the current node (included) by
      * calling the `next` iterator until the returned node satisfies the given
      * predicate or is falsy.
@@ -575,6 +607,21 @@ export class VNode {
             }
             return this._removeAtIndex(index);
         });
+    }
+    /**
+     * Split this node at the given child, moving it and its next siblings into
+     * a duplicate of this VNode that is inserted after the original. Return the
+     * duplicated VNode.
+     *
+     * @param child
+     */
+    splitAt(child: VNode): VNode {
+        const nodesToMove = [child];
+        nodesToMove.push(...VDocument.withRange(() => child.nextSiblings()));
+        const duplicate = new VNode(this.type, this.originalTag, this.value, this.format);
+        this.after(duplicate);
+        nodesToMove.forEach(sibling => duplicate.append(sibling));
+        return duplicate;
     }
 
     //--------------------------------------------------------------------------
