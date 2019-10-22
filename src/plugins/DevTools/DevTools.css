@@ -23,6 +23,10 @@ jw-devtools.closed {
     max-height: 31px;
 }
 
+jw-devtools .anchor {
+    color: blue;
+}
+
 jw-devtools .bold {
     font-weight: bold;
 }

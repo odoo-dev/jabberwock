@@ -3,7 +3,21 @@ export const jabberwocky = {
         const title = document.createElement('h1');
         title.appendChild(document.createTextNode('Jabberwocky'));
         const subtitle = document.createElement('h3');
-        subtitle.appendChild(document.createTextNode('by Lewis Carroll'));
+
+        const anchorA = document.createElement('a');
+        anchorA.setAttribute('href', 'https://en.wikipedia.org/wiki/Jabberwocky');
+        anchorA.setAttribute('target', '_blank');
+        anchorA.appendChild(document.createTextNode('by '));
+        subtitle.appendChild(anchorA);
+        const anchorB = document.createElement('a');
+        anchorB.setAttribute('href', 'https://en.wikipedia.org/wiki/Jabberwocky');
+        anchorB.appendChild(document.createTextNode('Lewis'));
+        subtitle.appendChild(anchorB);
+        const anchorC = document.createElement('a');
+        anchorC.setAttribute('href', 'https://en.wikipedia.org/wiki/Lewis_Carroll');
+        anchorC.appendChild(document.createTextNode(' Carroll'));
+        subtitle.appendChild(anchorC);
+
         const p = document.createElement('p');
         const i = document.createElement('i');
         p.appendChild(i);

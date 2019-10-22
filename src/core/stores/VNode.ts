@@ -15,13 +15,20 @@ export enum VNodeType {
     HEADING6 = 'HEADING6',
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
+    UNKNOWN = 'UNKNOWN',
 }
 
 export interface VNodeProperties {
     atomic: boolean;
 }
 
+export interface AnchorProperties {
+    url: URL;
+    target?: string;
+}
+
 export interface FormatType {
+    anchor?: AnchorProperties | null;
     bold?: boolean;
     italic?: boolean;
     underlined?: boolean;
@@ -45,11 +52,12 @@ export class VNode {
     };
     _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
-    constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
+    constructor(type = VNodeType.UNKNOWN, originalTag = '', value?: string, format?: FormatType) {
         this.type = type;
         this.originalTag = originalTag;
         this.value = value;
         this.format = format || {
+            anchor: null,
             bold: false,
             italic: false,
             underlined: false,

@@ -138,7 +138,20 @@ export class Renderer {
      * @param b
      */
     _isSameFormat(a: VNode, b: VNode): boolean {
-        return Object.keys(a.format).every(k => a.format[k] === b.format[k]);
+        return Object.keys(a.format).every(k => {
+            if (k === 'anchor') {
+                const anchorA = a.format[k];
+                const anchorB = b.format[k];
+                if (anchorA && anchorB) {
+                    return (
+                        anchorA.url.href === anchorB.url.href && anchorA.target === anchorB.target
+                    );
+                } else {
+                    return anchorA == anchorB;
+                }
+            }
+            return a.format[k] === b.format[k];
+        });
     }
     /**
      * Return a tuple containing a <br> element's parent and the offset on which
@@ -269,6 +282,12 @@ export class Renderer {
         Object.keys(vNode.format).forEach(type => {
             if (vNode.format[type]) {
                 const formatNode = document.createElement(Format.toTag(type));
+                if (type === 'anchor') {
+                    formatNode.setAttribute('href', vNode.format.anchor.url.href);
+                    if (vNode.format.anchor.target) {
+                        formatNode.setAttribute('target', vNode.format.anchor.target);
+                    }
+                }
                 renderedFormats.push(formatNode);
                 parent.appendChild(formatNode);
                 // Update the parent so the text is inside the format node.
