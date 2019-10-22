@@ -106,9 +106,9 @@ function parseElementNode(context: ParsingContext): ParsingContext {
         const format = context.format.length ? context.format[0] : {};
         context.format.unshift({
             anchor: format.anchor || getAnchorInfo(node),
-            bold: format.bold || node.nodeName === 'B',
-            italic: format.italic || node.nodeName === 'I',
-            underlined: format.underlined || node.nodeName === 'U',
+            bold: format.bold || Format.fromTag(node.nodeName) === 'bold',
+            italic: format.italic || Format.fromTag(node.nodeName) === 'italic',
+            underlined: format.underlined || Format.fromTag(node.nodeName) === 'underlined',
         });
     } else {
         const nodeType = getNodeType(node);

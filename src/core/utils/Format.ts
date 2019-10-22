@@ -2,15 +2,19 @@ const formatToTag = {
     anchor: 'A',
     bold: 'B',
     italic: 'I',
-    underline: 'U',
+    underlined: 'U',
 };
 
-const formatFromTag = {};
-Object.keys(formatToTag).forEach(key => {
-    formatFromTag[formatToTag[key]] = key;
-});
+const formatFromTag = {
+    A: 'anchor',
+    B: 'bold',
+    STRONG: 'bold',
+    EM: 'italic',
+    I: 'italic',
+    U: 'underlined',
+};
 
-const tags = Object.keys(formatToTag).map(key => formatToTag[key]);
+const tags = Object.keys(formatFromTag);
 
 export const Format = {
     tags: Object.freeze(tags),
