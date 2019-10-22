@@ -211,8 +211,10 @@ export class Renderer {
      * Create the element matching this context's vNode and append it.
      *
      * @param context
+     * @param __isSecondBR true if we are rendering a second BR of a pair that
+     * represents a single LINE_BREAK.
      */
-    _renderElement(context: RenderingContext): RenderingContext {
+    _renderElement(context: RenderingContext, __isSecondBR = false): RenderingContext {
         const element = context.vNode.render<HTMLElement>('html');
         context.parentElement.appendChild(element);
         VDocumentMap.set(element, context.vNode);
@@ -221,8 +223,23 @@ export class Renderer {
             parentElement: context.parentElement,
             lastRendered: element,
         });
-        if (!context.vNode.children.length && !context.vNode.properties.atomic) {
+        // If a node is empty (or only contains range nodes) but could
+        // accomodate children, fill it to make it visible.
+        if (
+            context.vNode.children.every(child => child.type.startsWith('RANGE')) &&
+            !context.vNode.properties.atomic
+        ) {
             return this._insertFiller(newContext);
+        }
+
+        // If a LINE_BREAK has no next sibling, it must be rendered as two BRs
+        // in order for it to be visible.
+        let nextNonRangeSibling = context.vNode.nextSibling;
+        while (nextNonRangeSibling && nextNonRangeSibling.type.startsWith('RANGE')) {
+            nextNonRangeSibling = nextNonRangeSibling.nextSibling;
+        }
+        if (!__isSecondBR && context.vNode.type === VNodeType.LINE_BREAK && !nextNonRangeSibling) {
+            return this._renderElement(newContext, true);
         }
         return newContext;
     }
