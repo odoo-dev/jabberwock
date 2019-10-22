@@ -56,10 +56,11 @@ export class Renderer {
             });
             context = this._renderVNode(context);
         });
+
+        const computedRange = this._computeRange(context.range, fragment);
         target.appendChild(fragment);
 
         // Set the new range, base on the accumulated context
-        const computedRange = this._computeRange(context.range, fragment);
         this._setRange(computedRange, target);
     }
 
@@ -116,6 +117,19 @@ export class Renderer {
         } else {
             return offset;
         }
+    }
+    /**
+     * Fill the last rendered node in order to make it visible.
+     * Eg: <p></p> => <p><br/></p>.
+     *
+     * @param context
+     */
+    _insertFiller(context: RenderingContext): RenderingContext {
+        const placeholderBR = document.createElement('BR');
+        context.lastRendered.appendChild(placeholderBR);
+        VDocumentMap.set(placeholderBR, context.vNode);
+        context.lastRendered = placeholderBR;
+        return context;
     }
     /**
      * Return true if `a` has the same format properties as `b`.
@@ -202,11 +216,15 @@ export class Renderer {
         const element = context.vNode.render<HTMLElement>('html');
         context.parentElement.appendChild(element);
         VDocumentMap.set(element, context.vNode);
-        return Object.assign(context, {
+        const newContext = Object.assign({}, context, {
             vNode: context.vNode,
             parentElement: context.parentElement,
             lastRendered: element,
         });
+        if (!context.vNode.children.length && !context.vNode.properties.atomic) {
+            return this._insertFiller(newContext);
+        }
+        return newContext;
     }
     /**
      * Render a Range node: update the range to set.

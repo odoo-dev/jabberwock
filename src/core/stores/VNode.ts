@@ -17,6 +17,10 @@ export enum VNodeType {
     LINE_BREAK = 'LINE_BREAK',
 }
 
+export interface VNodeProperties {
+    atomic: boolean;
+}
+
 export interface FormatType {
     bold?: boolean;
     italic?: boolean;
@@ -36,6 +40,9 @@ export class VNode {
     };
     originalTag: string;
     value: string;
+    properties: VNodeProperties = {
+        atomic: false,
+    };
     _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
     constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
@@ -47,6 +54,7 @@ export class VNode {
             italic: false,
             underlined: false,
         };
+        this._updateProperties();
         id++;
     }
 
@@ -124,6 +132,14 @@ export class VNode {
     hasFormat(): boolean {
         return Object.keys(this.format).some(
             (key: keyof FormatType): boolean => !!this.format[key],
+        );
+    }
+    /**
+     * Return true if this VNode has a properties property set to true.
+     */
+    hasProperties(): boolean {
+        return Object.keys(this.properties).some(
+            (key: keyof VNodeProperties): boolean => !!this.properties[key],
         );
     }
 
@@ -345,6 +361,18 @@ export class VNode {
             this._childrenMap.set(child, i);
         });
         return this;
+    }
+    /**
+     * Update the VNode's properties.
+     */
+    _updateProperties(): void {
+        if (
+            this.type === VNodeType.CHAR ||
+            this.type === VNodeType.LINE_BREAK ||
+            this.type.startsWith('RANGE')
+        ) {
+            this.properties.atomic = true;
+        }
     }
     /**
      * Traverse all previous/next siblings until `callback` returns true. Return
