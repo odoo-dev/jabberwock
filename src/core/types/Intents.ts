@@ -1,10 +1,17 @@
 import { VRangeDescription } from '../stores/VRange';
+import { VNode } from '../stores/VNode';
 
 // Specialized intents
 
 // Insert
-export interface InsertPayload extends ActionPayload {
+export interface InsertTextPayload extends ActionPayload {
     value: string;
+}
+export interface InsertTextIntent extends Intent {
+    payload: InsertTextPayload;
+}
+export interface InsertPayload extends ActionPayload {
+    value: VNode;
 }
 export interface InsertIntent extends Intent {
     payload: InsertPayload;
