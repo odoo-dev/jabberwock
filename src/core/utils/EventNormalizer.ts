@@ -310,21 +310,25 @@ export class EventNormalizer {
                     : compiledEvent.key;
             if (data === ' ' || data === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
-                this._triggerEvent('insert', {
+                this._triggerEvent('insertText', {
                     value: '\u00A0',
                     elements: elements,
                 }); // nbsp
             } else if (data && data[0] === '\u000A') {
-                // The enter key on some mobile keyboards do not trigger an
-                // actual keypress event but trigger an input event with the
-                // LINE FEED (LF) (u000A) unicode character instead.
-                // TODO: replace this <br/> by a contextualized 'enter' event
-                this._triggerEvent('insert', {
-                    value: '<br/>',
+                // The enter key on some mobile keyboards does not trigger an
+                // actual keypress event but triggers an input event with the
+                // LINE FEED (LF) (u000A) unicode character instead. This
+                // normalizes it so it behaves like Shift+Enter.
+                const enterEventPayload = {
+                    altKey: false,
+                    ctrlKey: false,
+                    metaKey: false,
+                    shiftKey: true,
                     elements: elements,
-                });
+                };
+                this._triggerEvent('enter', enterEventPayload);
             } else {
-                this._triggerEvent('insert', {
+                this._triggerEvent('insertText', {
                     value: data,
                     elements: elements,
                 });
@@ -597,7 +601,7 @@ export class EventNormalizer {
         };
 
         this._triggerEvent('setRange', { domRange: insertionRange });
-        this._triggerEvent('insert', { value: insertedText, elements: ev.elements });
+        this._triggerEvent('insertText', { value: insertedText, elements: ev.elements });
     }
     /**
      * Process the given compiled event as a move and trigger the corresponding

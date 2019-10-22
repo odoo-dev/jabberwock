@@ -1,7 +1,7 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
-import { InsertIntent, RangeIntent, FormatIntent } from '../types/Intents';
+import { InsertTextIntent, RangeIntent, FormatIntent, InsertIntent } from '../types/Intents';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -9,6 +9,7 @@ export class CorePlugin extends JWPlugin {
         intents: {
             insertParagraphBreak: 'insertParagraphBreak',
             insert: 'insert',
+            insertText: 'insertText',
             deleteBackward: 'deleteBackward',
             deleteForward: 'deleteForward',
             setRange: 'navigate',
@@ -21,6 +22,7 @@ export class CorePlugin extends JWPlugin {
         deleteForward: this.deleteForward.bind(this),
         insertParagraphBreak: this.insertParagraphBreak.bind(this),
         insert: this.insert.bind(this),
+        insertText: this.insertText.bind(this),
         navigate: this.navigate.bind(this),
         selectAll: this.selectAll.bind(this),
         applyFormat: this.applyFormat.bind(this),
@@ -41,12 +43,19 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.insertParagraphBreak();
     }
     /**
-     * Insert something at range.
+     * Insert a VNode at range.
      *
      * @param intent
      */
     insert(intent: InsertIntent): void {
-        // TODO: check the intent to insert other things than text.
+        this.editor.vDocument.insert(intent.payload.value);
+    }
+    /**
+     * Insert text at range.
+     *
+     * @param intent
+     */
+    insertText(intent: InsertTextIntent): void {
         this.editor.vDocument.insertText(intent.payload.value);
     }
     /**

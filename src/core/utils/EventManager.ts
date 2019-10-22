@@ -3,7 +3,7 @@ import { DispatchFunction } from '../dispatcher/Dispatcher';
 import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
-import { VNode } from '../stores/VNode';
+import { VNode, VNodeType } from '../stores/VNode';
 
 export interface EventManagerOptions {
     dispatch?: DispatchFunction;
@@ -85,7 +85,12 @@ export class EventManager {
         let name;
         switch (customEvent.type) {
             case 'enter':
-                name = 'insertParagraphBreak';
+                if (customEvent.detail.shiftKey) {
+                    name = 'insert';
+                    payload.value = new VNode(VNodeType.LINE_BREAK, 'BR');
+                } else {
+                    name = 'insertParagraphBreak';
+                }
                 break;
             case 'selectAll':
             case 'setRange':
