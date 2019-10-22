@@ -17,12 +17,22 @@ export enum VNodeType {
     LINE_BREAK = 'LINE_BREAK',
 }
 
+export interface VNodeProperties {
+    atomic: boolean;
+}
+
 export interface FormatType {
     bold?: boolean;
     italic?: boolean;
     underlined?: boolean;
 }
 
+const atomicTypes = [
+    VNodeType.CHAR,
+    VNodeType.LINE_BREAK,
+    VNodeType.RANGE_START,
+    VNodeType.RANGE_END,
+];
 let id = 0;
 
 export class VNode {
@@ -36,6 +46,9 @@ export class VNode {
     };
     originalTag: string;
     value: string;
+    properties: VNodeProperties = {
+        atomic: false,
+    };
     _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
     constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
@@ -47,6 +60,7 @@ export class VNode {
             italic: false,
             underlined: false,
         };
+        this._updateProperties();
         id++;
     }
 
@@ -401,6 +415,14 @@ export class VNode {
             this._childrenMap.set(child, i);
         });
         return this;
+    }
+    /**
+     * Update the VNode's properties.
+     */
+    _updateProperties(): void {
+        if (atomicTypes.includes(this.type)) {
+            this.properties.atomic = true;
+        }
     }
     /**
      * Return the next node in a depth-first pre-order traversal of the tree.
