@@ -78,6 +78,12 @@ export class VNode {
     render<T>(to = 'html'): T {
         return this.renderingEngines[to].render(this) as T;
     }
+    /**
+     * Return a new VNode that is a duplicate of this node.
+     */
+    duplicate(): VNode {
+        return new VNode(this.type, this.originalTag, this.value, this.format);
+    }
 
     //--------------------------------------------------------------------------
     // Properties
