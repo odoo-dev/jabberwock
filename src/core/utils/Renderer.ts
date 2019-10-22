@@ -339,7 +339,7 @@ export class Renderer {
         });
 
         // Create and append the text node, update the VDocumentMap.
-        const renderedNode = document.createTextNode(text);
+        const renderedNode = document.createTextNode(text.replace(/^ | $/g, '\u00A0'));
         parent.appendChild(renderedNode);
         charNodes.forEach(charNode => {
             VDocumentMap.set(renderedNode, charNode);
