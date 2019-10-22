@@ -79,6 +79,8 @@ function getNodeType(node: Node): VNodeType {
             return VNodeType.HEADING6;
         case 'BR':
             return VNodeType.LINE_BREAK;
+        case 'BLOCKQUOTE':
+            return VNodeType.BLOCKQUOTE;
     }
     // TODO: Handle other types of video embeds than youtube iframe src
     if (node.nodeName === 'IFRAME' && (node as Element).getAttribute('src').includes('youtube')) {

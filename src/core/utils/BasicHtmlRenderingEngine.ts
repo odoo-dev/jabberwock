@@ -20,6 +20,8 @@ const getRenderingTagName = function(nodeType: VNodeType): string {
         // TODO: Handle other types of video embeds than iframe src
         case 'VIDEO':
             return 'IFRAME';
+        case 'BLOCKQUOTE':
+            return 'BLOCKQUOTE';
     }
 };
 /**

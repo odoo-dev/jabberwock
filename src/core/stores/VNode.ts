@@ -16,6 +16,7 @@ export enum VNodeType {
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
     VIDEO = 'VIDEO',
+    BLOCKQUOTE = 'BLOCKQUOTE',
     UNKNOWN = 'UNKNOWN',
 }
 
