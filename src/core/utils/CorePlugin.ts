@@ -1,6 +1,7 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { VRangeLocation, RangeDirection, RelativePosition, VRange } from '../stores/VRange';
+import { VNode, VNodeType } from '../stores/VNode';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -32,8 +33,17 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
-    enter(): void {
-        this.editor.vDocument.enter();
+    /**
+     * Handle the (shift+) enter key.
+     *
+     * @param intent
+     */
+    enter(intent: Intent): void {
+        if (intent.payload['shiftKey']) {
+            this.editor.vDocument.insert(new VNode(VNodeType.LINE_BREAK));
+        } else {
+            this.editor.vDocument.enter();
+        }
     }
     /**
      * Insert something at range.
