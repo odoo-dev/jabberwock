@@ -7,6 +7,7 @@ export class CorePlugin extends JWPlugin {
     editor: JWEditor;
     handlers = {
         intents: {
+            insertParagraphBreak: 'insertParagraphBreak',
             insert: 'insert',
             deleteBackward: 'deleteBackward',
             deleteForward: 'deleteForward',
@@ -18,6 +19,7 @@ export class CorePlugin extends JWPlugin {
     commands = {
         deleteBackward: this.deleteBackward.bind(this),
         deleteForward: this.deleteForward.bind(this),
+        insertParagraphBreak: this.insertParagraphBreak.bind(this),
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
         selectAll: this.selectAll.bind(this),
@@ -32,6 +34,12 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Insert a paragraph break.
+     */
+    insertParagraphBreak(): void {
+        this.editor.vDocument.insertParagraphBreak();
+    }
     /**
      * Insert something at range.
      *
