@@ -80,6 +80,11 @@ function getNodeType(node: Node): VNodeType {
         case 'BR':
             return VNodeType.LINE_BREAK;
     }
+    // TODO: Handle other types of video embeds than youtube iframe src
+    if (node.nodeName === 'IFRAME' && (node as Element).getAttribute('src').includes('youtube')) {
+        return VNodeType.VIDEO;
+    }
+    return VNodeType.UNKNOWN;
 }
 /**
  * Parse the given DOM Element into VNode(s).
@@ -89,7 +94,7 @@ function getNodeType(node: Node): VNodeType {
  * @returns the parsed VNode(s)
  */
 function parseElementNode(context: ParsingContext): ParsingContext {
-    const node = context.node;
+    const node = context.node as Element;
     if (Format.tags.includes(context.node.nodeName)) {
         // Format nodes (e.g. A, B, I, U) are parsed differently than regular
         // elements since they are not represented by a proper VNode in our
@@ -104,12 +109,12 @@ function parseElementNode(context: ParsingContext): ParsingContext {
             underlined: format.underlined || node.nodeName === 'U',
         });
     } else {
-        const parsedNode: VNode = new VNode(
-            getNodeType(node),
-            node.nodeName,
-            undefined,
-            context.format[0],
-        );
+        const nodeType = getNodeType(node);
+        const parsedNode: VNode = new VNode(nodeType, node.nodeName, undefined, context.format[0]);
+        // TODO: Handle other types of video embeds than iframe src
+        if (nodeType === VNodeType.VIDEO && node.nodeName === 'IFRAME') {
+            parsedNode.setAttribute('src', node.getAttribute('src'));
+        }
         VDocumentMap.set(node, parsedNode);
         context.parentVNode.append(parsedNode);
     }

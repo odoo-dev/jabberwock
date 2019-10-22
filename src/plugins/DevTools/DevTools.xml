@@ -158,6 +158,18 @@
                             </ol>
                         </td>
                     </tr>
+                    <tr t-if="props.vNode.hasAttributes()">
+                        <td>attributes</td>
+                        <td>
+                            <ol style="list-style-type: none">
+                                <li
+                                t-foreach="Object.keys(props.vNode.attributes)"
+                                t-as="key" t-key="key_index">
+                                    <t t-esc="key"/>: <t t-esc="props.vNode.attributes[key]"/>
+                                </li>
+                            </ol>
+                        </td>
+                    </tr>
                     <tr t-if="props.vNode.hasFormat()">
                         <td>format</td>
                         <td>

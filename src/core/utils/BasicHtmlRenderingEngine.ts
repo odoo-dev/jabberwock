@@ -17,6 +17,9 @@ const getRenderingTagName = function(nodeType: VNodeType): string {
             return 'P';
         case 'ROOT':
             return 'ROOT';
+        // TODO: Handle other types of video embeds than iframe src
+        case 'VIDEO':
+            return 'IFRAME';
     }
 };
 /**
@@ -41,6 +44,6 @@ export const BasicHtmlRenderingEngine = {
      */
     render: function(node: VNode): HTMLElement {
         const tagName = getRenderingTagName(node.type);
-        return document.createElement(tagName);
+        return document.createElement(tagName || node.originalTag || 'UNKNOWN');
     },
 };

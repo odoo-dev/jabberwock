@@ -15,6 +15,7 @@ export enum VNodeType {
     HEADING6 = 'HEADING6',
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
+    VIDEO = 'VIDEO',
     UNKNOWN = 'UNKNOWN',
 }
 
@@ -39,6 +40,7 @@ const atomicTypes = [
     VNodeType.LINE_BREAK,
     VNodeType.RANGE_START,
     VNodeType.RANGE_END,
+    VNodeType.VIDEO,
 ];
 let id = 0;
 
@@ -56,6 +58,7 @@ export class VNode {
     properties: VNodeProperties = {
         atomic: false,
     };
+    attributes: object = {};
     _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
     constructor(type = VNodeType.UNKNOWN, originalTag = '', value?: string, format?: FormatType) {
@@ -139,6 +142,12 @@ export class VNode {
             __current = child.text(__current);
         });
         return __current;
+    }
+    /**
+     * Return true if this VNode has a format property set to true.
+     */
+    hasAttributes(): boolean {
+        return Object.keys(this.attributes).some((key: string): boolean => !!this.attributes[key]);
     }
     /**
      * Return true if this VNode has a format property set to true.
@@ -366,6 +375,27 @@ export class VNode {
             throw new Error('The given VNode is not a child of this VNode');
         }
         return this._removeAtIndex(index);
+    }
+    /**
+     * Set an attribute of the VNode.
+     *
+     * @param key
+     * @param value
+     */
+    setAttribute(key: string, value: string): VNode {
+        this.attributes[key] = value;
+        return this;
+    }
+    /**
+     * Set a series of attributes of the VNode.
+     *
+     * @param attributes
+     */
+    setAttributes(attributes: object): VNode {
+        Object.keys(attributes).forEach(key => {
+            this.attributes[key] = attributes[key];
+        });
+        return this;
     }
 
     //--------------------------------------------------------------------------

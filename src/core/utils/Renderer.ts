@@ -253,6 +253,9 @@ export class Renderer {
      */
     _renderElement(context: RenderingContext, __isSecondBR = false): RenderingContext {
         const element = context.vNode.render<HTMLElement>('html');
+        Object.keys(context.vNode.attributes).forEach(key => {
+            element.setAttribute(key, context.vNode.attributes[key]);
+        });
         context.parentElement.appendChild(element);
         VDocumentMap.set(element, context.vNode);
         const newContext = Object.assign({}, context, {
