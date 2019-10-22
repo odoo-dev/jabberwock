@@ -22,7 +22,13 @@ export interface VNodeProperties {
     atomic: boolean;
 }
 
+export interface AnchorProperties {
+    url: URL;
+    target?: string;
+}
+
 export interface FormatType {
+    anchor?: AnchorProperties | null;
     bold?: boolean;
     italic?: boolean;
     underlined?: boolean;
@@ -57,6 +63,7 @@ export class VNode {
         this.originalTag = originalTag;
         this.value = value;
         this.format = format || {
+            anchor: null,
             bold: false,
             italic: false,
             underlined: false,

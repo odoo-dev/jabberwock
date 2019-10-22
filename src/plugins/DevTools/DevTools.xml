@@ -54,6 +54,7 @@
             <span t-elif="props.vNode.value" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
+                    anchor: props.vNode.format.anchor != null,
                     bold: props.vNode.format.bold,
                     italic: props.vNode.format.italic,
                     underlined: props.vNode.format.underlined,
@@ -65,6 +66,7 @@
                 <span class="element-name selectable-line" t-on-click="onClickNode"
                     t-on-dblclick="onDblClickNode"
                     t-att-class="{
+                        anchor: props.vNode.format.anchor != null,
                         bold: props.vNode.format.bold,
                         italic: props.vNode.format.italic,
                         underlined: props.vNode.format.underlined,
@@ -160,6 +162,12 @@
                         <td>format</td>
                         <td>
                             <ol style="list-style-type: none">
+                                <li t-if="props.vNode.format.anchor !== null">
+                                    Anchor to
+                                    <a t-attf-href="props.vNode.format.anchor.url.href"><t t-esc="props.vNode.format.anchor.url.href"/></a>
+                                    <t t-if="props.vNode.format.anchor.target"> (target:
+                                    <t t-esc="props.vNode.format.anchor.target"/>)</t>
+                                </li>
                                 <li t-if="props.vNode.format.bold">Bold</li>
                                 <li t-if="props.vNode.format.italic">Italic</li>
                                 <li t-if="props.vNode.format.underlined">Underlined</li>

@@ -23,9 +23,9 @@ export class VDocument {
         }
         // Do the splitting.
         const nextSiblings: VNode[] = [this.range.first];
-        this.range.first.nextSiblings((sibling): boolean => {
-            nextSiblings.push(sibling);
-            return false;
+        this.range.first.next((next: VNode): boolean => {
+            nextSiblings.push(next);
+            return !next.nextSibling;
         });
         const oldParent = this.range.first.parent;
         const duplicatedParent = new VNode(oldParent.type, oldParent.originalTag);

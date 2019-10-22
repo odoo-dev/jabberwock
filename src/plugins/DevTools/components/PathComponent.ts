@@ -5,6 +5,9 @@ export class PathComponent extends OwlUIComponent<{}> {
     getNodeRepr(vNode: VNode): string {
         const name: string = (vNode.type && vNode.type.toLowerCase()) || '?';
         let format = '';
+        if (vNode.format.anchor !== null) {
+            format += '.a';
+        }
         if (vNode.format.bold) {
             format += '.b';
         }

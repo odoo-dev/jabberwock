@@ -1,4 +1,5 @@
 const formatToTag = {
+    anchor: 'A',
     bold: 'B',
     italic: 'I',
     underline: 'U',

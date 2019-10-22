@@ -1,4 +1,4 @@
-import { VNode, VNodeType, FormatType } from '../stores/VNode';
+import { VNode, VNodeType, FormatType, AnchorProperties } from '../stores/VNode';
 import { VDocument } from '../stores/VDocument';
 import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
@@ -41,6 +41,20 @@ function parseNode(context: ParsingContext): ParsingContext {
     }
 }
 
+function getAnchorInfo(node: Node): AnchorProperties {
+    if (node.nodeName !== 'A') {
+        return null;
+    }
+    const anchor = node as Element;
+    const info: AnchorProperties = {
+        url: new URL(anchor.getAttribute('href')),
+    };
+    if (anchor.getAttribute('target')) {
+        info.target = anchor.getAttribute('target');
+    }
+    return info;
+}
+
 /**
  * Return the `VNodeType` of the given DOM node.
  *
@@ -77,13 +91,14 @@ function getNodeType(node: Node): VNodeType {
 function parseElementNode(context: ParsingContext): ParsingContext {
     const node = context.node;
     if (Format.tags.includes(context.node.nodeName)) {
-        // Format nodes (e.g. B, I, U) are parsed differently than regular
+        // Format nodes (e.g. A, B, I, U) are parsed differently than regular
         // elements since they are not represented by a proper VNode in our
         // internal representation but by the format of its children.
         // For the parsing, encountering a format node generates a new format
         // context which inherits from the previous one.
         const format = context.format.length ? context.format[0] : {};
         context.format.unshift({
+            anchor: format.anchor || getAnchorInfo(node),
             bold: format.bold || node.nodeName === 'B',
             italic: format.italic || node.nodeName === 'I',
             underlined: format.underlined || node.nodeName === 'U',
