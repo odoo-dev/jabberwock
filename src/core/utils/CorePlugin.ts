@@ -1,7 +1,8 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
-import { InsertIntent, RangeIntent, FormatIntent } from '../types/Intents';
+import { InsertIntent, RangeIntent, FormatIntent, KeydownIntent } from '../types/Intents';
+import { VNode, VNodeType } from '../stores/VNode';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -34,8 +35,17 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
-    enter(): void {
-        this.editor.vDocument.enter();
+    /**
+     * Handle the (shift+) enter key.
+     *
+     * @param intent
+     */
+    enter(intent: KeydownIntent): void {
+        if (intent.payload.shiftKey) {
+            this.editor.vDocument.insert(new VNode(VNodeType.LINE_BREAK));
+        } else {
+            this.editor.vDocument.enter();
+        }
     }
     /**
      * Insert something at range.
@@ -43,8 +53,11 @@ export class CorePlugin extends JWPlugin {
      * @param intent
      */
     insert(intent: InsertIntent): void {
-        // TODO: check the intent to insert other things than text.
-        this.editor.vDocument.insertText(intent.payload.value);
+        if (typeof intent.payload.value === 'string') {
+            this.editor.vDocument.insertText(intent.payload.value);
+        } else {
+            this.editor.vDocument.insert(intent.payload.value);
+        }
     }
     /**
      * Command to apply the format.

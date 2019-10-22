@@ -2,6 +2,19 @@ import { VRangeDescription } from '../stores/VRange';
 
 // Specialized intents
 
+// Generic keydown
+export interface KeydownPayload extends ActionPayload {
+    altKey: boolean;
+    ctrlKey: boolean;
+    metaKey: boolean;
+    shiftKey: boolean;
+    elements: Set<HTMLElement>;
+    origin: string;
+}
+export interface KeydownIntent extends Intent {
+    payload: KeydownPayload;
+}
+
 // Insert
 export interface InsertPayload extends ActionPayload {
     value: string;

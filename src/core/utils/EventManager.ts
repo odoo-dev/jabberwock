@@ -3,7 +3,7 @@ import { DispatchFunction } from '../dispatcher/Dispatcher';
 import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
-import { VNode } from '../stores/VNode';
+import { VNode, VNodeType } from '../stores/VNode';
 
 export interface EventManagerOptions {
     dispatch?: DispatchFunction;
@@ -82,11 +82,17 @@ export class EventManager {
     _matchIntent(customEvent: CustomEvent): Intent {
         // TODO: this value is an implicit any!
         let payload = customEvent.detail;
-        let name;
+        let name = customEvent.type;
         switch (customEvent.type) {
             case 'selectAll':
             case 'setRange':
                 payload.vRange = this._convertRange(payload.domRange);
+                break;
+            case 'enter':
+                if (customEvent.detail.shiftKey) {
+                    name = 'insert';
+                    payload.value = new VNode(VNodeType.LINE_BREAK, 'BR');
+                }
                 break;
             case 'keydown':
                 // TODO: keydown should be matched with existing shortcuts. If
