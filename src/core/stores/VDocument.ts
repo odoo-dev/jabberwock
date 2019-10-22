@@ -14,6 +14,25 @@ export class VDocument {
     //--------------------------------------------------------------------------
 
     /**
+     * Handle the general expected behavior (a block split) of the enter key.
+     */
+    enter(): void {
+        // Remove the contents of the selection if needed.
+        if (!this.range.collapsed) {
+            this.removeSelection();
+        }
+        // Do the splitting.
+        const nextSiblings: VNode[] = [this.range.first];
+        this.range.first.nextSiblings((sibling): boolean => {
+            nextSiblings.push(sibling);
+            return false;
+        });
+        const oldParent = this.range.first.parent;
+        const duplicatedParent = new VNode(oldParent.type, oldParent.originalTag);
+        oldParent.after(duplicatedParent);
+        nextSiblings.forEach(sibling => duplicatedParent.append(sibling));
+    }
+    /**
      * Insert something at range.
      *
      * @param value

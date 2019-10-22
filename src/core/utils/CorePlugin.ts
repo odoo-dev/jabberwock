@@ -7,6 +7,7 @@ export class CorePlugin extends JWPlugin {
     range: VRange;
     handlers = {
         intents: {
+            enter: 'enter',
             insert: 'insert',
             remove: 'remove',
             render: 'render',
@@ -15,6 +16,7 @@ export class CorePlugin extends JWPlugin {
         },
     };
     commands = {
+        enter: this.enter.bind(this),
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
         remove: this.removeSide.bind(this),
@@ -30,6 +32,9 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
+    enter(): void {
+        this.editor.vDocument.enter();
+    }
     /**
      * Insert something at range.
      *
