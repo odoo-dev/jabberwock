@@ -5,9 +5,13 @@ import { JWPlugin } from './JWPlugin';
 import { VDocument } from './stores/VDocument';
 import { Parser } from './utils/Parser';
 import { Renderer } from './utils/Renderer';
+import { OwlUI } from '../../src/ui/OwlUI';
+import { DevTools } from '../../src/plugins/DevTools/DevTools';
+import '../../src/plugins/DevTools/DevTools.css';
 
 export interface JWEditorConfig {
-    theme: string;
+    debug?: boolean;
+    theme?: string;
 }
 
 export class JWEditor {
@@ -92,8 +96,9 @@ export class JWEditor {
     }
 
     loadConfig(config: JWEditorConfig): void {
-        // TODO
-        config;
+        if (config.debug) {
+            new OwlUI(this).addPlugin(DevTools);
+        }
     }
 
     stop(): void {
