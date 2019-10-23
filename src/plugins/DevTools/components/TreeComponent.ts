@@ -2,6 +2,8 @@ import { utils } from '../../../core/utils/utils';
 import { VNode, VNodeType } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
+import { Direction, VRangeDescription } from '../../../core/stores/VRange';
+import { ActionGenerator } from '../../../core/actions/ActionGenerator';
 
 interface NodeProps {
     isRoot: boolean;
@@ -68,6 +70,18 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
                 vNode: this.props.vNode,
             });
         }
+    }
+    onDblClickNode(): void {
+        const location: VRangeDescription = {
+            start: this.props.vNode,
+            direction: Direction.FORWARD,
+        };
+        this.env.editor.dispatcher.dispatch(
+            ActionGenerator.intent({
+                name: 'setRange',
+                payload: { vRange: location },
+            }),
+        );
     }
     /**
      * Handle folding/unfolding on press Enter
