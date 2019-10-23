@@ -148,9 +148,17 @@ devtools-tree devtools-node > span.range-node {
 }
 
 devtools-tree span.element-name {
+    color: #76526c;
+}
+
+devtools-tree span.element-name:not(.line-break) {
     width: 100%;
     display: inline-block;
-    color: #76526c;
+}
+
+devtools-tree span.element-name.line-break:after {
+    content: '\A';
+    white-space: pre;
 }
 
 devtools-node {
