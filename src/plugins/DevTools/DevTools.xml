@@ -37,20 +37,22 @@
         t-on-node-selected="selectNode">
         <t t-if="props.isRoot">
             <span class="element-name selectable-line"
-                t-on-click="onClickNode" t-att-class="{
+                t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
+                t-att-class="{
                     selected: props.selectedID == props.vNode.id,
                 }">root</span>
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
             <span t-if="props.vNode.type == 'RANGE_START' or props.vNode.type == 'RANGE_END'"
-                t-on-click="onClickNode"
+                t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line range-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr"/>
             </span>
             <span t-elif="props.vNode.value" t-on-click="onClickNode"
+                t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
                     bold: props.vNode.format.bold,
                     italic: props.vNode.format.italic,
@@ -61,6 +63,7 @@
             </span>
             <t t-else="">
                 <span class="element-name selectable-line" t-on-click="onClickNode"
+                    t-on-dblclick="onDblClickNode"
                     t-att-class="{
                         bold: props.vNode.format.bold,
                         italic: props.vNode.format.italic,
