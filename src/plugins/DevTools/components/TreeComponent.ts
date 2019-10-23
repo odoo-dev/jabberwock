@@ -1,5 +1,5 @@
 import { utils } from '../../../core/utils/utils';
-import { VNode } from '../../../core/stores/VNode';
+import { VNode, VNodeType } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
 
@@ -115,6 +115,9 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         }
         if (node.type && node.type.startsWith('RANGE')) {
             return node.type.endsWith('START') ? '[' : ']';
+        }
+        if (node.type && node.type === VNodeType.LINE_BREAK) {
+            return '↲';
         }
         if (node.type) {
             return node.type.toLowerCase();
