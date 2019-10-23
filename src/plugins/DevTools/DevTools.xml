@@ -66,6 +66,7 @@
                         italic: props.vNode.format.italic,
                         underlined: props.vNode.format.underlined,
                         selected: props.selectedID == props.vNode.id,
+                        'line-break': props.vNode.type === 'LINE_BREAK',
                     }">
                     <t t-esc="repr"/>
                 </span>
