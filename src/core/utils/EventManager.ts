@@ -72,18 +72,6 @@ export class EventManager {
             location.vNode = containers[containers.length - 1];
             location.position = RelativePosition.AFTER;
         }
-        return this._makeLocationDeepest(location);
-    }
-    /**
-     * Move the position to its deepest first descendent.
-     *
-     * @param location
-     */
-    _makeLocationDeepest(location: TargetLocation): TargetLocation {
-        while (location.vNode.children.length) {
-            location.vNode = location.vNode.firstChild;
-            location.position = RelativePosition.BEFORE;
-        }
         return location;
     }
     /**
