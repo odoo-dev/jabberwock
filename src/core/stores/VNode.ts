@@ -126,6 +126,44 @@ export class VNode {
             (key: keyof FormatType): boolean => !!this.format[key],
         );
     }
+    /**
+     * Return true if this VNode comes before the given VNode in the pre-order
+     * traversal.
+     *
+     * TODO: Make a less naive version of this, performing an efficient search
+     * instead of a plain traversal.
+     *
+     * @param vNode
+     */
+    isBefore(vNode: VNode): boolean {
+        const next = this.next();
+        const previousVNode = vNode.previous();
+        if (next && next.id !== vNode.id && previousVNode && previousVNode.id !== next.id) {
+            return next.isBefore(previousVNode);
+        } else {
+            return !!next && !!previousVNode;
+        }
+    }
+    /**
+     * Return true if this VNode comes after the given VNode in the pre-order
+     * traversal.
+     *
+     * TODO: Make a less naive version of this, performing an efficient search
+     * instead of a plain traversal.
+     *
+     * @param vNode
+     */
+    isAfter(vNode: VNode): boolean {
+        return vNode.isBefore(this);
+    }
+    /**
+     * Return true if this VNode has a properties property set to true.
+     */
+    hasProperties(): boolean {
+        return Object.keys(this.properties).some(
+            (key: keyof VNodeProperties): boolean => !!this.properties[key],
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Browsing

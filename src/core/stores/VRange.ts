@@ -19,9 +19,16 @@ export interface VRangeLocation {
 export class VRange {
     readonly _start = new VNode(VNodeType.RANGE_START);
     readonly _end = new VNode(VNodeType.RANGE_END);
-    direction: RangeDirection;
+    _direction: RangeDirection;
     constructor(direction: RangeDirection = RangeDirection.FORWARD) {
-        this.direction = direction;
+        this._direction = direction;
+    }
+    get direction(): RangeDirection {
+        if (!this._direction) {
+            const isForward = this._start.isBefore(this._end);
+            this._direction = isForward ? RangeDirection.FORWARD : RangeDirection.BACKWARD;
+        }
+        return this._direction;
     }
     /**
      * Collapse the range. Return self.
@@ -31,10 +38,13 @@ export class VRange {
      */
     collapse(edge: 'start' | 'end' = 'start'): VRange {
         if (edge === 'start') {
-            return this.setEnd(this._start);
+            this.setEnd(this._start);
         } else {
-            return this.setStart(this._end);
+            this.setStart(this._end);
         }
+        // When collapsing, we always set the end after the start
+        this._direction = RangeDirection.FORWARD;
+        return this;
     }
     /**
      * Move the range to the given location. If no end location is given,
@@ -51,15 +61,9 @@ export class VRange {
         } else {
             this.select(location.end, location.endPosition, location.start, location.startPosition);
         }
-        return this.setDirection(location.direction);
-    }
-    /**
-     * Change the range's direction (forward or backward). Return self.
-     *
-     * @param direction
-     */
-    setDirection(direction: RangeDirection): VRange {
-        this.direction = direction;
+        if (location.direction) {
+            this._direction = location.direction;
+        }
         return this;
     }
     /**
@@ -126,6 +130,7 @@ export class VRange {
     setStart(reference: VNode, position = RelativePosition.BEFORE): VRange {
         const methodName = position === RelativePosition.BEFORE ? 'before' : 'after';
         reference.firstLeaf[methodName](this._start);
+        this._direction = null; // Invalidate range direction cache
         return this;
     }
     /**
@@ -140,6 +145,7 @@ export class VRange {
     setEnd(reference: VNode, position = RelativePosition.AFTER): VRange {
         const methodName = position === RelativePosition.BEFORE ? 'before' : 'after';
         reference.lastLeaf[methodName](this._end);
+        this._direction = null; // Invalidate range direction cache
         return this;
     }
 }
