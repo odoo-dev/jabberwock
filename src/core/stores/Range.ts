@@ -1,8 +1,8 @@
 type Direction = 'ltr' | 'rtl';
 export interface Range {
-    startContainer: DOMElement;
+    startContainer: Node;
     startOffset: number;
-    endContainer: DOMElement;
+    endContainer: Node;
     endOffset: number;
     direction: Direction;
 }

@@ -2,10 +2,9 @@ import { VNode, VNodeType } from '../stores/VNode';
 import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
 
-type ParentElement = Element | DocumentFragment;
 interface RenderingContext {
     vNode?: VNode;
-    parentElement?: ParentElement;
+    parentNode?: Node;
 }
 
 export class Renderer {
@@ -55,14 +54,14 @@ export class Renderer {
             return {
                 vNode: vNode.children[0],
                 // Text node cannot have children, therefore parent is Element, not Node
-                parentElement: VDocumentMap.toDom(vNode) as DOMElement,
+                parentNode: VDocumentMap.toDom(vNode),
             };
         } else if (vNode.nextSibling) {
             // Render the siblings of the current node with the same parent, if any.
             return {
                 vNode: vNode.nextSibling,
                 // Text node cannot have children, therefore parent is Element, not Node
-                parentElement: VDocumentMap.toDom(vNode.parent) as DOMElement,
+                parentNode: VDocumentMap.toDom(vNode.parent),
             };
         } else {
             // Render the next ancestor sibling in the ancestor tree, if any.
@@ -77,7 +76,7 @@ export class Renderer {
                 return {
                     vNode: ancestor.nextSibling,
                     // Text node cannot have children, therefore parent is Element, not Node
-                    parentElement: VDocumentMap.toDom(ancestor.parent) as DOMElement,
+                    parentNode: VDocumentMap.toDom(ancestor.parent),
                 };
             }
         }
@@ -89,13 +88,13 @@ export class Renderer {
      * @param vNode
      * @param parent
      */
-    _renderElement(vNode: VNode, parent: ParentElement): RenderingContext {
+    _renderElement(vNode: VNode, parent: Node): RenderingContext {
         const element = vNode.render<HTMLElement>('html');
         parent.appendChild(element);
         VDocumentMap.set(element, vNode);
         return {
             vNode: vNode,
-            parentElement: parent,
+            parentNode: parent,
         };
     }
     /**
@@ -104,7 +103,7 @@ export class Renderer {
      * @param vNode
      * @param parent
      */
-    _renderTextNode(vNode: VNode, parent: ParentElement): RenderingContext {
+    _renderTextNode(vNode: VNode, parent: Node): RenderingContext {
         // If the node has a format, render the format nodes first.
         const renderedFormats = [];
         Object.keys(vNode.format).forEach(type => {
@@ -135,7 +134,7 @@ export class Renderer {
         });
         return {
             vNode: vNode,
-            parentElement: parent,
+            parentNode: parent,
         };
     }
     /**
@@ -144,7 +143,7 @@ export class Renderer {
      * @param vNode
      * @param parent
      */
-    _renderVNode(vNode: VNode, parent: ParentElement): void {
+    _renderVNode(vNode: VNode, parent: Node): void {
         let context: RenderingContext;
         if (vNode.type === VNodeType.CHAR) {
             context = this._renderTextNode(vNode, parent);
@@ -154,8 +153,8 @@ export class Renderer {
 
         context = this._nextRenderingContext(context.vNode);
 
-        if (context.vNode && context.parentElement) {
-            this._renderVNode(context.vNode, context.parentElement);
+        if (context.vNode && context.parentNode) {
+            this._renderVNode(context.vNode, context.parentNode);
         }
     }
 }

@@ -11,9 +11,9 @@ const navigationKey = new Set([
 
 type Direction = 'ltr' | 'rtl';
 interface Range {
-    readonly startContainer: DOMElement;
+    readonly startContainer: Node;
     readonly startOffset: number;
-    readonly endContainer: DOMElement;
+    readonly endContainer: Node;
     readonly endOffset: number;
     readonly direction: Direction;
     origin?: string; // origin of the Range change
@@ -33,14 +33,14 @@ interface CompiledEvent {
     clone?: ClonedNode; // clone of closest block node containing modified selection during composition
 }
 
-interface ClonedNode extends DOMElement {
-    origin: DOMElement;
+interface ClonedNode extends Node {
+    origin: Node;
 }
 
 interface CharactersMapping {
     length: number;
     chars: string; // concatenated characters accross multiple nodes
-    nodes: Array<DOMElement | ClonedNode>; // corresponding textual nodes
+    nodes: Array<Node | ClonedNode>; // corresponding textual nodes
     offsets: number[]; // character offsets in their corresponding textual nodes
 }
 
@@ -56,17 +56,17 @@ interface EventListenerDeclaration {
 }
 
 export class EventNormalizer {
-    editable: DOMElement;
+    editable: HTMLElement;
     _eventListeners: EventListenerDeclaration[] = [];
     _compiledEvent: CompiledEvent;
     _observer: MutationObserver;
-    _selectAllOriginElement: DOMElement; // original selection/target before updating selection
+    _selectAllOriginElement: Node; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
     _eventCallback: (customEvent: CustomEvent) => void; // callback to trigger on events
     _rangeHasChanged: boolean;
 
     constructor(editable: HTMLElement, eventCallback: (customEvent: CustomEvent) => void) {
-        this.editable = editable as DOMElement;
+        this.editable = editable;
         this._eventCallback = eventCallback;
 
         const document = this.editable.ownerDocument;
@@ -192,7 +192,7 @@ export class EventNormalizer {
             format.parentNode &&
             format !== this.editable &&
             (format.nodeType === Node.TEXT_NODE || // text node can't be block => look for parent
-                window.getComputedStyle(format).display !== 'block')
+                window.getComputedStyle(format as Element).display !== 'block')
         ) {
             format = format.parentNode;
         }
@@ -205,10 +205,10 @@ export class EventNormalizer {
             if (clone.nodeType !== Node.ELEMENT_NODE) {
                 return;
             }
-            const childNodes = clone.origin.childNodes as NodeListOf<DOMElement>;
-            clone.childNodes.forEach((child: ClonedNode, index) => {
-                child.origin = childNodes[index];
-                addChildOrigin(child);
+            const childNodes = clone.origin.childNodes;
+            clone.childNodes.forEach((child: Node, index) => {
+                child['orgin'] = childNodes[index];
+                addChildOrigin(child as ClonedNode);
             });
         })(clone);
     }
@@ -353,11 +353,11 @@ export class EventNormalizer {
      * @private
      * @param node to extract from
      */
-    _getCharactersMapping(node: DOMElement): CharactersMapping {
+    _getCharactersMapping(node: Node): CharactersMapping {
         const textualNodes = this._getTextualNodes(node);
         let length = 0;
         let characters = '';
-        const correspondingNodes: Array<DOMElement | ClonedNode> = [];
+        const correspondingNodes: Array<Node | ClonedNode> = [];
         const offsets: number[] = [];
         textualNodes.forEach(function(node) {
             if (node.nodeValue) {
@@ -391,7 +391,7 @@ export class EventNormalizer {
      * @param node to extract from
      * @param acc accumulator array to append to
      */
-    _getTextualNodes(node: DOMElement, acc: DOMElement[] = []): DOMElement[] {
+    _getTextualNodes(node: Node, acc: Node[] = []): Node[] {
         if (this._isTextualNode(node)) {
             acc.push(node);
         } else {
@@ -399,8 +399,8 @@ export class EventNormalizer {
         }
         return acc;
     }
-    _isTextualNode(node: HTMLElement): boolean {
-        return node.nodeType === Node.TEXT_NODE || node.tagName === 'BR';
+    _isTextualNode(node: Node): boolean {
+        return node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR';
     }
     /**
      * Compare the given previous and current strings and return the offsets in
@@ -467,9 +467,9 @@ export class EventNormalizer {
                 ltr = selection.anchorNode === nativeRange.startContainer;
             }
             return {
-                startContainer: nativeRange.startContainer as DOMElement,
+                startContainer: nativeRange.startContainer as Node,
                 startOffset: nativeRange.startOffset,
-                endContainer: nativeRange.endContainer as DOMElement,
+                endContainer: nativeRange.endContainer as Node,
                 endOffset: nativeRange.endOffset,
                 direction: ltr ? 'ltr' : 'rtl',
             };
@@ -666,11 +666,11 @@ export class EventNormalizer {
      * @param element to check whether it is at the visible edge
      * @param side from which to look for textual nodes ('start' or 'end')
      */
-    _isAtVisibleEdge(element: HTMLElement, side: 'start' | 'end'): boolean {
+    _isAtVisibleEdge(element: Node, side: 'start' | 'end'): boolean {
         if (!this.editable.contains(element)) return false;
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
-        let node = this.editable;
+        let node: Node = this.editable;
         const child = side === 'start' ? 'firstChild' : 'lastChild';
         const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
         while (node) {
@@ -696,13 +696,16 @@ export class EventNormalizer {
         }
         return true;
     }
-    _isVisible(el: DOMElement): boolean {
+    _isVisible(el: Node): boolean {
         if (el === this.editable) {
             // The editable node was reached without encountering a hidden
             // container. The editable node is supposed to be visible.
             return true;
         }
-        const style = window.getComputedStyle(el);
+        if (el.nodeType !== Node.ELEMENT_NODE) {
+            return false;
+        }
+        const style = window.getComputedStyle(el as Element);
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
@@ -869,7 +872,7 @@ export class EventNormalizer {
         this._rangeHasChanged = false;
         // store mousedown event to detect range change from mouse selection
         this._mousedownInEditable = ev;
-        this._selectAllOriginElement = ev.target as DOMElement;
+        this._selectAllOriginElement = ev.target as Node;
         setTimeout(() => {
             this._selectAllOriginElement = this._getRange().startContainer;
         }, 0);
@@ -887,16 +890,16 @@ export class EventNormalizer {
             return;
         }
         setTimeout(() => {
-            this._selectAllOriginElement = ev.target as DOMElement;
-            const target = this._mousedownInEditable.target as Element;
+            this._selectAllOriginElement = ev.target as Node;
+            const target = this._mousedownInEditable.target as Node;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
                 let range: Range = this._getRange();
                 if (!target.contains(range.startContainer) && target === ev.target) {
                     range = {
-                        startContainer: target as DOMElement,
+                        startContainer: target,
                         startOffset: 0,
-                        endContainer: target as DOMElement,
+                        endContainer: target,
                         endOffset:
                             target.nodeType === Node.ELEMENT_NODE
                                 ? target.childNodes.length

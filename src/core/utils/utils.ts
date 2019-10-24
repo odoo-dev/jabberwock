@@ -18,7 +18,7 @@ export const utils = {
      * Take a collection of nodes and return a regular array
      * with the same contents.
      */
-    _collectionToArray: (collection: NodeListOf<Node> | HTMLCollection): DOMElement[] => {
+    _collectionToArray: (collection: NodeListOf<Node> | HTMLCollection): Node[] => {
         return Array.prototype.slice.call(collection);
     },
 };

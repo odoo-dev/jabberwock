@@ -15,7 +15,7 @@ interface Action extends ActionInit {
     type: ActionType;
     origin: string;
     subActions?: Action[];
-    target?: DOMElement;
+    target?: Node;
 }
 interface Intent extends Action {
     type: 'intent';

@@ -7,12 +7,12 @@ export interface EventManagerOptions {
 }
 
 export class EventManager {
-    editable: DOMElement;
+    editable: HTMLElement;
     options: EventManagerOptions;
     eventNormalizer: EventNormalizer;
 
     constructor(editable: HTMLElement, options: EventManagerOptions = {}) {
-        this.editable = editable as DOMElement;
+        this.editable = editable;
         this.options = options;
         this.eventNormalizer = new EventNormalizer(editable, this._triggerEvent.bind(this));
     }

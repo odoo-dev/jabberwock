@@ -1,16 +1,16 @@
 import { VNode } from '../stores/VNode';
 import { Format } from './Format';
 
-const fromDom = new Map<DOMElement | Node, VNode[]>();
-const toDom = new Map<VNode, DOMElement | Node>();
+const fromDom = new Map<Node, VNode[]>();
+const toDom = new Map<VNode, Node>();
 
 export const VDocumentMap = {
     clear: (): void => {
         fromDom.clear();
         toDom.clear();
     },
-    fromDom: (element: DOMElement | Node): VNode[] => fromDom.get(element),
-    toDom: (vNode): DOMElement | Node => toDom.get(vNode),
+    fromDom: (element: Node): VNode[] => fromDom.get(element),
+    toDom: (vNode): Node => toDom.get(vNode),
     /**
      * Map an DOM Element/Node to a VNode in `toDom` and vice versa in
      * `fromDom`.
@@ -18,7 +18,7 @@ export const VDocumentMap = {
      * @param element
      * @param vNode
      */
-    set(element: Element | Node, vNode: VNode): void {
+    set(element: Node, vNode: VNode): void {
         if (fromDom.has(element)) {
             const matches = fromDom.get(element);
             if (!matches.some((match: VNode) => match.id === vNode.id)) {
