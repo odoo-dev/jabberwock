@@ -316,11 +316,13 @@ export class Renderer {
         let text = vNode.value;
         const charNodes = [vNode];
         const rangeNodes: ({ node: VNode; offset: number })[] = [];
-        vNode.next((next: VNode, lastSeen: VNode): boolean => {
-            if (next.type === VNodeType.CHAR && this._isSameFormat(lastSeen, next)) {
+        let previousChar = vNode;
+        vNode.next((next: VNode): boolean => {
+            if (next.type === VNodeType.CHAR && this._isSameFormat(previousChar, next)) {
                 // Collect text.
                 charNodes.push(next);
                 text += next.value;
+                previousChar = next;
             } else if (next.type.startsWith('RANGE')) {
                 // Collect information about the range node's location.
                 rangeNodes.push({
