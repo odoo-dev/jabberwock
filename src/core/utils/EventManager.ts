@@ -4,6 +4,7 @@ import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeLocation, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode } from '../stores/VNode';
+import { Format } from './Format';
 
 interface TargetLocation {
     vNode: VNode;
@@ -84,13 +85,25 @@ export class EventManager {
      */
     _matchIntent(customEvent: CustomEvent): Intent {
         const payload = customEvent.detail;
+        let name = customEvent.type;
         switch (customEvent.type) {
             case 'setRange':
                 payload.vRangeLocation = this._convertRange(payload['domRangeChange']);
                 break;
+            case 'keydown':
+                if (
+                    Format.tags.includes(payload.key.toUpperCase()) &&
+                    payload.ctrlKey &&
+                    !payload.altKey &&
+                    !payload.metaKey &&
+                    !payload.shiftKey
+                ) {
+                    name = 'applyFormat';
+                    payload.format = Format.fromTag(payload.key.toUpperCase());
+                }
         }
         return ActionGenerator.intent({
-            name: customEvent.type,
+            name: name,
             origin: 'EventManager',
             payload: payload,
         });

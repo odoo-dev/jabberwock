@@ -13,6 +13,18 @@ export class VDocument {
     // Public
     //--------------------------------------------------------------------------
 
+    applyFormat(formatName: 'bold' | 'underlined' | 'italic'): void {
+        const selectedChars = this.range.selectedNodes.filter(node => node.type === VNodeType.CHAR);
+        if (!selectedChars.every(char => char.format[formatName])) {
+            selectedChars.forEach(char => {
+                char.format[formatName] = true;
+            });
+        } else {
+            selectedChars.forEach(char => {
+                char.format[formatName] = false;
+            });
+        }
+    }
     /**
      * Handle the general expected behavior (a block split) of the enter key.
      */

@@ -8,6 +8,7 @@ export class CorePlugin extends JWPlugin {
     range: VRange;
     handlers = {
         intents: {
+            applyFormat: 'applyFormat',
             enter: 'enter',
             insert: 'insert',
             remove: 'remove',
@@ -17,6 +18,7 @@ export class CorePlugin extends JWPlugin {
         },
     };
     commands = {
+        applyFormat: this.applyFormat.bind(this),
         enter: this.enter.bind(this),
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
@@ -33,6 +35,9 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
+    applyFormat(intent: Intent): void {
+        this.editor.vDocument.applyFormat(intent.payload['format']);
+    }
     /**
      * Handle the (shift+) enter key.
      *
