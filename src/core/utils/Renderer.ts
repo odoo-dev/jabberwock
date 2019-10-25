@@ -76,15 +76,17 @@ export class Renderer {
      * @param rendered
      */
     _computeRange(range: RangeDescription, rendered: DocumentFragment): ComputedRange {
-        const startContainer = this._computeContainer(range.startContainer, rendered);
-        const endContainer = range.endContainer
+        let startContainer = this._computeContainer(range.startContainer, rendered);
+        let endContainer = range.endContainer
             ? this._computeContainer(range.endContainer, rendered)
             : startContainer;
-        const startOffset = this._computeOffset(range.startOffset, startContainer);
-        const endOffset =
+        let startOffset = this._computeOffset(range.startOffset, startContainer);
+        let endOffset =
             typeof range.endOffset === 'undefined'
                 ? startOffset
                 : this._computeOffset(range.endOffset, endContainer);
+        [startContainer, startOffset] = this._rangePointToLeaf(startContainer, startOffset);
+        [endContainer, endOffset] = this._rangePointToLeaf(endContainer, endOffset);
         return {
             startContainer: startContainer,
             startOffset: startOffset,
@@ -208,6 +210,28 @@ export class Renderer {
         }
     }
     /**
+     * Move a container and offset to the container's leaf. In the case where
+     * that leaf is a <br>, target it via its parent. Return a tuple with the
+     * updated container and the offset.
+     *
+     * @param container
+     * @param offset
+     */
+    _rangePointToLeaf(container: Node, offset: number): [Node, number] {
+        // Move to leaf
+        while (container.childNodes && container.childNodes[offset]) {
+            container = container.childNodes[offset];
+            offset = 0;
+        }
+        // In the case where the leaf is a <br>, we need to target its parent at
+        // offset == BR.index + 1 for the browser to show the range where
+        // expected.
+        if (container.nodeName === 'BR') {
+            [container, offset] = this._moveToParentOfBR(container);
+        }
+        return [container, offset];
+    }
+    /**
      * Create the element matching this context's vNode and append it.
      *
      * @param context
@@ -252,15 +276,7 @@ export class Renderer {
     _renderRangeNode(context: RenderingContext, offset = 0): RenderingContext {
         let container: ContainerDescription;
         if (context.lastRendered) {
-            if (context.lastRendered.nodeName === 'BR') {
-                // In the case where the last rendered element was a <br>, we
-                // need to target its parent at offset == BR.index + 1 for the
-                // browser to show the range where expected.
-                [container, offset] = this._moveToParentOfBR(context.lastRendered);
-            } else {
-                // The range will be set on the last rendered element.
-                container = context.lastRendered;
-            }
+            container = context.lastRendered;
         } else {
             // If no node was created yet, target the very beginning of the
             // editable container.
