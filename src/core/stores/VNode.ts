@@ -15,6 +15,7 @@ export enum VNodeType {
     HEADING6 = 'HEADING6',
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
+    UNKNOWN = 'UNKNOWN',
 }
 
 export interface VNodeProperties {
@@ -51,7 +52,7 @@ export class VNode {
     };
     _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
-    constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
+    constructor(type = VNodeType.UNKNOWN, originalTag = '', value?: string, format?: FormatType) {
         this.type = type;
         this.originalTag = originalTag;
         this.value = value;
