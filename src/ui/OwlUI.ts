@@ -42,7 +42,7 @@ export class OwlUI {
      */
     async _createEnv(PluginClass: typeof JWOwlUIPlugin): Promise<PluginEnv> {
         return {
-            qweb: new QWeb(PluginClass.templates),
+            qweb: new QWeb({ templates: PluginClass.templates }),
             editor: this.editor,
         };
     }
