@@ -38,6 +38,8 @@ interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
 }
 
+export type CommandExec = (id: CommandIdentifier, params?: CommandParams) => void;
+
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
     el: HTMLElement;
@@ -271,10 +273,10 @@ export class JWEditor {
      * Execute the given command.
      *
      * @param id name identifier of the command to execute
-     * @param args arguments object of the command to execute
+     * @param params arguments object of the command to execute
      */
-    async execCommand(id: CommandIdentifier, args = {}): Promise<void> {
-        await this.dispatcher.dispatch(id, args);
+    async execCommand(id: CommandIdentifier, params = {}): Promise<void> {
+        await this.dispatcher.dispatch(id, params);
     }
 
     /**

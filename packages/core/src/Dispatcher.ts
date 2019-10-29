@@ -12,7 +12,6 @@ export interface CommandParams {
 }
 export type CommandHandler = (args) => void;
 export type CommandHook = (params: CommandParams, commandId: string) => void;
-
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
