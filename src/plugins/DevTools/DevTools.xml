@@ -160,13 +160,13 @@
                         <td>siblings</td>
                         <td>
                             <ol style="list-style-type: none">
-                                <li t-if="props.vNode.previousSibling"
-                                    t-on-click="selectNode(props.vNode.previousSibling)">
-                                    previous: <t t-esc="props.vNode.previousSibling.type or &quot;?&quot;"/>
+                                <li t-if="props.vNode.previousSibling()"
+                                    t-on-click="selectNode(props.vNode.previousSibling())">
+                                    previous: <t t-esc="props.vNode.previousSibling().type or &quot;?&quot;"/>
                                 </li>
-                                <li t-if="props.vNode.nextSibling"
-                                    t-on-click="selectNode(props.vNode.nextSibling)">
-                                    next: <t t-esc="props.vNode.nextSibling.type or &quot;?&quot;"/>
+                                <li t-if="props.vNode.nextSibling()"
+                                    t-on-click="selectNode(props.vNode.nextSibling())">
+                                    next: <t t-esc="props.vNode.nextSibling().type or &quot;?&quot;"/>
                                 </li>
                             </ol>
                         </td>

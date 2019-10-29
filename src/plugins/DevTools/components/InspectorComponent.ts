@@ -29,16 +29,16 @@ export class InspectorComponent extends OwlUIComponent<{}> {
         let newSelection: VNode;
         switch (event.code) {
             case 'ArrowDown':
-                newSelection = selected.nextSibling || selected.firstChild;
+                newSelection = selected.nextSibling() || selected.firstChild();
                 break;
             case 'ArrowUp':
-                newSelection = selected.previousSibling || selected.parent;
+                newSelection = selected.previousSibling() || selected.parent;
                 break;
             case 'ArrowLeft':
-                newSelection = selected.previousSibling;
+                newSelection = selected.previousSibling();
                 break;
             case 'ArrowRight':
-                newSelection = selected.nextSibling;
+                newSelection = selected.nextSibling();
                 break;
         }
         if (newSelection) {

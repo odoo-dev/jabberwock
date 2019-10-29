@@ -1,5 +1,7 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../utils/BasicHtmlRenderingEngine';
 
+export type Predicate = (node: VNode) => boolean;
+
 export enum VNodeType {
     ROOT = 'ROOT',
     PARAGRAPH = 'PARAGRAPH',
@@ -128,18 +130,6 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return this VNode's first child.
-     */
-    get firstChild(): VNode {
-        return this.nthChild(0);
-    }
-    /**
-     * Return this VNode's last child.
-     */
-    get lastChild(): VNode {
-        return this.nthChild(this.children.length - 1);
-    }
-    /**
      * Return the child's previous sibling.
      *
      * @param child
@@ -164,23 +154,241 @@ export class VNode {
         return this.children[index];
     }
     /**
+     * Return the descendant of this node that directly precedes the given node
+     * in depth-first pre-order traversal.
+     *
+     * @param node
+     */
+    descendantBefore(node: VNode): VNode {
+        let previous = node.previousSibling();
+        if (previous) {
+            // The node before node is the last leaf of its previous sibling.
+            previous = previous.lastLeaf();
+        } else if (node.parent !== this) {
+            // If it has no previous sibling then climb up to the parent.
+            // This is similar to `previous` but can't go further than `this`.
+            previous = node.parent;
+        }
+        return previous;
+    }
+    /**
+     * Return the descendant of this node that directly follows the given node
+     * in depth-first pre-order traversal.
+     *
+     * @param node
+     */
+    descendantAfter(node: VNode): VNode {
+        // The node after node is its first child.
+        let next = node.firstChild();
+        if (!next) {
+            // If it has no children then it is its next sibling.
+            next = node.nextSibling();
+        }
+        if (!next) {
+            // If it has no siblings either then climb up to the closest parent
+            // which has a next sibiling.
+            // This is similar to `next` but can't go further than `this`.
+            let ancestor = node.parent;
+            while (ancestor !== this && !ancestor.nextSibling()) {
+                ancestor = ancestor.parent;
+            }
+            if (ancestor !== this) {
+                next = ancestor.nextSibling();
+            }
+        }
+        return next;
+    }
+    /**
      * Return this VNode's siblings.
      */
     get siblings(): VNode[] {
         return (this.parent && this.parent.children) || [];
     }
     /**
-     * Return this VNode's next sibling.
+     * Return the first child of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the first child of this VNode.
      *
+     * @param [predicate]
      */
-    get previousSibling(): VNode {
-        return this.parent && this.parent.childBefore(this);
+    firstChild(predicate?: Predicate): VNode {
+        const firstChild = this.nthChild(0);
+        if (firstChild && predicate) {
+            return firstChild.walk((node: VNode) => node.nextSibling(), predicate);
+        } else {
+            return firstChild;
+        }
     }
     /**
-     * Return this VNode's next sibling.
+     * Return the last child of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the last child of this VNode.
+     *
+     * @param [predicate]
      */
-    get nextSibling(): VNode {
-        return this.parent && this.parent.childAfter(this);
+    lastChild(predicate?: Predicate): VNode {
+        const lastChild = this.nthChild(this.children.length - 1);
+        if (lastChild && predicate) {
+            return lastChild.walk((node: VNode) => node.previousSibling(), predicate);
+        } else {
+            return lastChild;
+        }
+    }
+    /**
+     * Return the first leaf of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the first leaf of this VNode.
+     *
+     * @param [predicate]
+     */
+    firstLeaf(predicate?: Predicate): VNode {
+        const isValidLeaf = (node: VNode): boolean => {
+            return !node.children.length && (!predicate || predicate(node));
+        };
+        if (isValidLeaf(this)) {
+            return this;
+        } else {
+            return this.firstDescendant((node: VNode) => isValidLeaf(node));
+        }
+    }
+    /**
+     * Return the last leaf of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the last leaf of this VNode.
+     *
+     * @param [predicate]
+     */
+    lastLeaf(predicate?: Predicate): VNode {
+        const isValidLeaf = (node: VNode): boolean => {
+            return !node.children.length && (!predicate || predicate(node));
+        };
+        if (isValidLeaf(this)) {
+            return this;
+        } else {
+            return this.lastDescendant((node: VNode) => isValidLeaf(node));
+        }
+    }
+    /**
+     * Return the first descendant of this VNode that satisfies the predicate.
+     * If no predicate is given, return the first descendant of this VNode.
+     *
+     * @param [predicate]
+     */
+    firstDescendant(predicate?: Predicate): VNode {
+        const firstDescendant = this.firstChild();
+        if (firstDescendant && predicate) {
+            return firstDescendant.walk((node: VNode) => this.descendantAfter(node), predicate);
+        } else {
+            return firstDescendant;
+        }
+    }
+    /**
+     * Return the last descendant of this VNode that satisfies the predicate.
+     * If no predicate is given, return the last descendant of this VNode.
+     *
+     * @param [predicate]
+     */
+    lastDescendant(predicate?: Predicate): VNode {
+        let lastDescendant = this.lastChild();
+        while (lastDescendant && lastDescendant.children.length) {
+            lastDescendant = lastDescendant.lastChild();
+        }
+        if (lastDescendant && predicate) {
+            return lastDescendant.walk((node: VNode) => this.descendantBefore(node), predicate);
+        } else {
+            return lastDescendant;
+        }
+    }
+    /**
+     * Return the previous sibling of this VNode that satisfies the predicate.
+     * If no predicate is given, return the previous sibling of this VNode.
+     *
+     * @param [predicate]
+     */
+    previousSibling(predicate?: Predicate): VNode {
+        const previousSibling = this.parent && this.parent.childBefore(this);
+        if (previousSibling && predicate) {
+            return previousSibling.walk((node: VNode) => node.previousSibling(), predicate);
+        } else {
+            return previousSibling;
+        }
+    }
+    /**
+     * Return the next sibling of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the next sibling of this VNode.
+     *
+     * @param [predicate]
+     */
+    nextSibling(predicate?: Predicate): VNode {
+        const nextSibling = this.parent && this.parent.childAfter(this);
+        if (nextSibling && predicate) {
+            return nextSibling.walk((node: VNode) => node.nextSibling(), predicate);
+        } else {
+            return nextSibling;
+        }
+    }
+    /**
+     * Return the previous node in a depth-first pre-order traversal of the
+     * tree that satisfies the given predicate. If no predicate is given return
+     * the previous node in a depth-first pre-order traversal of the tree.
+     *
+     * @param [predicate]
+     */
+    previous(predicate?: Predicate): VNode {
+        let previous = this.previousSibling();
+        if (previous) {
+            // The previous node is the last leaf of the previous sibling.
+            previous = previous.lastLeaf();
+        } else {
+            // If it has no previous sibling then climb up to the parent.
+            previous = this.parent;
+        }
+        if (previous && predicate) {
+            return previous.walk((node: VNode) => node.previous(), predicate);
+        } else {
+            return previous;
+        }
+    }
+    /**
+     * Return the next node in a depth-first pre-order traversal of the tree
+     * that satisfies the given predicate. If no predicate is given return the
+     * next node in a depth-first pre-order traversal of the tree.
+     *
+     * @param [predicate]
+     */
+    next(predicate?: Predicate): VNode {
+        // The node after node is its first child.
+        let next = this.firstChild();
+        if (!next) {
+            // If it has no children then it is its next sibling.
+            next = this.nextSibling();
+        }
+        if (!next) {
+            // If it has no siblings either then climb up to the closest parent
+            // which has a next sibiling.
+            let ancestor = this.parent;
+            while (ancestor && !ancestor.nextSibling()) {
+                ancestor = ancestor.parent;
+            }
+            next = ancestor && ancestor.nextSibling();
+        }
+        if (next && predicate) {
+            return next.walk((node: VNode) => node.next(), predicate);
+        } else {
+            return next;
+        }
+    }
+    /**
+     * Walk the document tree starting from the current node (included) by
+     * calling the `next` iterator until the returned node satisfies the given
+     * predicate or is falsy.
+     *
+     * @param next
+     * @param [predicate]
+     */
+    walk(next: (node: VNode) => VNode, predicate: Predicate): VNode {
+        let node: VNode;
+        node = this;
+        while (node && !predicate(node)) {
+            node = next(node);
+        }
+        return node;
     }
 
     //--------------------------------------------------------------------------
