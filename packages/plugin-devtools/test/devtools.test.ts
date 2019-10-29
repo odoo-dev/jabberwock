@@ -545,7 +545,7 @@ describe('Plugin: DevTools', () => {
             await nextTickFrame();
 
             const container = editor.el.querySelector('test-container');
-            container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
+            container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
             container.querySelector('b').firstChild.textContent = 'z';
             container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
             await nextTickFrame();
@@ -736,7 +736,7 @@ describe('Plugin: DevTools', () => {
             await nextTickFrame();
 
             const container = editor.el.querySelector('test-container');
-            container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
+            container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
             container.querySelector('b').firstChild.textContent = 'z';
             container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
             await nextTickFrame();
@@ -876,7 +876,7 @@ describe('Plugin: DevTools', () => {
                 charBeforeChange = editor.vDocument.root.children()[1].children()[1];
 
                 const container = editor.el.querySelector('test-container');
-                container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
+                container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
                 container.querySelector('b').firstChild.textContent = 'z';
                 container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
                 await nextTickFrame();
@@ -942,8 +942,6 @@ describe('Plugin: DevTools', () => {
                     '<table>' +
                     '<tbody>' +
                     '<tr><td>text</td><td>z</td></tr>' +
-                    '<tr><td>elements</td><td>[object Set]</td></tr>' +
-                    '<tr><td>origin</td><td>EventNormalizer</td></tr>' +
                     '</tbody>' +
                     '</table>';
                 expect(properties.outerHTML).to.equal(pResult);

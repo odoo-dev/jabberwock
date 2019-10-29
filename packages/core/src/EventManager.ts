@@ -1,11 +1,9 @@
-import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
+import { LineBreakNode } from './../../plugin-linebreak/LineBreakNode';
+import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
 import JWEditor from './JWEditor';
+import { CommandIdentifier } from './Dispatcher';
 import { VSelectionParams } from './CorePlugin';
 import { Dom } from '../../plugin-dom/Dom';
-
-interface SetSelectionParams {
-    domSelection: DomSelectionDescription;
-}
 
 export class EventManager {
     editor: JWEditor;
@@ -28,34 +26,43 @@ export class EventManager {
     // Private
     //--------------------------------------------------------------------------
 
-    /**
-     * Callback given to the normalizer.
-     */
-    async _onNormalizedEvent(customEvent: CustomEvent): Promise<void> {
-        const payload = customEvent.detail;
-        switch (customEvent.type) {
-            case 'tab':
-                if (customEvent.detail.shiftKey) {
-                    return this.editor.execCommand('outdent');
-                } else {
-                    return this.editor.execCommand('indent');
-                }
-            case 'enter':
-                if (customEvent.detail.shiftKey) {
-                    return this.editor.execCommand('insertLineBreak');
-                } else {
-                    return this.editor.execCommand('insertParagraphBreak');
-                }
+    _matchCommand(action: NormalizedAction): [CommandIdentifier, object] {
+        switch (action.type) {
+            case 'insertText':
+                return ['insertText', { text: action.text }];
+            case 'insertLineBreak':
+                return ['insert', { value: new LineBreakNode() }];
+            case 'insertParagraph':
+                return ['insertParagraphBreak', {}];
             case 'selectAll':
             case 'setSelection': {
-                const selectionParams = payload as SetSelectionParams;
                 const vSelectionParams: VSelectionParams = {
-                    vSelection: this.domPlugin.parseSelection(selectionParams.domSelection),
+                    vSelection: this.domPlugin.parseSelection(action.domSelection),
                 };
-                return this.editor.execCommand(customEvent.type, vSelectionParams);
+                return ['setSelection', vSelectionParams];
             }
+            case 'deleteContent':
+                return [action.direction === 'forward' ? 'deleteForward' : 'deleteBackward', {}];
+            case 'applyFormat':
+                return ['applyFormat', { format: action.format }];
             default:
-                return this.editor.execCommand(customEvent.type, payload);
+                break;
+        }
+    }
+    /**
+     * Handle the received signal and dispatch the corresponding editor command,
+     * based on the user's configuration and context.
+     *
+     * @param action
+     */
+    _onNormalizedEvent(batch: EventBatch): void {
+        for (const ev of batch.events) {
+            for (const action of ev.actions) {
+                const commandSpec = this._matchCommand(action);
+                if (commandSpec) {
+                    this.editor.execCommand(...commandSpec);
+                }
+            }
         }
     }
 }

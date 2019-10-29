@@ -1,5 +1,5 @@
 import { BoundCommand, Keymap } from './Keymap';
-import { Dispatcher, CommandIdentifier } from './Dispatcher';
+import { Dispatcher, CommandIdentifier, CommandParams } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './VDocument';
@@ -36,6 +36,8 @@ export interface JWEditorConfig {
     shortcuts?: Shortcut[];
     createBaseContainer?: () => VNode;
 }
+
+export type CommandExec = (id: CommandIdentifier, params?: CommandParams) => void;
 
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
@@ -271,10 +273,10 @@ export class JWEditor {
      * Execute the given command.
      *
      * @param id name identifier of the command to execute
-     * @param args arguments object of the command to execute
+     * @param params arguments object of the command to execute
      */
-    async execCommand(id: CommandIdentifier, args = {}): Promise<void> {
-        await this.dispatcher.dispatch(id, args);
+    async execCommand(id: CommandIdentifier, params = {}): Promise<void> {
+        await this.dispatcher.dispatch(id, params);
     }
 
     /**

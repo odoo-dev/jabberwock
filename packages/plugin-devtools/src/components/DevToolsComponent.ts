@@ -54,20 +54,23 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
      *
      * @param {MouseEvent} event
      */
-    startResize(event: MouseEvent): void {
+    startResize(event: MouseEvent | TouchEvent): void {
+        event.preventDefault();
         this._heightOnLastMousedown = this.state.height;
         if (this.state.closed) {
             return; // Do not resize if the DevTools are closed
         }
-        const startY: number = event.pageY; // Y position of the mousedown
+        const startY: number =
+            event instanceof MouseEvent ? event.pageY : event.targetTouches[0].pageY; // Y position of the mousedown
 
         /**
          * Perform the resizing on every mouse mouvement
          *
-         * @param mouseMoveEvent
+         * @param ev
          */
-        const doResize = (mouseMoveEvent: MouseEvent): void => {
-            const currentY: number = mouseMoveEvent.pageY;
+        const doResize = (ev: MouseEvent | TouchEvent): void => {
+            const currentY: number =
+                ev instanceof MouseEvent ? ev.pageY : ev.targetTouches[0].pageY;
             const offset: number = startY - currentY;
             this.state.height = this._heightOnLastMousedown + offset;
         };
@@ -77,10 +80,14 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
         const stopResize = (): void => {
             window.removeEventListener('mousemove', doResize, false);
             window.removeEventListener('mouseup', stopResize, false);
+            window.removeEventListener('touchmove', doResize, false);
+            window.removeEventListener('touchend', stopResize, false);
         };
 
         window.addEventListener('mousemove', doResize);
         window.addEventListener('mouseup', stopResize);
+        window.addEventListener('touchmove', doResize);
+        window.addEventListener('touchend', stopResize);
     }
     /**
      * Toggle the `closed` state of the DevTools (only on a simple click: not
