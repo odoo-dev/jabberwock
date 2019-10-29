@@ -14,6 +14,7 @@ interface Action extends ActionInit {
     readonly id: ActionIdentifier;
     type: ActionType;
     origin: string;
+    source?: string;
     subActions?: Action[];
     target?: Node;
     elements?: Set<HTMLElement>;

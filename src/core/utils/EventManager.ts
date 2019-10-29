@@ -1,12 +1,15 @@
-import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
-import { DispatchFunction } from '../dispatcher/Dispatcher';
+import { EventNormalizer, DomRangeDescription, EventNormalizerCallback } from './EventNormalizer';
 import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode } from '../stores/VNode';
 
+export interface EventManagerCallback {
+    intents: Intent[];
+    dirty: Set<HTMLElement>;
+}
 export interface EventManagerOptions {
-    dispatch?: DispatchFunction;
+    dispatch?: (res: EventManagerCallback) => void;
 }
 
 export class EventManager {
@@ -86,11 +89,8 @@ export class EventManager {
             case 'setRange':
                 payload.vRange = this._convertRange(payload.domRange);
                 break;
-            case 'keydown':
-                // TODO: keydown should be matched with existing shortcuts. If
-                // it matches an intent shortcut, trigger the corresponding
-                // intent, otherwise do not trigger a 'keydown' intent.
-                return;
+            default:
+                break;
         }
         return ActionGenerator.intent({
             name: customEvent.type,
@@ -104,10 +104,25 @@ export class EventManager {
      *
      * @param {CustomEvent} customEvent
      */
-    _triggerEvent(customEvent: CustomEvent): void {
-        const intent = this._matchIntent(customEvent);
-        if (intent) {
-            this.options.dispatch(intent);
-        }
+    _triggerEvent(res: EventNormalizerCallback): void {
+        let source: string;
+        const intents = [];
+        res.events.map(customEvent => {
+            if (
+                customEvent.type === 'key' ||
+                customEvent.type === 'pointer' ||
+                customEvent.type === 'composition'
+            ) {
+                source = customEvent.type;
+                return;
+            }
+            const intent = this._matchIntent(customEvent);
+            intent.source = source;
+            intents.push(intent);
+        });
+        this.options.dispatch({
+            intents: intents,
+            dirty: res.dirty,
+        });
     }
 }

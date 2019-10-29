@@ -1,6 +1,7 @@
 import { CorePlugin } from './utils/CorePlugin';
+import { ActionGenerator } from './actions/ActionGenerator';
 import { Dispatcher } from './dispatcher/Dispatcher';
-import { EventManager } from './utils/EventManager';
+import { EventManager, EventManagerCallback } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './stores/VDocument';
 import { Parser } from './utils/Parser';
@@ -76,8 +77,25 @@ export class JWEditor {
 
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this.editable, {
-            dispatch: (action: Action): void => {
-                this.dispatcher.dispatch(action);
+            dispatch: (res: EventManagerCallback): void => {
+                let intentIsHandled = false;
+                res.intents.forEach(intent => {
+                    intentIsHandled = intentIsHandled || this.dispatcher.dispatch(intent);
+                });
+                const actionRender = ActionGenerator.intent({
+                    name: 'render',
+                    origin: 'Editor',
+                    payload: {
+                        origin: 'EventManager',
+                        actions: res.intents.map(intent => intent.name),
+                        dirtyElements: res.dirty,
+                    },
+                });
+                const hasChangeInMemory = intentIsHandled;
+                if (res.dirty.size || hasChangeInMemory) {
+                    this.renderer.render(this.vDocument, this.editable);
+                    this.dispatcher.dispatch(actionRender);
+                }
             },
         });
 

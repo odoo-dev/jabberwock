@@ -9,6 +9,7 @@ export type Handlers = Record<HandlerToken, ActionHandler>;
 export type DispatcherRegistry = Record<ActionIdentifier, Handlers>;
 export type DispatchFunction = (action: Action) => void;
 
+const unhandledActions = ['render', 'key', 'pointer', 'composition'];
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
@@ -29,8 +30,9 @@ export class Dispatcher {
      * Dispatches a payload to all registered callbacks.
      *
      * @param {Action} action
+     * @returns {boolean} return true if this action was handled
      */
-    dispatch(action: Action): void {
+    dispatch(action: Action): boolean {
         // Fetch proper handlers.
         const properHandlers: Handlers = this.registry[action.id];
 
@@ -44,15 +46,10 @@ export class Dispatcher {
             handlers[handlerToken](action); // TODO: use return value to retrigger
         });
 
-        if (action.name !== 'render') {
-            if (!properHandlers) {
-                console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
-            }
-            // Render when done dispatching
-            this.editor.renderer.render(this.editor.vDocument, this.editor.editable);
-            // Notify plugins that a render has been trigerred.
-            this.dispatch(ActionGenerator.intent({ name: 'render' }));
+        if (!properHandlers && !unhandledActions.includes(action.name)) {
+            console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
         }
+        return !!properHandlers;
     }
     // Is this Dispatcher currently dispatching.
     isDispatching(): boolean {
