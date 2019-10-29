@@ -13,6 +13,8 @@ export interface JWEditorConfig {
     theme?: string;
 }
 
+export type CommandExec = (id: CommandIdentifier, args?: CommandArgs) => void;
+
 export class JWEditor {
     el: HTMLElement;
     _originalEditable: HTMLElement;
@@ -128,6 +130,22 @@ export class JWEditor {
      */
     execCommand(id: CommandIdentifier, args?: CommandArgs): void {
         this.dispatcher.dispatch(id, args);
+        this.renderer.render(this.vDocument, this.editable);
+    }
+
+    /**
+     * Execute commands in batch and trigger a single render at the end.
+     *
+     * Example:
+     *  editor.execBatch(execCommand => {
+     *      execCommand('command1', args1);
+     *      execCommand('command2', args2);
+     *  });
+     *
+     * @param callback
+     */
+    execBatch(callback: (execCommand: CommandExec) => void): void {
+        callback(this.dispatcher.dispatch.bind(this.dispatcher));
         this.renderer.render(this.vDocument, this.editable);
     }
 

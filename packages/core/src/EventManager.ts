@@ -1,11 +1,9 @@
-import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
+import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
 import { Parser } from './Parser';
 import { VNode, VNodeType } from './VNode';
 import JWEditor from './JWEditor';
-
-interface SetRangeParams {
-    domRange: DomRangeDescription;
-}
+import { CommandIdentifier } from './Dispatcher';
+import { CommandArgs } from './Dispatcher';
 
 export class EventManager {
     editor: JWEditor;
@@ -26,58 +24,41 @@ export class EventManager {
     /**
      * Callback given to the normalizer.
      */
-    _onNormalizedEvent(customEvent: CustomEvent): void {
-        const payload = customEvent.detail;
-        switch (customEvent.type) {
-            case 'enter':
-                if (customEvent.detail.shiftKey) {
-                    return this.editor.execCommand('insert', {
-                        value: new VNode(VNodeType.LINE_BREAK, 'BR'),
-                    });
-                } else {
-                    return this.editor.execCommand('insertParagraphBreak');
-                }
+    _matchCommand(action: NormalizedAction): [CommandIdentifier, CommandArgs] {
+        switch (action.type) {
+            case 'insertText':
+                return ['insertText', { value: action.text }];
+            case 'insertLineBreak':
+                return ['insert', { value: new VNode(VNodeType.LINE_BREAK, 'BR') }];
+            case 'insertParagraph':
+                return ['insertParagraphBreak', {}];
             case 'selectAll':
-            case 'setRange': {
-                const rangeParams = payload as SetRangeParams;
-                return this.editor.execCommand(customEvent.type, {
-                    vRange: Parser.parseRange(rangeParams.domRange),
-                });
-            }
-            case 'keydown': {
-                // TODO: keydown should be matched with existing shortcuts. If
-                // it matches an command shortcut, trigger the corresponding
-                // command, otherwise do not trigger any command.
-                if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'b'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'bold' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'i'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'italic' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'u'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'underline' });
-                }
-                // TODO: keydown should be matched with existing shortcuts.
-                return;
-            }
+            case 'setRange':
+                return ['setRange', { vRange: Parser.parseRange(action.domRange) }];
+            case 'deleteContent':
+                return [action.direction === 'forward' ? 'deleteForward' : 'deleteBackward', {}];
+            case 'applyFormat':
+                return ['applyFormat', { format: action.format }];
             default:
-                this.editor.execCommand(customEvent.type, payload);
+                break;
         }
+    }
+    /**
+     * Handle the received signal and dispatch the corresponding editor command,
+     * based on the user's configuration and context.
+     *
+     * @param action
+     */
+    _onNormalizedEvent(batch: EventBatch): void {
+        this.editor.execBatch(execCommand => {
+            batch.events.forEach(ev => {
+                ev.actions.forEach(action => {
+                    const commandSpec = this._matchCommand(action);
+                    if (commandSpec) {
+                        execCommand(...commandSpec);
+                    }
+                });
+            });
+        });
     }
 }

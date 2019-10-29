@@ -1,4 +1,6 @@
 import { Direction } from './VRange';
+import { MutationNormalizer } from './MutationNormalizer';
+import { caretPositionFromPoint } from '../../utils/polyfill';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -11,43 +13,144 @@ const navigationKey = new Set([
     'Home',
 ]);
 
+const inputTypeCommands = new Set([
+    'historyUndo',
+    'historyRedo',
+    'formatBold',
+    'formatItalic',
+    'formatUnderline',
+    'formatStrikeThrough',
+    'formatSuperscript',
+    'formatSubscript',
+    'formatJustifyFull',
+    'formatJustifyCenter',
+    'formatJustifyRight',
+    'formatJustifyLeft',
+    'formatIndent',
+    'formatOutdent',
+    'formatRemove',
+    'formatSetBlockTextDirection',
+    'formatSetInlineTextDirection',
+    'formatBackColor',
+    'formatFontColor',
+    'formatFontName',
+]);
+
+/*
+ * sources:
+ * - wikipedia
+ * - google translate
+ * - https://jrgraphix.net/r/Unicode/
+ * helper:
+ * - https://apps.timwhitlock.info/js/regex
+ */
+const alphabetWhoContainsSpace = new RegExp(
+    '(' +
+        [
+            '[а-яА-ЯЀ-ӿԀ-ԯ]+', // cyrillic
+            '[Ͱ-Ͼἀ-῾]+', // greek & coptic
+            '[\u0530-\u058F]+', // armenian
+            '[\u0600-۾ݐ-ݾ\u08a0-\u08fe]+', // arabic
+            '[\u0900-\u0DFF]+', // India
+            '[a-zA-Z]+', // latin
+            '[a-zA-ZÀ-ÿ]+', // latin-1
+            '[a-zA-ZĀ-ſ]+', // Latin Extended-A
+            '[a-zA-Zƀ-ɏ]+', // Latin Extended-B
+        ].join('|') +
+        ')$',
+);
+
+/**
+ * These event types might, in specific cases of browsers or spell-checking
+ * keyboard, trigger dom events in multiple javascript stacks. They will require
+ * to observe events during two ticks rather than after a single tick.
+ */
+const MultiStackEventTypes = ['input', 'compositionend', 'selectAll'];
+
 export interface DomRangeDescription {
     readonly startContainer: Node;
     readonly startOffset: number;
     readonly endContainer: Node;
     readonly endOffset: number;
     readonly direction: Direction;
-    origin?: string; // origin of the Range change
 }
 
+export interface NormalizedAction {
+    type: string;
+    origin: string;
+    domRange?: DomRangeDescription;
+    vRange?: object;
+    direction?: 'forward' | 'backward';
+    text?: string;
+    html?: string;
+    files?: File[];
+    format: string;
+}
+export interface NormalizedEvent {
+    type: string;
+    actions: NormalizedAction[];
+    defaultPrevented: boolean;
+}
+export interface NormalizedCompositionEvent extends NormalizedEvent {
+    type: 'composition';
+    from: string;
+    to: string;
+}
+export interface NormalizedKeyboardEvent extends NormalizedEvent {
+    type: 'keyboard';
+    key: string;
+    code: string;
+    altKey: boolean;
+    ctrlKey: boolean;
+    metaKey: boolean;
+    shiftKey: boolean;
+    inputType?: string;
+}
+
+export interface DomLocation {
+    offsetNode: Node;
+    offset: number;
+}
+
+export interface NormalizedPointerEvent extends NormalizedEvent {
+    type: 'pointer';
+    target: DomLocation;
+    inputType?: string;
+}
+
+export interface EventBatch {
+    events: NormalizedEvent[];
+    mutatedElements?: Set<Node>;
+}
+
+interface DataTransferDetail {
+    'text/plain': string;
+    'text/html': string;
+    'text/uri-list': string;
+    files: File[];
+    fromDragContent: boolean;
+    originalEvent: DragEvent | ClipboardEvent;
+    caretPosition: DomLocation;
+    range: DomRangeDescription;
+}
+
+interface DataTransferEvent extends CustomEvent {
+    detail: DataTransferDetail;
+}
 interface CompiledEvent {
     type: string; // main event type, e.g. 'keydown', 'composition', 'move', ...
     key?: string; // the key pressed for keyboard events
+    code?: string;
     altKey?: boolean;
     ctrlKey?: boolean;
     metaKey?: boolean;
     shiftKey?: boolean;
     data?: string; // specific data for input events
-    elements?: Set<HTMLElement>; // the nodes that were mutated, if any
-    mutationsList?: Array<MutationRecord>; // mutations observed by the observer
+    mutatedNodes?: Set<Node>; // the nodes that were mutated, if any
     defaultPrevented?: boolean;
-    clone?: ClonedNode; // clone of closest block node containing modified selection during composition
-}
-
-interface ClonedNode extends Node {
-    origin: Node;
-}
-
-interface CharactersMapping {
-    length: number;
-    chars: string; // concatenated characters accross multiple nodes
-    nodes: Array<Node | ClonedNode>; // corresponding textual nodes
-    offsets: number[]; // character offsets in their corresponding textual nodes
-}
-
-interface ChangeOffsets {
-    leftOffset: number;
-    rightOffset: number;
+    inputType?: string;
+    caretPosition?: DomLocation;
+    dataTransfer?: DataTransferDetail;
 }
 
 interface EventListenerDeclaration {
@@ -56,52 +159,91 @@ interface EventListenerDeclaration {
     readonly listener: EventListener;
 }
 
-interface NormalizedventPayload {
-    domRangeChange?: DomRangeDescription;
-
-    origin: string;
-}
-
 export class EventNormalizer {
+    /**
+     * HTML element that represents the editable zone. Only events happening
+     * inside the editable zone are subject to normalization.
+     */
     editable: HTMLElement;
+    /**
+     * Event listeners that are bound in the DOM by the normalizer on creation
+     * and unbound on destroy.
+     */
     _eventListeners: EventListenerDeclaration[] = [];
-    _compiledEvent: CompiledEvent;
-    _observer: MutationObserver;
-    _selectAllOriginElement: Node; // original selection/target before updating selection
-    _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
-    _eventCallback: (customEvent: CustomEvent) => void; // callback to trigger on events
-    _rangeHasChanged: boolean;
+    /**
+     * The MutationNormalizer used by the normalizer to watch the nodes that are
+     * being modified since the normalizer creation until it is drestroyed.
+     */
+    _mutationNormalizer: MutationNormalizer;
+    /**
+     * Events fired during the current tick.
+     */
+    _events: Event[];
+    /**
+     * Events fired during the previous action.
+     */
+    _lastEvents: Event[];
+    /**
+     * In some cases, the observation must be delayed to the next tick. In these
+     * cases, this control variable will be set to true such that the analysis
+     * process knows the current event queue processing has been delayed.
+     */
+    _secondTickObservation = false;
+    /**
+     * Callback function to trigger for each user action.
+     */
+    _triggerEvent: (batch: EventBatch) => void;
+    /**
+     * Whether the current state of the selection is already recognized as being
+     * a "select all".
+     */
     _selectAll: boolean;
+    /**
+     * Original mousedown event from which the current selection was made.
+     */
+    _initialMousedownInEditable: boolean;
+    /**
+     * Original selection target before the current selection is updated.
+     */
+    _initialCaretPosition: DomLocation;
+    /**
+     * TODO: ask CHM
+     */
+    _rangeHasChanged: boolean;
+    /**
+     * Whether the current dragging operation started from inside the editable.
+     * False if the dragging started outside of the editable.
+     */
+    _draggingFromEditable: boolean;
+    /**
+     * TODO: WTF ?
+     */
+    _setTimeoutID: NodeJS.Timeout;
 
-    constructor(editable: HTMLElement, eventCallback: (customEvent: CustomEvent) => void) {
+    constructor(editable: HTMLElement, callback: (res: EventBatch) => void) {
         this.editable = editable;
-        this._eventCallback = eventCallback;
+        this._triggerEvent = callback;
 
         const document = this.editable.ownerDocument;
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
         this._bindEvent(document, 'click', this._onClick);
-        this._bindEvent(document, 'touchend', this._onClick);
-        this._bindEvent(document, 'contextmenu', this._onContextMenu);
-
+        this._bindEvent(document, 'touchend', this._onTouchEnd);
+        this._bindEvent(editable, 'contextmenu', this._onContextMenu);
+        this._bindEvent(document, 'touchstart', this._onTouchStart);
+        this._bindEvent(document, 'mousedown', this._onMouseDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
-        this._bindEvent(editable, 'input', this._onInput);
         this._bindEvent(editable, 'compositionstart', this._onComposition);
         this._bindEvent(editable, 'compositionupdate', this._onComposition);
         this._bindEvent(editable, 'compositionend', this._onComposition);
-        this._bindEvent(editable, 'touchstart', this._onMouseDown);
-        this._bindEvent(editable, 'mousedown', this._onMouseDown);
+        this._bindEvent(editable, 'beforeinput', this._onInput);
+        this._bindEvent(editable, 'input', this._onInput);
+        this._bindEvent(editable, 'paste', this._onPaste);
+        this._bindEvent(editable, 'dragstart', this._onDragStart);
+        this._bindEvent(editable, 'dragend', this._onDragEnd);
+        this._bindEvent(editable, 'drop', this._onDrop);
 
-        this._observer = new MutationObserver((mutationsList): void => {
-            if (this._compiledEvent) {
-                this._compiledEvent.mutationsList.push(...mutationsList);
-            }
-        });
-        this._observer.observe(this.editable, {
-            characterData: true, // monitor text content changes
-            childList: true, // monitor child nodes addition or removal
-            subtree: true, // extend monitoring to all children of the target
-        });
+        this._mutationNormalizer = new MutationNormalizer(editable);
     }
     /**
      * Called when destroy the event normalizer.
@@ -109,7 +251,7 @@ export class EventNormalizer {
      *
      */
     destroy(): void {
-        this._observer.disconnect();
+        this._mutationNormalizer.destroy();
         this._unbindEvents();
     }
 
@@ -134,7 +276,7 @@ export class EventNormalizer {
             type: type,
             listener: boundListener,
         });
-        target.addEventListener(type, boundListener);
+        target.addEventListener(type, boundListener, false);
     }
     /**
      * Unbind all events bound by calls to _bindEvent.
@@ -147,313 +289,699 @@ export class EventNormalizer {
         });
     }
     /**
-     * This method creates a CompiledEvent.
-     * After a tick (setTimeout 0ms) the method '_tickAfterUserInteraction' is
-     * called.
-     * All events during a tick are caught and the CompiledEvent object is
-     * complete. This analysis tries to extract the actions desired by the user.
-     * Actions such as special character insertion, delete, backspace,
-     * spellcheckers...
-     * User events are received per batch, corresponding to an action.
+     * Register given event on `this._eventsQueue`. If the queue is not already
+     * initialized or has been cleared prior to this call, re-initialize it and
+     * reset the stored clone in the process.
      *
-     * @see _tickAfterUserInteraction
+     * After a tick (setTimeout 0ms) the '_processEvents' method is called.
+     * All events that happened during the tick are read from the queue and the
+     * analysis tries to extract the actions desired by the user such as insert,
+     * delete, backspace, spellchecking, special characters, etc.
+     *
+     * @see _processEvents
      * @private
-     * @returns {CompiledEvent}
      */
-    _compileEvents(): CompiledEvent {
-        if (this._compiledEvent) {
-            return this._compiledEvent;
+    _registerEvent(ev: Event): void {
+        if (!this._events) {
+            this._mutationNormalizer.start();
+            // The queue is not initialized or has been reset, so this is a new
+            // user action. Re-initialize the queue such that the analysis is
+            // not polluted by previous observations.
+            this._events = [];
+            this._secondTickObservation = false;
+            // All events during this tick will be processed in the next one.
+            setTimeout(this._processEvents.bind(this));
         }
-        this._rangeHasChanged = false;
-        this._compiledEvent = {
-            type: null,
-            key: 'Unidentified',
-            data: '',
-            altKey: false,
-            ctrlKey: false,
-            metaKey: false,
-            shiftKey: false,
-            mutationsList: [],
-            defaultPrevented: false,
-        };
-        setTimeout(this._processCompiledEvent.bind(this));
-        return this._compiledEvent;
+        this._events.push(ev);
     }
     /**
-     * Create a partial clone of the DOM starting from the current position of
-     * the range up to its closest display:block parent. This partial clone of
-     * the DOM will be compared later on with the state of the DOM after the
-     * composition has ended in order to indentify the change that was made.
+     * Process the registered events and create the compiled event.
      *
      * @private
      */
-    _cloneForComposition(): void {
-        // Check if already cloned earlier
-        if (this._compiledEvent.clone) {
+    _processEvents(): void {
+        // In some cases, for example cutting with Cmd+X on Safari, the browser
+        // triggers events in two different stacks. In such cases, observing
+        // events occuring during one tick is not enough so we need to delay the
+        // analysis after we observe events during two ticks instead.
+        const needSecondTickObservation = this._events.every(ev => {
+            return !MultiStackEventTypes.includes(ev.type);
+        });
+        if (needSecondTickObservation && !this._secondTickObservation) {
+            this._secondTickObservation = true;
+            setTimeout(this._processEvents.bind(this));
             return;
+        }
+
+        this._mutationNormalizer.stop();
+        // Store and reset compiled event for the next stack.
+        const events = this._events;
+        this._lastEvents = events;
+        this._events = null;
+
+        let compiledEvents: CompiledEvent[] = [];
+        events.forEach(ev => {
+            let lastCompiledEvent =
+                compiledEvents.length && compiledEvents[compiledEvents.length - 1];
+            if (['compositionstart', 'compositionupdate', 'compositionend'].includes(ev.type)) {
+                const compositionEvent = ev as CompositionEvent;
+                if (lastCompiledEvent) {
+                    if (lastCompiledEvent.type === 'composition') {
+                        if (compositionEvent.data) {
+                            lastCompiledEvent.data = compositionEvent.data;
+                            lastCompiledEvent.defaultPrevented =
+                                lastCompiledEvent.defaultPrevented ||
+                                compositionEvent.defaultPrevented;
+                        }
+                        return;
+                    }
+                }
+                const compiledEvent = {
+                    type: 'composition',
+                    data: compositionEvent.data,
+                    defaultPrevented: compositionEvent.defaultPrevented,
+                } as CompiledEvent;
+                if (lastCompiledEvent) {
+                    compiledEvent.inputType = lastCompiledEvent.inputType;
+                    compiledEvent.key = lastCompiledEvent.key;
+                    compiledEvent.code = lastCompiledEvent.code;
+                    compiledEvent.altKey = lastCompiledEvent.altKey;
+                    compiledEvent.ctrlKey = lastCompiledEvent.ctrlKey;
+                    compiledEvent.metaKey = lastCompiledEvent.metaKey;
+                    compiledEvent.shiftKey = lastCompiledEvent.shiftKey;
+                }
+                compiledEvents = [compiledEvent];
+            } else if (ev.type === 'selectAll') {
+                compiledEvents.push({ type: 'selectAll' });
+            } else if (
+                (ev.type === 'keydown' &&
+                    (!lastCompiledEvent ||
+                        (lastCompiledEvent.type !== 'composition' &&
+                            lastCompiledEvent.key !== 'Unidentified') ||
+                        lastCompiledEvent.code)) ||
+                (!lastCompiledEvent && ev.type === 'keypress')
+            ) {
+                // TODO comment: This is supposed to be the "keydown" section,
+                // but there is a case where we want to use the "keypress" event
+                // instead: In some cases(Mac), we can get a keypress without
+                // keydown. In such cases, we want to create the event with the
+                // keypress rather than only using keypress for enrichment.
+
+                // browser like safari send composition for accent then trigger
+                // keydown we use keydown to enrich the composition with the key
+                // and code
+                const keyboardEv = ev as KeyboardEvent;
+                if (keyboardEv.key === 'Dead') {
+                    return;
+                }
+                compiledEvents.push({
+                    type: 'keydown',
+                    key: keyboardEv.key,
+                    code: keyboardEv.code,
+                    altKey: keyboardEv.altKey,
+                    ctrlKey: keyboardEv.ctrlKey,
+                    metaKey: keyboardEv.metaKey,
+                    shiftKey: keyboardEv.shiftKey,
+                    defaultPrevented: keyboardEv.defaultPrevented,
+                });
+            } else if (ev.type === 'paste' || ev.type === 'drop') {
+                const evClipboardEvent = ev as DataTransferEvent;
+                if (!lastCompiledEvent) {
+                    const detail = evClipboardEvent.detail;
+                    lastCompiledEvent = {
+                        caretPosition: detail.caretPosition,
+                        type: 'pointer',
+                        defaultPrevented: detail.originalEvent.defaultPrevented,
+                    };
+                    compiledEvents.push(lastCompiledEvent);
+                }
+                lastCompiledEvent.inputType =
+                    ev.type === 'drop' ? 'insertFromDrop' : 'insertFromPaste';
+                compiledEvents.push({
+                    type: ev.type,
+                    dataTransfer: evClipboardEvent.detail,
+                });
+            } else if (lastCompiledEvent) {
+                // The following event types enrich the current compiled event
+                // rather than creating a new one.
+                if (ev.type === 'keypress' || ev.type === 'keydown') {
+                    this._enrichByKeypress(lastCompiledEvent, ev as KeyboardEvent);
+                } else {
+                    this._enrichByInput(lastCompiledEvent, ev as InputEvent);
+                }
+            } else if (ev.type === 'input') {
+                const evInput = ev as InputEvent;
+                if (evInput.inputType === 'insertReplacementText') {
+                    // safari completion/correction
+                    compiledEvents = [
+                        {
+                            type: 'composition',
+                            inputType: 'insertReplacementText',
+                            data: evInput.data,
+                            defaultPrevented: ev.defaultPrevented,
+                        },
+                    ];
+                } else if (evInput.inputType === 'deleteByCut') {
+                    compiledEvents = [
+                        {
+                            type: 'pointer',
+                            caretPosition: this._initialCaretPosition,
+                            inputType: 'deleteByCut',
+                            defaultPrevented: ev.defaultPrevented,
+                        },
+                    ];
+                }
+                compiledEvents.push({
+                    type: evInput.type,
+                    data: evInput.data,
+                    inputType: evInput.inputType || (evInput.data && 'textInput'),
+                    defaultPrevented: evInput.defaultPrevented,
+                });
+            }
+        });
+
+        // Compute the set of mutated elements accross all observed events.
+        const mutatedElements = this._mutationNormalizer.getMutatedElements();
+
+        // Create the custom events corresponding to the compiled data from
+        // observed events.
+        let normalizedEvents: NormalizedEvent[] = [];
+        let actions: NormalizedAction[];
+
+        compiledEvents.forEach(compiledEvent => {
+            if (compiledEvent.type === 'keydown' || compiledEvent.inputType === 'insertParagraph') {
+                actions = this._analyzeKeyboard(compiledEvent, mutatedElements);
+                const normalizedEvent = {
+                    type: 'keyboard',
+                    key:
+                        compiledEvent.data && compiledEvent.data.length === 1
+                            ? compiledEvent.data
+                            : compiledEvent.key,
+                    code: compiledEvent.code,
+                    altKey: compiledEvent.altKey,
+                    ctrlKey: compiledEvent.ctrlKey,
+                    metaKey: compiledEvent.metaKey,
+                    shiftKey: compiledEvent.shiftKey,
+                    defaultPrevented: compiledEvent.defaultPrevented,
+                    actions: actions,
+                } as NormalizedKeyboardEvent;
+                if (compiledEvent.inputType) {
+                    normalizedEvent.inputType = compiledEvent.inputType;
+                }
+                normalizedEvents.push(normalizedEvent);
+            } else if (compiledEvent.type === 'composition') {
+                normalizedEvents.push(...this._analyzeComposition(compiledEvent));
+            } else if (compiledEvent.type === 'pointer') {
+                actions = this._analyze(compiledEvent);
+                normalizedEvents.push({
+                    type: 'pointer',
+                    target: compiledEvent.caretPosition,
+                    inputType: compiledEvent.inputType,
+                    defaultPrevented: compiledEvent.defaultPrevented,
+                    actions: actions,
+                } as NormalizedPointerEvent);
+            } else if (compiledEvent.type !== 'input') {
+                actions.push(...this._analyze(compiledEvent));
+            } else if (inputTypeCommands.has(compiledEvent.inputType)) {
+                const inputType = compiledEvent.inputType;
+                if (inputType.indexOf('format') === 0) {
+                    const format = inputType[6].toLowerCase() + inputType.slice(7);
+                    actions = [
+                        this._makePayload('applyFormat', {
+                            format: format,
+                            data: compiledEvent.data,
+                        }),
+                    ];
+                } else {
+                    actions = [this._makePayload(inputType, {})];
+                }
+                normalizedEvents.push({
+                    type: 'pointer',
+                    target: this._initialCaretPosition,
+                    inputType: compiledEvent.inputType,
+                    defaultPrevented: compiledEvent.defaultPrevented,
+                    actions: actions,
+                } as NormalizedPointerEvent);
+            }
+        });
+
+        normalizedEvents = normalizedEvents.filter((normalizedEvent: NormalizedKeyboardEvent) => {
+            // max safari trigger the keyboard and later change the range to select all
+            return (
+                normalizedEvent.actions.length ||
+                normalizedEvent.type !== 'keyboard' ||
+                normalizedEvent.key !== 'a' ||
+                !normalizedEvent.metaKey
+            );
+        });
+
+        if (normalizedEvents.length || mutatedElements.size) {
+            this._triggerEvent({ events: normalizedEvents, mutatedElements });
+        }
+    }
+    /**
+     * @private
+     * @param {CompiledEvent} ev
+     * @param {KeyboardEvent} keypress
+     */
+    _enrichByKeypress(ev: CompiledEvent, keypress: KeyboardEvent): void {
+        if (keypress.key !== 'Dead') {
+            ev.key = keypress.key;
+        }
+        if (keypress.code) {
+            ev.code = keypress.code;
+        }
+        ev.altKey = keypress.altKey;
+        ev.ctrlKey = keypress.ctrlKey;
+        ev.metaKey = keypress.metaKey;
+        ev.shiftKey = keypress.shiftKey;
+        ev.defaultPrevented = ev.defaultPrevented || keypress.defaultPrevented;
+    }
+    /**
+     * @private
+     * @param {CompiledEvent} compiledEvent
+     * @param {InputEvent} ev
+     */
+    _enrichByInput(compiledEvent: CompiledEvent, ev: InputEvent): void {
+        compiledEvent.defaultPrevented = compiledEvent.defaultPrevented || ev.defaultPrevented;
+        const inputType = ev.inputType;
+        const type = compiledEvent.type;
+        const key = compiledEvent.key;
+        const data = compiledEvent.data;
+        const code = compiledEvent.code;
+        if (type === 'composition') {
+            if (['insertCompositionText', 'insertReplacementText'].includes(inputType)) {
+                // Some spell checking keyboards do not properly fill the textual
+                // data of the composition in the compositionend event. To protect
+                // against this, use the data from the input event instead.
+                compiledEvent.data = ev.data;
+            } else if (inputType === 'insertText') {
+                if (type === 'composition' && ev.data && ev.data.length === 1 && ev.data !== data) {
+                    // Some spell-checking keyboards automatically add a space
+                    // after the composition. Compile the two changes together.
+                    compiledEvent.data += ev.data;
+                }
+            }
+        } else if (key === 'Unidentified' || code === '') {
+            // Some spell-checking keyboards don't set a value for key in the
+            // keydown/keypress event, so we must guess it from the inputType.
+            if (inputType === 'insertParagraph' || inputType === 'insertLineBreak') {
+                compiledEvent.key = 'Enter';
+                compiledEvent.code = 'Enter';
+            } else if (inputType === 'deleteContentBackward') {
+                compiledEvent.key = 'Backspace';
+                compiledEvent.code = 'Backspace';
+            } else if (inputType === 'deleteContentForward') {
+                compiledEvent.key = 'Delete';
+                compiledEvent.code = 'Delete';
+            } else {
+                // The data property is supposed to contain the accentuated
+                // character, but it is an "Unidentified" key for some browsers.
+                compiledEvent.key = ev.data;
+            }
+        } else if (!data) {
+            // In most other cases, the data of the input event is more richer
+            // than the other events data property.
+            compiledEvent.data = ev.data;
+        }
+        compiledEvent.inputType = inputType || (data && 'textInput');
+    }
+    /**
+     * Analyze the compiled event and return the corresponding custom events.
+     *
+     * @private
+     */
+    _analyze(compiledEvent: CompiledEvent): NormalizedAction[] {
+        const events = [];
+        const type = compiledEvent.type;
+        const inputType = compiledEvent.inputType;
+        if (inputType === 'deleteByCut') {
+            events.push(...this._analyzeRemove(compiledEvent));
+        } else if (type === 'paste') {
+            events.push(...this._analyzePaste(compiledEvent));
+        } else if (type === 'drop') {
+            events.push(...this._analyzeDrop(compiledEvent));
+        } else if (compiledEvent.type === 'selectAll') {
+            events.push(...this._makeSelectAll());
+        }
+        return events;
+    }
+    _analyzeKeyboard(compiledEvent: CompiledEvent, elements: Set<Node>): NormalizedAction[] {
+        const events = [];
+        const key = compiledEvent.key;
+        const data = compiledEvent.data;
+        const inputType = compiledEvent.inputType;
+        if (navigationKey.has(key)) {
+            // Set the range according to the current one. Set the origin key
+            // in order to track the source of the move.
+            const range = this._getRange();
+            // TODO: nagivation word/line ?
+            events.push(this._makePayload('setRange', { domRange: range }));
+        } else if (key === 'Backspace' || key === 'Delete' || inputType === 'deleteByCut') {
+            events.push(...this._analyzeRemove(compiledEvent));
+        } else if (key === 'Enter') {
+            if (compiledEvent.inputType === 'insertLineBreak') {
+                events.push(this._makePayload('insertText', { text: '\n', html: '<br/>' }));
+            } else {
+                events.push(this._makePayload('insertParagraph', {}));
+            }
+        } else if (inputTypeCommands.has(inputType)) {
+            if (inputType.indexOf('format') === 0) {
+                const format = inputType[6].toLowerCase() + inputType.slice(7);
+                events.push(this._makePayload('applyFormat', { format: format, data: data }));
+            } else {
+                events.push(this._makePayload(inputType, {}));
+            }
+        } else if (
+            elements.size &&
+            !compiledEvent.ctrlKey &&
+            !compiledEvent.altKey &&
+            (compiledEvent.code === 'Space' ||
+                (data && data.length === 1) ||
+                (key && key.length === 1))
+        ) {
+            events.push(...this._analyzeSampleInsert(compiledEvent));
+        }
+        return events;
+    }
+    _analyzePaste(ev: CompiledEvent): NormalizedAction[] {
+        return [this._analyzeDataTransfer(ev.dataTransfer)];
+    }
+    _analyzeDrop(ev: CompiledEvent): NormalizedAction[] {
+        const events = [];
+        if (ev.dataTransfer.fromDragContent && !ev.dataTransfer.files.length) {
+            events.push(this._makePayload('deleteContent', { direction: 'forward' }));
+        }
+        events.push(this._makePayload('setRange', { domRange: ev.dataTransfer.range }));
+        events.push(this._analyzeDataTransfer(ev.dataTransfer));
+        return events;
+    }
+    _analyzeDataTransfer(dataTransfer: DataTransferDetail): NormalizedAction {
+        if (dataTransfer.files.length) {
+            return this._makePayload('insertFiles', { files: dataTransfer.files });
+        }
+        const uri = dataTransfer['text/uri-list'];
+        // eslint-disable-next-line no-control-regex
+        const html = dataTransfer['text/html'].replace(/\x00/g, ''); // replace for drag&drop from firefox to chrome
+        const text = dataTransfer['text/plain'];
+        if (html) {
+            if (uri) {
+                const temp = document.createElement('temp');
+                temp.innerHTML = html;
+                const element = temp.querySelector('a, img');
+                if (element) {
+                    if (
+                        !dataTransfer.fromDragContent &&
+                        element.nodeName === 'A' &&
+                        element.innerHTML === ''
+                    ) {
+                        // add default content if external link
+                        element.innerHTML = text;
+                    }
+                    return this._makePayload('insertHtml', { html: element.outerHTML });
+                }
+                return this._makePayload('insertHtml', { html: html });
+            }
+            return this._makePayload('insertHtml', {
+                html: html && html.replace(/^<meta[^>]+>/, ''),
+                text: text,
+            });
+        }
+        if (uri) {
+            return this._makePayload('insertHtml', {
+                html: '<a href="' + uri + '">' + uri + '</a>',
+            });
+        }
+        return this._makePayload('insertText', { text: text });
+    }
+    _analyzeSampleInsert(ev: CompiledEvent): NormalizedAction[] {
+        const key = ev.key;
+        const data = ev.data;
+        // Different browsers handle the same action differently using
+        // triggering different events with different payloads. We listen
+        // to input events which uses data and keypress event which uses key.
+        // In some browsers, input event data is empty (empty string) which
+        // is wrong, hence we have to look at the keypress event.
+        // When we have data, data has more value than key.
+        // TODO comment: input > keypress > keydown
+        const keydata = data && data.length === 1 ? data : key;
+        const events = [];
+        if (keydata === ' ' || keydata === 'Space') {
+            // Some send space as ' ' and some send 'Space'.
+            // Insert a non-breaking space instead.
+            ev.code = 'Space';
+            ev.key = ' ';
+            events.push(this._makePayload('insertText', { text: ' ' }));
+        } else {
+            events.push(this._makePayload('insertText', { text: keydata }));
+        }
+        return events;
+    }
+    /**
+     * Process the given compiled event as a composition to identify the text
+     * that was inserted and trigger the corresponding events on the listener.
+     *
+     * @private
+     */
+    _analyzeComposition(
+        ev: CompiledEvent,
+    ): (NormalizedCompositionEvent | NormalizedKeyboardEvent)[] {
+        if (!ev.inputType) {
+            return [];
+        }
+
+        // The goal of this function is to precisely find what was inserted by
+        // a keyboard supporting spell-checking and suggestions.
+        // Example (`|` represents the text cursor):
+        //   Previous content: 'My friend Christofe| was here.'
+        //   Current content:  'My friend Christophe Matthieu| was here.'
+        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
+        const res = this._mutationNormalizer.getCharactersMapping();
+
+        let index = res.index;
+        let insert = res.insert;
+        let remove = res.remove;
+        if (remove === '' && insert.length === 1 && ev.key) {
+            // virtual keyboard like swiftKey send composition event for each keypress
+            return [
+                {
+                    type: 'keyboard',
+                    key: ev.key,
+                    code: ev.code,
+                    altKey: ev.altKey,
+                    ctrlKey: ev.ctrlKey,
+                    metaKey: ev.metaKey,
+                    shiftKey: ev.shiftKey,
+                    inputType: 'insertCompositionText',
+                    defaultPrevented: ev.defaultPrevented,
+                    actions: [this._makePayload('insertText', { text: insert })],
+                },
+            ];
+        }
+        const data = ev.data;
+        if (insert === remove && data) {
+            insert = data;
+            remove = data;
         }
 
         const range = this._getRange();
-        // Look for closest block node starting from current text node
-        let format = range.startContainer;
-        while (
-            format.parentNode &&
-            format !== this.editable &&
-            (format.nodeType === Node.TEXT_NODE || // text node can't be block => look for parent
-                window.getComputedStyle(format as Element).display !== 'block')
-        ) {
-            format = format.parentNode;
-        }
-        const clone: ClonedNode = format.cloneNode(true) as ClonedNode;
-        clone.origin = format;
-        this._compiledEvent.clone = clone;
+        if (index === -1) {
+            // It is possible that the index of the observed change are undefined
+            // Example (`|` represents the collapsed selection):
+            //   Previous content: 'aa aa aa| aa aa'
+            //   Current content:  'aa aa aa aa| aa aa'
+            //   Actual text inserted by the keyboard: 'aa '
+            //   Observed change:  'aa ]aa aa aa aa[ aa'
+            // TODO CHM: the below min/max does not cover all cases
 
-        (function addChildOrigin(clone: ClonedNode): void {
-            // only mark DOM elements (type 1)
-            if (clone.nodeType !== Node.ELEMENT_NODE) {
-                return;
+            // With most spell-checking mobile keyboards, the range is set right
+            // after the inserted text. It can then be used as a marker to
+            // identify the end of the change.
+            let insertEnd = 0;
+            // The text has been flattened in the characters mapping. When
+            // the index of the node has been found, use the range offset
+            // to find the index of the character proper.
+            insertEnd += range.endOffset;
+            index = insertEnd - insert.length;
+        } else {
+            let offset = index + insert.length - 1;
+            if (
+                res.current.nodes[offset] &&
+                (range.endContainer !== res.current.nodes[offset] ||
+                    range.endOffset !== res.current.offsets[offset] + 1)
+            ) {
+                offset++;
+                while (
+                    res.current.nodes[offset] &&
+                    (range.endContainer !== res.current.nodes[offset] ||
+                        range.endOffset > res.current.offsets[offset])
+                ) {
+                    const text = res.current.chars[offset];
+                    insert += text;
+                    remove += text;
+                    offset++;
+                }
             }
-            const childNodes = clone.origin.childNodes;
-            clone.childNodes.forEach((child: Node, index) => {
-                const clonedNode = child as ClonedNode;
-                clonedNode.origin = childNodes[index];
-                addChildOrigin(clonedNode);
-            });
-        })(clone);
+        }
+
+        const before = res.previous.chars.slice(0, index);
+        const match = before.match(alphabetWhoContainsSpace);
+        if (
+            match &&
+            (insert === '' || alphabetWhoContainsSpace.test(insert)) &&
+            (remove === '' || alphabetWhoContainsSpace.test(remove))
+        ) {
+            // the word is write in a alphabet who contain space, search
+            // to complete the change and include the rest of the word
+            const beginWord = match[1];
+            remove = beginWord + remove;
+            insert = beginWord + insert;
+            index -= beginWord.length;
+        } else if (data && insert && (remove || insert !== ' ') && data !== insert) {
+            const charIndex = data.lastIndexOf(insert);
+            if (charIndex !== -1) {
+                index -= charIndex;
+                insert = data;
+                const len = remove.length + charIndex;
+                remove = res.previous.chars.slice(index, index + len + 1);
+            }
+        }
+
+        const hadEndSpace = remove[remove.length - 1] === ' ';
+        const hasEndSpace = insert[insert.length - 1] === ' ';
+        let rawRemove = remove;
+        let rawInsert = insert;
+        if (hasEndSpace) {
+            if (hadEndSpace) {
+                rawRemove = rawRemove.slice(0, -1);
+            }
+            rawInsert = rawInsert.slice(0, -1);
+        }
+
+        const nodes = res.previous.nodes;
+        const offsets = res.previous.offsets;
+        const last = nodes[nodes.length - 1];
+        const lastIndex = offsets[offsets.length - 1] + 1;
+        const end = index + rawRemove.length;
+        const actions = [
+            this._makePayload('setRange', {
+                domRange: {
+                    startContainer: nodes[index] || last,
+                    startOffset: index in offsets ? offsets[index] : lastIndex,
+                    endContainer: nodes[end] || last,
+                    endOffset: end in offsets ? offsets[end] : lastIndex,
+                    direction: Direction.BACKWARD,
+                } as DomRangeDescription,
+            }),
+            this._makePayload('insertText', { text: rawInsert }),
+        ];
+
+        if (hasEndSpace) {
+            if (hadEndSpace) {
+                index += rawRemove.length;
+                actions.push(
+                    this._makePayload('setRange', {
+                        domRange: {
+                            startContainer: nodes[index],
+                            startOffset: offsets[index],
+                            endContainer: nodes[end],
+                            endOffset: offsets[index + 1],
+                            direction: Direction.BACKWARD,
+                        } as DomRangeDescription,
+                    }),
+                );
+            }
+            actions.push(this._makePayload('insertText', { text: ' ' }));
+        }
+
+        return [
+            {
+                type: 'composition',
+                from: remove,
+                to: insert,
+                defaultPrevented: ev.defaultPrevented,
+                actions: actions,
+            },
+        ];
     }
     /**
-     * Process the compiled event by triggering the corresponding events on the
-     * listener and reset the compiling process for the next stack.
+     * Process the given compiled event as a backspace/delete to identify the text
+     * that was removed and trigger the corresponding events on the listener.
      *
      * @private
      */
-    _processCompiledEvent(): void {
-        // Store and reset compiled event for the next stack.
-        const compiledEvent = this._compiledEvent;
-        this._compiledEvent = null;
-
-        // TODO: transfer defaultPrevented information
-        if (compiledEvent.defaultPrevented) {
-            // The normalizer honors the preventDefault property of events. If
-            // something was changed regardless of that property, the listener
-            // won't know it. Let it know that the state might be inconsistent.
-            this._triggerEvent('inconsistentState');
-            return;
-        }
-
-        // Gather all modified nodes to notify the listener.
-        const elements: Set<HTMLElement> = new Set();
-        compiledEvent.mutationsList.forEach(mutation => {
-            if (mutation.type === 'characterData') {
-                elements.add(mutation.target as HTMLElement);
-            }
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach(target => elements.add(target as HTMLElement));
-                mutation.removedNodes.forEach(target => elements.add(target as HTMLElement));
-            }
-        });
-        compiledEvent.elements = elements;
-
-        if (navigationKey.has(compiledEvent.key)) {
-            this._processMove(compiledEvent);
-        } else if (compiledEvent.type === 'composition') {
-            this._processComposition(compiledEvent);
-        } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
-            const direction = compiledEvent.key === 'Backspace' ? 'backward' : 'forward';
-            const deleteEventPayload = {
-                direction: direction,
-                altKey: compiledEvent.altKey,
-                ctrlKey: compiledEvent.ctrlKey,
-                metaKey: compiledEvent.metaKey,
-                shiftKey: compiledEvent.shiftKey,
-                elements: elements,
-            };
-            const type = direction === 'backward' ? 'deleteBackward' : 'deleteForward';
-            this._triggerEvent(type, deleteEventPayload);
-        } else if (compiledEvent.key === 'Tab') {
-            // TODO: maybe like keydown, there is no normalization proper here
-            const tabEventPayload = {
-                altKey: compiledEvent.altKey,
-                ctrlKey: compiledEvent.ctrlKey,
-                metaKey: compiledEvent.metaKey,
-                shiftKey: compiledEvent.shiftKey,
-                elements: elements,
-            };
-            this._triggerEvent('tab', tabEventPayload);
-        } else if (compiledEvent.key === 'Enter') {
-            const enterEventPayload = {
-                altKey: compiledEvent.altKey,
-                ctrlKey: compiledEvent.ctrlKey,
-                metaKey: compiledEvent.metaKey,
-                shiftKey: compiledEvent.shiftKey,
-                elements: elements,
-            };
-            this._triggerEvent('enter', enterEventPayload);
-        } else if (
-            !compiledEvent.ctrlKey &&
-            !compiledEvent.altKey &&
-            ((compiledEvent.data && compiledEvent.data.length === 1) ||
-                (compiledEvent.key && compiledEvent.key.length === 1) ||
-                compiledEvent.key === 'Space')
+    _analyzeRemove(ev: CompiledEvent): NormalizedAction[] {
+        const direction = ev.key === 'Backspace' ? 'backward' : 'forward';
+        if (
+            ev.inputType === 'deleteContentForward' ||
+            ev.inputType === 'deleteContentBackward' ||
+            ev.inputType === 'deleteByCut'
         ) {
-            // TODO: the above condition is unreadable
-            // Different browsers handle the same action differently using
-            // triggering different events with different payloads. We listen
-            // to input events which uses data and keypress event which uses key.
-            // In some browsers, input event data is empty (empty string) which
-            // is wrong, hence we have to look at the keypress event.
-            // When we have data, data has more value than key.
-            // TODO comment: input > keypress > keydown
-            const data =
-                compiledEvent.data && compiledEvent.data.length === 1
-                    ? compiledEvent.data
-                    : compiledEvent.key;
-            if (data === ' ' || data === 'Space') {
-                // Some send space as ' ' and some send 'Space'.
-                this._triggerEvent('insertText', {
-                    value: '\u00A0',
-                    elements: elements,
-                }); // nbsp
-            } else if (data && data[0] === '\u000A') {
-                // The enter key on some mobile keyboards does not trigger an
-                // actual keypress event but triggers an input event with the
-                // LINE FEED (LF) (u000A) unicode character instead. This
-                // normalizes it so it behaves like Shift+Enter.
-                const enterEventPayload = {
-                    altKey: false,
-                    ctrlKey: false,
-                    metaKey: false,
-                    shiftKey: true,
-                    elements: elements,
-                };
-                this._triggerEvent('enter', enterEventPayload);
-            } else {
-                this._triggerEvent('insertText', {
-                    value: data,
-                    elements: elements,
-                });
-            }
-        } else if (compiledEvent.type === 'keydown') {
-            // TODO: Maybe the normalizer should not trigger keydown events:
-            // - they are consistent accross browsers so no normalization needed
-            // - they won't be able to be defaultPrevented after being triggered
-            this._triggerEvent('keydown', compiledEvent);
-        } else {
-            // Something definitely happened since some events were compiled,
-            // but it appears to be currently unsupported since it did not fall
-            // in any of the previous conditional branches. The listener has no
-            // way to understand the change in the DOM since the normalizer does
-            // not understand it either. Let it know about the inconsistence.
-            this._triggerEvent('inconsistentState', compiledEvent);
+            return [
+                this._makePayload('deleteContent', {
+                    direction: direction,
+                }),
+            ];
         }
+        const res = this._mutationNormalizer.getCharactersMapping();
+        if (res.insert === res.remove || res.remove === '') {
+            return [];
+        }
+        if (ev.inputType === 'deleteWordForward' || ev.inputType === 'deleteWordBackward') {
+            return [
+                this._makePayload('deleteWord', {
+                    direction: direction,
+                    text: res.remove,
+                }),
+            ];
+        }
+        return [
+            this._makePayload('deleteHardLine', {
+                direction: direction,
+                domRange: {
+                    startContainer: res.previous.nodes[res.index],
+                    startOffset: res.previous.offsets[res.index],
+                    endContainer: res.previous.nodes[res.index + res.remove.length - 1],
+                    endOffset: res.previous.offsets[res.index + res.remove.length - 1] + 1,
+                    direction: direction === 'backward' ? Direction.BACKWARD : Direction.FORWARD,
+                } as DomRangeDescription,
+            }),
+        ];
     }
     /**
-     * Format a custom event and trigger it.
+     * @private
+     * @param {KeyboardEvent} ev
+     * @returns CompiledEvent
+     */
+    _makeSelectAll(): NormalizedAction[] {
+        return [
+            this._makePayload('selectAll', {
+                target: this._initialCaretPosition,
+                domRange: this._getRange(),
+            }),
+        ];
+    }
+    /**
+     * Format a custom event.
      *
      * @param {string} type
      * @param {object} [params]
      */
-    _triggerEvent(type: string, params = {}): void {
-        const detail = params as NormalizedventPayload;
+    _makePayload(type: string, params: object): NormalizedAction {
+        const detail = params as NormalizedAction;
+        detail.type = type;
         detail.origin = 'EventNormalizer';
-        const initDict = {
-            detail: detail,
-        };
-        const event = new CustomEvent(type, initDict);
-        this._eventCallback(event);
+        return detail;
     }
     /**
-     * Extract a mapping of the separate characters, their corresponding text
-     * nodes and their offsets in said nodes from the given node's subtree.
+     * Return true if the given node can be considered a textual node, that is
+     * a text node or a BR node.
      *
      * @private
-     * @param node to extract from
+     * @param node
      */
-    _getCharactersMapping(node: Node): CharactersMapping {
-        const textualNodes = this._getTextualNodes(node);
-        let length = 0;
-        let characters = '';
-        const correspondingNodes: Array<Node | ClonedNode> = [];
-        const offsets: number[] = [];
-        textualNodes.forEach(function(node) {
-            if (node.nodeValue) {
-                // Split text nodes into separate chars
-                node.nodeValue.split('').forEach(function(char, index) {
-                    length++;
-                    characters += char;
-                    correspondingNodes.push(node);
-                    offsets.push(index);
-                });
-            } else {
-                // Push br node directly
-                length++;
-                characters += '\u000A'; // LINE FEED (LF)
-                correspondingNodes.push(node);
-                offsets.push(0);
-            }
-        });
-        return {
-            length: length,
-            chars: characters,
-            nodes: correspondingNodes,
-            offsets: offsets,
-        };
-    }
-    /**
-     * Recursively extract the text and br nodes from the given node and its
-     * children and return the given accumulator array after appending into it.
-     *
-     * @private
-     * @param node to extract from
-     * @param acc accumulator array to append to
-     */
-    _getTextualNodes(node: Node, acc: Node[] = []): Node[] {
-        if (this._isTextualNode(node)) {
-            acc.push(node);
-        } else {
-            node.childNodes.forEach(n => this._getTextualNodes(n, acc));
-        }
-        return acc;
-    }
     _isTextualNode(node: Node): boolean {
         return node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR';
-    }
-    /**
-     * Compare the given previous and current strings and return the offsets in
-     * the current string of the range where the content differ between the two.
-     * If they are equal, startOffset = current.length and endOffset = 0.
-     *
-     * @private
-     * @param previous
-     * @param current
-     */
-    _getChangeOffsets(previous: string, current: string): ChangeOffsets {
-        let startOffset = 0;
-        let endOffset = previous.length;
-        const lengthDiff = current.length - previous.length;
-
-        // Find the offset where a difference is first observed from the left
-        while (startOffset < previous.length) {
-            if (previous[startOffset] !== current[startOffset]) {
-                break;
-            }
-            startOffset++;
-        }
-
-        // Find the offset where a difference is first observed from the right
-        while (endOffset >= 0) {
-            if (previous[endOffset] !== current[lengthDiff + endOffset]) {
-                // Increment the end offset as the end of a range is inclusive
-                endOffset += 1;
-                break;
-            }
-            endOffset--;
-        }
-
-        return {
-            leftOffset: startOffset,
-            rightOffset: lengthDiff + endOffset,
-        };
     }
     /**
      * Get the current range from the current selection in DOM. If there is no
@@ -467,13 +995,12 @@ export class EventNormalizer {
         let ltr: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection means no range so a fake one is created
-            ltr = this.editable.dir === 'ltr';
             return {
                 startContainer: this.editable,
                 startOffset: 0,
                 endContainer: this.editable,
                 endOffset: 0,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+                direction: Direction.FORWARD,
             };
         } else {
             // The direction of the range is sorely missing from the DOM api
@@ -490,137 +1017,6 @@ export class EventNormalizer {
                 endOffset: nativeRange.endOffset,
                 direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
             };
-        }
-    }
-    /**
-     * Process the given compiled event as a composition to identify the text
-     * that was inserted and trigger the corresponding events on the listener.
-     *
-     * @private
-     */
-    _processComposition(ev: CompiledEvent): void {
-        if (!this.editable.contains(ev.clone.origin)) {
-            // Some weird keyboards might replace the entire block element
-            // rather than the text inside of it. This is currently unsupported.
-            this._triggerEvent('inconsistentState', ev);
-            return;
-        }
-
-        // The goal of this function is to precisely find what was inserted by
-        // a keyboard supporting spell-checking and suggestions.
-        // Example (`|` represents the text cursor):
-        //   Previous content: 'My friend Christofe| was here.'
-        //   Current content:  'My friend Christophe Matthieu| was here.'
-        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
-
-        const previous = this._getCharactersMapping(ev.clone);
-        const current = this._getCharactersMapping(ev.clone.origin);
-        const previousLength = previous.length;
-        const currentLength = current.length;
-        // In the typical case, that is most spell-checking mobile keyboards,
-        // the range is set right after the inserted text. It can then be used
-        // as a marker to identify the end of the change.
-        const range = this._getRange();
-        let insertEnd = 0;
-        while (insertEnd < currentLength) {
-            if (current.nodes[insertEnd] === range.endContainer) {
-                // The text has been flattened in the characters mapping. When
-                // the index of the node has been found, use the range offset
-                // to find the index of the character proper.
-                insertEnd += range.endOffset;
-                break;
-            }
-            insertEnd++;
-        }
-
-        // If a composition event has been observed and its data property was
-        // set, it can be used to compute the start of the change.
-        let insertStart = insertEnd;
-        if (ev.data) {
-            insertStart -= ev.data.length;
-        }
-
-        // In the optimal case where both the range is correctly placed and the
-        // data property of the composition event is correctly set, the above
-        // analysis is capable of finding the precise text that was inserted.
-        // However, if any of these two conditions are not met, the results
-        // might be spectacularly wrong. For example, spell checking suggestions
-        // on MacOS are displayed while hovering the mispelled word, regardless
-        // of the current position of the range, and the correction does not
-        // trigger an update of the range position either after correcting.
-        // Example (`|` represents the text cursor):
-        //   Previous content: 'My friend Christofe was here.|'
-        //   Current content:  'My friend Christophe Matthieu was here.|'
-        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
-        //   Result if data is set to 'Christophe' (length: 10): 'e was here'
-        //   Result if data is not set (regardless of the range): ''
-        //
-        // Because the first analysis might not be enough in some cases, a
-        // second analysis must be performed. This analysis aims at precisely
-        // identifying the offset of the actual change in the text by comparing
-        // the previous content with the current one from left to right to find
-        // the start of the change and from right to left to find its end.
-        // Example (`|` represents the text cursor):
-        //   Previous content: 'My friend Christofe| was here.'
-        //   Current content:  'My friend Christophe Matthieu| was here.'
-        //   Observed change:  'My friend Christo[fe => phe Matthieu] was here.'
-        //   Change offsets in the current content: {left: 17, right: 29}
-        const change = this._getChangeOffsets(previous.chars, current.chars);
-
-        // It is possible that the left and right offsets of the observed change
-        // are reversed in rtl direction or in some weird cases.
-        // Example (`|` represents the collapsed selection):
-        //   Previous content: 'aa aa aa| aa aa'
-        //   Current content:  'aa aa aa aa| aa aa'
-        //   Actual text inserted by the keyboard: 'aa '
-        //   Observed change:  'aa ]aa aa aa aa[ aa'
-        // TODO CHM: the below min/max does not cover all cases
-        insertStart = Math.min(insertStart, Math.max(change.leftOffset, change.rightOffset));
-        insertEnd = Math.max(insertEnd, Math.min(change.rightOffset, change.leftOffset));
-
-        // Reconstruct the inserted text from the computed indices.
-        const insertedText = current.chars.slice(insertStart, insertEnd);
-
-        // Compute the range in the previous DOM corresponding to the range of
-        // the observed correction in current DOM. For this purpose, the nodes
-        // in the `previous` mapping were given a reference to their original
-        // self before cloning such that it can be retrieved now.
-        const previousNodes = previous.nodes as ClonedNode[];
-        // The indices in the current DOM must be offset by the difference in
-        // length between the previous and current content in order to compute
-        // their corresponding indices in the previous DOM.
-        const insertPreviousStart = insertStart;
-        const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const insertionRange: DomRangeDescription = {
-            startContainer: previousNodes[insertPreviousStart].origin,
-            startOffset: previous.offsets[insertPreviousStart],
-            endContainer: previousNodes[insertPreviousEnd].origin,
-            endOffset: previous.offsets[insertPreviousEnd],
-            direction: Direction.BACKWARD,
-            origin: 'composition',
-        };
-
-        this._triggerEvent('setRange', { domRange: insertionRange });
-        this._triggerEvent('insertText', { value: insertedText, elements: ev.elements });
-    }
-    /**
-     * Process the given compiled event as a move and trigger the corresponding
-     * events on the listener.
-     *
-     * @private
-     */
-    _processMove(ev: CompiledEvent): void {
-        // The normalizer honors preventDefault for moves. If the range was
-        // moved regardless of the preventDefault setting, it must be restored.
-        if (ev.defaultPrevented) {
-            this._triggerEvent('restoreRange');
-        } else {
-            // Set the range according to the current one. Set the origin key
-            // in order to track the source of the move.
-            const range = this._getRange();
-            range.origin = ev.key;
-            // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', { domRange: range, elements: ev.elements });
         }
     }
     /**
@@ -660,6 +1056,7 @@ export class EventNormalizer {
             endContainer = endContainer.childNodes[endOffset];
             endOffset = 0;
         }
+
         if (
             startOffset !== 0 ||
             (endContainer.nodeType === Node.TEXT_NODE &&
@@ -667,7 +1064,6 @@ export class EventNormalizer {
         ) {
             return false;
         }
-
         // Look for visible nodes in editable that would be outside the range.
         return (
             this._isAtVisibleEdge(startContainer, 'start') &&
@@ -684,20 +1080,20 @@ export class EventNormalizer {
      * @param side from which to look for textual nodes ('start' or 'end')
      */
     _isAtVisibleEdge(element: Node, side: 'start' | 'end'): boolean {
-        if (!this.editable.contains(element)) return false;
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
         let node: Node = this.editable;
         const child = side === 'start' ? 'firstChild' : 'lastChild';
         const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
+        let crossVisible = false;
         while (node) {
             if (node === element) {
                 // The element was reached without finding another visible node.
-                return true;
+                return !crossVisible;
             }
             if (this._isTextualNode(node) && this._isVisible(node)) {
                 // There is a textual node in editable beyond the given element.
-                return false;
+                crossVisible = true;
             }
             // Continue the depth-first search.
             if (node[child]) {
@@ -711,7 +1107,6 @@ export class EventNormalizer {
                 node = node.parentNode[sibling];
             }
         }
-        return true;
     }
     _isVisible(el: Node): boolean {
         if (el === this.editable) {
@@ -730,61 +1125,91 @@ export class EventNormalizer {
         }
         return this._isVisible(el.parentNode);
     }
+    _caretPositionFromPoint(x: number, y: number, target: Node): DomLocation {
+        let caretPosition = x || y ? caretPositionFromPoint(x, y) : undefined;
+        if (!caretPosition || !caretPosition.offsetNode) {
+            const range = this._getRange();
+            caretPosition = {
+                offsetNode: range.startContainer,
+                offset: range.startOffset,
+            };
+        }
+        if (!this.editable.contains(caretPosition.offsetNode)) {
+            caretPosition = { offsetNode: target as Node, offset: 0 };
+        }
+        return caretPosition;
+    }
+    _rangeFromMousedown(x: number, y: number, target: Node): DomRangeDescription {
+        const caretPosition = this._caretPositionFromPoint(x, y, target);
+        let range = this._getRange();
+        if (!target.contains(range.startContainer) && !target.contains(range.endContainer)) {
+            // if target is an input or contenteditable false for eg
+            range = {
+                startContainer: caretPosition.offsetNode,
+                startOffset: caretPosition.offset,
+                endContainer: caretPosition.offsetNode,
+                endOffset: caretPosition.offset,
+                direction: Direction.FORWARD,
+            };
+        }
+        return range;
+    }
 
     //--------------------------------------------------------------------------
     // Handlers
     //--------------------------------------------------------------------------
 
     /**
-     * Catch composition action
-     *
-     * @private
-     * @param {CompositionEvent} ev
-     */
-    _onComposition(ev: CompositionEvent): void {
-        // Consider a spell checking keyboard that is being displayed following
-        // a focus event into the editable zone. If some other code on the page
-        // ends up hiding the editable zone for some functional reason, there is
-        // no guarantee the spell checking keyboard will be updated accordingly.
-        // In this case, if the user goes on to click on one of the proposition
-        // from his spell checking keyboard, it will trigger a CompositionEvent
-        // but, since the editable zone has since been hidden, we ignore it.
-        if (this.editable.style.display === 'none') return;
-        // TODO: what if we got detached from the DOM (beware of iframes) ?
-
-        // Spell checking keyboards handle composition events inconsistently.
-        // For example, compositionstart might not be triggered before a
-        // compositionupdate, or compositionend might be triggered without
-        // a prior compositionstart or compositionupdate. Because of this, we
-        // might want to start compiling events on any composition event.
-        const compiledEvent = this._compileEvents();
-
-        // When the composition ends, the DOM is updated with the final result.
-        // Since composition events are handled inconsistently by different
-        // spell checking keyboards, their payload cannot be used to identify
-        // the change they made. Instead, the DOM is cloned before the result
-        // of the composition is applied to be compared later on in order to
-        // properly identify the change that was made.
-        // TODO comment: not all the DOM is cloned, only closest block element
-        this._cloneForComposition();
-
-        // Some composition events have useful information.
-        if (ev.type !== 'compositionstart') {
-            compiledEvent.type = 'composition';
-            compiledEvent.data = ev.data;
-        }
-    }
-    /**
      * Catch setRange and selectAll actions
      *
      * @private
      * @param {MouseEvent} ev
      */
-    _onContextMenu(): void {
+    _onContextMenu(ev: MouseEvent): void {
+        clearTimeout(this._setTimeoutID);
+        this._setTimeoutID = setTimeout(() => {
+            if (!this._rangeHasChanged || this._selectAll) {
+                return;
+            }
+            this._initialCaretPosition = this._caretPositionFromPoint(
+                ev.clientX,
+                ev.clientY,
+                ev.target as Node,
+            );
+            this._triggerEvent({
+                events: [
+                    {
+                        type: 'pointer',
+                        target: this._initialCaretPosition,
+                        defaultPrevented: ev.defaultPrevented,
+                        actions: [
+                            this._makePayload('setRange', {
+                                domRange: this._rangeFromMousedown(
+                                    ev.clientX,
+                                    ev.clientY,
+                                    ev.target as Node,
+                                ),
+                            }),
+                        ],
+                    } as NormalizedPointerEvent,
+                ],
+                mutatedElements: new Set([]),
+            });
+            this._rangeHasChanged = false;
+        }, 0);
         // The _mousedownInEditable property is used to assess whether the user
         // is currently changing the selection by using the mouse. If the
         // context menu ends up opening, the user is definitely not selecting.
-        this._mousedownInEditable = null;
+        this._initialMousedownInEditable = false;
+    }
+    /**
+     * Catch composition
+     *
+     * @private
+     * @param {InputEvent} ev
+     */
+    _onComposition(ev: InputEvent): void {
+        this._registerEvent(ev);
     }
     /**
      * Catch composition, Enter, Backspace, Delete and insert actions
@@ -793,69 +1218,7 @@ export class EventNormalizer {
      * @param {InputEvent} ev
      */
     _onInput(ev: InputEvent): void {
-        // See comment on the same line in _onCompositionStart handler.
-        if (this.editable.style.display === 'none') return;
-
-        const compiledEvent = this._compileEvents();
-
-        // TODO comment: insert input data has more value than any other event
-        // type, but 'input' type has nearly no value since we don't know if it's
-        // a composition or something else, so we want to keep the original type
-        // but use the data from the input event.
-        if (!compiledEvent.type) {
-            compiledEvent.type = ev.type;
-            compiledEvent.data = ev.data;
-        }
-
-        if (
-            (ev.inputType === 'insertCompositionText' ||
-                ev.inputType === 'insertReplacementText') &&
-            compiledEvent.type === 'composition'
-        ) {
-            // TODO comment: sometimes data won't be in compositionend (or it won't be triggered at all)
-            // so, if we can catch this one, let's use it instead
-            compiledEvent.type = 'composition';
-            compiledEvent.data = ev.data;
-            this._cloneForComposition();
-        } else if (ev.inputType === 'insertParagraph' && compiledEvent.key === 'Unidentified') {
-            compiledEvent.key = 'Enter';
-        } else if (
-            ev.inputType === 'deleteContentBackward' &&
-            compiledEvent.key === 'Unidentified'
-        ) {
-            compiledEvent.key = 'Backspace';
-            // TODO comment: safari mac for accents
-            this._cloneForComposition();
-        } else if (
-            ev.inputType === 'deleteContentForward' &&
-            compiledEvent.key === 'Unidentified'
-        ) {
-            compiledEvent.key = 'Delete';
-        } else if (ev.inputType === 'insertText') {
-            // update the key which does not have the accent with the data which contains the accent
-            if (
-                compiledEvent.type.indexOf('key') === 0 &&
-                compiledEvent.key.length === 1 &&
-                ev.data.length === 1
-            ) {
-                compiledEvent.key = ev.data; // keep accent
-            } else if (
-                ev.data &&
-                ev.data.length === 1 &&
-                ev.data !== compiledEvent.data &&
-                compiledEvent.type === 'composition'
-            ) {
-                // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
-                // remember that ev.data and compiledEvent.data are from the same event stack !
-                compiledEvent.data += ev.data;
-            } else if (compiledEvent.key === 'Unidentified') {
-                // data contains the accentuated character, which is an "Unidentified" key for some browsers so let's update the key
-                compiledEvent.key = ev.data;
-            }
-        } else if (!compiledEvent.data) {
-            // TODO comment: input data > other events data
-            compiledEvent.data = ev.data;
-        }
+        this._registerEvent(ev);
     }
     /**
      * Catch Enter, Backspace, Delete and insert actions
@@ -864,22 +1227,13 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
-        this._selectAllOriginElement = this._getRange().startContainer;
-
-        // See comment on the same line in _onCompositionStart handler.
-        if (this.editable.style.display === 'none') return;
-
-        // Dead keys will trigger composition and input events later
-        if (ev.type === 'keydown' && ev.key === 'Dead') return;
-
-        const compiledEvent = this._compileEvents();
-        compiledEvent.defaultPrevented = compiledEvent.defaultPrevented || ev.defaultPrevented;
-        compiledEvent.type = compiledEvent.type || ev.type;
-        compiledEvent.key = ev.key;
-        compiledEvent.altKey = ev.altKey;
-        compiledEvent.ctrlKey = ev.ctrlKey;
-        compiledEvent.metaKey = ev.metaKey;
-        compiledEvent.shiftKey = ev.shiftKey;
+        this._registerEvent(ev);
+        const range = this._getRange();
+        const node = range.startContainer.childNodes[range.startOffset];
+        this._initialCaretPosition = {
+            offsetNode: node || range.startContainer,
+            offset: node ? 0 : range.startOffset,
+        };
     }
     /**
      * Catch setRange and selectAll actions
@@ -888,13 +1242,21 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onMouseDown(ev: MouseEvent): void {
+        if (!this.editable.contains(ev.target as Node)) {
+            this._initialMousedownInEditable = false;
+            this._initialCaretPosition = undefined;
+            return;
+        }
+        this._lastEvents = [ev];
         this._rangeHasChanged = false;
         // store mousedown event to detect range change from mouse selection
-        this._mousedownInEditable = ev;
-        this._selectAllOriginElement = ev.target as Node;
-        setTimeout(() => {
-            this._selectAllOriginElement = this._getRange().startContainer;
-        }, 0);
+        this._initialMousedownInEditable = true;
+        // store the caret position of the mousedown
+        this._initialCaretPosition = this._caretPositionFromPoint(
+            ev.clientX,
+            ev.clientY,
+            ev.target as Node,
+        );
     }
     /**
      * Catch setRange actions
@@ -905,34 +1267,107 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onClick(ev: MouseEvent): void {
-        if (!this._mousedownInEditable) {
+        this._lastEvents = [ev];
+        if (!this._initialMousedownInEditable) {
             return;
         }
-        setTimeout(() => {
-            this._selectAllOriginElement = ev.target as Node;
-            const target = this._mousedownInEditable.target as Node;
-            this._mousedownInEditable = null;
-            if (ev.target instanceof Element) {
-                let range: DomRangeDescription = this._getRange();
-                if (!target.contains(range.startContainer) && target === ev.target) {
-                    const ltr = document.dir === 'ltr';
-                    range = {
-                        startContainer: target,
-                        startOffset: 0,
-                        endContainer: target,
-                        endOffset:
-                            target.nodeType === Node.ELEMENT_NODE
-                                ? target.childNodes.length
-                                : target.nodeValue.length,
-                        direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
-                        origin: 'pointer',
-                    };
-                }
-                if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', { domRange: range });
-                }
+        if ('clientX' in ev) {
+            this._initialCaretPosition = this._caretPositionFromPoint(
+                ev.clientX,
+                ev.clientY,
+                ev.target as Node,
+            );
+        }
+        clearTimeout(this._setTimeoutID);
+        this._setTimeoutID = setTimeout(() => {
+            if (!(ev.target instanceof Element) || !this._rangeHasChanged) {
+                this._initialMousedownInEditable = false;
+                return;
             }
+
+            const range = this._rangeFromMousedown(ev.clientX, ev.clientY, ev.target as Node);
+            this._triggerEvent({
+                events: [
+                    {
+                        type: 'pointer',
+                        target: this._initialCaretPosition,
+                        defaultPrevented: ev.defaultPrevented,
+                        actions: [this._makePayload('setRange', { domRange: range })],
+                    } as NormalizedPointerEvent,
+                ],
+                mutatedElements: new Set([]),
+            });
         }, 0);
+    }
+    _onTouchEnd(ev: TouchEvent): void {
+        this._onClick((ev as unknown) as MouseEvent);
+    }
+    _onTouchStart(ev: TouchEvent): void {
+        this._onMouseDown((ev as unknown) as MouseEvent);
+    }
+    _onDragStart(): void {
+        this._draggingFromEditable = true;
+    }
+    _onDragEnd(): void {
+        this._draggingFromEditable = false;
+    }
+    _onDrop(ev: DragEvent): void {
+        // Prevent default behavior (Prevent file from being opened)
+        ev.preventDefault();
+        const dragAndDropAnyContent = this._draggingFromEditable;
+        this._draggingFromEditable = false;
+
+        const files = [];
+        const evDataTransfer = ev.dataTransfer;
+        // Use DataTransferItemList interface to access the file(s)
+        for (let i = 0; i < ev.dataTransfer.items.length; i++) {
+            const item = ev.dataTransfer.items[i];
+            if (item.kind === 'file') {
+                const file = item.getAsFile();
+                files.push(file);
+            }
+        }
+
+        const caretRange = this._caretPositionFromPoint(ev.clientX, ev.clientY, ev.target as Node);
+        const params = {
+            detail: {
+                'text/plain': evDataTransfer.getData('text/plain'),
+                'text/html': evDataTransfer.getData('text/html'),
+                'text/uri-list': evDataTransfer.getData('text/uri-list'),
+                files: files,
+                originalEvent: ev,
+                range: {
+                    startContainer: caretRange.offsetNode,
+                    startOffset: caretRange.offset,
+                    endContainer: caretRange.offsetNode,
+                    endOffset: caretRange.offset,
+                    direction: Direction.FORWARD,
+                },
+                caretPosition: caretRange,
+                fromDragContent: dragAndDropAnyContent,
+            } as DataTransferDetail,
+        } as CustomEventInit;
+        this._registerEvent(new CustomEvent('drop', params));
+    }
+    _onPaste(ev: ClipboardEvent): void {
+        ev.preventDefault();
+        const clipboard = ev.clipboardData;
+        const range = this._getRange();
+        const params = {
+            detail: {
+                'text/plain': clipboard.getData('text/plain'),
+                'text/html': clipboard.getData('text/html'),
+                'text/uri-list': clipboard.getData('text/uri-list'),
+                files: [],
+                originalEvent: ev,
+                range: range,
+                caretPosition: {
+                    offsetNode: range.startContainer,
+                    offset: range.startOffset,
+                },
+            } as DataTransferDetail,
+        } as CustomEventInit;
+        this._registerEvent(new CustomEvent('paste', params));
     }
     /**
      * Catch selectAll action
@@ -941,27 +1376,63 @@ export class EventNormalizer {
      * @param {Event} ev
      */
     _onSelectionChange(): void {
-        if (this._rangeHasChanged) {
+        if (!this._initialCaretPosition) {
             // The _rangeHasChanged hook will disappear once the renderer only
             // re-renders what has changed rather than re-rendering everything.
             // Right now it is needed to avoid an infinite loop when selectAll
             // triggers a new range set and the selection changes every time.
             return;
         }
+
         this._rangeHasChanged = true;
         // Testing whether the entire document is selected or not is a costly
         // process, so we use the below heuristics before actually checking.
-        const isVisible = this.editable.style.display !== 'none';
-        const isCurrentlySelecting = this._mousedownInEditable && isVisible;
-        const trigger = !this._compiledEvent || this._compiledEvent.key === 'a';
+        const eventsQueue = this._events || this._lastEvents;
+        const keyModifiled =
+            eventsQueue &&
+            eventsQueue.filter(
+                ev =>
+                    ev instanceof KeyboardEvent &&
+                    ev.type === 'keydown' &&
+                    (ev.ctrlKey || ev.metaKey),
+            )[0];
+        const trigger =
+            !eventsQueue ||
+            keyModifiled ||
+            (this._lastEvents &&
+                this._lastEvents.length === 1 &&
+                ((this._lastEvents[0] as Event).type === 'click' ||
+                    (this._lastEvents[0] as Event).type === 'mousedown' ||
+                    (this._lastEvents[0] as Event).type === 'touchend'));
+
+        if ((this._initialMousedownInEditable && !keyModifiled) || !trigger) {
+            this._selectAll = false;
+            return;
+        }
+
         const range = this._getRange();
-        if (!isCurrentlySelecting && trigger && this._isSelectAll(range)) {
-            if (!this._selectAll) {
-                this._selectAll = true;
-                this._triggerEvent('selectAll', {
-                    origin: this._compiledEvent ? 'keypress' : 'pointer',
-                    target: this._selectAllOriginElement,
-                    domRange: range,
+
+        if (this._isSelectAll(range)) {
+            if (this._selectAll) {
+                return;
+            }
+            this._selectAll = true;
+            if (keyModifiled) {
+                this._registerEvent(new CustomEvent('selectAll'));
+                if (this._events !== eventsQueue) {
+                    this._events.unshift(keyModifiled);
+                }
+            } else {
+                this._triggerEvent({
+                    events: [
+                        {
+                            type: 'pointer',
+                            target: this._initialCaretPosition,
+                            defaultPrevented: false,
+                            actions: this._makeSelectAll(),
+                        } as NormalizedPointerEvent,
+                    ],
+                    mutatedElements: new Set(),
                 });
             }
         } else {

@@ -133,8 +133,10 @@ export class VRange {
         } else {
             this.select(range.end, range.endPosition, range.start, range.startPosition);
         }
-        // If it is known, use of the given direction to populate the cache.
-        if (range.direction) {
+        if (range.end === range.start && range.endPosition === range.startPosition) {
+            this._direction = Direction.FORWARD;
+        } else if (range.direction) {
+            // If it is known, use of the given direction to populate the cache.
             this._direction = range.direction;
         }
         return this;

@@ -64,7 +64,11 @@ export class VDocument {
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new VNode(VNodeType.CHAR, '#text', char, format);
+            // TODO: determine format from current position
+            const vNode =
+                char === '\n'
+                    ? new VNode(VNodeType.LINE_BREAK, 'br')
+                    : new VNode(VNodeType.CHAR, '#text', char, format);
             this.range.start.before(vNode);
         });
         this.formatCache = null;

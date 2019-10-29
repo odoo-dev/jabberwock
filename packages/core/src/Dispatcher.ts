@@ -1,4 +1,4 @@
-import JWEditor from './JWEditor';
+import JWEditor, { CommandExec } from './JWEditor';
 
 export type CommandIdentifier = string;
 export interface CommandDefinition {
@@ -11,15 +11,13 @@ export interface CommandArgs {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
-export type DispatchHook = (command: string, args: CommandArgs) => void;
-
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
     el: Element;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
     handlers: Record<CommandIdentifier, CommandHandler[]> = {};
-    dispatchHooks: DispatchHook[] = [];
+    dispatchHooks: CommandExec[] = [];
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -43,7 +41,7 @@ export class Dispatcher {
                 handlerCallback(args);
             });
         }
-        this.dispatchHooks.forEach((hookCallback: DispatchHook) => {
+        this.dispatchHooks.forEach((hookCallback: CommandExec) => {
             hookCallback(commandId, args);
         });
     }
@@ -81,7 +79,7 @@ export class Dispatcher {
      *
      * @param hook The function that will be executed.
      */
-    registerDispatchHook(hook: DispatchHook): void {
+    registerDispatchHook(hook: CommandExec): void {
         this.dispatchHooks.push(hook);
     }
 }

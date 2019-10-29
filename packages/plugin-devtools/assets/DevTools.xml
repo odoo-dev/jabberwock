@@ -395,7 +395,8 @@
         tabindex="2">
         <devtools-navbar
             t-on-click="toggleClosed"
-            t-on-mousedown="startResize">
+            t-on-mousedown="startResize"
+            t-on-touchstart="startResize">
             <button t-on-click="openTab('inspector')" t-att-class="{
                 selected: state.currentTab == 'inspector',
             }">Inspector</button>
