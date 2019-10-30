@@ -28,13 +28,21 @@ export class Dispatcher {
      * @param {Action} action
      */
     dispatch(action: Action): void {
-        const handlers: Handlers = this._getHandlers(action.id);
-        const handlerTokens = Object.keys(handlers);
-        handlerTokens.forEach((handlerToken: HandlerToken): void => {
+        // Fetch proper handlers.
+        const properHandlers: Handlers = this.registry[action.id];
+
+        // Fetch wildcard handlers.
+        const wildcardActionIdentifier = action.id.split('.')[0] + '.*';
+        const wildcardHandlers = this.registry[wildcardActionIdentifier];
+
+        // Actually trigger the handlers.
+        const handlers = Object.assign({}, properHandlers, wildcardHandlers);
+        Object.keys(handlers).forEach((handlerToken: HandlerToken): void => {
             handlers[handlerToken](action); // TODO: use return value to retrigger
         });
+
         if (action.name !== 'render') {
-            if (!handlerTokens.length) {
+            if (!properHandlers) {
                 console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
             }
             // Render when done dispatching
@@ -102,24 +110,6 @@ export class Dispatcher {
      */
     _getHandler(handlerToken: HandlerToken): ActionHandler {
         return this.handlers[handlerToken];
-    }
-    /**
-     * Return a copy of an action's `Handlers`. Also looks into '*' records for
-     * the given action type, unless `wildcard` is false.
-     * '*' is a magic key used to listen to action of a given type.
-     *
-     * @param {ActionIdentifier} actionIdentifier
-     * @param {boolean} [wildcard] if true, include '*' records
-     * @returns {Handlers}
-     */
-    _getHandlers(actionIdentifier: ActionIdentifier, wildcard = true): Handlers {
-        const handlers = Object.assign({}, this.registry[actionIdentifier]);
-        if (wildcard) {
-            const type = actionIdentifier.split('.')[0];
-            const wildcardHandlers = this.registry[type + '.*'];
-            Object.assign(handlers, wildcardHandlers);
-        }
-        return handlers;
     }
     /**
      * Generate and return a new unique identifier for a handler.
