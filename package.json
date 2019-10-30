@@ -7,6 +7,7 @@
     "dev": "webpack-dev-server",
     "build": "webpack",
     "postinstall": "npm link owl-framework",
+    "perf": "karma start --include-files test/**/*.perf.ts",
     "test": "karma start"
   },
   "repository": {
