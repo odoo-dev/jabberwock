@@ -8,7 +8,7 @@ module.exports = function(config) {
         frameworks: ['mocha', 'chai', 'sinon'],
 
         // list of files / patterns to load in the browser
-        files: ['test/**/*.test.ts'],
+        files: config.includeFiles ? config.includeFiles.split(',') : ['test/**/*.test.ts'],
 
         // list of files / patterns to exclude
         exclude: [],
