@@ -81,6 +81,11 @@ export class EventManager {
             case 'setRange':
                 payload['vRange'] = this._convertRange(payload['domRange']);
                 break;
+            case 'keydown':
+                // TODO: keydown should be matched with existing shortcuts. If
+                // it matches an intent shortcut, trigger the corresponding
+                // intent, otherwise do not trigger a 'keydown' intent.
+                return;
         }
         return ActionGenerator.intent({
             name: customEvent.type,
@@ -95,6 +100,9 @@ export class EventManager {
      * @param {CustomEvent} customEvent
      */
     _triggerEvent(customEvent: CustomEvent): void {
-        this.options.dispatch(this._matchIntent(customEvent));
+        const intent = this._matchIntent(customEvent);
+        if (intent) {
+            this.options.dispatch(intent);
+        }
     }
 }
