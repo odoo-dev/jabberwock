@@ -252,15 +252,17 @@ export class EventNormalizer {
         } else if (compiledEvent.type === 'composition') {
             this._processComposition(compiledEvent);
         } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
+            const direction = compiledEvent.key === 'Backspace' ? 'backward' : 'forward';
             const deleteEventPayload = {
-                direction: compiledEvent.key === 'Backspace' ? 'backward' : 'forward',
+                direction: direction,
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
                 metaKey: compiledEvent.metaKey,
                 shiftKey: compiledEvent.shiftKey,
                 elements: elements,
             };
-            this._triggerEvent('remove', deleteEventPayload);
+            const type = direction === 'backward' ? 'removeBackward' : 'removeForward';
+            this._triggerEvent(type, deleteEventPayload);
         } else if (compiledEvent.key === 'Tab') {
             // TODO: maybe like keydown, there is no normalization proper here
             const tabEventPayload = {

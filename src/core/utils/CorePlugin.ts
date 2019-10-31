@@ -7,7 +7,8 @@ export class CorePlugin extends JWPlugin {
     handlers = {
         intents: {
             insert: 'insert',
-            remove: 'onRemoveIntent', // names are just to show relationships here
+            removeBackward: 'removeBackward',
+            removeForward: 'removeForward',
             setRange: 'navigate',
             selectAll: 'selectAll',
         },
@@ -15,7 +16,8 @@ export class CorePlugin extends JWPlugin {
     commands = {
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
-        onRemoveIntent: this.removeSide,
+        removeBackward: this.removeBackward.bind(this),
+        removeForward: this.removeForward.bind(this),
         selectAll: this.selectAll.bind(this),
     };
     constructor(editor) {
@@ -36,8 +38,21 @@ export class CorePlugin extends JWPlugin {
         // TODO: check the intent to insert other things than text.
         this.editor.vDocument.insertText(intent.payload['value']);
     }
-    removeSide(intent: Intent): void {
-        console.log('REMOVE SIDE:' + intent);
+    removeBackward(): void {
+        // TODO: this is stub
+        const range = this.editor.vDocument.range;
+        if (range.isCollapsed()) {
+            range.setStart(range.start.previous());
+        }
+        this.editor.vDocument.truncate(range.selectedNodes);
+    }
+    removeForward(): void {
+        // TODO: this is stub
+        const range = this.editor.vDocument.range;
+        if (range.isCollapsed()) {
+            range.setEnd(range.end.next());
+        }
+        this.editor.vDocument.truncate(range.selectedNodes);
     }
     /**
      * Navigate to a given Range (in the payload of the Intent).
