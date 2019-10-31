@@ -6,12 +6,14 @@ export class CorePlugin extends JWPlugin {
     editor: JWEditor;
     handlers = {
         intents: {
+            insert: 'insert',
             remove: 'onRemoveIntent', // names are just to show relationships here
             setRange: 'navigate',
             selectAll: 'selectAll',
         },
     };
     commands = {
+        insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
         onRemoveIntent: this.removeSide,
         selectAll: this.selectAll.bind(this),
@@ -25,6 +27,15 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Insert something at range.
+     *
+     * @param intent
+     */
+    insert(intent: Intent): void {
+        // TODO: check the intent to insert other things than text.
+        this.editor.vDocument.insertText(intent.payload['value']);
+    }
     removeSide(intent: Intent): void {
         console.log('REMOVE SIDE:' + intent);
     }

@@ -38,6 +38,40 @@ export class VRange {
         }
         return this._direction;
     }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return true if the range is collapsed.
+     */
+    isCollapsed(): boolean {
+        if (this.direction === Direction.FORWARD) {
+            return this.start.nextSibling() === this.end;
+        } else {
+            return this.end.nextSibling() === this.start;
+        }
+    }
+    /**
+     * Return a list of all the nodes implied in the selection between the first
+     * range node to the last (non-included).
+     */
+    get selectedNodes(): VNode[] {
+        const selectedNodes: VNode[] = [];
+        const next = this.direction === Direction.FORWARD ? 'next' : 'previous';
+        const push = this.direction === Direction.FORWARD ? 'push' : 'unshift';
+        let node = this.start;
+        while ((node = node[next]()) && node !== this.end) {
+            selectedNodes[push](node);
+        }
+        return selectedNodes;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
      * Collapse the range. Return self.
      *
