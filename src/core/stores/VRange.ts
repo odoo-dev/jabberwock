@@ -114,8 +114,13 @@ export class VRange {
             endNode = startPosition;
             startPosition = RelativePosition.BEFORE;
         }
-        this.setStart(startNode, startPosition);
-        this.setEnd(endNode, endPosition);
+        if (endPosition === RelativePosition.AFTER) {
+            this.setEnd(endNode, endPosition);
+            this.setStart(startNode, startPosition);
+        } else {
+            this.setStart(startNode, startPosition);
+            this.setEnd(endNode, endPosition);
+        }
         return this;
     }
     /**
