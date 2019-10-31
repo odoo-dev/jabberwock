@@ -1,17 +1,21 @@
 import { JWEditor } from '../core/JWEditor';
 import { JWOwlUIPlugin } from './JWOwlUIPlugin';
 import { QWeb } from 'owl-framework';
+import { Env } from 'owl-framework/src/component/component';
 
-export interface PluginEnv {
-    qweb: QWeb;
+export interface OwlUIEnv extends Env {
     editor: JWEditor;
 }
 
 export class OwlUI {
     pluginsRegistry: JWOwlUIPlugin[] = [];
-    editor: JWEditor;
+    env: OwlUIEnv;
     constructor(editor: JWEditor) {
-        this.editor = editor;
+        // Create the owl `env` variable shared by all plugins components.
+        this.env = {
+            qweb: new QWeb(),
+            editor: editor,
+        };
     }
 
     //--------------------------------------------------------------------------
@@ -25,25 +29,8 @@ export class OwlUI {
      * @returns {Promise<void>}
      */
     async addPlugin(PluginClass: typeof JWOwlUIPlugin): Promise<void> {
-        const env = await this._createEnv(PluginClass);
-        const plugin = new PluginClass(this.editor.dispatcher, env);
+        this.env.qweb.addTemplates(PluginClass.templates);
+        const plugin = new PluginClass(this.env);
         this.pluginsRegistry.push(plugin);
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Create the owl-required `env` variable for a plugin's Components, using
-     * the plugin's templates and adding the instance of the current editor
-     *
-     * @returns {Promise<PluginEnv>}
-     */
-    async _createEnv(PluginClass: typeof JWOwlUIPlugin): Promise<PluginEnv> {
-        return {
-            qweb: new QWeb(PluginClass.templates),
-            editor: this.editor,
-        };
     }
 }
