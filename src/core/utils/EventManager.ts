@@ -52,19 +52,24 @@ export class EventManager {
      * @param offset
      */
     _locate(container: Node, offset: number): [VNode, RelativePosition] {
-        // Move to deepest child of container.
-        while (container.hasChildNodes()) {
-            container = container.childNodes[offset];
-            offset = 0;
+        let position = RelativePosition.BEFORE;
+        const isTextNode = container.nodeType === Node.TEXT_NODE;
+        const content = isTextNode ? container.nodeValue : container.childNodes;
+        if (offset >= content.length) {
+            position = RelativePosition.AFTER;
+            offset = content.length - 1;
+            if (container) {
+                // Move to deepest child of container.
+                while (container.hasChildNodes()) {
+                    container = container.childNodes[offset];
+                    offset = 0;
+                }
+            }
         }
         // Get the VNodes matching the container.
         const containers = VDocumentMap.fromDom(container);
         // The reference is the offset-th match (eg.: text split into chars).
-        if (offset < containers.length) {
-            return [containers[offset], RelativePosition.BEFORE];
-        } else {
-            return [containers[containers.length - 1], RelativePosition.AFTER];
-        }
+        return [containers[offset], position];
     }
     /**
      * Match the received signal with the corresponding user intention, based on
