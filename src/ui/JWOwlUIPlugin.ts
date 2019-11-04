@@ -1,7 +1,6 @@
 import { JWPlugin } from '../core/JWPlugin';
 import { OwlUIEnv } from './OwlUI';
 import { OwlUIComponent } from './OwlUIComponent';
-import { config } from 'owl-framework';
 
 export class JWOwlUIPlugin extends JWPlugin {
     Components: Array<typeof OwlUIComponent> = [];
@@ -34,16 +33,8 @@ export class JWOwlUIPlugin extends JWPlugin {
      * @returns {Promise<OwlUIComponent<{}, {}>[]>}
      */
     _instantiateComponents(ComponentClasses: Array<typeof OwlUIComponent>): OwlUIComponent<{}>[] {
-        // TODO: all owl components on the same page share the same env. This is
-        // dangerous for libraries using owl like this one. The `setEnv` method,
-        // commented below, will soon be added to Component in order to sandbox
-        // it with the given env rather than using the global one. Until this
-        // hook is added, the global env must be used instead.
-        Object.assign(config.env, this.env);
         return ComponentClasses.map((ComponentClass: typeof OwlUIComponent) => {
-            // TODO: uncomment the line below and remove the config hack above
-            // when owl issue 430 is closed and introduces the `setEnv` method.
-            // componentClass.setEnv(this.env);
+            ComponentClass.env = this.env;
             return new ComponentClass();
         });
     }
