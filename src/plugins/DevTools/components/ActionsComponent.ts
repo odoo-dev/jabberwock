@@ -34,9 +34,9 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
      * @param {object|string|boolean|number} value
      * @returns {string}
      */
-    formatPayloadValue(value: object | string | boolean | number): string {
-        if (value && value['nodeName']) {
-            return '<' + value['nodeName'].toLowerCase() + '>';
+    formatPayloadValue(value: Node | string | boolean | number): string {
+        if (value && value instanceof Node && value.nodeName) {
+            return '<' + value.nodeName.toLowerCase() + '>';
         }
         switch (value) {
             case true:

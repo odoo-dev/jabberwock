@@ -84,7 +84,7 @@ export class EventManager {
         switch (customEvent.type) {
             case 'selectAll':
             case 'setRange':
-                payload['vRange'] = this._convertRange(payload['domRange']);
+                payload.vRange = this._convertRange(payload.domRange);
                 break;
             case 'keydown':
                 // TODO: keydown should be matched with existing shortcuts. If

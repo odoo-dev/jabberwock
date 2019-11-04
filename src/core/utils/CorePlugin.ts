@@ -1,6 +1,6 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
-import { VRangeDescription, RelativePosition } from '../stores/VRange';
+import { VRangeDescription, RelativePosition, RangeIntent } from '../stores/VRange';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -33,8 +33,8 @@ export class CorePlugin extends JWPlugin {
      *
      * @param intent
      */
-    navigate(intent: Intent): void {
-        const range: VRangeDescription = intent.payload['vRange'];
+    navigate(intent: RangeIntent): void {
+        const range: VRangeDescription = intent.payload.vRange;
         this.editor.vDocument.range.set(range);
     }
 
@@ -43,13 +43,13 @@ export class CorePlugin extends JWPlugin {
      *
      * @param intent
      */
-    selectAll(intent: Intent): void {
+    selectAll(intent: RangeIntent): void {
         this.editor.vDocument.range.set({
             start: this.editor.vDocument.root.firstLeaf(),
             startPosition: RelativePosition.BEFORE,
             end: this.editor.vDocument.root.lastLeaf(),
             endPosition: RelativePosition.AFTER,
-            direction: intent.payload['vRange'].direction,
+            direction: intent.payload.vRange.direction,
         });
     }
 }

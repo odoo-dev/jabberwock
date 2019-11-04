@@ -56,6 +56,12 @@ interface EventListenerDeclaration {
     readonly listener: EventListener;
 }
 
+interface NormalizedventPayload {
+    domRangeChange?: DomRangeDescription;
+
+    origin: string;
+}
+
 export class EventNormalizer {
     editable: HTMLElement;
     _eventListeners: EventListenerDeclaration[] = [];
@@ -209,8 +215,9 @@ export class EventNormalizer {
             }
             const childNodes = clone.origin.childNodes;
             clone.childNodes.forEach((child: Node, index) => {
-                child['orgin'] = childNodes[index];
-                addChildOrigin(child as ClonedNode);
+                const clonedNode = child as ClonedNode;
+                clonedNode.origin = childNodes[index];
+                addChildOrigin(clonedNode);
             });
         })(clone);
     }
@@ -341,10 +348,11 @@ export class EventNormalizer {
      * @param {object} [params]
      */
     _triggerEvent(type: string, params = {}): void {
+        const detail = params as NormalizedventPayload;
+        detail.origin = 'EventNormalizer';
         const initDict = {
-            detail: params,
+            detail: detail,
         };
-        initDict.detail['origin'] = 'EventNormalizer';
         const event = new CustomEvent(type, initDict);
         this._eventCallback(event);
     }

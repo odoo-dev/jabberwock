@@ -17,6 +17,13 @@ export interface VRangeDescription {
     direction: Direction;
 }
 
+export interface RangeIntent extends Intent {
+    payload: RangePayload;
+}
+export interface RangePayload extends ActionPayload {
+    vRange: VRangeDescription;
+}
+
 export class VRange {
     readonly start = new VNode(VNodeType.RANGE_START);
     readonly end = new VNode(VNodeType.RANGE_END);
