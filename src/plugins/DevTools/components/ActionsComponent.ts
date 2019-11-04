@@ -1,5 +1,9 @@
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { HandlerToken, DispatcherRegistry } from '../../../core/dispatcher/Dispatcher';
+import {
+    HandlerToken,
+    DispatcherRegistry,
+    ActionHandler,
+} from '../../../core/dispatcher/Dispatcher';
 import { useState } from 'owl-framework/src/hooks';
 
 interface ActionsState {
@@ -59,7 +63,7 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
      * @param {HandlerToken} handlerToken
      * @returns {ActionHandler|null}
      */
-    getHandler(handlerToken: HandlerToken): ActionHandler | null {
+    getHandler(handlerToken: HandlerToken): ActionHandler {
         return this.env.editor.dispatcher._getHandler(handlerToken);
     }
     /**

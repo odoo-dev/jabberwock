@@ -1,6 +1,9 @@
-import { ActionGenerator } from '../actions/ActionGenerator';
 import JWEditor from '../JWEditor';
+import { ActionGenerator } from '../actions/ActionGenerator';
+import { PluginHandlers, PluginCommands } from '../JWPlugin';
 
+export type ActionHandler = (action: Action) => void;
+export type CommandIdentifier = string;
 export type HandlerToken = string;
 export type Handlers = Record<HandlerToken, ActionHandler>;
 export type DispatcherRegistry = Record<ActionIdentifier, Handlers>;

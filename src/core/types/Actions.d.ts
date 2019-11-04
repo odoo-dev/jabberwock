@@ -27,12 +27,3 @@ interface Primitive extends Action {
 interface Command extends Action {
     type: 'command';
 }
-
-type ActionHandler = (action: Action) => void;
-type CommandIdentifier = string;
-interface PluginHandlers {
-    intents?: Record<string, CommandIdentifier>;
-    // TODO:
-    // hooks?: Record<CommandIdentifier, CommandIdentifier>;
-}
-type PluginCommands = Record<CommandIdentifier, ActionHandler>;

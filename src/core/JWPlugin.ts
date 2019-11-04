@@ -1,5 +1,12 @@
-import { Dispatcher } from './dispatcher/Dispatcher';
+import { Dispatcher, CommandIdentifier, ActionHandler } from './dispatcher/Dispatcher';
 import { ActionGenerator } from './actions/ActionGenerator';
+
+// Plugins define the intents that are handled by one of their commands.
+export interface PluginHandlers {
+    intents?: Record<string, CommandIdentifier>;
+}
+// Plugins define the commands they implement.
+export type PluginCommands = Record<CommandIdentifier, ActionHandler>;
 
 export interface JWPluginConfig {
     name?: string;

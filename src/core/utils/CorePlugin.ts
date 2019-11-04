@@ -1,22 +1,7 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { RelativePosition, VRangeDescription } from '../stores/VRange';
-
-// Specialized intents
-// Insert
-interface InsertPayload extends ActionPayload {
-    value: string;
-}
-interface InsertIntent extends Intent {
-    payload: InsertPayload;
-}
-// Range
-interface RangePayload extends ActionPayload {
-    vRange: VRangeDescription;
-}
-interface RangeIntent extends Intent {
-    payload: RangePayload;
-}
+import { InsertIntent, RangeIntent } from '../types/Intents';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;

@@ -1,6 +1,7 @@
 import { Component } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';
 import JWEditor from '../core/JWEditor';
+import { PluginHandlers, PluginCommands } from '../core/JWPlugin';
 
 interface OwlUIEnv extends Env {
     editor: JWEditor;
