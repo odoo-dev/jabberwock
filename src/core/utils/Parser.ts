@@ -165,7 +165,16 @@ function nextParsingContext(currentContext: ParsingContext): ParsingContext {
             // not a text node. Only text nodes can be represented by multiple
             // VNodes so the first VNode can safely be selected from the map.
             nextContext.node = ancestor.nextSibling;
-            nextContext.parentVNode = VDocumentMap.fromDom(ancestor.parentNode)[0];
+            // Traverse the DOM tree to search for the first parent present in the VDocumentMap.
+            // We do so because, some parent are not included in the VDocumentMap
+            // (e.g.formatting nodes).
+            let elementFound;
+            let elementParent = ancestor;
+            do {
+                elementParent = elementParent.parentNode;
+                elementFound = VDocumentMap.fromDom(elementParent);
+            } while (elementParent && !elementFound);
+            nextContext.parentVNode = elementFound[0];
         } else {
             // If no ancestor having a sibling could be found then the tree has
             // been fully parsed. There is no next parsing context. Stop it.
