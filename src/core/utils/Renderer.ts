@@ -140,7 +140,12 @@ export class Renderer {
             context.currentVNode = next;
             if (next.type === VNodeType.CHAR) {
                 charNodes.push(next);
-                text += next.value;
+                if (next.value === ' ' && text[text.length - 1] === ' ') {
+                    // Browsers don't render consecutive space chars otherwise.
+                    text += '\u00A0';
+                } else {
+                    text += next.value;
+                }
             }
             next = next.nextSibling();
         }
