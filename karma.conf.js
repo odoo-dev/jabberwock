@@ -65,6 +65,14 @@ module.exports = function(config) {
                             },
                         ],
                     },
+                    {
+                        test: /\.css$/i,
+                        use: ['style-loader', 'css-loader'],
+                    },
+                    {
+                        test: /\.xml$/i,
+                        use: ['text-loader'],
+                    },
                 ],
             },
             resolve: {
