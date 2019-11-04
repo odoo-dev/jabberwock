@@ -8,8 +8,8 @@ describe('utils', () => {
         describe('_renderTextNode', () => {
             it('should insert 1 space and 1 nbsp instead of 2 spaces', () => {
                 const element = document.createElement('p');
-                document.body.appendChild(element);
                 element.innerHTML = 'a';
+                document.body.appendChild(element);
 
                 const editor = new JWEditor(element);
                 editor.start();
@@ -20,13 +20,14 @@ describe('utils', () => {
                 const renderer = new Renderer();
                 renderer.render(editor.vDocument, editor.editable);
                 expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
+                editor.stop();
                 element.remove();
             });
 
             it('should insert 2 spaces and 2 nbsp instead of 4 spaces', () => {
                 const element = document.createElement('p');
-                document.body.appendChild(element);
                 element.innerHTML = 'a';
+                document.body.appendChild(element);
 
                 const editor = new JWEditor(element);
                 editor.start();
@@ -39,6 +40,7 @@ describe('utils', () => {
                 const renderer = new Renderer();
                 renderer.render(editor.vDocument, editor.editable);
                 expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
+                editor.stop();
                 element.remove();
             });
         });
