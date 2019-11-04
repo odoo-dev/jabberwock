@@ -11,25 +11,28 @@ interface ParsingContext {
 }
 
 /**
- * Parse the given DOM Node into VNode(s).
+ * Parse a node depending on its DOM type.
  *
- * @param node to parse
- * @param [format] to apply to the parsed node (default: none)
- * @returns the parsed VNode(s)
+ * @param currentContext The current context
+ * @returns The next parsing context
  */
 function parseNode(currentContext: ParsingContext): ParsingContext {
+    let context;
     switch (currentContext.node.nodeType) {
         case Node.ELEMENT_NODE: {
-            return parseElementNode(currentContext);
+            context = parseElementNode(currentContext);
+            break;
         }
         case Node.TEXT_NODE: {
-            return parseTextNode(currentContext);
+            context = parseTextNode(currentContext);
+            break;
         }
         case Node.DOCUMENT_NODE:
         case Node.DOCUMENT_FRAGMENT_NODE: {
             // These nodes have no effect in the context of parsing, but the
             // parsing itself will continue with their children.
-            return currentContext;
+            context = currentContext;
+            break;
         }
         case Node.CDATA_SECTION_NODE:
         case Node.PROCESSING_INSTRUCTION_NODE:
@@ -39,6 +42,7 @@ function parseNode(currentContext: ParsingContext): ParsingContext {
             throw `Unsupported node type: ${currentContext.node.nodeType}.`;
         }
     }
+    return nextParsingContext(context);
 }
 
 /**
@@ -329,7 +333,7 @@ export const Parser = {
             };
             do {
                 context = parseNode(context);
-            } while ((context = nextParsingContext(context)));
+            } while (context);
         }
         return new VDocument(root);
     },
