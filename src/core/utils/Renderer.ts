@@ -140,7 +140,12 @@ export class Renderer {
             context.currentVNode = next;
             if (next.type === VNodeType.CHAR) {
                 charNodes.push(next);
-                text += next.value;
+                const previousLetter = text[text.length - 1];
+                if (next.value === ' ' && previousLetter === ' ') {
+                    text += '\u00A0';
+                } else {
+                    text += next.value;
+                }
             }
             next = next.nextSibling();
         }
