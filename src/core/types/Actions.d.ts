@@ -16,6 +16,7 @@ interface Action extends ActionInit {
     origin: string;
     subActions?: Action[];
     target?: Node;
+    elements?: Set<HTMLElement>;
 }
 interface Intent extends Action {
     type: 'intent';

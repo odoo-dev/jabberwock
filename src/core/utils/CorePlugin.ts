@@ -1,6 +1,22 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
-import { VRangeDescription, RelativePosition, RangeIntent } from '../stores/VRange';
+import { RelativePosition, VRangeDescription } from '../stores/VRange';
+
+// Specialized intents
+// Insert
+interface InsertPayload extends ActionPayload {
+    value: string;
+}
+interface InsertIntent extends Intent {
+    payload: InsertPayload;
+}
+// Range
+interface RangePayload extends ActionPayload {
+    vRange: VRangeDescription;
+}
+interface RangeIntent extends Intent {
+    payload: RangePayload;
+}
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -34,9 +50,9 @@ export class CorePlugin extends JWPlugin {
      *
      * @param intent
      */
-    insert(intent: Intent): void {
+    insert(intent: InsertIntent): void {
         // TODO: check the intent to insert other things than text.
-        this.editor.vDocument.insertText(intent.payload['value']);
+        this.editor.vDocument.insertText(intent.payload.value);
     }
     removeBackward(): void {
         // TODO: this is a stub
