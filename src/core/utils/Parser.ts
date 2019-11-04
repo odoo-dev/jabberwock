@@ -17,26 +17,26 @@ interface ParsingContext {
  * @param [format] to apply to the parsed node (default: none)
  * @returns the parsed VNode(s)
  */
-function parseNode(context: ParsingContext): ParsingContext {
-    switch (context.node.nodeType) {
+function parseNode(currentContext: ParsingContext): ParsingContext {
+    switch (currentContext.node.nodeType) {
         case Node.ELEMENT_NODE: {
-            return parseElementNode(context);
+            return parseElementNode(currentContext);
         }
         case Node.TEXT_NODE: {
-            return parseTextNode(context);
+            return parseTextNode(currentContext);
         }
         case Node.DOCUMENT_NODE:
         case Node.DOCUMENT_FRAGMENT_NODE: {
             // These nodes have no effect in the context of parsing, but the
             // parsing itself will continue with their children.
-            return context;
+            return currentContext;
         }
         case Node.CDATA_SECTION_NODE:
         case Node.PROCESSING_INSTRUCTION_NODE:
         case Node.COMMENT_NODE:
         case Node.DOCUMENT_TYPE_NODE:
         default: {
-            throw `Unsupported node type: ${context.node.nodeType}.`;
+            throw `Unsupported node type: ${currentContext.node.nodeType}.`;
         }
     }
 }
@@ -74,7 +74,9 @@ function getNodeType(node: Node): VNodeType {
  * @param [format] to apply to the parsed node (default: none)
  * @returns the parsed VNode(s)
  */
-function parseElementNode(context: ParsingContext): ParsingContext {
+function parseElementNode(currentContext: ParsingContext): ParsingContext {
+    const context = { ...currentContext };
+
     const node = context.node;
     if (Format.tags.includes(context.node.nodeName)) {
         // Format nodes (e.g. B, I, U) are parsed differently than regular
@@ -107,11 +109,11 @@ function parseElementNode(context: ParsingContext): ParsingContext {
  * @param [format] to apply to the parsed node (default: none)
  * @returns the parsed VNode(s)
  */
-function parseTextNode(context: ParsingContext): ParsingContext {
-    const node = context.node;
+function parseTextNode(currentContext: ParsingContext): ParsingContext {
+    const node = currentContext.node;
     const nodeName = node.nodeName;
-    const parentVNode = context.parentVNode;
-    const format = context.format[0];
+    const parentVNode = currentContext.parentVNode;
+    const format = currentContext.format[0];
     const text = _removeFormatSpace(node);
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
@@ -119,14 +121,16 @@ function parseTextNode(context: ParsingContext): ParsingContext {
         VDocumentMap.set(parsedVNode, node, i);
         parentVNode.append(parsedVNode);
     }
-    return context;
+    return currentContext;
 }
 
-function nextParsingContext(context: ParsingContext): ParsingContext {
-    const node = context.node;
+function nextParsingContext(currentContext: ParsingContext): ParsingContext {
+    const nextContext = { ...currentContext };
+
+    const node = currentContext.node;
     if (node.childNodes.length) {
         // Parse the first child with the current node as parent, if any.
-        context.node = node.childNodes[0];
+        nextContext.node = node.childNodes[0];
         // Text node cannot have children, therefore `node` is an Element, not
         // a text node. Only text nodes can be represented by multiple VNodes,
         // so the first matching VNode can safely be selected from the map.
@@ -134,21 +138,21 @@ function nextParsingContext(context: ParsingContext): ParsingContext {
         // its children are added into the current `parentVNode`.
         const parsedParent = VDocumentMap.fromDom(node);
         if (parsedParent) {
-            context.parentVNode = parsedParent[0];
+            nextContext.parentVNode = parsedParent[0];
         }
     } else if (node.nextSibling) {
         // Parse the siblings of the current node with the same parent, if any.
-        context.node = node.nextSibling;
+        nextContext.node = node.nextSibling;
     } else {
         // Parse the next ancestor sibling in the ancestor tree, if any.
         let ancestor = node;
         // Climb back the ancestor tree to the first parent having a sibling.
-        const rootNode = context.rootNode;
+        const rootNode = currentContext.rootNode;
         do {
             ancestor = ancestor.parentNode;
             if (ancestor && Format.tags.includes(ancestor.nodeName)) {
                 // Pop last formatting context from the stack
-                context.format.shift();
+                nextContext.format.shift();
             }
         } while (ancestor && !ancestor.nextSibling && ancestor !== rootNode);
         // At this point, the found ancestor has a sibling.
@@ -156,15 +160,15 @@ function nextParsingContext(context: ParsingContext): ParsingContext {
             // Text node cannot have children, therefore parent is an Element,
             // not a text node. Only text nodes can be represented by multiple
             // VNodes so the first VNode can safely be selected from the map.
-            context.node = ancestor.nextSibling;
-            context.parentVNode = VDocumentMap.fromDom(ancestor.parentNode)[0];
+            nextContext.node = ancestor.nextSibling;
+            nextContext.parentVNode = VDocumentMap.fromDom(ancestor.parentNode)[0];
         } else {
             // If no ancestor having a sibling could be found then the tree has
             // been fully parsed. There is no next parsing context. Stop it.
             return;
         }
     }
-    return context;
+    return nextContext;
 }
 
 /**
