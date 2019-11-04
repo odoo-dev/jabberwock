@@ -52,19 +52,19 @@ export class EventManager {
      * @param offset
      */
     _locate(container: Node, offset: number): [VNode, RelativePosition] {
+        // Position `BEFORE` is preferred over `AFTER`, unless the offset
+        // overflows the children list, in which case `AFTER` is needed.
         let position = RelativePosition.BEFORE;
         const isTextNode = container.nodeType === Node.TEXT_NODE;
         const content = isTextNode ? container.nodeValue : container.childNodes;
         if (offset >= content.length) {
             position = RelativePosition.AFTER;
             offset = content.length - 1;
-            if (container) {
-                // Move to deepest child of container.
-                while (container.hasChildNodes()) {
-                    container = container.childNodes[offset];
-                    offset = 0;
-                }
-            }
+        }
+        // Move to deepest child of container.
+        while (container.hasChildNodes()) {
+            container = container.childNodes[offset];
+            offset = 0;
         }
         // Get the VNodes matching the container.
         const containers = VDocumentMap.fromDom(container);
