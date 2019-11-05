@@ -51,18 +51,28 @@ export class VDocument {
      */
     truncate(nodes: VNode[]): void {
         if (!nodes.length) return;
-        let reference = nodes[0];
-        const container = reference.parent;
+        // Determine where and how to reattach the orphaned child nodes.
+        const firstNode = nodes[0];
+        let reference = firstNode.previousSibling();
+        let methodName = 'after';
+        if (!reference) {
+            reference = firstNode.nextSibling();
+            methodName = 'before';
+        }
+        if (!reference) {
+            reference = firstNode.parent;
+            methodName = 'append';
+        }
         nodes.forEach(vNode => {
-            // If the node has children, try to merge it with the container of
-            // the range, that is insert them right after the first range node.
-            // Children of the merged node that are selected will be deleted in
-            // the following iterations since they appear in `selectedNodes`.
-            // The children array must be cloned to modify it while iterating.
+            // If the node has children, merge it with the container of the
+            // range. Children of the merged node that should be truncated as
+            // well will be deleted in the following iterations since they
+            // appear in `nodes`. The children array must be cloned in order to
+            // modify it while iterating.
             // TODO: test whether the node can be merged with the container.
             if (vNode.children.length) {
                 vNode.children.slice().forEach(child => {
-                    container.insertAfter(child, reference);
+                    reference[methodName](child);
                     reference = child;
                 });
             }

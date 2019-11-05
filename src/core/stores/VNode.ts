@@ -39,7 +39,6 @@ export class VNode {
     };
     originalTag: string;
     value: string;
-    _childrenMap: Map<VNode, number> = new Map<VNode, number>();
 
     constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
         this.type = type;
@@ -103,8 +102,7 @@ export class VNode {
      * @param child
      */
     indexOf(child: VNode): number {
-        const index = this._childrenMap.get(child);
-        return typeof index === 'undefined' ? -1 : index;
+        return this.children.indexOf(child);
     }
     /**
      * Return this VNode's inner text (concatenation of all descendent
@@ -520,7 +518,6 @@ export class VNode {
         }
         this.children.splice(index, 0, child);
         child.parent = this;
-        this._updateIndices();
         return this;
     }
     /**
@@ -528,16 +525,6 @@ export class VNode {
      */
     _removeAtIndex(index: number): VNode {
         this.children.splice(index, 1);
-        this._updateIndices();
-        return this;
-    }
-    /**
-     * Reset the indices of this node's children.
-     */
-    _updateIndices(): VNode {
-        this.children.forEach((child: VNode, i: number) => {
-            this._childrenMap.set(child, i);
-        });
         return this;
     }
 }
