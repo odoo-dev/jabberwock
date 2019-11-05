@@ -191,11 +191,15 @@ export class Renderer {
     _getDomLocation(rangeNode: VNode): [Node, number] {
         let reference = rangeNode.previousSibling();
         let position = RelativePosition.AFTER;
-        if (!reference) {
+        if (reference) {
+            reference = reference.lastLeaf();
+        } else {
             reference = rangeNode.nextSibling();
             position = RelativePosition.BEFORE;
         }
-        if (!reference) {
+        if (reference) {
+            reference = reference.firstLeaf();
+        } else {
             reference = rangeNode.parent;
             position = RelativePosition.INSIDE;
         }
