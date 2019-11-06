@@ -152,6 +152,8 @@ export class Renderer {
             }
             next = next.nextSibling();
         }
+        // Browsers don't render leading/trailing space chars otherwise.
+        text = text.replace(/^ | $/g, '\u00A0');
 
         // Create and append the text node, update the VDocumentMap.
         const renderedNode = document.createTextNode(text);
