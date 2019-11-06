@@ -1,4 +1,4 @@
-import { VNode, VNodeType, TextTypes, RangeTypes, ElementTypes } from '../stores/VNode';
+import { VNode, VNodeType } from '../stores/VNode';
 import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRange, RelativePosition } from '../stores/VRange';
@@ -53,12 +53,12 @@ export class Renderer {
      * @param b
      */
     _isSameTextNode(a: VNode, b: VNode): boolean {
-        if (RangeTypes.includes(a.type) || RangeTypes.includes(b.type)) {
+        if (a.isRange() || b.isRange()) {
             // A Range node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
             // be broken up just because it contains the range.
             return true;
-        } else if (!TextTypes.includes(a.type) || !TextTypes.includes(b.type)) {
+        } else if (a.type !== VNodeType.CHAR || b.type !== VNodeType.CHAR) {
             // Nodes that are not valid in a text node must end the text node.
             return false;
         } else {
@@ -186,13 +186,10 @@ export class Renderer {
      * @param rangeNode
      */
     _getDomLocation(rangeNode: VNode): [Node, number] {
-        const isValidRangeAnchorNode = (node: VNode): boolean => {
-            return !RangeTypes.includes(node.type);
-        };
-        let reference = rangeNode.previousSibling(isValidRangeAnchorNode);
+        let reference = rangeNode.previousSibling();
         let position = RelativePosition.AFTER;
         if (!reference) {
-            reference = rangeNode.nextSibling(isValidRangeAnchorNode);
+            reference = rangeNode.nextSibling();
             position = RelativePosition.BEFORE;
         }
         if (!reference) {
@@ -215,7 +212,7 @@ export class Renderer {
     _renderVNode(context: RenderingContext): RenderingContext {
         if (context.currentVNode.type === VNodeType.CHAR) {
             context = this._renderTextNode(context);
-        } else if (ElementTypes.includes(context.currentVNode.type)) {
+        } else {
             context = this._renderElement(context);
         }
         return context;

@@ -127,8 +127,8 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         if (node.value) {
             return utils.toUnicode(node.value);
         }
-        if (node.type && node.type.startsWith('RANGE')) {
-            return node.type.endsWith('START') ? '[' : ']';
+        if (node.isRange()) {
+            return node.type === VNodeType.RANGE_START ? '[' : ']';
         }
         if (node.type && node.type === VNodeType.LINE_BREAK) {
             return '↲';

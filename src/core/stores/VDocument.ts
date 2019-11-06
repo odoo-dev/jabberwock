@@ -1,6 +1,8 @@
 import { VNode, VNodeType } from './VNode';
 import { VRange } from './VRange';
 
+export let withRange = false;
+
 export class VDocument {
     root: VNode;
     range = new VRange();
@@ -51,34 +53,54 @@ export class VDocument {
      */
     truncate(nodes: VNode[]): void {
         if (!nodes.length) return;
-        // Determine where and how to reattach the orphaned child nodes.
-        const firstNode = nodes[0];
-        let reference = firstNode.previousSibling();
-        let methodName = 'after';
-        if (!reference) {
-            reference = firstNode.nextSibling();
-            methodName = 'before';
-        }
-        if (!reference) {
-            reference = firstNode.parent;
-            methodName = 'append';
-        }
-        nodes.forEach(vNode => {
-            // If the node has children, merge it with the container of the
-            // range. Children of the merged node that should be truncated as
-            // well will be deleted in the following iterations since they
-            // appear in `nodes`. The children array must be cloned in order to
-            // modify it while iterating.
-            // TODO: test whether the node can be merged with the container.
-            if (vNode.children.length) {
-                vNode.children.slice().forEach(child => {
-                    reference[methodName](child);
-                    reference = child;
-                });
+        VDocument.withRange(() => {
+            // Determine where and how to reattach the orphaned child nodes.
+            const firstNode = nodes[0];
+            let reference = firstNode.previousSibling();
+            let methodName = 'after';
+            if (!reference) {
+                reference = firstNode.nextSibling();
+                methodName = 'before';
             }
-            // Then remove.
-            vNode.remove();
+            if (!reference) {
+                reference = firstNode.parent;
+                methodName = 'append';
+            }
+            nodes.forEach(vNode => {
+                // If the node has children, merge it with the container of the
+                // range. Children of the merged node that should be truncated as
+                // well will be deleted in the following iterations since they
+                // appear in `nodes`. The children array must be cloned in order to
+                // modify it while iterating.
+                // TODO: test whether the node can be merged with the container.
+                if (vNode.children.length) {
+                    vNode.children.slice().forEach(child => {
+                        reference[methodName](child);
+                        reference = child;
+                    });
+                }
+                // Then remove.
+                vNode.remove();
+            });
+            this.range.collapse(); // Reset the direction of the range.
         });
-        this.range.collapse(); // Reset the direction of the range.
+    }
+
+    //--------------------------------------------------------------------------
+    // Context
+    //--------------------------------------------------------------------------
+
+    /**
+     * Call a callback on this VNode without ignoring the range nodes.
+     *
+     * @param callback
+     */
+    static withRange<T>(callback: () => T): T {
+        // Record the previous value to allow for nested calls to `withRange`.
+        const previousValue = withRange;
+        withRange = true;
+        const result = callback();
+        withRange = previousValue;
+        return result;
     }
 }
