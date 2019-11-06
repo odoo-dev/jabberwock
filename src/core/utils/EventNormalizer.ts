@@ -64,9 +64,9 @@ interface NormalizedventPayload {
     origin: string;
 }
 
-export interface EventNormalizerCallback {
+export interface EventBatch {
     events: CustomEvent[];
-    dirty: Set<HTMLElement>;
+    mutatedElements: Set<HTMLElement>;
 }
 
 export class EventNormalizer {
@@ -78,11 +78,11 @@ export class EventNormalizer {
     _observer: MutationObserver;
     _selectAllOriginElement: Node; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
-    _eventCallback: (res: EventNormalizerCallback) => void; // callback to trigger on events
+    _eventCallback: (res: EventBatch) => void; // callback to trigger on events
     _rangeHasChanged: boolean;
     _selectAll: boolean;
 
-    constructor(editable: HTMLElement, eventCallback: (res: EventNormalizerCallback) => void) {
+    constructor(editable: HTMLElement, eventCallback: (res: EventBatch) => void) {
         this.editable = editable;
         this._eventCallback = eventCallback;
 
@@ -546,7 +546,7 @@ export class EventNormalizer {
     _triggerEventsQueue(customEvents: CustomEvent[], elements: Set<HTMLElement>): void {
         this._eventCallback({
             events: customEvents,
-            dirty: elements || new Set(),
+            mutatedElements: elements || new Set(),
         });
     }
     _createCustomEvent(type: string, params = {}): CustomEvent {

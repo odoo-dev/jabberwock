@@ -1,4 +1,4 @@
-import { EventNormalizer, DomRangeDescription, EventNormalizerCallback } from './EventNormalizer';
+import { EventNormalizer, DomRangeDescription, EventBatch } from './EventNormalizer';
 import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
@@ -104,7 +104,7 @@ export class EventManager {
      *
      * @param {CustomEvent} customEvent
      */
-    _triggerEvent(res: EventNormalizerCallback): void {
+    _triggerEvent(res: EventBatch): void {
         let source: string;
         const intents = [];
         res.events.map(customEvent => {
@@ -122,7 +122,7 @@ export class EventManager {
         });
         this.options.dispatch({
             actions: intents,
-            mutatedElements: res.dirty,
+            mutatedElements: res.mutatedElements,
         });
     }
 }
