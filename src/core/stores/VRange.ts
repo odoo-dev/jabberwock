@@ -1,4 +1,5 @@
 import { VNode, VNodeType } from './VNode';
+import { VDocument } from './VDocument';
 
 export enum Direction {
     BACKWARD = 'BACKWARD',
@@ -33,7 +34,7 @@ export class VRange {
     }
     get direction(): Direction {
         if (!this._direction) {
-            const forward = this.start.isBefore(this.end);
+            const forward = VDocument.withRange(() => this.start.isBefore(this.end));
             this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
         }
         return this._direction;
@@ -47,11 +48,13 @@ export class VRange {
      * Return true if the range is collapsed.
      */
     isCollapsed(): boolean {
-        if (this.direction === Direction.FORWARD) {
-            return this.start.nextSibling() === this.end;
-        } else {
-            return this.end.nextSibling() === this.start;
-        }
+        return VDocument.withRange(() => {
+            if (this.direction === Direction.FORWARD) {
+                return this.start.nextSibling() === this.end;
+            } else {
+                return this.end.nextSibling() === this.start;
+            }
+        });
     }
     /**
      * Return a list of all the nodes implied in the selection between the first
@@ -62,9 +65,11 @@ export class VRange {
         const next = this.direction === Direction.FORWARD ? 'next' : 'previous';
         const push = this.direction === Direction.FORWARD ? 'push' : 'unshift';
         let node = this.start;
-        while ((node = node[next]()) && node !== this.end) {
-            selectedNodes[push](node);
-        }
+        VDocument.withRange(() => {
+            while ((node = node[next]()) && node !== this.end) {
+                selectedNodes[push](node);
+            }
+        });
         return selectedNodes;
     }
 
@@ -168,7 +173,7 @@ export class VRange {
      */
     setStart(reference: VNode, position = RelativePosition.BEFORE): VRange {
         reference = reference.firstLeaf();
-        if (position === RelativePosition.AFTER) {
+        if (position === RelativePosition.AFTER && reference !== this.end) {
             reference.after(this.start);
         } else {
             reference.before(this.start);
@@ -187,7 +192,7 @@ export class VRange {
      */
     setEnd(reference: VNode, position = RelativePosition.AFTER): VRange {
         reference = reference.lastLeaf();
-        if (position === RelativePosition.BEFORE) {
+        if (position === RelativePosition.BEFORE && reference !== this.start) {
             reference.before(this.end);
         } else {
             reference.after(this.end);

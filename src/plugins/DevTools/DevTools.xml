@@ -81,7 +81,7 @@
     <t t-name="treeChildren">
         <div class="children">
             <TreeComponent t-if="!state.folded"
-                t-foreach="props.vNode.children" t-as="child"
+                t-foreach="props.vNode._children" t-as="child"
                 t-key="child.id"
                 vNode="child"
                 selectedPath="props.selectedPath"
