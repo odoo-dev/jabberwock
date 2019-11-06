@@ -3,14 +3,20 @@ import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode } from '../stores/VNode';
+import { DispatchFunction } from '../dispatcher/Dispatcher';
 
-export interface ActionBatch {
-    actions: Intent[];
-    mutatedElements: Set<HTMLElement>;
-}
 export interface EventManagerOptions {
-    dispatch?: (res: ActionBatch) => void;
+    /**
+     * Function called to dispatch the actions corresponding to fired events.
+     */
+    dispatch?: DispatchFunction;
+    /**
+     * Callback called after events were fired and properly handled.
+     */
+    callback?: () => void;
 }
+
+const sourceTypes = ['composition', 'keyboard', 'pointer'];
 
 export class EventManager {
     editable: HTMLElement;
@@ -104,25 +110,32 @@ export class EventManager {
      *
      * @param {CustomEvent} customEvent
      */
-    _triggerEvent(res: EventBatch): void {
+    _triggerEvent(batch: EventBatch): void {
         let source: string;
-        const intents = [];
-        res.events.map(customEvent => {
-            if (
-                customEvent.type === 'keyboard' ||
-                customEvent.type === 'pointer' ||
-                customEvent.type === 'composition'
-            ) {
+        const actions = [];
+
+        // Convert the events into proper actions.
+        batch.events.forEach(customEvent => {
+            if (sourceTypes.includes(customEvent.type)) {
                 source = customEvent.type;
-                return;
+            } else {
+                const intent = this._matchIntent(customEvent);
+                intent.source = source;
+                actions.push(intent);
             }
-            const intent = this._matchIntent(customEvent);
-            intent.source = source;
-            intents.push(intent);
         });
-        this.options.dispatch({
-            actions: intents,
-            mutatedElements: res.mutatedElements,
+
+        // Dispatch each action through the dispatcher.
+        let hasBeenHandled = false;
+        actions.forEach(action => {
+            const handlers = this.options.dispatch(action);
+            hasBeenHandled = hasBeenHandled || !!handlers.length;
         });
+
+        // If the system handled any of the action or if the normalizer
+        // observed any mutation in the DOM, call the callback.
+        if (hasBeenHandled || batch.mutatedElements.size) {
+            this.options.callback();
+        }
     }
 }

@@ -1,7 +1,6 @@
 import { CorePlugin } from './utils/CorePlugin';
-import { ActionGenerator } from './actions/ActionGenerator';
 import { Dispatcher } from './dispatcher/Dispatcher';
-import { EventManager, ActionBatch } from './utils/EventManager';
+import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './stores/VDocument';
 import { Parser } from './utils/Parser';
@@ -9,6 +8,7 @@ import { Renderer } from './utils/Renderer';
 import { OwlUI } from '../../src/ui/OwlUI';
 import { DevTools } from '../../src/plugins/DevTools/DevTools';
 import '../../src/plugins/DevTools/DevTools.css';
+import { ActionGenerator } from './actions/ActionGenerator';
 
 export interface JWEditorConfig {
     debug?: boolean;
@@ -77,29 +77,16 @@ export class JWEditor {
 
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this.editable, {
-            dispatch: (batch: ActionBatch): void => {
-                let hasBeenHandled = false;
-                batch.actions.forEach(action => {
-                    // Dispatch each action through the dispatcher.
-                    const handlers = this.dispatcher.dispatch(action);
-                    hasBeenHandled = hasBeenHandled || !!handlers.length;
+            dispatch: this.dispatcher.dispatch.bind(this.dispatcher),
+            callback: (): void => {
+                // Re-render when events are fired.
+                this.renderer.render(this.vDocument, this.editable);
+                // Notify plugins that a render has been trigerred.
+                const render = ActionGenerator.intent({
+                    name: 'render',
+                    origin: 'Editor',
                 });
-                // If the system handled any of the action or if the normalizer
-                // observed any mutation in the DOM, trigger a re-render.
-                if (hasBeenHandled || batch.mutatedElements.size) {
-                    // Render when done dispatching.
-                    this.renderer.render(this.vDocument, this.editable);
-                    // Notify plugins that a render has been trigerred.
-                    const render = ActionGenerator.intent({
-                        name: 'render',
-                        origin: 'Editor',
-                        payload: {
-                            actions: batch.actions.map(action => action.name),
-                            mutatedElements: batch.mutatedElements,
-                        },
-                    });
-                    this.dispatcher.dispatch(render);
-                }
+                this.dispatcher.dispatch(render);
             },
         });
 

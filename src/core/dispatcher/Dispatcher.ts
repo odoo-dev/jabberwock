@@ -6,9 +6,8 @@ export type CommandIdentifier = string;
 export type HandlerToken = string;
 export type Handlers = Record<HandlerToken, ActionHandler>;
 export type DispatcherRegistry = Record<ActionIdentifier, Handlers>;
-export type DispatchFunction = (action: Action) => void;
+export type DispatchFunction = (action: Action) => ActionHandler[];
 
-const unhandledActions = ['render', 'keyboard', 'pointer', 'composition'];
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
@@ -46,7 +45,7 @@ export class Dispatcher {
             handlers[handlerToken](action); // TODO: use return value to retrigger
         });
 
-        if (!properHandlers && !unhandledActions.includes(action.name)) {
+        if (!properHandlers && action.name !== 'render') {
             console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
         }
         return Object.values(handlers);
