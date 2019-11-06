@@ -32,8 +32,6 @@ interface CompiledEvent {
     mutationsList?: Array<MutationRecord>; // mutations observed by the observer
     defaultPrevented?: boolean;
     clone?: ClonedNode; // clone of closest block node containing modified selection during composition
-    target?: Node;
-    range?: DomRangeDescription;
 }
 
 interface ClonedNode extends Node {
@@ -66,7 +64,7 @@ interface NormalizedventPayload {
 
 export interface EventBatch {
     events: CustomEvent[];
-    mutatedElements: Set<HTMLElement>;
+    mutatedElements?: Set<HTMLElement>;
 }
 
 export class EventNormalizer {
@@ -78,13 +76,13 @@ export class EventNormalizer {
     _observer: MutationObserver;
     _selectAllOriginElement: Node; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
-    _eventCallback: (res: EventBatch) => void; // callback to trigger on events
+    _triggerEvent: (batch: EventBatch) => void; // callback to trigger on events
     _rangeHasChanged: boolean;
     _selectAll: boolean;
 
-    constructor(editable: HTMLElement, eventCallback: (res: EventBatch) => void) {
+    constructor(editable: HTMLElement, callback: (res: EventBatch) => void) {
         this.editable = editable;
-        this._eventCallback = eventCallback;
+        this._triggerEvent = callback;
 
         const document = this.editable.ownerDocument;
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
@@ -264,18 +262,18 @@ export class EventNormalizer {
             }
         }
 
-        const customEvents = [];
-        const elements = new Set<HTMLElement>();
+        const events = [];
+        const mutatedElements = new Set<HTMLElement>();
         compiledEvents.map(compiledEvent => {
             if (compiledEvent.elements) {
-                compiledEvent.elements.forEach(el => elements.add(el));
+                compiledEvent.elements.forEach(el => mutatedElements.add(el));
             }
         });
         compiledEvents.map(compiledEvent => {
-            customEvents.push(...this._processCompiledEvents(compiledEvent, elements));
+            events.push(...this._processCompiledEvents(compiledEvent, mutatedElements));
         });
 
-        this._triggerEventsQueue(customEvents, elements);
+        this._triggerEvent({ events, mutatedElements });
     }
     /**
      * @private
@@ -538,17 +536,11 @@ export class EventNormalizer {
         ];
     }
     /**
-     * Format a custom event and trigger it.
+     * Format a custom event.
      *
      * @param {string} type
      * @param {object} [params]
      */
-    _triggerEventsQueue(customEvents: CustomEvent[], elements: Set<HTMLElement>): void {
-        this._eventCallback({
-            events: customEvents,
-            mutatedElements: elements || new Set(),
-        });
-    }
     _createCustomEvent(type: string, params = {}): CustomEvent {
         const detail = params as NormalizedventPayload;
         const initDict = {
@@ -1064,7 +1056,7 @@ export class EventNormalizer {
                 if (this._rangeHasChanged) {
                     const pointerEvent = this._createCustomEvent('pointer', { target: target });
                     const setRangeEvent = this._createCustomEvent('setRange', { domRange: range });
-                    this._triggerEventsQueue([pointerEvent, setRangeEvent], undefined);
+                    this._triggerEvent({ events: [pointerEvent, setRangeEvent] });
                 }
             }
         }, 0);
@@ -1110,13 +1102,13 @@ export class EventNormalizer {
                         this._eventsQueue.unshift(keyA);
                     }
                 } else {
-                    const customEvents = this._processSelectAll();
-                    customEvents.unshift(
+                    const events = this._processSelectAll();
+                    events.unshift(
                         this._createCustomEvent('pointer', {
                             target: this._selectAllOriginElement,
                         }),
                     );
-                    this._triggerEventsQueue(customEvents, undefined);
+                    this._triggerEvent({ events });
                 }
             }
             this._selectAllOriginElement = undefined;
