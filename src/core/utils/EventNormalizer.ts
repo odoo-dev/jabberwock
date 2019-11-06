@@ -72,17 +72,56 @@ export interface EventBatch {
 }
 
 export class EventNormalizer {
+    /**
+     * HTML element that represents the editable zone. Only events happening
+     * inside the editable zone are subject to normalization.
+     */
     editable: HTMLElement;
+    /**
+     * Event listeners that are bound in the DOM by the normalizer on creation
+     * and unbound on destroy.
+     */
     _eventListeners: EventListenerDeclaration[] = [];
-    _eventsQueue: Array<Event | MutationRecord[]>;
-    _lastEventsQueue: Array<Event | MutationRecord[]>;
-    _clone: ClonedNode;
+    /**
+     * The MutationObserver used by the normalizer to watch the nodes that are
+     * being modified since the normalizer creation until it is drestroyed.
+     */
     _observer: MutationObserver;
-    _selectAllOriginElement: Node; // original selection/target before updating selection
-    _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
-    _triggerEvent: (batch: EventBatch) => void; // callback to trigger on events
-    _rangeHasChanged: boolean;
+    /**
+     * Events fired during the current tick.
+     */
+    _events: Event[];
+    /**
+     * Events fired during the previous action.
+     */
+    _lastEventsQueue: Event[];
+    /**
+     * Callback function to trigger for each user action.
+     */
+    _triggerEvent: (batch: EventBatch) => void;
+    /**
+     * Partial clone of the DOM from the target of a composition event up to its
+     * closest display:block parent. Used to precisely indentify the change that
+     * was made in the DOM at the end of the composition event.
+     */
+    _clonedNodeForComposition: ClonedNode;
+    /**
+     * Whether the current state of the selection is already recognized as being
+     * a "select all".
+     */
     _selectAll: boolean;
+    /**
+     * Original selection target before the current selection is updated.
+     */
+    _selectAllOriginalTarget: Node;
+    /**
+     * Original mousedown event from which the current selection was made.
+     */
+    _selectAllOriginalMousedown: MouseEvent;
+    /**
+     * TODO: ask CHM
+     */
+    _rangeHasChanged: boolean;
 
     constructor(editable: HTMLElement, callback: (res: EventBatch) => void) {
         this.editable = editable;
@@ -104,7 +143,7 @@ export class EventNormalizer {
         this._bindEvent(editable, 'mousedown', this._onMouseDown);
 
         this._observer = new MutationObserver((mutationsList): void => {
-            if (this._eventsQueue) {
+            if (this._events) {
                 const mutationEvent = this._createCustomEvent('mutation', {
                     mutationsList: mutationsList,
                 });
@@ -174,16 +213,16 @@ export class EventNormalizer {
      * @private
      */
     _registerEvent(ev: Event): void {
-        if (!this._eventsQueue) {
+        if (!this._events) {
             // The queue is not initialized or has been reset, so this is a new
             // user action. Re-initialize the queue and reset the cloned nodes
             // such that the analysis is not polluted by previous observations.
-            this._eventsQueue = [];
-            this._clone = undefined;
+            this._events = [];
+            this._clonedNodeForComposition = undefined;
             // All events during this tick will be processed in the next one.
             setTimeout(this._processEventsQueue.bind(this));
         }
-        this._eventsQueue.push(ev);
+        this._events.push(ev);
     }
     /**
      * Create a partial clone of the DOM starting from the current position of
@@ -195,7 +234,7 @@ export class EventNormalizer {
      */
     _cloneForComposition(): void {
         // Check if already cloned earlier
-        if (this._clone) {
+        if (this._clonedNodeForComposition) {
             return;
         }
 
@@ -212,7 +251,7 @@ export class EventNormalizer {
         }
         const clone: ClonedNode = format.cloneNode(true) as ClonedNode;
         clone.origin = format;
-        this._clone = clone;
+        this._clonedNodeForComposition = clone;
 
         (function addChildOrigin(clone: ClonedNode): void {
             // only mark DOM elements (type 1)
@@ -235,9 +274,9 @@ export class EventNormalizer {
      */
     _processEventsQueue(): void {
         // Store and reset compiled event for the next stack.
-        const eventsQueue = this._eventsQueue;
+        const eventsQueue = this._events;
         this._lastEventsQueue = eventsQueue;
-        this._eventsQueue = null;
+        this._events = null;
 
         let compiledEvents: CompiledEvent[] = [];
         let compiledEvent: CompiledEvent;
@@ -289,7 +328,7 @@ export class EventNormalizer {
     _processCompositionEvent(ev: CompositionEvent): CompiledEvent {
         return {
             type: 'composition',
-            clone: this._clone,
+            clone: this._clonedNodeForComposition,
             data: ev.data,
             defaultPrevented: ev.defaultPrevented,
         };
@@ -367,7 +406,7 @@ export class EventNormalizer {
      * @returns CompiledEvent
      */
     _processKeydownEvent(ev: KeyboardEvent): CompiledEvent {
-        this._selectAllOriginElement = this._getRange().startContainer;
+        this._selectAllOriginalTarget = this._getRange().startContainer;
 
         // See comment on the same line in _onCompositionStart handler.
         if (this.editable.style.display === 'none') return;
@@ -536,7 +575,7 @@ export class EventNormalizer {
     _processSelectAll(): CustomEvent[] {
         return [
             this._createCustomEvent('selectAll', {
-                target: this._selectAllOriginElement,
+                target: this._selectAllOriginalTarget,
                 domRange: this._getRange(),
             }),
         ];
@@ -983,7 +1022,7 @@ export class EventNormalizer {
         // The _mousedownInEditable property is used to assess whether the user
         // is currently changing the selection by using the mouse. If the
         // context menu ends up opening, the user is definitely not selecting.
-        this._mousedownInEditable = null;
+        this._selectAllOriginalMousedown = null;
     }
     /**
      * Catch composition, Enter, Backspace, Delete and insert actions
@@ -1016,10 +1055,10 @@ export class EventNormalizer {
     _onMouseDown(ev: MouseEvent): void {
         this._rangeHasChanged = false;
         // store mousedown event to detect range change from mouse selection
-        this._mousedownInEditable = ev;
-        this._selectAllOriginElement = ev.target as Node;
+        this._selectAllOriginalMousedown = ev;
+        this._selectAllOriginalTarget = ev.target as Node;
         setTimeout(() => {
-            this._selectAllOriginElement = this._getRange().startContainer;
+            this._selectAllOriginalTarget = this._getRange().startContainer;
         }, 0);
     }
     /**
@@ -1032,13 +1071,13 @@ export class EventNormalizer {
      */
     _onClick(ev: MouseEvent): void {
         this._lastEventsQueue = [ev];
-        if (!this._mousedownInEditable) {
+        if (!this._selectAllOriginalMousedown) {
             return;
         }
         setTimeout(() => {
-            this._selectAllOriginElement = ev.target as Node;
-            const target = this._mousedownInEditable.target as Node;
-            this._mousedownInEditable = null;
+            this._selectAllOriginalTarget = ev.target as Node;
+            const target = this._selectAllOriginalMousedown.target as Node;
+            this._selectAllOriginalMousedown = null;
             if (ev.target instanceof Element) {
                 let range: DomRangeDescription = this._getRange();
                 if (
@@ -1074,7 +1113,7 @@ export class EventNormalizer {
      * @param {Event} ev
      */
     _onSelectionChange(): void {
-        if (!this._selectAllOriginElement) {
+        if (!this._selectAllOriginalTarget) {
             // The _rangeHasChanged hook will disappear once the renderer only
             // re-renders what has changed rather than re-rendering everything.
             // Right now it is needed to avoid an infinite loop when selectAll
@@ -1085,8 +1124,8 @@ export class EventNormalizer {
         // Testing whether the entire document is selected or not is a costly
         // process, so we use the below heuristics before actually checking.
         const isVisible = this.editable.style.display !== 'none';
-        const isCurrentlySelecting = this._mousedownInEditable && isVisible;
-        const eventsQueue = this._eventsQueue || this._lastEventsQueue;
+        const isCurrentlySelecting = this._selectAllOriginalMousedown && isVisible;
+        const eventsQueue = this._events || this._lastEventsQueue;
         const keyA =
             eventsQueue &&
             eventsQueue.filter(
@@ -1104,20 +1143,20 @@ export class EventNormalizer {
                 this._selectAll = true;
                 if (keyA) {
                     this._registerEvent(new CustomEvent('selectAll'));
-                    if (this._eventsQueue !== eventsQueue) {
-                        this._eventsQueue.unshift(keyA);
+                    if (this._events !== eventsQueue) {
+                        this._events.unshift(keyA);
                     }
                 } else {
                     const events = this._processSelectAll();
                     events.unshift(
                         this._createCustomEvent('pointer', {
-                            target: this._selectAllOriginElement,
+                            target: this._selectAllOriginalTarget,
                         }),
                     );
                     this._triggerEvent({ events });
                 }
             }
-            this._selectAllOriginElement = undefined;
+            this._selectAllOriginalTarget = undefined;
         } else {
             this._selectAll = false;
         }
