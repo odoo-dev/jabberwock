@@ -62,6 +62,10 @@ interface NormalizedventPayload {
     origin: string;
 }
 
+interface MutationEvent extends CustomEvent {
+    mutationsList: MutationRecord[];
+}
+
 export interface EventBatch {
     events: CustomEvent[];
     mutatedElements?: Set<HTMLElement>;
@@ -101,7 +105,10 @@ export class EventNormalizer {
 
         this._observer = new MutationObserver((mutationsList): void => {
             if (this._eventsQueue) {
-                this._addEventOrMutations(mutationsList);
+                const mutationEvent = this._createCustomEvent('mutation', {
+                    mutationsList: mutationsList,
+                });
+                this._registerEvent(mutationEvent);
             }
         });
         this._observer.observe(this.editable, {
@@ -154,24 +161,28 @@ export class EventNormalizer {
         });
     }
     /**
-     * After a tick (setTimeout 0ms) the method '_tickAfterUserInteraction' is
-     * called.
-     * All events during a tick are caught and the Event object is complete.
-     * This analysis tries to extract the actions desired by the user.
-     * Actions such as special character insertion, delete, backspace,
-     * spellcheckers...
-     * User events are received per batch, corresponding to an action.
+     * Register given event on `this._eventsQueue`. If the queue is not already
+     * initialized or has been cleared prior to this call, re-initialize it and
+     * reset the stored clone in the process.
      *
-     * @see _tickAfterUserInteraction
+     * After a tick (setTimeout 0ms) the method '_processEventsQueue' is called.
+     * All events that happened during the tick are read from the queue and the
+     * analysis tries to extract the actions desired by the user such as insert,
+     * delete, backspace, spellchecking, special characters, etc.
+     *
+     * @see _processEventsQueue
      * @private
      */
-    _addEventOrMutations(ev: Event | MutationRecord[]): void {
+    _registerEvent(ev: Event): void {
         if (!this._eventsQueue) {
+            // The queue is not initialized or has been reset, so this is a new
+            // user action. Re-initialize the queue and reset the cloned nodes
+            // such that the analysis is not polluted by previous observations.
             this._eventsQueue = [];
             this._clone = undefined;
+            // All events during this tick will be processed in the next one.
             setTimeout(this._processEventsQueue.bind(this));
         }
-        this._rangeHasChanged = false;
         this._eventsQueue.push(ev);
     }
     /**
@@ -232,33 +243,28 @@ export class EventNormalizer {
         let compiledEvent: CompiledEvent;
         for (let k = 0, len = eventsQueue.length; k < len; k++) {
             const ev = eventsQueue[k] as Event;
-            if (ev instanceof Event) {
-                if (ev.type === 'composition') {
-                    compiledEvent = this._processCompositionEvent(ev as CompositionEvent);
-                    const MutationList = eventsQueue.find(
-                        event => !('type' in event),
-                    ) as MutationRecord[];
-                    compiledEvent.elements = this._processMutationEvent(MutationList);
-                    compiledEvents = [compiledEvent];
-                    break;
-                }
-                if (ev.type === 'selectAll') {
-                    compiledEvents.push({ type: 'selectAll' });
-                }
-                if (ev.type === 'keydown') {
-                    compiledEvent = this._processKeydownEvent(ev as KeyboardEvent);
-                    compiledEvents.push(compiledEvent);
-                }
-                if (ev.type === 'keypress') {
-                    this._processKeypressEvent(compiledEvent, ev as KeyboardEvent);
-                }
-                if (ev.type === 'input') {
-                    this._processInputEvent(compiledEvent, ev as InputEvent);
-                }
-            } else {
-                compiledEvent.elements = this._processMutationEvent(eventsQueue[
-                    k
-                ] as MutationRecord[]);
+            if (ev.type === 'composition') {
+                compiledEvent = this._processCompositionEvent(ev as CompositionEvent);
+                const mutation = eventsQueue.find(
+                    event => event.type === 'mutation',
+                ) as MutationEvent;
+                compiledEvent.elements = this._processMutationEvent(mutation.detail.mutationsList);
+                compiledEvents = [compiledEvent];
+                break;
+            } else if (ev.type === 'selectAll') {
+                compiledEvents.push({ type: 'selectAll' });
+            } else if (ev.type === 'keydown') {
+                compiledEvent = this._processKeydownEvent(ev as KeyboardEvent);
+                compiledEvents.push(compiledEvent);
+            } else if (ev.type === 'keypress') {
+                this._processKeypressEvent(compiledEvent, ev as KeyboardEvent);
+            } else if (ev.type === 'input') {
+                this._processInputEvent(compiledEvent, ev as InputEvent);
+            } else if (ev.type === 'mutation') {
+                const mutationEvent = eventsQueue[k] as MutationEvent;
+                compiledEvent.elements = this._processMutationEvent(
+                    mutationEvent.detail.mutationsList,
+                );
             }
         }
 
@@ -956,7 +962,7 @@ export class EventNormalizer {
         // compositionupdate, or compositionend might be triggered without
         // a prior compositionstart or compositionupdate. Because of this, we
         // might want to start compiling events on any composition event.
-        this._addEventOrMutations(ev);
+        this._registerEvent(ev);
 
         // When the composition ends, the DOM is updated with the final result.
         // Since composition events are handled inconsistently by different
@@ -987,7 +993,7 @@ export class EventNormalizer {
      */
     _onInput(ev: InputEvent): void {
         if (this.editable.style.display !== 'none') {
-            this._addEventOrMutations(ev);
+            this._registerEvent(ev);
         }
     }
     /**
@@ -998,7 +1004,7 @@ export class EventNormalizer {
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
         if (this.editable.style.display !== 'none') {
-            this._addEventOrMutations(ev);
+            this._registerEvent(ev);
         }
     }
     /**
@@ -1097,7 +1103,7 @@ export class EventNormalizer {
             if (!this._selectAll) {
                 this._selectAll = true;
                 if (keyA) {
-                    this._addEventOrMutations(new CustomEvent('selectAll'));
+                    this._registerEvent(new CustomEvent('selectAll'));
                     if (this._eventsQueue !== eventsQueue) {
                         this._eventsQueue.unshift(keyA);
                     }
