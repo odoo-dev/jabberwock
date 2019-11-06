@@ -4,12 +4,12 @@ import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode } from '../stores/VNode';
 
-export interface EventManagerCallback {
-    intents: Intent[];
-    dirty: Set<HTMLElement>;
+export interface ActionBatch {
+    actions: Intent[];
+    mutatedElements: Set<HTMLElement>;
 }
 export interface EventManagerOptions {
-    dispatch?: (res: EventManagerCallback) => void;
+    dispatch?: (res: ActionBatch) => void;
 }
 
 export class EventManager {
@@ -121,8 +121,8 @@ export class EventManager {
             intents.push(intent);
         });
         this.options.dispatch({
-            intents: intents,
-            dirty: res.dirty,
+            actions: intents,
+            mutatedElements: res.dirty,
         });
     }
 }

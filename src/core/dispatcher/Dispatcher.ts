@@ -27,12 +27,13 @@ export class Dispatcher {
     //--------------------------------------------------------------------------
 
     /**
-     * Dispatches a payload to all registered callbacks.
+     * Dispatches a payload to all registered callbacks. Return the callbacks
+     * that were called.
      *
-     * @param {Action} action
-     * @returns {boolean} return true if this action was handled
+     * @param action
+     * @returns return the callbacks that were called to handle the action
      */
-    dispatch(action: Action): boolean {
+    dispatch(action: Action): ActionHandler[] {
         // Fetch proper handlers.
         const properHandlers: Handlers = this.registry[action.id];
 
@@ -49,7 +50,7 @@ export class Dispatcher {
         if (!properHandlers && !unhandledActions.includes(action.name)) {
             console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
         }
-        return !!properHandlers;
+        return Object.values(handlers);
     }
     // Is this Dispatcher currently dispatching.
     isDispatching(): boolean {
