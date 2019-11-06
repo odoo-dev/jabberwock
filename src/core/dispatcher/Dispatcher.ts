@@ -1,5 +1,4 @@
 import JWEditor from '../JWEditor';
-import { ActionGenerator } from '../actions/ActionGenerator';
 import { PluginHandlers, PluginCommands } from '../JWPlugin';
 
 export type ActionHandler = (action: Action) => void;
@@ -9,7 +8,7 @@ export type Handlers = Record<HandlerToken, ActionHandler>;
 export type DispatcherRegistry = Record<ActionIdentifier, Handlers>;
 export type DispatchFunction = (action: Action) => void;
 
-const unhandledActions = ['render', 'key', 'pointer', 'composition'];
+const unhandledActions = ['render', 'keyboard', 'pointer', 'composition'];
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;

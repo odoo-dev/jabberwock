@@ -109,7 +109,7 @@ export class EventManager {
         const intents = [];
         res.events.map(customEvent => {
             if (
-                customEvent.type === 'key' ||
+                customEvent.type === 'keyboard' ||
                 customEvent.type === 'pointer' ||
                 customEvent.type === 'composition'
             ) {

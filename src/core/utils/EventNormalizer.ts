@@ -448,7 +448,7 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
             };
             const type = direction === 'backward' ? 'removeBackward' : 'removeForward';
-            customEvents.push(this._createCustomEvent('key', compiledEvent));
+            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
             customEvents.push(this._createCustomEvent(type, deleteEventPayload));
         } else if (compiledEvent.key === 'Tab') {
             // TODO: maybe like keydown, there is no normalization proper here
@@ -459,7 +459,7 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
                 elements: compiledEvent.elements,
             };
-            customEvents.push(this._createCustomEvent('key', compiledEvent));
+            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
             customEvents.push(this._createCustomEvent('tab', tabEventPayload));
         } else if (compiledEvent.key === 'Enter') {
             const enterEventPayload = {
@@ -469,7 +469,7 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
                 elements: compiledEvent.elements,
             };
-            customEvents.push(this._createCustomEvent('key', compiledEvent));
+            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
             customEvents.push(this._createCustomEvent('enter', enterEventPayload));
         } else if (
             elements.size &&
@@ -491,7 +491,7 @@ export class EventNormalizer {
                 compiledEvent.data && compiledEvent.data.length === 1
                     ? compiledEvent.data
                     : compiledEvent.key;
-            customEvents.push(this._createCustomEvent('key', compiledEvent));
+            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
             if (data === ' ' || data === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
                 customEvents.push(this._createCustomEvent('insert', { value: '\u00A0' })); // nbsp
@@ -508,7 +508,7 @@ export class EventNormalizer {
             // TODO: Maybe the normalizer should not trigger keydown events:
             // - they are consistent accross browsers so no normalization needed
             // - they won't be able to be defaultPrevented after being triggered
-            customEvents.push(this._createCustomEvent('key', compiledEvent));
+            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
         } else if (compiledEvent.type === 'selectAll') {
             // TODO: Maybe the normalizer should not trigger keydown events:
             // - they are consistent accross browsers so no normalization needed
@@ -817,7 +817,7 @@ export class EventNormalizer {
     _processMove(ev: CompiledEvent): CustomEvent[] {
         // The normalizer honors preventDefault for moves. If the range was
         // moved regardless of the preventDefault setting, it must be restored.
-        const events = [this._createCustomEvent('key', ev)];
+        const events = [this._createCustomEvent('keyboard', ev)];
         if (ev.defaultPrevented) {
             events.push(this._createCustomEvent('restoreRange'));
         } else {
