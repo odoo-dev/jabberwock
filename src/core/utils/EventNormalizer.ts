@@ -341,53 +341,48 @@ export class EventNormalizer {
             compiledEvent.data = ev.data;
         }
 
-        if (
-            (ev.inputType === 'insertCompositionText' ||
-                ev.inputType === 'insertReplacementText') &&
-            compiledEvent.type === 'composition'
-        ) {
-            // TODO comment: sometimes data won't be in compositionend (or it won't be triggered at all)
-            // so, if we can catch this one, let's use it instead
-            compiledEvent.type = 'composition';
-            compiledEvent.data = ev.data;
-            this._cloneForComposition();
-        } else if (ev.inputType === 'insertParagraph' && compiledEvent.key === 'Unidentified') {
-            compiledEvent.key = 'Enter';
-        } else if (
-            ev.inputType === 'deleteContentBackward' &&
-            compiledEvent.key === 'Unidentified'
-        ) {
-            compiledEvent.key = 'Backspace';
-            // TODO comment: safari mac for accents
-            this._cloneForComposition();
-        } else if (
-            ev.inputType === 'deleteContentForward' &&
-            compiledEvent.key === 'Unidentified'
-        ) {
-            compiledEvent.key = 'Delete';
-        } else if (ev.inputType === 'insertText') {
-            // update the key which does not have the accent with the data which contains the accent
-            if (
-                compiledEvent.type.indexOf('key') === 0 &&
-                compiledEvent.key.length === 1 &&
-                ev.data.length === 1
-            ) {
-                compiledEvent.key = ev.data; // keep accent
-            } else if (
-                ev.data &&
-                ev.data.length === 1 &&
-                ev.data !== compiledEvent.data &&
-                compiledEvent.type === 'composition'
-            ) {
-                // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
-                // remember that ev.data and compiledEvent.data are from the same event stack !
-                compiledEvent.data += ev.data;
-            } else if (compiledEvent.key === 'Unidentified') {
-                // data contains the accentuated character, which is an "Unidentified" key for some browsers so let's update the key
+        const type = compiledEvent.type;
+        const key = compiledEvent.key;
+        const data = compiledEvent.data;
+        if (type === 'composition') {
+            if (['insertCompositionText', 'insertReplacementText'].includes(ev.inputType)) {
+                // Some spell checking keyboards do not properly fill the textual
+                // data of the composition in the compositionend event. To protect
+                // against this, use the data from the input event instead.
+                compiledEvent.data = ev.data;
+                this._cloneForComposition();
+            } else if (ev.inputType === 'insertText') {
+                // The key might not have the accent but data could have it.
+                if (type.indexOf('key') === 0 && key.length === 1 && ev.data.length === 1) {
+                    compiledEvent.key = ev.data;
+                } else if (
+                    ev.data &&
+                    ev.data.length === 1 &&
+                    ev.data !== data &&
+                    type === 'composition'
+                ) {
+                    // Some spell-checking keyboards automatically add a space
+                    // after the composition. Compile the two changes together.
+                    compiledEvent.data += ev.data;
+                }
+            }
+        } else if (key === 'Unidentified') {
+            if (ev.inputType === 'insertParagraph') {
+                compiledEvent.key = 'Enter';
+            } else if (ev.inputType === 'deleteContentBackward') {
+                compiledEvent.key = 'Backspace';
+                // Safari Mac for accents
+                this._cloneForComposition();
+            } else if (ev.inputType === 'deleteContentForward') {
+                compiledEvent.key = 'Delete';
+            } else if (ev.inputType === 'insertText') {
+                // The data property is supposed to contain the accentuated
+                // character, but it is an "Unidentified" key for some browsers.
                 compiledEvent.key = ev.data;
             }
         } else if (!compiledEvent.data) {
-            // TODO comment: input data > other events data
+            // In most other cases, the data of the input event is more richer
+            // than the other events data property.
             compiledEvent.data = ev.data;
         }
     }
