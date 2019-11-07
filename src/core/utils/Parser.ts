@@ -133,7 +133,7 @@ function parseTextNode(currentContext: ParsingContext): ParsingContext {
         } else if (char === RANGE_HEAD_CHAR && currentContext.options.parseTextualRange) {
             parentVNode.append(currentContext.vDocument.range.end);
         } else {
-            const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, format);
+            const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, { ...format });
             VDocumentMap.set(parsedVNode, node, i);
             parentVNode.append(parsedVNode);
         }
