@@ -877,8 +877,8 @@ export class EventNormalizer {
         compiledEvent.type = compiledEvent.type || ev.type;
         compiledEvent.key = ev.key;
         compiledEvent.altKey = ev.altKey;
-        compiledEvent.ctrlKey = ev.ctrlKey;
-        compiledEvent.metaKey = ev.metaKey;
+        // Meta key not supported: we consider it equivalent to Ctrl key.
+        compiledEvent.ctrlKey = ev.ctrlKey || ev.metaKey;
         compiledEvent.shiftKey = ev.shiftKey;
     }
     /**

@@ -2,21 +2,28 @@ import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
 import { Parser } from './Parser';
 import { VNode, VNodeType } from './VNode';
 import JWEditor from './JWEditor';
+import { CommandConfig, KeyMapping } from './KeyMapping';
 
 interface SetRangeParams {
     domRange: DomRangeDescription;
 }
 
+interface EventManagerOptions {
+    keyMap?: KeyMapping;
+}
+
 export class EventManager {
     editor: JWEditor;
     eventNormalizer: EventNormalizer;
+    keyMap: KeyMapping;
 
-    constructor(editor: JWEditor) {
+    constructor(editor: JWEditor, options: EventManagerOptions = {}) {
         this.editor = editor;
         this.eventNormalizer = new EventNormalizer(
             editor.editable,
             this._onNormalizedEvent.bind(this),
         );
+        this.keyMap = options.keyMap;
     }
 
     //--------------------------------------------------------------------------
@@ -28,6 +35,7 @@ export class EventManager {
      */
     _onNormalizedEvent(customEvent: CustomEvent): void {
         const payload = customEvent.detail;
+        let shortcutMatch: CommandConfig;
         switch (customEvent.type) {
             case 'enter':
                 if (customEvent.detail.shiftKey) {
@@ -48,32 +56,15 @@ export class EventManager {
                 // TODO: keydown should be matched with existing shortcuts. If
                 // it matches an command shortcut, trigger the corresponding
                 // command, otherwise do not trigger any command.
-                if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'b'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'bold' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'i'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'italic' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'u'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'underline' });
+
+                // TODO: use payload.code (Digit[0-6]) instead of
+                // payload.key
+                if (this.keyMap) {
+                    shortcutMatch = this.keyMap.fromKeypress(payload);
+                    if (shortcutMatch) {
+                        this.editor.execCommand(shortcutMatch.name, shortcutMatch.arguments);
+                    }
                 }
-                // TODO: keydown should be matched with existing shortcuts.
                 return;
             }
             default:
