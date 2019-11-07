@@ -108,9 +108,11 @@ export class Renderer {
      * @param context
      */
     _renderElement(context: RenderingContext): RenderingContext {
-        const element = context.currentVNode.render<HTMLElement>('html');
-        context.parentNode.appendChild(element);
-        VDocumentMap.set(context.currentVNode, element);
+        const fragment = context.currentVNode.render<DocumentFragment>('html');
+        Array.from(fragment.childNodes).forEach((element: Node): void => {
+            context.parentNode.appendChild(element);
+            VDocumentMap.set(context.currentVNode, element);
+        });
         return context;
     }
     /**
