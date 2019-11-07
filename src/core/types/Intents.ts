@@ -1,4 +1,5 @@
 import { VRangeDescription } from '../stores/VRange';
+import { VNodeType } from '../stores/VNode';
 
 // Specialized intents
 
@@ -13,6 +14,14 @@ export interface KeydownPayload extends ActionPayload {
 }
 export interface KeydownIntent extends Intent {
     payload: KeydownPayload;
+}
+
+// Change type
+export interface FormatParagraphPayload extends KeydownPayload {
+    value: VNodeType;
+}
+export interface FormatParagraphIntent extends Intent {
+    payload: FormatParagraphPayload;
 }
 
 // Insert

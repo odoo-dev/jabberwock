@@ -49,6 +49,32 @@ export class VDocument {
         nextSiblings.forEach(sibling => duplicatedParent.append(sibling));
     }
     /**
+     * Change the selection's paragraph formatting. If there is no selection,
+     * first select the parent of the range nodes.
+     *
+     * Examples:
+     *
+     * - `<paragraph>te◆xt</paragraph>` =>
+     *   `changeType(VNodeType.HEADING1)` =>
+     *   `<heading1>▶text◀</heading1>`
+     *
+     * - `<heading1>te▶xt</heading1><heading2>te◀xt</heading2>`=>
+     *   `changeType(VNodeType.PARAGRAPH)` =>
+     *   `<paragraph>te▶xt</paragraph><paragraph>te◀xt</paragraph>`
+     *
+     * @param type
+     */
+    formatParagraph(type: VNodeType): void {
+        if (this.range.isCollapsed()) {
+            this.range.select(this.range.start.parent, this.range.end.parent);
+        }
+        new Set(this.range.selectedLeaves.map(node => node.parent)).forEach(parent => {
+            // TODO: this suffices for the moment, but it will not be enough
+            // anymore once we introduce the VNode class extensions.
+            parent.type = type;
+        });
+    }
+    /**
      * Insert something at range.
      *
      * @param node

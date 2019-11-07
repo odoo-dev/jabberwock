@@ -9,6 +9,37 @@ export interface EventManagerOptions {
     dispatch?: DispatchFunction;
 }
 
+const ctrlAltShortcuts = {
+    '&': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING1,
+    },
+    'é': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING2,
+    },
+    '"': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING3,
+    },
+    "'": {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING4,
+    },
+    '(': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING5,
+    },
+    '§': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING6,
+    },
+    'à': {
+        name: 'formatParagraph',
+        value: VNodeType.PARAGRAPH,
+    },
+};
+
 export class EventManager {
     editable: HTMLElement;
     options: EventManagerOptions;
@@ -125,8 +156,19 @@ export class EventManager {
                 ) {
                     name = 'applyFormat';
                     payload = { format: 'underline' };
-                } else {
-                    return;
+                } else if (
+                    payload.ctrlKey &&
+                    payload.altKey &&
+                    !payload.shiftKey &&
+                    !payload.metaKey
+                ) {
+                    // CTRL+ALT shortcuts
+                    // TODO: research use payload.code (Digit[0-6]) instead of
+                    // payload.key
+                    if (Object.keys(ctrlAltShortcuts).includes(payload.key)) {
+                        name = ctrlAltShortcuts[payload.key].name;
+                        payload.value = ctrlAltShortcuts[payload.key].value;
+                    }
                 }
         }
         return ActionGenerator.intent({

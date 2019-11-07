@@ -39,7 +39,7 @@ const atomicTypes = [
 let id = 0;
 
 export class VNode {
-    readonly type: VNodeType;
+    type: VNodeType;
     format: FormatType;
     readonly id = id;
     parent: VNode | null = null;

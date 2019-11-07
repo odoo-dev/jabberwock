@@ -98,6 +98,13 @@ export class VRange {
         });
         return selectedNodes;
     }
+    /**
+     * Return a list of all the leaves implied in the selection between the
+     * first range node to the last (non-included).
+     */
+    get selectedLeaves(): VNode[] {
+        return this.selectedNodes.filter(node => !node.children.length);
+    }
 
     //--------------------------------------------------------------------------
     // Private

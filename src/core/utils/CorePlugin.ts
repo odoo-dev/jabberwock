@@ -1,13 +1,20 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
-import { InsertIntent, RangeIntent, FormatIntent, KeydownIntent } from '../types/Intents';
+import {
+    InsertIntent,
+    RangeIntent,
+    FormatIntent,
+    KeydownIntent,
+    FormatParagraphIntent,
+} from '../types/Intents';
 import { VNode, VNodeType } from '../stores/VNode';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
     handlers = {
         intents: {
+            formatParagraph: 'formatParagraph',
             enter: 'enter',
             insert: 'insert',
             deleteBackward: 'deleteBackward',
@@ -21,6 +28,7 @@ export class CorePlugin extends JWPlugin {
         deleteBackward: this.deleteBackward.bind(this),
         deleteForward: this.deleteForward.bind(this),
         enter: this.enter.bind(this),
+        formatParagraph: this.formatParagraph.bind(this),
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
         selectAll: this.selectAll.bind(this),
@@ -35,6 +43,15 @@ export class CorePlugin extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Change the type of the selection. If there is no selection, change the
+     * type of the range nodes' parent.
+     *
+     * @param intent
+     */
+    formatParagraph(intent: FormatParagraphIntent): void {
+        this.editor.vDocument.formatParagraph(intent.payload.value);
+    }
     /**
      * Handle the (shift+) enter key.
      *
