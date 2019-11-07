@@ -39,8 +39,10 @@ export const BasicHtmlRenderingEngine = {
      *
      * @param node
      */
-    render: function(node: VNode): HTMLElement {
+    render: function(node: VNode): DocumentFragment {
         const tagName = getRenderingTagName(node.type);
-        return document.createElement(tagName);
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(document.createElement(tagName));
+        return fragment;
     },
 };
