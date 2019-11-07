@@ -142,7 +142,7 @@ export class EventNormalizer {
 
         this._observer = new MutationObserver((mutationsList): void => {
             if (this._events) {
-                const mutationEvent = this._createCustomEvent('mutation', {
+                const mutationEvent = this._makeEvent('mutation', {
                     mutationsList: mutationsList,
                 });
                 this._registerEvent(mutationEvent);
@@ -456,16 +456,18 @@ export class EventNormalizer {
             // The normalizer honors the preventDefault property of events. If
             // something was changed regardless of that property, the listener
             // won't know it. Let it know that the state might be inconsistent.
-            return [this._createCustomEvent('inconsistentState', compiledEvent)];
+            return [this._makeEvent('inconsistentState', compiledEvent)];
         }
 
-        const customEvents = [];
-        if (navigationKey.has(compiledEvent.key)) {
-            customEvents.push(...this._processMove(compiledEvent));
+        const events = [];
+        const key = compiledEvent.key;
+        const data = compiledEvent.data;
+        if (navigationKey.has(key)) {
+            events.push(...this._analyzeMove(compiledEvent));
         } else if (compiledEvent.type === 'composition') {
-            customEvents.push(...this._processComposition(compiledEvent));
-        } else if (compiledEvent.key === 'Backspace' || compiledEvent.key === 'Delete') {
-            const direction = compiledEvent.key === 'Backspace' ? 'backward' : 'forward';
+            events.push(...this._analyzeComposition(compiledEvent));
+        } else if (key === 'Backspace' || key === 'Delete') {
+            const direction = key === 'Backspace' ? 'backward' : 'forward';
             const deleteEventPayload = {
                 direction: direction,
                 altKey: compiledEvent.altKey,
@@ -474,9 +476,9 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
             };
             const type = direction === 'backward' ? 'removeBackward' : 'removeForward';
-            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
-            customEvents.push(this._createCustomEvent(type, deleteEventPayload));
-        } else if (compiledEvent.key === 'Tab') {
+            events.push(this._makeEvent('keyboard', compiledEvent));
+            events.push(this._makeEvent(type, deleteEventPayload));
+        } else if (key === 'Tab') {
             const tabEventPayload = {
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
@@ -484,9 +486,9 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
                 elements: compiledEvent.elements,
             };
-            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
-            customEvents.push(this._createCustomEvent('tab', tabEventPayload));
-        } else if (compiledEvent.key === 'Enter') {
+            events.push(this._makeEvent('keyboard', compiledEvent));
+            events.push(this._makeEvent('tab', tabEventPayload));
+        } else if (key === 'Enter') {
             const enterEventPayload = {
                 altKey: compiledEvent.altKey,
                 ctrlKey: compiledEvent.ctrlKey,
@@ -494,15 +496,13 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
                 elements: compiledEvent.elements,
             };
-            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
-            customEvents.push(this._createCustomEvent('enter', enterEventPayload));
+            events.push(this._makeEvent('keyboard', compiledEvent));
+            events.push(this._makeEvent('enter', enterEventPayload));
         } else if (
             elements.size &&
             !compiledEvent.ctrlKey &&
             !compiledEvent.altKey &&
-            ((compiledEvent.data && compiledEvent.data.length === 1) ||
-                (compiledEvent.key && compiledEvent.key.length === 1) ||
-                compiledEvent.key === 'Space')
+            ((data && data.length === 1) || (key && key.length === 1) || key === 'Space')
         ) {
             // TODO: the above condition is unreadable
             // Different browsers handle the same action differently using
@@ -512,45 +512,43 @@ export class EventNormalizer {
             // is wrong, hence we have to look at the keypress event.
             // When we have data, data has more value than key.
             // TODO comment: input > keypress > keydown
-            const data =
-                compiledEvent.data && compiledEvent.data.length === 1
-                    ? compiledEvent.data
-                    : compiledEvent.key;
-            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
-            if (data === ' ' || data === 'Space') {
+            const keydata = data && data.length === 1 ? data : key;
+            events.push(this._makeEvent('keyboard', compiledEvent));
+            if (keydata === ' ' || keydata === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
-                customEvents.push(this._createCustomEvent('insert', { value: '\u00A0' })); // nbsp
-            } else if (data && data[0] === '\u000A') {
+                // Insert a non-breaking space instead.
+                events.push(this._makeEvent('insert', { value: '\u00A0' }));
+            } else if (keydata && keydata[0] === '\u000A') {
                 // The enter key on some mobile keyboards do not trigger an
                 // actual keypress event but trigger an input event with the
                 // LINE FEED (LF) (u000A) unicode character instead.
                 // TODO: replace this <br/> by a contextualized 'enter' event
-                customEvents.push(this._createCustomEvent('insert', { value: '<br/>' }));
+                events.push(this._makeEvent('insert', { value: '<br/>' }));
             } else {
-                customEvents.push(this._createCustomEvent('insert', { value: data }));
+                events.push(this._makeEvent('insert', { value: keydata }));
             }
         } else if (compiledEvent.type === 'keydown') {
-            customEvents.push(this._createCustomEvent('keyboard', compiledEvent));
+            events.push(this._makeEvent('keyboard', compiledEvent));
         } else if (compiledEvent.type === 'selectAll') {
-            customEvents.push(...this._processSelectAll());
+            events.push(...this._makeSelectAll());
         } else {
             // Something definitely happened since some events were compiled,
             // but it appears to be currently unsupported since it did not fall
             // in any of the previous conditional branches. The listener has no
             // way to understand the change in the DOM since the normalizer does
             // not understand it either. Let it know about the inconsistence.
-            customEvents.push(this._createCustomEvent('inconsistentState', compiledEvent));
+            events.push(this._makeEvent('inconsistentState', compiledEvent));
         }
-        return customEvents;
+        return events;
     }
     /**
      * @private
      * @param {KeyboardEvent} ev
      * @returns CompiledEvent
      */
-    _processSelectAll(): CustomEvent[] {
+    _makeSelectAll(): CustomEvent[] {
         return [
-            this._createCustomEvent('selectAll', {
+            this._makeEvent('selectAll', {
                 target: this._selectAllOriginalTarget,
                 domRange: this._getRange(),
             }),
@@ -562,7 +560,7 @@ export class EventNormalizer {
      * @param {string} type
      * @param {object} [params]
      */
-    _createCustomEvent(type: string, params = {}): CustomEvent {
+    _makeEvent(type: string, params = {}): CustomEvent {
         const detail = params as NormalizedventPayload;
         const initDict = {
             detail: detail,
@@ -706,11 +704,11 @@ export class EventNormalizer {
      *
      * @private
      */
-    _processComposition(ev: CompiledEvent): CustomEvent[] {
+    _analyzeComposition(ev: CompiledEvent): CustomEvent[] {
         if (!this.editable.contains(ev.clone.origin)) {
             // Some weird keyboards might replace the entire block element
             // rather than the text inside of it. This is currently unsupported.
-            return [this._createCustomEvent('inconsistentState', ev)];
+            return [this._makeEvent('inconsistentState', ev)];
         }
 
         // The goal of this function is to precisely find what was inserted by
@@ -810,12 +808,12 @@ export class EventNormalizer {
         // Reconstruct the replaced text from the computed indices.
         const replacedText = previous.chars.slice(insertPreviousStart, insertPreviousEnd);
 
-        const compositionEvent = this._createCustomEvent('composition', {
+        const compositionEvent = this._makeEvent('composition', {
             from: replacedText,
             to: insertedText,
         });
-        const setRangeEvent = this._createCustomEvent('setRange', { domRange: insertionRange });
-        const insertEvent = this._createCustomEvent('insert', {
+        const setRangeEvent = this._makeEvent('setRange', { domRange: insertionRange });
+        const insertEvent = this._makeEvent('insert', {
             value: insertedText,
             elements: ev.elements,
         });
@@ -827,19 +825,19 @@ export class EventNormalizer {
      *
      * @private
      */
-    _processMove(ev: CompiledEvent): CustomEvent[] {
+    _analyzeMove(ev: CompiledEvent): CustomEvent[] {
         // The normalizer honors preventDefault for moves. If the range was
         // moved regardless of the preventDefault setting, it must be restored.
-        const events = [this._createCustomEvent('keyboard', ev)];
+        const events = [this._makeEvent('keyboard', ev)];
         if (ev.defaultPrevented) {
-            events.push(this._createCustomEvent('restoreRange'));
+            events.push(this._makeEvent('restoreRange'));
         } else {
             // Set the range according to the current one. Set the origin key
             // in order to track the source of the move.
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            events.push(this._createCustomEvent('setRange', { domRange: range }));
+            events.push(this._makeEvent('setRange', { domRange: range }));
         }
         return events;
     }
@@ -1075,9 +1073,12 @@ export class EventNormalizer {
                     };
                 }
                 if (this._rangeHasChanged) {
-                    const pointerEvent = this._createCustomEvent('pointer', { target: target });
-                    const setRangeEvent = this._createCustomEvent('setRange', { domRange: range });
-                    this._triggerEvent({ events: [pointerEvent, setRangeEvent] });
+                    this._triggerEvent({
+                        events: [
+                            this._makeEvent('pointer', { target: target }),
+                            this._makeEvent('setRange', { domRange: range }),
+                        ],
+                    });
                 }
             }
         }, 0);
@@ -1122,9 +1123,9 @@ export class EventNormalizer {
                         this._events.unshift(keyA);
                     }
                 } else {
-                    const events = this._processSelectAll();
+                    const events = this._makeSelectAll();
                     events.unshift(
-                        this._createCustomEvent('pointer', {
+                        this._makeEvent('pointer', {
                             target: this._selectAllOriginalTarget,
                         }),
                     );
