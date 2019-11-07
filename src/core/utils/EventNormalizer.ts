@@ -326,6 +326,45 @@ export class EventNormalizer {
     }
     /**
      * @private
+     * @param {KeyboardEvent} ev
+     * @returns CompiledEvent
+     */
+    _processKeydownEvent(ev: KeyboardEvent): CompiledEvent {
+        this._selectAllOriginalTarget = this._getRange().startContainer;
+
+        // See comment on the same line in the _onComposition handler.
+        if (this.editable.style.display === 'none') return;
+
+        // Dead keys will trigger composition and input events later on.
+        if (ev.type === 'keydown' && ev.key === 'Dead') return;
+
+        return {
+            type: 'keydown',
+            key: ev.key,
+            altKey: ev.altKey,
+            ctrlKey: ev.ctrlKey,
+            metaKey: ev.metaKey,
+            shiftKey: ev.shiftKey,
+            defaultPrevented: ev.defaultPrevented,
+        };
+    }
+    /**
+     * @private
+     * @param {CompiledEvent} ev
+     * @param {KeyboardEvent} keypress
+     */
+    _enrichByKeypress(ev: CompiledEvent, keypress: KeyboardEvent): void {
+        if (keypress.key.length || ev.key === 'Dead') {
+            ev.key = keypress.key;
+        }
+        ev.altKey = keypress.altKey;
+        ev.ctrlKey = keypress.ctrlKey;
+        ev.metaKey = keypress.metaKey;
+        ev.shiftKey = keypress.shiftKey;
+        ev.defaultPrevented = ev.defaultPrevented || keypress.defaultPrevented;
+    }
+    /**
+     * @private
      * @param {CompiledEvent} compiledEvent
      * @param {InputEvent} ev
      */
@@ -385,45 +424,6 @@ export class EventNormalizer {
             // than the other events data property.
             compiledEvent.data = ev.data;
         }
-    }
-    /**
-     * @private
-     * @param {KeyboardEvent} ev
-     * @returns CompiledEvent
-     */
-    _processKeydownEvent(ev: KeyboardEvent): CompiledEvent {
-        this._selectAllOriginalTarget = this._getRange().startContainer;
-
-        // See comment on the same line in the _onComposition handler.
-        if (this.editable.style.display === 'none') return;
-
-        // Dead keys will trigger composition and input events later on.
-        if (ev.type === 'keydown' && ev.key === 'Dead') return;
-
-        return {
-            type: 'keydown',
-            key: ev.key,
-            altKey: ev.altKey,
-            ctrlKey: ev.ctrlKey,
-            metaKey: ev.metaKey,
-            shiftKey: ev.shiftKey,
-            defaultPrevented: ev.defaultPrevented,
-        };
-    }
-    /**
-     * @private
-     * @param {CompiledEvent} ev
-     * @param {KeyboardEvent} keypress
-     */
-    _enrichByKeypress(ev: CompiledEvent, keypress: KeyboardEvent): void {
-        if (keypress.key.length || ev.key === 'Dead') {
-            ev.key = keypress.key;
-        }
-        ev.altKey = keypress.altKey;
-        ev.ctrlKey = keypress.ctrlKey;
-        ev.metaKey = keypress.metaKey;
-        ev.shiftKey = keypress.shiftKey;
-        ev.defaultPrevented = ev.defaultPrevented || keypress.defaultPrevented;
     }
     /**
      * Enrich the given CompiledEvent by setting its `elements` property with
@@ -540,163 +540,6 @@ export class EventNormalizer {
             events.push(this._makeEvent('inconsistentState', compiledEvent));
         }
         return events;
-    }
-    /**
-     * @private
-     * @param {KeyboardEvent} ev
-     * @returns CompiledEvent
-     */
-    _makeSelectAll(): CustomEvent[] {
-        return [
-            this._makeEvent('selectAll', {
-                target: this._selectAllOriginalTarget,
-                domRange: this._getRange(),
-            }),
-        ];
-    }
-    /**
-     * Format a custom event.
-     *
-     * @param {string} type
-     * @param {object} [params]
-     */
-    _makeEvent(type: string, params = {}): CustomEvent {
-        const detail = params as NormalizedventPayload;
-        const initDict = {
-            detail: detail,
-        };
-        initDict.detail.origin = 'EventNormalizer';
-        return new CustomEvent(type, initDict);
-    }
-    /**
-     * Extract a mapping of the separate characters, their corresponding text
-     * nodes and their offsets in said nodes from the given node's subtree.
-     *
-     * @private
-     * @param node to extract from
-     */
-    _getCharactersMapping(node: Node): CharactersMapping {
-        const textualNodes = this._getTextualNodes(node);
-        let length = 0;
-        let characters = '';
-        const correspondingNodes: Array<Node | ClonedNode> = [];
-        const offsets: number[] = [];
-        textualNodes.forEach(function(node) {
-            if (node.nodeValue) {
-                // Split text nodes into separate chars
-                node.nodeValue.split('').forEach(function(char, index) {
-                    length++;
-                    characters += char;
-                    correspondingNodes.push(node);
-                    offsets.push(index);
-                });
-            } else {
-                // Push br node directly
-                length++;
-                characters += '\u000A'; // LINE FEED (LF)
-                correspondingNodes.push(node);
-                offsets.push(0);
-            }
-        });
-        return {
-            length: length,
-            chars: characters,
-            nodes: correspondingNodes,
-            offsets: offsets,
-        };
-    }
-    /**
-     * Recursively extract the text and br nodes from the given node and its
-     * children and return the given accumulator array after appending into it.
-     *
-     * @private
-     * @param node to extract from
-     * @param acc accumulator array to append to
-     */
-    _getTextualNodes(node: Node, acc: Node[] = []): Node[] {
-        if (this._isTextualNode(node)) {
-            acc.push(node);
-        } else {
-            node.childNodes.forEach(n => this._getTextualNodes(n, acc));
-        }
-        return acc;
-    }
-    _isTextualNode(node: Node): boolean {
-        return node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR';
-    }
-    /**
-     * Compare the given previous and current strings and return the offsets in
-     * the current string of the range where the content differ between the two.
-     * If they are equal, startOffset = current.length and endOffset = 0.
-     *
-     * @private
-     * @param previous
-     * @param current
-     */
-    _getChangeOffsets(previous: string, current: string): ChangeOffsets {
-        let startOffset = 0;
-        let endOffset = previous.length;
-        const lengthDiff = current.length - previous.length;
-
-        // Find the offset where a difference is first observed from the left
-        while (startOffset < previous.length) {
-            if (previous[startOffset] !== current[startOffset]) {
-                break;
-            }
-            startOffset++;
-        }
-
-        // Find the offset where a difference is first observed from the right
-        while (endOffset >= 0) {
-            if (previous[endOffset] !== current[lengthDiff + endOffset]) {
-                // Increment the end offset as the end of a range is inclusive
-                endOffset += 1;
-                break;
-            }
-            endOffset--;
-        }
-
-        return {
-            leftOffset: startOffset,
-            rightOffset: lengthDiff + endOffset,
-        };
-    }
-    /**
-     * Get the current range from the current selection in DOM. If there is no
-     * range in the DOM, return a fake one at offset 0 of the editable element.
-     *
-     * @private
-     */
-    _getRange(): DomRangeDescription {
-        const selection = this.editable.ownerDocument.getSelection();
-
-        let ltr: boolean;
-        if (!selection || selection.rangeCount === 0) {
-            // No selection means no range so a fake one is created
-            ltr = this.editable.dir === 'ltr';
-            return {
-                startContainer: this.editable,
-                startOffset: 0,
-                endContainer: this.editable,
-                endOffset: 0,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
-            };
-        } else {
-            // The direction of the range is sorely missing from the DOM api
-            const nativeRange = selection.getRangeAt(0);
-            if (selection.anchorNode === selection.focusNode) {
-                ltr = selection.anchorOffset <= selection.focusOffset;
-            } else {
-                ltr = selection.anchorNode === nativeRange.startContainer;
-            }
-            return {
-                startContainer: nativeRange.startContainer,
-                startOffset: nativeRange.startOffset,
-                endContainer: nativeRange.endContainer,
-                endOffset: nativeRange.endOffset,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
-            };
-        }
     }
     /**
      * Process the given compiled event as a composition to identify the text
@@ -840,6 +683,170 @@ export class EventNormalizer {
             events.push(this._makeEvent('setRange', { domRange: range }));
         }
         return events;
+    }
+    /**
+     * @private
+     * @param {KeyboardEvent} ev
+     * @returns CompiledEvent
+     */
+    _makeSelectAll(): CustomEvent[] {
+        return [
+            this._makeEvent('selectAll', {
+                target: this._selectAllOriginalTarget,
+                domRange: this._getRange(),
+            }),
+        ];
+    }
+    /**
+     * Format a custom event.
+     *
+     * @param {string} type
+     * @param {object} [params]
+     */
+    _makeEvent(type: string, params = {}): CustomEvent {
+        const detail = params as NormalizedventPayload;
+        const initDict = {
+            detail: detail,
+        };
+        initDict.detail.origin = 'EventNormalizer';
+        return new CustomEvent(type, initDict);
+    }
+    /**
+     * Extract a mapping of the separate characters, their corresponding text
+     * nodes and their offsets in said nodes from the given node's subtree.
+     *
+     * @private
+     * @param node to extract from
+     */
+    _getCharactersMapping(node: Node): CharactersMapping {
+        const textualNodes = this._getTextualNodes(node);
+        let length = 0;
+        let characters = '';
+        const correspondingNodes: Array<Node | ClonedNode> = [];
+        const offsets: number[] = [];
+        textualNodes.forEach(function(node) {
+            if (node.nodeValue) {
+                // Split text nodes into separate chars
+                node.nodeValue.split('').forEach(function(char, index) {
+                    length++;
+                    characters += char;
+                    correspondingNodes.push(node);
+                    offsets.push(index);
+                });
+            } else {
+                // Push br node directly
+                length++;
+                characters += '\u000A'; // LINE FEED (LF)
+                correspondingNodes.push(node);
+                offsets.push(0);
+            }
+        });
+        return {
+            length: length,
+            chars: characters,
+            nodes: correspondingNodes,
+            offsets: offsets,
+        };
+    }
+    /**
+     * Recursively extract the text and br nodes from the given node and its
+     * children and return the given accumulator array after appending into it.
+     *
+     * @private
+     * @param node to extract from
+     * @param acc accumulator array to append to
+     */
+    _getTextualNodes(node: Node, acc: Node[] = []): Node[] {
+        if (this._isTextualNode(node)) {
+            acc.push(node);
+        } else {
+            node.childNodes.forEach(n => this._getTextualNodes(n, acc));
+        }
+        return acc;
+    }
+    /**
+     * Return true if the given node can be considered a textual node, that is
+     * a text node or a BR node.
+     *
+     * @private
+     * @param node
+     */
+    _isTextualNode(node: Node): boolean {
+        return node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR';
+    }
+    /**
+     * Compare the given previous and current strings and return the offsets in
+     * the current string of the range where the content differ between the two.
+     * If they are equal, startOffset = current.length and endOffset = 0.
+     *
+     * @private
+     * @param previous
+     * @param current
+     */
+    _getChangeOffsets(previous: string, current: string): ChangeOffsets {
+        let startOffset = 0;
+        let endOffset = previous.length;
+        const lengthDiff = current.length - previous.length;
+
+        // Find the offset where a difference is first observed from the left
+        while (startOffset < previous.length) {
+            if (previous[startOffset] !== current[startOffset]) {
+                break;
+            }
+            startOffset++;
+        }
+
+        // Find the offset where a difference is first observed from the right
+        while (endOffset >= 0) {
+            if (previous[endOffset] !== current[lengthDiff + endOffset]) {
+                // Increment the end offset as the end of a range is inclusive
+                endOffset += 1;
+                break;
+            }
+            endOffset--;
+        }
+
+        return {
+            leftOffset: startOffset,
+            rightOffset: lengthDiff + endOffset,
+        };
+    }
+    /**
+     * Get the current range from the current selection in DOM. If there is no
+     * range in the DOM, return a fake one at offset 0 of the editable element.
+     *
+     * @private
+     */
+    _getRange(): DomRangeDescription {
+        const selection = this.editable.ownerDocument.getSelection();
+
+        let ltr: boolean;
+        if (!selection || selection.rangeCount === 0) {
+            // No selection means no range so a fake one is created
+            ltr = this.editable.dir === 'ltr';
+            return {
+                startContainer: this.editable,
+                startOffset: 0,
+                endContainer: this.editable,
+                endOffset: 0,
+                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+            };
+        } else {
+            // The direction of the range is sorely missing from the DOM api
+            const nativeRange = selection.getRangeAt(0);
+            if (selection.anchorNode === selection.focusNode) {
+                ltr = selection.anchorOffset <= selection.focusOffset;
+            } else {
+                ltr = selection.anchorNode === nativeRange.startContainer;
+            }
+            return {
+                startContainer: nativeRange.startContainer,
+                startOffset: nativeRange.startOffset,
+                endContainer: nativeRange.endContainer,
+                endOffset: nativeRange.endOffset,
+                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+            };
+        }
     }
     /**
      * Return true if the given range is interpreted like a
