@@ -7,10 +7,12 @@ import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
+import { KeyMapping, KeyMap } from './KeyMapping';
 
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
+    keyMap?: KeyMap;
 }
 
 export class JWEditor {
@@ -19,6 +21,7 @@ export class JWEditor {
     editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
+    keyMap: KeyMapping = new KeyMapping();
     pluginsRegistry: JWPlugin[];
     renderer: Renderer;
     vDocument: VDocument;
@@ -78,7 +81,9 @@ export class JWEditor {
         this.addPlugin(CorePlugin);
 
         // Init the event manager now that the cloned editable is in the DOM.
-        this.eventManager = new EventManager(this);
+        this.eventManager = new EventManager(this, {
+            keyMap: this.keyMap,
+        });
 
         this.renderer.render(this.vDocument, this.editable);
 
@@ -121,6 +126,9 @@ export class JWEditor {
         if (config.debug) {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
+        }
+        if (config.keyMap) {
+            this.keyMap = new KeyMapping(config.keyMap);
         }
     }
 
