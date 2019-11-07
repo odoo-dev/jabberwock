@@ -160,11 +160,17 @@ export class VRange {
      * `select(a, RelativePosition.BEFORE, b, RelativePosition.AFTER)` => `[ab]`
      * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a[b]`
      *
-     * @param tailNode
+     * If no node is given, extend the range to select its parents.
+     * Ex: <p>ab[cd</p><p>ef]gh</p>
+     *     select()
+     *     <p>[abcd</p>efgh]</p>
+     *
+     * @param [tailNode]
      * @param [startPosition] default: `RelativePosition.BEFORE`
-     * @param [headNode] default: `startNode`
+     * @param [headNode] default: `tailNode`
      * @param [endPosition] default: `RelativePosition.AFTER`
      */
+    select(): VRange;
     select(tailNode: VNode, headNode?: VNode): VRange;
     select(
         tailNode: VNode,
@@ -173,11 +179,16 @@ export class VRange {
         headPosition: RelativePosition,
     ): VRange;
     select(
-        tailNode: VNode,
+        tailNode?: VNode,
         tailPosition: RelativePosition | VNode = RelativePosition.BEFORE,
         headNode: VNode = tailNode,
         headPosition: RelativePosition = RelativePosition.AFTER,
     ): VRange {
+        if (!tailNode) {
+            // If no argument is given, extend the range to select its parents.
+            tailNode = this.start.parent;
+            headNode = this.end.parent;
+        }
         if (tailPosition instanceof VNode) {
             headNode = tailPosition;
             tailPosition = RelativePosition.BEFORE;

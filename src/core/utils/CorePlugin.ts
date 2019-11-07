@@ -1,7 +1,8 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
-import { InsertIntent, RangeIntent, FormatIntent } from '../types/Intents';
+import { InsertIntent, RangeIntent, FormatIntent, FormatParagraphIntent } from '../types/Intents';
+import { isLeaf } from './Predicates';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -13,6 +14,7 @@ export class CorePlugin extends JWPlugin {
             setRange: 'navigate',
             selectAll: 'selectAll',
             applyFormat: 'applyFormat',
+            formatParagraph: 'formatParagraph',
         },
     };
     commands = {
@@ -22,6 +24,7 @@ export class CorePlugin extends JWPlugin {
         navigate: this.navigate.bind(this),
         selectAll: this.selectAll.bind(this),
         applyFormat: this.applyFormat.bind(this),
+        formatParagraph: this.formatParagraph.bind(this),
     };
     constructor(editor) {
         super(editor.dispatcher);
@@ -97,6 +100,40 @@ export class CorePlugin extends JWPlugin {
             end: this.editor.vDocument.root.lastLeaf(),
             endPosition: RelativePosition.AFTER,
             direction: intent.payload.vRange.direction,
+        });
+    }
+    /**
+     * Change the selection's paragraph formatting. If there is no selection,
+     * first select the parent of the range nodes.
+     *
+     * Examples:
+     *
+     * - `<paragraph>te◆xt</paragraph>` =>
+     *   `changeType(VNodeType.HEADING1)` =>
+     *   `<heading1>▶text◀</heading1>`
+     *
+     * - `<heading1>te▶xt</heading1><heading2>te◀xt</heading2>`=>
+     *   `changeType(VNodeType.PARAGRAPH)` =>
+     *   `<paragraph>te▶xt</paragraph><paragraph>te◀xt</paragraph>`
+     *
+     * @param type
+     */
+    formatParagraph(intent: FormatParagraphIntent): void {
+        const type = intent.payload.value;
+        const range = this.editor.vDocument.range;
+        if (range.isCollapsed()) {
+            range.select();
+        }
+        // TODO: This is very naive. We might want to have something like:
+        // node.closest(predicate) here rather than doing this in order to only
+        // select the parents that are compatible with the type change.
+        const selectedContainers = new Set(
+            range.selectedNodes.filter(isLeaf).map(node => node.parent),
+        );
+        selectedContainers.forEach(parent => {
+            // TODO: this suffices for the moment, but it will not be enough
+            // anymore once we introduce the VNode class extensions.
+            parent.type = type;
         });
     }
 }

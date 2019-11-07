@@ -1,4 +1,5 @@
 import { VRangeDescription } from '../stores/VRange';
+import { VNodeType } from '../stores/VNode';
 
 // Specialized intents
 
@@ -23,4 +24,12 @@ export interface FormatPayload extends ActionPayload {
 }
 export interface FormatIntent extends Intent {
     payload: FormatPayload;
+}
+
+// Change type
+export interface FormatParagraphPayload {
+    value: VNodeType;
+}
+export interface FormatParagraphIntent extends Intent {
+    payload: FormatParagraphPayload;
 }

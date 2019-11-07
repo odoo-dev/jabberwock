@@ -3,11 +3,42 @@ import { DispatchFunction } from '../dispatcher/Dispatcher';
 import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
-import { VNode } from '../stores/VNode';
+import { VNode, VNodeType } from '../stores/VNode';
 
 export interface EventManagerOptions {
     dispatch?: DispatchFunction;
 }
+
+const ctrlAltShortcuts = {
+    '1': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING1,
+    },
+    '2': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING2,
+    },
+    '3': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING3,
+    },
+    '4': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING4,
+    },
+    '5': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING5,
+    },
+    '6': {
+        name: 'formatParagraph',
+        value: VNodeType.HEADING6,
+    },
+    '7': {
+        name: 'formatParagraph',
+        value: VNodeType.PARAGRAPH,
+    },
+};
 
 export class EventManager {
     editable: HTMLElement;
@@ -119,8 +150,19 @@ export class EventManager {
                 ) {
                     name = 'applyFormat';
                     payload = { format: 'underline' };
-                } else {
-                    return;
+                } else if (
+                    payload.ctrlKey &&
+                    payload.altKey &&
+                    !payload.shiftKey &&
+                    !payload.metaKey
+                ) {
+                    // CTRL+ALT shortcuts
+                    // TODO: research use payload.code (Digit[0-6]) instead of
+                    // payload.key
+                    if (Object.keys(ctrlAltShortcuts).includes(payload.key)) {
+                        name = ctrlAltShortcuts[payload.key].name;
+                        payload.value = ctrlAltShortcuts[payload.key].value;
+                    }
                 }
         }
         return ActionGenerator.intent({
