@@ -128,7 +128,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             return utils.toUnicode(node.value);
         }
         if (node.isRange()) {
-            return node.type === VNodeType.RANGE_START ? '[' : ']';
+            return node.type === VNodeType.RANGE_TAIL ? '[' : ']';
         }
         if (node.type && node.type === VNodeType.LINE_BREAK) {
             return '↲';
@@ -146,12 +146,12 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      */
     _getRangeAncestors(): Set<number> {
         const rangeAncestors = new Set<number>();
-        let ancestor = this.env.editor.vDocument.range.start.parent;
+        let ancestor = this.env.editor.vDocument.range.end.parent;
         while (ancestor) {
             rangeAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        ancestor = this.env.editor.vDocument.range.end.parent;
+        ancestor = this.env.editor.vDocument.range.start.parent;
         while (ancestor) {
             rangeAncestors.add(ancestor.id);
             ancestor = ancestor.parent;

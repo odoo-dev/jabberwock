@@ -1,5 +1,5 @@
 import { VNode, VNodeType } from './VNode';
-import { VRange, Direction } from './VRange';
+import { VRange } from './VRange';
 
 export let withRange = false;
 
@@ -53,9 +53,8 @@ export class VDocument {
         VDocument.withRange(() => {
             const nodes = this.range.selectedNodes;
             if (!nodes.length) return;
-            this.range.collapse(this.range.direction === Direction.FORWARD ? 'start' : 'end'); // Reset the direction of the range.
-            let reference =
-                this.range.direction === Direction.FORWARD ? this.range.end : this.range.start;
+            this.range.collapse(this.range.start); // Reset the direction of the range.
+            let reference = this.range.end;
             nodes.forEach(vNode => {
                 // If the node has children, merge it with the container of the
                 // range. Children of the merged node that should be truncated

@@ -1,6 +1,6 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
-import { RelativePosition, VRangeDescription } from '../stores/VRange';
+import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
 import { InsertIntent, RangeIntent } from '../types/Intents';
 
 export class CorePlugin extends JWPlugin {
@@ -43,11 +43,9 @@ export class CorePlugin extends JWPlugin {
         // TODO: this is a stub
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            const previous = range.start.previousLeaf();
-            if (previous && range.start.index > 0) {
-                range.setStart(previous, RelativePosition.BEFORE);
-            } else if (previous) {
-                range.setStart(previous, RelativePosition.AFTER);
+            const previous = range.start.previous();
+            if (previous) {
+                range.extendTo(previous, Direction.BACKWARD);
             }
         }
         this.editor.vDocument.deleteSelection();
@@ -56,11 +54,9 @@ export class CorePlugin extends JWPlugin {
         // TODO: this is a stub
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            const next = range.end.nextLeaf();
-            if (next && next === range.end.nextSibling()) {
-                range.setEnd(next, RelativePosition.AFTER);
-            } else if (next) {
-                range.setEnd(next, RelativePosition.BEFORE);
+            const next = range.end.next();
+            if (next) {
+                range.extendTo(next, Direction.FORWARD);
             }
         }
         this.editor.vDocument.deleteSelection();

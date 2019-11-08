@@ -19,10 +19,10 @@ export interface VRangeDescription {
 }
 
 export class VRange {
-    readonly start = new VNode(VNodeType.RANGE_START);
-    readonly end = new VNode(VNodeType.RANGE_END);
+    readonly _tail = new VNode(VNodeType.RANGE_TAIL);
+    readonly _head = new VNode(VNodeType.RANGE_HEAD);
     /**
-     * The direction of the range depends on whether start is before end or the
+     * The direction of the range depends on whether tail is before head or the
      * opposite. This is costly to compute and, as such, is only computed when
      * needed by the `direction` getter. The `_direction` variable is the cache
      * for this computation, as the direction will not change anymore until the
@@ -34,10 +34,35 @@ export class VRange {
     }
     get direction(): Direction {
         if (!this._direction) {
-            const forward = VDocument.withRange(() => this.start.isBefore(this.end));
+            const forward = VDocument.withRange(() => this._tail.isBefore(this._head));
             this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
         }
         return this._direction;
+    }
+    /**
+     * Return the first range node in order of traversal.
+     */
+    get start(): VNode {
+        return this.direction === Direction.FORWARD ? this._tail : this._head;
+    }
+    /**
+     * Return the last range node in order of traversal.
+     */
+    get end(): VNode {
+        return this.direction === Direction.FORWARD ? this._head : this._tail;
+    }
+    /**
+     * Return the anchor range node: the one on which the selection was
+     * initiated.
+     */
+    get anchor(): VNode {
+        return this._tail;
+    }
+    /**
+     * Return the focus range node: the one to which the selection was extended.
+     */
+    get focus(): VNode {
+        return this._head;
     }
 
     //--------------------------------------------------------------------------
@@ -50,9 +75,9 @@ export class VRange {
     isCollapsed(): boolean {
         return VDocument.withRange(() => {
             if (this.direction === Direction.FORWARD) {
-                return this.start.nextSibling() === this.end;
+                return this._tail.nextSibling() === this._head;
             } else {
-                return this.end.nextSibling() === this.start;
+                return this._head.nextSibling() === this._tail;
             }
         });
     }
@@ -62,12 +87,10 @@ export class VRange {
      */
     get selectedNodes(): VNode[] {
         const selectedNodes: VNode[] = [];
-        const next = this.direction === Direction.FORWARD ? 'next' : 'previous';
-        const push = this.direction === Direction.FORWARD ? 'push' : 'unshift';
         let node = this.start;
         VDocument.withRange(() => {
-            while ((node = node[next]()) && node !== this.end) {
-                selectedNodes[push](node);
+            while ((node = node.next()) && node !== this.end) {
+                selectedNodes.push(node);
             }
         });
         return selectedNodes;
@@ -80,16 +103,18 @@ export class VRange {
     /**
      * Collapse the range. Return self.
      *
-     * @param [edge] edge on which to collapse ('start' or 'end')
-     *               default: 'start'
+     * @param [edge] range node on which to collapse
      */
-    collapse(edge: 'start' | 'end' = 'start'): VRange {
-        if (edge === 'start') {
-            this.setEnd(this.start);
-        } else {
-            this.setStart(this.end);
+    collapse(edge = this._tail): VRange {
+        if (!edge.isRange()) {
+            edge = this._tail;
         }
-        // When collapsing, we always set the end after the start
+        if (edge === this._tail) {
+            this._setHead(edge);
+        } else {
+            this._setTail(edge);
+        }
+        // When collapsing, we always set the head after the tail
         this._direction = Direction.FORWARD;
         return this;
     }
@@ -119,7 +144,7 @@ export class VRange {
      * @param reference
      */
     setAt(reference: VNode, position = RelativePosition.BEFORE): VRange {
-        return this.setStart(reference, position).collapse();
+        return this._setTail(reference, position).collapse();
     }
     /**
      * Set a range selecting the given nodes.
@@ -131,37 +156,109 @@ export class VRange {
      * `select(a, RelativePosition.BEFORE, b, RelativePosition.AFTER)` => `▶ab◀`
      * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a▶b◀`
      *
-     * @param startNode
+     * @param tailNode
      * @param [startPosition] default: `RelativePosition.BEFORE`
-     * @param [endNode] default: `startNode`
+     * @param [headNode] default: `startNode`
      * @param [endPosition] default: `RelativePosition.AFTER`
      */
-    select(startNode: VNode, endNode?: VNode): VRange;
+    select(tailNode: VNode, headNode?: VNode): VRange;
     select(
-        startNode: VNode,
-        startPosition: RelativePosition,
-        endNode: VNode,
-        endPosition: RelativePosition,
+        tailNode: VNode,
+        tailPosition: RelativePosition,
+        headNode: VNode,
+        headPosition: RelativePosition,
     ): VRange;
     select(
-        startNode: VNode,
-        startPosition: RelativePosition | VNode = RelativePosition.BEFORE,
-        endNode: VNode = startNode,
-        endPosition: RelativePosition = RelativePosition.AFTER,
+        tailNode: VNode,
+        tailPosition: RelativePosition | VNode = RelativePosition.BEFORE,
+        headNode: VNode = tailNode,
+        headPosition: RelativePosition = RelativePosition.AFTER,
     ): VRange {
-        if (startPosition instanceof VNode) {
-            endNode = startPosition;
-            startPosition = RelativePosition.BEFORE;
+        if (tailPosition instanceof VNode) {
+            headNode = tailPosition;
+            tailPosition = RelativePosition.BEFORE;
         }
-        if (endPosition === RelativePosition.AFTER) {
-            this.setEnd(endNode, endPosition);
-            this.setStart(startNode, startPosition);
+        if (headPosition === RelativePosition.AFTER) {
+            this._setHead(headNode, headPosition);
+            this._setTail(tailNode, tailPosition);
         } else {
-            this.setStart(startNode, startPosition);
-            this.setEnd(endNode, endPosition);
+            this._setTail(tailNode, tailPosition);
+            this._setHead(headNode, headPosition);
         }
         return this;
     }
+    /**
+     * Set the range's start point at the given location, targetting a
+     * `reference` VNode and specifying the `position` in reference to that
+     * VNode ('BEFORE', 'AFTER'), like in an `xpath`. If a direction is
+     * specified, the range's start point will be the head of the range.
+     * Return self.
+     *
+     * @param reference
+     * @param [position]
+     * @param [direction] default: Direction.FORWARD
+     */
+    setStart(reference: VNode, position?: RelativePosition, direction = Direction.FORWARD): VRange {
+        if (direction === Direction.FORWARD) {
+            return this._setTail(reference, position);
+        } else {
+            return this._setHead(reference, position);
+        }
+    }
+    /**
+     * Set the range's end point at the given location, targetting a `reference`
+     * VNode and specifying the `position` in reference to that VNode ('BEFORE',
+     * 'AFTER'), like in an `xpath`. If a direction is specified, the range's
+     * end point will be the tail of the range.
+     * Return self.
+     *
+     * @param reference
+     * @param [position]
+     * @param [direction] default: Direction.FORWARD
+     */
+    setEnd(reference: VNode, position?: RelativePosition, direction = Direction.FORWARD): VRange {
+        if (direction === Direction.FORWARD) {
+            return this._setHead(reference, position);
+        } else {
+            return this._setTail(reference, position);
+        }
+    }
+    /**
+     * Extend the range from its tail to the given location, targetting a
+     * `reference` VNode and specifying the `direction` of the extension.
+     *
+     * @param reference
+     * @param [direction] default: Direction.FORWARD
+     * @see _setHead
+     */
+    extendTo(reference: VNode, direction = Direction.FORWARD): void {
+        let position: RelativePosition;
+        if (direction === Direction.FORWARD) {
+            if (reference.hasChildren()) {
+                reference = reference.next();
+                reference = reference.firstLeaf();
+                position = RelativePosition.BEFORE;
+            } else {
+                position = RelativePosition.AFTER;
+            }
+        } else {
+            reference = reference.previous();
+            if (reference.hasChildren()) {
+                reference = reference.firstLeaf();
+                position = RelativePosition.BEFORE;
+            } else {
+                position = RelativePosition.AFTER;
+            }
+        }
+        if (reference) {
+            this._setHead(reference, position);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
      * Set the start of the range by targetting a `reference` VNode and
      * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
@@ -171,12 +268,14 @@ export class VRange {
      * @param position
      * @param reference
      */
-    setStart(reference: VNode, position = RelativePosition.BEFORE): VRange {
+    _setTail(reference: VNode, position = RelativePosition.BEFORE): VRange {
         reference = reference.firstLeaf();
-        if (position === RelativePosition.AFTER && reference !== this.end) {
-            reference.after(this.start);
+        if (position === RelativePosition.AFTER && reference !== this._head) {
+            // We check that `reference` isn't `_head` to avoid a backward
+            // collapsed range.
+            reference.after(this._tail);
         } else {
-            reference.before(this.start);
+            reference.before(this._tail);
         }
         this._direction = null; // Invalidate range direction cache.
         return this;
@@ -190,12 +289,14 @@ export class VRange {
      * @param position
      * @param reference
      */
-    setEnd(reference: VNode, position = RelativePosition.AFTER): VRange {
+    _setHead(reference: VNode, position = RelativePosition.AFTER): VRange {
         reference = reference.lastLeaf();
-        if (position === RelativePosition.BEFORE && reference !== this.start) {
-            reference.before(this.end);
+        if (position === RelativePosition.BEFORE && reference !== this._tail) {
+            // We check that `reference` isn't `_tail` to avoid a backward
+            // collapsed range.
+            reference.before(this._head);
         } else {
-            reference.after(this.end);
+            reference.after(this._head);
         }
         this._direction = null; // Invalidate range direction cache.
         return this;

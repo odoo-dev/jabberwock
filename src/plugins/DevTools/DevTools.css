@@ -35,6 +35,10 @@ jw-devtools .underlined {
     text-decoration: underline;
 }
 
+jw-devtools .range-node {
+    color: red;
+}
+
 devtools-panel {
     height: 100%;
 }
@@ -141,10 +145,6 @@ devtools-tree > devtools-node.root > span.element-name {
     color: white;
     padding-left: 5px;
     box-sizing: border-box;
-}
-
-devtools-tree devtools-node > span.range-node {
-    color: red;
 }
 
 devtools-tree span.element-name {
