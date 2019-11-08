@@ -167,8 +167,8 @@ export class Renderer {
      * @param target
      */
     _renderRange(range: VRange, target: Element): void {
-        const [startContainer, startOffset] = this._getDomLocation(range.start);
-        const [endContainer, endOffset] = this._getDomLocation(range.end);
+        const [startContainer, startOffset] = this._getDomLocation(range.anchor);
+        const [endContainer, endOffset] = this._getDomLocation(range.focus);
         const domRange: Range = target.ownerDocument.createRange();
         domRange.setStart(startContainer, startOffset);
         domRange.collapse(true);

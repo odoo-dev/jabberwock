@@ -5,8 +5,8 @@ export type Predicate = (node: VNode) => boolean;
 
 export enum VNodeType {
     ROOT = 'ROOT',
-    RANGE_START = 'RANGE_START',
-    RANGE_END = 'RANGE_END',
+    RANGE_TAIL = 'RANGE_TAIL',
+    RANGE_HEAD = 'RANGE_HEAD',
     PARAGRAPH = 'PARAGRAPH',
     HEADING1 = 'HEADING1',
     HEADING2 = 'HEADING2',
@@ -17,7 +17,7 @@ export enum VNodeType {
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
 }
-export const RangeTypes = [VNodeType.RANGE_START, VNodeType.RANGE_END];
+export const RangeTypes = [VNodeType.RANGE_TAIL, VNodeType.RANGE_HEAD];
 
 export interface VNodeProperties {
     atomic: boolean;
@@ -32,8 +32,8 @@ export interface FormatType {
 const atomicTypes = [
     VNodeType.CHAR,
     VNodeType.LINE_BREAK,
-    VNodeType.RANGE_START,
-    VNodeType.RANGE_END,
+    VNodeType.RANGE_TAIL,
+    VNodeType.RANGE_HEAD,
 ];
 let id = 0;
 
