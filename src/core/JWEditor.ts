@@ -8,6 +8,7 @@ import { Renderer } from './utils/Renderer';
 import { OwlUI } from '../../src/ui/OwlUI';
 import { DevTools } from '../../src/plugins/DevTools/DevTools';
 import '../../src/plugins/DevTools/DevTools.css';
+import { FormatType } from './stores/VNode';
 
 export interface JWEditorConfig {
     debug?: boolean;
@@ -31,6 +32,9 @@ export class JWEditor {
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
         this.pluginsRegistry = [];
+
+        // Render the contents of `vDocument`
+        this.renderer = new Renderer();
 
         if (!editable) {
             editable = document.createElement('jw-editable');
@@ -87,8 +91,6 @@ export class JWEditor {
             },
         });
 
-        // Render the contents of `vDocument`
-        this.renderer = new Renderer();
         this.renderer.render(this.vDocument, this.editable);
     }
 

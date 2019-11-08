@@ -17,3 +17,10 @@ export interface RangePayload extends ActionPayload {
 export interface RangeIntent extends Intent {
     payload: RangePayload;
 }
+
+export interface FormatPayload extends ActionPayload {
+    format: 'bold' | 'italic' | 'underline';
+}
+export interface FormatIntent extends Intent {
+    payload: FormatPayload;
+}

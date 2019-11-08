@@ -99,7 +99,7 @@ function parseElementNode(currentContext: ParsingContext): ParsingContext {
         context.format.unshift({
             bold: format.bold || node.nodeName === 'B',
             italic: format.italic || node.nodeName === 'I',
-            underlined: format.underlined || node.nodeName === 'U',
+            underline: format.underline || node.nodeName === 'U',
         });
     } else {
         const parsedNode: VNode = new VNode(
