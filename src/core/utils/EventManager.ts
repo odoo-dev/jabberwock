@@ -80,7 +80,9 @@ export class EventManager {
      * @returns {Action}
      */
     _matchIntent(customEvent: CustomEvent): Intent {
-        const payload = customEvent.detail;
+        // TODO: this value is an implicit any!
+        let payload = customEvent.detail;
+        let name;
         switch (customEvent.type) {
             case 'selectAll':
             case 'setRange':
@@ -90,10 +92,39 @@ export class EventManager {
                 // TODO: keydown should be matched with existing shortcuts. If
                 // it matches an intent shortcut, trigger the corresponding
                 // intent, otherwise do not trigger a 'keydown' intent.
-                return;
+                if (
+                    payload.ctrlKey &&
+                    !payload.altKey &&
+                    !payload.shiftKey &&
+                    !payload.metaKey &&
+                    payload.key === 'b'
+                ) {
+                    name = 'applyFormat';
+                    payload = { format: 'bold' };
+                } else if (
+                    payload.ctrlKey &&
+                    !payload.altKey &&
+                    !payload.shiftKey &&
+                    !payload.metaKey &&
+                    payload.key === 'i'
+                ) {
+                    name = 'applyFormat';
+                    payload = { format: 'italic' };
+                } else if (
+                    payload.ctrlKey &&
+                    !payload.altKey &&
+                    !payload.shiftKey &&
+                    !payload.metaKey &&
+                    payload.key === 'u'
+                ) {
+                    name = 'applyFormat';
+                    payload = { format: 'underline' };
+                } else {
+                    return;
+                }
         }
         return ActionGenerator.intent({
-            name: customEvent.type,
+            name: name || customEvent.type,
             origin: 'EventManager',
             payload: payload,
         });

@@ -26,8 +26,9 @@ export interface VNodeProperties {
 export interface FormatType {
     bold?: boolean;
     italic?: boolean;
-    underlined?: boolean;
+    underline?: boolean;
 }
+export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
 const atomicTypes = [
     VNodeType.CHAR,
@@ -59,7 +60,7 @@ export class VNode {
         this.format = format || {
             bold: false,
             italic: false,
-            underlined: false,
+            underline: false,
         };
         this._updateProperties();
         id++;

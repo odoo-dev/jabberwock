@@ -1,7 +1,7 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
 import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
-import { InsertIntent, RangeIntent } from '../types/Intents';
+import { InsertIntent, RangeIntent, FormatIntent } from '../types/Intents';
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
@@ -12,6 +12,7 @@ export class CorePlugin extends JWPlugin {
             deleteForward: 'deleteForward',
             setRange: 'navigate',
             selectAll: 'selectAll',
+            applyFormat: 'applyFormat',
         },
     };
     commands = {
@@ -20,6 +21,7 @@ export class CorePlugin extends JWPlugin {
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
         selectAll: this.selectAll.bind(this),
+        applyFormat: this.applyFormat.bind(this),
     };
     constructor(editor) {
         super(editor.dispatcher);
@@ -38,6 +40,12 @@ export class CorePlugin extends JWPlugin {
     insert(intent: InsertIntent): void {
         // TODO: check the intent to insert other things than text.
         this.editor.vDocument.insertText(intent.payload.value);
+    }
+    /**
+     * Command to apply the format.
+     */
+    applyFormat(intent: FormatIntent): void {
+        this.editor.vDocument.applyFormat(intent.payload.format);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
@@ -73,6 +81,8 @@ export class CorePlugin extends JWPlugin {
     navigate(intent: RangeIntent): void {
         const range: VRangeDescription = intent.payload.vRange;
         this.editor.vDocument.range.set(range);
+        // Each time the range changes, we reset its format.
+        this.editor.vDocument.formatCache = null;
     }
 
     /**

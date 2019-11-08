@@ -56,7 +56,7 @@
                 class="selectable-line" t-att-class="{
                     bold: props.vNode.format.bold,
                     italic: props.vNode.format.italic,
-                    underlined: props.vNode.format.underlined,
+                    underline: props.vNode.format.underline,
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr"/>
@@ -67,7 +67,7 @@
                     t-att-class="{
                         bold: props.vNode.format.bold,
                         italic: props.vNode.format.italic,
-                        underlined: props.vNode.format.underlined,
+                        underline: props.vNode.format.underline,
                         selected: props.selectedID == props.vNode.id,
                         'line-break': props.vNode.type === 'LINE_BREAK',
                     }">
@@ -162,7 +162,7 @@
                             <ol style="list-style-type: none">
                                 <li t-if="props.vNode.format.bold">Bold</li>
                                 <li t-if="props.vNode.format.italic">Italic</li>
-                                <li t-if="props.vNode.format.underlined">Underlined</li>
+                                <li t-if="props.vNode.format.underline">Underline</li>
                             </ol>
                         </td>
                     </tr>

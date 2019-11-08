@@ -11,7 +11,7 @@ export class PathComponent extends OwlUIComponent<{}> {
         if (vNode.format.italic) {
             format += '.i';
         }
-        if (vNode.format.underlined) {
+        if (vNode.format.underline) {
             format += '.u';
         }
         return name + format;

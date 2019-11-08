@@ -35,19 +35,19 @@ describe('utils', () => {
                 expect(p.children[1].format).to.deep.equal({
                     bold: false,
                     italic: true,
-                    underlined: false,
+                    underline: false,
                 });
                 expect(p.children[2].value).to.equal('c');
                 expect(p.children[2].format).to.deep.equal({
                     bold: true,
                     italic: true,
-                    underlined: false,
+                    underline: false,
                 });
                 expect(p.children[3].value).to.equal('d');
                 expect(p.children[3].format).to.deep.equal({
                     bold: false,
                     italic: true,
-                    underlined: false,
+                    underline: false,
                 });
             });
             it('should parse without range char', () => {

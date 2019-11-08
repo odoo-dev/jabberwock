@@ -12,6 +12,7 @@ export interface TestEditorSpec {
     contentAfter: string;
     parsingOptions?: ParsingOptions;
     renderingOptions?: RenderOptions;
+    stepFunction?: (editor: JWEditor) => void;
 }
 
 /**
@@ -32,6 +33,9 @@ export function testEditor(spec: TestEditorSpec): void {
 
     const editor = new JWEditor(wrapper);
     editor.start(spec.parsingOptions);
+    if (spec.stepFunction) {
+        spec.stepFunction(editor);
+    }
 
     if (spec.renderingOptions.renderTextualRange) {
         _renderTextualRange();
