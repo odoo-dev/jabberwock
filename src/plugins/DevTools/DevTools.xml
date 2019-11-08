@@ -44,7 +44,7 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <span t-if="props.vNode.type == 'RANGE_START' or props.vNode.type == 'RANGE_END'"
+            <span t-if="props.vNode.type == 'RANGE_TAIL' or props.vNode.type == 'RANGE_HEAD'"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line range-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
@@ -235,12 +235,16 @@
                         <td><t t-esc="state.range.direction"/></td>
                     </tr>
                     <tr>
-                        <td>start</td>
-                        <td><t t-esc="reprStart"/></td>
+                        <td><strong class="range-node"><t
+                        t-if="state.range.start === state.range.anchor">[</t><t
+                        t-else="">]</t></strong> start</td>
+                        <td><t t-esc="_repr(state.range.start)"/></td>
                     </tr>
                     <tr>
-                        <td>end</td>
-                        <td><t t-esc="reprEnd"/></td>
+                        <td><strong class="range-node"><t
+                        t-if="state.range.end === state.range.focus">]</t><t
+                        t-else="">[</t></strong> end</td>
+                        <td><t t-esc="_repr(state.range.end)"/></td>
                     </tr>
                 </tbody>
             </table>

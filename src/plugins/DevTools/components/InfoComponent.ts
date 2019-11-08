@@ -21,12 +21,6 @@ export class InfoComponent extends OwlUIComponent<{}> {
     openTab(tabName: string): void {
         this.state.currentTab = tabName;
     }
-    get reprEnd(): string {
-        return this._repr(this.state.range.end);
-    }
-    get reprStart(): string {
-        return this._repr(this.state.range.start);
-    }
     /**
      * Trigger a 'node-selected' custom event
      * with the given `vNode` to select it
