@@ -83,7 +83,7 @@ export class VNode {
     totalLength(__current = 0): number {
         __current += this.length;
         this.children.forEach((child: VNode): void => {
-            if (child.children.length) {
+            if (child.hasChildren()) {
                 __current = child.totalLength(__current);
             }
         });
@@ -118,6 +118,12 @@ export class VNode {
             __current = child.text(__current);
         });
         return __current;
+    }
+    /**
+     * Return true if this VNode has children.
+     */
+    hasChildren(): boolean {
+        return this.children.length > 0;
     }
     /**
      * Return true if this VNode has a format property set to true.
@@ -267,7 +273,7 @@ export class VNode {
      */
     firstLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return !node.children.length && (!predicate || predicate(node));
+            return !node.hasChildren() && (!predicate || predicate(node));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -283,7 +289,7 @@ export class VNode {
      */
     lastLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return !node.children.length && (!predicate || predicate(node));
+            return !node.hasChildren() && (!predicate || predicate(node));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -313,7 +319,7 @@ export class VNode {
      */
     lastDescendant(predicate?: Predicate): VNode {
         let lastDescendant = this.lastChild();
-        while (lastDescendant && lastDescendant.children.length) {
+        while (lastDescendant && lastDescendant.hasChildren()) {
             lastDescendant = lastDescendant.lastChild();
         }
         if (lastDescendant && predicate) {
