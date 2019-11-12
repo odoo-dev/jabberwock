@@ -3,7 +3,7 @@ import { Dispatcher } from './dispatcher/Dispatcher';
 import { EventManager } from './utils/EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './stores/VDocument';
-import { Parser } from './utils/Parser';
+import { Parser, ParsingOptions } from './utils/Parser';
 import { Renderer } from './utils/Renderer';
 import { OwlUI } from '../../src/ui/OwlUI';
 import { DevTools } from '../../src/plugins/DevTools/DevTools';
@@ -45,13 +45,13 @@ export class JWEditor {
         this.editable = editable;
     }
 
-    start(): void {
+    start(parsingOptions?: ParsingOptions): void {
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
         this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
 
         // Parse the editable in the internal format of the editor.
-        this.vDocument = Parser.parse(this.editable);
+        this.vDocument = Parser.parse(this.editable, parsingOptions);
 
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';
