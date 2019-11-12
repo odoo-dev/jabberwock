@@ -42,7 +42,14 @@ export const BasicHtmlRenderingEngine = {
     render: function(node: VNode): DocumentFragment {
         const tagName = getRenderingTagName(node.type);
         const fragment = document.createDocumentFragment();
-        fragment.appendChild(document.createElement(tagName));
+        const renderedElement = document.createElement(tagName);
+        fragment.appendChild(renderedElement);
+
+        // If a node is empty but could accomodate children,
+        // fill it to make it visible.
+        if (!node.hasChildren() && !node.properties.atomic) {
+            renderedElement.appendChild(document.createElement('BR'));
+        }
         return fragment;
     },
 };

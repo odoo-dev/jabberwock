@@ -47,7 +47,7 @@ export class Renderer {
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if `a` is part of the same text node as `b`.
+     * Return true if `a` has the same format properties as `b`.
      *
      * @param a
      * @param b
@@ -112,6 +112,7 @@ export class Renderer {
         Array.from(fragment.childNodes).forEach((element: Node): void => {
             context.parentNode.appendChild(element);
             VDocumentMap.set(context.currentVNode, element);
+            element.childNodes.forEach(child => VDocumentMap.set(context.currentVNode, child));
         });
         return context;
     }
