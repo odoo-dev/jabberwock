@@ -268,7 +268,7 @@ export class EventNormalizer {
                 shiftKey: compiledEvent.shiftKey,
                 elements: elements,
             };
-            const type = direction === 'backward' ? 'removeBackward' : 'removeForward';
+            const type = direction === 'backward' ? 'deleteBackward' : 'deleteForward';
             this._triggerEvent(type, deleteEventPayload);
         } else if (compiledEvent.key === 'Tab') {
             // TODO: maybe like keydown, there is no normalization proper here
