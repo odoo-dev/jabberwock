@@ -43,17 +43,27 @@ export class CorePlugin extends JWPlugin {
         // TODO: this is a stub
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            range.setStart(range.start.previous());
+            const previous = range.start.previousLeaf();
+            if (previous && range.start.index > 0) {
+                range.setStart(previous, RelativePosition.BEFORE);
+            } else if (previous) {
+                range.setStart(previous, RelativePosition.AFTER);
+            }
         }
-        this.editor.vDocument.truncate(range.selectedNodes);
+        this.editor.vDocument.deleteSelection();
     }
     removeForward(): void {
         // TODO: this is a stub
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            range.setEnd(range.end.next());
+            const next = range.end.nextLeaf();
+            if (next && next === range.end.nextSibling()) {
+                range.setEnd(next, RelativePosition.AFTER);
+            } else if (next) {
+                range.setEnd(next, RelativePosition.BEFORE);
+            }
         }
-        this.editor.vDocument.truncate(range.selectedNodes);
+        this.editor.vDocument.deleteSelection();
     }
     /**
      * Navigate to a given Range (in the payload of the Intent).
