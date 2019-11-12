@@ -19,12 +19,22 @@ export enum VNodeType {
 }
 export const RangeTypes = [VNodeType.RANGE_START, VNodeType.RANGE_END];
 
+export interface VNodeProperties {
+    atomic: boolean;
+}
+
 export interface FormatType {
     bold?: boolean;
     italic?: boolean;
     underlined?: boolean;
 }
 
+const atomicTypes = [
+    VNodeType.CHAR,
+    VNodeType.LINE_BREAK,
+    VNodeType.RANGE_START,
+    VNodeType.RANGE_END,
+];
 let id = 0;
 
 export class VNode {
@@ -37,6 +47,9 @@ export class VNode {
     };
     originalTag: string;
     value: string;
+    properties: VNodeProperties = {
+        atomic: false,
+    };
     _children: VNode[] = [];
 
     constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
@@ -48,6 +61,7 @@ export class VNode {
             italic: false,
             underlined: false,
         };
+        this._updateProperties();
         id++;
     }
 
@@ -141,6 +155,14 @@ export class VNode {
     hasFormat(): boolean {
         return Object.keys(this.format).some(
             (key: keyof FormatType): boolean => !!this.format[key],
+        );
+    }
+    /**
+     * Return true if this VNode has a vNode property set to true.
+     */
+    hasProperties(): boolean {
+        return Object.keys(this.properties).some(
+            (key: keyof VNodeProperties): boolean => !!this.properties[key],
         );
     }
     /**
@@ -594,5 +616,13 @@ export class VNode {
     _removeAtIndex(index: number): VNode {
         this._children.splice(index, 1);
         return this;
+    }
+    /**
+     * Update the VNode's properties.
+     */
+    _updateProperties(): void {
+        if (atomicTypes.includes(this.type)) {
+            this.properties.atomic = true;
+        }
     }
 }
