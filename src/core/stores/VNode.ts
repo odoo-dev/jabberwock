@@ -408,6 +408,30 @@ export class VNode {
         }
     }
     /**
+     * Return the previous leaf in a depth-first pre-order traversal of the
+     * tree that satisfies the given predicate. If no predicate is given return
+     * the previous leaf in a depth-first pre-order traversal of the tree.
+     *
+     * @param [predicate]
+     */
+    previousLeaf(predicate?: Predicate): VNode {
+        return this.previous((node: VNode): boolean => {
+            return !node.hasChildren() && (!predicate || predicate(node));
+        });
+    }
+    /**
+     * Return the next leaf in a depth-first pre-order traversal of the tree
+     * that satisfies the given predicate. If no predicate is given return the
+     * next leaf in a depth-first pre-order traversal of the tree.
+     *
+     * @param [predicate]
+     */
+    nextLeaf(predicate?: Predicate): VNode {
+        return this.next((node: VNode): boolean => {
+            return !node.hasChildren() && (!predicate || predicate(node));
+        });
+    }
+    /**
      * Walk the document tree starting from the current node (included) by
      * calling the `next` iterator until the returned node satisfies the given
      * predicate or is falsy.
