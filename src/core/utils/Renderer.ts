@@ -28,7 +28,7 @@ export class Renderer {
         VDocumentMap.clear(); // TODO: update instead of recreate
         VDocumentMap.set(root, fragment);
 
-        if (root.children.length) {
+        if (root.hasChildren()) {
             let context: RenderingContext = {
                 currentVNode: root.firstChild(),
                 parentNode: fragment,
@@ -75,7 +75,7 @@ export class Renderer {
      */
     _nextRenderingContext(context: RenderingContext): RenderingContext {
         const vNode = context.currentVNode;
-        if (vNode.children.length) {
+        if (vNode.hasChildren()) {
             // Render the first child with the current node as parent.
             context.currentVNode = context.currentVNode.children[0];
             context.parentNode = VDocumentMap.toDom(vNode) as Element;
