@@ -54,6 +54,38 @@ describe('utils', () => {
                     underlined: false,
                 });
             });
+            it('should parse without range char', () => {
+                const element = document.createElement('div');
+                element.innerHTML = '<p>[a]</p>';
+                const vDocument = Parser.parse(element);
+
+                expect(vDocument.root.type).to.equal(VNodeType.ROOT);
+                expect(vDocument.root.children.length).to.equal(1);
+                const p = vDocument.root.children[0];
+                expect(p.type).to.equal(VNodeType.PARAGRAPH);
+                expect(p.children.length).to.equal(5);
+                expect(p.children[0].type).to.equal(VNodeType.RANGE_START);
+                expect(p.children[1].type).to.equal(VNodeType.RANGE_END);
+                expect(p.children[2].type).to.equal(VNodeType.CHAR);
+                expect(p.children[2].value).to.equal('[');
+                expect(p.children[3].value).to.equal('a');
+                expect(p.children[4].value).to.equal(']');
+            });
+            it('should parse with range', () => {
+                const element = document.createElement('div');
+                element.innerHTML = '<p>[a]</p>';
+                const vDocument = Parser.parse(element, { parseTextualRange: true });
+
+                expect(vDocument.root.type).to.equal(VNodeType.ROOT);
+                expect(vDocument.root.children.length).to.equal(1);
+                const p = vDocument.root.children[0];
+                expect(p.type).to.equal(VNodeType.PARAGRAPH);
+                expect(p.children.length).to.equal(3);
+                expect(p.children[0].type).to.equal(VNodeType.RANGE_START);
+                expect(p.children[1].type).to.equal(VNodeType.CHAR);
+                expect(p.children[1].value).to.equal('a');
+                expect(p.children[2].type).to.equal(VNodeType.RANGE_END);
+            });
         });
     });
 });

@@ -8,7 +8,6 @@ export class VDocument {
     range = new VRange();
     constructor(root: VNode) {
         this.root = root;
-        this.range.setAt(this.root);
     }
 
     //--------------------------------------------------------------------------
