@@ -8,17 +8,17 @@ export class CorePlugin extends JWPlugin {
     handlers = {
         intents: {
             insert: 'insert',
-            removeBackward: 'removeBackward',
-            removeForward: 'removeForward',
+            deleteBackward: 'deleteBackward',
+            deleteForward: 'deleteForward',
             setRange: 'navigate',
             selectAll: 'selectAll',
         },
     };
     commands = {
+        deleteBackward: this.deleteBackward.bind(this),
+        deleteForward: this.deleteForward.bind(this),
         insert: this.insert.bind(this),
         navigate: this.navigate.bind(this),
-        removeBackward: this.removeBackward.bind(this),
-        removeForward: this.removeForward.bind(this),
         selectAll: this.selectAll.bind(this),
     };
     constructor(editor) {
@@ -39,8 +39,10 @@ export class CorePlugin extends JWPlugin {
         // TODO: check the intent to insert other things than text.
         this.editor.vDocument.insertText(intent.payload.value);
     }
-    removeBackward(): void {
-        // TODO: this is a stub
+    /**
+     * Delete in the backward direction (backspace key expected behavior).
+     */
+    deleteBackward(): void {
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
             const previous = range.start.previous();
@@ -50,8 +52,10 @@ export class CorePlugin extends JWPlugin {
         }
         this.editor.vDocument.deleteSelection();
     }
-    removeForward(): void {
-        // TODO: this is a stub
+    /**
+     * Delete in the forward direction (delete key expected behavior).
+     */
+    deleteForward(): void {
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
             const next = range.end.next();
