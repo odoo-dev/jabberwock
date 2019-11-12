@@ -18,6 +18,9 @@ export interface VRangeDescription {
     direction: Direction;
 }
 
+export const RANGE_TAIL_CHAR = '[';
+export const RANGE_HEAD_CHAR = ']';
+
 export class VRange {
     readonly _tail = new VNode(VNodeType.RANGE_TAIL);
     readonly _head = new VNode(VNodeType.RANGE_HEAD);
@@ -148,13 +151,13 @@ export class VRange {
     }
     /**
      * Set a range selecting the given nodes.
-     * Consider `ab` (▶ = `this._start`, ◀ = `this._end`):
-     * `select(a)` => `▶a◀b`
-     * `select(a, b)` => `▶ab◀`
-     * `select(a, RelativePosition.BEFORE, b, RelativePosition.BEFORE)` => `▶a◀b`
-     * `select(a, RelativePosition.AFTER, b, RelativePosition.BEFORE)` => `a▶◀b`
-     * `select(a, RelativePosition.BEFORE, b, RelativePosition.AFTER)` => `▶ab◀`
-     * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a▶b◀`
+     * Consider `ab` ([ = `this._start`, ] = `this._end`):
+     * `select(a)` => `[a]b`
+     * `select(a, b)` => `[ab]`
+     * `select(a, RelativePosition.BEFORE, b, RelativePosition.BEFORE)` => `[a]b`
+     * `select(a, RelativePosition.AFTER, b, RelativePosition.BEFORE)` => `a[]b`
+     * `select(a, RelativePosition.BEFORE, b, RelativePosition.AFTER)` => `[ab]`
+     * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a[b]`
      *
      * @param tailNode
      * @param [startPosition] default: `RelativePosition.BEFORE`

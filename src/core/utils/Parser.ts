@@ -2,12 +2,19 @@ import { VNode, VNodeType, FormatType } from '../stores/VNode';
 import { VDocument } from '../stores/VDocument';
 import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
+import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../stores/VRange';
+
+export interface ParsingOptions {
+    parseTextualRange: boolean;
+}
 
 interface ParsingContext {
     readonly rootNode?: Node;
     node?: Node;
     parentVNode?: VNode;
     format?: FormatType[];
+    vDocument: VDocument;
+    options: ParsingOptions;
 }
 
 /**
@@ -121,9 +128,15 @@ function parseTextNode(currentContext: ParsingContext): ParsingContext {
     const text = _removeFormatSpace(node);
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
-        const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, format);
-        VDocumentMap.set(parsedVNode, node, i);
-        parentVNode.append(parsedVNode);
+        if (char === RANGE_TAIL_CHAR && currentContext.options.parseTextualRange) {
+            parentVNode.append(currentContext.vDocument.range.start);
+        } else if (char === RANGE_HEAD_CHAR && currentContext.options.parseTextualRange) {
+            parentVNode.append(currentContext.vDocument.range.end);
+        } else {
+            const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, format);
+            VDocumentMap.set(parsedVNode, node, i);
+            parentVNode.append(parsedVNode);
+        }
     }
     return currentContext;
 }
@@ -328,9 +341,15 @@ export const Parser = {
      * @param node the HTML element to parse
      * @returns the element parsed into the editor's virtual representation
      */
-    parse: (node: Node): VDocument => {
+    parse: (node: Node, parsingOptions?: ParsingOptions): VDocument => {
+        if (!parsingOptions) {
+            parsingOptions = {
+                parseTextualRange: false,
+            };
+        }
         const root = new VNode(VNodeType.ROOT);
         VDocumentMap.set(root, node);
+        const vDocument = new VDocument(root);
         // The tree is parsed in depth-first order traversal.
         // Start with the first child and the whole tree will be parsed.
         if (node.childNodes.length) {
@@ -339,11 +358,18 @@ export const Parser = {
                 node: node.childNodes[0],
                 parentVNode: root,
                 format: [],
+                vDocument: vDocument,
+                options: parsingOptions,
             };
             do {
                 context = parseNode(context);
             } while (context);
         }
-        return new VDocument(root);
+
+        if (!vDocument.range.start.parent || !vDocument.range.end.parent) {
+            vDocument.range.setAt(vDocument.root);
+        }
+
+        return vDocument;
     },
 };
