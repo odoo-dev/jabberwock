@@ -1,5 +1,5 @@
 import { VNode, VNodeType } from './VNode';
-import { VRange } from './VRange';
+import { VRange, Direction } from './VRange';
 
 export let withRange = false;
 
@@ -23,7 +23,7 @@ export class VDocument {
     insert(node: VNode): void {
         // Remove the contents of the selection if needed.
         if (!this.range.isCollapsed()) {
-            this.truncate(this.range.selectedNodes);
+            this.deleteSelection();
         }
         this.range.start.before(node);
     }
@@ -35,7 +35,7 @@ export class VDocument {
     insertText(text: string): void {
         // Remove the contents of the selection if needed.
         if (!this.range.isCollapsed()) {
-            this.truncate(this.range.selectedNodes);
+            this.deleteSelection();
         }
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('').reverse();
@@ -46,43 +46,32 @@ export class VDocument {
         });
     }
     /**
-     * Truncate the tree by removing the given nodes and merging their orphaned
-     * children into the parent of the first removed node.
-     *
-     * @param nodes
+     * Truncate the tree by removing the selected nodes and merging their
+     * orphaned children into the parent of the first removed node.
      */
-    truncate(nodes: VNode[]): void {
-        if (!nodes.length) return;
+    deleteSelection(): void {
         VDocument.withRange(() => {
-            // Determine where and how to reattach the orphaned child nodes.
-            const firstNode = nodes[0];
-            let reference = firstNode.previousSibling();
-            let methodName = 'after';
-            if (!reference) {
-                reference = firstNode.nextSibling();
-                methodName = 'before';
-            }
-            if (!reference) {
-                reference = firstNode.parent;
-                methodName = 'append';
-            }
+            const nodes = this.range.selectedNodes;
+            if (!nodes.length) return;
+            this.range.collapse(this.range.direction === Direction.FORWARD ? 'start' : 'end'); // Reset the direction of the range.
+            let reference =
+                this.range.direction === Direction.FORWARD ? this.range.end : this.range.start;
             nodes.forEach(vNode => {
                 // If the node has children, merge it with the container of the
-                // range. Children of the merged node that should be truncated as
-                // well will be deleted in the following iterations since they
-                // appear in `nodes`. The children array must be cloned in order to
-                // modify it while iterating.
+                // range. Children of the merged node that should be truncated
+                // as well will be deleted in the following iterations since
+                // they appear in `nodes`. The children array must be cloned in
+                // order to modify it while iterating.
                 // TODO: test whether the node can be merged with the container.
-                if (vNode.children.length) {
+                if (vNode.hasChildren()) {
                     vNode.children.slice().forEach(child => {
-                        reference[methodName](child);
+                        reference.after(child);
                         reference = child;
                     });
                 }
-                // Then remove.
-                vNode.remove();
             });
-            this.range.collapse(); // Reset the direction of the range.
+            // Then remove.
+            nodes.forEach(vNode => vNode.remove());
         });
     }
 
