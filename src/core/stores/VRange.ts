@@ -1,5 +1,6 @@
-import { VNode, VNodeType } from './VNode';
+import { VNode } from './VNode';
 import { VDocument } from './VDocument';
+import { RangeNode } from './VNodes/RangeNode';
 
 export enum Direction {
     BACKWARD = 'BACKWARD',
@@ -19,8 +20,8 @@ export interface VRangeDescription {
 }
 
 export class VRange {
-    readonly _tail = new VNode(VNodeType.RANGE_TAIL);
-    readonly _head = new VNode(VNodeType.RANGE_HEAD);
+    readonly _tail = new RangeNode('tail');
+    readonly _head = new RangeNode('head');
     /**
      * The direction of the range depends on whether tail is before head or the
      * opposite. This is costly to compute and, as such, is only computed when

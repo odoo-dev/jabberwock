@@ -2,6 +2,9 @@ import { VNode, VNodeType, FormatType } from '../stores/VNode';
 import { VDocument } from '../stores/VDocument';
 import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
+import { LineBreakNode } from '../stores/VNodes/LineBreakNode';
+import { CharNode } from '../stores/VNodes/CharNode';
+import { SimpleElementNode } from '../stores/VNodes/SimpleElementNode';
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -42,29 +45,31 @@ function parseNode(currentContext: ParsingContext): ParsingContext {
 }
 
 /**
- * Return the `VNodeType` of the given DOM node.
+ * Create and return a `VNode` corresponding to the given DOM tag.
+ *
+ * TODO: When introducing videos and other complex (atomic) nodes, this is going
+ * to be to naive and it will have to be replaced.
  *
  * @param node
- * @returns the `VNodeType` of the given DOM node
  */
-function getNodeType(node: Node): VNodeType {
-    switch (node.nodeName) {
+function VNodeFromTag(tag: string): VNode {
+    switch (tag) {
         case 'P':
-            return VNodeType.PARAGRAPH;
+            return new SimpleElementNode(VNodeType.PARAGRAPH, tag);
         case 'H1':
-            return VNodeType.HEADING1;
+            return new SimpleElementNode(VNodeType.HEADING1, tag);
         case 'H2':
-            return VNodeType.HEADING2;
+            return new SimpleElementNode(VNodeType.HEADING2, tag);
         case 'H3':
-            return VNodeType.HEADING3;
+            return new SimpleElementNode(VNodeType.HEADING3, tag);
         case 'H4':
-            return VNodeType.HEADING4;
+            return new SimpleElementNode(VNodeType.HEADING4, tag);
         case 'H5':
-            return VNodeType.HEADING5;
+            return new SimpleElementNode(VNodeType.HEADING5, tag);
         case 'H6':
-            return VNodeType.HEADING6;
+            return new SimpleElementNode(VNodeType.HEADING6, tag);
         case 'BR':
-            return VNodeType.LINE_BREAK;
+            return new LineBreakNode();
     }
 }
 /**
@@ -91,12 +96,8 @@ function parseElementNode(currentContext: ParsingContext): ParsingContext {
             underlined: format.underlined || node.nodeName === 'U',
         });
     } else {
-        const parsedNode: VNode = new VNode(
-            getNodeType(node),
-            node.nodeName,
-            undefined,
-            context.format[0],
-        );
+        const parsedNode: VNode = VNodeFromTag(node.nodeName);
+        Object.assign(parsedNode.format, context.format[0]);
         VDocumentMap.set(parsedNode, node);
         context.parentVNode.append(parsedNode);
     }
@@ -111,13 +112,12 @@ function parseElementNode(currentContext: ParsingContext): ParsingContext {
  */
 function parseTextNode(currentContext: ParsingContext): ParsingContext {
     const node = currentContext.node;
-    const nodeName = node.nodeName;
     const parentVNode = currentContext.parentVNode;
     const format = currentContext.format[0];
     const text = _removeFormatSpace(node);
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
-        const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, format);
+        const parsedVNode = new CharNode(char, format);
         VDocumentMap.set(parsedVNode, node, i);
         parentVNode.append(parsedVNode);
     }

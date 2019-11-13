@@ -17,7 +17,6 @@ export enum VNodeType {
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
 }
-export const RangeTypes = [VNodeType.RANGE_TAIL, VNodeType.RANGE_HEAD];
 
 export interface VNodeProperties {
     atomic: boolean;
@@ -29,12 +28,6 @@ export interface FormatType {
     underlined?: boolean;
 }
 
-const atomicTypes = [
-    VNodeType.CHAR,
-    VNodeType.LINE_BREAK,
-    VNodeType.RANGE_TAIL,
-    VNodeType.RANGE_HEAD,
-];
 let id = 0;
 
 export class VNode {
@@ -61,7 +54,6 @@ export class VNode {
             italic: false,
             underlined: false,
         };
-        this._updateProperties();
         id++;
     }
 
@@ -193,7 +185,7 @@ export class VNode {
      * Return true if this VNode is a range node.
      */
     isRange(): boolean {
-        return RangeTypes.includes(this.type);
+        return false;
     }
 
     //--------------------------------------------------------------------------
@@ -616,13 +608,5 @@ export class VNode {
     _removeAtIndex(index: number): VNode {
         this._children.splice(index, 1);
         return this;
-    }
-    /**
-     * Update the VNode's properties.
-     */
-    _updateProperties(): void {
-        if (atomicTypes.includes(this.type)) {
-            this.properties.atomic = true;
-        }
     }
 }
