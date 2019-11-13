@@ -63,6 +63,22 @@ export class VNode {
         this._updateProperties();
         id++;
     }
+    /**
+     * @override
+     */
+    toString(): string {
+        let string = this.constructor.name + '<' + this.type.toLowerCase();
+        if (this.hasChildren()) {
+            string += '>';
+            this.children.forEach(child => {
+                string += child.toString();
+            });
+            string += '<' + this.type.toLowerCase() + '>';
+        } else {
+            string += '/>';
+        }
+        return string;
+    }
 
     //--------------------------------------------------------------------------
     // Lifecycle
