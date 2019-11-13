@@ -42,7 +42,6 @@ export class InfoComponent extends OwlUIComponent<{}> {
         const prevSibling = rangeNode.previousSibling();
         const position = nextSibling ? 'BEFORE' : 'AFTER';
         const reference = nextSibling || prevSibling;
-        const nodeRepr = reference.value || reference.type;
-        return `${position} ${reference.id} (${nodeRepr})`;
+        return `${position} ${reference.id} (${reference.name})`;
     }
 }

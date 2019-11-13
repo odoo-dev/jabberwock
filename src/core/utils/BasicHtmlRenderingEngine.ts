@@ -11,8 +11,6 @@ const getRenderingTagName = function(nodeType: VNodeType): string {
         case 'HEADING5':
         case 'HEADING6':
             return 'H' + nodeType[7];
-        case 'LINE_BREAK':
-            return 'BR';
         case 'PARAGRAPH':
             return 'P';
         case 'ROOT':
@@ -49,12 +47,6 @@ export const BasicHtmlRenderingEngine = {
         // fill it to make it visible.
         if (!node.hasChildren() && !node.properties.atomic) {
             renderedElement.appendChild(document.createElement('BR'));
-        }
-
-        // If a LINE_BREAK has no next sibling, it must be rendered as two BRs
-        // in order for it to be visible.
-        if (node.type === VNodeType.LINE_BREAK && !node.nextSibling()) {
-            fragment.appendChild(document.createElement(tagName));
         }
         return fragment;
     },

@@ -38,22 +38,22 @@ export class VNode {
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
+    name: string;
     originalTag: string;
-    value: string;
     properties: VNodeProperties = {
         atomic: false,
     };
     _children: VNode[] = [];
 
-    constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
+    constructor(type: VNodeType, originalTag = '', format?: FormatType) {
         this.type = type;
         this.originalTag = originalTag;
-        this.value = value;
         this.format = format || {
             bold: false,
             italic: false,
             underlined: false,
         };
+        this.name = this.type;
         id++;
     }
 
@@ -64,7 +64,8 @@ export class VNode {
     /**
      * Render the VNode to the given format.
      *
-     * @param to the name of the format to which we want to render (default: html)
+     * @param [to] the name of the format to which we want to render (default:
+     * html)
      */
     render<T>(to = 'html'): T {
         return this.renderingEngines[to].render(this) as T;
@@ -87,7 +88,7 @@ export class VNode {
      * Return the length of this VNode.
      */
     get length(): number {
-        return this.value ? this.value.length : this.children.length;
+        return this.children.length;
     }
     /**
      * Return the length of this node and all its descendents.
@@ -127,9 +128,6 @@ export class VNode {
      * @param __current
      */
     text(__current = ''): string {
-        if (this.value) {
-            __current += this.value;
-        }
         this.children.forEach((child: VNode): void => {
             __current = child.text(__current);
         });
@@ -180,6 +178,12 @@ export class VNode {
      */
     isAfter(vNode: VNode): boolean {
         return vNode.isBefore(this);
+    }
+    /**
+     * Return true if this VNode is a char node.
+     */
+    isChar(): boolean {
+        return false;
     }
     /**
      * Return true if this VNode is a range node.

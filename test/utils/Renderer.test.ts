@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import JWEditor from '../../src/core/JWEditor';
 import { Renderer } from '../../src/core/utils/Renderer';
-import { VNode, VNodeType } from '../../src/core/stores/VNode';
+import { CharNode } from '../../src/core/stores/VNodes/CharNode';
 
 describe('utils', () => {
     describe('Renderer', () => {
@@ -13,9 +13,9 @@ describe('utils', () => {
 
                 const editor = new JWEditor(element);
                 editor.start();
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', 'b'));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode('b'));
 
                 const renderer = new Renderer();
                 renderer.render(editor.vDocument, editor.editable);
@@ -31,11 +31,11 @@ describe('utils', () => {
 
                 const editor = new JWEditor(element);
                 editor.start();
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', 'b'));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode('b'));
 
                 const renderer = new Renderer();
                 renderer.render(editor.vDocument, editor.editable);

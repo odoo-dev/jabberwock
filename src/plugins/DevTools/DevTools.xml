@@ -27,7 +27,7 @@
     <!-- INSPECTOR.Tree -->
     <devtools-node t-name="TreeComponent"
         t-att-class="{
-            element: props.vNode.length and !props.vNode.value,
+            element: props.vNode.length and !props.vNode.isChar(),
             folded: state.folded,
             root: props.isRoot,
             'self-closing': props.vNode.length == 0,
@@ -44,14 +44,14 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <span t-if="props.vNode.type == 'RANGE_TAIL' or props.vNode.type == 'RANGE_HEAD'"
+            <span t-if="props.vNode.isRange()"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line range-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <b><t t-esc="repr"/></b>
             </span>
-            <span t-elif="props.vNode.value" t-on-click="onClickNode"
+            <span t-elif="props.vNode.isChar()" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
                     bold: props.vNode.format.bold,
@@ -119,8 +119,8 @@
     <t t-name="infoVNode">
         <div class="about">
             <span class="type">VNode</span> <t t-esc="props.vNode.type or &quot;?&quot;"/>
-            <t t-if="props.vNode.value">:
-                "<t t-esc="props.vNode.value"/>"
+            <t t-if="props.vNode.isChar()">:
+                "<t t-esc="props.vNode.char"/>"
             </t>
             <span class="id"><t t-esc="props.vNode.id"/></span>
         </div>
@@ -136,9 +136,9 @@
                         <td>type</td>
                         <td><t t-esc="props.vNode.type or &quot;UNKNOWN&quot;"/></td>
                     </tr>
-                    <tr t-if="props.vNode.value">
+                    <tr t-if="props.vNode.isChar()">
                         <td>value</td>
-                        <td>"<t t-esc="props.vNode.value"/>"</td>
+                        <td>"<t t-esc="props.vNode.char"/>"</td>
                     </tr>
                     <tr>
                         <td>length</td>

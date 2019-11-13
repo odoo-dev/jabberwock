@@ -1,5 +1,6 @@
-import { VNode, VNodeType } from './VNode';
+import { VNode } from './VNode';
 import { VRange } from './VRange';
+import { CharNode } from './VNodes/CharNode';
 
 export let withRange = false;
 
@@ -41,7 +42,7 @@ export class VDocument {
         const characters = text.split('').reverse();
         characters.forEach(char => {
             // TODO: determine format from current position
-            const vNode = new VNode(VNodeType.CHAR, '#text', char);
+            const vNode = new CharNode(char);
             this.range.start.before(vNode);
         });
     }
