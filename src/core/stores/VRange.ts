@@ -270,7 +270,9 @@ export class VRange {
      */
     _setTail(reference: VNode, position = RelativePosition.BEFORE): VRange {
         reference = reference.firstLeaf();
-        if (position === RelativePosition.AFTER && reference !== this._head) {
+        if (!reference.hasChildren() && !reference.properties.atomic) {
+            reference.prepend(this._tail);
+        } else if (position === RelativePosition.AFTER && reference !== this._head) {
             // We check that `reference` isn't `_head` to avoid a backward
             // collapsed range.
             reference.after(this._tail);
@@ -291,7 +293,9 @@ export class VRange {
      */
     _setHead(reference: VNode, position = RelativePosition.AFTER): VRange {
         reference = reference.lastLeaf();
-        if (position === RelativePosition.BEFORE && reference !== this._tail) {
+        if (!reference.hasChildren() && !reference.properties.atomic) {
+            reference.append(this._head);
+        } else if (position === RelativePosition.BEFORE && reference !== this._tail) {
             // We check that `reference` isn't `_tail` to avoid a backward
             // collapsed range.
             reference.before(this._head);
