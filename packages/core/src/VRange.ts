@@ -192,9 +192,9 @@ export class VRange {
         return this;
     }
     /**
-     * Set the range's start point at the given location, targetting a
-     * `reference` VNode and specifying the `position` in reference to that
-     * VNode ('BEFORE', 'AFTER'), like in an `xpath`. If a direction is
+     * Set the range's start point (in traversal order) at the given location,
+     * targetting a `reference` VNode and specifying the `position` in reference
+     * to that VNode ('BEFORE', 'AFTER'), like in an `xpath`. If a direction is
      * specified, the range's start point will be the head of the range.
      * Return self.
      *
@@ -210,10 +210,10 @@ export class VRange {
         }
     }
     /**
-     * Set the range's end point at the given location, targetting a `reference`
-     * VNode and specifying the `position` in reference to that VNode ('BEFORE',
-     * 'AFTER'), like in an `xpath`. If a direction is specified, the range's
-     * end point will be the tail of the range.
+     * Set the range's end point (in traversal order) at the given location,
+     * targetting a `reference` VNode and specifying the `position` in reference
+     * to that VNode ('BEFORE', 'AFTER'), like in an `xpath`. If a direction is
+     * specified, the range's end point will be the tail of the range.
      * Return self.
      *
      * @param reference
@@ -226,6 +226,30 @@ export class VRange {
         } else {
             return this._setTail(reference, position);
         }
+    }
+    /**
+     * Set the start of the range by targetting a `reference` VNode and
+     * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
+     * like in an `xpath`. If no relative position if given, include the
+     * reference node in the selection. Return self.
+     *
+     * @param reference
+     * @param [position]
+     */
+    setAnchor(reference: VNode, position = RelativePosition.BEFORE): VRange {
+        return this._setTail(reference, position);
+    }
+    /**
+     * Set the end of the range by targetting a `reference` VNode and specifying
+     * the `position` in reference to that VNode ('BEFORE', 'AFTER'), like in an
+     * `xpath`. If no relative position if given, include the reference node in
+     * the selection. Return self.
+     *
+     * @param reference
+     * @param [position]
+     */
+    setFocus(reference: VNode, position = RelativePosition.AFTER): VRange {
+        return this._setHead(reference, position);
     }
     /**
      * Extend the range from its tail to the given location, targetting a
@@ -264,13 +288,13 @@ export class VRange {
     //--------------------------------------------------------------------------
 
     /**
-     * Set the start of the range by targetting a `reference` VNode and
-     * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
-     * like in an `xpath`. If no relative position if given, include the
-     * reference node in the selection. Return self.
+     * Set the end of the range by targetting a `reference` VNode and specifying
+     * the `position` in reference to that VNode ('BEFORE', 'AFTER'), like in an
+     * `xpath`. If no relative position if given, include the reference node in
+     * the selection. Return self.
      *
-     * @param position
      * @param reference
+     * @param [position]
      */
     _setTail(reference: VNode, position = RelativePosition.BEFORE): VRange {
         reference = reference.firstLeaf();
@@ -287,13 +311,13 @@ export class VRange {
         return this;
     }
     /**
-     * Set the end of the range by targetting a `reference` VNode and
-     * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
-     * like in an `xpath`. If no relative position if given, include the
-     * reference node in the selection. Return self.
+     * Set the end of the range by targetting a `reference` VNode and specifying
+     * the `position` in reference to that VNode ('BEFORE', 'AFTER'), like in an
+     * `xpath`. If no relative position if given, include the reference node in
+     * the selection. Return self.
      *
-     * @param position
      * @param reference
+     * @param [position]
      */
     _setHead(reference: VNode, position = RelativePosition.AFTER): VRange {
         reference = reference.lastLeaf();
