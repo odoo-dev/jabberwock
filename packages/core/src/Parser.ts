@@ -2,7 +2,7 @@ import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode, FormatType, VNodeType } from './VNode';
-import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from './VRange';
+import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR, RelativePosition } from './VRange';
 
 export interface ParsingOptions {
     parseTextualRange: boolean;
@@ -142,9 +142,11 @@ function parseTextNode(currentContext: ParsingContext): ParsingContext {
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
         if (char === RANGE_TAIL_CHAR && currentContext.options.parseTextualRange) {
-            parentVNode.append(currentContext.vDocument.range.start);
+            const lastLeaf = parentVNode.lastLeaf();
+            currentContext.vDocument.range.setAnchor(lastLeaf, RelativePosition.AFTER);
         } else if (char === RANGE_HEAD_CHAR && currentContext.options.parseTextualRange) {
-            parentVNode.append(currentContext.vDocument.range.end);
+            const lastLeaf = parentVNode.lastLeaf();
+            currentContext.vDocument.range.setFocus(lastLeaf, RelativePosition.AFTER);
         } else {
             const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, { ...format });
             VDocumentMap.set(parsedVNode, node, i);
