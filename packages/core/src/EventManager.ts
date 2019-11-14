@@ -69,7 +69,14 @@ export class EventManager {
         // Get the VNodes matching the container.
         const containers = VDocumentMap.fromDom(container);
         // The reference is the offset-th match (eg.: text split into chars).
-        return [containers[offset], position];
+        const reference = containers[offset];
+        // When clicking on a trailing line break, we need to target after the
+        // line break. The DOM represents these as 2 <br> so this is a special
+        // case.
+        if (reference.type === 'LINE_BREAK' && !reference.nextSibling() && !container.nextSibling) {
+            position = RelativePosition.AFTER;
+        }
+        return [reference, position];
     }
     /**
      * Callback given to the normalizer.
