@@ -246,8 +246,7 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
                         },
                         contentAfter: 'a[<b>b]</b>c',
                     });
@@ -259,8 +258,7 @@ describe('stores', () => {
                             const params: FormatParams = {
                                 format: 'bold',
                             };
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
                         },
                         contentAfter: 'a[b]c',
                     });
@@ -273,8 +271,7 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
                         },
                         contentAfter: 'a[<b>bc]</b>',
                     });
