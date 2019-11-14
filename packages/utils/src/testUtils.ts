@@ -13,6 +13,7 @@ export interface TestEditorSpec {
     parsingOptions?: ParsingOptions;
     renderingOptions?: RenderOptions;
     stepFunction?: (editor: JWEditor) => void;
+    debug?: boolean;
 }
 
 /**
@@ -32,6 +33,11 @@ export function testEditor(spec: TestEditorSpec): void {
     document.body.appendChild(wrapper);
 
     const editor = new JWEditor(wrapper);
+    if (spec.debug === true) {
+        editor.loadConfig({
+            debug: true,
+        });
+    }
     editor.start(spec.parsingOptions);
     if (spec.stepFunction) {
         spec.stepFunction(editor);
