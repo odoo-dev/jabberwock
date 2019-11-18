@@ -4,6 +4,7 @@ import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
 import { Direction, VRangeDescription } from '../../../core/stores/VRange';
 import { ActionGenerator } from '../../../core/actions/ActionGenerator';
+import { isRange } from '../../../core/utils/Predicates';
 
 interface NodeProps {
     isRoot: boolean;
@@ -127,7 +128,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         if (node.value) {
             return utils.toUnicode(node.value);
         }
-        if (node.isRange()) {
+        if (isRange(node)) {
             return node.type === VNodeType.RANGE_TAIL ? '[' : ']';
         }
         if (node.type && node.type === VNodeType.LINE_BREAK) {

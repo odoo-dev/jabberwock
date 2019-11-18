@@ -1,11 +1,8 @@
 import { VNode, VNodeType, FormatType, FORMAT_TYPES } from './VNode';
 import { VRange } from './VRange';
+import { isChar } from '../utils/Predicates';
 
 export let withRange = false;
-
-function isChar(node): boolean {
-    return node.type === VNodeType.CHAR;
-}
 
 export class VDocument {
     root: VNode;
