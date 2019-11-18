@@ -3,6 +3,7 @@ import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRange, RelativePosition } from '../stores/VRange';
 import { VDocument } from '../stores/VDocument';
+import { isRange, isChar } from './Predicates';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
@@ -53,12 +54,12 @@ export class Renderer {
      * @param b
      */
     _isSameTextNode(a: VNode, b: VNode): boolean {
-        if (a.isRange() || b.isRange()) {
+        if (isRange(a) || isRange(b)) {
             // A Range node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
             // be broken up just because it contains the range.
             return true;
-        } else if (a.type !== VNodeType.CHAR || b.type !== VNodeType.CHAR) {
+        } else if (!isChar(a) || !isChar(b)) {
             // Nodes that are not valid in a text node must end the text node.
             return false;
         } else {
@@ -142,7 +143,7 @@ export class Renderer {
         const charNodes = [firstChar];
         while (next && this._isSameTextNode(firstChar, next)) {
             context.currentVNode = next;
-            if (next.type === VNodeType.CHAR) {
+            if (isChar(next)) {
                 charNodes.push(next);
                 if (next.value === ' ' && text[text.length - 1] === ' ') {
                     // Browsers don't render consecutive space chars otherwise.
@@ -220,7 +221,7 @@ export class Renderer {
      * @param context
      */
     _renderVNode(context: RenderingContext): RenderingContext {
-        if (context.currentVNode.type === VNodeType.CHAR) {
+        if (isChar(context.currentVNode)) {
             context = this._renderTextNode(context);
         } else {
             context = this._renderElement(context);

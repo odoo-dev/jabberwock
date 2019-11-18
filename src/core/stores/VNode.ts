@@ -1,7 +1,6 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../utils/BasicHtmlRenderingEngine';
 import { withRange, VDocument } from './VDocument';
-
-export type Predicate = (node: VNode) => boolean;
+import { Predicate, isRange, isLeaf, not } from '../utils/Predicates';
 
 export enum VNodeType {
     ROOT = 'ROOT',
@@ -17,7 +16,6 @@ export enum VNodeType {
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
 }
-export const RangeTypes = [VNodeType.RANGE_TAIL, VNodeType.RANGE_HEAD];
 
 export interface VNodeProperties {
     atomic: boolean;
@@ -90,7 +88,7 @@ export class VNode {
         if (withRange) {
             return this._children;
         }
-        return this._children.filter(child => !child.isRange());
+        return this._children.filter(not(isRange));
     }
     /**
      * Return the length of this VNode.
@@ -190,12 +188,6 @@ export class VNode {
     isAfter(vNode: VNode): boolean {
         return vNode.isBefore(this);
     }
-    /**
-     * Return true if this VNode is a range node.
-     */
-    isRange(): boolean {
-        return RangeTypes.includes(this.type);
-    }
 
     //--------------------------------------------------------------------------
     // Browsing
@@ -209,7 +201,7 @@ export class VNode {
     childBefore(child: VNode): VNode {
         const childBefore = VDocument.withRange(() => this.nthChild(this.indexOf(child) - 1));
         // Ignore range nodes by default.
-        if (!withRange && childBefore && childBefore.isRange()) {
+        if (!withRange && childBefore && isRange(childBefore)) {
             return this.childBefore(childBefore);
         } else {
             return childBefore;
@@ -223,7 +215,7 @@ export class VNode {
     childAfter(child: VNode): VNode {
         const childAfter = VDocument.withRange(() => this.nthChild(this.indexOf(child) + 1));
         // Ignore range nodes by default.
-        if (!withRange && childAfter && childAfter.isRange()) {
+        if (!withRange && childAfter && isRange(childAfter)) {
             return this.childAfter(childAfter);
         } else {
             return childAfter;
@@ -325,7 +317,7 @@ export class VNode {
      */
     firstLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return !node.hasChildren() && (!predicate || predicate(node));
+            return isLeaf(node) && (!predicate || predicate(node));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -341,7 +333,7 @@ export class VNode {
      */
     lastLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return !node.hasChildren() && (!predicate || predicate(node));
+            return isLeaf(node) && (!predicate || predicate(node));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -468,7 +460,7 @@ export class VNode {
      */
     previousLeaf(predicate?: Predicate): VNode {
         return this.previous((node: VNode): boolean => {
-            return !node.hasChildren() && (!predicate || predicate(node));
+            return isLeaf(node) && (!predicate || predicate(node));
         });
     }
     /**
@@ -480,7 +472,7 @@ export class VNode {
      */
     nextLeaf(predicate?: Predicate): VNode {
         return this.next((node: VNode): boolean => {
-            return !node.hasChildren() && (!predicate || predicate(node));
+            return isLeaf(node) && (!predicate || predicate(node));
         });
     }
     /**

@@ -1,5 +1,6 @@
 import { VNode, VNodeType } from './VNode';
 import { VDocument } from './VDocument';
+import { isRange } from '../utils/Predicates';
 
 export enum Direction {
     BACKWARD = 'BACKWARD',
@@ -109,7 +110,7 @@ export class VRange {
      * @param [edge] range node on which to collapse
      */
     collapse(edge = this._tail): VRange {
-        if (!edge.isRange()) {
+        if (!isRange(edge)) {
             edge = this._tail;
         }
         if (edge === this._tail) {
