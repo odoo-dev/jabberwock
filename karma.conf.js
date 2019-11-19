@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = function(config) {
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -22,7 +24,7 @@ module.exports = function(config) {
         // test results reporter to use
         // possible values: 'dots', 'progress', 'spec'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['spec'],
+        reporters: ['coverage-istanbul', 'spec'],
 
         // web server port
         port: 9876,
@@ -53,7 +55,6 @@ module.exports = function(config) {
         },
         webpack: {
             mode: 'development',
-            devtool: 'inline-source-map',
             module: {
                 rules: [
                     {
@@ -64,6 +65,14 @@ module.exports = function(config) {
                                 options: { configFile: 'tsconfig-base.json' },
                             },
                         ],
+                    },
+                    {
+                      test: /\.ts$/,
+                      enforce: 'post',
+                      include: path.resolve(`src/`),
+                      exclude: [/node_modules/, path.resolve(__dirname, "test")],
+                      loader: 'istanbul-instrumenter-loader',
+                      options: { esModules: true }
                     },
                     {
                         test: /\.css$/i,
@@ -78,6 +87,15 @@ module.exports = function(config) {
             resolve: {
                 extensions: ['.ts', '.js'],
             },
+        },
+
+        coverageIstanbulReporter: {
+            reports: [ 'html', 'text-summary', 'lcovonly' ],
+            dir: path.join(__dirname, 'coverage'),
+            fixWebpackSourcePaths: true,
+            'report-config': {
+                html: { outdir: 'html' }
+            }
         },
     });
 };

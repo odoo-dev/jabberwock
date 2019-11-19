@@ -13,3 +13,4 @@ Thumbs.db
 data/
 build/
 package-lock.json
+coverage/
