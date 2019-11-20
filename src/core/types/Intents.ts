@@ -1,3 +1,4 @@
+import { ActionPayload, Intent } from './Actions';
 import { VRangeDescription } from '../stores/VRange';
 
 // Specialized intents

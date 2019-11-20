@@ -8,7 +8,7 @@ import { Renderer } from './utils/Renderer';
 import { OwlUI } from '../../src/ui/OwlUI';
 import { DevTools } from '../../src/plugins/DevTools/DevTools';
 import '../../src/plugins/DevTools/DevTools.css';
-import { FormatType } from './stores/VNode';
+import { Action } from './types/Actions';
 
 export interface JWEditorConfig {
     debug?: boolean;

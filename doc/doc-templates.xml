@@ -1,0 +1,451 @@
+<templates>
+    <!-- INSPECTOR -->
+    <section class="main" t-name="DocApp">
+        <header class="top-header">
+            <div class="logo">
+                <a href="#" t-on-click="onClickHome"><img t-att-src="asset.logoSrc"/> Jabberwork</a>
+            </div>
+            <ul>
+                <li><a class="header__item header__item--github" href="http://github.com/odoo/jabberwock"><img t-att-src="asset.githubSrc" alt="Github"/></a></li>
+                <li>
+                    <Link to="'DOC_PAGE'" params="{path: 'build'}"
+                        t-att-class="'header__item ' + (env.router.currentRoute.name === 'DOC_PAGE' &amp;&amp; env.router.currentParams.path.match('^build') ? 'header__item--active': '')" >
+                        Builds
+                    </Link>
+                </li>
+                <li>
+                    <Link to="'DOC_PAGE'" params="{path: 'framework'}"
+                        t-att-class="'header__item ' + (env.router.currentRoute.name === 'DOC_PAGE' &amp;&amp; env.router.currentParams.path.match('^framework') ? 'header__item--active': '')" >
+                        Framework
+                    </Link>
+                </li>
+                <li>
+                    <Link to="'DOC_PAGE'" params="{path: 'examples'}"
+                        t-att-class="'header__item ' + (env.router.currentRoute.name === 'DOC_PAGE' &amp;&amp; env.router.currentParams.path.match('^examples') ? 'header__item--active': '')" >
+                        Examples
+                    </Link>
+                </li>
+                <li>
+                    <Link to="'API_ITEM'" params="{id: 0}"
+                        t-att-class="'header__item ' + (env.router.currentRouteName === 'API_ITEM' ? 'header__item--active': '')" >
+                    API
+                    </Link>
+                </li>
+            </ul>
+            <Search />
+        </header>
+        <RouteComponent />
+    </section>
+
+    <div class="search" t-name="Search">
+        <!-- <input class="seach__input" t-attf-style="background: white url('{{asset.searchSrc}}') no-repeat right 7px center;" type="text" placeholder="search" />
+        <div class="seach__input-box"/>
+        <div class="seach__input-result">
+        </div> -->
+    </div>
+
+    <section class="wrapper" t-name="ArticleWrapperComponent"
+        t-on-select-article="onSelectedArticle">
+
+        <section class="main-sidebar-article">
+            <t t-if="state.tree &amp;&amp; state.tree.name">
+                <MainSidebarArticle
+                    name="state.tree.name"
+                    path="state.tree.path"
+                    children="state.tree.children" />
+            </t>
+            <t t-else="">
+                loading
+            </t>
+        </section>
+        <!-- the t-key directive is a hack to workaround a current bug in Owl (see https://github.com/odoo/owl/issues/325) -->
+        <!-- By specifying the t-key, it will properly rerender the state.article from the t-raw -->
+        <div class="main-article-wrapper">
+            <section class="main-article" t-key="state.article">
+                <t t-raw="state.article"/>
+            </section>
+        </div>
+    </section>
+
+    <ul t-name="MainSidebarArticle">
+        <t t-foreach="props.children" t-as="item" t-key="$as_index">
+            <t t-if="item.children">
+                <li>
+                    <!-- <div class="sidebar__item" t-on-click="onClickSelectArticle(item)"> -->
+                    <div class="sidebar__item">
+                    <!-- <div class="sidebar__item"> -->
+                        <!-- <Link to="'DOC_PAGE'" params="{path: item.path}"> -->
+                            &#128448;
+                            <t t-esc="item.name"/>
+                        <!-- </Link> -->
+                    </div>
+                    <MainSidebarArticle
+                        name="item.name"
+                        path="item.path"
+                        children="item.children" />
+                </li>
+            </t>
+            <t t-else="">
+                <li>
+                    <div class="sidebar__item">
+                        <!-- <Link to="'DOC_PAGE'" params="{path: ''}"> -->
+                            <!-- <span t-on-click="onClickSelectArticle(item)"> -->
+                            <span>
+                                &#128462;
+                                <t t-esc="item.name"/>
+                            </span><br/>
+                        <!-- </Link> -->
+                    </div>
+                </li>
+            </t>
+        </t>
+    </ul>
+
+    <section class="wrapper" t-name="APIWrapperComponent"
+        t-on-select-file="onSelectObject"
+        t-on-select-object="onSelectObject">
+
+        <section class="main-sidebar-api">
+            <t t-if="state.api">
+                <MainSidebarAPI
+                    name="''"
+                    path="[]"
+                    currentPath="state.currentPath"
+                    children="state.api.tree" />
+            </t>
+        </section>
+        <section class="main-content">
+            <t t-if="state.apiContent">
+                <div class="main-content-inner">
+                    <div class="main-content-inner-head">
+                        <div class="main-content-center main-content-inner-head-wrapper">
+                            <div class="main-content-center-head">
+                                <div class="main-content-center-head-logo">
+                                    <APIIcon name="KIND_MAP[state.apiContent.kind]" big="true"/>
+                                </div>
+                                <div class="main-content-center-head-title">
+                                    <h1><t t-esc="state.apiContent.name" /></h1>
+                                    <a t-att-href="getGithubUrl(state.apiContent)" title="See sources">
+                                        <t t-esc="state.apiContent.sources[0].fileName"/>
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- <nav class="main-content-center-nav">
+                                <ul class="main-content-center-nav-ul">
+                                    <li>Properties</li>
+                                    <li>Methods</li>
+                                    <li>Events</li>
+                                </ul>
+                            </nav> -->
+                        </div>
+                    </div>
+                    <div class="main-content-inner-wrapper">
+                        <div class="main-content-inner-summary">
+                            <div class="main-content-center">
+                                <div t-if="state.apiContent.comment">
+                                    <div class="api__comment-short-text"
+                                        t-if="state.apiContent.comment &amp;&amp; state.apiContent.comment.shortText"
+                                        t-key="state.apiContent.comment.shortText">
+                                        <t t-raw="md.render(state.apiContent.comment.shortText)" />
+                                    </div>
+                                    <div class="api__comment-text"
+                                        t-if="state.apiContent.comment &amp;&amp; state.apiContent.comment.text"
+                                        t-key="state.apiContent.comment.text">
+                                        <t t-raw="md.render(state.apiContent.comment.text)"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="main-content-inner-content">
+                            <div class="main-content-center">
+                                <div t-if="state.apiContent.groups">
+                                    <div t-foreach="state.apiContent.groups" t-as="group" t-key="Math.random()">
+                                        <h3><t t-esc="group.title" /></h3>
+                                        <APIElement
+                                            t-foreach="group.children"
+                                            t-as="elementId"
+                                            t-key="Math.random()"
+                                            element="getMember(elementId)"
+                                            getGithubUrl="getGithubUrl"
+                                            md="md"
+                                            />
+                                    </div>
+                                </div>
+                                <t t-elif="state.apiContent.kindString === 'Function'">
+                                     <SignatureType type="state.apiContent" signatures="state.apiContent.signatures"/>
+                                </t>
+                                <t t-else="">
+                                    <SignatureType type="state.apiContent.type"/>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="main-content-nav">
+                    <t t-if="state.apiContent.extendedTypes">
+                        <div class="main-content-nav__title">Superclass</div>
+                        <ul class="main-content-nav__content">
+                                <li t-foreach="state.apiContent.extendedTypes" t-as="type">
+                                    <Link to="'API_ITEM'" params="{id: type.id}" t-esc="type.name"/>
+                                </li>
+                        </ul>
+                    </t>
+
+                    <t t-if="state.apiContent.extendedBy">
+                        <div class="main-content-nav__title">Subclasses</div>
+                        <ul class="main-content-nav__content">
+                                <li t-foreach="state.apiContent.extendedBy" t-as="type">
+                                    <Link to="'API_ITEM'" params="{id: type.id}" t-esc="type.name"/>
+                                </li>
+                        </ul>
+                    </t>
+                    <t t-if="state.apiContent.implementedTypes">
+                        <div class="main-content-nav__title">Implement</div>
+                        <ul class="main-content-nav__content">
+                                <li t-foreach="state.apiContent.implementedTypes"
+                                    t-as="type">
+                                    <Link to="'API_ITEM'" params="{id: type.id}" t-esc="type.name"/>
+                                </li>
+                        </ul>
+                    </t>
+
+                    <t t-if="state.apiContent.implementedBy">
+                        <div class="main-content-nav__title">Implemented by</div>
+                        <ul class="main-content-nav__content">
+                                <li t-foreach="state.apiContent.implementedBy"
+                                    t-as="type">
+                                    <Link to="'API_ITEM'" params="{id: type.id}" t-esc="type.name"/>
+                                </li>
+                        </ul>
+                    </t>
+                </nav>
+            </t>
+            <t t-else="">
+                Loading...
+            </t>
+        </section>
+    </section>
+
+    <div
+        t-attf-class="api__element-container {{state.isFull ? 'api__element-container-full' : ''}}"
+        t-name="APIElement">
+        <!-- todo: handle flags properly -->
+        <div class="child__flags">
+            <div class="api__comment-source">
+                <a t-att-href="props.getGithubUrl(props.element)" title="See sources">
+                    <img alt="See sources" t-att-src="asset.githubSrc"/>
+                </a>
+            </div>
+            <div class="child__flag child__flag--private">
+                Private
+            </div>
+        </div>
+        <div class="api__element" t-on-click="selectElement">
+            <div class="arrow-area">
+                <div
+                    t-if="isOpenable()"
+                    t-attf-class="arrow {{state.isFull ? 'arrow-down' : 'arrow-right'}}"/>
+            </div>
+            <span class="api__element-name" t-esc="props.element.name"/>
+            <div class="api__signature">
+                <t t-if="props.element.type || props.element.signatures">
+                    : <SignatureType type="props.element.type" signatures="props.element.signatures" />
+                </t>
+            </div>
+        </div>
+        <div class="api__comment" t-if="state.isFull &amp;&amp; props.element">
+            <!-- <div class="api__comment-short-text"
+                t-if="props.element.comment &amp;&amp; props.element.comment.shortText"
+                tt-key="props.element.comment.shortText"
+                > -->
+            <div class="api__comment-short-text"
+                t-if="props.element.comment &amp;&amp; props.element.comment.shortText">
+                <t t-raw="props.md.render(props.element.comment.shortText)" />
+            </div>
+            <div class="api__comment-text">
+                <t t-if="state.isFull &amp;&amp; props.element">
+                    <div
+                        t-if="props.element.comment &amp;&amp; props.element.comment.text"
+                        t-raw="props.md.render(props.element.comment.text)"/>
+                </t>
+            </div>
+        </div>
+        <div class="api-comment-parameters" t-if="state.isFull &amp;&amp; props.element.signatures">
+            <t t-foreach="props.element.signatures" t-as="signature">
+                <h3 class="api-comment-parameters-title">Parameters</h3>
+                <t t-if="signature.parameters">
+                <div class="api-comment-parameter"
+                    t-foreach="signature.parameters"
+                    t-as="parameter">
+                    <div class="api-comment-parameter__signature">
+                        <span class="api-comment-parameter__name" t-esc="parameter.name"/>:
+                    </div>
+                    <!-- <SignatureTyype type="parameter.type" signatures="false"/> -->
+                    <div class="api-comment-parameter__content" t-if="parameter.comment &amp;&amp; (parameter.comment.shortText || parameter.comment.text)">
+                        <t t-if="parameter.comment.shortText">
+                            <t t-raw="props.md.render(parameter.comment.shortText)" />
+                        </t>
+                        <t t-if="parameter.comment.text">
+                            <t t-raw="props.md.render(parameter.comment.text)" />
+                        </t>
+                    </div>
+                </div>
+                </t>
+            </t>
+        </div>
+    </div>
+
+    <span
+        t-name="APIIcon"
+        t-att-title="props.name"
+        t-attf-class="API_icon API_icon--{{props.name}} {{props.big ? 'API_icon--big' : ''}}"/>
+
+    <span t-name="SignatureType">
+        <t t-if="props.signatures">
+            <t t-foreach="props.signatures" t-as="signature">
+                <t t-if="signature.typeParameter" t-as="typeParameter">
+                    &lt;<t t-foreach="signature.typeParameter" t-as="typeParameter">
+                        <t t-if="!typeParameter_first">, </t>
+                        <t t-esc="typeParameter.name"/>
+                        <t t-if="typeParameter.type">
+                            extends <SignatureType type="typeParameter.type"/>
+                        </t>
+                    </t>&gt;
+                </t>
+                (
+                <t t-if="signature.parameters">
+                    <t t-foreach="signature.parameters" t-as="parameter">
+                        <t t-if="!parameter_first">, </t>
+                        <t t-esc="parameter.name" />
+                        : <SignatureType type="parameter.type"/>
+                        <!-- <t t-debug="1"/> -->
+                    </t>
+                </t>
+                ): <SignatureType type="signature.type"/>
+            </t>
+        </t>
+        <t t-else="">
+            <t t-if="props.type.type === 'typeParameter'">
+                <t t-esc="props.type.name"/>
+            </t>
+            <t t-elif="props.type.type === 'typeOperator'">
+                <!-- operator -->
+                <t t-esc="props.type.operator"/> <t t-esc="props.type.target.name"/>
+            </t>
+            <t t-elif="props.type.type === 'union'">
+                <t t-foreach="props.type.types" t-as="signature" >
+                    <t t-if="!signature_first"> | </t>
+                    <SignatureType type="signature" t-key="Math.random()"/>
+                </t>
+            </t>
+            <t t-elif="props.type.type === 'intersection'">
+                <t t-foreach="props.type.types" t-as="signature" >
+                    <t t-if="!signature_first"> &amp; </t>
+                    <SignatureType type="signature" t-key="Math.random()"/>
+                </t>
+            </t>
+            <t t-elif="props.type.type === 'reference'">
+                <Link
+                    to="'API_ITEM'"
+                    params="{id: props.type.id}"
+                    class="api__signature-reference"
+                   ><t t-esc="props.type.name" /></Link>
+                <t t-if="props.type.typeArguments">
+                    &lt;<t t-foreach="props.type.typeArguments" t-as="typeArgument">
+                        <t t-if="!typeArgument_first">, </t>
+                        <SignatureType type="typeArgument"/>
+                    </t>&gt;
+                </t>
+            </t>
+            <t t-elif="props.type.type === 'stringLiteral'">
+                "<span class="api__signature-string-literal" t-esc="props.type.value" />"
+            </t>
+            <t t-elif="props.type.type === 'tuple'">
+                [
+                <t t-foreach="props.type.elements" t-as="signature" >
+                    <t t-if="!signature_first">, </t>
+                    <SignatureType type="signature" t-key="Math.random()"/>
+                </t>
+                ]
+            </t>
+            <t t-elif="props.type.type === 'typeOperator'">
+                keyof <SignatureType type="props.type.target" />
+            </t>
+            <t t-elif="props.type.type === 'array'">
+                <SignatureType type="props.type.elementType"/>[]</t>
+            <t t-elif="props.type.type === 'intrinsic'">
+                <t t-esc="props.type.name" />
+            </t>
+            <t t-elif="props.type.type === 'reflection'">
+                <!-- <t t-debug="1"/> -->
+            </t>
+            <t t-elif="props.type.type === 'function'">
+                function
+            </t>
+            <t t-else="">
+                <!-- <t t-debug="1"/> -->
+                <t t-esc="props.type.name" />
+                <!-- <strong>foo</strong> -->
+            </t>
+        </t>
+    </span>
+
+    <ul t-name="MainSidebarAPI">
+        <t t-foreach="props.children" t-as="item" t-key="item.name">
+            <t t-if="item.children">
+                <li t-att-class="item.className">
+                    <Link to="'API_ITEM'" params="{id: item.id}">
+                        <div class="sidebar__item" t-on-click="toggleVisible(item)">
+                                <div class="arrow-area">
+                                    <div t-attf-class="arrow {{state.visibleItems[item.name] ? 'arrow-down' : 'arrow-right'}}"/>
+                                </div>
+                                <t t-esc="console.log('item.isFolder:', item.isFolder)|| ''"/>
+                                <APIIcon name="item.isFolder ? 'fold' : 'file'"/>
+                                <!-- todo: ask gery why do I need to put a span to solve a visual bug -->
+                                <span class="sidebar__item-name" t-esc="item.name" />
+                        </div>
+                    </Link>
+                    <MainSidebarAPI
+                        name="item.name"
+                        children="item.children"
+                        currentPath="props.currentPath"
+                        path="props.path.concat([item.name])"
+                        t-if="state.visibleItems[item.name]" />
+                </li>
+            </t>
+            <t t-else="">
+                <li t-att-class="item.className">
+                    <Link to="'API_ITEM'" params="{id: item.id}">
+                        <div t-attf-class="sidebar__item sidebar__item--empty {{props.currentPath.slice(-1)[0] === item.id ? 'sidebar__item--active' : ''}}">
+                            <div class="arrow-area"></div>
+                            <APIIcon name="KIND_MAP[item.kind]"/>
+                            <t class="sidebar__item-name" t-esc="item.name" />
+                       </div>
+                    </Link>
+                </li>
+            </t>
+        </t>
+    </ul>
+
+    <section class="table-of-content" t-name="TableOfContent">
+        <h3>Table of contents</h3>
+        <TableOfContentMenu tree="props.tree" />
+    </section>
+
+    <section class="content-wrapper" t-name="ContentWrapper">
+        <section class="content">
+        </section>
+        <TableOfContent tree="props.tableOfContent" />
+    </section>
+
+    <ul t-name="TableOfContentMenu">
+        <li t-foreach="props.items" t-as="item" t-key="item.id" >
+            <t t-if="item.tree">
+                <TableOfContentMenu tree="items.tree" />
+            </t>
+            <t t-else="">
+                <a t-att-href="item.href" t-esc="item.title"></a>
+            </t>
+        </li>
+    </ul>
+</templates>

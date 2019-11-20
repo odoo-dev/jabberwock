@@ -1,6 +1,6 @@
 import JWEditor from '../JWEditor';
 import { ActionGenerator } from '../actions/ActionGenerator';
-import { PluginHandlers, PluginCommands } from '../JWPlugin';
+import { ActionIdentifier, Action, PluginHandlers, PluginCommands } from '../types/Actions';
 
 export type ActionHandler = (action: Action) => void;
 export type CommandIdentifier = string;

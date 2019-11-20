@@ -1,4 +1,13 @@
 import { Dispatcher } from '../dispatcher/Dispatcher';
+import {
+    ActionType,
+    Action,
+    ActionInit,
+    Intent,
+    Primitive,
+    Command,
+    ActionIdentifier,
+} from '../types/Actions';
 
 export class ActionGenerator {
     dispatcher: Dispatcher;

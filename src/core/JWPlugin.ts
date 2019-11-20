@@ -1,5 +1,6 @@
 import { Dispatcher, CommandIdentifier, ActionHandler } from './dispatcher/Dispatcher';
 import { ActionGenerator } from './actions/ActionGenerator';
+import { ActionInit, Intent, Command, Primitive } from './types/Actions';
 
 // Plugins define the intents that are handled by one of their commands.
 export interface PluginHandlers {

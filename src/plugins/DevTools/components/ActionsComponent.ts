@@ -1,10 +1,8 @@
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import {
-    HandlerToken,
-    DispatcherRegistry,
-    ActionHandler,
-} from '../../../core/dispatcher/Dispatcher';
+import { HandlerToken, DispatcherRegistry } from '../../../core/dispatcher/Dispatcher';
 import { useState } from 'owl-framework/src/hooks';
+import { ActionPayload, Action, ActionIdentifier } from '../../../core/types/Actions';
+import { ActionHandler } from '../../../../src/core/dispatcher/Dispatcher';
 
 interface ActionsState {
     currentTab: string;
@@ -83,7 +81,7 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
     /**
      * Open the tab with the given `tabName`
      *
-     * @param {string} tabName
+     * @param tabName
      */
     openTab(tabName: string): void {
         this.state.currentTab = tabName;
@@ -91,7 +89,7 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
     /**
      * Select the action at given index
      *
-     * @param {number} index
+     * @param index
      */
     selectAction(index: number): void {
         this.state.selectedActionIndex = index;

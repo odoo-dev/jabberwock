@@ -3,6 +3,7 @@ import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
 import { PluginHandlers } from '../../../core/JWPlugin';
+import { Action, Intent } from '../../../core/types/Actions';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 

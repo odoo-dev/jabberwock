@@ -1,9 +1,11 @@
-import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
+import { EventNormalizer } from './EventNormalizer';
 import { DispatchFunction } from '../dispatcher/Dispatcher';
-import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode } from '../stores/VNode';
+import { Intent } from '../types/Actions';
+import { DomRangeDescription } from './EventNormalizer';
+import { ActionGenerator } from '../actions/ActionGenerator';
 
 export interface EventManagerOptions {
     dispatch?: DispatchFunction;

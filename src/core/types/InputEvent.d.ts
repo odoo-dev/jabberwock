@@ -3,7 +3,7 @@
 // Definitions by: Steven Sinatra <https://github.com/diagramatics>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-interface InputEventInit extends UIEventInit {
+export interface InputEventInit extends UIEventInit {
     data?: string;
     dataTransfer?: DataTransfer;
     inputType?: string;
@@ -15,7 +15,7 @@ interface InputEventInit extends UIEventInit {
 // probably the reason why its type definition is not included in the basic
 // TypeScript distribution. However, these properties actually appear to be
 // working perfectly fine on these browser after some manual testing on MacOS.
-interface InputEvent extends UIEvent {
+export interface InputEvent extends UIEvent {
     readonly data: string;
     readonly dataTransfer: DataTransfer;
     readonly inputType: string;
