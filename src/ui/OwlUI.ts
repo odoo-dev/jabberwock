@@ -28,9 +28,19 @@ export class OwlUI {
      * @param {typeof JWOwlUIPlugin} PluginClass
      * @returns {Promise<void>}
      */
-    async addPlugin(PluginClass: typeof JWOwlUIPlugin): Promise<void> {
+    addPlugin(PluginClass: typeof JWOwlUIPlugin): void {
         this.env.qweb.addTemplates(PluginClass.templates);
         const plugin = new PluginClass(this.env);
         this.pluginsRegistry.push(plugin);
+    }
+
+    /**
+     * Start the Owl UI by starting all its registered plugins.
+     *
+     */
+    async start(): Promise<void> {
+        for (let i = 0; i < this.pluginsRegistry.length; i++) {
+            await this.pluginsRegistry[i].start();
+        }
     }
 }

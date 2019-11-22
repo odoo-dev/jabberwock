@@ -23,6 +23,7 @@ export class JWEditor {
     pluginsRegistry: JWPlugin[];
     renderer: Renderer;
     vDocument: VDocument;
+    debugger: OwlUI;
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -48,7 +49,7 @@ export class JWEditor {
         this.editable = editable;
     }
 
-    start(parsingOptions?: ParsingOptions): void {
+    async start(parsingOptions?: ParsingOptions): Promise<void> {
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
         this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
@@ -77,6 +78,10 @@ export class JWEditor {
         this.eventManager = new EventManager(this);
 
         this.renderer.render(this.vDocument, this.editable);
+
+        if (this.debugger) {
+            await this.debugger.start();
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -98,7 +103,8 @@ export class JWEditor {
 
     loadConfig(config: JWEditorConfig): void {
         if (config.debug) {
-            new OwlUI(this).addPlugin(DevTools);
+            this.debugger = new OwlUI(this);
+            this.debugger.addPlugin(DevTools);
         }
     }
 
