@@ -1,7 +1,6 @@
 import { Component } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';
 import JWEditor from '../core/JWEditor';
-import { PluginHandlers, PluginCommands } from '../core/JWPlugin';
 
 interface OwlUIEnv extends Env {
     editor: JWEditor;
@@ -15,13 +14,6 @@ export class OwlUIComponent<Props> extends Component<OwlUIEnv, Props> {
     // read from the localStorage during the willStart of the component, and
     // wrote back to the localStorage whenever the state changes.
     localStorage: string[] = [];
-
-    handlers: PluginHandlers = {
-        intents: {},
-    };
-
-    commands: PluginCommands = {};
-
     /**
      * Owl hook called exactly once before the initial rendering.
      */

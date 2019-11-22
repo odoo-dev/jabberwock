@@ -1,31 +1,48 @@
 import { JWPlugin } from '../JWPlugin';
 import JWEditor from '../JWEditor';
-import { RelativePosition, VRangeDescription, Direction } from '../stores/VRange';
-import { InsertTextIntent, RangeIntent, FormatIntent, InsertIntent } from '../types/Intents';
+import { RelativePosition, Direction, VRangeDescription } from '../stores/VRange';
+import { VNode } from '../stores/VNode';
+
+export interface InsertParams {
+    value: VNode;
+}
+export interface InsertTextParams {
+    value: string;
+}
+export interface VRangeParams {
+    vRange: VRangeDescription;
+}
+export interface FormatParams {
+    format: 'bold' | 'italic' | 'underline';
+}
 
 export class CorePlugin extends JWPlugin {
     editor: JWEditor;
-    handlers = {
-        intents: {
-            insertParagraphBreak: 'insertParagraphBreak',
-            insert: 'insert',
-            insertText: 'insertText',
-            deleteBackward: 'deleteBackward',
-            deleteForward: 'deleteForward',
-            setRange: 'navigate',
-            selectAll: 'selectAll',
-            applyFormat: 'applyFormat',
-        },
-    };
     commands = {
-        deleteBackward: this.deleteBackward.bind(this),
-        deleteForward: this.deleteForward.bind(this),
-        insertParagraphBreak: this.insertParagraphBreak.bind(this),
-        insert: this.insert.bind(this),
-        insertText: this.insertText.bind(this),
-        navigate: this.navigate.bind(this),
-        selectAll: this.selectAll.bind(this),
-        applyFormat: this.applyFormat.bind(this),
+        insert: {
+            handler: this.insert.bind(this),
+        },
+        insertParagraphBreak: {
+            handler: this.insertParagraphBreak.bind(this),
+        },
+        insertText: {
+            handler: this.insertText.bind(this),
+        },
+        setRange: {
+            handler: this.setRange.bind(this),
+        },
+        deleteBackward: {
+            handler: this.deleteBackward.bind(this),
+        },
+        deleteForward: {
+            handler: this.deleteForward.bind(this),
+        },
+        selectAll: {
+            handler: this.selectAll.bind(this),
+        },
+        applyFormat: {
+            handler: this.applyFormat.bind(this),
+        },
     };
     constructor(editor) {
         super(editor.dispatcher);
@@ -47,22 +64,22 @@ export class CorePlugin extends JWPlugin {
      *
      * @param intent
      */
-    insert(intent: InsertIntent): void {
-        this.editor.vDocument.insert(intent.payload.value);
+    insert(params: InsertParams): void {
+        this.editor.vDocument.insert(params.value);
     }
     /**
      * Insert text at range.
      *
      * @param intent
      */
-    insertText(intent: InsertTextIntent): void {
-        this.editor.vDocument.insertText(intent.payload.value);
+    insertText(params: InsertTextParams): void {
+        this.editor.vDocument.insertText(params.value);
     }
     /**
      * Command to apply the format.
      */
-    applyFormat(intent: FormatIntent): void {
-        this.editor.vDocument.applyFormat(intent.payload.format);
+    applyFormat(params: FormatParams): void {
+        this.editor.vDocument.applyFormat(params.format);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
@@ -93,11 +110,10 @@ export class CorePlugin extends JWPlugin {
     /**
      * Navigate to a given Range (in the payload of the Intent).
      *
-     * @param intent
+     * @param params
      */
-    navigate(intent: RangeIntent): void {
-        const range: VRangeDescription = intent.payload.vRange;
-        this.editor.vDocument.range.set(range);
+    setRange(params: VRangeParams): void {
+        this.editor.vDocument.range.set(params.vRange);
         // Each time the range changes, we reset its format.
         this.editor.vDocument.formatCache = null;
     }
@@ -105,15 +121,15 @@ export class CorePlugin extends JWPlugin {
     /**
      * Update the range such that it selects the entire document.
      *
-     * @param intent
+     * @param params
      */
-    selectAll(intent: RangeIntent): void {
+    selectAll(params: VRangeParams): void {
         this.editor.vDocument.range.set({
             start: this.editor.vDocument.root.firstLeaf(),
             startPosition: RelativePosition.BEFORE,
             end: this.editor.vDocument.root.lastLeaf(),
             endPosition: RelativePosition.AFTER,
-            direction: intent.payload.vRange.direction,
+            direction: params.vRange.direction,
         });
     }
 }

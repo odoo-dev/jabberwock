@@ -1,8 +1,7 @@
-import { ActionsComponent } from './ActionsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
-import { PluginHandlers } from '../../../core/JWPlugin';
+import { CommandIdentifier, CommandArgs } from '../../../core/dispatcher/Dispatcher';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -10,11 +9,10 @@ interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     currentTab: string; // Name of the current tab
-    actions: Action[]; // Stack of all actions performed since init
 }
 
 export class DevToolsComponent extends OwlUIComponent<{}> {
-    static components = { ActionsComponent, InspectorComponent };
+    static components = { InspectorComponent };
     static template = 'devtools';
     state: DevToolsState = useState({
         closed: true,
@@ -22,22 +20,18 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
         height: 300,
         actions: [], // Stack of all actions performed since init
     });
-    handlers: PluginHandlers = {
-        intents: {
-            '*': 'refresh',
-        },
-    };
-    commands = {
-        refresh: this.refresh.bind(this),
-    };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
     _heightOnLastMousedown: number;
 
+    async willStart(): Promise<void> {
+        this.env.editor.dispatcher.registerDispatchHook(this.refresh.bind(this));
+        return super.willStart();
+    }
+
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
-
     /**
      * Open the tab with the given `tabName`
      *
@@ -47,13 +41,14 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
         this.state.currentTab = tabName;
     }
     /**
-     * On render the `vDocument`, rerender and select the range nodes.
+     * Refresh this component with respect to the recent dispatching of the
+     * given command with the given arguments.
      */
-    refresh(intent?: Intent): void {
-        this.state.actions.push(intent);
-        if (intent.name === 'render') {
-            this.render();
-        }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    refresh(id: CommandIdentifier, args: CommandArgs): void {
+        // TODO: adapt the below line to the new commands system
+        // this.state.actions.push(intent);
+        this.render();
     }
     /**
      * Drag the DevTools to resize them

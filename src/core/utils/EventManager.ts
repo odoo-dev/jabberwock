@@ -1,23 +1,23 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
-import { DispatchFunction } from '../dispatcher/Dispatcher';
-import { ActionGenerator } from '../actions/ActionGenerator';
 import { VRangeDescription, RelativePosition } from '../stores/VRange';
 import { VDocumentMap } from './VDocumentMap';
 import { VNode, VNodeType } from '../stores/VNode';
+import JWEditor from '../JWEditor';
 
-export interface EventManagerOptions {
-    dispatch?: DispatchFunction;
+interface SetRangeParams {
+    domRange: DomRangeDescription;
 }
 
 export class EventManager {
-    editable: HTMLElement;
-    options: EventManagerOptions;
+    editor: JWEditor;
     eventNormalizer: EventNormalizer;
 
-    constructor(editable: HTMLElement, options: EventManagerOptions = {}) {
-        this.editable = editable;
-        this.options = options;
-        this.eventNormalizer = new EventNormalizer(editable, this._triggerEvent.bind(this));
+    constructor(editor: JWEditor) {
+        this.editor = editor;
+        this.eventNormalizer = new EventNormalizer(
+            editor.editable,
+            this._onNormalizedEvent.bind(this),
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -72,31 +72,27 @@ export class EventManager {
         return [containers[offset], position];
     }
     /**
-     * Match the received signal with the corresponding user intention, based on
-     * the user's configuration and context.
-     * TODO: this is just a stub
-     *
-     * @param {CustomEvent} customEvent
-     * @returns {Action}
+     * Callback given to the normalizer.
      */
-    _matchIntent(customEvent: CustomEvent): Intent {
-        // TODO: this value is an implicit any!
-        let payload = customEvent.detail;
-        let name;
+    _onNormalizedEvent(customEvent: CustomEvent): void {
+        const payload = customEvent.detail;
         switch (customEvent.type) {
             case 'enter':
                 if (customEvent.detail.shiftKey) {
-                    name = 'insert';
-                    payload.value = new VNode(VNodeType.LINE_BREAK, 'BR');
+                    return this.editor.execCommand('insert', {
+                        value: new VNode(VNodeType.LINE_BREAK, 'BR'),
+                    });
                 } else {
-                    name = 'insertParagraphBreak';
+                    return this.editor.execCommand('insertParagraphBreak');
                 }
-                break;
             case 'selectAll':
-            case 'setRange':
-                payload.vRange = this._convertRange(payload.domRange);
-                break;
-            case 'keydown':
+            case 'setRange': {
+                const rangeParams = payload as SetRangeParams;
+                return this.editor.execCommand(customEvent.type, {
+                    vRange: this._convertRange(rangeParams.domRange),
+                });
+            }
+            case 'keydown': {
                 // TODO: keydown should be matched with existing shortcuts. If
                 // it matches an intent shortcut, trigger the corresponding
                 // intent, otherwise do not trigger a 'keydown' intent.
@@ -107,8 +103,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'b'
                 ) {
-                    name = 'applyFormat';
-                    payload = { format: 'bold' };
+                    return this.editor.execCommand('applyFormat', { format: 'bold' });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
@@ -116,8 +111,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'i'
                 ) {
-                    name = 'applyFormat';
-                    payload = { format: 'italic' };
+                    return this.editor.execCommand('applyFormat', { format: 'italic' });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
@@ -125,28 +119,13 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'u'
                 ) {
-                    name = 'applyFormat';
-                    payload = { format: 'underline' };
-                } else {
-                    return;
+                    return this.editor.execCommand('applyFormat', { format: 'underline' });
                 }
-        }
-        return ActionGenerator.intent({
-            name: name || customEvent.type,
-            origin: 'EventManager',
-            payload: payload,
-        });
-    }
-    /**
-     * Take a signal, match it with the corresponding user intention,
-     * and dispatch that.
-     *
-     * @param {CustomEvent} customEvent
-     */
-    _triggerEvent(customEvent: CustomEvent): void {
-        const intent = this._matchIntent(customEvent);
-        if (intent) {
-            this.options.dispatch(intent);
+                // TODO: keydown should be matched with existing shortcuts.
+                return;
+            }
+            default:
+                this.editor.execCommand(customEvent.type, payload);
         }
     }
 }
