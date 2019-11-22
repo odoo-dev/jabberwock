@@ -1,15 +1,13 @@
-import { JWPlugin } from '../core/JWPlugin';
 import { OwlUIEnv } from './OwlUI';
 import { OwlUIComponent } from './OwlUIComponent';
 
-export class JWOwlUIPlugin extends JWPlugin {
+export class JWOwlUIPlugin {
     Components: Array<typeof OwlUIComponent> = [];
     env: OwlUIEnv;
     static templates: string;
+
     constructor(env: OwlUIEnv) {
-        super(env.editor.dispatcher);
         this.env = env;
-        this.dispatcher.register(this.handlers, this.commands);
         // Note: Always call init() in the constructor of a `JWOwlUIPlugin`.
     }
 

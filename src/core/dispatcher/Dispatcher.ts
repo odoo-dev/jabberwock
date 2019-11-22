@@ -1,20 +1,25 @@
 import JWEditor from '../JWEditor';
-import { ActionGenerator } from '../actions/ActionGenerator';
-import { PluginHandlers, PluginCommands } from '../JWPlugin';
 
-export type ActionHandler = (action: Action) => void;
 export type CommandIdentifier = string;
-export type HandlerToken = string;
-export type Handlers = Record<HandlerToken, ActionHandler>;
-export type DispatcherRegistry = Record<ActionIdentifier, Handlers>;
-export type DispatchFunction = (action: Action) => void;
+export interface CommandDefinition {
+    title?: string;
+    description?: string;
+    handler: CommandHandler;
+}
+export type CommandHandler = (args: CommandArgs) => void;
+export interface CommandArgs {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+}
+export type DispatchHook = (command: string, args: CommandArgs) => void;
 
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
     el: Element;
-    handlers: Handlers = {};
-    registry: DispatcherRegistry = {};
+    commands: Record<CommandIdentifier, CommandDefinition> = {};
+    handlers: Record<CommandIdentifier, CommandHandler[]> = {};
+    dispatchHooks: DispatchHook[] = [];
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -26,121 +31,57 @@ export class Dispatcher {
     //--------------------------------------------------------------------------
 
     /**
-     * Dispatches a payload to all registered callbacks.
+     * Call all hooks registred for the command `id`.
      *
-     * @param {Action} action
+     * @param commandId The name of the command.
+     * @param args The arguments of the command.
      */
-    dispatch(action: Action): void {
-        // Fetch proper handlers.
-        const properHandlers: Handlers = this.registry[action.id];
-
-        // Fetch wildcard handlers.
-        const wildcardActionIdentifier = action.id.split('.')[0] + '.*';
-        const wildcardHandlers = this.registry[wildcardActionIdentifier];
-
-        // Actually trigger the handlers.
-        const handlers = Object.assign({}, properHandlers, wildcardHandlers);
-        Object.keys(handlers).forEach((handlerToken: HandlerToken): void => {
-            handlers[handlerToken](action); // TODO: use return value to retrigger
-        });
-
-        if (action.name !== 'render') {
-            if (!properHandlers) {
-                console.warn(`No plugin is listening to the ${action.type} "${action.name}".`);
-            }
-            // Render when done dispatching
-            this.editor.renderer.render(this.editor.vDocument, this.editor.editable);
-            // Notify plugins that a render has been trigerred.
-            this.dispatch(ActionGenerator.intent({ name: 'render' }));
+    dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): void {
+        const handlers = this.handlers[commandId];
+        if (handlers) {
+            handlers.forEach((handlerCallback: CommandHandler) => {
+                handlerCallback(args);
+            });
         }
+        this.dispatchHooks.forEach((hookCallback: DispatchHook) => {
+            hookCallback(commandId, args);
+        });
     }
-    // Is this Dispatcher currently dispatching.
-    isDispatching(): boolean {
-        return false;
-    }
+
     /**
      * Register all handlers declared in a plugin, and match them with their
      * corresponding command.
      *
-     * @param {PluginIntents} intents
-     * @param {PluginActions} actions
-     * @param {PluginCommands} commands
      */
-    register(handlers: PluginHandlers, commands: PluginCommands): void {
-        Object.keys(handlers).forEach((handlerType: string): void => {
-            Object.keys(handlers[handlerType]).forEach((actionName: string): void => {
-                const type = 'intent'; // todo: use handlerType (right now only one)
-                const id: ActionIdentifier = type + '.' + actionName;
-                const commandIdentifier: CommandIdentifier = handlers.intents[actionName];
-                const command = commands[commandIdentifier];
-                if (command) {
-                    this._register(id, command);
-                } else {
-                    const info = id.split('.');
-                    console.warn(
-                        `Cannot register ${info[0]} "${info[1]}" with the ` +
-                            `command "${commandIdentifier}": that command ` +
-                            `does not exist or was not registered.`,
-                    );
-                }
-            });
-        });
-    }
-    // Removes a callback based on its token.
-    unregister(token: HandlerToken): void {
-        // TODO
-        token;
-        // delete this.handlers[token];
-    }
-    // Waits for the callbacks specified to be invoked before continuing
-    // execution of the current callback. This method should only be used by a
-    // callback in response to a dispatched payload.
-    waitFor(tokens: HandlerToken[]): Promise<HandlerToken[]> {
-        // TODO
-        return Promise.resolve(tokens);
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Return the `ActionHandler` corresponding to the given `handlerToken` in
-     * the registry.
-     *
-     * @param {HandlerToken} handlerToken
-     * @returns {ActionHandler}
-     */
-    _getHandler(handlerToken: HandlerToken): ActionHandler {
-        return this.handlers[handlerToken];
-    }
-    /**
-     * Generate and return a new unique identifier for a handler.
-     *
-     * @returns {HandlerToken}
-     */
-    _getNextHandlerToken(): string {
-        const handlerToken = '' + this.__nextHandlerTokenID;
-        this.__nextHandlerTokenID++;
-        return handlerToken;
-    }
-
-    /**
-     * Registers a callback to be invoked with every dispatched payload.
-     * Returns a token that can be used with waitFor().
-     *
-     * @param {ActionIdentifier} id
-     * @param {ActionHandler} handler
-     * @returns {HandlerToken} the unique ID of the new handler
-     */
-    _register(id: ActionIdentifier, handler: ActionHandler): HandlerToken {
-        const handlerToken = this._getNextHandlerToken();
-        let handlers: Handlers = this.registry[id];
-        if (!handlers) {
-            handlers = this.registry[id] = {};
+    registerCommand(id: CommandIdentifier, def: CommandDefinition): void {
+        if (this.commands[id]) {
+            throw new Error(`Command ${id} already exists. Hook it instead.`);
         }
-        handlers[handlerToken] = handler;
-        this.handlers[handlerToken] = handler;
-        return handlerToken;
+        this.commands[id] = def;
+        // Commands always have at least one handler for their identifier which
+        // is their own internal implementation. Additional handlers registered
+        // by calling `registerHook` will be pushed after it, thus constructing
+        // a queue of callbacks to call in order to execute a given command.
+        this.handlers[id] = [def.handler];
+    }
+
+    /**
+     * Register `CommandHook` for a `Command`.
+     */
+    registerHook(id: CommandIdentifier, handler: CommandHandler): void {
+        if (!this.commands[id]) {
+            throw new Error(`Failed to hook command ${id}. Command not found.`);
+        } else {
+            this.handlers[id].push(handler);
+        }
+    }
+
+    /**
+     * Register a callback that will be executed each time `dispatch` is called.
+     *
+     * @param hook The function that will be executed.
+     */
+    registerDispatchHook(hook: DispatchHook): void {
+        this.dispatchHooks.push(hook);
     }
 }

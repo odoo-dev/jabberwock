@@ -1,7 +1,6 @@
-import { expect } from 'chai';
 import JWEditor from '../../src/core/JWEditor';
 import { testEditor } from '../../src/core/utils/testUtils';
-import { FormatPayload } from '../../src/core/types/Intents';
+import { FormatParams } from '../../src/core/utils/CorePlugin';
 
 describe('stores', () => {
     describe('VDocument', () => {
@@ -128,17 +127,11 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -149,24 +142,12 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -177,17 +158,11 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: 'a[]',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -198,24 +173,12 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: 'a[]',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -226,17 +189,11 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: '<b>a</b>[]',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -247,24 +204,12 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: '<b>a</b>[]',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -275,26 +220,15 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const formatBold: FormatParams = {
                                 format: 'bold',
                             };
+                            const formatUnderline: FormatParams = {
+                                format: 'underline',
+                            };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: {
-                                    format: 'underline',
-                                },
-                            });
+                            editor.dispatcher.dispatch('applyFormat', formatBold);
+                            editor.dispatcher.dispatch('applyFormat', formatUnderline);
                             editor.vDocument.insertText('b');
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
@@ -308,17 +242,11 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: 'a[b]c',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
                         contentAfter: 'a[<b>b]</b>c',
@@ -328,17 +256,10 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: 'a<b>[b]</b>c',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
-
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
                         contentAfter: 'a[b]c',
@@ -348,17 +269,11 @@ describe('stores', () => {
                     testEditor({
                         contentBefore: 'a<b>[b</b>c]',
                         stepFunction: (editor: JWEditor) => {
-                            const payload: FormatPayload = {
+                            const params: FormatParams = {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch({
-                                id: 'intent.applyFormat',
-                                type: 'intent',
-                                origin: 'EventManager',
-                                name: 'applyFormat',
-                                payload: payload,
-                            });
+                            editor.dispatcher.dispatch('applyFormat', params);
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
                         contentAfter: 'a[<b>bc]</b>',
