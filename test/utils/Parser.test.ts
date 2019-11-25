@@ -18,7 +18,24 @@ describe('utils', () => {
                 expect(p.children[0].type).to.equal(VNodeType.CHAR);
                 expect(p.children[0].value).to.equal('a');
             });
-
+            it('should parse a "p" tag with no content', () => {
+                const element = document.createElement('div');
+                element.innerHTML = '<p><br></p>';
+                const vDocument = Parser.parse(element);
+                const p = vDocument.root.firstChild();
+                // The placeholder <br> should not be parsed.
+                expect(p.hasChildren()).to.be.false;
+            });
+            it('should parse two trailing consecutive <br> as one LINE_BREAK', () => {
+                const element = document.createElement('div');
+                element.innerHTML = '<p>a<br><br>';
+                const vDocument = Parser.parse(element);
+                const p = vDocument.root.firstChild();
+                // Only one <br> should be parsed.
+                expect(p.children.length).to.equal(2);
+                expect(p.lastChild().type).to.equal(VNodeType.LINE_BREAK);
+                expect(p.lastChild().previousSibling().value).to.equal('a');
+            });
             it('handles nested formatted nodes', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
