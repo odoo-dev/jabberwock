@@ -1,5 +1,4 @@
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { useState } from 'owl-framework/src/hooks';
 import {
     CommandIdentifier,
     CommandHandler,
@@ -21,14 +20,14 @@ interface CommandsProps {
 }
 
 export class CommandsComponent extends OwlUIComponent<CommandsProps> {
-    state: CommandsState = useState({
+    state: CommandsState = {
         currentTab: 'selected',
         registry: this.env.editor.dispatcher.commands,
         handlers: this.env.editor.dispatcher.handlers,
         selectedCommandIndex: null, // Index of the selected command in the stack
         selectedCommandIdentifier: null, // Token of the selected handler
         selectedHandlerIndex: null, // Index of the selected handler
-    });
+    };
     localStorage = ['currentTab'];
 
     //--------------------------------------------------------------------------

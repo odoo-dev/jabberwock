@@ -1,7 +1,6 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { useState } from 'owl-framework/src/hooks';
 import { CommandIdentifier, CommandArgs } from '../../../core/dispatcher/Dispatcher';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
@@ -16,12 +15,12 @@ interface DevToolsState {
 export class DevToolsComponent extends OwlUIComponent<{}> {
     static components = { CommandsComponent: CommandsComponent, InspectorComponent };
     static template = 'devtools';
-    state: DevToolsState = useState({
+    state: DevToolsState = {
         closed: true,
         currentTab: 'inspector',
         height: 300,
         commands: [], // Stack of all commands executed since init.
-    });
+    };
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
     _heightOnLastMousedown: number;
