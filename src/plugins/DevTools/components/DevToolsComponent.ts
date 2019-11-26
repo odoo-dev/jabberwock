@@ -1,4 +1,4 @@
-import { CommandsComponent } from './ActionsComponent';
+import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
