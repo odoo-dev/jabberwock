@@ -1,29 +1,33 @@
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import {
-    HandlerToken,
-    DispatcherRegistry,
-    ActionHandler,
-} from '../../../core/dispatcher/Dispatcher';
 import { useState } from 'owl-framework/src/hooks';
+import {
+    CommandIdentifier,
+    CommandHandler,
+    CommandArgs,
+    CommandDefinition,
+} from '../../../core/dispatcher/Dispatcher';
 
-interface ActionsState {
+interface CommandsState {
     currentTab: string;
-    registry: DispatcherRegistry;
-    selectedActionIndex: number | null;
-    selectedHandlerToken: HandlerToken | null;
-    selectedActionIdentifier: ActionIdentifier | null;
+    registry: Record<CommandIdentifier, CommandDefinition>;
+    handlers: Record<CommandIdentifier, CommandHandler[]>;
+    selectedCommandIndex: number;
+    selectedCommandIdentifier: string;
+    selectedHandlerIndex: number;
 }
-interface ActionsProps {
-    actions: Action[]; // Stack of all actions performed since init
+interface CommandsProps {
+    // Stack of all commands executed since init.
+    commands: Array<[CommandIdentifier, CommandArgs]>;
 }
 
-export class ActionsComponent extends OwlUIComponent<ActionsProps> {
-    state: ActionsState = useState({
+export class CommandsComponent extends OwlUIComponent<CommandsProps> {
+    state: CommandsState = useState({
         currentTab: 'selected',
-        registry: this.env.editor.dispatcher.registry,
-        selectedActionIndex: null, // Index of the selected action in the stack
-        selectedHandlerToken: null, // Token of the selected handler
-        selectedActionIdentifier: null, // ID of the selected registry record
+        registry: this.env.editor.dispatcher.commands,
+        handlers: this.env.editor.dispatcher.handlers,
+        selectedCommandIndex: null, // Index of the selected command in the stack
+        selectedCommandIdentifier: null, // Token of the selected handler
+        selectedHandlerIndex: null, // Index of the selected handler
     });
     localStorage = ['currentTab'];
 
@@ -35,8 +39,7 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
      * Take a payload value and format it for display (mostly to ensure that
      * we can display it properly as a string).
      *
-     * @param {object|string|boolean|number} value
-     * @returns {string}
+     * @param value
      */
     formatPayloadValue(value: Node | string | boolean | number): string {
         if (value && value instanceof Node && value.nodeName) {
@@ -58,22 +61,21 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
         }
     }
     /**
-     * Return the action handler corresponding to the given token.
+     * Return the command handler corresponding to the given token.
      *
-     * @param {HandlerToken} handlerToken
-     * @returns {ActionHandler|null}
+     * @param commandIdentifier
      */
-    getHandler(handlerToken: HandlerToken): ActionHandler {
-        return this.env.editor.dispatcher._getHandler(handlerToken);
+    getHandlers(commandIdentifier: CommandIdentifier): CommandHandler[] {
+        return this.env.editor.dispatcher[commandIdentifier];
     }
     /**
-     * Handle keydown event to navigate in the action stack
+     * Handle keydown event to navigate in the command stack.
      */
     onKeydown(event: KeyboardEvent): void {
         if (event.code === 'ArrowDown') {
-            this.state.selectedActionIndex += 1;
+            this.state.selectedCommandIndex += 1;
         } else if (event.code === 'ArrowUp') {
-            this.state.selectedActionIndex -= 1;
+            this.state.selectedCommandIndex -= 1;
         } else {
             return;
         }
@@ -81,48 +83,28 @@ export class ActionsComponent extends OwlUIComponent<ActionsProps> {
         event.stopImmediatePropagation();
     }
     /**
-     * Open the tab with the given `tabName`
+     * Open the tab with the given tabName.
      *
-     * @param {string} tabName
+     * @param tabName
      */
     openTab(tabName: string): void {
         this.state.currentTab = tabName;
     }
     /**
-     * Select the action at given index
+     * Select the command at given index.
      *
-     * @param {number} index
+     * @param index
      */
-    selectAction(index: number): void {
-        this.state.selectedActionIndex = index;
-        const action: Action = this.props.actions[index];
-        this.selectRegistryRecord((action && action.id) || null);
+    selectCommandByIndex(index: number): void {
+        this.state.selectedCommandIndex = index;
+        this.state.selectedCommandIdentifier = this.props.commands[index][0];
     }
     /**
-     * Select the action handler corresponding to the given token.
+     * Select the command with given identifier.
      *
-     * @param {HandlerToken|null} handlerToken
+     * @param commandIdentifier
      */
-    selectHandler(handlerToken: HandlerToken | null): void {
-        this.state.selectedHandlerToken = handlerToken;
-    }
-    /**
-     * Select the registry record at given index
-     *
-     * @param {number|null} index
-     */
-    selectRegistryRecord(id: ActionIdentifier | null): void {
-        this.state.selectedActionIdentifier = id;
-        // Automatically select the first handler of the record, if any.
-        const ids: ActionIdentifier[] = Object.keys(this.state.registry[id] || {});
-        this.selectHandler(ids[0] || null);
-    }
-    /**
-     * Stringify an `ActionPayload`
-     *
-     * @param value ActionPayload
-     */
-    valueToString(value: ActionPayload): string {
-        return value ? JSON.stringify(value) : '';
+    selectCommand(commandIdentifier: string): void {
+        this.state.selectedCommandIdentifier = commandIdentifier;
     }
 }

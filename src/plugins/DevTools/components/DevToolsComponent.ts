@@ -1,3 +1,4 @@
+import { CommandsComponent } from './ActionsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { useState } from 'owl-framework/src/hooks';
@@ -9,16 +10,17 @@ interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     currentTab: string; // Name of the current tab
+    commands: Array<[CommandIdentifier, CommandArgs]>;
 }
 
 export class DevToolsComponent extends OwlUIComponent<{}> {
-    static components = { InspectorComponent };
+    static components = { CommandsComponent: CommandsComponent, InspectorComponent };
     static template = 'devtools';
     state: DevToolsState = useState({
         closed: true,
         currentTab: 'inspector',
         height: 300,
-        actions: [], // Stack of all actions performed since init
+        commands: [], // Stack of all commands executed since init.
     });
     localStorage = ['closed', 'currentTab', 'height'];
     // For resizing/opening (see toggleClosed)
@@ -44,10 +46,8 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
      * Refresh this component with respect to the recent dispatching of the
      * given command with the given arguments.
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     refresh(id: CommandIdentifier, args: CommandArgs): void {
-        // TODO: adapt the below line to the new commands system
-        // this.state.actions.push(intent);
+        this.state.commands.push([id, args]);
         this.render();
     }
     /**
