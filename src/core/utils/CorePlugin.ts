@@ -62,7 +62,7 @@ export class CorePlugin extends JWPlugin {
     /**
      * Insert a VNode at range.
      *
-     * @param intent
+     * @param params
      */
     insert(params: InsertParams): void {
         this.editor.vDocument.insert(params.value);
@@ -70,7 +70,7 @@ export class CorePlugin extends JWPlugin {
     /**
      * Insert text at range.
      *
-     * @param intent
+     * @param params
      */
     insertText(params: InsertTextParams): void {
         this.editor.vDocument.insertText(params.value);
@@ -108,7 +108,7 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.deleteSelection();
     }
     /**
-     * Navigate to a given Range (in the payload of the Intent).
+     * Navigate to a given range.
      *
      * @param params
      */

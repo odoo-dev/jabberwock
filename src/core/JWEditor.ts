@@ -49,6 +49,11 @@ export class JWEditor {
         this.editable = editable;
     }
 
+    /**
+     * Start the editor on the editable DOM node set on this editor instance.
+     *
+     * @param parsingOptions
+     */
     async start(parsingOptions?: ParsingOptions): Promise<void> {
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
@@ -88,6 +93,11 @@ export class JWEditor {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Add the given plugin class to this editor instance.
+     *
+     * @param pluginClass
+     */
     addPlugin(pluginClass: typeof JWPlugin): void {
         const plugin: JWPlugin = new pluginClass(this);
         this.pluginsRegistry.push(plugin);
@@ -101,6 +111,11 @@ export class JWEditor {
         });
     }
 
+    /**
+     * Load the given config in this editor instance.
+     *
+     * @param config
+     */
     loadConfig(config: JWEditorConfig): void {
         if (config.debug) {
             this.debugger = new OwlUI(this);
@@ -108,11 +123,20 @@ export class JWEditor {
         }
     }
 
+    /**
+     * Execute the given command.
+     *
+     * @param id name identifier of the command to execute
+     * @param args arguments object of the command to execute
+     */
     execCommand(id: CommandIdentifier, args?: CommandArgs): void {
         this.dispatcher.dispatch(id, args);
         this.renderer.render(this.vDocument, this.editable);
     }
 
+    /**
+     * Stop this editor instance.
+     */
     stop(): void {
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;

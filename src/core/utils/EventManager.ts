@@ -94,8 +94,8 @@ export class EventManager {
             }
             case 'keydown': {
                 // TODO: keydown should be matched with existing shortcuts. If
-                // it matches an intent shortcut, trigger the corresponding
-                // intent, otherwise do not trigger a 'keydown' intent.
+                // it matches an command shortcut, trigger the corresponding
+                // command, otherwise do not trigger any command.
                 if (
                     payload.ctrlKey &&
                     !payload.altKey &&
