@@ -35,45 +35,6 @@ npm link
 npm link owl-framework
 ```
 
-## Vision
-- Code quality
-  - Document everything
-  - Share the experience of building the editor
-- Easy to instantiate
-  - No configuration
-- Modularity
-- Easy and powerful plugin development
-- Paradigm-agnostic plugin development (functional, object oriented)
-- Feels pleasant to use
-
-## Futur(ist) features
-- Collaborative
-  - Flexible range
-- Multimode
-- UI Themes
-- Tree history
-- Global history (odoo)
-- Command Bar
-- Latex mode
-  - Flexible rules
-- Music notation edition
-- Template edition
-  - Mirror
-  - Input-agnostic (any templating engine could be implemented)
-  - Output-agnostic (any templating could be output)
-- Dynamic values
-- Odoo Studio
-- Votes
-- Single Page Application
-- Playground
-- Free canvas
-- Zoom
-- Visual configurator
-- Word count
-- Syntax highlighting
-- Change the documentation with direct modification
-- Flowcharts and other graphs
-
 ## Story
 During the dark age of the web came version 5.5 of Internet Explorer.\
 In its wake, the contentEditable attribute was born.\
