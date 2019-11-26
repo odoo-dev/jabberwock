@@ -1,8 +1,8 @@
-import { utils } from '../../../core/utils/utils';
-import { VNode, VNodeType } from '../../../core/stores/VNode';
-import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { Direction, VRangeDescription } from '../../../core/stores/VRange';
-import { isRange } from '../../../core/utils/Predicates';
+import { utils } from '../../../../packages/utils/src/utils';
+import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { isRange } from '../../../../packages/utils/src/Predicates';
+import { VNode, VNodeType } from '../../../core/src/VNode';
+import { VRangeDescription, Direction } from '../../../core/src/VRange';
 
 interface NodeProps {
     isRoot: boolean;

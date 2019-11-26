@@ -1,6 +1,6 @@
 import { VNode, VNodeType } from './VNode';
 import { VDocument } from './VDocument';
-import { isRange } from '../utils/Predicates';
+import { isRange } from '../../utils/src/Predicates';
 
 export enum Direction {
     BACKWARD = 'BACKWARD',

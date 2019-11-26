@@ -1,8 +1,8 @@
-import { VNode, VNodeType, FormatType } from '../stores/VNode';
-import { VDocument } from '../stores/VDocument';
-import { Format } from './Format';
+import { VDocument } from './VDocument';
+import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../stores/VRange';
+import { VNode, FormatType, VNodeType } from './VNode';
+import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from './VRange';
 
 export interface ParsingOptions {
     parseTextualRange: boolean;

@@ -1,10 +1,10 @@
-import { OwlUIComponent } from '../../../ui/OwlUIComponent';
+import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import {
     CommandIdentifier,
     CommandHandler,
     CommandArgs,
     CommandDefinition,
-} from '../../../core/dispatcher/Dispatcher';
+} from '../../../core/src/Dispatcher';
 
 interface CommandsState {
     currentTab: string;

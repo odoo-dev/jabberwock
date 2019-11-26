@@ -1,4 +1,4 @@
-import { JWEditor } from '../core/JWEditor';
+import { JWEditor } from '../../core/src/JWEditor';
 import { JWOwlUIPlugin } from './JWOwlUIPlugin';
 import { QWeb } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';

@@ -1,6 +1,6 @@
-import JWEditor from '../../src/core/JWEditor';
-import { testEditor } from '../../src/core/utils/testUtils';
-import { FormatParams } from '../../src/core/utils/CorePlugin';
+import JWEditor from '../src/JWEditor';
+import { testEditor } from '../../utils/src/testUtils';
+import { FormatParams } from '../src/CorePlugin';
 
 describe('stores', () => {
     describe('VDocument', () => {

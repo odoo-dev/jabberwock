@@ -1,4 +1,4 @@
-import JWEditor from '../JWEditor';
+import JWEditor from './JWEditor';
 
 export type CommandIdentifier = string;
 export interface CommandDefinition {

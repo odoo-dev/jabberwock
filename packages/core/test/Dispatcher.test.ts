@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import JWEditor from '../../src/core/JWEditor';
+import JWEditor from '../src/JWEditor';
 import * as sinon from 'sinon';
-import { Dispatcher, CommandDefinition } from '../../src/core/dispatcher/Dispatcher';
+import { Dispatcher, CommandDefinition } from '../src/Dispatcher';
 
 describe('utils', () => {
     describe('Dispatcher', () => {

@@ -1,4 +1,4 @@
-import { testEditor } from '../../../src/core/utils/testUtils';
+import { testEditor } from '../src/testUtils';
 
 describe('core', () => {
     describe('utils', () => {

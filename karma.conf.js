@@ -10,7 +10,7 @@ module.exports = function(config) {
         frameworks: ['mocha', 'chai', 'sinon'],
 
         // list of files / patterns to load in the browser
-        files: config.includeFiles ? config.includeFiles.split(',') : ['test/**/*.test.ts'],
+        files: config.includeFiles ? config.includeFiles.split(',') : ['packages/**/test/**/*.ts'],
 
         // list of files / patterns to exclude
         exclude: [],
@@ -18,7 +18,7 @@ module.exports = function(config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'test/**/*.ts': ['webpack'],
+            'packages/**/test/**/*.ts': ['webpack'],
         },
 
         // test results reporter to use
@@ -70,8 +70,7 @@ module.exports = function(config) {
                     {
                       test: /\.ts$/,
                       enforce: 'post',
-                      include: path.resolve(`src/`),
-                      exclude: [/node_modules/, path.resolve(__dirname, "test")],
+                      include: /packages\/[^\/]*\/src\.*/,
                       loader: 'istanbul-instrumenter-loader',
                       options: { esModules: true }
                     },

@@ -1,6 +1,6 @@
-import { BasicHtmlRenderingEngine, RenderingEngine } from '../utils/BasicHtmlRenderingEngine';
+import { BasicHtmlRenderingEngine, RenderingEngine } from './BasicHtmlRenderingEngine';
 import { withRange, VDocument } from './VDocument';
-import { Predicate, isRange, isLeaf, not } from '../utils/Predicates';
+import { Predicate, isRange, isLeaf, not } from './../../utils/src/Predicates';
 
 export enum VNodeType {
     ROOT = 'ROOT',

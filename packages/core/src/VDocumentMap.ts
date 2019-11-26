@@ -1,5 +1,5 @@
-import { VNode } from '../stores/VNode';
-import { Format } from './Format';
+import { Format } from '../../utils/src/Format';
+import { VNode } from './VNode';
 
 const fromDom = new Map<Node, VNode[]>();
 const toDom = new Map<VNode, [Node, number]>();
