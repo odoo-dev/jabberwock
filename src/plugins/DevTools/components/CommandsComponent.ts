@@ -72,12 +72,28 @@ export class CommandsComponent extends OwlUIComponent<CommandsProps> {
      * Handle keydown event to navigate in the command stack.
      */
     onKeydown(event: KeyboardEvent): void {
-        if (event.code === 'ArrowDown') {
-            this.state.selectedCommandIndex += 1;
-        } else if (event.code === 'ArrowUp') {
-            this.state.selectedCommandIndex -= 1;
-        } else {
-            return;
+        if (this.state.currentTab === 'queue') {
+            if (event.code === 'ArrowDown') {
+                this.state.selectedCommandIndex = Math.max(this.state.selectedCommandIndex - 1, 0);
+            } else if (event.code === 'ArrowUp') {
+                this.state.selectedCommandIndex = Math.min(
+                    this.state.selectedCommandIndex + 1,
+                    this.props.commands.length - 1,
+                );
+            } else {
+                return;
+            }
+        } else if (this.state.currentTab === 'registry') {
+            const identifiers = Object.keys(this.state.registry);
+            const currentIndex = identifiers.indexOf(this.state.selectedCommandIdentifier);
+            if (event.code === 'ArrowDown') {
+                this.state.selectedCommandIdentifier =
+                    identifiers[Math.min(currentIndex + 1, identifiers.length - 1)];
+            } else if (event.code === 'ArrowUp') {
+                this.state.selectedCommandIdentifier = identifiers[Math.max(currentIndex - 1, 0)];
+            } else {
+                return;
+            }
         }
         event.preventDefault();
         event.stopImmediatePropagation();
