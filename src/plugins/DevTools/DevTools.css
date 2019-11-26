@@ -251,6 +251,10 @@ devtools-sidepane .properties .divider {
     color: #382034;
 }
 
+devtools-sidepane .properties .divider:first-child {
+    padding-top: 0em;
+}
+
 devtools-sidepane .properties table {
     width: 100%;
     font-size: inherit;

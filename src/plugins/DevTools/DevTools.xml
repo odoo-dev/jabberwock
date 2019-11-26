@@ -251,90 +251,78 @@
         </div>
     </t>
 
-    <!-- ACTIONS -->
-    <devtools-panel class="actions" t-name="ActionsComponent"
+    <devtools-panel t-name="CommandsComponent"
         t-att-class="{active: props.isOpen}" tabindex="1"
         t-on-keydown="onKeydown">
         <devtools-contents t-if="props.isOpen">
-            <t t-set="selectedRecord" t-value="state.registry[state.selectedActionIdentifier] or False"/>
+            <t t-set="handlers" t-value="state.handlers[state.selectedCommandIdentifier]"/>
             <devtools-mainpane style="overflow: hidden">
                 <devtools-navbar>
-                    <button t-on-click="openTab('selected')" t-att-class="{
-                        selected: state.currentTab == 'selected',
-                    }">Selected</button>
+                    <button t-on-click="openTab('queue')" t-att-class="{
+                        selected: state.currentTab == 'queue',
+                    }">Queue</button>
                     <button t-on-click="openTab('registry')" t-att-class="{
                         selected: state.currentTab == 'registry',
                     }">Registry</button>
                 </devtools-navbar>
-                <mainpane-contents t-if="state.currentTab == 'selected'" style="overflow: auto">
+                <mainpane-contents t-if="state.currentTab == 'queue'" style="overflow: auto">
                     <table style="width: 100%;">
                         <tbody>
-                            <tr t-foreach="Array.from(props.actions.keys()).reverse()" t-as="actionIndex"
-                                t-key="actionIndex_index" class="selectable-line"
+                        <t t-esc="console.log(props) || ''"/>
+                            <tr t-foreach="Array.from(props.commands.keys()).reverse()" t-as="commandIndex"
+                                t-key="commandIndex_index" class="selectable-line"
                                 t-att-class="{
-                                    selected: state.selectedActionIndex == actionIndex,
+                                    selected: state.selectedCommandIndex == commandIndex,
                                 }"
-                                t-on-click="selectAction(actionIndex)">
-                                <td><t t-esc="props.actions[actionIndex].type"/></td>
-                                <td><t t-esc="props.actions[actionIndex].name"/></td>
+                                t-on-click="selectCommandByIndex(commandIndex)">
+                                <td><t t-esc="props.commands[commandIndex][0]"/></td>
                             </tr>
                         </tbody>
                     </table>
                 </mainpane-contents>
                 <mainpane-contents t-elif="state.currentTab == 'registry'" style="overflow: auto">
-                    <div t-foreach="Object.keys(state.registry)" t-as="recordID"
+                    <div t-foreach="Object.keys(state.registry)" t-as="commandIdentifier"
                         t-key="record_index" class="selectable-line"
                         t-att-class="{
-                            selected: state.selectedActionIdentifier == recordID,
+                            selected: state.selectedCommandIdentifier == commandIdentifier,
                         }"
-                        t-on-click="selectRegistryRecord(recordID)">
-                        <t t-esc="recordID"/>
+                        t-on-click="selectCommand(commandIdentifier)">
+                        <t t-esc="commandIdentifier"/>
                     </div>
                 </mainpane-contents>
             </devtools-mainpane>
             <devtools-sidepane>
-                <devtools-info t-if="state.currentTab == 'selected'">
-                    <t t-set="selectedAction" t-value="props.actions[state.selectedActionIndex] or False"/>
-                    <div class="about" t-if="selectedAction !== False">
-                        <span class="type"><t t-esc="selectedAction.type"/></span> <t t-esc="selectedAction.name"/>
+                <devtools-info t-if="state.currentTab == 'queue'">
+                    <t t-set="selectedCommand" t-value="props.commands[state.selectedCommandIndex]"/>
+                    <div class="about" t-if="selectedCommand">
+                        <span class="type">Command</span> <t t-esc="selectedCommand[0]"/>
                     </div>
-                    <div class="properties" t-if="selectedAction !== False">
-                        <div class="divider">👤 About me</div>
-                        <table>
-                            <tbody>
-                                <t t-foreach="Object.keys(selectedAction)" t-as="key">
-                                    <tr t-if="key !== 'payload'" t-key="key_index">
-                                        <td><t t-esc="key"/></td>
-                                        <td><t t-esc="selectedAction[key]"/></td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                        <t t-if="selectedAction and selectedAction.payload">
-                            <t t-set="payload" t-value="selectedAction.payload"/>
-                            <t t-call="actionPayload"/>
-                        </t>
-                        <t t-call="actionHandlers"/>
-                        <t t-call="selectedActionHandler"/>
+                    <div class="properties" t-if="selectedCommand">
+                        <div class="divider">Arguments</div>
+                        <div class="properties">
+                            <t t-if="selectedCommand">
+                                <t t-set="payload" t-value="selectedCommand[1]"/>
+                                <t t-call="commandArgs"/>
+                            </t>
+                            <t t-call="commandHandlers"/>
+                        </div>
                     </div>
                 </devtools-info>
                 <devtools-info t-elif="state.currentTab == 'registry'">
-                    <div class="about" t-if="selectedRecord !== False">
-                        <t t-set="recordInfo" t-value="state.selectedActionIdentifier.split('.')"/>
-                        <span class="type"><t t-esc="recordInfo[0]"/></span> <t t-esc="recordInfo[1]"/>
-                    </div>
-                    <div class="properties" t-if="selectedRecord !== False">
-                        <t t-call="actionHandlers"/>
-                        <t t-call="selectedActionHandler"/>
-                    </div>
+                    <t t-if="state.registry">
+                        <div class="about" t-if="state.selectedCommandIdentifier">
+                            <span class="type">Command</span> <t t-esc="state.selectedCommandIdentifier"/>
+                        </div>
+                        <div class="properties" t-if="state.selectedCommandIdentifier">
+                            <t t-call="commandHandlers"/>
+                        </div>
+                    </t>
                 </devtools-info>
             </devtools-sidepane>
         </devtools-contents>
     </devtools-panel>
 
-    <!-- ACTIONS.Payload-->
-    <t t-name="actionPayload">
-        <div class="divider">💎 Payload</div>
+    <t t-name="commandArgs">
         <table>
             <tbody>
                 <tr t-foreach="Object.keys(payload)" t-as="key" t-key="key_index">
@@ -343,8 +331,7 @@
                         <t t-esc="key"/>
                     </td>
                     <td>
-                        <t t-if="value and key == 'domRange'" t-call="payloadRange"/>
-                        <t t-elif="value and key == 'vRange'" t-call="payloadVRange"/>
+                        <t t-if="value and key == 'vRange'" t-call="payloadVRange"/>
                         <t t-else=""><t t-esc="formatPayloadValue(value)"/></t>
                     </td>
                 </tr>
@@ -352,24 +339,6 @@
         </table>
     </t>
 
-    <!-- ACTIONS.Payload.domRange -->
-    <t t-name="payloadRange">
-        <table>
-            <tbody>
-                <tr t-foreach="Object.keys(value)" t-as="rangeKey" t-key="rangeKey_index">
-                    <t t-set="value" t-value="value[rangeKey]"/>
-                    <td>
-                        <t t-esc="rangeKey"/>
-                    </td>
-                    <td>
-                        <t t-esc="formatPayloadValue(value)"/>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </t>
-
-    <!-- ACTIONS.Payload.vRange -->
     <t t-name="payloadVRange">
         <table>
             <tbody>
@@ -401,41 +370,17 @@
         </table>
     </t>
 
-    <!-- ACTIONS.Handlers -->
-    <t t-name="actionHandlers">
-        <div class="divider" t-if="selectedRecord !== False">🎬 Action Handlers</div>
-        <table t-if="selectedRecord !== False">
+    <t t-name="commandHandlers">
+        <div class="divider" t-if="handlers">Handlers</div>
+        <table t-if="handlers">
             <tbody>
-                <tr t-foreach="Object.keys(selectedRecord)"
-                    t-as="handlerToken" t-key="handlerToken_index"
-                    class="selectable-line" t-on-click="selectHandler(handlerToken)"
+                <tr t-foreach="handlers"
+                    t-as="handler" t-key="handler_index"
+                    class="selectable-line"
                     t-att-class="{
-                        selected: state.selectedHandlerToken == handlerToken,
+                        selected: state.selectedHandlerIndex == handlerIndex,
                     }">
-                    <t t-set="handler" t-value="selectedRecord[handlerToken]"/>
-                    <td><t t-esc="handlerToken"/></td>
                     <td><t t-esc="handler.name"/></td>
-                </tr>
-            </tbody>
-        </table>
-    </t>
-
-    <!-- ACTIONS.SelectedHandler -->
-    <t t-name="selectedActionHandler">
-        <div t-if="state.selectedHandlerToken" class="divider">🎯 Selected Handler</div>
-        <table t-if="state.selectedHandlerToken">
-            <t t-set="handler" t-value="getHandler(state.selectedHandlerToken)"/>
-            <tbody>
-                <tr>
-                    <td>token</td>
-                    <td><t t-esc="state.selectedHandlerToken"/></td>
-                </tr>
-                <tr>
-                    <td>name</td>
-                    <td><t t-esc="handler.name"/></td>
-                </tr>
-                <tr t-if="!handler.name.startsWith('bound ')">
-                    <td>code</td>
                     <td><t t-esc="handler"/></td>
                 </tr>
             </tbody>
@@ -455,14 +400,14 @@
             <button t-on-click="openTab('inspector')" t-att-class="{
                 selected: state.currentTab == 'inspector',
             }">Inspector</button>
-            <button t-on-click="openTab('actions')" t-att-class="{
-                selected: state.currentTab == 'actions',
-            }">Actions</button>
+            <button t-on-click="openTab('commands')" t-att-class="{
+                selected: state.currentTab == 'commands',
+            }">Commands</button>
         </devtools-navbar>
         <t t-if="!state.closed">
             <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
-            <ActionsComponent isOpen="state.currentTab == 'actions'"
-                actions="state.actions"/>
+            <CommandsComponent isOpen="state.currentTab == 'commands'"
+                commands="state.commands"/>
         </t>
     </jw-devtools>
 
