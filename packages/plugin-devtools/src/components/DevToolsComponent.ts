@@ -1,7 +1,7 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
-import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { CommandIdentifier, CommandArgs } from '../../../core/dispatcher/Dispatcher';
+import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { CommandIdentifier, CommandArgs } from '../../../core/src/Dispatcher';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 

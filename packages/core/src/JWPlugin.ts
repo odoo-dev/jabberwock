@@ -1,7 +1,5 @@
 import JWEditor from './JWEditor';
-import { CommandDefinition } from '../core/dispatcher/Dispatcher';
-import { CommandIdentifier } from '../core/dispatcher/Dispatcher';
-import { CommandHandler } from '../core/dispatcher/Dispatcher';
+import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
 
 export interface JWPluginConfig {
     name?: string;

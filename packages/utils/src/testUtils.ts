@@ -1,7 +1,7 @@
-import JWEditor from '../JWEditor';
+import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { ParsingOptions } from './Parser';
-import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR } from '../stores/VRange';
+import { ParsingOptions } from '../../core/src/Parser';
+import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR } from '../../core/src/VRange';
 
 interface RenderOptions {
     renderTextualRange: boolean;

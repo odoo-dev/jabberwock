@@ -1,6 +1,6 @@
-import { VNode } from '../../../core/stores/VNode';
-import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { VRange } from '../../../core/stores/VRange';
+import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { VRange } from '../../../core/src/VRange';
+import { VNode } from '../../../core/src/VNode';
 
 interface InfoState {
     currentTab: string;

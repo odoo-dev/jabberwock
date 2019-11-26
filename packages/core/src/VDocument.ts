@@ -1,6 +1,6 @@
 import { VNode, VNodeType, FormatType, FORMAT_TYPES } from './VNode';
 import { VRange } from './VRange';
-import { isChar } from '../utils/Predicates';
+import { isChar } from '../../utils/src/Predicates';
 
 export let withRange = false;
 

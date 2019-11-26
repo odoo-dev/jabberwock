@@ -1,6 +1,6 @@
 import { Component } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';
-import JWEditor from '../core/JWEditor';
+import JWEditor from '../../core/src/JWEditor';
 import { useState } from 'owl-framework/src/hooks';
 
 interface OwlUIEnv extends Env {

@@ -1,4 +1,4 @@
-import JWEditor from '../../src/core/JWEditor';
+import JWEditor from '../../packages/core/src/JWEditor';
 import { jabberwocky } from '../utils/jabberwocky';
 import './index.css';
 

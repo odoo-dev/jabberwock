@@ -1,8 +1,8 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
-import { VRangeDescription, RelativePosition } from '../stores/VRange';
+import { VRangeDescription, RelativePosition } from './VRange';
 import { VDocumentMap } from './VDocumentMap';
-import { VNode, VNodeType } from '../stores/VNode';
-import JWEditor from '../JWEditor';
+import { VNode, VNodeType } from './VNode';
+import JWEditor from './JWEditor';
 
 interface SetRangeParams {
     domRange: DomRangeDescription;

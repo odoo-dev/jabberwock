@@ -1,9 +1,9 @@
-import { VNode, VNodeType } from '../stores/VNode';
-import { Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
-import { VRange, RelativePosition } from '../stores/VRange';
-import { VDocument } from '../stores/VDocument';
-import { isRange, isChar } from './Predicates';
+import { VDocument } from './VDocument';
+import { isRange, isChar } from '../../utils/src/Predicates';
+import { VNode } from './VNode';
+import { Format } from '../../utils/src/Format';
+import { VRange, RelativePosition } from './VRange';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.

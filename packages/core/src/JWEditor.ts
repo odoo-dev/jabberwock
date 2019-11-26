@@ -1,13 +1,12 @@
-import { CorePlugin } from './utils/CorePlugin';
-import { Dispatcher, CommandIdentifier, CommandArgs } from './dispatcher/Dispatcher';
-import { EventManager } from './utils/EventManager';
+import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
+import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
-import { VDocument } from './stores/VDocument';
-import { Parser, ParsingOptions } from './utils/Parser';
-import { Renderer } from './utils/Renderer';
-import { OwlUI } from '../../src/ui/OwlUI';
-import { DevTools } from '../../src/plugins/DevTools/DevTools';
-import '../../src/plugins/DevTools/DevTools.css';
+import { Renderer } from './Renderer';
+import { VDocument } from './VDocument';
+import { OwlUI } from '../../owl-ui/src/OwlUI';
+import { CorePlugin } from './CorePlugin';
+import { ParsingOptions, Parser } from './Parser';
+import { DevTools } from '../../plugin-devtools/src/DevTools';
 
 export interface JWEditorConfig {
     debug?: boolean;

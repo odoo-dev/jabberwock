@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from '../stores/VNode';
+import { VNode, VNodeType } from './VNode';
 
 const getRenderingTagName = function(nodeType: VNodeType): string {
     switch (nodeType) {
