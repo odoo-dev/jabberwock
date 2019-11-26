@@ -1,7 +1,6 @@
 import { utils } from '../../../core/utils/utils';
 import { VNode, VNodeType } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { useState } from 'owl-framework/src/hooks';
 import { Direction, VRangeDescription } from '../../../core/stores/VRange';
 import { isRange } from '../../../core/utils/Predicates';
 
@@ -27,9 +26,9 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     static components = { TreeComponent };
     // User-friendly representation of the node
     repr: string = this._getNodeRepr(this.props.vNode);
-    state: NodeState = useState({
+    state: NodeState = {
         folded: !this.props.isRoot, // Fold everything but the root on init
-    });
+    };
 
     //--------------------------------------------------------------------------
     // Public

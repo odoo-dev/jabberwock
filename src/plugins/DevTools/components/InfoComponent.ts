@@ -1,17 +1,16 @@
 import { VNode } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
 import { VRange } from '../../../core/stores/VRange';
-import { useState } from 'owl-framework/src/hooks';
 
 interface InfoState {
     currentTab: string;
     range: VRange;
 }
 export class InfoComponent extends OwlUIComponent<{}> {
-    state: InfoState = useState({
+    state: InfoState = {
         currentTab: 'vNode',
         range: this.env.editor.vDocument.range,
-    });
+    };
     localStorage = ['currentTab'];
     /**
      * Open the tab with the given `tabName`

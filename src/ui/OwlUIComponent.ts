@@ -1,6 +1,7 @@
 import { Component } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';
 import JWEditor from '../core/JWEditor';
+import { useState } from 'owl-framework/src/hooks';
 
 interface OwlUIEnv extends Env {
     editor: JWEditor;
@@ -20,6 +21,7 @@ export class OwlUIComponent<Props> extends Component<OwlUIEnv, Props> {
     willStart(): Promise<void> {
         if (this.state) {
             this._importStateFromStorage(localStorage, this.localStorage);
+            this.state = useState(this.state);
         }
         return super.willStart();
     }
@@ -71,7 +73,7 @@ export class OwlUIComponent<Props> extends Component<OwlUIEnv, Props> {
     }
 
     /**
-     * For every keys in the property `state`, write it back to `storage`
+     * For every key in the property `state`, write it back to `storage`
      * Write the given storable state items to the given storage.
      *
      * @param storage to write the state items to

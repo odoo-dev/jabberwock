@@ -3,7 +3,6 @@ import { PathComponent } from './PathComponent';
 import { TreeComponent } from './TreeComponent';
 import { VNode } from '../../../core/stores/VNode';
 import { OwlUIComponent } from '../../../ui/OwlUIComponent';
-import { useState } from 'owl-framework/src/hooks';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -14,10 +13,10 @@ interface InspectorState {
 
 export class InspectorComponent extends OwlUIComponent<{}> {
     static components = { InfoComponent, PathComponent, TreeComponent };
-    state: InspectorState = useState({
+    state: InspectorState = {
         selectedNode: this.env.editor.vDocument.root,
         selectedPath: this._getPath(this.env.editor.vDocument.root),
-    });
+    };
 
     /**
      * Handle keyboard navigation in DevTools (arrows to move in the tree)
