@@ -89,19 +89,12 @@ function parseElementNode(currentContext: ParsingContext): ParsingContext {
     const context = { ...currentContext };
 
     const node = context.node;
-    // A <br/> with no siblings is there only to make its parent visible.
-    // Consume it since it was just parsed as its parent element node.
-    // TODO: do this less naively to account for formatting space.
-    if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
-        context.node = node.childNodes[0];
-    }
-    // A trailing <br/> after another <br/> is there only to make its previous
-    // sibling visible. Consume it since it was just parsed as a single BR
-    // within our abstraction.
-    // TODO: do this less naively to account for formatting space.
-    if (node.nodeName === 'BR' && node.nextSibling && node.nextSibling.nodeName === 'BR') {
-        context.node = node.nextSibling;
-    }
+    const parsedNode: VNode = new VNode(
+        getNodeType(node),
+        node.nodeName,
+        undefined,
+        context.format[0],
+    );
     if (Format.tags.includes(context.node.nodeName)) {
         // Format nodes (e.g. B, I, U) are parsed differently than regular
         // elements since they are not represented by a proper VNode in our
@@ -115,14 +108,28 @@ function parseElementNode(currentContext: ParsingContext): ParsingContext {
             underline: format.underline || node.nodeName === 'U',
         });
     } else {
-        const parsedNode: VNode = new VNode(
-            getNodeType(node),
-            node.nodeName,
-            undefined,
-            context.format[0],
-        );
         VDocumentMap.set(parsedNode, node);
         context.parentVNode.append(parsedNode);
+    }
+    // A <br/> with no siblings is there only to make its parent visible.
+    // Consume it since it was just parsed as its parent element node.
+    // TODO: do this less naively to account for formatting space.
+    if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
+        context.node = node.childNodes[0];
+        VDocumentMap.set(parsedNode, context.node);
+    }
+    // A trailing <br/> after another <br/> is there only to make its previous
+    // sibling visible. Consume it since it was just parsed as a single BR
+    // within our abstraction.
+    // TODO: do this less naively to account for formatting space.
+    if (
+        node.nodeName === 'BR' &&
+        node.nextSibling &&
+        node.nextSibling.nodeName === 'BR' &&
+        !node.nextSibling.nextSibling
+    ) {
+        context.node = node.nextSibling;
+        VDocumentMap.set(parsedNode, context.node);
     }
     return context;
 }
