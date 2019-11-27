@@ -5,7 +5,7 @@ import { DomRangeDescription } from '../../core/src/EventNormalizer';
 
 export interface TestEditorSpec {
     contentBefore: string;
-    contentAfter: string;
+    contentAfter?: string;
     stepFunction?: (editor: JWEditor) => void;
     debug?: boolean;
 }
@@ -37,8 +37,9 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
     if (rangeDescription) {
         _renderTextualRange();
     }
-
-    expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
+    if (spec.contentAfter) {
+        expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
+    }
 
     editor.stop();
     wrapper.remove();

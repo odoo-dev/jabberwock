@@ -67,34 +67,6 @@ describe('utils', () => {
                     underline: false,
                 });
             });
-            it('should parse without range char', () => {
-                const element = document.createElement('div');
-                element.innerHTML = '<p>[a]</p>';
-                const vDocument = Parser.parse(element);
-
-                expect(vDocument.root.type).to.equal(VNodeType.ROOT);
-                expect(vDocument.root.children.length).to.equal(1);
-                const p = vDocument.root.children[0];
-                expect(p.type).to.equal(VNodeType.PARAGRAPH);
-                expect(p.children.length).to.equal(3);
-                expect(p.children[0].type).to.equal(VNodeType.CHAR);
-                expect(p.children[0].value).to.equal('[');
-                expect(p.children[1].value).to.equal('a');
-                expect(p.children[2].value).to.equal(']');
-            });
-            it('should parse with range', () => {
-                const element = document.createElement('div');
-                element.innerHTML = '<p>[a]</p>';
-                const vDocument = Parser.parse(element);
-
-                expect(vDocument.root.type).to.equal(VNodeType.ROOT);
-                expect(vDocument.root.children.length).to.equal(1);
-                const p = vDocument.root.children[0];
-                expect(p.type).to.equal(VNodeType.PARAGRAPH);
-                expect(p.children.length).to.equal(1);
-                expect(p.children[0].type).to.equal(VNodeType.CHAR);
-                expect(p.children[0].value).to.equal('a');
-            });
         });
     });
 });
