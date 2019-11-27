@@ -161,7 +161,7 @@ describe('utils', () => {
                 before(callbackBefore);
                 after(callbackAfter);
 
-                it('insert char (chrome)', async () => {
+                it.only('insert char (chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
                     root.innerHTML = '';

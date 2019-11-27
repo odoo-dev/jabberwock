@@ -1,5 +1,5 @@
 import { ConfiguredCommand, Keymap } from './Keymap';
-import { Dispatcher, CommandIdentifier } from './Dispatcher';
+import { Dispatcher, CommandIdentifier, CommandParams } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
@@ -60,12 +60,16 @@ export class JWEditor {
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
+    private mutex = Promise.resolve();
 
     constructor() {
         this.el = document.createElement('jw-editor');
         this.dispatcher = new Dispatcher(this);
         this.plugins = new Map();
         this.contextManager = new ContextManager(this);
+
+        this.nextEventMutex = this.nextEventMutex.bind(this);
+
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
         this.loadPlugin(CorePlugin);
@@ -78,6 +82,9 @@ export class JWEditor {
         return this.configuration.createBaseContainer;
     }
 
+    async nextEventMutex(next: (...args) => void): Promise<void> {
+        return (this.mutex = this.mutex.then(next));
+    }
     /**
      * Start the editor on the editable DOM node set on this editor instance.
      */
@@ -104,7 +111,7 @@ export class JWEditor {
         const domPlugin = this.plugins.get(Dom);
         if (domPlugin) {
             // Attach the keymaps to the editable.
-            domPlugin.editable.addEventListener('keydown', this._onKeydown.bind(this));
+            domPlugin.editable.addEventListener('keydown', this.processKeydown.bind(this));
             this.eventManager = new EventManager(this, domPlugin);
         }
     }
@@ -358,7 +365,7 @@ export class JWEditor {
      *
      * @param event
      */
-    _onKeydown(event: KeyboardEvent): void {
+    async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
         let command: ConfiguredCommand;
         let context: Context;
         const userCommands = this.keymaps.user.match(event);
@@ -372,7 +379,11 @@ export class JWEditor {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            this.execCommand(command.commandId, params);
+            this.eventManager.eventNormalizer.initNextObservation();
+            this.nextEventMutex(() => {
+                return this.execCommand(command.commandId, params);
+            });
+            return command.commandId;
         }
     }
 }
