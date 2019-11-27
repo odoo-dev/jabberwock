@@ -79,14 +79,14 @@ export interface DomRangeDescription {
 
 export interface NormalizedAction {
     type: string;
-    origin: string;
     domRange?: DomRangeDescription;
     vRange?: object;
     direction?: Direction;
     text?: string;
     html?: string;
     files?: File[];
-    format: string;
+    format?: string;
+    target?: DomLocation;
 }
 export interface NormalizedEvent {
     type: string;
@@ -963,7 +963,6 @@ export class EventNormalizer {
     _makePayload(type: string, params: object): NormalizedAction {
         const detail = params as NormalizedAction;
         detail.type = type;
-        detail.origin = 'EventNormalizer';
         return detail;
     }
     /**
@@ -1391,15 +1390,27 @@ export class EventNormalizer {
                     this._events.unshift(modifiedKeyEvent);
                 }
             } else {
+                // The target of the select all specifies where the user caret
+                // was when the select all was triggered.
+                const selectAll: NormalizedAction = {
+                    type: 'selectAll',
+                    target: this._initialCaretPosition,
+                    domRange: this._getRange(),
+                };
+                // In this case, the select all was triggered from the pointer.
+                const normalizedPointerEvent: NormalizedPointerEvent = {
+                    type: 'pointer',
+                    target: this._initialCaretPosition,
+                    defaultPrevented: false,
+                    actions: [selectAll],
+                };
+                // We did not find any case where a select all triggered from
+                // the mouse actually resulted in a mutation, so the mutation
+                // normalizer is not listnening in this case. If it happens to
+                // be insufficient later on, the mutated elements will need to
+                // be retrieved from the mutation normalizer.
                 this._triggerEvent({
-                    events: [
-                        {
-                            type: 'pointer',
-                            target: this._initialCaretPosition,
-                            defaultPrevented: false,
-                            actions: this._makeSelectAll(),
-                        } as NormalizedPointerEvent,
-                    ],
+                    events: [normalizedPointerEvent],
                     mutatedElements: new Set(),
                 });
             }

@@ -236,7 +236,6 @@ describe('utils', () => {
                                         {
                                             type: 'insertText',
                                             text: 'o',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -297,7 +296,6 @@ describe('utils', () => {
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -354,7 +352,6 @@ describe('utils', () => {
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -410,7 +407,6 @@ describe('utils', () => {
                                         {
                                             type: 'insertText',
                                             text: 'o',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -428,7 +424,6 @@ describe('utils', () => {
                                         {
                                             type: 'insertText',
                                             text: 'i',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -446,7 +441,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'BACKWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -510,7 +504,6 @@ describe('utils', () => {
                                         {
                                             type: 'insertText',
                                             text: 'ô',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -578,7 +571,6 @@ describe('utils', () => {
                                         {
                                             type: 'insertText',
                                             text: 'ô',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -641,7 +633,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 4,
@@ -653,7 +644,6 @@ describe('utils', () => {
                                         {
                                             text: '^',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -670,7 +660,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 4,
@@ -682,7 +671,6 @@ describe('utils', () => {
                                         {
                                             text: 'ô',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -737,7 +725,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 4,
@@ -749,7 +736,6 @@ describe('utils', () => {
                                         {
                                             text: '^',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -766,7 +752,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 4,
@@ -778,7 +763,6 @@ describe('utils', () => {
                                         {
                                             text: 'ô',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -825,7 +809,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 4,
@@ -837,7 +820,6 @@ describe('utils', () => {
                                         {
                                             text: '^',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -854,7 +836,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 4,
@@ -866,7 +847,6 @@ describe('utils', () => {
                                         {
                                             text: 'ô',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -921,7 +901,6 @@ describe('utils', () => {
                                         {
                                             type: 'insertText',
                                             text: 'ô',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -970,7 +949,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 2,
@@ -982,7 +960,6 @@ describe('utils', () => {
                                         {
                                             text: 'hello',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1041,7 +1018,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: br,
                                                 startOffset: 0,
@@ -1053,12 +1029,10 @@ describe('utils', () => {
                                         {
                                             text: 'hello',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1106,7 +1080,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 13,
@@ -1118,7 +1091,6 @@ describe('utils', () => {
                                         {
                                             text: 'raths',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1178,7 +1150,6 @@ describe('utils', () => {
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1232,7 +1203,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 2,
@@ -1244,12 +1214,10 @@ describe('utils', () => {
                                         {
                                             text: 'hello',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1308,7 +1276,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: textB,
                                                 startOffset: 0,
@@ -1320,11 +1287,9 @@ describe('utils', () => {
                                         {
                                             text: 'Christophe',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 2,
@@ -1336,7 +1301,6 @@ describe('utils', () => {
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1386,7 +1350,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 9,
@@ -1398,12 +1361,10 @@ describe('utils', () => {
                                         {
                                             text: 'ha',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             text: ' ',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1455,7 +1416,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 0,
@@ -1467,7 +1427,6 @@ describe('utils', () => {
                                         {
                                             text: 'aXc',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1514,7 +1473,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 0,
@@ -1526,7 +1484,6 @@ describe('utils', () => {
                                         {
                                             text: 'abc',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1618,7 +1575,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'BACKWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1662,7 +1618,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'FORWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1706,7 +1661,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'BACKWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1750,7 +1704,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'FORWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1803,7 +1756,6 @@ describe('utils', () => {
                                             type: 'deleteWord',
                                             direction: 'BACKWARD',
                                             text: 'toto',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1854,7 +1806,6 @@ describe('utils', () => {
                                             type: 'deleteWord',
                                             direction: 'BACKWARD',
                                             text: 'test',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1905,7 +1856,6 @@ describe('utils', () => {
                                             type: 'deleteWord',
                                             direction: 'BACKWARD',
                                             text: 'test',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -1958,7 +1908,6 @@ describe('utils', () => {
                                             type: 'deleteWord',
                                             direction: 'BACKWARD',
                                             text: 'test',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2019,7 +1968,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.BACKWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2072,7 +2020,6 @@ describe('utils', () => {
                                             type: 'deleteWord',
                                             direction: 'FORWARD',
                                             text: 'ctest',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2133,7 +2080,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2218,7 +2164,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'BACKWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2271,7 +2216,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2319,7 +2263,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2374,7 +2317,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2429,7 +2371,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2477,7 +2418,6 @@ describe('utils', () => {
                                             type: 'insertText',
                                             text: '\n',
                                             html: '<br/>',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2529,7 +2469,6 @@ describe('utils', () => {
                                                 endOffset: 3,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2573,7 +2512,6 @@ describe('utils', () => {
                                                 endOffset: 0,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2623,7 +2561,6 @@ describe('utils', () => {
                                                 endOffset: 4,
                                                 direction: Direction.BACKWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2674,7 +2611,6 @@ describe('utils', () => {
                                                 endOffset: 5,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2749,7 +2685,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2824,7 +2759,6 @@ describe('utils', () => {
                                                 endOffset: 0,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2892,7 +2826,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -2954,7 +2887,6 @@ describe('utils', () => {
                                         {
                                             direction: 'FORWARD',
                                             type: 'deleteContent',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3003,7 +2935,6 @@ describe('utils', () => {
                                             html: '<div>b</div>',
                                             text: 'b',
                                             type: 'insertHtml',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3049,7 +2980,7 @@ describe('utils', () => {
                                     metaKey: false,
                                     shiftKey: false,
                                     defaultPrevented: false,
-                                    actions: [{ type: 'historyUndo', origin: 'EventNormalizer' }],
+                                    actions: [{ type: 'historyUndo' }],
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -3108,7 +3039,6 @@ describe('utils', () => {
                                         {
                                             format: 'bold',
                                             type: 'applyFormat',
-                                            origin: 'EventNormalizer',
                                             data: null,
                                         },
                                     ],
@@ -3188,7 +3118,6 @@ describe('utils', () => {
                                                 endOffset: 0,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3260,7 +3189,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3308,7 +3236,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3363,7 +3290,6 @@ describe('utils', () => {
                                                 endOffset: 4,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3417,7 +3343,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3458,7 +3383,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3516,7 +3440,6 @@ describe('utils', () => {
                                                 endOffset: 0,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3577,7 +3500,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 2,
@@ -3589,7 +3511,6 @@ describe('utils', () => {
                                         {
                                             text: 'brill',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3657,7 +3578,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 2,
@@ -3669,7 +3589,6 @@ describe('utils', () => {
                                         {
                                             text: 'brill',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3711,7 +3630,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 7,
@@ -3723,7 +3641,6 @@ describe('utils', () => {
                                         {
                                             text: 'toes',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3775,7 +3692,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 6,
@@ -3787,7 +3703,6 @@ describe('utils', () => {
                                         {
                                             text: 'brill',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3851,7 +3766,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 7,
@@ -3863,7 +3777,6 @@ describe('utils', () => {
                                         {
                                             text: 'toes',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3918,7 +3831,6 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'setRange',
-                                            origin: 'EventNormalizer',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 2,
@@ -3930,7 +3842,6 @@ describe('utils', () => {
                                         {
                                             text: 'brill',
                                             type: 'insertText',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -3990,7 +3901,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4020,7 +3930,6 @@ describe('utils', () => {
                                                 endOffset: 3,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4078,7 +3987,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4108,7 +4016,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4160,7 +4067,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4259,7 +4165,6 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4289,7 +4194,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4385,7 +4289,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4406,7 +4309,6 @@ describe('utils', () => {
                                         {
                                             direction: 'FORWARD',
                                             type: 'deleteContent',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4496,7 +4398,6 @@ describe('utils', () => {
                                                 endOffset: 2,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4517,7 +4418,6 @@ describe('utils', () => {
                                         {
                                             direction: 'FORWARD',
                                             type: 'deleteContent',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4567,7 +4467,6 @@ describe('utils', () => {
                                             html: '<div>b</div>',
                                             text: 'b',
                                             type: 'insertHtml',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4622,7 +4521,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'FORWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'setRange',
@@ -4633,13 +4531,11 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html: '<div>b</div>',
                                             text: 'b',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4692,7 +4588,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'FORWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'setRange',
@@ -4703,12 +4598,10 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html: '<a href="https://www.odoo.com"></a>',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4777,7 +4670,6 @@ describe('utils', () => {
                                         {
                                             type: 'deleteContent',
                                             direction: 'FORWARD',
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'setRange',
@@ -4788,12 +4680,10 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html: '<svg>unload content</svg>',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4845,13 +4735,11 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html:
                                                 '<a href="https://www.odoo.com/mylink">https://www.odoo.com/mylink</a>',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4902,12 +4790,10 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertText',
                                             text: 'b',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4959,13 +4845,11 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html: '<div>b</div>',
                                             text: 'b',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -5018,12 +4902,10 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html: '<img src="https://www.odoo.com/logo.png">',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -5076,12 +4958,10 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html: '<a href="https://www.odoo.com">test</a>',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -5134,13 +5014,11 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertHtml',
                                             html:
                                                 '<a href="https://www.odoo.com">https://www.odoo.com</a>',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -5208,12 +5086,10 @@ describe('utils', () => {
                                                 endOffset: 1,
                                                 direction: Direction.FORWARD,
                                             },
-                                            origin: 'EventNormalizer',
                                         },
                                         {
                                             type: 'insertFiles',
                                             files: files,
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -5261,7 +5137,7 @@ describe('utils', () => {
                                     },
                                     inputType: 'historyUndo',
                                     defaultPrevented: false,
-                                    actions: [{ type: 'historyUndo', origin: 'EventNormalizer' }],
+                                    actions: [{ type: 'historyUndo' }],
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -5323,7 +5199,6 @@ describe('utils', () => {
                                         {
                                             format: 'bold',
                                             type: 'applyFormat',
-                                            origin: 'EventNormalizer',
                                             data: null,
                                         },
                                     ],
