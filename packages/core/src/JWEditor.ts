@@ -54,12 +54,12 @@ export class JWEditor {
      * @param parsingOptions
      */
     async start(parsingOptions?: ParsingOptions): Promise<void> {
+        // Parse the editable in the internal format of the editor.
+        this.vDocument = Parser.parse(this._originalEditable, parsingOptions);
+
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
         this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
-
-        // Parse the editable in the internal format of the editor.
-        this.vDocument = Parser.parse(this.editable, parsingOptions);
 
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';
