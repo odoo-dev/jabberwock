@@ -44,7 +44,7 @@ const inputTypeCommands = new Set([
  * helper:
  * - https://apps.timwhitlock.info/js/regex
  */
-const alphabetWhoContainsSpace = new RegExp(
+const alphabetsContainingSpaces = new RegExp(
     '(' +
         [
             '[а-яА-ЯЀ-ӿԀ-ԯ]+', // cyrillic
@@ -225,19 +225,20 @@ export class EventNormalizer {
         this._triggerEvent = callback;
 
         const document = this.editable.ownerDocument;
+        this._bindEvent(editable, 'compositionstart', this._registerEvent);
+        this._bindEvent(editable, 'compositionupdate', this._registerEvent);
+        this._bindEvent(editable, 'compositionend', this._registerEvent);
+        this._bindEvent(editable, 'beforeinput', this._registerEvent);
+        this._bindEvent(editable, 'input', this._registerEvent);
+
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
         this._bindEvent(document, 'click', this._onClick);
-        this._bindEvent(document, 'touchend', this._onTouchEnd);
+        this._bindEvent(document, 'touchend', this._onClick);
         this._bindEvent(editable, 'contextmenu', this._onContextMenu);
-        this._bindEvent(document, 'touchstart', this._onTouchStart);
         this._bindEvent(document, 'mousedown', this._onMouseDown);
+        this._bindEvent(document, 'touchstart', this._onMouseDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
-        this._bindEvent(editable, 'compositionstart', this._onComposition);
-        this._bindEvent(editable, 'compositionupdate', this._onComposition);
-        this._bindEvent(editable, 'compositionend', this._onComposition);
-        this._bindEvent(editable, 'beforeinput', this._onInput);
-        this._bindEvent(editable, 'input', this._onInput);
         this._bindEvent(editable, 'paste', this._onPaste);
         this._bindEvent(editable, 'dragstart', this._onDragStart);
         this._bindEvent(editable, 'dragend', this._onDragEnd);
@@ -289,26 +290,26 @@ export class EventNormalizer {
         });
     }
     /**
-     * Register given event on `this._eventsQueue`. If the queue is not already
-     * initialized or has been cleared prior to this call, re-initialize it and
-     * reset the stored clone in the process.
+     * Register given event on the this._events queue. If the queue is not yet
+     * initialized or has been cleared prior to this call, re-initialize it.
      *
-     * After a tick (setTimeout 0ms) the '_processEvents' method is called.
-     * All events that happened during the tick are read from the queue and the
+     * After a tick (setTimeout 0ms) the '_processEvents' method is called. All
+     * events that happened during the tick are read from the queue and the
      * analysis tries to extract the actions desired by the user such as insert,
-     * delete, backspace, spellchecking, special characters, etc.
+     * delete, backspace, spell checking, special characters, etc.
      *
      * @see _processEvents
      * @private
      */
     _registerEvent(ev: Event): void {
         if (!this._events) {
-            this._mutationNormalizer.start();
             // The queue is not initialized or has been reset, so this is a new
             // user action. Re-initialize the queue such that the analysis is
             // not polluted by previous observations.
             this._events = [];
             this._secondTickObservation = false;
+            // Start observing mutations.
+            this._mutationNormalizer.start();
             // All events during this tick will be processed in the next one.
             setTimeout(this._processEvents.bind(this));
         }
@@ -825,11 +826,11 @@ export class EventNormalizer {
         }
 
         const before = res.previous.chars.slice(0, index);
-        const match = before.match(alphabetWhoContainsSpace);
+        const match = before.match(alphabetsContainingSpaces);
         if (
             match &&
-            (insert === '' || alphabetWhoContainsSpace.test(insert)) &&
-            (remove === '' || alphabetWhoContainsSpace.test(remove))
+            (insert === '' || alphabetsContainingSpaces.test(insert)) &&
+            (remove === '' || alphabetsContainingSpaces.test(remove))
         ) {
             // the word is write in a alphabet who contain space, search
             // to complete the change and include the rest of the word
@@ -1203,24 +1204,6 @@ export class EventNormalizer {
         this._initialMousedownInEditable = false;
     }
     /**
-     * Catch composition
-     *
-     * @private
-     * @param {InputEvent} ev
-     */
-    _onComposition(ev: InputEvent): void {
-        this._registerEvent(ev);
-    }
-    /**
-     * Catch composition, Enter, Backspace, Delete and insert actions
-     *
-     * @private
-     * @param {InputEvent} ev
-     */
-    _onInput(ev: InputEvent): void {
-        this._registerEvent(ev);
-    }
-    /**
      * Catch Enter, Backspace, Delete and insert actions
      *
      * @private
@@ -1298,12 +1281,6 @@ export class EventNormalizer {
                 mutatedElements: new Set([]),
             });
         }, 0);
-    }
-    _onTouchEnd(ev: TouchEvent): void {
-        this._onClick((ev as unknown) as MouseEvent);
-    }
-    _onTouchStart(ev: TouchEvent): void {
-        this._onMouseDown((ev as unknown) as MouseEvent);
     }
     _onDragStart(): void {
         this._draggingFromEditable = true;
