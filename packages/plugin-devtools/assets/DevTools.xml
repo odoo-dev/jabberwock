@@ -268,7 +268,6 @@
                 <mainpane-contents t-if="state.currentTab == 'queue'" style="overflow: auto">
                     <table style="width: 100%;">
                         <tbody>
-                        <t t-esc="console.log(props) || ''"/>
                             <tr t-foreach="Array.from(props.commands.keys()).reverse()" t-as="commandIndex"
                                 t-key="commandIndex_index" class="selectable-line"
                                 t-att-class="{
