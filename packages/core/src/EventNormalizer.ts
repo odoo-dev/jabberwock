@@ -2,6 +2,8 @@ import { Direction } from './VRange';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint } from '../../utils/polyfill';
 
+const pointerEventTypes = ['click', 'mousedown', 'touchend'];
+
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -197,7 +199,7 @@ export class EventNormalizer {
      * Whether the current state of the selection is already recognized as being
      * a "select all".
      */
-    _selectAll: boolean;
+    _currentlySelectingAll: boolean;
     /**
      * Original mousedown event from which the current selection was made.
      */
@@ -1169,7 +1171,7 @@ export class EventNormalizer {
     _onContextMenu(ev: MouseEvent): void {
         clearTimeout(this._setTimeoutID);
         this._setTimeoutID = setTimeout(() => {
-            if (!this._rangeHasChanged || this._selectAll) {
+            if (!this._rangeHasChanged || this._currentlySelectingAll) {
                 return;
             }
             this._initialCaretPosition = this._caretPositionFromPoint(
@@ -1354,50 +1356,50 @@ export class EventNormalizer {
      */
     _onSelectionChange(): void {
         if (!this._initialCaretPosition) {
-            // The _rangeHasChanged hook will disappear once the renderer only
-            // re-renders what has changed rather than re-rendering everything.
-            // Right now it is needed to avoid an infinite loop when selectAll
-            // triggers a new range set and the selection changes every time.
+            // TODO: Remove this once the renderer only re-renders what has
+            // changed rather than re-rendering everything. Right now it is
+            // needed to avoid an infinite loop when selectAll triggers a new
+            // setRange, which triggers a new selection, which loops infinitely.
             return;
         }
 
         this._rangeHasChanged = true;
         // Testing whether the entire document is selected or not is a costly
         // process, so we use the below heuristics before actually checking.
-        const eventsQueue = this._events || this._lastEvents;
-        const keyModifiled =
-            eventsQueue &&
-            eventsQueue.filter(
-                ev =>
-                    ev instanceof KeyboardEvent &&
-                    ev.type === 'keydown' &&
-                    (ev.ctrlKey || ev.metaKey),
-            )[0];
-        const trigger =
-            !eventsQueue ||
-            keyModifiled ||
-            (this._lastEvents &&
-                this._lastEvents.length === 1 &&
-                ((this._lastEvents[0] as Event).type === 'click' ||
-                    (this._lastEvents[0] as Event).type === 'mousedown' ||
-                    (this._lastEvents[0] as Event).type === 'touchend'));
-
-        if ((this._initialMousedownInEditable && !keyModifiled) || !trigger) {
-            this._selectAll = false;
-            return;
+        let events = this._events;
+        if (!events) {
+            // On Safari MacOS, the selectionchange event is triggered in the
+            // stack following the keyboard events rather than the same one.
+            events = this._lastEvents;
         }
+        // There are only a few cases where a selection change might actually be
+        // a select all. Outside of these cases, there is no need to make the
+        // costly check.
+        // 1. Following a modified key being pressed. (e.g. Ctrl+A)
+        const modifiedKeyEvent = events.find((ev: KeyboardEvent) => {
+            return ev.type === 'keydown' && (ev.ctrlKey || ev.metaKey);
+        });
+        // 2. Following a single pointer action. (e.g. right click > Select All)
+        const single = this._lastEvents && this._lastEvents.length === 1;
+        const type = single && this._lastEvents[0].type;
+        const followsPointerAction = single && pointerEventTypes.includes(type);
 
-        const range = this._getRange();
+        // This heuristic protects against a costly `_isSelectAll` call.
+        const heuristic = modifiedKeyEvent || followsPointerAction;
+        const isSelectAll = heuristic && this._isSelectAll(this._getRange());
 
-        if (this._isSelectAll(range)) {
-            if (this._selectAll) {
-                return;
-            }
-            this._selectAll = true;
-            if (keyModifiled) {
+        if (isSelectAll && !this._currentlySelectingAll) {
+            if (modifiedKeyEvent) {
+                // This select all was triggered from the keyboard. Add a fake
+                // selectAll event to the queue as a marker for `_processEvents`
+                // to register that a select all was triggered in this stack.
                 this._registerEvent(new CustomEvent('selectAll'));
-                if (this._events !== eventsQueue) {
-                    this._events.unshift(keyModifiled);
+                if (events === this._lastEvents) {
+                    // On Safari MacOS, `this._lastEvents` is used for `events`.
+                    // In this case, the modified key event is missing from the
+                    // current event stack since Safari triggered the change in
+                    // the next stack. This fixes the event stack on Safari.
+                    this._events.unshift(modifiedKeyEvent);
                 }
             } else {
                 this._triggerEvent({
@@ -1412,8 +1414,12 @@ export class EventNormalizer {
                     mutatedElements: new Set(),
                 });
             }
-        } else {
-            this._selectAll = false;
         }
+        // Safari on MacOS triggers a selection change when pressing Ctrl even
+        // though the selection did not actually change. This property is used
+        // to store whether the current state is considered to be a select all.
+        // The point is to avoid triggering a new event for a selection change
+        // if everything was already selected beforehand.
+        this._currentlySelectingAll = isSelectAll;
     }
 }
