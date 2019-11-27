@@ -61,18 +61,26 @@ module.exports = function(config) {
                     {
                         test: /\.ts$/,
                         use: [
+                            'cache-loader',
                             {
                                 loader: 'ts-loader',
-                                options: { configFile: 'tsconfig-base.json' },
+                                options: {
+                                    configFile: 'tsconfig-base.json',
+                                },
                             },
                         ],
                     },
                     {
-                      test: /\.ts$/,
-                      enforce: 'post',
-                      include: /packages\/[^\/]*\/src\.*/,
-                      loader: 'istanbul-instrumenter-loader',
-                      options: { esModules: true }
+                        test: /\.ts$/,
+                        enforce: 'post',
+                        include: /packages\/[^\/]*\/src\.*/,
+                        use: [
+                            'cache-loader',
+                            {
+                                loader: 'istanbul-instrumenter-loader',
+                                options: { esModules: true }
+                            }
+                        ],
                     },
                     {
                         test: /\.css$/i,
@@ -86,6 +94,11 @@ module.exports = function(config) {
             },
             resolve: {
                 extensions: ['.ts', '.js'],
+            },
+            optimization: {
+                removeAvailableModules: false,
+                removeEmptyChunks: false,
+                splitChunks: false,
             },
         },
 
