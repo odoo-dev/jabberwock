@@ -134,8 +134,14 @@ describe('utils', () => {
             eventBatchs.push(res);
         }
         function callbackBefore(done: Function): void {
+            if (container) {
+                document.body.removeChild(container);
+                normalizer.destroy();
+            }
             container = document.createElement('container');
-            container.style.fontSize = '10px';
+            container.style.fontFamily = 'Courier, Courier New';
+            container.style.lineHeight = '20px';
+            container.style.fontSize = '18px';
             container.style.display = 'block';
             container.style.position = 'absolute';
             container.style.top = '0';
@@ -151,10 +157,25 @@ describe('utils', () => {
             done();
         }
         function callbackAfter(done: Function): void {
-            document.body.removeChild(container);
-            normalizer.destroy();
+            if (container) {
+                document.body.removeChild(container);
+                normalizer.destroy();
+                container = undefined;
+                normalizer = undefined;
+            }
             done();
         }
+
+        before(callbackBefore);
+        after(callbackAfter);
+
+        it('Check if your browser have an available font (Courier) to have valid test', async () => {
+            root.innerHTML = '<span>i</span>';
+            const rect = (root.firstChild as HTMLElement).getBoundingClientRect();
+            expect(rect.height).to.equal(20);
+            expect(rect.width).to.gt(10.5);
+            expect(rect.width).to.lt(11);
+        });
 
         describe('keyboard', () => {
             describe('insert', () => {
@@ -3160,13 +3181,13 @@ describe('utils', () => {
                     triggerEvent(p1, 'mousedown', {
                         button: 2,
                         detail: 1,
-                        clientX: 5,
+                        clientX: 10,
                         clientY: 10,
                     });
                     setRange(text1, 1, text1, 1);
                     setRange(text1, 1, text2, 1);
-                    triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 5, clientY: 18 });
-                    triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 5, clientY: 18 });
+                    triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+                    triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -3205,15 +3226,16 @@ describe('utils', () => {
                     const i = root.childNodes[1];
                     await nextTick();
                     eventBatchs = [];
+
                     triggerEvent(i, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 40,
-                        clientY: 10,
+                        clientY: 25,
                     });
                     setRange(text, 3, text, 3);
-                    triggerEvent(i, 'click', { button: 2, detail: 0, clientX: 20, clientY: 10 });
-                    triggerEvent(i, 'mouseup', { button: 2, detail: 0, clientX: 20, clientY: 10 });
+                    triggerEvent(i, 'click', { button: 2, detail: 0, clientX: 50, clientY: 5 });
+                    triggerEvent(i, 'mouseup', { button: 2, detail: 0, clientX: 50, clientY: 5 });
                     await nextTick();
                     await nextTick();
 
@@ -3262,7 +3284,7 @@ describe('utils', () => {
                         clientX: 18,
                         clientY: 10,
                     });
-                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 18, clientY: 10 });
+                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 45, clientY: 10 });
                     setRange(text, 4, text, 4);
                     await nextTick();
                     triggerEvent(root, 'compositionstart', { data: '' });
@@ -3306,6 +3328,7 @@ describe('utils', () => {
                     const p = root.firstChild;
                     const text = p.firstChild;
                     setRange(text, 3, text, 3);
+
                     await nextTick();
                     eventBatchs = [];
                     triggerEvent(p, 'touchstart', { detail: 0 });
@@ -3315,10 +3338,10 @@ describe('utils', () => {
                     triggerEvent(p, 'mousedown', {
                         button: 1,
                         detail: 1,
-                        clientX: 14,
+                        clientX: 24,
                         clientY: 10,
                     });
-                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 14, clientY: 10 });
+                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 24, clientY: 10 });
                     setRange(text, 2, text, 2);
                     await nextTick();
                     triggerEvent(root, 'compositionupdate', { data: 'def' });
@@ -3332,7 +3355,7 @@ describe('utils', () => {
                                     type: 'pointer',
                                     target: {
                                         offsetNode: text,
-                                        offset: 3,
+                                        offset: 2,
                                     },
                                     defaultPrevented: false,
                                     actions: [
@@ -3902,15 +3925,16 @@ describe('utils', () => {
                     triggerEvent(p2, 'mousedown', {
                         button: 2,
                         detail: 1,
-                        clientX: 5,
-                        clientY: 34,
+                        clientX: 10,
+                        clientY: 65,
                     });
+
                     setRange(text2, 1, text2, 1);
                     triggerEvent(p2, 'contextmenu', {
                         button: 2,
                         detail: 0,
-                        clientX: 5,
-                        clientY: 34,
+                        clientX: 10,
+                        clientY: 65,
                     });
                     await nextTick();
                     await nextTick();
@@ -4083,8 +4107,8 @@ describe('utils', () => {
                     triggerEvent(p2, 'contextmenu', {
                         button: 0,
                         detail: 0,
-                        clientX: 5,
-                        clientY: 18,
+                        clientX: 10,
+                        clientY: 25,
                     });
                     setRange(text2, 1, text2, 1);
                     await nextTick();
@@ -4092,8 +4116,8 @@ describe('utils', () => {
                     triggerEvent(p2, 'contextmenu', {
                         button: 0,
                         detail: 0,
-                        clientX: 5,
-                        clientY: 18,
+                        clientX: 10,
+                        clientY: 45,
                     });
                     setRange(text1, 0, p3, 2);
                     await nextTick();
@@ -4174,29 +4198,39 @@ describe('utils', () => {
                     const text3 = p.childNodes[4];
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'mousedown', { button: 2, detail: 1, clientX: 6, clientY: 10 });
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 11,
+                        clientY: 10,
+                    });
                     setRange(text1, 1, text1, 1);
                     setRange(text1, 1, text3, 2);
                     triggerEvent(root.lastChild, 'click', {
                         button: 2,
                         detail: 0,
-                        clientX: 10,
-                        clientY: 30,
+                        clientX: 22,
+                        clientY: 45,
                     });
                     triggerEvent(root.lastChild, 'mouseup', {
                         button: 2,
                         detail: 0,
-                        clientX: 10,
-                        clientY: 30,
+                        clientX: 22,
+                        clientY: 45,
                     });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(p, 'mousedown', { button: 2, detail: 1, clientX: 6, clientY: 20 });
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 10,
+                        clientY: 25,
+                    });
                     triggerEvent(p, 'contextmenu', {
                         button: 2,
                         detail: 0,
-                        clientX: 6,
-                        clientY: 20,
+                        clientX: 10,
+                        clientY: 25,
                     });
                     await nextTick();
                     await nextTick();
@@ -4324,25 +4358,24 @@ describe('utils', () => {
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'mousedown', { button: 0, detail: 1, clientX: 5, clientY: 5 });
+                    triggerEvent(p, 'mousedown', { button: 0, detail: 1, clientX: 15, clientY: 5 });
                     await nextTick();
-                    triggerEvent(p.firstChild, 'dragstart', { clientX: 5, clientY: 5 });
+                    triggerEvent(p.firstChild, 'dragstart', { clientX: 15, clientY: 5 });
                     await nextTick();
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'b');
                     dataTransfer.setData('text/html', '<div>b</div>');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
                     expect(dropEvent.defaultPrevented).to.equal(true);
-
                     expect(eventBatchs).to.deep.equal([
                         {
                             events: [
@@ -4395,19 +4428,19 @@ describe('utils', () => {
                     eventBatchs = [];
                     triggerEvent(a, 'mousedown', { button: 0, detail: 1 });
                     await nextTick();
-                    triggerEvent(a, 'dragstart', { clientX: 5, clientY: 5 });
+                    triggerEvent(a, 'dragstart', { clientX: 15, clientY: 5 });
                     await nextTick();
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'https://www.odoo.com');
                     dataTransfer.setData('text/html', '<a href="https://www.odoo.com"></a>');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4479,7 +4512,7 @@ describe('utils', () => {
                     await nextTick();
                     const dataTransfer = new DataTransfer();
                     triggerEvent(svg, 'dragstart', {
-                        clientX: 5,
+                        clientX: 15,
                         clientY: 5,
                         dataTransfer: dataTransfer,
                     });
@@ -4487,12 +4520,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<svg>unload content</svg>');
                     dataTransfer.setData('text/uri-list', 'svg');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4549,12 +4582,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/plain', '/mylink');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com/mylink');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4606,12 +4639,12 @@ describe('utils', () => {
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'b');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4663,12 +4696,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/plain', 'b');
                     dataTransfer.setData('text/html', '<div>b</div>');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4722,12 +4755,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<img src="https://www.odoo.com/logo.png">');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com/logo.png');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4780,12 +4813,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<a href="https://www.odoo.com">test</a>');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4838,12 +4871,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<a href="https://www.odoo.com"></a>');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4912,12 +4945,12 @@ describe('utils', () => {
                         ],
                     });
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
