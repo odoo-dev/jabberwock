@@ -1,6 +1,25 @@
 const path = require('path');
 
 module.exports = function(config) {
+    const coverageReporters = [];
+    const coverageLoaders = [];
+
+    if (config.coverage) {
+        coverageReporters.push('coverage-istanbul');
+        coverageLoaders.push({
+            test: /\.ts$/,
+            enforce: 'post',
+            include: /packages\/[^\/]*\/src\.*/,
+            use: [
+                'cache-loader',
+                {
+                    loader: 'istanbul-instrumenter-loader',
+                    options: { esModules: true }
+                }
+            ],
+            options: { esModules: true }
+        });
+    }
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
@@ -24,7 +43,7 @@ module.exports = function(config) {
         // test results reporter to use
         // possible values: 'dots', 'progress', 'spec'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['coverage-istanbul', 'spec'],
+        reporters: [...coverageReporters, 'spec'],
 
         // web server port
         port: 9876,
@@ -70,18 +89,7 @@ module.exports = function(config) {
                             },
                         ],
                     },
-                    {
-                        test: /\.ts$/,
-                        enforce: 'post',
-                        include: /packages\/[^\/]*\/src\.*/,
-                        use: [
-                            'cache-loader',
-                            {
-                                loader: 'istanbul-instrumenter-loader',
-                                options: { esModules: true }
-                            }
-                        ],
-                    },
+                    ...coverageLoaders,
                     {
                         test: /\.css$/i,
                         use: ['style-loader', 'css-loader'],
