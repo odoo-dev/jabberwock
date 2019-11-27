@@ -71,7 +71,10 @@ describe('utils', () => {
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
             it('should render the range outside the tag', async () => {
-                await testEditor({ contentBefore: '[<b>a</b>]', contentAfter: '<b>[a]</b>' });
+                await testEditor({
+                    contentBefore: '<p>[<b>a</b>]</p>',
+                    contentAfter: '<p><b>[a]</b></p>',
+                });
             });
         });
     });
