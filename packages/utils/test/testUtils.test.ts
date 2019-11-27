@@ -1,4 +1,7 @@
+import { expect } from 'chai';
 import { testEditor } from '../src/testUtils';
+import { VNodeType } from '../../core/src/VNode';
+import JWEditor from '../../core/src/JWEditor';
 
 describe('core', () => {
     describe('utils', () => {
@@ -16,6 +19,21 @@ describe('core', () => {
                     await testEditor({
                         contentBefore: content,
                         contentAfter: content,
+                    });
+                });
+                it('should parse with range', () => {
+                    testEditor({
+                        contentBefore: '<p>[a]</p>',
+                        stepFunction: (editor: JWEditor) => {
+                            const vDocument = editor.vDocument;
+                            expect(vDocument.root.type).to.equal(VNodeType.ROOT);
+                            expect(vDocument.root.children.length).to.equal(1);
+                            const p = vDocument.root.children[0];
+                            expect(p.type).to.equal(VNodeType.PARAGRAPH);
+                            expect(p.children.length).to.equal(1);
+                            expect(p.children[0].type).to.equal(VNodeType.CHAR);
+                            expect(p.children[0].value).to.equal('a');
+                        },
                     });
                 });
             });
