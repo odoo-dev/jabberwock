@@ -547,7 +547,7 @@ describe('Plugin: DevTools', () => {
             const container = editor.el.querySelector('test-container');
             container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
             container.querySelector('b').firstChild.textContent = 'z';
-            container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
+            container.dispatchEvent(new InputEvent('input', { bubbles: true }));
             await nextTickFrame();
             await nextTickFrame();
             expect(container.querySelector('b').parentElement.innerHTML).to.equal('a<b>z</b>c');
@@ -738,7 +738,7 @@ describe('Plugin: DevTools', () => {
             const container = editor.el.querySelector('test-container');
             container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
             container.querySelector('b').firstChild.textContent = 'z';
-            container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
+            container.dispatchEvent(new InputEvent('input', { bubbles: true }));
             await nextTickFrame();
             await nextTickFrame();
 
@@ -746,7 +746,7 @@ describe('Plugin: DevTools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.textContent).to.equal('insertTextsetSelection');
+            expect(subpanel.textContent).to.equal('insertTextsetSelectionsetSelection');
         });
         it('should select "setSelection"', async () => {
             await openDevTools(devtools);
@@ -878,7 +878,7 @@ describe('Plugin: DevTools', () => {
                 const container = editor.el.querySelector('test-container');
                 container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
                 container.querySelector('b').firstChild.textContent = 'z';
-                container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
+                container.dispatchEvent(new InputEvent('input', { bubbles: true }));
                 await nextTickFrame();
                 await nextTickFrame();
 
@@ -913,10 +913,10 @@ describe('Plugin: DevTools', () => {
                     '<tbody>' +
                     '<tr><td>vSelection</td><td><table><tbody>' +
                     '<tr><td> direction </td><td>FORWARD</td></tr>' +
-                    '<tr><td> anchor </td><td> ' +
+                    '<tr><td> anchor </td><td>BEFORE ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
-                    '<tr><td> focus </td><td> ' +
+                    '<tr><td> focus </td><td>AFTER ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
                     '</tbody></table></td></tr>' +

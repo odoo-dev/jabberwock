@@ -7,6 +7,7 @@ import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
 import { Dom } from '../../plugin-dom/Dom';
+import { targetDeepest } from './Dom';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -287,41 +288,21 @@ export function renderTextualSelection(): void {
     const selection = document.getSelection();
     if (selection.rangeCount === 0) return;
 
-    const anchor = _targetDeepest(selection.anchorNode, selection.anchorOffset);
-    const focus = _targetDeepest(selection.focusNode, selection.focusOffset);
+    const anchor = targetDeepest(selection.anchorNode, selection.anchorOffset);
+    const focus = targetDeepest(selection.focusNode, selection.focusOffset);
+
+    _insertCharAt(ANCHOR_CHAR, ...anchor);
 
     // If the range characters have to be inserted within the same parent and
-    // the start range character has to be before the end range character, the
-    // end offset needs to be adapted to account for the anchor insertion.
-    if (anchor.container === focus.container && anchor.offset <= focus.offset) {
-        focus.offset++;
+    // the anchor range character has to be before the focus range character,
+    // the focus offset needs to be adapted to account for the first insertion.
+    const [anchorNode, anchorOffset] = anchor;
+    const [focusNode, baseFocusOffset] = focus;
+    let focusOffset = baseFocusOffset;
+    if (anchorNode === focusNode && anchorOffset <= focusOffset) {
+        focusOffset++;
     }
-
-    _insertCharAt(ANCHOR_CHAR, anchor.container, anchor.offset);
-    _insertCharAt(FOCUS_CHAR, focus.container, focus.offset);
-}
-
-/**
- * Return the deepest child of a given container at a given offset, and its
- * adapted offset.
- *
- * @param container
- * @param offset
- */
-function _targetDeepest(container: Node, offset: number): { container: Node; offset: number } {
-    while (container.hasChildNodes()) {
-        if (offset >= container.childNodes.length) {
-            container = container.lastChild;
-            offset = container.childNodes.length - 1;
-        } else {
-            container = container.childNodes[offset];
-            offset = 0;
-        }
-    }
-    return {
-        container: container as Node,
-        offset: offset,
-    };
+    _insertCharAt(FOCUS_CHAR, focusNode, focusOffset);
 }
 
 /**

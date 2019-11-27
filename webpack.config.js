@@ -7,6 +7,7 @@ module.exports = {
         'jabberwocky': './examples/jabberwocky/jabberwocky.ts',
         'jabberwockipedia': './examples/jabberwockipedia/jabberwockipedia.ts',
         'demo': './examples/demo/demo.ts',
+        'get-keys-index': './examples/getKeys/index.ts',
     },
     devtool: 'inline-source-map',
     output: {
@@ -39,6 +40,7 @@ module.exports = {
     },
     devServer: {
         contentBase: './examples',
+        disableHostCheck: true,
     },
     // We might require this configuration in the future to
     // bundle the differents parts of the editor.

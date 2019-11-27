@@ -312,18 +312,6 @@ export class MutationNormalizer {
     // Private
     //--------------------------------------------------------------------------
 
-    _searchText(target: Node): Node[] {
-        const texts = [];
-        if (target.nodeType === Node.TEXT_NODE || target.nodeName === 'BR') {
-            texts.push(target);
-        } else {
-            target.childNodes.forEach(target => {
-                texts.push(...this._searchText(target));
-            });
-        }
-        return texts;
-    }
-
     _getCharLinked(charMutations: CharMutation[], type: string): CharactersMapping {
         const mapNodeValue = new WeakMap();
         const obj: CharactersMapping = {
@@ -412,6 +400,8 @@ export class MutationNormalizer {
 
     _onMutation(mutationsList: MutationRecord[]): void {
         if (this._listen) {
+            // we push the mutation because some browser (e.g. safari) separate mutations with
+            // microtask.
             this._mutations.push(...mutationsList);
         }
     }

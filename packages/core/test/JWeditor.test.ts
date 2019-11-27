@@ -201,7 +201,7 @@ describe('core', () => {
                                 editor._platform = Platform.PC;
                                 // todo: to remove when the normalizer will
                                 //       not be in included by default
-                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
+                                editor.eventManager.eventNormalizer._triggerEventBatch = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
@@ -241,7 +241,7 @@ describe('core', () => {
                                 editor._platform = Platform.PC;
                                 // todo: to remove when the normalizer will
                                 //       not be in included by default
-                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
+                                editor.eventManager.eventNormalizer._triggerEventBatch = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
@@ -281,7 +281,7 @@ describe('core', () => {
                                 editor._platform = Platform.PC;
                                 // todo: to remove when the normalizer will
                                 //       not be in included by default
-                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
+                                editor.eventManager.eventNormalizer._triggerEventBatch = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });

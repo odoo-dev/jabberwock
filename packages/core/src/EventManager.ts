@@ -1,9 +1,9 @@
-import { LineBreakNode } from './../../plugin-linebreak/LineBreakNode';
 import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
 import JWEditor from './JWEditor';
 import { CommandIdentifier } from './Dispatcher';
 import { VSelectionParams } from './CorePlugin';
 import { Dom } from '../../plugin-dom/Dom';
+import { Direction } from './VSelection';
 
 export class EventManager {
     editor: JWEditor;
@@ -29,20 +29,28 @@ export class EventManager {
     _matchCommand(action: NormalizedAction): [CommandIdentifier, object] {
         switch (action.type) {
             case 'insertText':
-                return ['insertText', { text: action.text }];
-            case 'insertLineBreak':
-                return ['insert', { value: new LineBreakNode() }];
-            case 'insertParagraph':
-                return ['insertParagraphBreak', {}];
+                if (action.text === '\n') {
+                    return ['insertLineBreak', {}];
+                } else {
+                    return ['insertText', { text: action.text }];
+                }
             case 'selectAll':
             case 'setSelection': {
+                // Todo: This is wrong in case the normalizer provide a range in the DOM that is not
+                //       present in the VDocument.
                 const vSelectionParams: VSelectionParams = {
                     vSelection: this.domPlugin.parseSelection(action.domSelection),
                 };
                 return ['setSelection', vSelectionParams];
             }
+            case 'insertParagraph':
+                return ['insertParagraphBreak', {}];
+            case 'deleteWord':
             case 'deleteContent':
-                return [action.direction === 'forward' ? 'deleteForward' : 'deleteBackward', {}];
+                return [
+                    action.direction === Direction.FORWARD ? 'deleteForward' : 'deleteBackward',
+                    {},
+                ];
             case 'applyFormat':
                 return ['applyFormat', { format: action.format }];
             default:
@@ -56,12 +64,10 @@ export class EventManager {
      * @param action
      */
     _onNormalizedEvent(batch: EventBatch): void {
-        for (const ev of batch.events) {
-            for (const action of ev.actions) {
-                const commandSpec = this._matchCommand(action);
-                if (commandSpec) {
-                    this.editor.execCommand(...commandSpec);
-                }
+        for (const action of batch.actions) {
+            const commandSpec = this._matchCommand(action);
+            if (commandSpec) {
+                this.editor.execCommand(...commandSpec);
             }
         }
     }
