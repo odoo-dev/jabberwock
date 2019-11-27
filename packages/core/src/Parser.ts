@@ -1,8 +1,11 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
+import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from './VRange';
+import { RelativePosition, VRangeDescription, Direction } from './VRange';
 import { VNode, FormatType, VNodeType } from './VNode';
-import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR, RelativePosition } from './VRange';
+import { DomRangeDescription } from './EventNormalizer';
+import { utils } from '../../utils/src/utils';
 
 export interface ParsingOptions {
     parseTextualRange: boolean;
@@ -50,6 +53,29 @@ function parseNode(currentContext: ParsingContext): ParsingContext {
         }
     }
     return nextParsingContext(context);
+}
+/**
+ * Convert the DOM description of a range to the description of a VRange.
+ *
+ * @param range
+ * @param [direction]
+ */
+function parseRange(range: DomRangeDescription): VRangeDescription;
+function parseRange(range: Range, direction: Direction): VRangeDescription;
+function parseRange(range: Range | DomRangeDescription, direction?: Direction): VRangeDescription {
+    const start = _locate(range.startContainer, range.startOffset);
+    const end = _locate(range.endContainer, range.endOffset);
+    if (start && end) {
+        const [startVNode, startPosition] = start;
+        const [endVNode, endPosition] = end;
+        return {
+            start: startVNode,
+            startPosition: startPosition,
+            end: endVNode,
+            endPosition: endPosition,
+            direction: range instanceof Range ? direction : range.direction,
+        };
+    }
 }
 
 /**
@@ -357,6 +383,38 @@ function _removeFormatSpace(node: Node): string {
     }
     return newText;
 }
+/**
+ * Return a position in the `VDocument` as a tuple containing a reference
+ * node and a relative position with respect to this node ('BEFORE' or
+ * 'AFTER'). The position is always given on the leaf.
+ *
+ * @param container
+ * @param offset
+ */
+function _locate(container: Node, offset: number): [VNode, RelativePosition] {
+    // When targetting the end of a node, the DOM gives an offset that is
+    // equal to the length of the container. In order to retrieve the last
+    // descendent, we need to make sure we target an existing node, ie. an
+    // existing index.
+    let index = Math.min(offset, utils.nodeLength(container) - 1);
+    // Move to deepest child of container.
+    while (container.hasChildNodes()) {
+        container = container.childNodes[index];
+        index = 0;
+    }
+    // Get the VNodes matching the container.
+    const vNodes = VDocumentMap.fromDom(container);
+    if (vNodes && vNodes.length) {
+        let reference: VNode;
+        if (container.nodeType === Node.TEXT_NODE) {
+            // The reference is the index-th match (eg.: text split into chars).
+            reference = vNodes[index];
+        } else {
+            reference = vNodes[0];
+        }
+        return reference.locateRange(container, offset);
+    }
+}
 
 export const Parser = {
     /**
@@ -390,10 +448,27 @@ export const Parser = {
             } while (context);
         }
 
+        // Parse the DOM range if any.
+        const selection = node.ownerDocument.getSelection();
+        const range = selection.rangeCount && selection.getRangeAt(0);
+        if (range) {
+            const forward = range.startContainer === selection.anchorNode;
+            const vRange = parseRange(range, forward ? Direction.FORWARD : Direction.BACKWARD);
+            vDocument.range.set(vRange);
+        }
+
+        // Set a default range in VDocument if none was set yet.
         if (!vDocument.range.start.parent || !vDocument.range.end.parent) {
             vDocument.range.setAt(vDocument.root);
         }
 
         return vDocument;
     },
+    /**
+     * Convert the DOM description of a range to the description of a VRange.
+     *
+     * @param range
+     * @param [direction]
+     */
+    parseRange: parseRange,
 };

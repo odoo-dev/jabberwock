@@ -1,6 +1,5 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
-import { VRangeDescription, RelativePosition } from './VRange';
-import { VDocumentMap } from './VDocumentMap';
+import { Parser } from './Parser';
 import { VNode, VNodeType } from './VNode';
 import JWEditor from './JWEditor';
 
@@ -25,60 +24,6 @@ export class EventManager {
     //--------------------------------------------------------------------------
 
     /**
-     * Convert the DOM values for a range to set to VRange locations in the
-     * CustomEvent's payload.
-     *
-     * @param range
-     */
-    _convertRange(range: DomRangeDescription): VRangeDescription {
-        const start = this._locate(range.startContainer, range.startOffset);
-        const end = this._locate(range.endContainer, range.endOffset);
-        const [startVNode, startPosition] = start;
-        const [endVNode, endPosition] = end;
-        return {
-            start: startVNode,
-            startPosition: startPosition,
-            end: endVNode,
-            endPosition: endPosition,
-            direction: range.direction,
-        };
-    }
-    /**
-     * Return a position in the `VDocument` as a tuple containing a reference
-     * node and a relative position with respect to this node ('BEFORE' or
-     * 'AFTER'). The position is always given on the leaf.
-     *
-     * @param container
-     * @param offset
-     */
-    _locate(container: Node, offset: number): [VNode, RelativePosition] {
-        // Position `BEFORE` is preferred over `AFTER`, unless the offset
-        // overflows the children list, in which case `AFTER` is needed.
-        let position = RelativePosition.BEFORE;
-        const isTextNode = container.nodeType === Node.TEXT_NODE;
-        const content = isTextNode ? container.nodeValue : container.childNodes;
-        if (offset >= content.length) {
-            position = RelativePosition.AFTER;
-            offset = content.length - 1;
-        }
-        // Move to deepest child of container.
-        while (container.hasChildNodes()) {
-            container = container.childNodes[offset];
-            offset = 0;
-        }
-        // Get the VNodes matching the container.
-        const containers = VDocumentMap.fromDom(container);
-        // The reference is the offset-th match (eg.: text split into chars).
-        const reference = containers[offset];
-        // When clicking on a trailing line break, we need to target after the
-        // line break. The DOM represents these as 2 <br> so this is a special
-        // case.
-        if (reference.type === 'LINE_BREAK' && !reference.nextSibling() && !container.nextSibling) {
-            position = RelativePosition.AFTER;
-        }
-        return [reference, position];
-    }
-    /**
      * Callback given to the normalizer.
      */
     _onNormalizedEvent(customEvent: CustomEvent): void {
@@ -96,7 +41,7 @@ export class EventManager {
             case 'setRange': {
                 const rangeParams = payload as SetRangeParams;
                 return this.editor.execCommand(customEvent.type, {
-                    vRange: this._convertRange(rangeParams.domRange),
+                    vRange: Parser.parseRange(rangeParams.domRange),
                 });
             }
             case 'keydown': {
