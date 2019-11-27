@@ -4,6 +4,7 @@ import { VNode, VNodeType } from './VNode';
 import JWEditor from './JWEditor';
 import { CommandIdentifier } from './Dispatcher';
 import { CommandArgs } from './Dispatcher';
+import { Direction } from './VRange';
 
 export class EventManager {
     editor: JWEditor;
@@ -36,7 +37,10 @@ export class EventManager {
             case 'setRange':
                 return ['setRange', { vRange: Parser.parseRange(action.domRange) }];
             case 'deleteContent':
-                return [action.direction === 'forward' ? 'deleteForward' : 'deleteBackward', {}];
+                return [
+                    action.direction === Direction.FORWARD ? 'deleteForward' : 'deleteBackward',
+                    {},
+                ];
             case 'applyFormat':
                 return ['applyFormat', { format: action.format }];
             default:

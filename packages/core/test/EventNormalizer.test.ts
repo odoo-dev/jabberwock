@@ -24,12 +24,12 @@ type TriggerNativeEventsOption =
  */
 function _eventType(eventName: string): string {
     const types = {
-        mouse: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
-        composition: ['composition'],
-        input: ['input'],
-        keyboard: ['key'],
-        drag: ['dragstart', 'dragend', 'drop'],
-        paste: ['paste'],
+        MouseEvent: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
+        CompositionEvent: ['composition'],
+        InputEvent: ['input'],
+        KeyboardEvent: ['key'],
+        DragEvent: ['dragstart', 'dragend', 'drop'],
+        ClipboardEvent: ['beforecut', 'cut', 'paste'],
     };
     let type = 'unknown';
     Object.keys(types).forEach(function(key) {
@@ -71,23 +71,25 @@ function triggerEvent(el: Node, eventName: string, options: TriggerNativeEventsO
     const type = _eventType(eventName);
     let ev: Event;
     switch (type) {
-        case 'mouse':
-        case 'contextmenu':
+        case 'MouseEvent':
             ev = new MouseEvent(eventName, options);
             break;
-        case 'keyboard':
+        case 'KeyboardEvent':
             ev = new KeyboardEvent(eventName, options);
             break;
-        case 'composition':
+        case 'CompositionEvent':
             ev = new CompositionEvent(eventName, options);
             break;
-        case 'drag':
+        case 'DragEvent':
             ev = new DragEvent(eventName, options);
             break;
-        case 'paste':
+        case 'ClipboardEvent':
+            if (!('clipboardData' in options)) {
+                throw new Error('Wrong test');
+            }
             ev = new ClipboardEvent(eventName, options);
             break;
-        case 'input':
+        case 'InputEvent':
             ev = new InputEvent(eventName, options);
             break;
         default:
@@ -443,7 +445,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             origin: 'EventNormalizer',
                                         },
                                     ],
@@ -1615,7 +1617,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             origin: 'EventNormalizer',
                                         },
                                     ],
@@ -1659,7 +1661,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             origin: 'EventNormalizer',
                                         },
                                     ],
@@ -1703,7 +1705,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             origin: 'EventNormalizer',
                                         },
                                     ],
@@ -1747,7 +1749,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             origin: 'EventNormalizer',
                                         },
                                     ],
@@ -1799,7 +1801,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteWord',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             text: 'toto',
                                             origin: 'EventNormalizer',
                                         },
@@ -1850,7 +1852,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteWord',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             text: 'test',
                                             origin: 'EventNormalizer',
                                         },
@@ -1901,7 +1903,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteWord',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             text: 'test',
                                             origin: 'EventNormalizer',
                                         },
@@ -1954,7 +1956,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteWord',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             text: 'test',
                                             origin: 'EventNormalizer',
                                         },
@@ -2009,7 +2011,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteHardLine',
-                                            direction: 'backward',
+                                            direction: 'BACKWARD',
                                             domRange: {
                                                 startContainer: text,
                                                 startOffset: 0,
@@ -2068,7 +2070,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteWord',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             text: 'ctest',
                                             origin: 'EventNormalizer',
                                         },
@@ -2123,7 +2125,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteHardLine',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             domRange: {
                                                 startContainer: text2,
                                                 startOffset: 2,
@@ -2180,6 +2182,48 @@ describe('utils', () => {
                                 },
                             ],
                             mutatedElements: new Set([text3]),
+                        },
+                    ]);
+                });
+                it('backspace (Edge)', async () => {
+                    const p = document.createElement('p');
+                    const text = document.createTextNode('hello');
+                    root.innerHTML = '';
+                    root.appendChild(p);
+                    p.appendChild(text);
+                    setRange(text, 5, text, 5);
+
+                    await nextTick();
+                    eventBatchs = [];
+                    triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                    triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                    text.textContent = 'hell';
+                    triggerEvent(root, 'input', {});
+                    setRange(text, 4, text, 4);
+                    await nextTick();
+
+                    expect(eventBatchs).to.deep.equal([
+                        {
+                            events: [
+                                {
+                                    type: 'keyboard',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    altKey: false,
+                                    ctrlKey: false,
+                                    metaKey: false,
+                                    shiftKey: false,
+                                    defaultPrevented: false,
+                                    actions: [
+                                        {
+                                            type: 'deleteContent',
+                                            direction: 'BACKWARD',
+                                            origin: 'EventNormalizer',
+                                        },
+                                    ],
+                                },
+                            ],
+                            mutatedElements: new Set([text]),
                         },
                     ]);
                 });
@@ -2863,7 +2907,7 @@ describe('utils', () => {
                 before(callbackBefore);
                 after(callbackAfter);
 
-                it('ctrl + c to cut', async () => {
+                it('ctrl + x to cut', async () => {
                     root.innerHTML = '<div>abc<br/>abc<br/>abc</div>';
                     const p = root.firstChild;
                     const text1 = p.childNodes[0];
@@ -2878,12 +2922,17 @@ describe('utils', () => {
 
                     triggerEvent(root, 'keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
                     triggerEvent(p, 'beforeinput', { inputType: 'deleteByCut' });
-                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'bc\ndef\ngh');
+                    dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
+                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
                     (text1 as Text).textContent = 'ab';
                     p.removeChild(br1);
                     p.removeChild(text2);
                     p.removeChild(br2);
                     (text3 as Text).textContent = 'c';
+                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
                     setRange(text3, 0, text3, 0);
                     await nextTick();
                     await nextTick();
@@ -2903,7 +2952,7 @@ describe('utils', () => {
                                     defaultPrevented: false,
                                     actions: [
                                         {
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             type: 'deleteContent',
                                             origin: 'EventNormalizer',
                                         },
@@ -3823,6 +3872,73 @@ describe('utils', () => {
                         },
                     ]);
                 });
+                it('correction (Edge)', async () => {
+                    const p = document.createElement('p');
+                    const text = document.createTextNode('a brillig b');
+                    root.innerHTML = '';
+                    root.appendChild(p);
+                    p.appendChild(text);
+                    setRange(text, 4, text, 4);
+
+                    await nextTick();
+                    await nextTick();
+                    eventBatchs = [];
+                    triggerEvent(root, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 20,
+                        clientY: 10,
+                    });
+                    setRange(text, 2, text, 9);
+                    triggerEvent(root, 'contextmenu', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 20,
+                        clientY: 10,
+                    });
+
+                    await nextTick();
+                    eventBatchs = [];
+                    text.textContent = 'a  b';
+                    text.textContent = 'a brill b';
+                    // await nextTick(); TODO with Edge next version
+                    triggerEvent(root, 'input', {});
+                    setRange(text, 7, text, 7);
+                    await nextTick();
+                    await nextTick();
+
+                    expect(eventBatchs).to.deep.equal([
+                        {
+                            events: [
+                                {
+                                    from: 'brillig',
+                                    to: 'brill',
+                                    type: 'composition',
+                                    defaultPrevented: false,
+                                    actions: [
+                                        {
+                                            type: 'setRange',
+                                            origin: 'EventNormalizer',
+                                            domRange: {
+                                                startContainer: text,
+                                                startOffset: 2,
+                                                endContainer: text,
+                                                endOffset: 9,
+                                                direction: 'BACKWARD',
+                                            },
+                                        },
+                                        {
+                                            text: 'brill',
+                                            type: 'insertText',
+                                            origin: 'EventNormalizer',
+                                        },
+                                    ],
+                                },
+                            ],
+                            mutatedElements: new Set([text]),
+                        },
+                    ]);
+                });
             });
 
             describe('select all', () => {
@@ -4188,7 +4304,7 @@ describe('utils', () => {
                 before(callbackBefore);
                 after(callbackAfter);
 
-                it('use mouse cut', async () => {
+                it('use mouse cut (ubuntu chrome)', async () => {
                     root.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
                     const p = root.firstChild;
                     const text1 = p.childNodes[0];
@@ -4234,13 +4350,17 @@ describe('utils', () => {
                     });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(p, 'beforeinput', { inputType: 'deleteByCut' });
-                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'bc\ndef\ngh');
+                    dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
+                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
                     (text1 as Text).textContent = 'ab';
                     p.removeChild(br1);
                     p.removeChild(text2);
                     p.removeChild(br2);
                     (text3 as Text).textContent = 'i';
+                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
                     setRange(text3, 0, text3, 0);
                     await nextTick();
                     await nextTick();
@@ -4284,7 +4404,118 @@ describe('utils', () => {
                                     defaultPrevented: false,
                                     actions: [
                                         {
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
+                                            type: 'deleteContent',
+                                            origin: 'EventNormalizer',
+                                        },
+                                    ],
+                                },
+                            ],
+                            mutatedElements: new Set([text1, br1, text2, br2, text3]),
+                        },
+                    ]);
+                });
+                it('use mouse cut (Edge)', async () => {
+                    root.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
+                    const p = root.firstChild;
+                    const text1 = p.childNodes[0];
+                    const br1 = p.childNodes[1];
+                    const text2 = p.childNodes[2];
+                    const br2 = p.childNodes[3];
+                    const text3 = p.childNodes[4];
+                    await nextTick();
+                    eventBatchs = [];
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 11,
+                        clientY: 10,
+                    });
+                    setRange(text1, 1, text1, 1);
+                    setRange(text1, 1, text3, 2);
+                    triggerEvent(root.lastChild, 'click', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 22,
+                        clientY: 45,
+                    });
+                    triggerEvent(root.lastChild, 'mouseup', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 22,
+                        clientY: 45,
+                    });
+                    await nextTick();
+                    await nextTick();
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 10,
+                        clientY: 25,
+                    });
+                    triggerEvent(p, 'contextmenu', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 10,
+                        clientY: 25,
+                    });
+                    await nextTick();
+                    await nextTick();
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'bc\ndef\ngh');
+                    dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
+                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
+                    (text1 as Text).textContent = 'ab';
+                    p.removeChild(br1);
+                    p.removeChild(text2);
+                    p.removeChild(br2);
+                    (text3 as Text).textContent = 'i';
+                    triggerEvent(p, 'input', {});
+                    setRange(text3, 0, text3, 0);
+                    await nextTick();
+                    await nextTick();
+
+                    expect(eventBatchs).to.deep.equal([
+                        {
+                            events: [
+                                {
+                                    type: 'pointer',
+                                    target: {
+                                        offsetNode: text3,
+                                        offset: 2,
+                                    },
+                                    defaultPrevented: false,
+                                    actions: [
+                                        {
+                                            type: 'setRange',
+                                            domRange: {
+                                                startContainer: text1,
+                                                startOffset: 1,
+                                                endContainer: text3,
+                                                endOffset: 2,
+                                                direction: Direction.FORWARD,
+                                            },
+                                            origin: 'EventNormalizer',
+                                        },
+                                    ],
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
+                        {
+                            events: [
+                                {
+                                    type: 'pointer',
+                                    inputType: 'deleteByCut',
+                                    target: {
+                                        offsetNode: text2,
+                                        offset: 1,
+                                    },
+                                    defaultPrevented: false,
+                                    actions: [
+                                        {
+                                            direction: 'FORWARD',
                                             type: 'deleteContent',
                                             origin: 'EventNormalizer',
                                         },
@@ -4390,7 +4621,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             origin: 'EventNormalizer',
                                         },
                                         {
@@ -4460,7 +4691,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             origin: 'EventNormalizer',
                                         },
                                         {
@@ -4545,7 +4776,7 @@ describe('utils', () => {
                                     actions: [
                                         {
                                             type: 'deleteContent',
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             origin: 'EventNormalizer',
                                         },
                                         {

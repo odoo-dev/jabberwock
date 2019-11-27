@@ -82,7 +82,7 @@ export interface NormalizedAction {
     origin: string;
     domRange?: DomRangeDescription;
     vRange?: object;
-    direction?: 'forward' | 'backward';
+    direction?: Direction;
     text?: string;
     html?: string;
     files?: File[];
@@ -241,7 +241,8 @@ export class EventNormalizer {
         this._bindEvent(document, 'touchstart', this._onMouseDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
-        this._bindEvent(editable, 'paste', this._onPaste);
+        this._bindEvent(editable, 'cut', this._onCutOrPaste);
+        this._bindEvent(editable, 'paste', this._onCutOrPaste);
         this._bindEvent(editable, 'dragstart', this._onDragStart);
         this._bindEvent(editable, 'dragend', this._onDragEnd);
         this._bindEvent(editable, 'drop', this._onDrop);
@@ -407,7 +408,7 @@ export class EventNormalizer {
                     shiftKey: keyboardEv.shiftKey,
                     defaultPrevented: keyboardEv.defaultPrevented,
                 });
-            } else if (ev.type === 'paste' || ev.type === 'drop') {
+            } else if (ev.type === 'cut' || ev.type === 'paste' || ev.type === 'drop') {
                 const evClipboardEvent = ev as DataTransferEvent;
                 if (!lastCompiledEvent) {
                     const detail = evClipboardEvent.detail;
@@ -418,8 +419,13 @@ export class EventNormalizer {
                     };
                     compiledEvents.push(lastCompiledEvent);
                 }
-                lastCompiledEvent.inputType =
-                    ev.type === 'drop' ? 'insertFromDrop' : 'insertFromPaste';
+                if (ev.type === 'cut') {
+                    lastCompiledEvent.inputType = 'deleteByCut';
+                } else if (ev.type === 'drop') {
+                    lastCompiledEvent.inputType = 'insertFromDrop';
+                } else {
+                    lastCompiledEvent.inputType = 'insertFromPaste';
+                }
                 compiledEvents.push({
                     type: ev.type,
                     dataTransfer: evClipboardEvent.detail,
@@ -434,22 +440,13 @@ export class EventNormalizer {
                 }
             } else if (ev.type === 'input') {
                 const evInput = ev as InputEvent;
-                if (evInput.inputType === 'insertReplacementText') {
+                if (evInput.inputType === 'insertReplacementText' || !evInput.inputType) {
                     // safari completion/correction
                     compiledEvents = [
                         {
                             type: 'composition',
                             inputType: 'insertReplacementText',
                             data: evInput.data,
-                            defaultPrevented: ev.defaultPrevented,
-                        },
-                    ];
-                } else if (evInput.inputType === 'deleteByCut') {
-                    compiledEvents = [
-                        {
-                            type: 'pointer',
-                            caretPosition: this._initialCaretPosition,
-                            inputType: 'deleteByCut',
                             defaultPrevented: ev.defaultPrevented,
                         },
                     ];
@@ -495,7 +492,7 @@ export class EventNormalizer {
             } else if (compiledEvent.type === 'composition') {
                 normalizedEvents.push(...this._analyzeComposition(compiledEvent));
             } else if (compiledEvent.type === 'pointer') {
-                actions = this._analyze(compiledEvent);
+                actions = [];
                 normalizedEvents.push({
                     type: 'pointer',
                     target: compiledEvent.caretPosition,
@@ -503,8 +500,14 @@ export class EventNormalizer {
                     defaultPrevented: compiledEvent.defaultPrevented,
                     actions: actions,
                 } as NormalizedPointerEvent);
-            } else if (compiledEvent.type !== 'input') {
-                actions.push(...this._analyze(compiledEvent));
+            } else if (compiledEvent.type === 'cut') {
+                actions.push(...this._analyzeRemove(compiledEvent));
+            } else if (compiledEvent.type === 'paste') {
+                actions.push(...this._analyzePaste(compiledEvent));
+            } else if (compiledEvent.type === 'drop') {
+                actions.push(...this._analyzeDrop(compiledEvent));
+            } else if (compiledEvent.type === 'selectAll') {
+                actions.push(...this._makeSelectAll());
             } else if (inputTypeCommands.has(compiledEvent.inputType)) {
                 const inputType = compiledEvent.inputType;
                 if (inputType.indexOf('format') === 0) {
@@ -609,26 +612,6 @@ export class EventNormalizer {
         }
         compiledEvent.inputType = inputType || (data && 'textInput');
     }
-    /**
-     * Analyze the compiled event and return the corresponding custom events.
-     *
-     * @private
-     */
-    _analyze(compiledEvent: CompiledEvent): NormalizedAction[] {
-        const events = [];
-        const type = compiledEvent.type;
-        const inputType = compiledEvent.inputType;
-        if (inputType === 'deleteByCut') {
-            events.push(...this._analyzeRemove(compiledEvent));
-        } else if (type === 'paste') {
-            events.push(...this._analyzePaste(compiledEvent));
-        } else if (type === 'drop') {
-            events.push(...this._analyzeDrop(compiledEvent));
-        } else if (compiledEvent.type === 'selectAll') {
-            events.push(...this._makeSelectAll());
-        }
-        return events;
-    }
     _analyzeKeyboard(compiledEvent: CompiledEvent, elements: Set<Node>): NormalizedAction[] {
         const events = [];
         const key = compiledEvent.key;
@@ -673,7 +656,7 @@ export class EventNormalizer {
     _analyzeDrop(ev: CompiledEvent): NormalizedAction[] {
         const events = [];
         if (ev.dataTransfer.fromDragContent && !ev.dataTransfer.files.length) {
-            events.push(this._makePayload('deleteContent', { direction: 'forward' }));
+            events.push(this._makePayload('deleteContent', { direction: Direction.FORWARD }));
         }
         events.push(this._makePayload('setRange', { domRange: ev.dataTransfer.range }));
         events.push(this._analyzeDataTransfer(ev.dataTransfer));
@@ -914,11 +897,11 @@ export class EventNormalizer {
      * @private
      */
     _analyzeRemove(ev: CompiledEvent): NormalizedAction[] {
-        const direction = ev.key === 'Backspace' ? 'backward' : 'forward';
+        const direction = ev.key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
         if (
             ev.inputType === 'deleteContentForward' ||
             ev.inputType === 'deleteContentBackward' ||
-            ev.inputType === 'deleteByCut'
+            ev.type === 'cut'
         ) {
             return [
                 this._makePayload('deleteContent', {
@@ -938,16 +921,23 @@ export class EventNormalizer {
                 }),
             ];
         }
+        if (ev.inputType === 'deleteHardLineForward' || ev.inputType === 'deleteHardLineBackward') {
+            return [
+                this._makePayload('deleteHardLine', {
+                    direction: direction,
+                    domRange: {
+                        startContainer: res.previous.nodes[res.index],
+                        startOffset: res.previous.offsets[res.index],
+                        endContainer: res.previous.nodes[res.index + res.remove.length - 1],
+                        endOffset: res.previous.offsets[res.index + res.remove.length - 1] + 1,
+                        direction: direction,
+                    } as DomRangeDescription,
+                }),
+            ];
+        }
         return [
-            this._makePayload('deleteHardLine', {
+            this._makePayload('deleteContent', {
                 direction: direction,
-                domRange: {
-                    startContainer: res.previous.nodes[res.index],
-                    startOffset: res.previous.offsets[res.index],
-                    endContainer: res.previous.nodes[res.index + res.remove.length - 1],
-                    endOffset: res.previous.offsets[res.index + res.remove.length - 1] + 1,
-                    direction: direction === 'backward' ? Direction.BACKWARD : Direction.FORWARD,
-                } as DomRangeDescription,
             }),
         ];
     }
@@ -1328,8 +1318,10 @@ export class EventNormalizer {
         } as CustomEventInit;
         this._registerEvent(new CustomEvent('drop', params));
     }
-    _onPaste(ev: ClipboardEvent): void {
-        ev.preventDefault();
+    _onCutOrPaste(ev: ClipboardEvent): void {
+        if (ev.type !== 'cut') {
+            ev.preventDefault();
+        }
         const clipboard = ev.clipboardData;
         const range = this._getRange();
         const params = {
@@ -1340,13 +1332,10 @@ export class EventNormalizer {
                 files: [],
                 originalEvent: ev,
                 range: range,
-                caretPosition: {
-                    offsetNode: range.startContainer,
-                    offset: range.startOffset,
-                },
+                caretPosition: this._initialCaretPosition,
             } as DataTransferDetail,
         } as CustomEventInit;
-        this._registerEvent(new CustomEvent('paste', params));
+        this._registerEvent(new CustomEvent(ev.type, params));
     }
     /**
      * Catch selectAll action

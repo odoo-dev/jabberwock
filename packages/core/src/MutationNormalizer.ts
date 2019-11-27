@@ -312,18 +312,6 @@ export class MutationNormalizer {
     // Private
     //--------------------------------------------------------------------------
 
-    _searchText(target: Node): Node[] {
-        const texts = [];
-        if (target.nodeType === Node.TEXT_NODE || target.nodeName === 'BR') {
-            texts.push(target);
-        } else {
-            target.childNodes.forEach(target => {
-                texts.push(...this._searchText(target));
-            });
-        }
-        return texts;
-    }
-
     _getCharLinked(charMutations: CharMutation[], type: string): CharactersMapping {
         const mapNodeValue = new WeakMap();
         const obj: CharactersMapping = {
