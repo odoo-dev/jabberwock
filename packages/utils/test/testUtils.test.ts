@@ -4,10 +4,10 @@ describe('core', () => {
     describe('utils', () => {
         describe('testUtils', () => {
             describe('testEditor()', () => {
-                it('content should be the same (without range)', () => {
+                it('content should be the same (without range)', async () => {
                     let content;
                     content = 'a';
-                    testEditor({
+                    await testEditor({
                         contentBefore: content,
                         contentAfter: content,
                         renderingOptions: {
@@ -16,7 +16,7 @@ describe('core', () => {
                     });
 
                     content = '<b>a</b>';
-                    testEditor({
+                    await testEditor({
                         contentBefore: content,
                         contentAfter: content,
                         renderingOptions: {

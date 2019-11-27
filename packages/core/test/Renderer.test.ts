@@ -46,32 +46,32 @@ describe('utils', () => {
             });
         });
         describe('range', () => {
-            it('should render text range at the beginning', () => {
+            it('should render text range at the beginning', async () => {
                 const content = `<p>[a]bc</p>`;
-                testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range at the end', () => {
+            it('should render text range at the end', async () => {
                 const content = `<p>ab[c]</p>`;
-                testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range in the whole tag', () => {
+            it('should render text range in the whole tag', async () => {
                 const content = `<p>[abc]</p>`;
-                testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range that is collapsed in the beginning', () => {
+            it('should render text range that is collapsed in the beginning', async () => {
                 const content = `<p>[]abc</p>`;
-                testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range that is collapsed in the end', () => {
+            it('should render text range that is collapsed in the end', async () => {
                 const content = `<p>abc[]</p>`;
-                testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range that is collapsed in the middle', () => {
+            it('should render text range that is collapsed in the middle', async () => {
                 const content = `<p>ab[]c</p>`;
-                testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render the range outside the tag', () => {
-                testEditor({ contentBefore: '[<b>a</b>]', contentAfter: '<b>[a]</b>' });
+            it('should render the range outside the tag', async () => {
+                await testEditor({ contentBefore: '[<b>a</b>]', contentAfter: '<b>[a]</b>' });
             });
         });
     });

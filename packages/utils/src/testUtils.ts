@@ -21,7 +21,7 @@ export interface TestEditorSpec {
  *
  * @param spec
  */
-export function testEditor(spec: TestEditorSpec): void {
+export async function testEditor(spec: TestEditorSpec): Promise<void> {
     if (!spec.renderingOptions) {
         spec.renderingOptions = { renderTextualRange: true };
     }
@@ -38,7 +38,7 @@ export function testEditor(spec: TestEditorSpec): void {
             debug: true,
         });
     }
-    editor.start(spec.parsingOptions);
+    await editor.start(spec.parsingOptions);
     if (spec.stepFunction) {
         spec.stepFunction(editor);
     }
