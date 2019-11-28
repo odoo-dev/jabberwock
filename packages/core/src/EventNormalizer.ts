@@ -130,15 +130,12 @@ interface DataTransferDetail {
     'text/html': string;
     'text/uri-list': string;
     files: File[];
+    originalEvent: Event;
     fromDragContent: boolean;
-    originalEvent: DragEvent | ClipboardEvent;
     caretPosition: DomLocation;
     range: DomRangeDescription;
 }
 
-interface DataTransferEvent extends CustomEvent {
-    detail: DataTransferDetail;
-}
 interface CompiledEvent {
     type: string; // main event type, e.g. 'keydown', 'composition', 'move', ...
     key?: string; // the key pressed for keyboard events
@@ -241,8 +238,8 @@ export class EventNormalizer {
         this._bindEvent(document, 'touchstart', this._onMouseDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
-        this._bindEvent(editable, 'cut', this._onCutOrPaste);
-        this._bindEvent(editable, 'paste', this._onCutOrPaste);
+        this._bindEvent(editable, 'cut', this._onClipboard);
+        this._bindEvent(editable, 'paste', this._onClipboard);
         this._bindEvent(editable, 'dragstart', this._onDragStart);
         this._bindEvent(editable, 'dragend', this._onDragEnd);
         this._bindEvent(editable, 'drop', this._onDrop);
@@ -409,7 +406,7 @@ export class EventNormalizer {
                     defaultPrevented: keyboardEv.defaultPrevented,
                 });
             } else if (ev.type === 'cut' || ev.type === 'paste' || ev.type === 'drop') {
-                const evClipboardEvent = ev as DataTransferEvent;
+                const evClipboardEvent = ev as CustomEvent<DataTransferDetail>;
                 if (!lastCompiledEvent) {
                     const detail = evClipboardEvent.detail;
                     lastCompiledEvent = {
@@ -1297,7 +1294,7 @@ export class EventNormalizer {
         }
 
         const caretRange = this._caretPositionFromPoint(ev.clientX, ev.clientY, ev.target as Node);
-        const params = {
+        const params: CustomEventInit<DataTransferDetail> = {
             detail: {
                 'text/plain': evDataTransfer.getData('text/plain'),
                 'text/html': evDataTransfer.getData('text/html'),
@@ -1313,34 +1310,41 @@ export class EventNormalizer {
                 },
                 caretPosition: caretRange,
                 fromDragContent: dragAndDropAnyContent,
-            } as DataTransferDetail,
-        } as CustomEventInit;
+            },
+        };
         this._registerEvent(new CustomEvent('drop', params));
     }
-    _onCutOrPaste(ev: ClipboardEvent): void {
-        if (ev.type !== 'cut') {
+    /**
+     * Convert the clipboard event into a custom pre-processed format in order
+     * to store additional information that are specific to this point in time,
+     * such as the current range and the initial caret position.
+     *
+     * @param ev
+     */
+    _onClipboard(ev: ClipboardEvent): void {
+        if (ev.type === 'paste') {
+            // Prevent the default browser wild pasting behavior.
             ev.preventDefault();
         }
         const clipboard = ev.clipboardData;
-        const range = this._getRange();
-        const params = {
+        const params: CustomEventInit<DataTransferDetail> = {
             detail: {
                 'text/plain': clipboard.getData('text/plain'),
                 'text/html': clipboard.getData('text/html'),
                 'text/uri-list': clipboard.getData('text/uri-list'),
                 files: [],
                 originalEvent: ev,
-                range: range,
+                range: this._getRange(),
                 caretPosition: this._initialCaretPosition,
-            } as DataTransferDetail,
-        } as CustomEventInit;
+                fromDragContent: false,
+            },
+        };
         this._registerEvent(new CustomEvent(ev.type, params));
     }
     /**
-     * Catch selectAll action
+     * On each change of selection, check if it might be a "Select All" action.
      *
      * @private
-     * @param {Event} ev
      */
     _onSelectionChange(): void {
         if (!this._initialCaretPosition) {
