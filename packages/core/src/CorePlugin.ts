@@ -1,18 +1,27 @@
 import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
-import { VRangeDescription, Direction, RelativePosition } from './VRange';
+import { VRangeDescription, Direction, RelativePosition, RangePosition } from './VRange';
 import { VNode } from './VNode';
 
-export interface InsertParams {
+export interface RangeFromTo {
+    start: VNode;
+    startPosition?: RangePosition;
+    end?: VNode;
+    endPosition?: RangePosition;
+}
+export interface OptionalRangeParams {
+    range?: RangeFromTo;
+}
+export interface InsertParams extends OptionalRangeParams {
     value: VNode;
 }
-export interface InsertTextParams {
+export interface InsertTextParams extends OptionalRangeParams {
     value: string;
 }
 export interface VRangeParams {
     vRange: VRangeDescription;
 }
-export interface FormatParams {
+export interface FormatParams extends OptionalRangeParams {
     format: 'bold' | 'italic' | 'underline';
 }
 
@@ -56,8 +65,8 @@ export class CorePlugin extends JWPlugin {
     /**
      * Insert a paragraph break.
      */
-    insertParagraphBreak(): void {
-        this.editor.vDocument.insertParagraphBreak();
+    insertParagraphBreak(optionalRangeParams: OptionalRangeParams): void {
+        this.editor.vDocument.insertParagraphBreak(optionalRangeParams.range);
     }
     /**
      * Insert a VNode at range.
@@ -65,7 +74,7 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     insert(params: InsertParams): void {
-        this.editor.vDocument.insert(params.value);
+        this.editor.vDocument.insert(params.value, params.range);
     }
     /**
      * Insert text at range.
@@ -73,39 +82,41 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     insertText(params: InsertTextParams): void {
-        this.editor.vDocument.insertText(params.value);
+        this.editor.vDocument.insertText(params.value, params.range);
     }
     /**
      * Command to apply the format.
      */
     applyFormat(params: FormatParams): void {
-        this.editor.vDocument.applyFormat(params.format);
+        this.editor.vDocument.applyFormat(params.format, params.range);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
      */
-    deleteBackward(): void {
-        const range = this.editor.vDocument.range;
-        if (range.isCollapsed()) {
-            const previous = range.start.previous();
-            if (previous) {
-                range.extendTo(previous, Direction.BACKWARD);
+    deleteBackward(optionalRangeParams: OptionalRangeParams): void {
+        this.editor.vDocument.withCustomRange(optionalRangeParams.range, range => {
+            if (range.isCollapsed()) {
+                const previous = range.start.previous();
+                if (previous) {
+                    range.extendTo(previous, Direction.BACKWARD);
+                }
             }
-        }
-        this.editor.vDocument.deleteSelection();
+            this.editor.vDocument.deleteSelection(range);
+        });
     }
     /**
      * Delete in the forward direction (delete key expected behavior).
      */
-    deleteForward(): void {
-        const range = this.editor.vDocument.range;
-        if (range.isCollapsed()) {
-            const next = range.end.next();
-            if (next) {
-                range.extendTo(next, Direction.FORWARD);
+    deleteForward(optionalRangeParams: OptionalRangeParams): void {
+        this.editor.vDocument.withCustomRange(optionalRangeParams.range, range => {
+            if (range.isCollapsed()) {
+                const next = range.end.next();
+                if (next) {
+                    range.extendTo(next, Direction.FORWARD);
+                }
             }
-        }
-        this.editor.vDocument.deleteSelection();
+            this.editor.vDocument.deleteSelection(range);
+        });
     }
     /**
      * Navigate to a given range.

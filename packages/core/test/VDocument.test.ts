@@ -1,9 +1,169 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { FormatParams } from '../src/CorePlugin';
+import { FormatParams, InsertParams, OptionalRangeParams, RangeFromTo } from '../src/CorePlugin';
+import { VNode, VNodeType } from '../src/VNode';
+import { RangePosition } from '../src/VRange';
+import { expect } from 'chai';
 
 describe('stores', () => {
     describe('VDocument', () => {
+        describe('withCustomRange', () => {
+            it('should work with a provided VRange ', () => {
+                testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: async (editor: JWEditor) => {
+                        await editor.vDocument.withCustomRange(editor.vDocument.range, range => {
+                            editor.vDocument.insertText('c', range);
+                            editor.renderer.render(editor.vDocument, editor.editable);
+                        });
+                    },
+                    contentAfter: 'abc[]',
+                });
+            });
+            it('should take the current range as default', () => {
+                testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: async (editor: JWEditor) => {
+                        await editor.vDocument.withCustomRange(null, range => {
+                            editor.vDocument.insertText('c', range);
+                            editor.renderer.render(editor.vDocument, editor.editable);
+                        });
+                    },
+                    contentAfter: 'abc[]',
+                });
+            });
+            describe('rangeParam with RangeFromTo', () => {
+                it('should work with without rangeParams.startPosition and rangeParams.endPosition', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                                end: aNode,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                            });
+                        },
+                        contentAfter: 'cab[]',
+                    });
+                });
+                it('should work with without rangeParams.end', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                                expect(range.start).to.be.equal(range.end);
+                            });
+                        },
+                        contentAfter: 'cab[]',
+                    });
+                });
+                it('should work with default RangePosition.BEFORE and RangePosition.BEFORE', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                                end: aNode,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                            });
+                        },
+                        contentAfter: 'cab[]',
+                    });
+                });
+                it('should work with RangePosition.BEFORE and RangePosition.BEFORE', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                                startPosition: RangePosition.BEFORE,
+                                end: aNode,
+                                endPosition: RangePosition.BEFORE,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                            });
+                        },
+                        contentAfter: 'cab[]',
+                    });
+                });
+                it('should work with RangePosition.BEFORE and RangePosition.AFTER', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                                startPosition: RangePosition.BEFORE,
+                                end: aNode,
+                                endPosition: RangePosition.AFTER,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                            });
+                        },
+                        contentAfter: 'cb[]',
+                    });
+                });
+                it('should work with RangePosition.AFTER and RangePosition.BEFORE', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const bNode = editor.vDocument.root.next(node => node.value === 'b');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                                startPosition: RangePosition.AFTER,
+                                end: bNode,
+                                endPosition: RangePosition.BEFORE,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                            });
+                        },
+                        contentAfter: 'acb[]',
+                    });
+                });
+                it('should work with RangePosition.AFTER and RangePosition.AFTER', () => {
+                    testEditor({
+                        contentBefore: 'ab[]',
+                        stepFunction: async (editor: JWEditor) => {
+                            const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                            const bNode = editor.vDocument.root.next(node => node.value === 'b');
+                            const rangeParams: RangeFromTo = {
+                                start: aNode,
+                                startPosition: RangePosition.AFTER,
+                                end: bNode,
+                                endPosition: RangePosition.AFTER,
+                            };
+                            await editor.vDocument.withCustomRange(rangeParams, range => {
+                                editor.vDocument.insertText('c', range);
+                                editor.renderer.render(editor.vDocument, editor.editable);
+                            });
+                        },
+                        contentAfter: 'ac[]',
+                    });
+                });
+            });
+        });
         describe('insertText', () => {
             describe('bold', () => {
                 describe('Range collapsed', () => {
@@ -75,6 +235,27 @@ describe('stores', () => {
                                 editor.renderer.render(editor.vDocument, editor.editable);
                             },
                             contentAfter: '<p><b>a</b></p><p>c[]b</p>',
+                        });
+                    });
+                    it('should insert with a fake range', () => {
+                        testEditor({
+                            contentBefore: '<p>a[b<b>c</b></p><p>de]f</p>',
+                            stepFunction: (editor: JWEditor) => {
+                                const bNode = editor.vDocument.root.next(
+                                    node => node.value === 'b',
+                                );
+                                const eNode = editor.vDocument.root.next(
+                                    node => node.value === 'e',
+                                );
+                                editor.execCommand('insertText', {
+                                    value: 'gh',
+                                    range: {
+                                        start: bNode,
+                                        end: eNode,
+                                    },
+                                });
+                            },
+                            contentAfter: '<p>a[<b>gh</b>e]f</p>',
                         });
                     });
                 });
@@ -278,6 +459,68 @@ describe('stores', () => {
                         },
                         contentAfter: 'a[<b>bc]</b>',
                     });
+                });
+            });
+            it('should applyFormat with a fake range', () => {
+                testEditor({
+                    contentBefore: 'a[bc]d',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                        const cNode = editor.vDocument.root.next(node => node.value === 'c');
+                        const params: FormatParams = {
+                            format: 'bold',
+                            range: {
+                                start: aNode,
+                                end: cNode,
+                            },
+                        };
+
+                        editor.execCommand('applyFormat', params);
+                    },
+                    contentAfter: '<b>a[b</b>c]d',
+                });
+            });
+        });
+        describe('insert', () => {
+            it('should insert with a fake range', () => {
+                testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const node = new VNode(VNodeType.CHAR, '#text', 'c');
+                        const aNode = editor.vDocument.root.next(node => node.value === 'a');
+                        const bNode = editor.vDocument.root.next(node => node.value === 'b');
+                        const params: InsertParams = {
+                            value: node,
+                            range: {
+                                start: aNode,
+                                end: bNode,
+                            },
+                        };
+
+                        editor.execCommand('insert', params);
+                    },
+                    contentAfter: 'cb[]',
+                });
+            });
+        });
+        describe('insertParagraphBreak', () => {
+            it('should insertParagraphBreak with a fake range', () => {
+                testEditor({
+                    contentBefore: '<p>abc</p><p>de[]</p>',
+                    stepFunction: (editor: JWEditor) => {
+                        const bNode = editor.vDocument.root.next(node => node.value === 'b');
+                        const cNode = editor.vDocument.root.next(node => node.value === 'c');
+                        const params: OptionalRangeParams = {
+                            range: {
+                                start: bNode,
+                                end: cNode,
+                            },
+                        };
+
+                        editor.execCommand('insertParagraphBreak', params);
+                        editor.renderer.render(editor.vDocument, editor.editable);
+                    },
+                    contentAfter: '<p>a</p><p>c</p><p>de[]</p>',
                 });
             });
         });

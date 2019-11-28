@@ -6,6 +6,12 @@ export enum Direction {
     BACKWARD = 'BACKWARD',
     FORWARD = 'FORWARD',
 }
+// ? rename this interface?
+export enum RangePosition {
+    BEFORE = 'BEFORE',
+    AFTER = 'AFTER',
+}
+// ? extend with RangePosition?
 export enum RelativePosition {
     BEFORE = 'BEFORE',
     AFTER = 'AFTER',
