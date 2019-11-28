@@ -131,7 +131,7 @@ interface DataTransferDetail {
     'text/uri-list': string;
     files: File[];
     originalEvent: Event;
-    fromDragContent: boolean;
+    draggingFromEditable: boolean;
     caretPosition: DomLocation;
     range: DomRangeDescription;
 }
@@ -234,14 +234,13 @@ export class EventNormalizer {
         this._bindEvent(document, 'click', this._onClick);
         this._bindEvent(document, 'touchend', this._onClick);
         this._bindEvent(editable, 'contextmenu', this._onContextMenu);
-        this._bindEvent(document, 'mousedown', this._onMouseDown);
-        this._bindEvent(document, 'touchstart', this._onMouseDown);
+        this._bindEvent(document, 'mousedown', this._onPointerDown);
+        this._bindEvent(document, 'touchstart', this._onPointerDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'cut', this._onClipboard);
         this._bindEvent(editable, 'paste', this._onClipboard);
         this._bindEvent(editable, 'dragstart', this._onDragStart);
-        this._bindEvent(editable, 'dragend', this._onDragEnd);
         this._bindEvent(editable, 'drop', this._onDrop);
 
         this._mutationNormalizer = new MutationNormalizer(editable);
@@ -652,7 +651,7 @@ export class EventNormalizer {
     }
     _analyzeDrop(ev: CompiledEvent): NormalizedAction[] {
         const events = [];
-        if (ev.dataTransfer.fromDragContent && !ev.dataTransfer.files.length) {
+        if (ev.dataTransfer.draggingFromEditable && !ev.dataTransfer.files.length) {
             events.push(this._makePayload('deleteContent', { direction: Direction.FORWARD }));
         }
         events.push(this._makePayload('setRange', { domRange: ev.dataTransfer.range }));
@@ -674,7 +673,7 @@ export class EventNormalizer {
                 const element = temp.querySelector('a, img');
                 if (element) {
                     if (
-                        !dataTransfer.fromDragContent &&
+                        !dataTransfer.draggingFromEditable &&
                         element.nodeName === 'A' &&
                         element.innerHTML === ''
                     ) {
@@ -975,16 +974,19 @@ export class EventNormalizer {
     /**
      * Get the current range from the current selection in DOM. If there is no
      * range in the DOM, return a fake one at offset 0 of the editable element.
+     * If an event is given, then the range must be at least partially
+     * contained in the target of the event, otherwise it means it took no
+     * part in it. In this case, return the caret position instead.
      *
-     * @private
+     * @param [ev]
      */
-    _getRange(): DomRangeDescription {
+    _getRange(ev?: MouseEvent | TouchEvent): DomRangeDescription {
+        let range: DomRangeDescription;
         const selection = this.editable.ownerDocument.getSelection();
-
         let ltr: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection means no range so a fake one is created
-            return {
+            range = {
                 startContainer: this.editable,
                 startOffset: 0,
                 endContainer: this.editable,
@@ -992,14 +994,14 @@ export class EventNormalizer {
                 direction: Direction.FORWARD,
             };
         } else {
-            // The direction of the range is sorely missing from the DOM api
+            // The direction of the range is sorely missing from the DOM api.
             const nativeRange = selection.getRangeAt(0);
             if (selection.anchorNode === selection.focusNode) {
                 ltr = selection.anchorOffset <= selection.focusOffset;
             } else {
                 ltr = selection.anchorNode === nativeRange.startContainer;
             }
-            return {
+            range = {
                 startContainer: nativeRange.startContainer,
                 startOffset: nativeRange.startOffset,
                 endContainer: nativeRange.endContainer,
@@ -1007,6 +1009,26 @@ export class EventNormalizer {
                 direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
             };
         }
+
+        // If an event is given, then the range must be at least partially
+        // contained in the target of the event, otherwise it means it took no
+        // part in it. In this case, consider the caret position instead.
+        // This can happen when target is an input or a contenteditable=false.
+        if (ev && ev.target instanceof Node) {
+            const target = ev.target;
+            if (!target.contains(range.startContainer) && !target.contains(range.endContainer)) {
+                const caretPosition = this._locateEvent(ev);
+                range = {
+                    startContainer: caretPosition.offsetNode,
+                    startOffset: caretPosition.offset,
+                    endContainer: caretPosition.offsetNode,
+                    endOffset: caretPosition.offset,
+                    direction: Direction.FORWARD,
+                };
+            }
+        }
+
+        return range;
     }
     /**
      * Return true if the given range is interpreted like a
@@ -1114,34 +1136,14 @@ export class EventNormalizer {
         }
         return this._isVisible(el.parentNode);
     }
-    _caretPositionFromPoint(x: number, y: number, target: Node): DomLocation {
-        let caretPosition = x || y ? caretPositionFromPoint(x, y) : undefined;
-        if (!caretPosition || !caretPosition.offsetNode) {
-            const range = this._getRange();
-            caretPosition = {
-                offsetNode: range.startContainer,
-                offset: range.startOffset,
-            };
-        }
+    _locateEvent(ev: MouseEvent | TouchEvent): DomLocation {
+        const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
+        const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
+        let caretPosition = caretPositionFromPoint(x, y);
         if (!this.editable.contains(caretPosition.offsetNode)) {
-            caretPosition = { offsetNode: target as Node, offset: 0 };
+            caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
         return caretPosition;
-    }
-    _rangeFromMousedown(x: number, y: number, target: Node): DomRangeDescription {
-        const caretPosition = this._caretPositionFromPoint(x, y, target);
-        let range = this._getRange();
-        if (!target.contains(range.startContainer) && !target.contains(range.endContainer)) {
-            // if target is an input or contenteditable false for eg
-            range = {
-                startContainer: caretPosition.offsetNode,
-                startOffset: caretPosition.offset,
-                endContainer: caretPosition.offsetNode,
-                endOffset: caretPosition.offset,
-                direction: Direction.FORWARD,
-            };
-        }
-        return range;
     }
 
     //--------------------------------------------------------------------------
@@ -1160,11 +1162,7 @@ export class EventNormalizer {
             if (!this._rangeHasChanged || this._currentlySelectingAll) {
                 return;
             }
-            this._initialCaretPosition = this._caretPositionFromPoint(
-                ev.clientX,
-                ev.clientY,
-                ev.target as Node,
-            );
+            this._initialCaretPosition = this._locateEvent(ev);
             this._triggerEvent({
                 events: [
                     {
@@ -1173,11 +1171,7 @@ export class EventNormalizer {
                         defaultPrevented: ev.defaultPrevented,
                         actions: [
                             this._makePayload('setRange', {
-                                domRange: this._rangeFromMousedown(
-                                    ev.clientX,
-                                    ev.clientY,
-                                    ev.target as Node,
-                                ),
+                                domRange: this._getRange(ev),
                             }),
                         ],
                     } as NormalizedPointerEvent,
@@ -1212,7 +1206,7 @@ export class EventNormalizer {
      * @private
      * @param {MouseEvent} ev
      */
-    _onMouseDown(ev: MouseEvent): void {
+    _onPointerDown(ev: MouseEvent | TouchEvent): void {
         if (!this.editable.contains(ev.target as Node)) {
             this._initialMousedownInEditable = false;
             this._initialCaretPosition = undefined;
@@ -1223,11 +1217,7 @@ export class EventNormalizer {
         // store mousedown event to detect range change from mouse selection
         this._initialMousedownInEditable = true;
         // store the caret position of the mousedown
-        this._initialCaretPosition = this._caretPositionFromPoint(
-            ev.clientX,
-            ev.clientY,
-            ev.target as Node,
-        );
+        this._initialCaretPosition = this._locateEvent(ev);
     }
     /**
      * Catch setRange actions
@@ -1243,11 +1233,7 @@ export class EventNormalizer {
             return;
         }
         if ('clientX' in ev) {
-            this._initialCaretPosition = this._caretPositionFromPoint(
-                ev.clientX,
-                ev.clientY,
-                ev.target as Node,
-            );
+            this._initialCaretPosition = this._locateEvent(ev);
         }
         clearTimeout(this._setTimeoutID);
         this._setTimeoutID = setTimeout(() => {
@@ -1256,7 +1242,7 @@ export class EventNormalizer {
                 return;
             }
 
-            const range = this._rangeFromMousedown(ev.clientX, ev.clientY, ev.target as Node);
+            const range = this._getRange(ev);
             this._triggerEvent({
                 events: [
                     {
@@ -1270,49 +1256,62 @@ export class EventNormalizer {
             });
         }, 0);
     }
+    /**
+     * If the drag start event is observed by the normalizer, it means the
+     * dragging started in the editable itself. It means the user is dragging
+     * content around in the editable zone.
+     *
+     */
     _onDragStart(): void {
         this._draggingFromEditable = true;
     }
-    _onDragEnd(): void {
-        this._draggingFromEditable = false;
-    }
+    /**
+     * Convert the drop event into a custom pre-processed format in order to
+     * store additional information that are specific to this point in time,
+     * such as the current range and the initial caret position.
+     *
+     * @param ev
+     */
     _onDrop(ev: DragEvent): void {
-        // Prevent default behavior (Prevent file from being opened)
+        // Prevent default behavior (e.g. prevent file from being opened.)
         ev.preventDefault();
-        const dragAndDropAnyContent = this._draggingFromEditable;
-        this._draggingFromEditable = false;
 
+        const transfer = ev.dataTransfer;
+
+        // Extract files using the DataTransferItemList interface.
         const files = [];
-        const evDataTransfer = ev.dataTransfer;
-        // Use DataTransferItemList interface to access the file(s)
-        for (let i = 0; i < ev.dataTransfer.items.length; i++) {
-            const item = ev.dataTransfer.items[i];
+        for (let i = 0; i < transfer.items.length; i++) {
+            const item = transfer.items[i];
             if (item.kind === 'file') {
-                const file = item.getAsFile();
-                files.push(file);
+                files.push(item.getAsFile());
             }
         }
 
-        const caretRange = this._caretPositionFromPoint(ev.clientX, ev.clientY, ev.target as Node);
+        const caretPosition = this._locateEvent(ev);
         const params: CustomEventInit<DataTransferDetail> = {
             detail: {
-                'text/plain': evDataTransfer.getData('text/plain'),
-                'text/html': evDataTransfer.getData('text/html'),
-                'text/uri-list': evDataTransfer.getData('text/uri-list'),
+                'text/plain': transfer.getData('text/plain'),
+                'text/html': transfer.getData('text/html'),
+                'text/uri-list': transfer.getData('text/uri-list'),
                 files: files,
                 originalEvent: ev,
+                // TODO: This looks wrong. Shouldn't it give me the range from
+                // where I dragged the stuff if draggingFromEditable is true ?
                 range: {
-                    startContainer: caretRange.offsetNode,
-                    startOffset: caretRange.offset,
-                    endContainer: caretRange.offsetNode,
-                    endOffset: caretRange.offset,
+                    startContainer: caretPosition.offsetNode,
+                    startOffset: caretPosition.offset,
+                    endContainer: caretPosition.offsetNode,
+                    endOffset: caretPosition.offset,
                     direction: Direction.FORWARD,
                 },
-                caretPosition: caretRange,
-                fromDragContent: dragAndDropAnyContent,
+                caretPosition: caretPosition,
+                draggingFromEditable: this._draggingFromEditable,
             },
         };
         this._registerEvent(new CustomEvent('drop', params));
+
+        // Dragging is over, reset this property.
+        this._draggingFromEditable = false;
     }
     /**
      * Convert the clipboard event into a custom pre-processed format in order
@@ -1336,7 +1335,7 @@ export class EventNormalizer {
                 originalEvent: ev,
                 range: this._getRange(),
                 caretPosition: this._initialCaretPosition,
-                fromDragContent: false,
+                draggingFromEditable: false,
             },
         };
         this._registerEvent(new CustomEvent(ev.type, params));

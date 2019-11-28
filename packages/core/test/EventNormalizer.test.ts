@@ -12,7 +12,8 @@ type TriggerNativeEventsOption =
     | CustomEventInit<any>
     | EventInit
     | DragEventInit
-    | ClipboardEventInit;
+    | ClipboardEventInit
+    | TouchEventInit;
 
 /**
  * Get the event type based on its name.
@@ -30,6 +31,7 @@ function _eventType(eventName: string): string {
         KeyboardEvent: ['key'],
         DragEvent: ['dragstart', 'dragend', 'drop'],
         ClipboardEvent: ['beforecut', 'cut', 'paste'],
+        TouchEvent: ['touchstart', 'touchend'],
     };
     let type = 'unknown';
     Object.keys(types).forEach(function(key) {
@@ -91,6 +93,9 @@ function triggerEvent(el: Node, eventName: string, options: TriggerNativeEventsO
             break;
         case 'InputEvent':
             ev = new InputEvent(eventName, options);
+            break;
+        case 'TouchEvent':
+            ev = new TouchEvent(eventName, options);
             break;
         default:
             ev = new Event(eventName, options);
@@ -3250,7 +3255,28 @@ describe('utils', () => {
                     const text = p.firstChild;
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'touchstart', { detail: 0 });
+                    triggerEvent(p, 'touchstart', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 18,
+                                clientY: 10,
+                                target: p,
+                                altitudeAngle: 0,
+                                azimuthAngle: 0,
+                                force: 0.5,
+                                pageX: 18,
+                                pageY: 10,
+                                identifier: Date.now(),
+                                radiusX: 0,
+                                radiusY: 0,
+                                rotationAngle: 0,
+                                screenX: 18,
+                                screenY: 10,
+                                touchType: 'direct',
+                            }),
+                        ],
+                    });
                     await nextTick();
                     triggerEvent(p, 'touchend', { detail: 0 });
                     await nextTick();
@@ -3306,7 +3332,28 @@ describe('utils', () => {
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'touchstart', { detail: 0 });
+                    triggerEvent(p, 'touchstart', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 24,
+                                clientY: 10,
+                                target: text,
+                                altitudeAngle: 0,
+                                azimuthAngle: 0,
+                                force: 0.5,
+                                pageX: 24,
+                                pageY: 10,
+                                identifier: Date.now(),
+                                radiusX: 0,
+                                radiusY: 0,
+                                rotationAngle: 0,
+                                screenX: 24,
+                                screenY: 10,
+                                touchType: 'direct',
+                            }),
+                        ],
+                    });
                     await nextTick();
                     triggerEvent(p, 'touchend', { detail: 0 });
                     await nextTick();
@@ -3370,7 +3417,7 @@ describe('utils', () => {
                                     type: 'pointer',
                                     target: {
                                         offsetNode: text,
-                                        offset: 1,
+                                        offset: 0,
                                     },
                                     defaultPrevented: false,
                                     actions: [
@@ -4029,13 +4076,23 @@ describe('utils', () => {
                         '<div>a</div><div>b</div><div>c<br/><br/><i style="display: none;">text</i></div>';
                     const p1 = root.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1];
+                    const p2 = root.childNodes[1] as HTMLElement;
                     const text2 = p2.firstChild;
                     const p3 = root.childNodes[2];
                     await nextTick();
-                    triggerEvent(p2, 'mousedown', { button: 2, detail: 1 });
+                    triggerEvent(p2, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: p2.offsetLeft,
+                        clientY: p2.offsetTop,
+                    });
                     setRange(text2, 1, text2, 1);
-                    triggerEvent(p2, 'contextmenu', { button: 2, detail: 0 });
+                    triggerEvent(p2, 'contextmenu', {
+                        button: 2,
+                        detail: 0,
+                        clientX: p2.offsetLeft,
+                        clientY: p2.offsetTop,
+                    });
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
@@ -4050,7 +4107,7 @@ describe('utils', () => {
                                     type: 'pointer',
                                     target: {
                                         offsetNode: text2,
-                                        offset: 1,
+                                        offset: 0,
                                     },
                                     defaultPrevented: false,
                                     actions: [
@@ -4058,7 +4115,7 @@ describe('utils', () => {
                                             type: 'selectAll',
                                             target: {
                                                 offsetNode: text2,
-                                                offset: 1,
+                                                offset: 0,
                                             },
                                             domRange: {
                                                 startContainer: text1,
@@ -4125,7 +4182,28 @@ describe('utils', () => {
                     setRange(text1, 0, text1, 0);
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p2, 'touchstart', { button: 2, detail: 1 });
+                    triggerEvent(p2, 'touchstart', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 10,
+                                clientY: 25,
+                                target: p2,
+                                altitudeAngle: 0,
+                                azimuthAngle: 0,
+                                force: 0.5,
+                                pageX: 10,
+                                pageY: 25,
+                                identifier: Date.now(),
+                                radiusX: 0,
+                                radiusY: 0,
+                                rotationAngle: 0,
+                                screenX: 10,
+                                screenY: 25,
+                                touchType: 'direct',
+                            }),
+                        ],
+                    });
                     triggerEvent(p2, 'contextmenu', {
                         button: 0,
                         detail: 0,
@@ -5113,7 +5191,12 @@ describe('utils', () => {
                     setRange(text, 4, text, 4);
 
                     await nextTick();
-                    triggerEvent(p, 'mousedown', { button: 2, detail: 1 });
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: p.offsetLeft,
+                        clientY: p.offsetTop,
+                    });
                     setRange(text, 1, text, 1);
                     triggerEvent(p, 'contextmenu', { button: 2, detail: 0 });
                     await nextTick();
@@ -5133,7 +5216,7 @@ describe('utils', () => {
                                     type: 'pointer',
                                     target: {
                                         offsetNode: text,
-                                        offset: 1,
+                                        offset: 0,
                                     },
                                     inputType: 'historyUndo',
                                     defaultPrevented: false,
@@ -5191,7 +5274,7 @@ describe('utils', () => {
                                     type: 'pointer',
                                     target: {
                                         offsetNode: text,
-                                        offset: 1,
+                                        offset: 0,
                                     },
                                     inputType: 'formatBold',
                                     defaultPrevented: false,
