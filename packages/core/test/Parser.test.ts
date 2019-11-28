@@ -85,7 +85,7 @@ describe('utils', () => {
             it('should parse with range', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>[a]</p>';
-                const vDocument = Parser.parse(element, { parseTextualRange: true });
+                const vDocument = Parser.parse(element);
 
                 expect(vDocument.root.type).to.equal(VNodeType.ROOT);
                 expect(vDocument.root.children.length).to.equal(1);

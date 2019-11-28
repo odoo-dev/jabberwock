@@ -1,15 +1,10 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from './VRange';
 import { RelativePosition, VRangeDescription, Direction } from './VRange';
 import { VNode, FormatType, VNodeType } from './VNode';
 import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
-
-export interface ParsingOptions {
-    parseTextualRange: boolean;
-}
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -17,7 +12,6 @@ interface ParsingContext {
     parentVNode?: VNode;
     format?: FormatType[];
     vDocument: VDocument;
-    options: ParsingOptions;
 }
 
 /**
@@ -174,17 +168,9 @@ function parseTextNode(currentContext: ParsingContext): ParsingContext {
     const text = _removeFormatSpace(node);
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
-        if (char === RANGE_TAIL_CHAR && currentContext.options.parseTextualRange) {
-            const lastLeaf = parentVNode.lastLeaf();
-            currentContext.vDocument.range.setAnchor(lastLeaf, RelativePosition.AFTER);
-        } else if (char === RANGE_HEAD_CHAR && currentContext.options.parseTextualRange) {
-            const lastLeaf = parentVNode.lastLeaf();
-            currentContext.vDocument.range.setFocus(lastLeaf, RelativePosition.AFTER);
-        } else {
-            const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, { ...format });
-            VDocumentMap.set(parsedVNode, node, i);
-            parentVNode.append(parsedVNode);
-        }
+        const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, { ...format });
+        VDocumentMap.set(parsedVNode, node, i);
+        parentVNode.append(parsedVNode);
     }
     return currentContext;
 }
@@ -423,12 +409,7 @@ export const Parser = {
      * @param node the HTML element to parse
      * @returns the element parsed into the editor's virtual representation
      */
-    parse: (node: Node, parsingOptions?: ParsingOptions): VDocument => {
-        if (!parsingOptions) {
-            parsingOptions = {
-                parseTextualRange: false,
-            };
-        }
+    parse: (node: Node): VDocument => {
         const root = new VNode(VNodeType.ROOT);
         VDocumentMap.set(root, node);
         const vDocument = new VDocument(root);
@@ -441,7 +422,6 @@ export const Parser = {
                 parentVNode: root,
                 format: [],
                 vDocument: vDocument,
-                options: parsingOptions,
             };
             do {
                 context = parseNode(context);
