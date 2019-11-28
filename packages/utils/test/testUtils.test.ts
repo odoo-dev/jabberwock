@@ -10,18 +10,12 @@ describe('core', () => {
                     await testEditor({
                         contentBefore: content,
                         contentAfter: content,
-                        renderingOptions: {
-                            renderTextualRange: false,
-                        },
                     });
 
                     content = '<b>a</b>';
                     await testEditor({
                         contentBefore: content,
                         contentAfter: content,
-                        renderingOptions: {
-                            renderTextualRange: false,
-                        },
                     });
                 });
             });

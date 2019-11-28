@@ -5,7 +5,7 @@ import { Renderer } from './Renderer';
 import { VDocument } from './VDocument';
 import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
-import { ParsingOptions, Parser } from './Parser';
+import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 
 export interface JWEditorConfig {
@@ -50,12 +50,10 @@ export class JWEditor {
 
     /**
      * Start the editor on the editable DOM node set on this editor instance.
-     *
-     * @param parsingOptions
      */
-    async start(parsingOptions?: ParsingOptions): Promise<void> {
+    async start(): Promise<void> {
         // Parse the editable in the internal format of the editor.
-        this.vDocument = Parser.parse(this._originalEditable, parsingOptions);
+        this.vDocument = Parser.parse(this._originalEditable);
 
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
