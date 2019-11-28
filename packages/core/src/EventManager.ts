@@ -90,6 +90,18 @@ export class EventManager {
                 // TODO: keydown should be matched with existing shortcuts.
                 return;
             }
+            case 'tab':
+                if (!payload.shiftKey && !payload.ctrlKey && !payload.altKey && !payload.metaKey) {
+                    return this.editor.execCommand('indent');
+                } else if (
+                    payload.shiftKey &&
+                    !payload.ctrlKey &&
+                    !payload.altKey &&
+                    !payload.metaKey
+                ) {
+                    return this.editor.execCommand('outdent');
+                }
+                break;
             default:
                 this.editor.execCommand(customEvent.type, payload);
         }
