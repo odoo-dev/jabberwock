@@ -237,7 +237,9 @@ function _isAtSegmentBreak(node: Node, side: 'start' | 'end'): boolean {
     const sibling = node && node[siblingSide];
     const isAgainstAnotherSegment = sibling && _isSegment(sibling);
     const isAtEdgeOfOwnSegment = _isBlockEdge(node, side);
-    return isAgainstAnotherSegment || isAtEdgeOfOwnSegment;
+    // In the DOM, a space before a BR is rendered but a space after a BR isn't.
+    const isBeforeBR = side === 'end' && sibling && sibling.nodeName === 'BR';
+    return (isAgainstAnotherSegment && !isBeforeBR) || isAtEdgeOfOwnSegment;
 }
 /**
  * Return true if the node is a segment according to W3 formatting model.
@@ -268,7 +270,7 @@ function _isSegment(node: Node): boolean {
  * @param side of the block to check ('start' or 'end')
  */
 function _isBlockEdge(node: Node | Node, side: 'start' | 'end'): boolean {
-    const ancestorsUpToBlock = [];
+    const ancestorsUpToBlock: Node[] = [];
 
     // Move up to the first block ancestor
     let ancestor = node;
