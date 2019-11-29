@@ -1204,7 +1204,8 @@ export class EventNormalizer {
         };
     }
     /**
-     * Catch setRange and selectAll actions
+     * Set internal properties of the pointer down event to retrieve them later
+     * on when the user stops dragging its selection and the range has changed.
      *
      * @private
      * @param {MouseEvent} ev
@@ -1213,14 +1214,13 @@ export class EventNormalizer {
         if (!this.editable.contains(ev.target as Node)) {
             this._clickedInEditable = false;
             this._initialCaretPosition = undefined;
-            return;
+        } else {
+            this._clickedInEditable = true;
+            this._initialCaretPosition = this._locateEvent(ev);
+            this._rangeHasChanged = false;
+            // Mark the future event stack as following a single pointer action.
+            this._lastEvents = [ev];
         }
-        this._lastEvents = [ev];
-        this._rangeHasChanged = false;
-        // store mousedown event to detect range change from mouse selection
-        this._clickedInEditable = true;
-        // store the caret position of the mousedown
-        this._initialCaretPosition = this._locateEvent(ev);
     }
     /**
      * Catch setRange actions coming from clicks.
