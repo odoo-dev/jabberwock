@@ -200,7 +200,7 @@ export class EventNormalizer {
     /**
      * Original mousedown event from which the current selection was made.
      */
-    _initialMousedownInEditable: boolean;
+    _clickedInEditable: boolean;
     /**
      * Original selection target before the current selection is updated.
      */
@@ -215,9 +215,12 @@ export class EventNormalizer {
      */
     _draggingFromEditable: boolean;
     /**
-     * TODO: WTF ?
+     * When the users clicks in the DOM, the range is set in the next tick.
+     * The observation of the resulting range must thus be delayed to the next
+     * tick as well. This variable stores the return value of the `setTimeout`
+     * call in order to `clearTimeout` it later on.
      */
-    _setTimeoutID: NodeJS.Timeout;
+    _clickTimeout: NodeJS.Timeout;
 
     constructor(editable: HTMLElement, callback: (res: EventBatch) => void) {
         this.editable = editable;
@@ -1157,8 +1160,8 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
-        clearTimeout(this._setTimeoutID);
-        this._setTimeoutID = setTimeout(() => {
+        clearTimeout(this._clickTimeout);
+        this._clickTimeout = setTimeout(() => {
             if (!this._rangeHasChanged || this._currentlySelectingAll) {
                 return;
             }
@@ -1183,7 +1186,7 @@ export class EventNormalizer {
         // The _mousedownInEditable property is used to assess whether the user
         // is currently changing the selection by using the mouse. If the
         // context menu ends up opening, the user is definitely not selecting.
-        this._initialMousedownInEditable = false;
+        this._clickedInEditable = false;
     }
     /**
      * Catch Enter, Backspace, Delete and insert actions
@@ -1208,53 +1211,57 @@ export class EventNormalizer {
      */
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
         if (!this.editable.contains(ev.target as Node)) {
-            this._initialMousedownInEditable = false;
+            this._clickedInEditable = false;
             this._initialCaretPosition = undefined;
             return;
         }
         this._lastEvents = [ev];
         this._rangeHasChanged = false;
         // store mousedown event to detect range change from mouse selection
-        this._initialMousedownInEditable = true;
+        this._clickedInEditable = true;
         // store the caret position of the mousedown
         this._initialCaretPosition = this._locateEvent(ev);
     }
     /**
-     * Catch setRange actions
-     * After a tick (setTimeout 0) to have the new selection/range in the DOM
+     * Catch setRange actions coming from clicks.
      *
-     * @see __onClick
-     * @private
-     * @param {MouseEvent} ev
+     * @param ev
      */
     _onClick(ev: MouseEvent): void {
+        // Mark the future event stack as following a single pointer action.
         this._lastEvents = [ev];
-        if (!this._initialMousedownInEditable) {
-            return;
-        }
-        if ('clientX' in ev) {
-            this._initialCaretPosition = this._locateEvent(ev);
-        }
-        clearTimeout(this._setTimeoutID);
-        this._setTimeoutID = setTimeout(() => {
-            if (!(ev.target instanceof Element) || !this._rangeHasChanged) {
-                this._initialMousedownInEditable = false;
-                return;
-            }
 
-            const range = this._getRange(ev);
-            this._triggerEvent({
-                events: [
-                    {
-                        type: 'pointer',
-                        target: this._initialCaretPosition,
-                        defaultPrevented: ev.defaultPrevented,
-                        actions: [this._makePayload('setRange', { domRange: range })],
-                    } as NormalizedPointerEvent,
-                ],
-                mutatedElements: new Set([]),
-            });
-        }, 0);
+        // Don't trigger events on the editable if the click was done outside of
+        // the editable itself or on something else than an element.
+        if (!(this._clickedInEditable && ev.target instanceof Element)) return;
+
+        // When the users clicks in the DOM, the range is set in the next tick.
+        // The observation of the resulting range must thus be delayed to the
+        // next tick as well. Store the data we have now before it gets invalid.
+        this._initialCaretPosition = this._locateEvent(ev);
+        clearTimeout(this._clickTimeout);
+        this._clickTimeout = setTimeout(() => this._analyzeRangeChange(ev), 0);
+    }
+    /**
+     * Analyze a change of range to trigger a pointer event for it.
+     *
+     * @param ev
+     */
+    _analyzeRangeChange(ev: MouseEvent): void {
+        if (!this._rangeHasChanged) return;
+
+        const range = this._getRange(ev);
+        this._triggerEvent({
+            events: [
+                {
+                    type: 'pointer',
+                    target: this._initialCaretPosition,
+                    defaultPrevented: ev.defaultPrevented,
+                    actions: [{ type: 'setRange', domRange: range }],
+                } as NormalizedPointerEvent,
+            ],
+            mutatedElements: new Set([]),
+        });
     }
     /**
      * If the drag start event is observed by the normalizer, it means the

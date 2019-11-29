@@ -3262,23 +3262,22 @@ describe('utils', () => {
                                 clientX: 18,
                                 clientY: 10,
                                 target: p,
-                                altitudeAngle: 0,
-                                azimuthAngle: 0,
-                                force: 0.5,
-                                pageX: 18,
-                                pageY: 10,
                                 identifier: Date.now(),
-                                radiusX: 0,
-                                radiusY: 0,
-                                rotationAngle: 0,
-                                screenX: 18,
-                                screenY: 10,
-                                touchType: 'direct',
                             }),
                         ],
                     });
                     await nextTick();
-                    triggerEvent(p, 'touchend', { detail: 0 });
+                    triggerEvent(p, 'touchend', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 18,
+                                clientY: 10,
+                                target: p,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     await nextTick();
                     triggerEvent(p, 'mousedown', {
                         button: 1,
@@ -3339,23 +3338,22 @@ describe('utils', () => {
                                 clientX: 24,
                                 clientY: 10,
                                 target: text,
-                                altitudeAngle: 0,
-                                azimuthAngle: 0,
-                                force: 0.5,
-                                pageX: 24,
-                                pageY: 10,
                                 identifier: Date.now(),
-                                radiusX: 0,
-                                radiusY: 0,
-                                rotationAngle: 0,
-                                screenX: 24,
-                                screenY: 10,
-                                touchType: 'direct',
                             }),
                         ],
                     });
                     await nextTick();
-                    triggerEvent(p, 'touchend', { detail: 0 });
+                    triggerEvent(p, 'touchend', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 24,
+                                clientY: 10,
+                                target: p,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     await nextTick();
                     triggerEvent(p, 'mousedown', {
                         button: 1,
@@ -4189,18 +4187,7 @@ describe('utils', () => {
                                 clientX: 10,
                                 clientY: 25,
                                 target: p2,
-                                altitudeAngle: 0,
-                                azimuthAngle: 0,
-                                force: 0.5,
-                                pageX: 10,
-                                pageY: 25,
                                 identifier: Date.now(),
-                                radiusX: 0,
-                                radiusY: 0,
-                                rotationAngle: 0,
-                                screenX: 10,
-                                screenY: 25,
-                                touchType: 'direct',
                             }),
                         ],
                     });
@@ -4212,7 +4199,18 @@ describe('utils', () => {
                     });
                     setRange(text2, 1, text2, 1);
                     await nextTick();
-                    triggerEvent(p2, 'touchend', { button: 2, detail: 0 });
+                    triggerEvent(p2, 'touchend', {
+                        button: 2,
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 10,
+                                clientY: 25,
+                                target: p2,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     triggerEvent(p2, 'contextmenu', {
                         button: 0,
                         detail: 0,
