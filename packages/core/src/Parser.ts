@@ -431,7 +431,7 @@ export const Parser = {
         // Parse the DOM range if any.
         const selection = node.ownerDocument.getSelection();
         const range = selection.rangeCount && selection.getRangeAt(0);
-        if (range) {
+        if (range && node.contains(range.startContainer) && node.contains(range.endContainer)) {
             const forward = range.startContainer === selection.anchorNode;
             const vRange = parseRange(range, forward ? Direction.FORWARD : Direction.BACKWARD);
             vDocument.range.set(vRange);
