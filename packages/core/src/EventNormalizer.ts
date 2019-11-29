@@ -1,6 +1,7 @@
 import { Direction } from './VRange';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint } from '../../utils/polyfill';
+import { _targetDeepest } from '../../utils/src/testUtils';
 
 const pointerEventTypes = ['click', 'mousedown', 'touchend'];
 
@@ -86,7 +87,7 @@ export interface NormalizedAction {
     html?: string;
     files?: File[];
     format?: string;
-    target?: DomLocation;
+    target?: CaretPosition;
 }
 export interface NormalizedEvent {
     type: string;
@@ -109,14 +110,14 @@ export interface NormalizedKeyboardEvent extends NormalizedEvent {
     inputType?: string;
 }
 
-export interface DomLocation {
+export interface CaretPosition {
     offsetNode: Node;
     offset: number;
 }
 
 export interface NormalizedPointerEvent extends NormalizedEvent {
     type: 'pointer';
-    target: DomLocation;
+    target: CaretPosition;
     inputType?: string;
 }
 
@@ -132,7 +133,7 @@ interface DataTransferDetail {
     files: File[];
     originalEvent: Event;
     draggingFromEditable: boolean;
-    caretPosition: DomLocation;
+    caretPosition: CaretPosition;
     range: DomRangeDescription;
 }
 
@@ -148,7 +149,7 @@ interface CompiledEvent {
     mutatedNodes?: Set<Node>; // the nodes that were mutated, if any
     defaultPrevented?: boolean;
     inputType?: string;
-    caretPosition?: DomLocation;
+    caretPosition?: CaretPosition;
     dataTransfer?: DataTransferDetail;
 }
 
@@ -204,7 +205,7 @@ export class EventNormalizer {
     /**
      * Original selection target before the current selection is updated.
      */
-    _initialCaretPosition: DomLocation;
+    _initialCaretPosition: CaretPosition;
     /**
      * TODO: ask CHM
      */
@@ -1139,7 +1140,7 @@ export class EventNormalizer {
         }
         return this._isVisible(el.parentNode);
     }
-    _locateEvent(ev: MouseEvent | TouchEvent): DomLocation {
+    _locateEvent(ev: MouseEvent | TouchEvent): CaretPosition {
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);
@@ -1197,11 +1198,8 @@ export class EventNormalizer {
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
         this._registerEvent(ev);
         const range = this._getRange();
-        const node = range.startContainer.childNodes[range.startOffset];
-        this._initialCaretPosition = {
-            offsetNode: node || range.startContainer,
-            offset: node ? 0 : range.startOffset,
-        };
+        const [offsetNode, offset] = _targetDeepest(range.startContainer, range.startOffset);
+        this._initialCaretPosition = { offsetNode, offset };
     }
     /**
      * Set internal properties of the pointer down event to retrieve them later

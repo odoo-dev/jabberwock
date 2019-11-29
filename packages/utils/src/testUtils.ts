@@ -169,18 +169,21 @@ function _nextNode(node: Node): Node {
 function _renderTextualRange(): void {
     const selection = document.getSelection();
 
-    const start = _targetDeepest(selection.anchorNode, selection.anchorOffset);
-    const end = _targetDeepest(selection.focusNode, selection.focusOffset);
+    const anchor = _targetDeepest(selection.anchorNode, selection.anchorOffset);
+    const focus = _targetDeepest(selection.focusNode, selection.focusOffset);
+
+    _insertCharAt(RANGE_TAIL_CHAR, ...anchor);
 
     // If the range characters have to be inserted within the same parent and
-    // the start range character has to be before the end range character, the
-    // end offset needs to be adapted to account for the first insertion.
-    if (start.container === end.container && start.offset <= end.offset) {
-        end.offset++;
+    // the anchor range character has to be before the focus range character,
+    // the focus offset needs to be adapted to account for the first insertion.
+    const [anchorNode, anchorOffset] = anchor;
+    const [focusNode, baseFocusOffset] = focus;
+    let focusOffset = baseFocusOffset;
+    if (anchorNode === focusNode && anchorOffset <= focusOffset) {
+        focusOffset++;
     }
-
-    _insertCharAt(RANGE_TAIL_CHAR, start.container, start.offset);
-    _insertCharAt(RANGE_HEAD_CHAR, end.container, end.offset);
+    _insertCharAt(RANGE_HEAD_CHAR, focusNode, focusOffset);
 }
 
 /**
@@ -190,7 +193,7 @@ function _renderTextualRange(): void {
  * @param container
  * @param offset
  */
-function _targetDeepest(container: Node, offset: number): { container: Node; offset: number } {
+export function _targetDeepest(container: Node, offset: number): [Node, number] {
     while (container.hasChildNodes()) {
         if (offset >= container.childNodes.length) {
             container = container.lastChild;
@@ -200,10 +203,7 @@ function _targetDeepest(container: Node, offset: number): { container: Node; off
             offset = 0;
         }
     }
-    return {
-        container: container as Node,
-        offset: offset,
-    };
+    return [container, offset];
 }
 
 /**
