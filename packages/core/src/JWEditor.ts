@@ -12,8 +12,10 @@ import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
 import { ModeIdentifier, ModeDefinition, Mode, RuleProperty } from './Mode';
 import { Memory, ChangesLocations } from './Memory/Memory';
-import { makeVersionable } from './Memory/Versionable';
+import { makeVersionable, markNotVersionable } from './Memory/Versionable';
 import { VersionableArray } from './Memory/VersionableArray';
+import { VersionableSet } from './Memory/VersionableSet';
+import { MemoryOrigin } from '../../plugin-devtools/src/components/MemoryComponent';
 import { Point, VNode } from './VNodes/VNode';
 
 export enum EditorStage {
@@ -85,6 +87,10 @@ export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
 }
 
+interface MemoryInfo extends MemoryOrigin {
+    uiCommand: boolean;
+}
+
 export class JWEditor {
     private _stage: EditorStage = EditorStage.CONFIGURATION;
     dispatcher: Dispatcher;
@@ -101,7 +107,7 @@ export class JWEditor {
         deadlockTimeout: 10000,
     };
     memory: Memory;
-    memoryInfo: { commandNames: string[]; uiCommand: boolean };
+    memoryInfo: MemoryInfo;
     private _memoryID = 0;
     selection: VSelection;
     loaders: Record<string, Loader> = {};
@@ -161,7 +167,18 @@ export class JWEditor {
         this.memory = new Memory();
         this.memory.attach(this.selection.range.start);
         this.memory.attach(this.selection.range.end);
-        this.memoryInfo = makeVersionable({ commandNames: [], uiCommand: false });
+        this.memoryInfo = makeVersionable({
+            // for dev tools and plugin's values merge
+            commandNames: [],
+            uiCommand: false,
+            layers: new Set([]),
+            actionID: '',
+            actionArgs: {} as object,
+            base: '',
+            current: this._memoryID.toString(),
+            isMaster: true,
+            error: null,
+        });
         this.memory.attach(this.memoryInfo);
         this.memory.create(this._memoryID.toString());
 
@@ -500,7 +517,10 @@ export class JWEditor {
         const origin = this.memory.sliceKey;
         const memorySlice = this._memoryID.toString();
         this.memory.switchTo(memorySlice);
+        this.memoryInfo.isMaster = false;
+        this.memoryInfo.layers = new VersionableSet([memorySlice]);
         this.memoryInfo.commandNames = new VersionableArray();
+        this.memoryInfo.actionID = null;
         this.memoryInfo.uiCommand = false;
         let commandNames = this.memoryInfo.commandNames;
 
@@ -510,6 +530,7 @@ export class JWEditor {
                 if (typeof commandName === 'function') {
                     const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
                     this.memoryInfo.commandNames.push(name);
+                    this.memoryInfo.actionID = name;
                     await commandName(this.contextManager.defaultContext);
                     if (this.memory.sliceKey !== memorySlice) {
                         // Override by the current commandName if the slice changed.
@@ -517,6 +538,8 @@ export class JWEditor {
                     }
                 } else {
                     this.memoryInfo.commandNames.push(commandName);
+                    if (params) markNotVersionable(params);
+                    this.memoryInfo.actionID = commandName;
                     await this.dispatcher.dispatch(commandName, params);
                     if (this.memory.sliceKey !== memorySlice) {
                         // Override by the current commandName if the slice changed.
@@ -538,7 +561,14 @@ export class JWEditor {
                 exec().then(resolve, reject);
             });
 
-            // Prepare nex slice and freeze the memory.
+            // The running memory slice becomes a master slice.
+            if (!this.memory.isFrozen()) {
+                this.memoryInfo.isMaster = true;
+                this.memoryInfo.base = memorySlice;
+                this.memoryInfo.current = this._memoryID.toString();
+            }
+
+            // Prepare next slice and freeze the memory.
             this._memoryID++;
             const nextMemorySlice = this._memoryID.toString();
             this.memory.create(nextMemorySlice);
@@ -566,6 +596,12 @@ export class JWEditor {
             });
 
             const failedSlice = this.memory.sliceKey;
+
+            // The failed memory slice becomes a master slice.
+            this.memory.create(failedSlice + '-fail').switchTo(failedSlice + '-fail');
+            this.memoryInfo.isMaster = false;
+            this.memoryInfo.base = memorySlice;
+            this.memoryInfo.error = error.message;
 
             // When an error occurs, we go back to part of the functional memory.
             this.memory.switchTo(origin);
@@ -609,12 +645,14 @@ export class JWEditor {
         params?: CommandParamsType<P, C>,
     ): Promise<void> {
         if (typeof commandName === 'function') {
-            this.memoryInfo.commandNames.push(
-                '@custom' + (commandName.name ? ':' + commandName.name : ''),
-            );
+            const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
+            this.memoryInfo.commandNames.push(name);
+            this.memoryInfo.actionID = name;
             await commandName(this.contextManager.defaultContext);
         } else {
             this.memoryInfo.commandNames.push(commandName);
+            if (params) markNotVersionable(params);
+            this.memoryInfo.actionID = commandName;
             await this.dispatcher.dispatch(commandName, params);
         }
     }

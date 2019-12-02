@@ -1,5 +1,6 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
+import { MemoryComponent } from './MemoryComponent';
 import { ShortcutsComponent } from './ShortcutsComponent';
 import { PluginsComponent } from './PluginsComponent';
 import { ModesComponent } from './ModesComponent';
@@ -21,6 +22,7 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
     static components = {
         CommandsComponent: CommandsComponent,
         InspectorComponent,
+        MemoryComponent,
         ShortcutsComponent,
         PluginsComponent,
         ModesComponent,
