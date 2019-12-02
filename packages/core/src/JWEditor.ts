@@ -8,7 +8,8 @@ import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { Memory } from './Memory/Memory';
-import { makeVersionable } from './Memory/Versionable';
+import { makeVersionable, markNotVersionable } from './Memory/Versionable';
+import { MemoryOrigin } from '../../plugin-devtools/src/components/MemoryComponent';
 
 export interface JWEditorConfig {
     debug?: boolean;
@@ -25,6 +26,7 @@ export class JWEditor {
     renderer: Renderer;
     vDocument: VDocument;
     memory: Memory;
+    origin: MemoryOrigin;
     _memoryID: number;
     debugger: OwlUI;
 
@@ -58,6 +60,16 @@ export class JWEditor {
     async start(): Promise<void> {
         this.memory = new Memory();
         this._memoryID = 0;
+
+        this.origin = makeVersionable({
+            // for dev tools and plugin's values merge
+            layers: new Set([]),
+            actionID: '' as CommandIdentifier,
+            actionArgs: {} as CommandArgs,
+            base: '',
+            isMaster: true,
+        });
+        this.memory.linkToMemory(this.origin);
 
         // Parse the editable in the internal format of the editor.
         const vDocument = Parser.parse(this._originalEditable);
@@ -151,6 +163,11 @@ export class JWEditor {
         this.memory.create(intermediateSliceKey).switchTo(intermediateSliceKey);
         this.origin.isMaster = false;
 
+        const intermediate = {} as CommandArgs;
+        markNotVersionable(intermediate);
+        this.origin.actionID = 'intentName ' + this._memoryID;
+        this.origin.actionArgs = intermediate;
+
         // in dispatcher: eg:
         const winnerSliceKey = intermediateSliceKey + ':pluginA';
         this.memory.create(winnerSliceKey).switchTo(winnerSliceKey);
@@ -159,6 +176,16 @@ export class JWEditor {
 
         this.memory.snapshotIntoExistingSlice(winnerSliceKey, winnerSliceKey, newMasterSliceKey);
         this.memory.switchTo(newMasterSliceKey);
+
+        this.origin.layers.clear();
+        this.origin.layers.add(winnerSliceKey);
+        if (args) {
+            markNotVersionable(args);
+        }
+        this.origin.actionID = id;
+        this.origin.actionArgs = args;
+        this.origin.base = intermediateSliceKey;
+        this.origin.isMaster = true;
 
         this.renderer.render(this.vDocument, this.editable);
     }

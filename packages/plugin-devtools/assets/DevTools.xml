@@ -386,6 +386,129 @@
         </table>
     </t>
 
+    <!-- MEMORY SVG COMPONENT -->
+    <g t-name="MemoryIntermediateLayout" t-attf-transform="translate(0, {{props.intermediate.offsetY * props.heigth}})" class="MemoryIntermediateLayout">
+        <g t-if="props.intermediate.nexts.length" t-attf-transform="translate({{props.width}}, 0)">
+            <MemoryIntermediateLayout
+                t-foreach="props.intermediate.nexts" t-as="next"
+                activeSlice="props.activeSlice"
+                selectedSlice="props.selectedSlice"
+                intermediate="next"
+                width="props.width"
+                heigth="props.heigth"/>
+            <line x1="0" t-att-y1="props.heigth" x2="0" t-att-y2="props.intermediate.height * props.heigth" stroke="black"/>
+        </g>
+        <g>
+            <text t-on-click="selectAction" x="6" y="28" fill="red" stroke="none"
+                style="font-size: 10px;font-family: arial; cursor: pointer;"><t t-esc="props.intermediate.origin.actionID"/></text>
+            <line x1="0" t-att-y1="props.heigth" t-att-x2="props.width" t-att-y2="props.heigth" stroke="black"/>
+            <circle
+                t-on-click="selectMemory"
+                t-att-cx="props.width" t-att-cy="props.heigth" r="5"
+                stroke-width="1"
+                t-att-fill="props.activeSlice === props.intermediate.key ? 'green' : (props.selectedSlice === props.intermediate.key ? 'yellow' : '#dddddd')"
+                style="cursor: pointer;"/>
+        </g>
+    </g>
+
+    <g t-name="MemoryIntermediateFluxLayout" class="MemoryIntermediateFluxLayout" transform="translate(12, 0)">
+        <!-- <rect t-att-width="props.flux.width * props.width - 24" t-att-height="props.flux.height * props.heigth" fill="transparent" stroke="#dddddd" stroke-width="1"/> -->
+        <line t-foreach="props.flux.origins" t-as="origin"
+            t-att-x1="origin.offsetX * props.width" t-att-y1="origin.offsetY * props.heigth"
+            t-att-x2="flux.width * props.width - 24" t-att-y2="origin.offsetY * props.heigth" stroke="green"/>
+        <line t-if="props.flux.origins.length"
+            t-att-x1="flux.width * props.width - 24" t-att-y1="flux.origins[flux.origins.length - 1].offsetY * props.heigth"
+            t-att-x2="flux.width * props.width - 24" y2="0" stroke="green"/>
+        <MemoryIntermediateLayout
+            t-foreach="flux.intermediates" t-as="intermediate"
+            activeSlice="props.activeSlice"
+            selectedSlice="props.selectedSlice"
+            intermediate="intermediate"
+            width="props.width"
+            heigth="props.heigth"/>
+        <line x1="0" y1="0" x2="0" t-att-y2="props.flux.height * props.heigth" stroke="black"/>
+    </g>
+
+    <g t-name="MemoryMasterLayout" class="MemoryMasterLayout" t-attf-transform="translate(0, {{props.master.offsetY * props.heigth}})">
+        <MemoryIntermediateFluxLayout
+            activeSlice="props.activeSlice"
+            selectedSlice="props.selectedSlice"
+            flux="props.master.flux"
+            width="props.width"
+            heigth="props.heigth"/>
+        <g t-if="!props.master.finished &amp;&amp; props.master.nexts.length" t-attf-transform="translate({{props.master.flux.width * props.width}},0)">
+            <MemoryMasterLayout
+                t-foreach="props.master.nexts" t-as="next"
+                activeSlice="props.activeSlice"
+                selectedSlice="props.selectedSlice"
+                master="next"
+                width="props.width"
+                heigth="props.heigth"/>
+            <line t-if="props.master.nexts.length > 1" x1="0" y1="0" x2="0" t-att-y2="props.master.nexts[props.master.nexts.length - 1].offsetY * props.heigth" stroke="black" stroke-width="2"/>
+        </g>
+        <line t-if="!props.master.finished &amp;&amp; !props.master.nexts.length"
+             t-attf-x1="{{props.master.flux.width * props.width}}" y1="0" y2="0" t-attf-x2="{{(props.master.flux.width + 1) * props.width}}" stroke="black" stroke-width="2"/>
+        <g>
+            <text t-if="!props.firstItem"
+                t-on-click="selectAction" x="16" y="-2" fill="red" stroke="none"
+                style="font-size: 10px;font-family: arial; cursor: pointer;"><t t-esc="props.master.origin.actionID"/></text>
+            <line x1="0" y1="0" y2="0" t-attf-x2="{{props.master.flux.width * props.width}}" stroke="black" stroke-width="2"/>
+            <circle
+                t-on-click="selectMemory"
+                t-on-dblclick="switchMemory"
+                t-att-cx="props.master.flux.width * props.width" cy="0" r="8"
+                stroke-width="1"
+                t-att-fill="props.activeSlice === props.master.key ? 'green' : (props.selectedSlice === props.master.key ? 'yellow' : '#dddddd')"
+                style="cursor: pointer;"/>
+        </g>
+    </g>
+
+    <svg t-name="MemoryFluxLayout" t-att-width="props.flux.width * 60 + 40" t-att-height="(props.flux.height + 1) * 30 + 20">
+        <g t-attf-transform="translate(0, 20)">
+            <MemoryMasterLayout
+                activeSlice="props.activeSlice"
+                selectedSlice="props.selectedSlice"
+                master="props.flux.first"
+                firstItem="true"
+                width="55"
+                heigth="30"/>
+        </g>
+    </svg>
+
+    <!-- MEMORY -->
+    <devtools-panel t-name="MemoryComponent"
+        t-on-memory-selected="onSelectMemory"
+        t-on-memory-switch="onSwitchMemory"
+        class="active" tabindex="2">
+        <devtools-contents>
+            <devtools-mainpane>
+                <MemoryFluxLayout t-if="state.flux" flux="state.flux" activeSlice="state.activeSlice" selectedSlice="state.selectedSlice"/>
+                <MemoryFluxLayout t-if="state.flux2" flux="state.flux2" activeSlice="state.activeSlice" selectedSlice="state.selectedSlice"/>
+            </devtools-mainpane>
+            <devtools-sidepane>
+                <div class="about">
+                    <span class="type">Memory Slice</span> <t t-esc="state.selectedSlice.split('-').pop()"/>
+                </div>
+                <div class="properties">
+                    <div class="divider">👤 Parent</div>
+                    <span style="cursor: pointer;" 
+                        t-if="memory._slicesReference[state.selectedSlice].parent"
+                        t-on-click="selectMemory(memory._slicesReference[state.selectedSlice].parent.name)">
+                        <t t-esc="memory._slicesReference[state.selectedSlice].parent.name"/>
+                    </span>
+                    <div class="divider">👪 Children</div>
+                    <table>
+                        <tbody>
+                            <tr t-foreach="memory._slicesReference[state.selectedSlice].children" t-as="ref">
+                                <td style="cursor: pointer;" t-on-click="selectMemory(ref.name)"><t t-esc="ref.name.split('-').pop()"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </devtools-sidepane>
+        </devtools-contents>
+    </devtools-panel>
+
     <!-- MAIN -->
     <jw-devtools t-name="devtools"
         t-att-class="{
@@ -402,11 +525,16 @@
             <button t-on-click="openTab('commands')" t-att-class="{
                 selected: state.currentTab == 'commands',
             }">Commands</button>
+            <button t-on-click="openTab('memory')" t-att-class="{
+                selected: state.currentTab == 'memory',
+            }">Memory</button>
         </devtools-navbar>
         <t t-if="!state.closed">
             <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
             <CommandsComponent isOpen="state.currentTab == 'commands'"
                 commands="state.commands"/>
+            <MemoryComponent t-if="state.currentTab == 'memory'"
+                actions="state.actions"/>
         </t>
     </jw-devtools>
 
