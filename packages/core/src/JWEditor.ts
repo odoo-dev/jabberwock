@@ -51,6 +51,43 @@ export class JWEditor {
         this.editable = editable;
     }
 
+    //--------------------------------------------------------------------------
+    // Lifecycle
+    //--------------------------------------------------------------------------
+
+    /**
+     * Add the given plugin class to this editor instance.
+     *
+     * @param pluginClass
+     */
+    addPlugin(pluginClass: typeof JWPlugin): void {
+        const plugin: JWPlugin = new pluginClass(this);
+        this.pluginsRegistry.push(plugin);
+        // Register the commands of this plugin.
+        Object.keys(plugin.commands).forEach(key => {
+            this.dispatcher.registerCommand(key, plugin.commands[key]);
+        });
+        // Register the hooks of this plugin.
+        Object.keys(plugin.commandHooks).forEach(key => {
+            this.dispatcher.registerHook(key, plugin.commandHooks[key]);
+        });
+    }
+
+    /**
+     * Load the given config in this editor instance.
+     *
+     * @param config
+     */
+    loadConfig(config: JWEditorConfig): void {
+        if (config.debug) {
+            this.debugger = new OwlUI(this);
+            this.debugger.addPlugin(DevTools);
+        }
+        if (config.keyMap) {
+            this.keyMap = new KeyMapping(config.keyMap);
+        }
+    }
+
     /**
      * Start the editor on the editable DOM node set on this editor instance.
      */
@@ -94,39 +131,6 @@ export class JWEditor {
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
-
-    /**
-     * Add the given plugin class to this editor instance.
-     *
-     * @param pluginClass
-     */
-    addPlugin(pluginClass: typeof JWPlugin): void {
-        const plugin: JWPlugin = new pluginClass(this);
-        this.pluginsRegistry.push(plugin);
-        // Register the commands of this plugin.
-        Object.keys(plugin.commands).forEach(key => {
-            this.dispatcher.registerCommand(key, plugin.commands[key]);
-        });
-        // Register the hooks of this plugin.
-        Object.keys(plugin.commandHooks).forEach(key => {
-            this.dispatcher.registerHook(key, plugin.commandHooks[key]);
-        });
-    }
-
-    /**
-     * Load the given config in this editor instance.
-     *
-     * @param config
-     */
-    loadConfig(config: JWEditorConfig): void {
-        if (config.debug) {
-            this.debugger = new OwlUI(this);
-            this.debugger.addPlugin(DevTools);
-        }
-        if (config.keyMap) {
-            this.keyMap = new KeyMapping(config.keyMap);
-        }
-    }
 
     /**
      * Execute the given command.
