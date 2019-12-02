@@ -382,11 +382,14 @@ function _locate(container: Node, offset: number): [VNode, RelativePosition] {
     // equal to the length of the container. In order to retrieve the last
     // descendent, we need to make sure we target an existing node, ie. an
     // existing index.
-    let index = Math.min(offset, utils.nodeLength(container) - 1);
+    const isAfterEnd = offset >= utils.nodeLength(container);
+    let index = isAfterEnd ? utils.nodeLength(container) - 1 : offset;
     // Move to deepest child of container.
     while (container.hasChildNodes()) {
         container = container.childNodes[index];
-        index = 0;
+        index = isAfterEnd ? utils.nodeLength(container) - 1 : 0;
+        // Adapt the offset to be its equivalent within the new container.
+        offset = isAfterEnd ? utils.nodeLength(container) : index;
     }
     // Get the VNodes matching the container.
     const vNodes = VDocumentMap.fromDom(container);
