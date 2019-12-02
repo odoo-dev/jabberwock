@@ -8,6 +8,7 @@
     "build": "webpack",
     "postinstall": "npm link owl-framework",
     "perf": "karma start --include-files test/**/*.perf.ts",
+    "coverage": "karma start --coverage",
     "test": "karma start"
   },
   "repository": {

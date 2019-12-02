@@ -17,7 +17,6 @@ module.exports = function(config) {
                     options: { esModules: true }
                 }
             ],
-            options: { esModules: true }
         });
     }
     config.set({
