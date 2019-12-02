@@ -165,7 +165,7 @@ function parseTextNode(currentContext: ParsingContext): ParsingContext {
     const nodeName = node.nodeName;
     const parentVNode = currentContext.parentVNode;
     const format = currentContext.format[0];
-    const text = _removeFormatSpace(node);
+    const text = removeFormatSpace(node);
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
         const parsedVNode = new VNode(VNodeType.CHAR, nodeName, char, { ...format });
@@ -315,7 +315,7 @@ function _isTextNode(node: Node): boolean {
  * @see https://www.w3.org/TR/css-text-3/#white-space-processing
  * @returns {string}
  */
-function _removeFormatSpace(node: Node): string {
+function removeFormatSpace(node: Node): string {
     // TODO: check the value of the `white-space` property
     const text: string = node.textContent;
     const spaceBeforeNewline = /([ \t])*(\n)/g;
@@ -451,4 +451,5 @@ export const Parser = {
      * @param [direction]
      */
     parseRange: parseRange,
+    removeFormatSpace: removeFormatSpace,
 };
