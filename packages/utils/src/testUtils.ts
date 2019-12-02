@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from '../../core/src/VRange';
 import { DomRangeDescription } from '../../core/src/EventNormalizer';
 import { Parser } from '../../core/src/Parser';
+import { targetDeepest } from './Dom';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -169,8 +170,8 @@ function _nextNode(node: Node): Node {
 function _renderTextualRange(): void {
     const selection = document.getSelection();
 
-    const anchor = _targetDeepest(selection.anchorNode, selection.anchorOffset);
-    const focus = _targetDeepest(selection.focusNode, selection.focusOffset);
+    const anchor = targetDeepest(selection.anchorNode, selection.anchorOffset);
+    const focus = targetDeepest(selection.focusNode, selection.focusOffset);
 
     _insertCharAt(RANGE_TAIL_CHAR, ...anchor);
 
@@ -184,26 +185,6 @@ function _renderTextualRange(): void {
         focusOffset++;
     }
     _insertCharAt(RANGE_HEAD_CHAR, focusNode, focusOffset);
-}
-
-/**
- * Return the deepest child of a given container at a given offset, and its
- * adapted offset.
- *
- * @param container
- * @param offset
- */
-export function _targetDeepest(container: Node, offset: number): [Node, number] {
-    while (container.hasChildNodes()) {
-        if (offset >= container.childNodes.length) {
-            container = container.lastChild;
-            offset = container.childNodes.length - 1;
-        } else {
-            container = container.childNodes[offset];
-            offset = 0;
-        }
-    }
-    return [container, offset];
 }
 
 /**

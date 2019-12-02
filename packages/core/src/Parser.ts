@@ -4,7 +4,7 @@ import { VDocumentMap } from './VDocumentMap';
 import { RelativePosition, VRangeDescription, Direction } from './VRange';
 import { VNode, FormatType, VNodeType } from './VNode';
 import { DomRangeDescription } from './EventNormalizer';
-import { utils } from '../../utils/src/utils';
+import { targetDeepest, nodeLength } from '../../utils/src/Dom';
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -382,21 +382,14 @@ function _locate(container: Node, offset: number): [VNode, RelativePosition] {
     // equal to the length of the container. In order to retrieve the last
     // descendent, we need to make sure we target an existing node, ie. an
     // existing index.
-    const isAfterEnd = offset >= utils.nodeLength(container);
-    let index = isAfterEnd ? utils.nodeLength(container) - 1 : offset;
-    // Move to deepest child of container.
-    while (container.hasChildNodes()) {
-        container = container.childNodes[index];
-        index = isAfterEnd ? utils.nodeLength(container) - 1 : 0;
-        // Adapt the offset to be its equivalent within the new container.
-        offset = isAfterEnd ? utils.nodeLength(container) : index;
-    }
+    [container, offset] = targetDeepest(container, offset);
     // Get the VNodes matching the container.
     const vNodes = VDocumentMap.fromDom(container);
     if (vNodes && vNodes.length) {
         let reference: VNode;
         if (container.nodeType === Node.TEXT_NODE) {
             // The reference is the index-th match (eg.: text split into chars).
+            const index = Math.min(offset, nodeLength(container) - 1);
             reference = vNodes[index];
         } else {
             reference = vNodes[0];

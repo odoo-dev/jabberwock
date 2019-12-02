@@ -1,7 +1,7 @@
 import { Direction } from './VRange';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint } from '../../utils/polyfill';
-import { _targetDeepest } from '../../utils/src/testUtils';
+import { targetDeepest } from '../../utils/src/Dom';
 
 const pointerEventTypes = ['click', 'mousedown', 'touchend'];
 
@@ -1198,7 +1198,7 @@ export class EventNormalizer {
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
         this._registerEvent(ev);
         const range = this._getRange();
-        const [offsetNode, offset] = _targetDeepest(range.startContainer, range.startOffset);
+        const [offsetNode, offset] = targetDeepest(range.startContainer, range.startOffset);
         this._initialCaretPosition = { offsetNode, offset };
     }
     /**

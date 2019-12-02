@@ -2,7 +2,7 @@ import { BasicHtmlRenderingEngine, RenderingEngine } from './BasicHtmlRenderingE
 import { withRange, VDocument } from './VDocument';
 import { Predicate, isRange, isLeaf, not } from './../../utils/src/Predicates';
 import { RelativePosition } from './VRange';
-import { utils } from './../../utils/src/utils';
+import { nodeLength } from '../../utils/src/Dom';
 
 export enum VNodeType {
     ROOT = 'ROOT',
@@ -105,7 +105,7 @@ export class VNode {
         // Position `BEFORE` is preferred over `AFTER`, unless the offset
         // overflows the children list, in which case `AFTER` is needed.
         let position = RelativePosition.BEFORE;
-        const domNodeLength = utils.nodeLength(domNode);
+        const domNodeLength = nodeLength(domNode);
         if (domNodeLength && offset >= domNodeLength) {
             position = RelativePosition.AFTER;
         }

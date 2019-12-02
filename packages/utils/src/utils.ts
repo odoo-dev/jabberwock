@@ -15,16 +15,6 @@ export const utils = {
         return string;
     },
     /**
-     * Return the length of a DOM Node.
-     *
-     * @param node
-     */
-    nodeLength(node: Node): number {
-        const isTextNode = node.nodeType === Node.TEXT_NODE;
-        const content = isTextNode ? node.nodeValue : node.childNodes;
-        return content.length;
-    },
-    /**
      * Take a collection of nodes and return a regular array
      * with the same contents.
      */
