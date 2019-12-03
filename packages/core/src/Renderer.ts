@@ -3,7 +3,8 @@ import { VDocument } from './VDocument';
 import { isRange, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNode';
 import { Format } from '../../utils/src/Format';
-import { VRange, RelativePosition } from './VRange';
+import { VRange } from './VRange';
+import { RelativePosition } from '../../utils/src/range';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.

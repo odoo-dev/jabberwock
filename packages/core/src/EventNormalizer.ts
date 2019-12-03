@@ -1,4 +1,4 @@
-import { Direction } from './VRange';
+import { Direction } from '../../utils/src/range';
 
 const navigationKey = new Set([
     'ArrowUp',
