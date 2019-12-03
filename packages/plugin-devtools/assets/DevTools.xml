@@ -148,12 +148,10 @@
                         <td>total length</td>
                         <td><t t-esc="props.vNode.totalLength()"/></td>
                     </tr>
-                    <tr t-if="props.vNode.hasProperties()">
-                        <td>properties</td>
+                    <tr>
+                        <td>atomic</td>
                         <td>
-                            <ol style="list-style-type: none">
-                                <li t-if="props.vNode.properties.atomic">Atomic</li>
-                            </ol>
+                            <t t-esc="'' + props.vNode.atomic"/>
                         </td>
                     </tr>
                     <tr t-if="props.vNode.hasFormat()">
