@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { Parser } from '../src/Parser';
 import { VNodeType } from '../src/VNodes/VNode';
+import { CharNode } from '../src/VNodes/CharNode';
 
 describe('utils', () => {
     describe('Parser', () => {
@@ -16,7 +17,7 @@ describe('utils', () => {
                 expect(p.type).to.equal(VNodeType.PARAGRAPH);
                 expect(p.children.length).to.equal(1);
                 expect(p.children[0].type).to.equal(VNodeType.CHAR);
-                expect(p.children[0].value).to.equal('a');
+                expect((p.children[0] as CharNode).char).to.equal('a');
             });
             it('should parse a "p" tag with no content', () => {
                 const element = document.createElement('div');
@@ -34,7 +35,7 @@ describe('utils', () => {
                 // Only one <br> should be parsed.
                 expect(p.children.length).to.equal(2);
                 expect(p.lastChild().type).to.equal(VNodeType.LINE_BREAK);
-                expect(p.lastChild().previousSibling().value).to.equal('a');
+                expect((p.lastChild().previousSibling() as CharNode).char).to.equal('a');
             });
             it('handles nested formatted nodes', () => {
                 const element = document.createElement('div');
@@ -47,20 +48,20 @@ describe('utils', () => {
                 expect(p.type).to.equal(VNodeType.PARAGRAPH);
                 expect(p.children.length).to.equal(4);
                 expect(p.children[0].type).to.equal(VNodeType.CHAR);
-                expect(p.children[0].value).to.equal('a');
-                expect(p.children[1].value).to.equal('b');
+                expect((p.children[0] as CharNode).char).to.equal('a');
+                expect((p.children[1] as CharNode).char).to.equal('b');
                 expect(p.children[1].format).to.deep.equal({
                     bold: false,
                     italic: true,
                     underline: false,
                 });
-                expect(p.children[2].value).to.equal('c');
+                expect((p.children[2] as CharNode).char).to.equal('c');
                 expect(p.children[2].format).to.deep.equal({
                     bold: true,
                     italic: true,
                     underline: false,
                 });
-                expect(p.children[3].value).to.equal('d');
+                expect((p.children[3] as CharNode).char).to.equal('d');
                 expect(p.children[3].format).to.deep.equal({
                     bold: false,
                     italic: true,
