@@ -1,16 +1,8 @@
 import { VNode, VNodeType } from './VNode';
-import { VDocument } from './VDocument';
 import { isRange } from '../../utils/src/Predicates';
+import { utils } from '../../utils/src/utils';
+import { RelativePosition, Direction } from '../../utils/src/range';
 
-export enum Direction {
-    BACKWARD = 'BACKWARD',
-    FORWARD = 'FORWARD',
-}
-export enum RelativePosition {
-    BEFORE = 'BEFORE',
-    AFTER = 'AFTER',
-    INSIDE = 'INSIDE',
-}
 export interface VRangeDescription {
     start: VNode;
     startPosition?: RelativePosition;
@@ -18,9 +10,6 @@ export interface VRangeDescription {
     endPosition?: RelativePosition;
     direction: Direction;
 }
-
-export const RANGE_TAIL_CHAR = '[';
-export const RANGE_HEAD_CHAR = ']';
 
 export class VRange {
     readonly _tail = new VNode(VNodeType.RANGE_TAIL);
@@ -38,7 +27,7 @@ export class VRange {
     }
     get direction(): Direction {
         if (!this._direction) {
-            const forward = VDocument.withRange(() => this._tail.isBefore(this._head));
+            const forward = utils.withRange(() => this._tail.isBefore(this._head));
             this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
         }
         return this._direction;
@@ -77,7 +66,7 @@ export class VRange {
      * Return true if the range is collapsed.
      */
     isCollapsed(): boolean {
-        return VDocument.withRange(() => {
+        return utils.withRange(() => {
             if (this.direction === Direction.FORWARD) {
                 return this._tail.nextSibling() === this._head;
             } else {
@@ -92,7 +81,7 @@ export class VRange {
     get selectedNodes(): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
-        VDocument.withRange(() => {
+        utils.withRange(() => {
             while ((node = node.next()) && node !== this.end) {
                 selectedNodes.push(node);
             }

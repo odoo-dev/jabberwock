@@ -1,6 +1,6 @@
 import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from '../../core/src/VRange';
+import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from './range';
 import { DomRangeDescription } from '../../core/src/EventNormalizer';
 import { Parser } from '../../core/src/Parser';
 
