@@ -1,6 +1,6 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
 import { Parser } from './Parser';
-import { VNode, VNodeType } from './VNodes/VNode';
+import { LineBreakNode } from './VNodes/LineBreakNode';
 import JWEditor from './JWEditor';
 
 interface SetRangeParams {
@@ -31,9 +31,7 @@ export class EventManager {
         switch (customEvent.type) {
             case 'enter':
                 if (customEvent.detail.shiftKey) {
-                    return this.editor.execCommand('insert', {
-                        value: new VNode(VNodeType.LINE_BREAK, 'BR'),
-                    });
+                    return this.editor.execCommand('insert', { value: new LineBreakNode() });
                 } else {
                     return this.editor.execCommand('insertParagraphBreak');
                 }

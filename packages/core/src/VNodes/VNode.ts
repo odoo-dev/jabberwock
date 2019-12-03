@@ -109,12 +109,6 @@ export class VNode {
         if (domNodeLength && offset >= domNodeLength) {
             position = RelativePosition.AFTER;
         }
-        // When clicking on a trailing line break, we need to target after the
-        // line break. The DOM represents these as 2 <br> so this is a special
-        // case. TODO: move this to LINE_BREAK node when it's implemented.
-        if (this.type === 'LINE_BREAK' && !this.nextSibling() && !domNode.nextSibling) {
-            position = RelativePosition.AFTER;
-        }
         return [this, position];
     }
     /**
