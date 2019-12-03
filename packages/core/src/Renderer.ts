@@ -4,6 +4,7 @@ import { isRange, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNode';
 import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
+import { CharNode } from './VNodes/CharNode';
 import { RelativePosition } from '../../utils/src/range';
 
 interface RenderingContext {
@@ -127,7 +128,7 @@ export class Renderer {
     _renderTextNode(context: RenderingContext): RenderingContext {
         // If the node has a format, render the format nodes first.
         const renderedFormats = [];
-        const firstChar = context.currentVNode;
+        const firstChar = context.currentVNode as CharNode;
         Object.keys(firstChar.format).forEach(type => {
             if (firstChar.format[type]) {
                 const formatNode = document.createElement(Format.toTag(type));
@@ -139,18 +140,18 @@ export class Renderer {
         });
 
         // Consecutive compatible char nodes are rendered as a single text node.
-        let text = firstChar.value;
+        let text = '' + firstChar.char;
         let next = firstChar.nextSibling();
         const charNodes = [firstChar];
         while (next && this._isSameTextNode(firstChar, next)) {
             context.currentVNode = next;
-            if (isChar(next)) {
+            if (next instanceof CharNode) {
                 charNodes.push(next);
-                if (next.value === ' ' && text[text.length - 1] === ' ') {
+                if (next.char === ' ' && text[text.length - 1] === ' ') {
                     // Browsers don't render consecutive space chars otherwise.
                     text += '\u00A0';
                 } else {
-                    text += next.value;
+                    text += next.char;
                 }
             }
             next = next.nextSibling();

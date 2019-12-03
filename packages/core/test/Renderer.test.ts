@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import JWEditor from '../src/JWEditor';
 import { Renderer } from '../src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
-import { VNode, VNodeType } from '../src/VNode';
+import { CharNode } from '../src/VNodes/CharNode';
 
 describe('utils', () => {
     describe('Renderer', () => {
@@ -14,9 +14,9 @@ describe('utils', () => {
 
                 const editor = new JWEditor(element);
                 editor.start();
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', 'b'));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode('b'));
 
                 const renderer = new Renderer();
                 renderer.render(editor.vDocument, editor.editable);
@@ -32,11 +32,11 @@ describe('utils', () => {
 
                 const editor = new JWEditor(element);
                 editor.start();
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', ' '));
-                editor.vDocument.root.append(new VNode(VNodeType.CHAR, '', 'b'));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode(' '));
+                editor.vDocument.root.append(new CharNode('b'));
 
                 const renderer = new Renderer();
                 renderer.render(editor.vDocument, editor.editable);

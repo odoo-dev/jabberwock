@@ -1,5 +1,6 @@
-import { VNode, VNodeType, FormatType, FORMAT_TYPES } from './VNode';
+import { VNode, FormatType, FORMAT_TYPES } from './VNode';
 import { VRange } from './VRange';
+import { CharNode } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RootNode } from './VNodes/RootNode';
@@ -64,7 +65,7 @@ export class VDocument {
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new VNode(VNodeType.CHAR, '#text', char, format);
+            const vNode = new CharNode(char, format);
             this.range.start.before(vNode);
         });
         this.formatCache = null;
