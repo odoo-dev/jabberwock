@@ -1,3 +1,5 @@
+export let isWithRange = false;
+
 export const utils = {
     /**
      * Convert certain special characters to unicode.
@@ -23,6 +25,19 @@ export const utils = {
         const isTextNode = node.nodeType === Node.TEXT_NODE;
         const content = isTextNode ? node.nodeValue : node.childNodes;
         return content.length;
+    },
+    /**
+     * Call a callback on this VNode without ignoring the range nodes.
+     *
+     * @param callback
+     */
+    withRange<T>(callback: () => T): T {
+        // Record the previous value to allow for nested calls to `withRange`.
+        const previousValue = isWithRange;
+        isWithRange = true;
+        const result = callback();
+        isWithRange = previousValue;
+        return result;
     },
     /**
      * Take a collection of nodes and return a regular array

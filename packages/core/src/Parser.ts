@@ -1,7 +1,8 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { RelativePosition, VRangeDescription, Direction } from './VRange';
+import { VRangeDescription } from './VRange';
+import { Direction, RelativePosition } from '../../utils/src/range';
 import { VNode, FormatType, VNodeType } from './VNode';
 import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';

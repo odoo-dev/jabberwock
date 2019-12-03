@@ -1,8 +1,7 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from './BasicHtmlRenderingEngine';
-import { withRange, VDocument } from './VDocument';
 import { Predicate, isRange, isLeaf, not } from './../../utils/src/Predicates';
-import { RelativePosition } from './VRange';
-import { utils } from './../../utils/src/utils';
+import { RelativePosition } from '../../utils/src/range';
+import { utils, isWithRange } from './../../utils/src/utils';
 
 export enum VNodeType {
     ROOT = 'ROOT',
@@ -126,7 +125,7 @@ export class VNode {
      * Return the VNode's children.
      */
     get children(): VNode[] {
-        if (withRange) {
+        if (isWithRange) {
             return this._children;
         }
         return this._children.filter(not(isRange));
@@ -240,9 +239,9 @@ export class VNode {
      * @param child
      */
     childBefore(child: VNode): VNode {
-        const childBefore = VDocument.withRange(() => this.nthChild(this.indexOf(child) - 1));
+        const childBefore = utils.withRange(() => this.nthChild(this.indexOf(child) - 1));
         // Ignore range nodes by default.
-        if (!withRange && childBefore && isRange(childBefore)) {
+        if (!isWithRange && childBefore && isRange(childBefore)) {
             return this.childBefore(childBefore);
         } else {
             return childBefore;
@@ -254,9 +253,9 @@ export class VNode {
      * @param child
      */
     childAfter(child: VNode): VNode {
-        const childAfter = VDocument.withRange(() => this.nthChild(this.indexOf(child) + 1));
+        const childAfter = utils.withRange(() => this.nthChild(this.indexOf(child) + 1));
         // Ignore range nodes by default.
-        if (!withRange && childAfter && isRange(childAfter)) {
+        if (!isWithRange && childAfter && isRange(childAfter)) {
             return this.childAfter(childAfter);
         } else {
             return childAfter;
@@ -605,7 +604,7 @@ export class VNode {
      * @param reference
      */
     insertBefore(node: VNode, reference: VNode): VNode {
-        return VDocument.withRange(() => {
+        return utils.withRange(() => {
             const index = this.indexOf(reference);
             if (index < 0) {
                 throw new Error('The given VNode is not a child of this VNode');
@@ -621,7 +620,7 @@ export class VNode {
      * @param reference
      */
     insertAfter(node: VNode, reference: VNode): VNode {
-        return VDocument.withRange(() => {
+        return utils.withRange(() => {
             const index = this.indexOf(reference);
             if (index < 0) {
                 throw new Error('The given VNode is not a child of this VNode');
@@ -641,7 +640,7 @@ export class VNode {
      * @param child
      */
     removeChild(child: VNode): VNode {
-        return VDocument.withRange(() => {
+        return utils.withRange(() => {
             const index = this.indexOf(child);
             if (index < 0) {
                 throw new Error('The given VNode is not a child of this VNode');
@@ -658,7 +657,7 @@ export class VNode {
      */
     splitAt(child: VNode): VNode {
         const nodesToMove = [child];
-        nodesToMove.push(...VDocument.withRange(() => child.nextSiblings()));
+        nodesToMove.push(...utils.withRange(() => child.nextSiblings()));
         const duplicate = new VNode(this.type, this.originalTag, this.value, this.format);
         this.after(duplicate);
         nodesToMove.forEach(sibling => duplicate.append(sibling));
@@ -679,7 +678,7 @@ export class VNode {
      */
     _insertAtIndex(child: VNode, index: number): VNode {
         if (child.parent) {
-            const currentIndex = VDocument.withRange(() => child.parent.indexOf(child));
+            const currentIndex = utils.withRange(() => child.parent.indexOf(child));
             if (index && child.parent === this && currentIndex < index) {
                 index--;
             }

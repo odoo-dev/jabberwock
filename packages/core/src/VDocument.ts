@@ -1,8 +1,7 @@
 import { VNode, VNodeType, FormatType, FORMAT_TYPES } from './VNode';
 import { VRange } from './VRange';
 import { isChar } from '../../utils/src/Predicates';
-
-export let withRange = false;
+import { utils } from '../../utils/src/utils';
 
 export class VDocument {
     root: VNode;
@@ -97,7 +96,7 @@ export class VDocument {
      * orphaned children into the parent of the first removed node.
      */
     deleteSelection(): void {
-        VDocument.withRange(() => {
+        utils.withRange(() => {
             const nodes = this.range.selectedNodes;
             if (!nodes.length) return;
             this.range.collapse(this.range.start); // Reset the direction of the range.
@@ -124,20 +123,6 @@ export class VDocument {
     //--------------------------------------------------------------------------
     // Context
     //--------------------------------------------------------------------------
-
-    /**
-     * Call a callback on this VNode without ignoring the range nodes.
-     *
-     * @param callback
-     */
-    static withRange<T>(callback: () => T): T {
-        // Record the previous value to allow for nested calls to `withRange`.
-        const previousValue = withRange;
-        withRange = true;
-        const result = callback();
-        withRange = previousValue;
-        return result;
-    }
 
     /**
      * Apply the `format` to the range.
