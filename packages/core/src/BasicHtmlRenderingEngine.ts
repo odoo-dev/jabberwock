@@ -47,7 +47,7 @@ export const BasicHtmlRenderingEngine = {
 
         // If a node is empty but could accomodate children,
         // fill it to make it visible.
-        if (!node.hasChildren() && !node.properties.atomic) {
+        if (!node.hasChildren() && !node.atomic) {
             renderedElement.appendChild(document.createElement('BR'));
         }
         return fragment;

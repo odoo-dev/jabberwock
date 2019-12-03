@@ -18,10 +18,6 @@ export enum VNodeType {
     LINE_BREAK = 'LINE_BREAK',
 }
 
-export interface VNodeProperties {
-    atomic: boolean;
-}
-
 export interface FormatType {
     bold?: boolean;
     italic?: boolean;
@@ -29,12 +25,6 @@ export interface FormatType {
 }
 export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
-const atomicTypes = [
-    VNodeType.CHAR,
-    VNodeType.LINE_BREAK,
-    VNodeType.RANGE_TAIL,
-    VNodeType.RANGE_HEAD,
-];
 let id = 0;
 
 export class VNode {
@@ -47,9 +37,6 @@ export class VNode {
     };
     name: string;
     originalTag: string;
-    properties: VNodeProperties = {
-        atomic: false,
-    };
     _children: VNode[] = [];
 
     constructor(type: VNodeType, originalTag = '', format?: FormatType) {
@@ -60,7 +47,6 @@ export class VNode {
             italic: false,
             underline: false,
         };
-        this._updateProperties();
         this.name = this.type;
         id++;
     }
@@ -122,6 +108,12 @@ export class VNode {
     // Properties
     //--------------------------------------------------------------------------
 
+    /**
+     * Return true if the VNode is atomic (ie. it may not have children).
+     */
+    get atomic(): boolean {
+        return false;
+    }
     /**
      * Return the VNode's children.
      */
@@ -192,14 +184,6 @@ export class VNode {
     hasFormat(): boolean {
         return Object.keys(this.format).some(
             (key: keyof FormatType): boolean => !!this.format[key],
-        );
-    }
-    /**
-     * Return true if this VNode has a vNode property set to true.
-     */
-    hasProperties(): boolean {
-        return Object.keys(this.properties).some(
-            (key: keyof VNodeProperties): boolean => !!this.properties[key],
         );
     }
     /**
@@ -694,13 +678,5 @@ export class VNode {
     _removeAtIndex(index: number): VNode {
         this._children.splice(index, 1);
         return this;
-    }
-    /**
-     * Update the VNode's properties.
-     */
-    _updateProperties(): void {
-        if (atomicTypes.includes(this.type)) {
-            this.properties.atomic = true;
-        }
     }
 }
