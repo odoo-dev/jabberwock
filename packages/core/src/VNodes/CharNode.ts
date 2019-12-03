@@ -21,9 +21,6 @@ export function makeChar(char: string): Char {
 }
 
 export class CharNode extends VNode {
-    properties = {
-        atomic: true,
-    };
     char: Char;
     constructor(char: string, format?: FormatType) {
         super(VNodeType.CHAR, '#text', format);
@@ -48,6 +45,14 @@ export class CharNode extends VNode {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Return true if the VNode is atomic (ie. it may not have children).
+     *
+     * @override
+     */
+    get atomic(): boolean {
+        return true;
+    }
     /**
      * Return the length of this VNode.
      */

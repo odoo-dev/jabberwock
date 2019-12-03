@@ -2,10 +2,6 @@ import { VNode, VNodeType } from './VNode';
 import { RelativePosition } from '../../../utils/src/range';
 
 export class LineBreakNode extends VNode {
-    properties = {
-        atomic: true,
-    };
-
     constructor() {
         super(VNodeType.LINE_BREAK, 'BR');
     }
@@ -28,6 +24,19 @@ export class LineBreakNode extends VNode {
             t.appendChild(document.createElement('br'));
         }
         return t;
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return true if the VNode is atomic (ie. it may not have children).
+     *
+     * @override
+     */
+    get atomic(): boolean {
+        return true;
     }
     /**
      * Return a new VNode with the same type and attributes as this VNode.
