@@ -119,17 +119,14 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      * @returns {string}
      */
     _getNodeRepr(node: VNode): string {
-        if (node.value) {
-            return utils.toUnicode(node.value);
-        }
         if (isRange(node)) {
             return node.type === VNodeType.RANGE_TAIL ? '[' : ']';
         }
         if (node.type && node.type === VNodeType.LINE_BREAK) {
             return '↲';
         }
-        if (node.type) {
-            return node.type.toLowerCase();
+        if (node.name) {
+            return utils.toUnicode(node.name);
         }
         if (node.originalTag.length) {
             return node.originalTag.toLowerCase();

@@ -45,23 +45,23 @@ export class VNode {
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
+    name: string;
     originalTag: string;
-    value: string;
     properties: VNodeProperties = {
         atomic: false,
     };
     _children: VNode[] = [];
 
-    constructor(type: VNodeType, originalTag = '', value?: string, format?: FormatType) {
+    constructor(type: VNodeType, originalTag = '', format?: FormatType) {
         this.type = type;
         this.originalTag = originalTag;
-        this.value = value;
         this.format = format || {
             bold: false,
             italic: false,
             underline: false,
         };
         this._updateProperties();
+        this.name = this.type;
         id++;
     }
     /**
@@ -88,7 +88,8 @@ export class VNode {
     /**
      * Render the VNode to the given format.
      *
-     * @param to the name of the format to which we want to render (default: html)
+     * @param [to] the name of the format to which we want to render (default:
+     * html)
      */
     render<T>(to = 'html'): T {
         return this.renderingEngines[to].render(this) as T;
@@ -116,6 +117,12 @@ export class VNode {
         }
         return [this, position];
     }
+    /**
+     * Return a new VNode with the same type and attributes as this VNode.
+     */
+    shallowDuplicate(): VNode {
+        return new VNode(this.type, this.originalTag, this.format);
+    }
 
     //--------------------------------------------------------------------------
     // Properties
@@ -134,7 +141,7 @@ export class VNode {
      * Return the length of this VNode.
      */
     get length(): number {
-        return this.value ? this.value.length : this.children.length;
+        return this.children.length;
     }
     /**
      * Return the length of this node and all its descendents.
@@ -174,9 +181,6 @@ export class VNode {
      * @param __current
      */
     text(__current = ''): string {
-        if (this.value) {
-            __current += this.value;
-        }
         this.children.forEach((child: VNode): void => {
             __current = child.text(__current);
         });
@@ -670,7 +674,7 @@ export class VNode {
     splitAt(child: VNode): VNode {
         const nodesToMove = [child];
         nodesToMove.push(...utils.withRange(() => child.nextSiblings()));
-        const duplicate = new VNode(this.type, this.originalTag, this.value, this.format);
+        const duplicate = this.shallowDuplicate();
         this.after(duplicate);
         nodesToMove.forEach(sibling => duplicate.append(sibling));
         return duplicate;
