@@ -1,14 +1,13 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { FormatParams } from '../src/CorePlugin';
-import { VNode, VNodeType } from '../src/VNodes/VNode';
+import { LineBreakNode } from '../src/VNodes/LineBreakNode';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
 const insertParagraphBreak = (editor: JWEditor): void => editor.execCommand('insertParagraphBreak');
-const insertLineBreak = (editor: JWEditor): void => {
-    editor.execCommand('insert', { value: new VNode(VNodeType.LINE_BREAK, 'BR') });
-};
+const insertLineBreak = (editor: JWEditor): void =>
+    editor.execCommand('insert', { value: new LineBreakNode() });
 
 describe('stores', () => {
     describe('VDocument', () => {
