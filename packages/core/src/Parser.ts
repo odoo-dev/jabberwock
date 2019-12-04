@@ -20,6 +20,10 @@ interface ParsingContext {
 }
 
 export class Parser {
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     /**
      * Parse an HTML element into the editor's virtual representation.
      *
@@ -41,7 +45,7 @@ export class Parser {
                 vDocument: vDocument,
             };
             do {
-                context = this.parseNode(context);
+                context = this._parseNode(context);
             } while (context);
         }
 
@@ -62,38 +66,67 @@ export class Parser {
         return vDocument;
     }
     /**
-     * Parse a node depending on its DOM type.
+     * Return a string with the value of a text node stripped of its formatting
+     * space, applying the w3 rules for white space processing
+     * TODO: decide what exactly to do with formatting spaces:
+     * remove, keep, recompute?
      *
-     * @param currentContext The current context
-     * @returns The next parsing context
+     * @see https://www.w3.org/TR/css-text-3/#white-space-processing
+     * @returns {string}
      */
-    parseNode(currentContext: ParsingContext): ParsingContext {
-        let context;
-        switch (currentContext.node.nodeType) {
-            case Node.ELEMENT_NODE: {
-                context = this.parseElementNode(currentContext);
-                break;
-            }
-            case Node.TEXT_NODE: {
-                context = this.parseTextNode(currentContext);
-                break;
-            }
-            case Node.DOCUMENT_NODE:
-            case Node.DOCUMENT_FRAGMENT_NODE: {
-                // These nodes have no effect in the context of parsing, but the
-                // parsing itself will continue with their children.
-                context = currentContext;
-                break;
-            }
-            case Node.CDATA_SECTION_NODE:
-            case Node.PROCESSING_INSTRUCTION_NODE:
-            case Node.COMMENT_NODE:
-            case Node.DOCUMENT_TYPE_NODE:
-            default: {
-                throw `Unsupported node type: ${currentContext.node.nodeType}.`;
-            }
+    static removeFormatSpace(node: Node): string {
+        // TODO: check the value of the `white-space` property
+        const text: string = node.textContent;
+        const spaceBeforeNewline = /([ \t])*(\n)/g;
+        const spaceAfterNewline = /(\n)([ \t])*/g;
+        const tabs = /\t/g;
+        const newlines = /\n/g;
+        const consecutiveSpace = /  */g;
+
+        // (Comments refer to the w3 link provided above.)
+        // Phase I: Collapsing and Transformation
+        let newText = text
+            // 1. All spaces and tabs immediately preceding or following a
+            //    segment break are removed.
+            .replace(spaceBeforeNewline, '$2')
+            .replace(spaceAfterNewline, '$1')
+            // 2. Segment breaks are transformed for rendering according to the
+            //    segment break transformation rules.
+            .replace(newlines, ' ')
+            // 3. Every tab is converted to a space (U+0020).
+            .replace(tabs, ' ')
+            // 4. Any space immediately following another collapsible space —
+            //    even one outside the boundary of the inline containing that
+            //    space, provided both spaces are within the same inline
+            //    formatting context—is collapsed to have zero advance width.
+            //    (It is invisible, but retains its soft wrap opportunity, if
+            //    any.)
+            .replace(consecutiveSpace, ' ');
+
+        // Phase II: Trimming and Positioning
+        // 1. A sequence of collapsible spaces at the beginning of a line
+        //    (ignoring any intervening inline box boundaries) is removed.
+        if (Parser._isAtSegmentBreak(node, 'start')) {
+            const startSpace = /^ */g;
+            newText = newText.replace(startSpace, '');
         }
-        return this.nextParsingContext(context);
+        // 2. If the tab size is zero, tabs are not rendered. Otherwise, each
+        //    tab is rendered as a horizontal shift that lines up the start edge
+        //    of the next glyph with the next tab stop. If this distance is less
+        //    than 0.5ch, then the subsequent tab stop is used instead. Tab
+        //    stops occur at points that are multiples of the tab size from the
+        //    block’s starting content edge. The tab size is given by the
+        //    tab-size property.
+        // TODO
+        // 3. A sequence at the end of a line (ignoring any intervening inline
+        //    box boundaries) of collapsible spaces (U+0020) and/or ideographic
+        //    spaces (U+3000) whose white-space value collapses spaces is
+        //    removed.
+        if (Parser._isAtSegmentBreak(node, 'end')) {
+            const endSpace = /[ \u3000]*$/g;
+            newText = newText.replace(endSpace, '');
+        }
+        return newText;
     }
     /**
      * Convert the DOM description of a range to the description of a VRange.
@@ -119,6 +152,44 @@ export class Parser {
         }
     }
 
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Parse a node depending on its DOM type.
+     *
+     * @param currentContext The current context
+     * @returns The next parsing context
+     */
+    _parseNode(currentContext: ParsingContext): ParsingContext {
+        let context;
+        switch (currentContext.node.nodeType) {
+            case Node.ELEMENT_NODE: {
+                context = this._parseElementNode(currentContext);
+                break;
+            }
+            case Node.TEXT_NODE: {
+                context = this._parseTextNode(currentContext);
+                break;
+            }
+            case Node.DOCUMENT_NODE:
+            case Node.DOCUMENT_FRAGMENT_NODE: {
+                // These nodes have no effect in the context of parsing, but the
+                // parsing itself will continue with their children.
+                context = currentContext;
+                break;
+            }
+            case Node.CDATA_SECTION_NODE:
+            case Node.PROCESSING_INSTRUCTION_NODE:
+            case Node.COMMENT_NODE:
+            case Node.DOCUMENT_TYPE_NODE:
+            default: {
+                throw `Unsupported node type: ${currentContext.node.nodeType}.`;
+            }
+        }
+        return this._nextParsingContext(context);
+    }
     /**
      * Create and return a `VNode` corresponding to the given DOM tag.
      *
@@ -127,7 +198,7 @@ export class Parser {
      *
      * @param node
      */
-    VNodeFromTag(tag: string): VNode {
+    _VNodeFromTag(tag: string): VNode {
         switch (tag) {
             case 'P':
                 return new SimpleElementNode(VNodeType.PARAGRAPH);
@@ -154,11 +225,11 @@ export class Parser {
      * @param [format] to apply to the parsed node (default: none)
      * @returns the parsed VNode(s)
      */
-    parseElementNode(currentContext: ParsingContext): ParsingContext {
+    _parseElementNode(currentContext: ParsingContext): ParsingContext {
         const context = { ...currentContext };
 
         const node = context.node;
-        const parsedNode: VNode = this.VNodeFromTag(node.nodeName);
+        const parsedNode: VNode = this._VNodeFromTag(node.nodeName);
         if (Format.tags.includes(context.node.nodeName)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our
@@ -207,7 +278,7 @@ export class Parser {
      * @param [format] to apply to the parsed node (default: none)
      * @returns the parsed VNode(s)
      */
-    parseTextNode(currentContext: ParsingContext): ParsingContext {
+    _parseTextNode(currentContext: ParsingContext): ParsingContext {
         const node = currentContext.node;
         const parentVNode = currentContext.parentVNode;
         const format = currentContext.format[0];
@@ -220,8 +291,7 @@ export class Parser {
         }
         return currentContext;
     }
-
-    nextParsingContext(currentContext: ParsingContext): ParsingContext {
+    _nextParsingContext(currentContext: ParsingContext): ParsingContext {
         const nextContext = { ...currentContext };
 
         const node = currentContext.node;
@@ -276,7 +346,41 @@ export class Parser {
         }
         return nextContext;
     }
-
+    /**
+     * Return a position in the `VDocument` as a tuple containing a reference
+     * node and a relative position with respect to this node ('BEFORE' or
+     * 'AFTER'). The position is always given on the leaf.
+     *
+     * @param container
+     * @param offset
+     */
+    _locate(container: Node, offset: number): [VNode, RelativePosition] {
+        // When targetting the end of a node, the DOM gives an offset that is
+        // equal to the length of the container. In order to retrieve the last
+        // descendent, we need to make sure we target an existing node, ie. an
+        // existing index.
+        const isAfterEnd = offset >= utils.nodeLength(container);
+        let index = isAfterEnd ? utils.nodeLength(container) - 1 : offset;
+        // Move to deepest child of container.
+        while (container.hasChildNodes()) {
+            container = container.childNodes[index];
+            index = isAfterEnd ? utils.nodeLength(container) - 1 : 0;
+            // Adapt the offset to be its equivalent within the new container.
+            offset = isAfterEnd ? utils.nodeLength(container) : index;
+        }
+        // Get the VNodes matching the container.
+        const vNodes = VDocumentMap.fromDom(container);
+        if (vNodes && vNodes.length) {
+            let reference: VNode;
+            if (container.nodeType === Node.TEXT_NODE) {
+                // The reference is the index-th match (eg.: text split into chars).
+                reference = vNodes[index];
+            } else {
+                reference = vNodes[0];
+            }
+            return reference.locateRange(container, offset);
+        }
+    }
     /**
      * Return true if the given node is immediately preceding (`side` === 'end')
      * or following (`side` === 'start') a segment break, to see if its edge
@@ -351,103 +455,5 @@ export class Parser {
      */
     static _isTextNode(node: Node): boolean {
         return node.nodeType === Node.TEXT_NODE;
-    }
-    /**
-     * Return a string with the value of a text node stripped of its formatting
-     * space, applying the w3 rules for white space processing
-     * TODO: decide what exactly to do with formatting spaces:
-     * remove, keep, recompute?
-     *
-     * @see https://www.w3.org/TR/css-text-3/#white-space-processing
-     * @returns {string}
-     */
-    static removeFormatSpace(node: Node): string {
-        // TODO: check the value of the `white-space` property
-        const text: string = node.textContent;
-        const spaceBeforeNewline = /([ \t])*(\n)/g;
-        const spaceAfterNewline = /(\n)([ \t])*/g;
-        const tabs = /\t/g;
-        const newlines = /\n/g;
-        const consecutiveSpace = /  */g;
-
-        // (Comments refer to the w3 link provided above.)
-        // Phase I: Collapsing and Transformation
-        let newText = text
-            // 1. All spaces and tabs immediately preceding or following a
-            //    segment break are removed.
-            .replace(spaceBeforeNewline, '$2')
-            .replace(spaceAfterNewline, '$1')
-            // 2. Segment breaks are transformed for rendering according to the
-            //    segment break transformation rules.
-            .replace(newlines, ' ')
-            // 3. Every tab is converted to a space (U+0020).
-            .replace(tabs, ' ')
-            // 4. Any space immediately following another collapsible space —
-            //    even one outside the boundary of the inline containing that
-            //    space, provided both spaces are within the same inline
-            //    formatting context—is collapsed to have zero advance width.
-            //    (It is invisible, but retains its soft wrap opportunity, if
-            //    any.)
-            .replace(consecutiveSpace, ' ');
-
-        // Phase II: Trimming and Positioning
-        // 1. A sequence of collapsible spaces at the beginning of a line
-        //    (ignoring any intervening inline box boundaries) is removed.
-        if (Parser._isAtSegmentBreak(node, 'start')) {
-            const startSpace = /^ */g;
-            newText = newText.replace(startSpace, '');
-        }
-        // 2. If the tab size is zero, tabs are not rendered. Otherwise, each
-        //    tab is rendered as a horizontal shift that lines up the start edge
-        //    of the next glyph with the next tab stop. If this distance is less
-        //    than 0.5ch, then the subsequent tab stop is used instead. Tab
-        //    stops occur at points that are multiples of the tab size from the
-        //    block’s starting content edge. The tab size is given by the
-        //    tab-size property.
-        // TODO
-        // 3. A sequence at the end of a line (ignoring any intervening inline
-        //    box boundaries) of collapsible spaces (U+0020) and/or ideographic
-        //    spaces (U+3000) whose white-space value collapses spaces is
-        //    removed.
-        if (Parser._isAtSegmentBreak(node, 'end')) {
-            const endSpace = /[ \u3000]*$/g;
-            newText = newText.replace(endSpace, '');
-        }
-        return newText;
-    }
-    /**
-     * Return a position in the `VDocument` as a tuple containing a reference
-     * node and a relative position with respect to this node ('BEFORE' or
-     * 'AFTER'). The position is always given on the leaf.
-     *
-     * @param container
-     * @param offset
-     */
-    _locate(container: Node, offset: number): [VNode, RelativePosition] {
-        // When targetting the end of a node, the DOM gives an offset that is
-        // equal to the length of the container. In order to retrieve the last
-        // descendent, we need to make sure we target an existing node, ie. an
-        // existing index.
-        const isAfterEnd = offset >= utils.nodeLength(container);
-        let index = isAfterEnd ? utils.nodeLength(container) - 1 : offset;
-        // Move to deepest child of container.
-        while (container.hasChildNodes()) {
-            container = container.childNodes[index];
-            index = isAfterEnd ? utils.nodeLength(container) - 1 : 0;
-            // Adapt the offset to be its equivalent within the new container.
-            offset = isAfterEnd ? utils.nodeLength(container) : index;
-        }
-        // Get the VNodes matching the container.
-        const vNodes = VDocumentMap.fromDom(container);
-        if (vNodes && vNodes.length) {
-            let reference: VNode;
-            if (container.nodeType === Node.TEXT_NODE) {
-                // The reference is the index-th match (eg.: text split into chars).
-                reference = vNodes[index];
-            } else {
-                reference = vNodes[0];
-            }
-            return reference.locateRange(container, offset);
-        }
     }
 }
