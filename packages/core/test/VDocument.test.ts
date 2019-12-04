@@ -421,7 +421,6 @@ describe('stores', () => {
                                 contentBefore: '<p>ab</p><p><br><br><br><br>[]</p><p>cd</p>',
                                 stepFunction: deleteForward,
                                 contentAfter: '<p>ab</p><p><br><br><br>[]cd</p>',
-                                debug: true,
                             });
                             // 2-1
                             await testEditor({
