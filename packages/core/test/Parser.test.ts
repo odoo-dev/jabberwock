@@ -47,22 +47,31 @@ describe('utils', () => {
                 const p = vDocument.root.children[0];
                 expect(p.type).to.equal(VNodeType.PARAGRAPH);
                 expect(p.children.length).to.equal(4);
-                expect(p.children[0].type).to.equal(VNodeType.CHAR);
-                expect((p.children[0] as CharNode).char).to.equal('a');
-                expect((p.children[1] as CharNode).char).to.equal('b');
-                expect(p.children[1].format).to.deep.equal({
+                const a = p.children[0] as CharNode;
+                expect(a instanceof CharNode).to.be.true;
+                expect(a.char).to.equal('a');
+                expect(a.format).to.deep.equal({
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                });
+                const b = p.children[1] as CharNode;
+                expect(b.char).to.equal('b');
+                expect(b.format).to.deep.equal({
                     bold: false,
                     italic: true,
                     underline: false,
                 });
-                expect((p.children[2] as CharNode).char).to.equal('c');
-                expect(p.children[2].format).to.deep.equal({
+                const c = p.children[2] as CharNode;
+                expect(c.char).to.equal('c');
+                expect(c.format).to.deep.equal({
                     bold: true,
                     italic: true,
                     underline: false,
                 });
-                expect((p.children[3] as CharNode).char).to.equal('d');
-                expect(p.children[3].format).to.deep.equal({
+                const d = p.children[3] as CharNode;
+                expect(d.char).to.equal('d');
+                expect(d.format).to.deep.equal({
                     bold: false,
                     italic: true,
                     underline: false,
