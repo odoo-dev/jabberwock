@@ -17,36 +17,20 @@ export enum VNodeType {
     CHAR = 'CHAR',
     LINE_BREAK = 'LINE_BREAK',
 }
-
-export interface FormatType {
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-}
-export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
-
 let id = 0;
 
 export class VNode {
     readonly type: VNodeType;
-    format: FormatType;
     readonly id = id;
     parent: VNode | null = null;
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
     name: string;
-    originalTag: string;
     _children: VNode[] = [];
 
-    constructor(type: VNodeType, originalTag = '', format?: FormatType) {
+    constructor(type: VNodeType) {
         this.type = type;
-        this.originalTag = originalTag;
-        this.format = format || {
-            bold: false,
-            italic: false,
-            underline: false,
-        };
         this.name = this.type;
         id++;
     }
@@ -101,7 +85,7 @@ export class VNode {
      * Return a new VNode with the same type and attributes as this VNode.
      */
     shallowDuplicate(): VNode {
-        return new VNode(this.type, this.originalTag, this.format);
+        return new VNode(this.type);
     }
 
     //--------------------------------------------------------------------------
@@ -177,14 +161,6 @@ export class VNode {
      */
     hasChildren(): boolean {
         return this.children.length > 0;
-    }
-    /**
-     * Return true if this VNode has a format property set to true.
-     */
-    hasFormat(): boolean {
-        return Object.keys(this.format).some(
-            (key: keyof FormatType): boolean => !!this.format[key],
-        );
     }
     /**
      * Return true if this VNode comes before the given VNode in the pre-order
