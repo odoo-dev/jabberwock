@@ -4,32 +4,33 @@ import { RelativePosition } from '../../../utils/src/range';
 import { utils, isWithRange } from '../../../utils/src/utils';
 
 export enum VNodeType {
-    ROOT = 'ROOT',
-    RANGE_TAIL = 'RANGE_TAIL',
-    RANGE_HEAD = 'RANGE_HEAD',
-    PARAGRAPH = 'PARAGRAPH',
-    HEADING1 = 'HEADING1',
-    HEADING2 = 'HEADING2',
-    HEADING3 = 'HEADING3',
-    HEADING4 = 'HEADING4',
-    HEADING5 = 'HEADING5',
-    HEADING6 = 'HEADING6',
-    CHAR = 'CHAR',
-    LINE_BREAK = 'LINE_BREAK',
+    ROOT = 'root',
+    RANGE_TAIL = 'range_tail',
+    RANGE_HEAD = 'range_head',
+    PARAGRAPH = 'paragraph',
+    HEADING1 = 'heading1',
+    HEADING2 = 'heading2',
+    HEADING3 = 'heading3',
+    HEADING4 = 'heading4',
+    HEADING5 = 'heading5',
+    HEADING6 = 'heading6',
+    CHAR = 'char',
+    LINE_BREAK = 'line_break',
 }
 let id = 0;
 
 export class VNode {
-    readonly type: VNodeType;
+    readonly type: VNodeType | string;
     readonly id = id;
     parent: VNode | null = null;
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
     name: string;
+    htmlTag: string;
     _children: VNode[] = [];
 
-    constructor(type: VNodeType) {
+    constructor(type: VNodeType | string) {
         this.type = type;
         this.name = this.type;
         id++;
@@ -55,6 +56,10 @@ export class VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    static parse(node: Node): VNode | VNode[] | null {
+        return null;
+    }
     /**
      * Render the VNode to the given format.
      *
