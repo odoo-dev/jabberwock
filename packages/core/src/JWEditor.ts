@@ -23,6 +23,7 @@ export class JWEditor {
     renderer: Renderer;
     vDocument: VDocument;
     debugger: OwlUI;
+    parser: Parser;
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -53,7 +54,8 @@ export class JWEditor {
      */
     async start(): Promise<void> {
         // Parse the editable in the internal format of the editor.
-        this.vDocument = Parser.parse(this._originalEditable);
+        this.parser = new Parser();
+        this.vDocument = this.parser.parse(this._originalEditable);
 
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.

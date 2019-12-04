@@ -1,15 +1,16 @@
 import { expect } from 'chai';
-import { Parser } from '../src/Parser';
 import { VNodeType } from '../src/VNode';
 import { CharNode } from '../src/VNodes/CharNode';
+import { Parser } from '../src/Parser';
 
 describe('utils', () => {
     describe('Parser', () => {
+        const parser = new Parser();
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a</p>';
-                const vDocument = Parser.parse(element);
+                const vDocument = parser.parse(element);
 
                 expect(vDocument.root.type).to.equal(VNodeType.ROOT);
                 expect(vDocument.root.children.length).to.equal(1);
@@ -22,7 +23,7 @@ describe('utils', () => {
             it('should parse a "p" tag with no content', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p><br></p>';
-                const vDocument = Parser.parse(element);
+                const vDocument = parser.parse(element);
                 const p = vDocument.root.firstChild();
                 // The placeholder <br> should not be parsed.
                 expect(p.hasChildren()).to.be.false;
@@ -30,7 +31,7 @@ describe('utils', () => {
             it('should parse two trailing consecutive <br> as one LINE_BREAK', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a<br><br>';
-                const vDocument = Parser.parse(element);
+                const vDocument = parser.parse(element);
                 const p = vDocument.root.firstChild();
                 // Only one <br> should be parsed.
                 expect(p.children.length).to.equal(2);
@@ -40,7 +41,7 @@ describe('utils', () => {
             it('handles nested formatted nodes', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
-                const vDocument = Parser.parse(element);
+                const vDocument = parser.parse(element);
 
                 expect(vDocument.root.type).to.equal(VNodeType.ROOT);
                 expect(vDocument.root.children.length).to.equal(1);
