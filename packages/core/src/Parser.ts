@@ -3,10 +3,10 @@ import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
-import { VNode, FormatType, VNodeType } from './VNode';
+import { VNode, VNodeType } from './VNode';
 import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
-import { CharNode } from './VNodes/CharNode';
+import { CharNode, FormatType } from './VNodes/CharNode';
 import { SimpleElementNode } from './VNodes/SimpleElementNode';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { RootNode } from './VNodes/RootNode';
@@ -88,19 +88,19 @@ function parseRange(range: Range | DomRangeDescription, direction?: Direction): 
 function VNodeFromTag(tag: string): VNode {
     switch (tag) {
         case 'P':
-            return new SimpleElementNode(VNodeType.PARAGRAPH, tag);
+            return new SimpleElementNode(VNodeType.PARAGRAPH);
         case 'H1':
-            return new SimpleElementNode(VNodeType.HEADING1, tag);
+            return new SimpleElementNode(VNodeType.HEADING1);
         case 'H2':
-            return new SimpleElementNode(VNodeType.HEADING2, tag);
+            return new SimpleElementNode(VNodeType.HEADING2);
         case 'H3':
-            return new SimpleElementNode(VNodeType.HEADING3, tag);
+            return new SimpleElementNode(VNodeType.HEADING3);
         case 'H4':
-            return new SimpleElementNode(VNodeType.HEADING4, tag);
+            return new SimpleElementNode(VNodeType.HEADING4);
         case 'H5':
-            return new SimpleElementNode(VNodeType.HEADING5, tag);
+            return new SimpleElementNode(VNodeType.HEADING5);
         case 'H6':
-            return new SimpleElementNode(VNodeType.HEADING6, tag);
+            return new SimpleElementNode(VNodeType.HEADING6);
         case 'BR':
             return new LineBreakNode();
     }
@@ -130,7 +130,9 @@ function parseElementNode(currentContext: ParsingContext): ParsingContext {
             underline: format.underline || node.nodeName === 'U',
         });
     } else {
-        Object.assign(parsedNode.format, context.format[0]);
+        if (parsedNode instanceof CharNode) {
+            Object.assign(parsedNode.format, context.format[0]);
+        }
         VDocumentMap.set(parsedNode, node);
         context.parentVNode.append(parsedNode);
     }

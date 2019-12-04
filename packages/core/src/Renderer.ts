@@ -66,8 +66,8 @@ export class Renderer {
             return false;
         } else {
             // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...a.format, ...b.format });
-            return formats.every(k => !!a.format[k] === !!b.format[k]);
+            const formats = Object.keys({ ...(a as CharNode).format, ...(b as CharNode).format });
+            return formats.every(k => !!(a as CharNode).format[k] === !!(b as CharNode).format[k]);
         }
     }
     /**
