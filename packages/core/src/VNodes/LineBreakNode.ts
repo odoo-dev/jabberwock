@@ -2,6 +2,7 @@ import { VNode, VNodeType } from './VNode';
 import { RelativePosition } from '../../../utils/src/range';
 
 export class LineBreakNode extends VNode {
+    htmlTag = 'BR';
     constructor() {
         super(VNodeType.LINE_BREAK);
     }
@@ -10,6 +11,12 @@ export class LineBreakNode extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
+    static parse(node: Node): LineBreakNode {
+        if (node.nodeName === 'BR') {
+            return new LineBreakNode();
+        }
+        return null;
+    }
     /**
      * Render the VNode to the given format.
      *
@@ -46,6 +53,11 @@ export class LineBreakNode extends VNode {
     shallowDuplicate(): LineBreakNode {
         return new LineBreakNode();
     }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
     /**
      * Locate where to set the range, when it targets this VNode, at a certain
      * offset. This allows us to handle special cases.

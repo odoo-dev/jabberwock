@@ -1,4 +1,5 @@
 import { VNode, VNodeType } from './VNode';
+import { utils } from '../../../utils/src/utils';
 
 /**
  * This "phantom type" is there to ensure that the type `Char` is only generated
@@ -44,6 +45,18 @@ export class CharNode extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
+    static parse(node: Node): VNode | VNode[] | null {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const vNodes: VNode[] = [];
+            const text = utils.removeFormatSpace(node);
+            for (let i = 0; i < text.length; i++) {
+                const parsedVNode = new CharNode(text.charAt(i));
+                vNodes.push(parsedVNode);
+            }
+            return vNodes;
+        }
+        return null;
+    }
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      *

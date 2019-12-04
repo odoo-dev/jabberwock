@@ -44,7 +44,7 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <span t-if="props.vNode.type == 'RANGE_TAIL' or props.vNode.type == 'RANGE_HEAD'"
+            <span t-if="props.vNode.type == 'range_tail' or props.vNode.type == 'range_head'"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line range-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
@@ -54,9 +54,9 @@
             <span t-elif="props.vNode.char" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
-                    bold: props.vNode.format.bold,
-                    italic: props.vNode.format.italic,
-                    underline: props.vNode.format.underline,
+                    bold: props.vNode.format and props.vNode.format.bold,
+                    italic: props.vNode.format and props.vNode.format.italic,
+                    underline: props.vNode.format and props.vNode.format.underline,
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr"/>
@@ -65,11 +65,11 @@
                 <span class="element-name selectable-line" t-on-click="onClickNode"
                     t-on-dblclick="onDblClickNode"
                     t-att-class="{
-                        bold: props.vNode.format.bold,
-                        italic: props.vNode.format.italic,
-                        underline: props.vNode.format.underline,
+                        bold: props.vNode.format and props.vNode.format.bold,
+                        italic: props.vNode.format and props.vNode.format.italic,
+                        underline: props.vNode.format and props.vNode.format.underline,
                         selected: props.selectedID == props.vNode.id,
-                        'line-break': props.vNode.type === 'LINE_BREAK',
+                        'line-break': props.vNode.type === 'line_break',
                     }">
                     <t t-esc="repr"/>
                 </span>
@@ -118,7 +118,7 @@
     <!-- INSPECTOR.Info.vNode -->
     <t t-name="infoVNode">
         <div class="about">
-            <span class="type">VNode</span> <t t-esc="props.vNode.type or &quot;?&quot;"/>
+            <span class="type"><t t-esc="className(props.vNode)"/></span> <t t-esc="props.vNode.type or &quot;?&quot;"/>
             <t t-if="props.vNode.char">:
                 "<t t-esc="props.vNode.char"/>"
             </t>
@@ -158,9 +158,9 @@
                         <td>format</td>
                         <td>
                             <ol style="list-style-type: none">
-                                <li t-if="props.vNode.format.bold">Bold</li>
-                                <li t-if="props.vNode.format.italic">Italic</li>
-                                <li t-if="props.vNode.format.underline">Underline</li>
+                                <li t-if="props.vNode.format.bold">bold</li>
+                                <li t-if="props.vNode.format.italic">italic</li>
+                                <li t-if="props.vNode.format.underline">underline</li>
                             </ol>
                         </td>
                     </tr>
