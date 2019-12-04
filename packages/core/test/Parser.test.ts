@@ -48,6 +48,9 @@ describe('utils', () => {
                 const p = vDocument.root.children[0];
                 expect(p.type).to.equal(VNodeType.PARAGRAPH);
                 expect(p.children.length).to.equal(4);
+                const a = p.children[0] as CharNode;
+                expect(a.type).to.equal(VNodeType.CHAR);
+                expect(a.char).to.equal('a');
                 const b = p.children[1] as CharNode;
                 expect(b.char).to.equal('b');
                 expect(b.format).to.deep.equal({

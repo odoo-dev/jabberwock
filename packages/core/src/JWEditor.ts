@@ -7,10 +7,12 @@ import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
+import { VNode } from './VNode';
 
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
+    replaceDefaultNodes?: Array<typeof VNode>;
 }
 
 export class JWEditor {
@@ -23,7 +25,7 @@ export class JWEditor {
     renderer: Renderer;
     vDocument: VDocument;
     debugger: OwlUI;
-    parser: Parser;
+    parser = new Parser();
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -54,7 +56,6 @@ export class JWEditor {
      */
     async start(): Promise<void> {
         // Parse the editable in the internal format of the editor.
-        this.parser = new Parser();
         this.vDocument = this.parser.parse(this._originalEditable);
 
         // Deep clone the given editable node in order to break free of any
@@ -109,6 +110,22 @@ export class JWEditor {
             this.dispatcher.registerHook(key, plugin.commandHooks[key]);
         });
     }
+    /**
+     * Add a custom VNode to the ones that this Parser can handle.
+     *
+     * @param VNodeClasses
+     */
+    addCustomNode(VNodeClass: typeof VNode): void {
+        this.parser.addCustomVNode(VNodeClass);
+    }
+    /**
+     * Add an array of custom VNodes to the ones that this Parser can handle.
+     *
+     * @param VNodeClasses
+     */
+    addCustomNodes(VNodeClasses: Array<typeof VNode>): void {
+        this.parser.addCustomVNodes(VNodeClasses);
+    }
 
     /**
      * Load the given config in this editor instance.
@@ -119,6 +136,9 @@ export class JWEditor {
         if (config.debug) {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
+        }
+        if (config.replaceDefaultNodes) {
+            this.parser = new Parser(config.replaceDefaultNodes);
         }
     }
 

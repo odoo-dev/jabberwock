@@ -31,6 +31,9 @@ export class InfoComponent extends OwlUIComponent<{}> {
             vNode: vNode,
         });
     }
+    className(vNode: VNode): string {
+        return vNode.constructor.name;
+    }
 
     //--------------------------------------------------------------------------
     // Private
