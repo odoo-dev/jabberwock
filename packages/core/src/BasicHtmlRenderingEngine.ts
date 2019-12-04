@@ -1,24 +1,5 @@
-import { VNode, VNodeType } from './VNodes/VNode';
+import { VNode } from './VNodes/VNode';
 
-const getRenderingTagName = function(nodeType: VNodeType): string {
-    switch (nodeType) {
-        case 'CHAR':
-            return;
-        case 'HEADING1':
-        case 'HEADING2':
-        case 'HEADING3':
-        case 'HEADING4':
-        case 'HEADING5':
-        case 'HEADING6':
-            return 'H' + nodeType[7];
-        case 'LINE_BREAK':
-            return 'BR';
-        case 'PARAGRAPH':
-            return 'P';
-        case 'ROOT':
-            return 'ROOT';
-    }
-};
 /**
  * Renderers exist to render a node into another, different format. Each
  * format is implemented by a separate renderer following this interface.
@@ -40,7 +21,7 @@ export const BasicHtmlRenderingEngine = {
      * @param node
      */
     render: function(node: VNode): DocumentFragment {
-        const tagName = getRenderingTagName(node.type);
+        const tagName = node.htmlTag;
         const fragment = document.createDocumentFragment();
         const renderedElement = document.createElement(tagName);
         fragment.appendChild(renderedElement);
