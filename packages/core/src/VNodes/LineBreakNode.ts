@@ -3,7 +3,7 @@ import { RelativePosition } from '../../../utils/src/range';
 
 export class LineBreakNode extends VNode {
     constructor() {
-        super(VNodeType.LINE_BREAK, 'BR');
+        super(VNodeType.LINE_BREAK);
     }
 
     //--------------------------------------------------------------------------

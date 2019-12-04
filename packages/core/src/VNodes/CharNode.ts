@@ -1,4 +1,4 @@
-import { VNode, VNodeType, FormatType } from './VNode';
+import { VNode, VNodeType } from './VNode';
 
 /**
  * This "phantom type" is there to ensure that the type `Char` is only generated
@@ -19,13 +19,27 @@ export function makeChar(char: string): Char {
         throw new Error('Cannot make a Char out of anything else than a string of length 1.');
     }
 }
+export interface FormatType {
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+}
+export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
 export class CharNode extends VNode {
     char: Char;
-    constructor(char: string, format?: FormatType) {
-        super(VNodeType.CHAR, '#text', format);
+    format: FormatType = {
+        bold: false,
+        italic: false,
+        underline: false,
+    };
+    constructor(char: string, format: FormatType = {}) {
+        super(VNodeType.CHAR);
         this.char = makeChar(char);
         this.name = char;
+        this.format.bold = !!format.bold;
+        this.format.italic = !!format.italic;
+        this.format.underline = !!format.underline;
     }
 
     //--------------------------------------------------------------------------

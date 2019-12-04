@@ -154,7 +154,7 @@
                             <t t-esc="'' + props.vNode.atomic"/>
                         </td>
                     </tr>
-                    <tr t-if="props.vNode.hasFormat()">
+                    <tr t-if="props.vNode.format">
                         <td>format</td>
                         <td>
                             <ol style="list-style-type: none">
@@ -163,10 +163,6 @@
                                 <li t-if="props.vNode.format.underline">Underline</li>
                             </ol>
                         </td>
-                    </tr>
-                    <tr>
-                        <td>original tag</td>
-                        <td><t t-esc="props.vNode.originalTag or &quot;None&quot;"/></td>
                     </tr>
                     <tr t-if="props.vNode.text().length">
                         <td>text</td>
