@@ -128,9 +128,6 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         if (node.name) {
             return utils.toUnicode(node.name);
         }
-        if (node.originalTag.length) {
-            return node.originalTag.toLowerCase();
-        }
         return '?';
     }
     /**

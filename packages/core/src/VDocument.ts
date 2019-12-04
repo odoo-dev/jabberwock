@@ -1,6 +1,6 @@
-import { VNode, FormatType, FORMAT_TYPES } from './VNodes/VNode';
+import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { CharNode } from './VNodes/CharNode';
+import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RootNode } from './VNodes/RootNode';
@@ -79,13 +79,13 @@ export class VDocument {
         if (this.formatCache) {
             return this.formatCache;
         } else if (this.range.isCollapsed()) {
-            const charToCopyFormat = this.range.start.previousSibling(isChar) ||
+            const charToCopyFormat = (this.range.start.previousSibling(isChar) ||
                 this.range.start.nextSibling(isChar) || {
                     format: {},
-                };
+                }) as CharNode;
             format = { ...charToCopyFormat.format };
         } else {
-            const selectedChars = this.range.selectedNodes.filter(isChar);
+            const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
             FORMAT_TYPES.forEach(formatName => {
                 format[formatName] = selectedChars.some(char => char.format[formatName]);
             });
@@ -139,7 +139,7 @@ export class VDocument {
             }
             this.formatCache[formatName] = !this.formatCache[formatName];
         } else {
-            const selectedChars = this.range.selectedNodes.filter(isChar);
+            const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
 
             // If there is no char with the format `formatName` in the range, set the format to true
             // for all nodes.
