@@ -1,9 +1,10 @@
-import { VNode } from './VNodes/VNode';
+import { VNode, VNodeType } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RootNode } from './VNodes/RootNode';
+import { SimpleElementNode } from './VNodes/SimpleElementNode';
 
 export class VDocument {
     root: VNode;
@@ -112,7 +113,14 @@ export class VDocument {
                 // TODO: test whether the node can be merged with the container.
                 if (vNode.hasChildren()) {
                     vNode.children.slice().forEach(child => {
-                        reference.after(child);
+                        if (isChar(child) && reference.parent.type === 'root') {
+                            // A CharNode cannot be the direct child of the root.
+                            const paragraph = new SimpleElementNode(VNodeType.PARAGRAPH);
+                            reference.after(paragraph);
+                            paragraph.append(child);
+                        } else {
+                            reference.after(child);
+                        }
                         reference = child;
                     });
                 }
