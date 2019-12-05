@@ -40,24 +40,11 @@ export class CommandsComponent extends OwlUIComponent<CommandsProps> {
      *
      * @param value
      */
-    formatPayloadValue(value: Node | string | boolean | number): string {
+    formatPayloadValue(value: Node | string | boolean | number | object): string {
         if (value && value instanceof Node && value.nodeName) {
             return '<' + value.nodeName.toLowerCase() + '>';
         }
-        switch (value) {
-            case true:
-                return 'true';
-            case false:
-                return 'false';
-            case null:
-                return 'null';
-            case 0:
-                return '0';
-            case undefined:
-                return 'undefined';
-            default:
-                return '' + value;
-        }
+        return '' + value;
     }
     /**
      * Return the command handler corresponding to the given token.
