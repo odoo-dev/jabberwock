@@ -29,16 +29,17 @@ export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
 export class CharNode extends VNode {
     char: Char;
-    format: FormatType = {
-        bold: false,
-        italic: false,
-        underline: false,
-    };
+    // Format
+    bold = false;
+    italic = false;
+    underline = false;
     constructor(char: string, format: FormatType = {}) {
         super(VNodeType.CHAR);
         this.char = makeChar(char);
         this.name = char;
-        this.format = format;
+        this.bold = !!format.bold;
+        this.italic = !!format.italic;
+        this.underline = !!format.underline;
     }
 
     //--------------------------------------------------------------------------
@@ -70,6 +71,18 @@ export class CharNode extends VNode {
     // Public
     //--------------------------------------------------------------------------
 
+    get format(): FormatType {
+        return {
+            bold: this.bold,
+            italic: this.italic,
+            underline: this.underline,
+        };
+    }
+    set format(format: FormatType) {
+        this.bold = !!format.bold;
+        this.italic = !!format.italic;
+        this.underline = !!format.underline;
+    }
     /**
      * Return true if the VNode is atomic (ie. it may not have children).
      *
