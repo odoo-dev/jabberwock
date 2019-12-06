@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { testEditor } from '../src/testUtils';
-import { VNodeType } from '../../core/src/VNode';
+import { VNodeType } from '../../core/src/VNodes/VNode';
 import JWEditor from '../../core/src/JWEditor';
 
 describe('core', () => {

@@ -1,7 +1,8 @@
-import { VNode, VNodeType } from './VNode';
+import { VNode } from './VNodes/VNode';
 import { isRange } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RelativePosition, Direction } from '../../utils/src/range';
+import { RangeNode } from './VNodes/RangeNode';
 
 export interface VRangeDescription {
     start: VNode;
@@ -12,8 +13,8 @@ export interface VRangeDescription {
 }
 
 export class VRange {
-    readonly _tail = new VNode(VNodeType.RANGE_TAIL);
-    readonly _head = new VNode(VNodeType.RANGE_HEAD);
+    readonly _tail = new RangeNode('tail');
+    readonly _head = new RangeNode('head');
     /**
      * The direction of the range depends on whether tail is before head or the
      * opposite. This is costly to compute and, as such, is only computed when
@@ -35,13 +36,13 @@ export class VRange {
     /**
      * Return the first range node in order of traversal.
      */
-    get start(): VNode {
+    get start(): RangeNode {
         return this.direction === Direction.FORWARD ? this._tail : this._head;
     }
     /**
      * Return the last range node in order of traversal.
      */
-    get end(): VNode {
+    get end(): RangeNode {
         return this.direction === Direction.FORWARD ? this._head : this._tail;
     }
     /**

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import JWEditor from '../src/JWEditor';
 import { Renderer } from '../src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
-import { VNode, VNodeType } from '../src/VNode';
+import { VNode, VNodeType } from '../src/VNodes/VNode';
 
 describe('utils', () => {
     describe('Renderer', () => {
