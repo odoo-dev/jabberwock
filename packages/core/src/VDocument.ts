@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from './VNode';
+import { VNode, VNodeType } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';

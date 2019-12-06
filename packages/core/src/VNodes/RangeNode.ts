@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from '../VNode';
+import { VNode, VNodeType } from './VNode';
 
 export class RangeNode extends VNode {
     constructor(tailOrHead: 'tail' | 'head') {

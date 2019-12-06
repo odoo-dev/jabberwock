@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { VNodeType } from '../src/VNode';
+import { VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../src/VNodes/CharNode';
 import { Parser } from '../src/Parser';
 

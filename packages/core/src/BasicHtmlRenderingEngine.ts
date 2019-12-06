@@ -1,4 +1,4 @@
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 
 /**
  * Renderers exist to render a node into another, different format. Each

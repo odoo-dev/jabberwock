@@ -1,5 +1,5 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { VNode } from '../../../core/src/VNode';
+import { VNode } from '../../../core/src/VNodes/VNode';
 import { CharNode } from '../../../core/src/VNodes/CharNode';
 
 export class PathComponent extends OwlUIComponent<{}> {

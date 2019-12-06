@@ -3,7 +3,7 @@ import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { SimpleElementNode } from './VNodes/SimpleElementNode';

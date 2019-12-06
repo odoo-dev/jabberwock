@@ -1,4 +1,4 @@
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 import { isRange } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RelativePosition, Direction } from '../../utils/src/range';

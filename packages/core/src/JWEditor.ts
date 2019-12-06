@@ -7,7 +7,7 @@ import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 
 export interface JWEditorConfig {
     debug?: boolean;

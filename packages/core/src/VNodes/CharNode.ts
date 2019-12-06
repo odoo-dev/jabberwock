@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from '../VNode';
+import { VNode, VNodeType } from './VNode';
 import { utils } from '../../../utils/src/utils';
 
 /**

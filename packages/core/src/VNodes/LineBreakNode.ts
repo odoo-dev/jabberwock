@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from '../VNode';
+import { VNode, VNodeType } from './VNode';
 import { RelativePosition } from '../../../utils/src/range';
 
 export class LineBreakNode extends VNode {

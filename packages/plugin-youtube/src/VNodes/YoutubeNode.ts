@@ -1,4 +1,4 @@
-import { VNode } from '../../../core/src/VNode';
+import { VNode } from '../../../core/src/VNodes/VNode';
 
 interface YoutubeOptions {
     width?: string;

@@ -1,7 +1,7 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { isRange } from '../../../../packages/utils/src/Predicates';
-import { VNode, VNodeType } from '../../../core/src/VNode';
+import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VRangeDescription } from '../../../core/src/VRange';
 import { Direction } from '../../../utils/src/range';
 

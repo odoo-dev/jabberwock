@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from '../../core/src/VNode';
+import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
 
 export type Predicate = (node: VNode) => boolean;
 
