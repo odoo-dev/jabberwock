@@ -145,13 +145,13 @@ export class VDocument {
             // for all nodes.
             if (!selectedChars.every(char => char.format[formatName])) {
                 selectedChars.forEach(char => {
-                    char.format[formatName] = true;
+                    char[formatName] = true;
                 });
                 // If there is at least one char in with the format `fomatName` in the range, set the
                 // format to false for all nodes.
             } else {
                 selectedChars.forEach(char => {
-                    char.format[formatName] = false;
+                    char[formatName] = false;
                 });
             }
         }
