@@ -1,7 +1,7 @@
-import { BasicHtmlRenderingEngine, RenderingEngine } from './BasicHtmlRenderingEngine';
-import { Predicate, isRange, isLeaf, not } from './../../utils/src/Predicates';
-import { RelativePosition } from '../../utils/src/range';
-import { utils, isWithRange } from './../../utils/src/utils';
+import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
+import { Predicate, isRange, isLeaf, not } from '../../../utils/src/Predicates';
+import { RelativePosition } from '../../../utils/src/range';
+import { utils, isWithRange } from '../../../utils/src/utils';
 
 export enum VNodeType {
     ROOT = 'ROOT',

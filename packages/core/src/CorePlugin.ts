@@ -2,7 +2,7 @@ import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 
 export interface InsertParams {
     value: VNode;

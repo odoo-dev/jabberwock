@@ -2,7 +2,7 @@ import { InfoComponent } from './InfoComponent';
 import { PathComponent } from './PathComponent';
 import { TreeComponent } from './TreeComponent';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { VNode } from '../../../core/src/VNode';
+import { VNode } from '../../../core/src/VNodes/VNode';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 

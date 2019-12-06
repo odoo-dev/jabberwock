@@ -1,7 +1,7 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { FormatParams } from '../src/CorePlugin';
-import { VNode, VNodeType } from '../src/VNode';
+import { VNode, VNodeType } from '../src/VNodes/VNode';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');

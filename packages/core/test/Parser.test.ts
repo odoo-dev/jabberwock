@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Parser } from '../src/Parser';
-import { VNodeType } from '../src/VNode';
+import { VNodeType } from '../src/VNodes/VNode';
 
 describe('utils', () => {
     describe('Parser', () => {

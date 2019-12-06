@@ -1,5 +1,5 @@
 import { Format } from '../../utils/src/Format';
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 
 const fromDom = new Map<Node, VNode[]>();
 const toDom = new Map<VNode, [Node, number]>();
