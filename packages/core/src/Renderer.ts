@@ -1,7 +1,7 @@
 import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
 import { isRange, isChar } from '../../utils/src/Predicates';
-import { VNode } from './VNode';
+import { VNode } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
 import { RelativePosition } from '../../utils/src/range';

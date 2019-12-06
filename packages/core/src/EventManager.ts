@@ -1,6 +1,6 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
 import { Parser } from './Parser';
-import { VNode, VNodeType } from './VNode';
+import { VNode, VNodeType } from './VNodes/VNode';
 import JWEditor from './JWEditor';
 
 interface SetRangeParams {
