@@ -128,87 +128,55 @@
             <div class="divider">👤 About me</div>
             <table>
                 <tbody>
-                    <tr>
-                        <td>id</td>
-                        <td><t t-esc="props.vNode.id"/></td>
+                    <tr t-foreach="aboutMeProps" t-as="propName" t-key="propName_index">
+                        <td><t t-esc="propName"/></td>
+                        <td><t t-esc="propRepr(props.vNode, propName)"/></td>
                     </tr>
-                    <tr>
-                        <td>type</td>
-                        <td><t t-esc="props.vNode.type or &quot;UNKNOWN&quot;"/></td>
-                    </tr>
-                    <tr t-if="props.vNode.char">
-                        <td>char</td>
-                        <td>"<t t-esc="props.vNode.char"/>"</td>
-                    </tr>
-                    <tr>
-                        <td>length</td>
-                        <td><t t-esc="props.vNode.length"/></td>
-                    </tr>
-                    <tr>
-                        <td>total length</td>
-                        <td><t t-esc="props.vNode.totalLength()"/></td>
-                    </tr>
-                    <tr>
-                        <td>atomic</td>
-                        <td>
-                            <t t-esc="'' + props.vNode.atomic"/>
-                        </td>
-                    </tr>
-                    <tr t-if="props.vNode.format">
-                        <td>format</td>
-                        <td>
-                            <ol style="list-style-type: none">
-                                <li t-if="props.vNode.format.bold">bold</li>
-                                <li t-if="props.vNode.format.italic">italic</li>
-                                <li t-if="props.vNode.format.underline">underline</li>
-                            </ol>
-                        </td>
-                    </tr>
-                    <tr t-if="props.vNode.text().length">
-                        <td>text</td>
-                        <td>"<t t-esc="props.vNode.text()"/>"</td>
+                </tbody>
+            </table>
+            <div class="divider">📖 My Custom Properties</div>
+            <table>
+                <tbody>
+                    <tr t-foreach="nodeCustomProperties(props.vNode)" t-as="prop" t-key="prop_index">
+                        <td><t t-esc="prop.key"/></td>
+                        <td><t t-esc="prop.value"/></td>
                     </tr>
                 </tbody>
             </table>
             <div class="divider">👪 My Family</div>
             <table>
                 <tbody>
-                    <tr>
-                        <td>index</td>
-                        <td><t t-esc="props.vNode.index"/></td>
-                    </tr>
-                    <tr t-if="props.vNode.parent">
-                        <td>parent</td>
-                        <td t-on-click="selectNode(props.vNode.parent)">
-                            <t t-esc="props.vNode.parent.type or &quot;?&quot;"/>
+                    <tr t-foreach="familyProps" t-as="propName"
+                    t-key="propName_index">
+                        <td><t t-esc="propName"/></td>
+                        <td t-if="propName === 'parent'" t-on-click="selectNode(props.vNode.parent)">
+                            <t t-esc="propRepr(props.vNode, propName)"/>
                         </td>
-                    </tr>
-                    <tr t-if="props.vNode.siblings.length > 1">
-                        <td>siblings</td>
-                        <td>
+                        <td t-elif="propName === 'siblings'">
                             <ol style="list-style-type: none">
                                 <li t-if="props.vNode.previousSibling()"
                                     t-on-click="selectNode(props.vNode.previousSibling())">
                                     previous: <t t-esc="props.vNode.previousSibling().type or &quot;?&quot;"/>
                                 </li>
+                                <li t-else="">previous: none</li>
                                 <li t-if="props.vNode.nextSibling()"
                                     t-on-click="selectNode(props.vNode.nextSibling())">
                                     next: <t t-esc="props.vNode.nextSibling().type or &quot;?&quot;"/>
                                 </li>
+                                <li t-else="">next: none</li>
                             </ol>
                         </td>
-                    </tr>
-                    <tr t-if="props.vNode.children.length">
-                        <td>children</td>
-                        <td>
-                            <ol>
+                        <td t-elif="propName === 'children'">
+                            <ol t-if="props.vNode.children.length">
                                 <li t-foreach="props.vNode.children"
                                     t-as="child" t-key="child.id"
                                     t-on-click="selectNode(child)">
                                     <t t-esc="child.type or &quot;?&quot;"/>
                                 </li>
                             </ol>
+                            <t t-else="">none</t>
                         </td>
+                        <td t-else=""><t t-esc="propRepr(props.vNode, propName)"/></td>
                     </tr>
                 </tbody>
             </table>
