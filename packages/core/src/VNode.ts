@@ -209,20 +209,32 @@ export class VNode {
      * Return true if this VNode comes before the given VNode in the pre-order
      * traversal.
      *
-     * TODO: Make a less naive version of this, performing an efficient search
-     * instead of a full traversal.
-     *
      * @param vNode
      */
     isBefore(vNode: VNode): boolean {
-        return !!this.next((node: VNode) => node.id === vNode.id);
+        const path = this._pathToRoot(this);
+        const otherPath = this._pathToRoot(vNode);
+        let ancestor = path.pop();
+        let otherAncestor = otherPath.pop();
+        // Compare the ancestors of each nodes one by one, in a path to the
+        // root. While the ancestors are the same in both, continue on the path.
+        while (ancestor && otherAncestor && ancestor === otherAncestor) {
+            ancestor = path.pop();
+            otherAncestor = otherPath.pop();
+        }
+        // If we reached the end of one of the paths, that is when one of the
+        // ancestors is undefined, then the VNode that originally generated this
+        // path is itself part of the ancestors path of the other VNode. This
+        // VNode is definitely first in traversal since the other is a
+        // descendent of it. Otherwise, compare the ancestors indices. The
+        // smaller of the two indices gives us the first VNode in traversal.
+        const index = ancestor && VDocument.withRange(() => ancestor.index);
+        const otherIndex = otherAncestor && VDocument.withRange(() => otherAncestor.index);
+        return !ancestor || (otherAncestor && index < otherIndex);
     }
     /**
      * Return true if this VNode comes after the given VNode in the pre-order
      * traversal.
-     *
-     * TODO: Make a less naive version of this, performing an efficient search
-     * instead of a full traversal.
      *
      * @param vNode
      */
@@ -705,5 +717,20 @@ export class VNode {
         if (atomicTypes.includes(this.type)) {
             this.properties.atomic = true;
         }
+    }
+    /**
+     * Return an array representing the path from the given VNode to the root
+     * VNode through.
+     *
+     * @param node
+     */
+    _pathToRoot(node: VNode): VNode[] {
+        const path = [node];
+        let parent = node.parent;
+        while (parent) {
+            path.push(parent);
+            parent = parent.parent;
+        }
+        return path;
     }
 }
