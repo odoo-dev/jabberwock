@@ -2,6 +2,7 @@ import { VNode, VNodeType, FormatType, FORMAT_TYPES } from './VNode';
 import { VRange } from './VRange';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
+import { RootNode } from './VNodes/RootNode';
 
 export class VDocument {
     root: VNode;
@@ -13,7 +14,7 @@ export class VDocument {
      */
     formatCache: FormatType = null;
 
-    constructor(root: VNode) {
+    constructor(root: RootNode) {
         this.root = root;
     }
 
