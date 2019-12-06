@@ -157,16 +157,27 @@
                     <tr t-if="props.vNode.format">
                         <td>format</td>
                         <td>
-                            <ol style="list-style-type: none">
+                            <ol t-if="Object.keys(props.vNode.format).length" style="list-style-type: none">
                                 <li t-if="props.vNode.format.bold">bold</li>
                                 <li t-if="props.vNode.format.italic">italic</li>
                                 <li t-if="props.vNode.format.underline">underline</li>
                             </ol>
+                            <t t-else="">{}</t>
                         </td>
                     </tr>
                     <tr t-if="props.vNode.text().length">
                         <td>text</td>
                         <td>"<t t-esc="props.vNode.text()"/>"</td>
+                    </tr>
+                </tbody>
+            </table>
+            <t t-set="customPropsNames" t-value="Object.keys(props.vNode)"/>
+            <div class="divider" t-if="Object.keys(nodeCustomProperties(props.vNode)).length">📖 My Custom Properties</div>
+            <table>
+                <tbody>
+                    <tr t-foreach="nodeCustomProperties(props.vNode)" t-as="prop" t-key="prop_index">
+                        <td><t t-esc="prop.key"/></td>
+                        <td><t t-esc="prop.value"/></td>
                     </tr>
                 </tbody>
             </table>
