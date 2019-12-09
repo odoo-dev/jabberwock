@@ -1,20 +1,26 @@
 import { VNode, VNodeType } from '../VNode';
 
+const tags = {
+    [VNodeType.HEADING1]: 'H1',
+    [VNodeType.HEADING2]: 'H2',
+    [VNodeType.HEADING3]: 'H3',
+    [VNodeType.HEADING4]: 'H4',
+    [VNodeType.HEADING5]: 'H5',
+    [VNodeType.HEADING6]: 'H6',
+    [VNodeType.PARAGRAPH]: 'P',
+};
+const types = Object.keys(tags).reduce((accumulator, type) => {
+    return {
+        ...accumulator,
+        [tags[type]]: type,
+    };
+}, {});
+
 export class SimpleElementNode extends VNode {
     htmlTag = '';
     constructor(type: VNodeType) {
         super(type);
-        this.htmlTag =
-            {
-                heading1: 'H1',
-                heading2: 'H2',
-                heading3: 'H3',
-                heading4: 'H4',
-                heading5: 'H5',
-                heading6: 'H6',
-                paragraph: 'P',
-                root: 'ROOT-NODE',
-            }[this.type] || 'UNKNOWN-ELEMENT';
+        this.htmlTag = tags[this.type] || 'UNKNOWN-ELEMENT';
     }
 
     //--------------------------------------------------------------------------
@@ -22,24 +28,8 @@ export class SimpleElementNode extends VNode {
     //--------------------------------------------------------------------------
 
     static parse(node: Node): VNode | VNode[] | null {
-        switch (node.nodeName) {
-            case 'H1':
-                return new SimpleElementNode(VNodeType.HEADING1);
-            case 'H2':
-                return new SimpleElementNode(VNodeType.HEADING2);
-            case 'H3':
-                return new SimpleElementNode(VNodeType.HEADING3);
-            case 'H4':
-                return new SimpleElementNode(VNodeType.HEADING4);
-            case 'H5':
-                return new SimpleElementNode(VNodeType.HEADING5);
-            case 'H6':
-                return new SimpleElementNode(VNodeType.HEADING6);
-            case 'P':
-                return new SimpleElementNode(VNodeType.PARAGRAPH);
-            default:
-                return null;
-        }
+        const type = types[node.nodeName];
+        return type ? new SimpleElementNode(type).addClass((node as Element).className) : null;
     }
 
     //--------------------------------------------------------------------------

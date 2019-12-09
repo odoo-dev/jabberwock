@@ -1,6 +1,6 @@
 import { VNode, VNodeType } from '../VNode';
 import { utils } from '../../../utils/src/utils';
-import { FormatType } from '../../../utils/src/Format';
+import { Format } from '../Format/Format';
 
 /**
  * This "phantom type" is there to ensure that the type `Char` is only generated
@@ -24,20 +24,11 @@ export function makeChar(char: string): Char {
 
 export class CharNode extends VNode {
     char: Char;
-    // Format
-    bold = false;
-    italic = false;
-    underline = false;
-    strikethrough = false;
-    subscript = false;
-    superscript = false;
-    strong = false;
-    emphasis = false;
-    constructor(char: string, format: FormatType = {}) {
+    constructor(char: string, format: Set<Format> = new Set()) {
         super(VNodeType.CHAR);
         this.char = makeChar(char);
         this.name = char;
-        this.format = format;
+        Array.from(format).forEach(formatName => this._format.add(formatName));
     }
 
     //--------------------------------------------------------------------------
@@ -62,35 +53,13 @@ export class CharNode extends VNode {
      * @override
      */
     shallowDuplicate(): VNode {
-        return new CharNode(this.char, this.format);
+        return new CharNode(this.char, this._format);
     }
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    get format(): FormatType {
-        return {
-            bold: this.bold,
-            italic: this.italic,
-            underline: this.underline,
-            strikethrough: this.strikethrough,
-            subscript: this.subscript,
-            superscript: this.superscript,
-            strong: this.strong,
-            emphasis: this.emphasis,
-        };
-    }
-    set format(format: FormatType) {
-        this.bold = !!format.bold;
-        this.italic = !!format.italic;
-        this.underline = !!format.underline;
-        this.strikethrough = !!format.strikethrough;
-        this.subscript = !!format.subscript;
-        this.superscript = !!format.superscript;
-        this.strong = !!format.strong;
-        this.emphasis = !!format.emphasis;
-    }
     /**
      * Return true if the VNode is atomic (ie. it may not have children).
      *

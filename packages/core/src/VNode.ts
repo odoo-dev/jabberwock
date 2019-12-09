@@ -2,6 +2,7 @@ import { BasicHtmlRenderingEngine, RenderingEngine } from './BasicHtmlRenderingE
 import { Predicate, isRange, isLeaf, not } from './../../utils/src/Predicates';
 import { RelativePosition } from '../../utils/src/range';
 import { utils, isWithRange } from './../../utils/src/utils';
+import { Format } from './Format/Format';
 
 export enum VNodeType {
     ROOT = 'root',
@@ -26,6 +27,8 @@ export class VNode {
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
+    classes: Set<string> = new Set();
+    _format: Set<Format> = new Set();
     name: string;
     htmlTag: string;
     _children: VNode[] = [];
@@ -102,6 +105,9 @@ export class VNode {
      */
     get atomic(): boolean {
         return false;
+    }
+    get format(): string[] {
+        return Array.from(this._format).map(format => format.name.toLowerCase());
     }
     /**
      * Return the VNode's children.
@@ -531,6 +537,10 @@ export class VNode {
     // Updating
     //--------------------------------------------------------------------------
 
+    addClass(classes: string): VNode {
+        classes.split(' ').forEach(oneClass => this.classes.add(oneClass));
+        return this;
+    }
     /**
      * Insert the given VNode before this VNode. Return self.
      *

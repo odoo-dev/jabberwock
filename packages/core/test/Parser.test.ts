@@ -47,19 +47,19 @@ describe('utils', () => {
                 expect(p.length).to.equal(17);
                 expect(p.children.every(child => child.type === VNodeType.CHAR)).to.be.true;
                 const i = p.firstChild() as CharNode;
-                expect(i.italic).to.be.true;
+                expect(i.format).to.have.members(['italic']);
                 const b = p.nthChild(1) as CharNode;
-                expect(b.bold).to.be.true;
+                expect(b.format).to.have.members(['bold']);
                 const s = p.nthChild(2) as CharNode;
-                expect(s.strikethrough).to.be.true;
+                expect(s.format).to.have.members(['strikethrough']);
                 const sup = p.nthChild(3) as CharNode;
-                expect(sup.superscript).to.be.true;
+                expect(sup.format).to.have.members(['superscript']);
                 const sub = p.nthChild(6) as CharNode;
-                expect(sub.subscript).to.be.true;
+                expect(sub.format).to.have.members(['subscript']);
                 const strong = p.nthChild(9) as CharNode;
-                expect(strong.strong).to.be.true;
+                expect(strong.format).to.have.members(['strong']);
                 const em = p.nthChild(15) as CharNode;
-                expect(em.emphasis).to.be.true;
+                expect(em.format).to.have.members(['emphasis']);
             });
             it('handles nested formatted nodes', () => {
                 const element = document.createElement('div');
@@ -76,40 +76,13 @@ describe('utils', () => {
                 expect(a.char).to.equal('a');
                 const b = p.children[1] as CharNode;
                 expect(b.char).to.equal('b');
-                expect(b.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                    strikethrough: false,
-                    subscript: false,
-                    superscript: false,
-                    strong: false,
-                    emphasis: false,
-                });
+                expect(b.format).to.have.members(['italic']);
                 const c = p.children[2] as CharNode;
                 expect(c.char).to.equal('c');
-                expect(c.format).to.deep.equal({
-                    bold: true,
-                    italic: true,
-                    underline: false,
-                    strikethrough: false,
-                    subscript: false,
-                    superscript: false,
-                    strong: false,
-                    emphasis: false,
-                });
+                expect(c.format).to.have.members(['bold', 'italic']);
                 const d = p.children[3] as CharNode;
                 expect(d.char).to.equal('d');
-                expect(d.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                    strikethrough: false,
-                    subscript: false,
-                    superscript: false,
-                    strong: false,
-                    emphasis: false,
-                });
+                expect(d.format).to.have.members(['italic']);
             });
         });
     });

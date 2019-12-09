@@ -2,7 +2,6 @@ import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
 import { isRange, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNode';
-import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
 import { CharNode } from './VNodes/CharNode';
 import { RelativePosition } from '../../utils/src/range';
@@ -66,8 +65,13 @@ export class Renderer {
             return false;
         } else {
             // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...(a as CharNode).format, ...(b as CharNode).format });
-            return formats.every(k => !!(a as CharNode).format[k] === !!(b as CharNode).format[k]);
+            const formatsA = Array.from(a._format)
+                .map(format => format.constructor.name)
+                .sort();
+            const formatsB = Array.from(b._format)
+                .map(format => format.constructor.name)
+                .sort();
+            return formatsA.every((formatA, index) => formatA === formatsB[index]);
         }
     }
     /**
@@ -129,14 +133,12 @@ export class Renderer {
         // If the node has a format, render the format nodes first.
         const renderedFormats = [];
         const firstChar = context.currentVNode as CharNode;
-        Object.keys(firstChar.format).forEach(type => {
-            if (firstChar.format[type]) {
-                const formatNode = document.createElement(Format.toTag(type));
-                renderedFormats.push(formatNode);
-                context.parentNode.appendChild(formatNode);
-                // Update the parent so the text is inside the format node.
-                context.parentNode = formatNode;
-            }
+        firstChar._format.forEach(format => {
+            const formatNode = format.render();
+            renderedFormats.push(formatNode);
+            context.parentNode.appendChild(formatNode);
+            // Update the parent so the text is inside the format node.
+            context.parentNode = formatNode;
         });
 
         // Consecutive compatible char nodes are rendered as a single text node.

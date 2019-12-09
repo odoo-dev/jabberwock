@@ -24,6 +24,10 @@ export const BasicHtmlRenderingEngine = {
         const tagName = node.htmlTag;
         const fragment = document.createDocumentFragment();
         const renderedElement = document.createElement(tagName);
+        const className = Array.from(node.classes).join(' ');
+        if (className.length) {
+            renderedElement.className = className;
+        }
         fragment.appendChild(renderedElement);
 
         // If a node is empty but could accomodate children,

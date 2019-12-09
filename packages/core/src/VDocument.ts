@@ -1,11 +1,11 @@
 import { VNode, VNodeType } from './VNode';
 import { VRange } from './VRange';
 import { CharNode } from './VNodes/CharNode';
-import { FormatType, Format } from '../../utils/src/Format';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RootNode } from './VNodes/RootNode';
 import { SimpleElementNode } from './VNodes/SimpleElementNode';
+import { Format } from './Format/Format';
 
 export class VDocument {
     root: VNode;
@@ -15,7 +15,7 @@ export class VDocument {
      * property.
      * This value is reset each time the range change in a document.
      */
-    formatCache: FormatType = null;
+    formatCache: Set<Format> = new Set();
 
     constructor(root: RootNode) {
         this.root = root;
@@ -67,7 +67,8 @@ export class VDocument {
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new CharNode(char, format);
+            const vNode = new CharNode(char);
+            vNode._format = format;
             this.range.start.before(vNode);
         });
         this.formatCache = null;
@@ -76,21 +77,21 @@ export class VDocument {
     /**
      * Get the format for the next insertion.
      */
-    _getCurrentFormat(): FormatType {
-        let format: FormatType = {};
+    _getCurrentFormat(): Set<Format> {
+        let format: Set<Format> = new Set();
         if (this.formatCache) {
             return this.formatCache;
         } else if (this.range.isCollapsed()) {
-            const charToCopyFormat = (this.range.start.previousSibling(isChar) ||
-                this.range.start.nextSibling(isChar) || {
-                    format: {},
-                }) as CharNode;
-            format = { ...charToCopyFormat.format };
+            const charToCopyFormat =
+                this.range.start.previousSibling(isChar) || this.range.start.nextSibling(isChar);
+            if (charToCopyFormat) {
+                format = new Set(charToCopyFormat._format);
+            }
         } else {
-            const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
+            /* const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
             Format.formats.forEach(formatName => {
                 format[formatName] = selectedChars.some(char => char.format[formatName]);
-            });
+            }); */
         }
         return format;
     }
@@ -152,7 +153,7 @@ export class VDocument {
 
             // If there is no char with the format `formatName` in the range, set the format to true
             // for all nodes.
-            if (!selectedChars.every(char => char.format[formatName])) {
+            if (!selectedChars.every(char => char._format[formatName])) {
                 selectedChars.forEach(char => {
                     char[formatName] = true;
                 });

@@ -8,11 +8,13 @@ import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { VNode } from './VNode';
+import { Format } from './Format/Format';
 
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
     replaceDefaultNodes?: Array<typeof VNode>;
+    replaceDefaultFormats?: Array<typeof Format>;
 }
 
 export class JWEditor {
@@ -137,8 +139,8 @@ export class JWEditor {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
         }
-        if (config.replaceDefaultNodes) {
-            this.parser = new Parser(config.replaceDefaultNodes);
+        if (config.replaceDefaultNodes || config.replaceDefaultFormats) {
+            this.parser = new Parser(config.replaceDefaultNodes, config.replaceDefaultFormats);
         }
     }
 

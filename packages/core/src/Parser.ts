@@ -1,5 +1,5 @@
 import { VDocument } from './VDocument';
-import { Format, FormatType } from '../../utils/src/Format';
+import { Format } from './Format/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
@@ -11,20 +11,45 @@ import { LineBreakNode } from './VNodes/LineBreakNode';
 import { RootNode } from './VNodes/RootNode';
 import { RangeNode } from './VNodes/RangeNode';
 import { CharNode } from './VNodes/CharNode';
+import { Bold } from './Format/Bold';
+import { Italic } from './Format/Italic';
+import { Underline } from './Format/Underline';
+import { Strikethrough } from './Format/Strikethrough';
+import { Strong } from './Format/Strong';
+import { Subscript } from './Format/Subscript';
+import { Superscript } from './Format/Superscript';
+import { Emphasis } from './Format/Emphasis';
+import { Span } from './Format/Span';
 
 interface ParsingContext {
     readonly rootNode?: Node;
     node?: Node;
     parentVNode?: VNode;
-    format?: FormatType;
+    format: Set<Format>;
     vDocument: VDocument;
 }
 export const defaultNodes = [CharNode, LineBreakNode, RangeNode, SimpleElementNode];
+export const defaultFormats = [
+    Bold,
+    Italic,
+    Underline,
+    Strikethrough,
+    Strong,
+    Subscript,
+    Superscript,
+    Emphasis,
+    Span,
+];
 
 export class Parser {
     _customVNodes: Set<typeof VNode> = new Set();
-    constructor(replaceDefaultNodes?: Array<typeof VNode>) {
+    _Formats: Set<typeof Format> = new Set();
+    constructor(
+        replaceDefaultNodes?: Array<typeof VNode>,
+        replaceDefaultFormats?: Array<typeof Format>,
+    ) {
         this.addCustomVNodes(replaceDefaultNodes || defaultNodes);
+        this.addCustomFormats(replaceDefaultFormats || defaultFormats);
     }
 
     //--------------------------------------------------------------------------
@@ -47,6 +72,14 @@ export class Parser {
     addCustomVNodes(VNodeClasses: Array<typeof VNode>): void {
         VNodeClasses.forEach(VNodeClass => {
             this._customVNodes.add(VNodeClass);
+        });
+    }
+    addCustomFormat(FormatClass: typeof Format): void {
+        this._Formats.add(FormatClass);
+    }
+    addCustomFormats(FormatClasses: Array<typeof Format>): void {
+        FormatClasses.forEach(FormatClass => {
+            this._Formats.add(FormatClass);
         });
     }
     /**
@@ -79,7 +112,7 @@ export class Parser {
                 rootNode: node,
                 node: node.childNodes[0],
                 parentVNode: root,
-                format: {},
+                format: new Set(),
                 vDocument: vDocument,
             };
             do {
@@ -177,22 +210,21 @@ export class Parser {
 
         const node = context.node;
         const parsedNode = this.parseNode(node) as VNode;
-        if (Format.tags.includes(context.node.nodeName)) {
+        let parsedFormat: Format;
+        Array.from(this._Formats).some(FormatClass => {
+            parsedFormat = FormatClass.parse(context.node);
+            return !!parsedFormat;
+        });
+        if (parsedFormat) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our
             // internal representation but by the format of its children.
             // For the parsing, encountering a format node generates a new format
             // context which inherits from the previous one.
-            const format = context.format || {};
-            context.format = Format.formats.reduce((accumulator, formatName) => {
-                return {
-                    ...accumulator,
-                    [formatName]: format[formatName] || node.nodeName === Format.toTag(formatName),
-                };
-            }, {});
+            context.format.add(parsedFormat);
         } else {
             if (parsedNode instanceof CharNode) {
-                Object.assign(parsedNode.format, context.format);
+                Object.assign(parsedNode._format, context.format);
             }
             VDocumentMap.set(parsedNode, node);
             context.parentVNode.append(parsedNode);
@@ -232,7 +264,7 @@ export class Parser {
         const format = currentContext.format;
         const parsedVNodes = this.parseNode(node) as CharNode[];
         parsedVNodes.forEach((parsedVNode: CharNode, index: number) => {
-            parsedVNode.format = { ...format };
+            format.forEach(formatName => parsedVNode._format.add(formatName));
             VDocumentMap.set(parsedVNode, node, index);
             parentVNode.append(parsedVNode);
         });
@@ -264,9 +296,23 @@ export class Parser {
             const rootNode = currentContext.rootNode;
             do {
                 ancestor = ancestor.parentNode;
-                if (ancestor && Format.tags.includes(ancestor.nodeName)) {
-                    // Pop last formatting context from the stack
-                    nextContext.format[Format.fromTag(ancestor.nodeName)] = false;
+                if (ancestor) {
+                    const formatsToRemove: Format[] = [];
+                    this._Formats.forEach(FormatClass => {
+                        const formatToRemove = FormatClass.parse(ancestor);
+                        if (formatToRemove) {
+                            formatsToRemove.push(formatToRemove);
+                        }
+                    });
+                    if (formatsToRemove.length) {
+                        formatsToRemove.forEach(formatToRemove => {
+                            nextContext.format.forEach(format => {
+                                if (format.name === formatToRemove.name) {
+                                    nextContext.format.delete(format);
+                                }
+                            });
+                        });
+                    }
                 }
             } while (ancestor && !ancestor.nextSibling && ancestor !== rootNode);
             // At this point, the found ancestor has a sibling.
