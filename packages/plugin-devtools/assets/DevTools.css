@@ -23,16 +23,28 @@ jw-devtools.closed {
     max-height: 31px;
 }
 
-jw-devtools .bold {
+jw-devtools .bold, jw-devtools .strong {
     font-weight: bold;
 }
 
-jw-devtools .italic {
+jw-devtools .italic, jw-devtools .emphasis {
     font-style: italic;
 }
 
 jw-devtools .underline {
     text-decoration: underline;
+}
+
+jw-devtools .strikethrough {
+    text-decoration: line-through;
+}
+
+jw-devtools .subscript {
+    vertical-align: sub;
+}
+
+jw-devtools .superscript {
+    vertical-align: super;
 }
 
 jw-devtools .range-node {

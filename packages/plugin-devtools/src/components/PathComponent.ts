@@ -7,14 +7,29 @@ export class PathComponent extends OwlUIComponent<{}> {
         const name: string = (vNode.type && vNode.type.toLowerCase()) || '?';
         let format = '';
         if (vNode instanceof CharNode) {
-            if (vNode.format.bold) {
+            if (vNode.bold) {
                 format += '.b';
             }
-            if (vNode.format.italic) {
+            if (vNode.italic) {
                 format += '.i';
             }
-            if (vNode.format.underline) {
+            if (vNode.underline) {
                 format += '.u';
+            }
+            if (vNode.strikethrough) {
+                format += '.s';
+            }
+            if (vNode.subscript) {
+                format += '.sub';
+            }
+            if (vNode.superscript) {
+                format += '.sup';
+            }
+            if (vNode.strong) {
+                format += '.strong';
+            }
+            if (vNode.emphasis) {
+                format += '.em';
             }
         }
         return name + format;

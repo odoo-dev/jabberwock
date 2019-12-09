@@ -1,5 +1,5 @@
 import { VDocument } from './VDocument';
-import { Format } from '../../utils/src/Format';
+import { Format, FormatType } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
@@ -10,13 +10,13 @@ import { SimpleElementNode } from './VNodes/SimpleElementNode';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { RootNode } from './VNodes/RootNode';
 import { RangeNode } from './VNodes/RangeNode';
-import { FormatType, CharNode } from './VNodes/CharNode';
+import { CharNode } from './VNodes/CharNode';
 
 interface ParsingContext {
     readonly rootNode?: Node;
     node?: Node;
     parentVNode?: VNode;
-    format?: FormatType[];
+    format?: FormatType;
     vDocument: VDocument;
 }
 export const defaultNodes = [CharNode, LineBreakNode, RangeNode, SimpleElementNode];
@@ -79,7 +79,7 @@ export class Parser {
                 rootNode: node,
                 node: node.childNodes[0],
                 parentVNode: root,
-                format: [],
+                format: {},
                 vDocument: vDocument,
             };
             do {
@@ -183,15 +183,16 @@ export class Parser {
             // internal representation but by the format of its children.
             // For the parsing, encountering a format node generates a new format
             // context which inherits from the previous one.
-            const format = context.format.length ? context.format[0] : {};
-            context.format.unshift({
-                bold: format.bold || node.nodeName === 'B',
-                italic: format.italic || node.nodeName === 'I',
-                underline: format.underline || node.nodeName === 'U',
-            });
+            const format = context.format || {};
+            context.format = Format.formats.reduce((accumulator, formatName) => {
+                return {
+                    ...accumulator,
+                    [formatName]: format[formatName] || node.nodeName === Format.toTag(formatName),
+                };
+            }, {});
         } else {
             if (parsedNode instanceof CharNode) {
-                Object.assign(parsedNode.format, context.format[0]);
+                Object.assign(parsedNode.format, context.format);
             }
             VDocumentMap.set(parsedNode, node);
             context.parentVNode.append(parsedNode);
@@ -228,7 +229,7 @@ export class Parser {
     _parseTextNode(currentContext: ParsingContext): ParsingContext {
         const node = currentContext.node;
         const parentVNode = currentContext.parentVNode;
-        const format = currentContext.format[0];
+        const format = currentContext.format;
         const parsedVNodes = this.parseNode(node) as CharNode[];
         parsedVNodes.forEach((parsedVNode: CharNode, index: number) => {
             parsedVNode.format = { ...format };
@@ -265,7 +266,7 @@ export class Parser {
                 ancestor = ancestor.parentNode;
                 if (ancestor && Format.tags.includes(ancestor.nodeName)) {
                     // Pop last formatting context from the stack
-                    nextContext.format.shift();
+                    nextContext.format[Format.fromTag(ancestor.nodeName)] = false;
                 }
             } while (ancestor && !ancestor.nextSibling && ancestor !== rootNode);
             // At this point, the found ancestor has a sibling.

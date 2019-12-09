@@ -1,6 +1,7 @@
 import { VNode, VNodeType } from './VNode';
 import { VRange } from './VRange';
-import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
+import { CharNode } from './VNodes/CharNode';
+import { FormatType, Format } from '../../utils/src/Format';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RootNode } from './VNodes/RootNode';
@@ -87,7 +88,7 @@ export class VDocument {
             format = { ...charToCopyFormat.format };
         } else {
             const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
-            FORMAT_TYPES.forEach(formatName => {
+            Format.formats.forEach(formatName => {
                 format[formatName] = selectedChars.some(char => char.format[formatName]);
             });
         }

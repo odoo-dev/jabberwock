@@ -1,5 +1,6 @@
 import { VNode, VNodeType } from '../VNode';
 import { utils } from '../../../utils/src/utils';
+import { FormatType } from '../../../utils/src/Format';
 
 /**
  * This "phantom type" is there to ensure that the type `Char` is only generated
@@ -20,12 +21,6 @@ export function makeChar(char: string): Char {
         throw new Error('Cannot make a Char out of anything else than a string of length 1.');
     }
 }
-export interface FormatType {
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-}
-export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
 export class CharNode extends VNode {
     char: Char;
@@ -33,13 +28,16 @@ export class CharNode extends VNode {
     bold = false;
     italic = false;
     underline = false;
+    strikethrough = false;
+    subscript = false;
+    superscript = false;
+    strong = false;
+    emphasis = false;
     constructor(char: string, format: FormatType = {}) {
         super(VNodeType.CHAR);
         this.char = makeChar(char);
         this.name = char;
-        this.bold = !!format.bold;
-        this.italic = !!format.italic;
-        this.underline = !!format.underline;
+        this.format = format;
     }
 
     //--------------------------------------------------------------------------
@@ -76,12 +74,22 @@ export class CharNode extends VNode {
             bold: this.bold,
             italic: this.italic,
             underline: this.underline,
+            strikethrough: this.strikethrough,
+            subscript: this.subscript,
+            superscript: this.superscript,
+            strong: this.strong,
+            emphasis: this.emphasis,
         };
     }
     set format(format: FormatType) {
         this.bold = !!format.bold;
         this.italic = !!format.italic;
         this.underline = !!format.underline;
+        this.strikethrough = !!format.strikethrough;
+        this.subscript = !!format.subscript;
+        this.superscript = !!format.superscript;
+        this.strong = !!format.strong;
+        this.emphasis = !!format.emphasis;
     }
     /**
      * Return true if the VNode is atomic (ie. it may not have children).

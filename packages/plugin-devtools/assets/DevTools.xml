@@ -54,9 +54,14 @@
             <span t-elif="props.vNode.char" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
-                    bold: props.vNode.format and props.vNode.format.bold,
-                    italic: props.vNode.format and props.vNode.format.italic,
-                    underline: props.vNode.format and props.vNode.format.underline,
+                    bold: props.vNode.bold,
+                    italic: props.vNode.italic,
+                    underline: props.vNode.underline,
+                    strikethrough: props.vNode.strikethrough,
+                    subscript: props.vNode.subscript,
+                    superscript: props.vNode.superscript,
+                    strong: props.vNode.strong,
+                    emphasis: props.vNode.emphasis,
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr"/>
@@ -68,6 +73,11 @@
                         bold: props.vNode.format and props.vNode.format.bold,
                         italic: props.vNode.format and props.vNode.format.italic,
                         underline: props.vNode.format and props.vNode.format.underline,
+                        strikethrough: props.vNode.strikethrough,
+                        subscript: props.vNode.subscript,
+                        superscript: props.vNode.superscript,
+                        strong: props.vNode.strong,
+                        emphasis: props.vNode.emphasis,
                         selected: props.selectedID == props.vNode.id,
                         'line-break': props.vNode.type === 'line_break',
                     }">
@@ -158,9 +168,14 @@
                         <td>format</td>
                         <td>
                             <ol t-if="Object.keys(props.vNode.format).length" style="list-style-type: none">
-                                <li t-if="props.vNode.format.bold">bold</li>
-                                <li t-if="props.vNode.format.italic">italic</li>
-                                <li t-if="props.vNode.format.underline">underline</li>
+                                <li t-if="props.vNode.bold">bold</li>
+                                <li t-if="props.vNode.italic">italic</li>
+                                <li t-if="props.vNode.underline">underline</li>
+                                <li t-if="props.vNode.strikethrough">strikethrough</li>
+                                <li t-if="props.vNode.subscript">subscript</li>
+                                <li t-if="props.vNode.superscript">superscript</li>
+                                <li t-if="props.vNode.strong">strong</li>
+                                <li t-if="props.vNode.emphasis">emphasis</li>
                             </ol>
                             <t t-else="">{}</t>
                         </td>

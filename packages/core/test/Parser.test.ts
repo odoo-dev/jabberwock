@@ -38,6 +38,29 @@ describe('utils', () => {
                 expect(p.lastChild().type).to.equal(VNodeType.LINE_BREAK);
                 expect((p.lastChild().previousSibling() as CharNode).char).to.equal('a');
             });
+            it('should parse all format nodes individually', () => {
+                const element = document.createElement('div');
+                element.innerHTML =
+                    '<p><i>i</i><b>b</b><s>s</s><sup>sup</sup><sub>sub</sub><strong>strong</strong><em>em</em></p>';
+                const vDocument = parser.parse(element);
+                const p = vDocument.root.firstChild();
+                expect(p.length).to.equal(17);
+                expect(p.children.every(child => child.type === VNodeType.CHAR)).to.be.true;
+                const i = p.firstChild() as CharNode;
+                expect(i.italic).to.be.true;
+                const b = p.nthChild(1) as CharNode;
+                expect(b.bold).to.be.true;
+                const s = p.nthChild(2) as CharNode;
+                expect(s.strikethrough).to.be.true;
+                const sup = p.nthChild(3) as CharNode;
+                expect(sup.superscript).to.be.true;
+                const sub = p.nthChild(6) as CharNode;
+                expect(sub.subscript).to.be.true;
+                const strong = p.nthChild(9) as CharNode;
+                expect(strong.strong).to.be.true;
+                const em = p.nthChild(15) as CharNode;
+                expect(em.emphasis).to.be.true;
+            });
             it('handles nested formatted nodes', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
@@ -57,6 +80,11 @@ describe('utils', () => {
                     bold: false,
                     italic: true,
                     underline: false,
+                    strikethrough: false,
+                    subscript: false,
+                    superscript: false,
+                    strong: false,
+                    emphasis: false,
                 });
                 const c = p.children[2] as CharNode;
                 expect(c.char).to.equal('c');
@@ -64,6 +92,11 @@ describe('utils', () => {
                     bold: true,
                     italic: true,
                     underline: false,
+                    strikethrough: false,
+                    subscript: false,
+                    superscript: false,
+                    strong: false,
+                    emphasis: false,
                 });
                 const d = p.children[3] as CharNode;
                 expect(d.char).to.equal('d');
@@ -71,6 +104,11 @@ describe('utils', () => {
                     bold: false,
                     italic: true,
                     underline: false,
+                    strikethrough: false,
+                    subscript: false,
+                    superscript: false,
+                    strong: false,
+                    emphasis: false,
                 });
             });
         });
