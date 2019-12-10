@@ -2,10 +2,10 @@ import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
 import { isRange, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNodes/VNode';
-import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
 import { CharNode } from './VNodes/CharNode';
 import { RelativePosition } from '../../utils/src/range';
+import { FormatManager } from './Format/FormatManager';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
@@ -13,6 +13,10 @@ interface RenderingContext {
 }
 
 export class Renderer {
+    formatManager: FormatManager;
+    constructor(formatManager: FormatManager = new FormatManager()) {
+        this.formatManager = formatManager;
+    }
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -29,7 +33,7 @@ export class Renderer {
         target.innerHTML = ''; // TODO: update instead of recreate
         const fragment: DocumentFragment = document.createDocumentFragment();
         VDocumentMap.clear(); // TODO: update instead of recreate
-        VDocumentMap.set(root, fragment);
+        VDocumentMap.set(root, fragment, this.formatManager);
 
         if (root.hasChildren()) {
             let context: RenderingContext = {
@@ -66,8 +70,27 @@ export class Renderer {
             return false;
         } else {
             // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...(a as CharNode).format, ...(b as CharNode).format });
-            return formats.every(k => !!(a as CharNode).format[k] === !!(b as CharNode).format[k]);
+            if (a.format.size !== b.format.size) {
+                return false;
+            }
+            let areSame = true;
+            a.format.forEach((format, name) => {
+                if (
+                    !b.format.has(name) ||
+                    b.format
+                        .get(name)
+                        .className.split(' ')
+                        .sort()
+                        .join('') !==
+                        format.className
+                            .split(' ')
+                            .sort()
+                            .join('')
+                ) {
+                    areSame = false;
+                }
+            });
+            return areSame;
         }
     }
     /**
@@ -115,8 +138,10 @@ export class Renderer {
         const fragment = context.currentVNode.render<DocumentFragment>('html');
         Array.from(fragment.childNodes).forEach((element: Node): void => {
             context.parentNode.appendChild(element);
-            VDocumentMap.set(context.currentVNode, element);
-            element.childNodes.forEach(child => VDocumentMap.set(context.currentVNode, child));
+            VDocumentMap.set(context.currentVNode, element, this.formatManager);
+            element.childNodes.forEach(child =>
+                VDocumentMap.set(context.currentVNode, child, this.formatManager),
+            );
         });
         return context;
     }
@@ -129,14 +154,12 @@ export class Renderer {
         // If the node has a format, render the format nodes first.
         const renderedFormats = [];
         const firstChar = context.currentVNode as CharNode;
-        Object.keys(firstChar.format).forEach(type => {
-            if (firstChar.format[type]) {
-                const formatNode = document.createElement(Format.toTag(type));
-                renderedFormats.push(formatNode);
-                context.parentNode.appendChild(formatNode);
-                // Update the parent so the text is inside the format node.
-                context.parentNode = formatNode;
-            }
+        firstChar.format.forEach(formatInformation => {
+            const formatNode = this.formatManager.render(formatInformation);
+            renderedFormats.push(formatNode);
+            context.parentNode.appendChild(formatNode);
+            // Update the parent so the text is inside the format node.
+            context.parentNode = formatNode;
         });
 
         // Consecutive compatible char nodes are rendered as a single text node.
@@ -163,8 +186,10 @@ export class Renderer {
         const renderedNode = document.createTextNode(text);
         context.parentNode.appendChild(renderedNode);
         charNodes.forEach((charNode, nodeIndex) => {
-            VDocumentMap.set(charNode, renderedNode, nodeIndex);
-            renderedFormats.forEach(formatNode => VDocumentMap.set(charNode, formatNode));
+            VDocumentMap.set(charNode, renderedNode, this.formatManager, nodeIndex);
+            renderedFormats.forEach(formatNode =>
+                VDocumentMap.set(charNode, formatNode, this.formatManager),
+            );
         });
 
         return context;

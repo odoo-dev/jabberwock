@@ -8,6 +8,7 @@ import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { VNode } from './VNodes/VNode';
+import { FormatManager } from './Format/FormatManager';
 
 export interface JWEditorConfig {
     debug?: boolean;
@@ -25,7 +26,8 @@ export class JWEditor {
     renderer: Renderer;
     vDocument: VDocument;
     debugger: OwlUI;
-    parser = new Parser();
+    formatManager = new FormatManager();
+    parser = new Parser(this.formatManager);
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -36,7 +38,7 @@ export class JWEditor {
         this.pluginsRegistry = [];
 
         // Render the contents of `vDocument`
-        this.renderer = new Renderer();
+        this.renderer = new Renderer(this.formatManager);
 
         if (!editable) {
             editable = document.createElement('jw-editable');
@@ -138,7 +140,7 @@ export class JWEditor {
             this.debugger.addPlugin(DevTools);
         }
         if (config.replaceDefaultNodes) {
-            this.parser = new Parser(config.replaceDefaultNodes);
+            this.parser = new Parser(this.formatManager, config.replaceDefaultNodes);
         }
     }
 

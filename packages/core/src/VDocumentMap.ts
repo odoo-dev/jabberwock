@@ -1,5 +1,5 @@
-import { Format } from '../../utils/src/Format';
 import { VNode } from './VNodes/VNode';
+import { FormatManager } from './Format/FormatManager';
 
 const fromDom = new Map<Node, VNode[]>();
 const toDom = new Map<VNode, [Node, number]>();
@@ -50,7 +50,7 @@ export const VDocumentMap = {
      * @param vNode
      * @param [offset]
      */
-    set(vNode: VNode, domNode: Node, offset?: number): void {
+    set(vNode: VNode, domNode: Node, formatManager: FormatManager, offset?: number): void {
         if (fromDom.has(domNode)) {
             const matches = fromDom.get(domNode);
             if (!matches.some((match: VNode) => match.id === vNode.id)) {
@@ -62,7 +62,7 @@ export const VDocumentMap = {
         // Only if element is not a format and not already in the map to prevent
         // overriding a VNode if it is representing by multiple Nodes. Only the
         // first Node is mapped to the VNode.
-        if (!Format.tags.includes(domNode.nodeName) && !toDom.has(vNode)) {
+        if (!formatManager.isFormat(domNode) && !toDom.has(vNode)) {
             toDom.set(vNode, [domNode, offset]);
         }
     },

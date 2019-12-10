@@ -1,23 +1,26 @@
 import { VNode, VNodeType } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
+import { CharNode } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
 import { utils } from '../../utils/src/utils';
 import { RootNode } from './VNodes/RootNode';
 import { SimpleElementNode } from './VNodes/SimpleElementNode';
+import { FormatInformation, FormatManager, FormatName } from './Format/FormatManager';
 
 export class VDocument {
     root: VNode;
     range = new VRange();
+    formatManager: FormatManager;
     /**
      * When apply format on a collapsed range, cache the calculation of the format the following
      * property.
      * This value is reset each time the range change in a document.
      */
-    formatCache: FormatType = null;
+    formatCache: Map<FormatName, FormatInformation> = null;
 
-    constructor(root: RootNode) {
+    constructor(root: RootNode, formatManager = new FormatManager()) {
         this.root = root;
+        this.formatManager = formatManager;
     }
 
     //--------------------------------------------------------------------------
@@ -66,7 +69,7 @@ export class VDocument {
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new CharNode(char, format);
+            const vNode = new CharNode(char, new Map(format));
             this.range.start.before(vNode);
         });
         this.formatCache = null;
@@ -75,20 +78,25 @@ export class VDocument {
     /**
      * Get the format for the next insertion.
      */
-    _getCurrentFormat(): FormatType {
-        let format: FormatType = {};
+    _getCurrentFormat(): Map<FormatName, FormatInformation> {
+        let format: Map<FormatName, FormatInformation> = new Map();
         if (this.formatCache) {
             return this.formatCache;
         } else if (this.range.isCollapsed()) {
             const charToCopyFormat = (this.range.start.previousSibling(isChar) ||
-                this.range.start.nextSibling(isChar) || {
-                    format: {},
-                }) as CharNode;
-            format = { ...charToCopyFormat.format };
+                this.range.start.nextSibling(isChar)) as CharNode;
+            if (charToCopyFormat) {
+                format = new Map(charToCopyFormat.format);
+            }
         } else {
             const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
-            FORMAT_TYPES.forEach(formatName => {
-                format[formatName] = selectedChars.some(char => char.format[formatName]);
+            this.formatManager.formatNames.forEach(formatName => {
+                selectedChars.forEach(char => {
+                    const formatToAdd = char.format.get(formatName);
+                    if (formatToAdd) {
+                        format.set(formatName, formatToAdd);
+                    }
+                });
             });
         }
         return format;
@@ -145,21 +153,25 @@ export class VDocument {
             if (!this.formatCache) {
                 this.formatCache = this._getCurrentFormat();
             }
-            this.formatCache[formatName] = !this.formatCache[formatName];
+            if (this.formatCache.get(formatName)) {
+                this.formatCache.delete(formatName);
+            } else {
+                this.formatCache.set(formatName, this.formatManager.create(formatName));
+            }
         } else {
             const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
 
-            // If there is no char with the format `formatName` in the range, set the format to true
-            // for all nodes.
-            if (!selectedChars.every(char => char.format[formatName])) {
+            // If there is no char with the format `formatName` in the range,
+            // add the format for all nodes.
+            if (!selectedChars.every(char => char.format.has(formatName))) {
                 selectedChars.forEach(char => {
-                    char[formatName] = true;
+                    char.format.set(formatName, this.formatManager.create(formatName));
                 });
-                // If there is at least one char in with the format `fomatName` in the range, set the
-                // format to false for all nodes.
+                // If there is at least one char in with the format `fomatName`
+                // in the range, delete the format for all nodes.
             } else {
                 selectedChars.forEach(char => {
-                    char[formatName] = false;
+                    char.format.delete(formatName);
                 });
             }
         }

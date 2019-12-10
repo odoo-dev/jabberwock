@@ -53,25 +53,13 @@ describe('utils', () => {
                 expect(a.char).to.equal('a');
                 const b = p.children[1] as CharNode;
                 expect(b.char).to.equal('b');
-                expect(b.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                });
+                expect(Array.from(b.format.keys())).to.have.members(['italic']);
                 const c = p.children[2] as CharNode;
                 expect(c.char).to.equal('c');
-                expect(c.format).to.deep.equal({
-                    bold: true,
-                    italic: true,
-                    underline: false,
-                });
+                expect(Array.from(c.format.keys())).to.have.members(['italic', 'bold']);
                 const d = p.children[3] as CharNode;
                 expect(d.char).to.equal('d');
-                expect(d.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                });
+                expect(Array.from(d.format.keys())).to.have.members(['italic']);
             });
         });
     });

@@ -1,6 +1,7 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VRange } from '../../../core/src/VRange';
 import { VNode } from '../../../core/src/VNodes/VNode';
+import { FormatInformation, FormatName } from '../../../core/src/Format/FormatManager';
 
 interface InfoValue {
     range: VRange;
@@ -89,6 +90,18 @@ export class InfoComponent extends OwlUIComponent<{}> {
         const position = nextSibling ? 'BEFORE' : prevSibling ? 'AFTER' : 'INSIDE';
         const reference = nextSibling || prevSibling || rangeNode.parent;
         return `${position} ${reference.id} (${reference.name})`;
+    }
+    _formatRepr(format: Map<FormatName, FormatInformation>): string {
+        const res = [];
+        format.forEach((info, name) => {
+            let str = '';
+            str += name + ' (' + info.tagName + ')';
+            if (info.className.length) {
+                str += ': ' + info.className;
+            }
+            res.push(str);
+        });
+        return res.length ? res.join('; ') : 'none';
     }
     _objectRepr(obj: object): string {
         return Object.keys(obj)

@@ -157,12 +157,7 @@
                     <tr t-if="props.vNode.format">
                         <td>format</td>
                         <td>
-                            <ol t-if="Object.keys(props.vNode.format).length" style="list-style-type: none">
-                                <li t-if="props.vNode.format.bold">bold</li>
-                                <li t-if="props.vNode.format.italic">italic</li>
-                                <li t-if="props.vNode.format.underline">underline</li>
-                            </ol>
-                            <t t-else="">{}</t>
+                            <t t-esc="_formatRepr(props.vNode.format)"/>
                         </td>
                     </tr>
                     <tr t-if="props.vNode.text().length">

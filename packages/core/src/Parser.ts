@@ -1,5 +1,4 @@
 import { VDocument } from './VDocument';
-import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
@@ -10,20 +9,26 @@ import { SimpleElementNode } from './VNodes/SimpleElementNode';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { RootNode } from './VNodes/RootNode';
 import { RangeNode } from './VNodes/RangeNode';
-import { FormatType, CharNode } from './VNodes/CharNode';
+import { CharNode } from './VNodes/CharNode';
+import { FormatInformation, FormatManager, FormatName } from './Format/FormatManager';
 
 interface ParsingContext {
     readonly rootNode?: Node;
     node?: Node;
     parentVNode?: VNode;
-    format?: FormatType[];
+    format?: Map<FormatName, FormatInformation>;
     vDocument: VDocument;
 }
 export const defaultNodes = [CharNode, LineBreakNode, RangeNode, SimpleElementNode];
 
 export class Parser {
     _customVNodes: Set<typeof VNode> = new Set();
-    constructor(replaceDefaultNodes?: Array<typeof VNode>) {
+    formatManager: FormatManager;
+    constructor(
+        formatManager: FormatManager = new FormatManager(),
+        replaceDefaultNodes?: Array<typeof VNode>,
+    ) {
+        this.formatManager = formatManager;
         this.addCustomVNodes(replaceDefaultNodes || defaultNodes);
     }
 
@@ -70,8 +75,8 @@ export class Parser {
      */
     parse(node: Node): VDocument {
         const root = new RootNode();
-        VDocumentMap.set(root, node);
-        const vDocument = new VDocument(root);
+        VDocumentMap.set(root, node, this.formatManager);
+        const vDocument = new VDocument(root, this.formatManager);
         // The tree is parsed in depth-first order traversal.
         // Start with the first child and the whole tree will be parsed.
         if (node.childNodes.length) {
@@ -79,7 +84,7 @@ export class Parser {
                 rootNode: node,
                 node: node.childNodes[0],
                 parentVNode: root,
-                format: [],
+                format: new Map(),
                 vDocument: vDocument,
             };
             do {
@@ -177,23 +182,20 @@ export class Parser {
 
         const node = context.node;
         const parsedNode = this.parseNode(node) as VNode;
-        if (Format.tags.includes(context.node.nodeName)) {
+        if (this.formatManager.isFormat(context.node)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our
             // internal representation but by the format of its children.
             // For the parsing, encountering a format node generates a new format
             // context which inherits from the previous one.
-            const format = context.format.length ? context.format[0] : {};
-            context.format.unshift({
-                bold: format.bold || node.nodeName === 'B',
-                italic: format.italic || node.nodeName === 'I',
-                underline: format.underline || node.nodeName === 'U',
+            this.formatManager.parse(context.node).forEach((parsedFormat, parsedName) => {
+                context.format.set(parsedName, parsedFormat);
             });
         } else {
-            if (parsedNode instanceof CharNode) {
-                Object.assign(parsedNode.format, context.format[0]);
-            }
-            VDocumentMap.set(parsedNode, node);
+            context.format.forEach((parsedFormat, parsedName) => {
+                parsedNode.format.set(parsedName, parsedFormat);
+            });
+            VDocumentMap.set(parsedNode, node, this.formatManager);
             context.parentVNode.append(parsedNode);
         }
         // A <br/> with no siblings is there only to make its parent visible.
@@ -201,7 +203,7 @@ export class Parser {
         // TODO: do this less naively to account for formatting space.
         if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
             context.node = node.childNodes[0];
-            VDocumentMap.set(parsedNode, context.node);
+            VDocumentMap.set(parsedNode, context.node, this.formatManager);
         }
         // A trailing <br/> after another <br/> is there only to make its previous
         // sibling visible. Consume it since it was just parsed as a single BR
@@ -214,7 +216,7 @@ export class Parser {
             !node.nextSibling.nextSibling
         ) {
             context.node = node.nextSibling;
-            VDocumentMap.set(parsedNode, context.node);
+            VDocumentMap.set(parsedNode, context.node, this.formatManager);
         }
         return context;
     }
@@ -228,11 +230,11 @@ export class Parser {
     _parseTextNode(currentContext: ParsingContext): ParsingContext {
         const node = currentContext.node;
         const parentVNode = currentContext.parentVNode;
-        const format = currentContext.format[0];
+        const format = currentContext.format;
         const parsedVNodes = this.parseNode(node) as CharNode[];
         parsedVNodes.forEach((parsedVNode: CharNode, index: number) => {
-            parsedVNode.format = { ...format };
-            VDocumentMap.set(parsedVNode, node, index);
+            parsedVNode.format = new Map(format);
+            VDocumentMap.set(parsedVNode, node, this.formatManager, index);
             parentVNode.append(parsedVNode);
         });
         return currentContext;
@@ -263,9 +265,16 @@ export class Parser {
             const rootNode = currentContext.rootNode;
             do {
                 ancestor = ancestor.parentNode;
-                if (ancestor && Format.tags.includes(ancestor.nodeName)) {
+                if (ancestor && this.formatManager.isFormat(ancestor)) {
                     // Pop last formatting context from the stack
-                    nextContext.format.shift();
+                    const parsedFormats = this.formatManager.parse(ancestor);
+                    nextContext.format.forEach((contextFormat, contextFormatName: FormatName) => {
+                        parsedFormats.forEach((parsedFormat, parsedFormatName: FormatName) => {
+                            if (contextFormatName === parsedFormatName) {
+                                nextContext.format.delete(contextFormatName);
+                            }
+                        });
+                    });
                 }
             } while (ancestor && !ancestor.nextSibling && ancestor !== rootNode);
             // At this point, the found ancestor has a sibling.

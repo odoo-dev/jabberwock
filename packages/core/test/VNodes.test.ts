@@ -6,33 +6,27 @@ import { RangeNode } from '../src/VNodes/RangeNode';
 import { SimpleElementNode } from '../src/VNodes/SimpleElementNode';
 import { RootNode } from '../src/VNodes/RootNode';
 import { utils } from '../../utils/src/utils';
+import { FormatManager } from '../src/Format/FormatManager';
 
 describe('core', () => {
     describe('src', () => {
         describe('VNodes', () => {
             describe('CharNode', () => {
+                const formatManager = new FormatManager();
                 describe('constructor', () => {
                     it('should create a CharNode', async () => {
                         const c = new CharNode(' ');
                         expect(c.char).to.equal(' ');
                         expect(c.atomic).to.equal(true);
-                        expect(c.format).to.deep.equal({
-                            bold: false,
-                            italic: false,
-                            underline: false,
-                        });
+                        expect(c.format.size).to.equal(0);
                         expect(c.length).to.equal(1);
                     });
                     it('should create a CharNode with format', async () => {
-                        const c = new CharNode(' ', { bold: true });
+                        const format = new Map([['bold', formatManager.create('bold')]]);
+                        const c = new CharNode(' ', format);
                         expect(c.char).to.equal(' ');
                         expect(c.atomic).to.equal(true);
-                        expect(c.bold).to.equal(true);
-                        expect(c.format).to.deep.equal({
-                            bold: true,
-                            italic: false,
-                            underline: false,
-                        });
+                        expect(Array.from(c.format.keys())).to.have.members(['bold']);
                     });
                     it('should throw an exception if create a CharNode with wrong value', async () => {
                         expect(() => {
@@ -70,26 +64,25 @@ describe('core', () => {
                     });
                     it('should duplicate a char with format', async () => {
                         const c = new CharNode('a');
-                        c.bold = true;
+                        c.format.set('bold', formatManager.create('bold'));
                         const copy = c.shallowDuplicate();
                         expect(copy).to.not.equal(c);
-                        expect(copy.format.bold).to.equal(true, 'copy is bold');
+                        expect(Array.from(copy.format.keys())).to.have.members(
+                            ['bold'],
+                            'copy is bold',
+                        );
                         expect(copy.char).to.equal(c.char);
                         expect(copy.format).to.deep.equal(c.format);
                     });
                     it('should mark as italic a duplicate a char', async () => {
                         const c = new CharNode('a');
                         const copy = c.shallowDuplicate();
-                        copy.italic = true;
-                        expect(copy.format.italic).to.equal(true, 'copy is now italic');
-                        expect(c.format.italic).to.equal(false, 'original char is not italic');
-                    });
-                    it('should update the format for a duplicate a char', async () => {
-                        const c = new CharNode('a');
-                        const copy = c.shallowDuplicate();
-                        copy.format = { italic: true };
-                        expect(copy.format.italic).to.equal(true, 'copy is now italic');
-                        expect(c.format.italic).to.equal(false, 'original char is not italic');
+                        copy.format.set('italic', formatManager.create('italic'));
+                        expect(Array.from(copy.format.keys())).to.have.members(
+                            ['italic'],
+                            'copy is now italic',
+                        );
+                        expect(c.format.size).to.equal(0, 'original char is not italic');
                     });
                 });
                 describe('text', () => {

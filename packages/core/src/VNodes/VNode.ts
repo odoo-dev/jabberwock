@@ -2,6 +2,7 @@ import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRendering
 import { Predicate, isRange, isLeaf, not } from '../../../utils/src/Predicates';
 import { RelativePosition } from '../../../utils/src/range';
 import { utils, isWithRange } from '../../../utils/src/utils';
+import { FormatInformation, FormatName } from '../Format/FormatManager';
 
 export enum VNodeType {
     ROOT = 'root',
@@ -28,6 +29,7 @@ export class VNode {
     };
     name: string;
     htmlTag: string;
+    format: Map<FormatName, FormatInformation> = new Map();
     _children: VNode[] = [];
 
     constructor(type: VNodeType | string) {

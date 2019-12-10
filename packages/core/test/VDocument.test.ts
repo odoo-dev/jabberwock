@@ -205,6 +205,7 @@ describe('stores', () => {
                             editor.renderer.render(editor.vDocument, editor.editable);
                         },
                         contentAfter: '<b>a</b>b[]',
+                        debug: true,
                     });
                 });
                 it('should make bold the next insertion when applyFormat 2 times after the first char that is bold', async () => {
