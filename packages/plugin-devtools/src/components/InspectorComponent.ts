@@ -4,19 +4,12 @@ import { TreeComponent } from './TreeComponent';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 
-////////////////////////////// todo: use API ///////////////////////////////////
-
-interface InspectorState {
-    selectedNode: VNode;
-    selectedPath: VNode[]; // From highest parent to currently selected node
-}
-
 export class InspectorComponent extends OwlUIComponent<{}> {
     static components = { InfoComponent, PathComponent, TreeComponent };
-    state: InspectorState = {
-        selectedNode: this.env.editor.vDocument.root,
-        selectedPath: this._getPath(this.env.editor.vDocument.root),
+    state = {
+        selectedNodeID: 0,
     };
+    selectedNode = this.env.editor.vDocument.root;
 
     /**
      * Handle keyboard navigation in DevTools (arrows to move in the tree)
@@ -24,7 +17,7 @@ export class InspectorComponent extends OwlUIComponent<{}> {
      * @param {KeyboardEvent} event
      */
     onKeydown(event: KeyboardEvent): void {
-        const selected: VNode = this.state.selectedNode;
+        const selected: VNode = this.selectedNode;
         let newSelection: VNode;
         switch (event.code) {
             case 'ArrowDown':
@@ -39,10 +32,13 @@ export class InspectorComponent extends OwlUIComponent<{}> {
             case 'ArrowRight':
                 newSelection = selected.nextSibling();
                 break;
+            default:
+                return;
         }
         if (newSelection) {
             event.preventDefault();
-            this._selectNode(newSelection);
+            this.selectedNode = newSelection;
+            this.state.selectedNodeID = newSelection.id;
         }
     }
     /**
@@ -56,13 +52,9 @@ export class InspectorComponent extends OwlUIComponent<{}> {
      */
     selectNode(event: CustomEvent): void {
         const vNode: VNode = event.detail.vNode;
-        this._selectNode(vNode);
+        this.selectedNode = vNode;
+        this.state.selectedNodeID = vNode.id;
     }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
     /**
      * Return the path between the given `vNode` and the root vNode, as an array
      * of VNode, sorted from the highest parent (the root) to the given vNode.
@@ -70,7 +62,7 @@ export class InspectorComponent extends OwlUIComponent<{}> {
      * @param {VNode} vNode
      * @returns {VNode []}
      */
-    _getPath(vNode: VNode): VNode[] {
+    getPath(vNode: VNode): VNode[] {
         const path: VNode[] = [vNode];
         let parent: VNode = vNode.parent;
         while (parent) {
@@ -78,14 +70,5 @@ export class InspectorComponent extends OwlUIComponent<{}> {
             parent = parent.parent;
         }
         return path;
-    }
-    /**
-     * Update the state to account for the selection of the given vNode
-     *
-     * @param {VNode} vNode
-     */
-    _selectNode(vNode: VNode): void {
-        this.state.selectedNode = vNode;
-        this.state.selectedPath = this._getPath(vNode);
     }
 }

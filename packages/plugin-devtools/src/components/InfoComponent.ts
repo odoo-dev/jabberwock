@@ -1,10 +1,8 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { VRange } from '../../../core/src/VRange';
 import { VNode } from '../../../core/src/VNodes/VNode';
 
 interface InfoState {
     currentTab: string;
-    range: VRange;
 }
 export class InfoComponent extends OwlUIComponent<{}> {
     aboutMeProps = ['id', 'name', 'type', 'length', 'atomic', 'text'];
@@ -12,7 +10,6 @@ export class InfoComponent extends OwlUIComponent<{}> {
     customPropsBlacklist = this.aboutMeProps.concat(this.familyProps).concat(['renderingEngines']);
     state: InfoState = {
         currentTab: 'vNode',
-        range: this.env.editor.vDocument.range,
     };
     localStorage = ['currentTab'];
     /**
