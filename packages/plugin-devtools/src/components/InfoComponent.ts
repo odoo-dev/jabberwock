@@ -2,15 +2,19 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VRange } from '../../../core/src/VRange';
 import { VNode } from '../../../core/src/VNodes/VNode';
 
+interface InfoValue {
+    range: VRange;
+}
 interface InfoState {
     currentTab: string;
-    range: VRange;
 }
 const vNodeKeys = Object.keys(new VNode('default'));
 export class InfoComponent extends OwlUIComponent<{}> {
+    values: InfoValue = {
+        range: this.env.editor.vDocument.range,
+    };
     state: InfoState = {
         currentTab: 'vNode',
-        range: this.env.editor.vDocument.range,
     };
     localStorage = ['currentTab'];
     /**

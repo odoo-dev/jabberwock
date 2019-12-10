@@ -10,16 +10,16 @@
                         <TreeComponent
                             vNode="env.editor.vDocument.root"
                             isRoot="true"
-                            selectedPath="state.selectedPath"
-                            selectedID="state.selectedNode.id"/>
+                            selectedPath="values.selectedPath"
+                            selectedID="values.selectedNode.id"/>
                     </devtools-tree>
                 </mainpane-contents>
                 <PathComponent
-                    path="state.selectedPath"
-                    selectedID="state.selectedNode.id"/>
+                    path="values.selectedPath"
+                    selectedID="values.selectedNode.id"/>
             </devtools-mainpane>
             <devtools-sidepane>
-                <InfoComponent vNode="state.selectedNode"/>
+                <InfoComponent vNode="values.selectedNode"/>
             </devtools-sidepane>
         </devtools-contents>
     </devtools-panel>
@@ -237,19 +237,19 @@
                 <tbody>
                     <tr>
                         <td>direction</td>
-                        <td><t t-esc="state.range.direction"/></td>
+                        <td><t t-esc="values.range.direction"/></td>
                     </tr>
                     <tr>
                         <td><strong class="range-node"><t
-                        t-if="state.range.start === state.range.anchor">[</t><t
+                        t-if="values.range.start === values.range.anchor">[</t><t
                         t-else="">]</t></strong> start</td>
-                        <td><t t-esc="_repr(state.range.start)"/></td>
+                        <td><t t-esc="_repr(values.range.start)"/></td>
                     </tr>
                     <tr>
                         <td><strong class="range-node"><t
-                        t-if="state.range.end === state.range.focus">]</t><t
+                        t-if="values.range.end === values.range.focus">]</t><t
                         t-else="">[</t></strong> end</td>
-                        <td><t t-esc="_repr(state.range.end)"/></td>
+                        <td><t t-esc="_repr(values.range.end)"/></td>
                     </tr>
                 </tbody>
             </table>

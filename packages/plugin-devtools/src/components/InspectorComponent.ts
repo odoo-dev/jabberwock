@@ -6,14 +6,17 @@ import { VNode } from '../../../core/src/VNodes/VNode';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
-interface InspectorState {
+interface InspectorValues {
     selectedNode: VNode;
     selectedPath: VNode[]; // From highest parent to currently selected node
 }
 
 export class InspectorComponent extends OwlUIComponent<{}> {
     static components = { InfoComponent, PathComponent, TreeComponent };
-    state: InspectorState = {
+    state = {
+        redrawWithoutLinkVNodes: 0,
+    };
+    values: InspectorValues = {
         selectedNode: this.env.editor.vDocument.root,
         selectedPath: this._getPath(this.env.editor.vDocument.root),
     };
@@ -24,7 +27,7 @@ export class InspectorComponent extends OwlUIComponent<{}> {
      * @param {KeyboardEvent} event
      */
     onKeydown(event: KeyboardEvent): void {
-        const selected: VNode = this.state.selectedNode;
+        const selected: VNode = this.values.selectedNode;
         let newSelection: VNode;
         switch (event.code) {
             case 'ArrowDown':
@@ -85,7 +88,8 @@ export class InspectorComponent extends OwlUIComponent<{}> {
      * @param {VNode} vNode
      */
     _selectNode(vNode: VNode): void {
-        this.state.selectedNode = vNode;
-        this.state.selectedPath = this._getPath(vNode);
+        this.values.selectedNode = vNode;
+        this.values.selectedPath = this._getPath(vNode);
+        this.state.redrawWithoutLinkVNodes = Date.now();
     }
 }
