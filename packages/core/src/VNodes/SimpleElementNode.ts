@@ -13,7 +13,6 @@ export class SimpleElementNode extends VNode {
                 heading5: 'H5',
                 heading6: 'H6',
                 paragraph: 'P',
-                root: 'ROOT-NODE',
             }[this.type] || 'UNKNOWN-ELEMENT';
     }
 
@@ -21,7 +20,7 @@ export class SimpleElementNode extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): VNode | VNode[] | null {
+    static parse(node: Node): SimpleElementNode {
         switch (node.nodeName) {
             case 'H1':
                 return new SimpleElementNode(VNodeType.HEADING1);
@@ -49,7 +48,7 @@ export class SimpleElementNode extends VNode {
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      */
-    shallowDuplicate(): VNode {
+    shallowDuplicate(): SimpleElementNode {
         return new SimpleElementNode(this.type as VNodeType);
     }
 }

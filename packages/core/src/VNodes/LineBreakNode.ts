@@ -11,7 +11,7 @@ export class LineBreakNode extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): VNode | VNode[] | null {
+    static parse(node: Node): LineBreakNode {
         if (node.nodeName === 'BR') {
             return new LineBreakNode();
         }
@@ -50,7 +50,7 @@ export class LineBreakNode extends VNode {
      *
      *  @override
      */
-    shallowDuplicate(): VNode {
+    shallowDuplicate(): LineBreakNode {
         return new LineBreakNode();
     }
 
