@@ -307,7 +307,7 @@ export class VNode {
      * @param [predicate]
      */
     previousSibling(predicate?: Predicate): VNode {
-        const previousSibling = this.parent && this.parent._childBefore(this);
+        const previousSibling = (this.parent && this.parent._childBefore(this)) || undefined;
         if (previousSibling && predicate) {
             return previousSibling.walk((node: VNode) => node.previousSibling(), predicate);
         } else {
@@ -321,7 +321,7 @@ export class VNode {
      * @param [predicate]
      */
     nextSibling(predicate?: Predicate): VNode {
-        const nextSibling = this.parent && this.parent._childAfter(this);
+        const nextSibling = (this.parent && this.parent._childAfter(this)) || undefined;
         if (nextSibling && predicate) {
             return nextSibling.walk((node: VNode) => node.nextSibling(), predicate);
         } else {
@@ -347,7 +347,7 @@ export class VNode {
         if (previous && predicate) {
             return previous.walk((node: VNode) => node.previous(), predicate);
         } else {
-            return previous;
+            return previous || undefined;
         }
     }
     /**
@@ -371,7 +371,7 @@ export class VNode {
             while (ancestor && !ancestor.nextSibling()) {
                 ancestor = ancestor.parent;
             }
-            next = ancestor && ancestor.nextSibling();
+            next = (ancestor && ancestor.nextSibling()) || undefined;
         }
         if (next && predicate) {
             return next.walk((node: VNode) => node.next(), predicate);
