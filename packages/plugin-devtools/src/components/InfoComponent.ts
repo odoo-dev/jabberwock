@@ -60,6 +60,20 @@ export class InfoComponent extends OwlUIComponent<{}> {
                 return { key: key, value: value };
             });
     }
+    /**
+     * Return the length of this node and all its descendents.
+     *
+     * @param __current
+     */
+    totalLength(vNode: VNode, __current = 0): number {
+        __current += vNode.length;
+        vNode.children.forEach((child: VNode): void => {
+            if (child.hasChildren()) {
+                __current = this.totalLength(child, __current);
+            }
+        });
+        return __current;
+    }
 
     //--------------------------------------------------------------------------
     // Private

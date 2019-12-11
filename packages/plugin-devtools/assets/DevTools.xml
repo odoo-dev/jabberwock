@@ -146,7 +146,7 @@
                     </tr>
                     <tr>
                         <td>total length</td>
-                        <td><t t-esc="props.vNode.totalLength()"/></td>
+                        <td><t t-esc="totalLength(props.vNode)"/></td>
                     </tr>
                     <tr>
                         <td>atomic</td>
