@@ -197,34 +197,6 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the child's previous sibling.
-     *
-     * @param child
-     */
-    childBefore(child: VNode): VNode {
-        const childBefore = utils.withRange(() => this.nthChild(this.indexOf(child) - 1));
-        // Ignore range nodes by default.
-        if (!isWithRange && childBefore && isRange(childBefore)) {
-            return this.childBefore(childBefore);
-        } else {
-            return childBefore;
-        }
-    }
-    /**
-     * Return the child's next sibling.
-     *
-     * @param child
-     */
-    childAfter(child: VNode): VNode {
-        const childAfter = utils.withRange(() => this.nthChild(this.indexOf(child) + 1));
-        // Ignore range nodes by default.
-        if (!isWithRange && childAfter && isRange(childAfter)) {
-            return this.childAfter(childAfter);
-        } else {
-            return childAfter;
-        }
-    }
-    /**
      * Return the child at given index.
      *
      * @see _nthChild
@@ -232,51 +204,6 @@ export class VNode {
      */
     nthChild(index: number): VNode {
         return this.children[index];
-    }
-    /**
-     * Return the descendant of this node that directly precedes the given node
-     * in depth-first pre-order traversal.
-     *
-     * @param node
-     */
-    descendantBefore(node: VNode): VNode {
-        let previous = node.previousSibling();
-        if (previous) {
-            // The node before node is the last leaf of its previous sibling.
-            previous = previous.lastLeaf();
-        } else if (node.parent !== this) {
-            // If it has no previous sibling then climb up to the parent.
-            // This is similar to `previous` but can't go further than `this`.
-            previous = node.parent;
-        }
-        return previous;
-    }
-    /**
-     * Return the descendant of this node that directly follows the given node
-     * in depth-first pre-order traversal.
-     *
-     * @param node
-     */
-    descendantAfter(node: VNode): VNode {
-        // The node after node is its first child.
-        let next = node.firstChild();
-        if (!next) {
-            // If it has no children then it is its next sibling.
-            next = node.nextSibling();
-        }
-        if (!next) {
-            // If it has no siblings either then climb up to the closest parent
-            // which has a next sibiling.
-            // This is similar to `next` but can't go further than `this`.
-            let ancestor = node.parent;
-            while (ancestor !== this && !ancestor.nextSibling()) {
-                ancestor = ancestor.parent;
-            }
-            if (ancestor !== this) {
-                next = ancestor.nextSibling();
-            }
-        }
-        return next;
     }
     /**
      * Return this VNode's siblings.
@@ -353,7 +280,7 @@ export class VNode {
     firstDescendant(predicate?: Predicate): VNode {
         const firstDescendant = this.firstChild();
         if (firstDescendant && predicate) {
-            return firstDescendant.walk((node: VNode) => this.descendantAfter(node), predicate);
+            return firstDescendant.walk((node: VNode) => this._descendantAfter(node), predicate);
         } else {
             return firstDescendant;
         }
@@ -370,7 +297,7 @@ export class VNode {
             lastDescendant = lastDescendant.lastChild();
         }
         if (lastDescendant && predicate) {
-            return lastDescendant.walk((node: VNode) => this.descendantBefore(node), predicate);
+            return lastDescendant.walk((node: VNode) => this._descendantBefore(node), predicate);
         } else {
             return lastDescendant;
         }
@@ -382,7 +309,7 @@ export class VNode {
      * @param [predicate]
      */
     previousSibling(predicate?: Predicate): VNode {
-        const previousSibling = this.parent && this.parent.childBefore(this);
+        const previousSibling = this.parent && this.parent._childBefore(this);
         if (previousSibling && predicate) {
             return previousSibling.walk((node: VNode) => node.previousSibling(), predicate);
         } else {
@@ -396,7 +323,7 @@ export class VNode {
      * @param [predicate]
      */
     nextSibling(predicate?: Predicate): VNode {
-        const nextSibling = this.parent && this.parent.childAfter(this);
+        const nextSibling = this.parent && this.parent._childAfter(this);
         if (nextSibling && predicate) {
             return nextSibling.walk((node: VNode) => node.nextSibling(), predicate);
         } else {
@@ -631,6 +558,79 @@ export class VNode {
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * Return the child's previous sibling.
+     *
+     * @param child
+     */
+    _childBefore(child: VNode): VNode {
+        const childBefore = utils.withRange(() => this.nthChild(this.indexOf(child) - 1));
+        // Ignore range nodes by default.
+        if (!isWithRange && childBefore && isRange(childBefore)) {
+            return this._childBefore(childBefore);
+        } else {
+            return childBefore;
+        }
+    }
+    /**
+     * Return the child's next sibling.
+     *
+     * @param child
+     */
+    _childAfter(child: VNode): VNode {
+        const childAfter = utils.withRange(() => this.nthChild(this.indexOf(child) + 1));
+        // Ignore range nodes by default.
+        if (!isWithRange && childAfter && isRange(childAfter)) {
+            return this._childAfter(childAfter);
+        } else {
+            return childAfter;
+        }
+    }
+    /**
+     * Return the descendant of this node that directly precedes the given node
+     * in depth-first pre-order traversal.
+     *
+     * @param node
+     */
+    _descendantBefore(node: VNode): VNode {
+        let previous = node.previousSibling();
+        if (previous) {
+            // The node before node is the last leaf of its previous sibling.
+            previous = previous.lastLeaf();
+        } else if (node.parent !== this) {
+            // If it has no previous sibling then climb up to the parent.
+            // This is similar to `previous` but can't go further than `this`.
+            previous = node.parent;
+        }
+        return previous;
+    }
+    /**
+     * Return the descendant of this node that directly follows the given node
+     * in depth-first pre-order traversal.
+     *
+     * @param node
+     */
+    _descendantAfter(node: VNode): VNode {
+        // The node after node is its first child.
+        let next = node.firstChild();
+        if (!next) {
+            // If it has no children then it is its next sibling.
+            next = node.nextSibling();
+        }
+        if (!next) {
+            // If it has no siblings either then climb up to the closest parent
+            // which has a next sibiling.
+            // This is similar to `next` but can't go further than `this`.
+            let ancestor = node.parent;
+            while (ancestor !== this && !ancestor.nextSibling()) {
+                ancestor = ancestor.parent;
+            }
+            if (ancestor !== this) {
+                next = ancestor.nextSibling();
+            }
+        }
+        return next;
+    }
     /**
      * Insert a VNode at the given index within this VNode's children.
      * Return self.
