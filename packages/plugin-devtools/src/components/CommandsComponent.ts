@@ -21,7 +21,7 @@ interface CommandsProps {
 
 export class CommandsComponent extends OwlUIComponent<CommandsProps> {
     state: CommandsState = {
-        currentTab: 'selected',
+        currentTab: 'queue',
         registry: this.env.editor.dispatcher.commands,
         handlers: this.env.editor.dispatcher.handlers,
         selectedCommandIndex: null, // Index of the selected command in the stack
@@ -45,14 +45,6 @@ export class CommandsComponent extends OwlUIComponent<CommandsProps> {
             return '<' + value.nodeName.toLowerCase() + '>';
         }
         return '' + value;
-    }
-    /**
-     * Return the command handler corresponding to the given token.
-     *
-     * @param commandIdentifier
-     */
-    getHandlers(commandIdentifier: CommandIdentifier): CommandHandler[] {
-        return this.env.editor.dispatcher[commandIdentifier];
     }
     /**
      * Handle keydown event to navigate in the command stack.

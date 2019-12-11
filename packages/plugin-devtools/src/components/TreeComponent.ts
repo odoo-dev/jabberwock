@@ -74,6 +74,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     onDblClickNode(): void {
         const location: VRangeDescription = {
             start: this.props.vNode,
+            end: this.props.vNode,
             direction: Direction.FORWARD,
         };
         this.env.editor.execCommand('setRange', { vRange: location });

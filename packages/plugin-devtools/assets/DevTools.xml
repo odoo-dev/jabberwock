@@ -320,7 +320,7 @@
                         start
                     </td>
                     <td>
-                        <t t-esc="value.startPosition"/> <t t-esc="value.start.id"/> (<t t-esc="value.start.value or value.start.type"/>)
+                        <t t-esc="value.startPosition"/> <t t-esc="value.start.id"/> (<t t-esc="value.start.name"/>)
                     </td>
                 </tr>
                 <tr>
@@ -328,7 +328,7 @@
                         end
                     </td>
                     <td>
-                        <t t-esc="value.endPosition"/> <t t-esc="value.end.id"/> (<t t-esc="value.end.value or value.end.type"/>)
+                        <t t-esc="value.endPosition"/> <t t-esc="value.end.id"/> (<t t-esc="value.end.name"/>)
                     </td>
                 </tr>
             </tbody>

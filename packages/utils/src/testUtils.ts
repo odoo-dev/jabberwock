@@ -222,3 +222,53 @@ function _insertCharAt(char: string, container: Node, offset: number): void {
         container.parentNode.insertBefore(document.createTextNode(char), container);
     }
 }
+
+/**
+ * await the next tick (as setTimeout 0)
+ *
+ */
+export async function nextTick(): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve));
+}
+
+/**
+ * await the next tick (as setTimeout 0) after the next redrawing frame
+ *
+ */
+export async function nextTickFrame(): Promise<void> {
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
+    await nextTick();
+}
+
+/**
+ * simple simulation of a click on an element
+ *
+ * @param el
+ * @param options
+ */
+export async function click(el: Element, options?: MouseEventInit): Promise<void> {
+    options = Object.assign({ bubbles: true }, options);
+    el.dispatchEvent(new MouseEvent('mousedown', options));
+    await nextTickFrame();
+    el.dispatchEvent(new MouseEvent('mouseup', options));
+    await nextTick();
+    el.dispatchEvent(new MouseEvent('click', options));
+    await nextTickFrame();
+}
+
+/**
+ * simple simulation of a keydown on an element
+ *
+ * @param el
+ * @param options
+ */
+export async function keydown(el: Element, key: string): Promise<void> {
+    el.dispatchEvent(
+        new KeyboardEvent('keydown', {
+            key: key,
+            code: key,
+            bubbles: true,
+        }),
+    );
+    await nextTickFrame();
+}
