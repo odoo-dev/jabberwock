@@ -7,7 +7,7 @@ interface InfoState {
     range: VRange;
 }
 export class InfoComponent extends OwlUIComponent<{}> {
-    aboutMeProps = ['id', 'name', 'type', 'length', 'totalLength', 'atomic', 'text'];
+    aboutMeProps = ['id', 'name', 'type', 'length', 'atomic', 'text'];
     familyProps = ['index', 'parent', 'children', 'siblings'];
     customPropsBlacklist = this.aboutMeProps.concat(this.familyProps).concat(['renderingEngines']);
     state: InfoState = {
@@ -68,6 +68,20 @@ export class InfoComponent extends OwlUIComponent<{}> {
             .map(key => {
                 return { key: key, value: this._propRepr(vNode[key]) };
             });
+    }
+    /**
+     * Return the length of this node and all its descendents.
+     *
+     * @param __current
+     */
+    totalLength(vNode: VNode, __current = 0): number {
+        __current += vNode.length;
+        vNode.children.forEach((child: VNode): void => {
+            if (child.hasChildren()) {
+                __current = this.totalLength(child, __current);
+            }
+        });
+        return __current;
     }
 
     //--------------------------------------------------------------------------
