@@ -95,7 +95,7 @@ export class CharNode extends VNode {
      * Return the length of this VNode.
      */
     get length(): number {
-        return this.char ? 1 : 0;
+        return 1;
     }
     /**
      * Return this VNode's inner text (concatenation of all descendent
