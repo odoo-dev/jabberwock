@@ -119,20 +119,6 @@ export class VNode {
         return this.children.length;
     }
     /**
-     * Return the length of this node and all its descendents.
-     *
-     * @param __current
-     */
-    totalLength(__current = 0): number {
-        __current += this.length;
-        this.children.forEach((child: VNode): void => {
-            if (child.hasChildren()) {
-                __current = child.totalLength(__current);
-            }
-        });
-        return __current;
-    }
-    /**
      * Return the index of this VNode within its parent.
      *
      * @see indexOf
