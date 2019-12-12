@@ -6,6 +6,7 @@ import { RangeNode } from '../src/VNodes/RangeNode';
 import { SimpleElementNode } from '../src/VNodes/SimpleElementNode';
 import { RootNode } from '../src/VNodes/RootNode';
 import { utils } from '../../utils/src/utils';
+import JWEditor from '../src/JWEditor';
 
 describe('core', () => {
     describe('src', () => {
@@ -1144,6 +1145,32 @@ describe('core', () => {
                         expect(p.children).to.deep.equal([a, tail]);
                         expect(p.nextSibling().children).to.deep.equal([b, head, c]);
                     });
+                });
+            });
+            describe('Custom VNode', () => {
+                it('should create and parse a custom node', () => {
+                    const editor = new JWEditor();
+                    class MyCustomNode extends VNode {
+                        customKey = 'yes';
+                        constructor() {
+                            super('custom');
+                        }
+                        static parse(node: Node): VNode | VNode[] | null {
+                            if (node.nodeName === 'CUSTOM-NODE') {
+                                return new MyCustomNode();
+                            }
+                        }
+                    }
+                    editor.addCustomNode(MyCustomNode);
+                    editor.start();
+                    const root = document.createElement('ROOT-NODE');
+                    const element = document.createElement('CUSTOM-NODE');
+                    root.appendChild(element);
+                    const vDocument = editor.parser.parse(root);
+                    const customVNode = vDocument.root.firstChild();
+                    expect(customVNode.constructor.name).to.equal('MyCustomNode');
+                    expect(customVNode.type).to.equal('custom');
+                    expect((customVNode as MyCustomNode).customKey).to.equal('yes');
                 });
             });
         });
