@@ -8,6 +8,7 @@ import { FragmentNode } from '../src/VNodes/FragmentNode';
 import { withMarkers } from '../../utils/src/range';
 import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
+import { testEditor } from '../../utils/src/testUtils';
 
 describe('core', () => {
     describe('src', () => {
@@ -990,6 +991,61 @@ describe('core', () => {
                                 return vNode instanceof CharNode;
                             }),
                         ).to.deep.equal([c, a]);
+                    });
+                });
+                describe('ancestors', () => {
+                    it("should get a list of all ancestors of the root node's first leaf", async () => {
+                        await testEditor({
+                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            stepFunction: (editor: JWEditor) => {
+                                const a = editor.vDocument.root.firstLeaf();
+                                const ancestors = a.ancestors();
+                                expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
+                                    'P',
+                                    'H1',
+                                    'FragmentNode',
+                                ]);
+                            },
+                        });
+                    });
+                    it("should get a list of all ancestors of the root node's first leaf up until HEADING1", async () => {
+                        await testEditor({
+                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            stepFunction: (editor: JWEditor) => {
+                                const a = editor.vDocument.root.firstLeaf();
+                                const ancestors = a.ancestors(ancestor => ancestor.name !== 'H1');
+                                expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
+                                    'P',
+                                    'FragmentNode',
+                                ]);
+                            },
+                        });
+                    });
+                });
+                describe('descendants', () => {
+                    it('should get a list of all descendants of the root node ', async () => {
+                        await testEditor({
+                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            stepFunction: (editor: JWEditor) => {
+                                const descendants = editor.vDocument.root.descendants();
+                                expect(
+                                    descendants.map(descendant => descendant.name),
+                                ).to.deep.equal(['H1', 'P', 'a', 'H2', 'b']);
+                            },
+                        });
+                    });
+                    it('should get a list of all non-HEADING2 descendants of the root node ', async () => {
+                        await testEditor({
+                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            stepFunction: (editor: JWEditor) => {
+                                const descendants = editor.vDocument.root.descendants(
+                                    descendant => descendant.name !== 'H2',
+                                );
+                                expect(
+                                    descendants.map(descendant => descendant.name),
+                                ).to.deep.equal(['H1', 'P', 'a', 'b']);
+                            },
+                        });
                     });
                 });
                 describe('walk', () => {
