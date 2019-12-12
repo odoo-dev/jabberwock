@@ -6,6 +6,8 @@ import { RangeNode } from '../src/VNodes/RangeNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
 import { withMarkers } from '../../utils/src/range';
+import { JWPlugin } from '../src/JWPlugin';
+import JWEditor from '../src/JWEditor';
 
 describe('core', () => {
     describe('src', () => {
@@ -1134,6 +1136,32 @@ describe('core', () => {
                         expect(p.children).to.deep.equal([a, tail]);
                         expect(p.nextSibling().children).to.deep.equal([b, head, c]);
                     });
+                });
+            });
+            describe('Custom VNode', () => {
+                it('should create and parse a custom node', () => {
+                    const editor = new JWEditor();
+                    class MyCustomNode extends VNode {
+                        customKey = 'yes';
+                        static parse(node: Node): MyCustomNode[] {
+                            if (node.nodeName === 'CUSTOM-NODE') {
+                                return [new MyCustomNode()];
+                            }
+                        }
+                    }
+                    class MyCustomPlugin extends JWPlugin {
+                        static readonly nodes = [MyCustomNode];
+                    }
+                    editor.addPlugin(MyCustomPlugin);
+                    editor.start();
+                    const root = document.createElement('ROOT-NODE');
+                    const element = document.createElement('CUSTOM-NODE');
+                    root.appendChild(element);
+                    const vDocument = editor.parser.parse(root);
+                    const customVNode = vDocument.root.firstChild();
+                    expect(customVNode.constructor.name).to.equal('MyCustomNode');
+                    expect(customVNode instanceof MyCustomNode).to.be.true;
+                    expect((customVNode as MyCustomNode).customKey).to.equal('yes');
                 });
             });
         });
