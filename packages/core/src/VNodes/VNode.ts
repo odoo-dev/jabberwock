@@ -144,8 +144,8 @@ export class VNode {
      * @param vNode
      */
     isBefore(vNode: VNode): boolean {
-        const path = this._pathToRoot(this);
-        const otherPath = this._pathToRoot(vNode);
+        const path = [].concat(this, ...this.ancestors());
+        const otherPath = [].concat(vNode, ...vNode.ancestors());
         let ancestor = path.pop();
         let otherAncestor = otherPath.pop();
         // Compare the ancestors of each nodes one by one, in a path to the
@@ -428,6 +428,44 @@ export class VNode {
         return nextSiblings;
     }
     /**
+     * Return all ancestors of the current node that satisfy the given
+     * predicate. If no predicate is given return all the ancestors of the
+     * current node.
+     *
+     * @param [predicate]
+     */
+    ancestors(predicate?: Predicate): VNode[] {
+        const ancestors: VNode[] = [];
+        let parent = this.parent;
+        while (parent) {
+            if (!predicate || predicate(parent)) {
+                ancestors.push(parent);
+            }
+            parent = parent.parent;
+        }
+        return ancestors;
+    }
+    /**
+     * Return all descendants of the current node that satisfy the given
+     * predicate. If no predicate is given return all the ancestors of the
+     * current node.
+     *
+     * @param [predicate]
+     */
+    descendants(predicate?: Predicate): VNode[] {
+        const descendants = [];
+        if (this.children) {
+            let currentDescendant = this.firstChild();
+            do {
+                if (!predicate || predicate(currentDescendant)) {
+                    descendants.push(currentDescendant);
+                }
+                currentDescendant = this._descendantAfter(currentDescendant);
+            } while (currentDescendant);
+        }
+        return descendants;
+    }
+    /**
      * Walk the document tree starting from the current node (included) by
      * calling the `next` iterator until the returned node satisfies the given
      * predicate or is falsy.
@@ -641,21 +679,6 @@ export class VNode {
     _removeAtIndex(index: number): VNode {
         this._children.splice(index, 1);
         return this;
-    }
-    /**
-     * Return an array representing the path from the given VNode to the root
-     * VNode through.
-     *
-     * @param node
-     */
-    _pathToRoot(node: VNode): VNode[] {
-        const path = [node];
-        let parent = node.parent;
-        while (parent) {
-            path.push(parent);
-            parent = parent.parent;
-        }
-        return path;
     }
 }
 
