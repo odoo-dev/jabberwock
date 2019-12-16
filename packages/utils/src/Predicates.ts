@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 export type Predicate = (node: VNode) => boolean;
 
@@ -11,30 +11,6 @@ export function not(predicate: Predicate): Predicate {
     return (node: VNode): boolean => !predicate(node);
 }
 
-/**
- * Return true if the given node is a range node.
- *
- * @param node node to check
- */
-export function isRange(node: VNode): boolean {
-    return node.type === VNodeType.RANGE_TAIL || node.type === VNodeType.RANGE_HEAD;
-}
-
-/**
- * Return true if the given node is a character node.
- *
- * @param node node to check
- */
-export function isChar(node: VNode): boolean {
-    return node.type === VNodeType.CHAR;
-}
-
-/**
- * Return true if the given node is a leaf in the VDocument, that is a node that
- * has no children.
- *
- * @param node node to check
- */
-export function isLeaf(node: VNode): boolean {
-    return !node.hasChildren();
-}
+export { isLeaf } from '../../core/src/VNodes/VNode';
+export { isMarker } from '../../core/src/VNodes/VNode';
+export { isChar } from '../../core/src/VNodes/CharNode';

@@ -1,7 +1,5 @@
 import { VNode } from './VNodes/VNode';
-import { isRange } from '../../utils/src/Predicates';
-import { utils } from '../../utils/src/utils';
-import { RelativePosition, Direction } from '../../utils/src/range';
+import { RelativePosition, Direction, withMarkers } from '../../utils/src/range';
 import { RangeNode } from './VNodes/RangeNode';
 
 export interface VRangeDescription {
@@ -13,8 +11,8 @@ export interface VRangeDescription {
 }
 
 export class VRange {
-    readonly _tail = new RangeNode('tail');
-    readonly _head = new RangeNode('head');
+    readonly _tail = new RangeNode();
+    readonly _head = new RangeNode();
     /**
      * The direction of the range depends on whether tail is before head or the
      * opposite. This is costly to compute and, as such, is only computed when
@@ -28,7 +26,7 @@ export class VRange {
     }
     get direction(): Direction {
         if (!this._direction) {
-            const forward = utils.withRange(() => this._tail.isBefore(this._head));
+            const forward = withMarkers(() => this._tail.isBefore(this._head));
             this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
         }
         return this._direction;
@@ -67,7 +65,7 @@ export class VRange {
      * Return true if the range is collapsed.
      */
     isCollapsed(): boolean {
-        return utils.withRange(() => {
+        return withMarkers(() => {
             if (this.direction === Direction.FORWARD) {
                 return this._tail.nextSibling() === this._head;
             } else {
@@ -82,7 +80,7 @@ export class VRange {
     get selectedNodes(): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
-        utils.withRange(() => {
+        withMarkers(() => {
             while ((node = node.next()) && node !== this.end) {
                 selectedNodes.push(node);
             }
@@ -100,9 +98,6 @@ export class VRange {
      * @param [edge] range node on which to collapse
      */
     collapse(edge = this._tail): VRange {
-        if (!isRange(edge)) {
-            edge = this._tail;
-        }
         if (edge === this._tail) {
             this._setHead(edge);
         } else {

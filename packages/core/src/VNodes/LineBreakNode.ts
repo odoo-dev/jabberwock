@@ -1,21 +1,21 @@
-import { VNode, VNodeType } from './VNode';
+import { VNode } from './VNode';
+import { VElement } from './VElement';
 import { RelativePosition } from '../../../utils/src/range';
 
-export class LineBreakNode extends VNode {
-    htmlTag = 'BR';
+export class LineBreakNode extends VElement {
+    static readonly atomic = true;
     constructor() {
-        super(VNodeType.LINE_BREAK);
+        super('BR');
     }
 
     //--------------------------------------------------------------------------
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): LineBreakNode {
+    static parse(node: Node): LineBreakNode[] {
         if (node.nodeName === 'BR') {
-            return new LineBreakNode();
+            return [new LineBreakNode()];
         }
-        return null;
     }
     /**
      * Render the VNode to the given format.
@@ -38,14 +38,6 @@ export class LineBreakNode extends VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if the VNode is atomic (ie. it may not have children).
-     *
-     * @override
-     */
-    get atomic(): boolean {
-        return true;
-    }
-    /**
      * Return a new VNode with the same type and attributes as this VNode.
      *
      *  @override
@@ -53,11 +45,6 @@ export class LineBreakNode extends VNode {
     shallowDuplicate(): LineBreakNode {
         return new LineBreakNode();
     }
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
     /**
      * Locate where to set the range, when it targets this VNode, at a certain
      * offset. This allows us to handle special cases.
