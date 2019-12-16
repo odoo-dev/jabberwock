@@ -6,10 +6,9 @@ import { Direction, RelativePosition } from '../../utils/src/range';
 import { VNode } from './VNodes/VNode';
 import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
-import { SimpleElementNode } from './VNodes/SimpleElementNode';
+import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
-import { RootNode } from './VNodes/RootNode';
-import { RangeNode } from './VNodes/RangeNode';
+import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType, CharNode } from './VNodes/CharNode';
 
 interface ParsingContext {
@@ -19,48 +18,41 @@ interface ParsingContext {
     format?: FormatType[];
     vDocument: VDocument;
 }
-export const defaultNodes = [CharNode, LineBreakNode, RangeNode, SimpleElementNode];
 
 export class Parser {
-    _customVNodes: Set<typeof VNode> = new Set();
-    constructor(replaceDefaultNodes?: Array<typeof VNode>) {
-        this.addCustomVNodes(replaceDefaultNodes || defaultNodes);
-    }
+    // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
+    _VNodes: Set<typeof VNode> = new Set([CharNode, LineBreakNode, VElement]);
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
     /**
-     * Add a custom VNode to the ones that this Parser can handle.
+     * Add an array of VNodes to the ones that this Parser can handle.
      *
      * @param VNodeClasses
      */
-    addCustomVNode(VNodeClass: typeof VNode): void {
-        this._customVNodes.add(VNodeClass);
-    }
-    /**
-     * Add an array of custom VNodes to the ones that this Parser can handle.
-     *
-     * @param VNodeClasses
-     */
-    addCustomVNodes(VNodeClasses: Array<typeof VNode>): void {
+    addVNode(...VNodeClasses: Array<typeof VNode>): void {
         VNodeClasses.forEach(VNodeClass => {
-            this._customVNodes.add(VNodeClass);
+            this._VNodes.add(VNodeClass);
         });
     }
     /**
-     * Return a (list of) vNode(s) matching the given node.
+     * Return a list of vNodes matching the given node.
      *
      * @param node
      */
-    parseNode(node: Node): VNode | Array<VNode> {
-        let vNode: VNode | Array<VNode> | null;
-        Array.from(this._customVNodes).some(customNode => {
-            vNode = customNode.parse(node);
-            return vNode !== null;
-        });
-        return vNode || new VNode(node.nodeName);
+    parseNode(node: Node): VNode[] {
+        for (const VNodeClass of this._VNodes) {
+            const vNodes = VNodeClass.parse(node);
+            if (vNodes) {
+                return vNodes;
+            }
+        }
+        // If the node could not be parsed, create a generic element node with
+        // the HTML tag of the DOM Node. This way we may not support the node
+        // but we don't break it either.
+        return [new VElement(node.nodeName)];
     }
     /**
      * Parse an HTML element into the editor's virtual representation.
@@ -69,7 +61,7 @@ export class Parser {
      * @returns the element parsed into the editor's virtual representation
      */
     parse(node: Node): VDocument {
-        const root = new RootNode();
+        const root = new FragmentNode();
         VDocumentMap.set(root, node);
         const vDocument = new VDocument(root);
         // The tree is parsed in depth-first order traversal.
@@ -176,7 +168,7 @@ export class Parser {
         const context = { ...currentContext };
 
         const node = context.node;
-        const parsedNode = this.parseNode(node) as VNode;
+        const parsedNode = this.parseNode(node)[0] as VNode;
         if (Format.tags.includes(context.node.nodeName)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our

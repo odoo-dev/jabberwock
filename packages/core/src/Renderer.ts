@@ -1,6 +1,6 @@
 import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
-import { isRange, isChar } from '../../utils/src/Predicates';
+import { isMarker, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
@@ -56,10 +56,10 @@ export class Renderer {
      * @param b
      */
     _isSameTextNode(a: VNode, b: VNode): boolean {
-        if (isRange(a) || isRange(b)) {
-            // A Range node is always considered to be part of the same text
+        if (isMarker(a) || isMarker(b)) {
+            // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
-            // be broken up just because it contains the range.
+            // be broken up just because it contains a marker.
             return true;
         } else if (!isChar(a) || !isChar(b)) {
             // Nodes that are not valid in a text node must end the text node.

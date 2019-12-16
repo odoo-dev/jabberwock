@@ -1,7 +1,9 @@
 import { expect } from 'chai';
-import { VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../src/VNodes/CharNode';
 import { Parser } from '../src/Parser';
+import { FragmentNode } from '../src/VNodes/FragmentNode';
+import { LineBreakNode } from '../src/VNodes/LineBreakNode';
+import { VElement } from '../src/VNodes/VElement';
 
 describe('utils', () => {
     describe('Parser', () => {
@@ -12,12 +14,12 @@ describe('utils', () => {
                 element.innerHTML = '<p>a</p>';
                 const vDocument = parser.parse(element);
 
-                expect(vDocument.root.type).to.equal(VNodeType.ROOT);
+                expect(vDocument.root instanceof FragmentNode).to.be.true;
                 expect(vDocument.root.children.length).to.equal(1);
-                const p = vDocument.root.children[0];
-                expect(p.type).to.equal(VNodeType.PARAGRAPH);
+                const p = vDocument.root.children[0] as VElement;
+                expect(p.htmlTag).to.equal('P');
                 expect(p.children.length).to.equal(1);
-                expect(p.children[0].type).to.equal(VNodeType.CHAR);
+                expect(p.children[0] instanceof CharNode).to.be.true;
                 expect((p.children[0] as CharNode).char).to.equal('a');
             });
             it('should parse a "p" tag with no content', () => {
@@ -35,7 +37,7 @@ describe('utils', () => {
                 const p = vDocument.root.firstChild();
                 // Only one <br> should be parsed.
                 expect(p.children.length).to.equal(2);
-                expect(p.lastChild().type).to.equal(VNodeType.LINE_BREAK);
+                expect(p.lastChild() instanceof LineBreakNode).to.be.true;
                 expect((p.lastChild().previousSibling() as CharNode).char).to.equal('a');
             });
             it('handles nested formatted nodes', () => {
@@ -43,10 +45,10 @@ describe('utils', () => {
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
                 const vDocument = parser.parse(element);
 
-                expect(vDocument.root.type).to.equal(VNodeType.ROOT);
+                expect(vDocument.root instanceof FragmentNode).to.be.true;
                 expect(vDocument.root.children.length).to.equal(1);
-                const p = vDocument.root.children[0];
-                expect(p.type).to.equal(VNodeType.PARAGRAPH);
+                const p = vDocument.root.children[0] as VElement;
+                expect(p.htmlTag).to.equal('P');
                 expect(p.children.length).to.equal(4);
                 const a = p.children[0] as CharNode;
                 expect(a instanceof CharNode).to.be.true;

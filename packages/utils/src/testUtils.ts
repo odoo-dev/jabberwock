@@ -2,7 +2,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
 import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from './range';
 import { DomRangeDescription } from '../../core/src/EventNormalizer';
-import { utils } from './utils';
+import { removeFormattingSpace } from './formattingSpace';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -91,7 +91,7 @@ function _parseTextualRange(testContainer: Node): DomRangeDescription {
 
             // Get the next node to check.
             next = _nextNode(node);
-            node.textContent = utils.removeFormatSpace(node);
+            node.textContent = removeFormattingSpace(node);
             // Remove the textual range node if it is empty.
             if (!node.textContent.length) {
                 node.parentNode.removeChild(node);

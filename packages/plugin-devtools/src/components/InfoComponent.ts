@@ -61,7 +61,7 @@ export class InfoComponent extends OwlUIComponent<{}> {
      *
      * @param vNode
      */
-    nodeCustomProperties(vNode: VNode): { [key: string]: string }[] {
+    nodeProperties(vNode: VNode): { [key: string]: string }[] {
         return Object.keys(vNode)
             .filter(key => !key.startsWith('_') && !this.customPropsBlacklist.includes(key))
             .sort()
@@ -104,13 +104,24 @@ export class InfoComponent extends OwlUIComponent<{}> {
     _propRepr(prop): string {
         let value = '' + prop;
         if (typeof prop === 'object') {
-            if (!prop || !Object.keys(prop).length) {
+            if (Array.isArray(prop) && !prop.length) {
+                value = '[]';
+            } else if (prop === null) {
+                value = 'null';
+            } else if (prop === undefined) {
+                value = 'undefined';
+            } else if (prop instanceof Set) {
+                const items = [];
+                prop.forEach(item => {
+                    items.push(item);
+                });
+                value = items.join('\n');
+            } else if (!prop || !Object.keys(prop).length) {
                 value = '{}';
             } else if (prop.toString === {}.toString) {
                 value = this._objectRepr(prop);
             }
-        }
-        if (typeof prop === 'string') {
+        } else if (typeof prop === 'string') {
             value = '"' + value + '"';
         }
         return value;

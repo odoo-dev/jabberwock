@@ -1,25 +1,6 @@
-import { VNode, VNodeType } from './VNode';
-import { utils } from '../../../utils/src/utils';
+import { VNode } from './VNode';
+import { removeFormattingSpace } from '../../../utils/src/formattingSpace';
 
-/**
- * This "phantom type" is there to ensure that the type `Char` is only generated
- * through the use of the function `makeChar`, so as to force going through the
- * length check.
- */
-type InternalChar<T> = { valid: true } & string;
-export type Char = InternalChar<{}>;
-/**
- * Return a Char type from a string of length 1 (validating the type).
- *
- * @param char
- */
-export function makeChar(char: string): Char {
-    if (char.length === 1) {
-        return char as Char;
-    } else {
-        throw new Error('Cannot make a Char out of anything else than a string of length 1.');
-    }
-}
 export interface FormatType {
     bold?: boolean;
     italic?: boolean;
@@ -28,14 +9,20 @@ export interface FormatType {
 export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
 export class CharNode extends VNode {
-    char: Char;
+    static readonly atomic = true;
+    readonly char: string;
     // Format
     bold = false;
     italic = false;
     underline = false;
     constructor(char: string, format: FormatType = {}) {
-        super(VNodeType.CHAR);
-        this.char = makeChar(char);
+        super();
+        if (char.length !== 1) {
+            throw new Error(
+                'Cannot make a CharNode out of anything else than a string of length 1.',
+            );
+        }
+        this.char = char;
         this.name = char;
         this.bold = !!format.bold;
         this.italic = !!format.italic;
@@ -46,17 +33,16 @@ export class CharNode extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): VNode | VNode[] | null {
+    static parse(node: Node): CharNode[] {
         if (node.nodeType === Node.TEXT_NODE) {
-            const vNodes: VNode[] = [];
-            const text = utils.removeFormatSpace(node);
+            const vNodes: CharNode[] = [];
+            const text = removeFormattingSpace(node);
             for (let i = 0; i < text.length; i++) {
                 const parsedVNode = new CharNode(text.charAt(i));
                 vNodes.push(parsedVNode);
             }
             return vNodes;
         }
-        return null;
     }
     /**
      * Return a new VNode with the same type and attributes as this VNode.
@@ -71,6 +57,22 @@ export class CharNode extends VNode {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * @override
+     */
+    toString(): string {
+        let string = '<' + this.constructor.name + ':' + this.name;
+        if (this.hasChildren()) {
+            string += '>';
+            this.children.forEach(child => {
+                string += child.toString();
+            });
+            string += '</' + this.constructor.name + ':' + this.name + '>';
+        } else {
+            string += '/>';
+        }
+        return string;
+    }
     get format(): FormatType {
         return {
             bold: this.bold,
@@ -82,14 +84,6 @@ export class CharNode extends VNode {
         this.bold = !!format.bold;
         this.italic = !!format.italic;
         this.underline = !!format.underline;
-    }
-    /**
-     * Return true if the VNode is atomic (ie. it may not have children).
-     *
-     * @override
-     */
-    get atomic(): boolean {
-        return true;
     }
     /**
      * Return the length of this VNode.
@@ -107,4 +101,13 @@ export class CharNode extends VNode {
         __current += this.char;
         return __current;
     }
+}
+
+/**
+ * Return true if the given node is a character node.
+ *
+ * @param node node to check
+ */
+export function isChar(node: VNode): boolean {
+    return node instanceof CharNode;
 }
