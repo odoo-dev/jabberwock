@@ -1,65 +1,68 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
-import { Predicate, isRange, isLeaf, not } from '../../../utils/src/Predicates';
-import { RelativePosition } from '../../../utils/src/range';
-import { utils, isWithRange } from '../../../utils/src/utils';
+import { Predicate } from '../../../utils/src/Predicates';
+import { RelativePosition, withMarkers, isWithMarkers } from '../../../utils/src/range';
+import { utils } from '../../../utils/src/utils';
 
 export enum VNodeType {
-    ROOT = 'root',
-    RANGE_TAIL = 'range_tail',
-    RANGE_HEAD = 'range_head',
-    PARAGRAPH = 'paragraph',
-    HEADING1 = 'heading1',
-    HEADING2 = 'heading2',
-    HEADING3 = 'heading3',
-    HEADING4 = 'heading4',
-    HEADING5 = 'heading5',
-    HEADING6 = 'heading6',
-    CHAR = 'char',
-    LINE_BREAK = 'line_break',
+    NODE = 'node',
+    MARKER = 'marker',
+    FRAGMENT = 'fragment',
+}
+export function isMarker(node: VNode): boolean {
+    return node.type === VNodeType.MARKER;
 }
 let id = 0;
 
 export class VNode {
-    readonly type: VNodeType | string;
+    static readonly atomic: boolean = false;
+    readonly type: VNodeType;
     readonly id = id;
-    parent: VNode | null = null;
+    parent: VNode;
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
     name: string;
-    htmlTag: string;
     _children: VNode[] = [];
 
-    constructor(type: VNodeType | string) {
-        this.type = type;
-        this.name = this.type;
+    // We need to include ...args in the constructor's arguments so it can be
+    // freely extended with different arguments.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    constructor(...arg: any[]) {
+        this.type = VNodeType.NODE;
+        this.name = this.constructor.name;
         id++;
     }
     /**
      * @override
      */
     toString(): string {
-        let string = this.constructor.name + '<' + this.type.toLowerCase();
+        let string = '<' + this.name;
         if (this.hasChildren()) {
             string += '>';
             this.children.forEach(child => {
                 string += child.toString();
             });
-            string += '<' + this.type.toLowerCase() + '>';
+            string += '</' + this.name + '>';
         } else {
             string += '/>';
         }
         return string;
+    }
+    /**
+     * A node is atomic when it is not allowed to have children in the
+     * abstraction. Its real-life children should be ignored in the abstraction.
+     * This getter allows us to call `this.atomic` on the extensions of `VNode`
+     * while declaring the `atomic` property in a static way.
+     */
+    get atomic(): boolean {
+        return (this.constructor as typeof VNode).atomic;
     }
 
     //--------------------------------------------------------------------------
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static parse(node: Node): VNode | VNode[] | null {
-        return null;
-    }
+    static parse: (node: Node) => VNode[];
     /**
      * Render the VNode to the given format.
      *
@@ -90,7 +93,7 @@ export class VNode {
      * Return a new VNode with the same type and attributes as this VNode.
      */
     shallowDuplicate(): VNode {
-        return new VNode(this.type);
+        return new VNode();
     }
 
     //--------------------------------------------------------------------------
@@ -98,19 +101,13 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if the VNode is atomic (ie. it may not have children).
-     */
-    get atomic(): boolean {
-        return false;
-    }
-    /**
      * Return the VNode's children.
      */
     get children(): VNode[] {
-        if (isWithRange) {
+        if (isWithMarkers) {
             return this._children;
         }
-        return this._children.filter(not(isRange));
+        return this._children.filter(child => !isMarker(child));
     }
     /**
      * Return the length of this VNode.
@@ -295,7 +292,7 @@ export class VNode {
      * @param [predicate]
      */
     previousSibling(predicate?: Predicate): VNode {
-        const previousSibling = (this.parent && this.parent._childBefore(this)) || undefined;
+        const previousSibling = this.parent && this.parent._adjacentChild(this, 'previous');
         if (previousSibling && predicate) {
             return previousSibling.walk((node: VNode) => node.previousSibling(), predicate);
         } else {
@@ -309,7 +306,7 @@ export class VNode {
      * @param [predicate]
      */
     nextSibling(predicate?: Predicate): VNode {
-        const nextSibling = (this.parent && this.parent._childAfter(this)) || undefined;
+        const nextSibling = this.parent && this.parent._adjacentChild(this, 'next');
         if (nextSibling && predicate) {
             return nextSibling.walk((node: VNode) => node.nextSibling(), predicate);
         } else {
@@ -335,7 +332,7 @@ export class VNode {
         if (previous && predicate) {
             return previous.walk((node: VNode) => node.previous(), predicate);
         } else {
-            return previous || undefined;
+            return previous;
         }
     }
     /**
@@ -359,7 +356,7 @@ export class VNode {
             while (ancestor && !ancestor.nextSibling()) {
                 ancestor = ancestor.parent;
             }
-            next = (ancestor && ancestor.nextSibling()) || undefined;
+            next = ancestor && ancestor.nextSibling();
         }
         if (next && predicate) {
             return next.walk((node: VNode) => node.next(), predicate);
@@ -480,7 +477,7 @@ export class VNode {
      * @param reference
      */
     insertBefore(node: VNode, reference: VNode): VNode {
-        return utils.withRange(() => {
+        return withMarkers(() => {
             const index = this.indexOf(reference);
             if (index < 0) {
                 throw new Error('The given VNode is not a child of this VNode');
@@ -496,7 +493,7 @@ export class VNode {
      * @param reference
      */
     insertAfter(node: VNode, reference: VNode): VNode {
-        return utils.withRange(() => {
+        return withMarkers(() => {
             const index = this.indexOf(reference);
             if (index < 0) {
                 throw new Error('The given VNode is not a child of this VNode');
@@ -516,7 +513,7 @@ export class VNode {
      * @param child
      */
     removeChild(child: VNode): VNode {
-        return utils.withRange(() => {
+        return withMarkers(() => {
             const index = this.indexOf(child);
             if (index < 0) {
                 throw new Error('The given VNode is not a child of this VNode');
@@ -533,7 +530,7 @@ export class VNode {
      */
     splitAt(child: VNode): VNode {
         const nodesToMove = [child];
-        nodesToMove.push(...utils.withRange(() => child.nextSiblings()));
+        nodesToMove.push(...withMarkers(() => child.nextSiblings()));
         const duplicate = this.shallowDuplicate();
         this.after(duplicate);
         nodesToMove.forEach(sibling => duplicate.append(sibling));
@@ -545,31 +542,23 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the child's previous sibling.
+     * Return the child's next (`direction === 'forward'`) or previous
+     * (`direction === 'backward'`) sibling.
      *
      * @param child
+     * @param direction ('backward' for the previous child,
+     *                   'forward' for the next child)
      */
-    _childBefore(child: VNode): VNode {
-        const childBefore = utils.withRange(() => this.nthChild(this.indexOf(child) - 1));
-        // Ignore range nodes by default.
-        if (!isWithRange && childBefore && isRange(childBefore)) {
-            return this._childBefore(childBefore);
+    _adjacentChild(child: VNode, direction: 'previous' | 'next'): VNode {
+        const adjacentChild = withMarkers(() => {
+            const index = this.indexOf(child);
+            return this.nthChild(direction === 'next' ? index + 1 : index - 1);
+        });
+        // Ignore marker nodes by default.
+        if (!isWithMarkers && adjacentChild && isMarker(adjacentChild)) {
+            return this._adjacentChild(adjacentChild, direction);
         } else {
-            return childBefore;
-        }
-    }
-    /**
-     * Return the child's next sibling.
-     *
-     * @param child
-     */
-    _childAfter(child: VNode): VNode {
-        const childAfter = utils.withRange(() => this.nthChild(this.indexOf(child) + 1));
-        // Ignore range nodes by default.
-        if (!isWithRange && childAfter && isRange(childAfter)) {
-            return this._childAfter(childAfter);
-        } else {
-            return childAfter;
+            return adjacentChild;
         }
     }
     /**
@@ -627,7 +616,7 @@ export class VNode {
      */
     _insertAtIndex(child: VNode, index: number): VNode {
         if (child.parent) {
-            const currentIndex = utils.withRange(() => child.parent.indexOf(child));
+            const currentIndex = withMarkers(() => child.parent.indexOf(child));
             if (index && child.parent === this && currentIndex < index) {
                 index--;
             }
@@ -646,4 +635,14 @@ export class VNode {
         this._children.splice(index, 1);
         return this;
     }
+}
+
+/**
+ * Return true if the given node is a leaf in the VDocument, that is a node that
+ * has no children.
+ *
+ * @param node node to check
+ */
+export function isLeaf(node: VNode): boolean {
+    return !node.hasChildren();
 }

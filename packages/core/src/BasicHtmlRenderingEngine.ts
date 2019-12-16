@@ -1,4 +1,5 @@
 import { VNode } from './VNodes/VNode';
+import { VElement } from './VNodes/VElement';
 
 /**
  * Renderers exist to render a node into another, different format. Each
@@ -20,7 +21,7 @@ export const BasicHtmlRenderingEngine = {
      *
      * @param node
      */
-    render: function(node: VNode): DocumentFragment {
+    render: function(node: VElement): DocumentFragment {
         const tagName = node.htmlTag;
         const fragment = document.createDocumentFragment();
         const renderedElement = document.createElement(tagName);

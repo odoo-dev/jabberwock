@@ -1,9 +1,9 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { isRange } from '../../../../packages/utils/src/Predicates';
-import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
+import { VNode } from '../../../core/src/VNodes/VNode';
 import { VRangeDescription } from '../../../core/src/VRange';
-import { Direction } from '../../../utils/src/range';
+import { Direction, RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../../../utils/src/range';
+import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
 
 interface NodeProps {
     isRoot: boolean;
@@ -119,10 +119,13 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      * @returns {string}
      */
     _getNodeRepr(node: VNode): string {
-        if (isRange(node)) {
-            return node.type === VNodeType.RANGE_TAIL ? '[' : ']';
+        if (node === this.env.editor.vDocument.range.anchor) {
+            return RANGE_TAIL_CHAR;
         }
-        if (node.type && node.type === VNodeType.LINE_BREAK) {
+        if (node === this.env.editor.vDocument.range.focus) {
+            return RANGE_HEAD_CHAR;
+        }
+        if (node instanceof LineBreakNode) {
             return '↲';
         }
         if (node.name) {

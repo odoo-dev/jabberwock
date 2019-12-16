@@ -7,12 +7,10 @@ import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
-import { VNode } from './VNodes/VNode';
 
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
-    replaceDefaultNodes?: Array<typeof VNode>;
 }
 
 export class JWEditor {
@@ -109,24 +107,11 @@ export class JWEditor {
         Object.keys(plugin.commandHooks).forEach(key => {
             this.dispatcher.registerHook(key, plugin.commandHooks[key]);
         });
+        // Register the nodes of this plugin.
+        if (pluginClass.nodes.length) {
+            this.parser.addVNode(...pluginClass.nodes);
+        }
     }
-    /**
-     * Add a custom VNode to the ones that this Parser can handle.
-     *
-     * @param VNodeClasses
-     */
-    addCustomNode(VNodeClass: typeof VNode): void {
-        this.parser.addCustomVNode(VNodeClass);
-    }
-    /**
-     * Add an array of custom VNodes to the ones that this Parser can handle.
-     *
-     * @param VNodeClasses
-     */
-    addCustomNodes(VNodeClasses: Array<typeof VNode>): void {
-        this.parser.addCustomVNodes(VNodeClasses);
-    }
-
     /**
      * Load the given config in this editor instance.
      *
@@ -136,9 +121,6 @@ export class JWEditor {
         if (config.debug) {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
-        }
-        if (config.replaceDefaultNodes) {
-            this.parser = new Parser(config.replaceDefaultNodes);
         }
     }
 

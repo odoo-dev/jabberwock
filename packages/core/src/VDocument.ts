@@ -2,8 +2,8 @@ import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
-import { utils } from '../../utils/src/utils';
-import { RootNode } from './VNodes/RootNode';
+import { withMarkers } from '../../utils/src/range';
+import { FragmentNode } from './VNodes/FragmentNode';
 
 export class VDocument {
     root: VNode;
@@ -15,7 +15,7 @@ export class VDocument {
      */
     formatCache: FormatType = null;
 
-    constructor(root: RootNode) {
+    constructor(root: FragmentNode) {
         this.root = root;
     }
 
@@ -98,7 +98,7 @@ export class VDocument {
      * orphaned children into the parent of the first removed node.
      */
     deleteSelection(): void {
-        utils.withRange(() => {
+        withMarkers(() => {
             const nodes = this.range.selectedNodes;
             if (!nodes.length) return;
             this.range.collapse(this.range.start); // Reset the direction of the range.

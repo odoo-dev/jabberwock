@@ -1,11 +1,13 @@
 import JWEditor from './JWEditor';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
+import { VNode } from './VNodes/VNode';
 
 export interface JWPluginConfig {
     name?: string;
 }
 
 export class JWPlugin {
+    static readonly nodes: Array<typeof VNode> = [];
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
