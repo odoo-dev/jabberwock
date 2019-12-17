@@ -1,4 +1,4 @@
-import { Format } from '../../utils/src/Format';
+import { formatMap } from '../../plugin-format/src/formatMap';
 import { VNode } from './VNodes/VNode';
 
 const fromDom = new Map<Node, VNode[]>();
@@ -62,7 +62,7 @@ export const VDocumentMap = {
         // Only if element is not a format and not already in the map to prevent
         // overriding a VNode if it is representing by multiple Nodes. Only the
         // first Node is mapped to the VNode.
-        if (!Format.tags.includes(domNode.nodeName) && !toDom.has(vNode)) {
+        if (!formatMap.tags.includes(domNode.nodeName) && !toDom.has(vNode)) {
             toDom.set(vNode, [domNode, offset]);
         }
     },

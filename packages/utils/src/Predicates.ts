@@ -13,4 +13,4 @@ export function not(predicate: Predicate): Predicate {
 
 export { isLeaf } from '../../core/src/VNodes/VNode';
 export { isMarker } from '../../core/src/VNodes/VNode';
-export { isChar } from '../../core/src/VNodes/CharNode';
+export { isChar } from '../../plugin-char/src/VNodes/CharNode';

@@ -1,6 +1,8 @@
 import JWEditor from './JWEditor';
 import { ParsingFunction } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
+import { VNode } from './VNodes/VNode';
+import { Attribute } from './VNodes/Attribute';
 
 export interface JWPluginConfig {
     name?: string;
@@ -19,4 +21,5 @@ export class JWPlugin {
         // todo: namespace
         this.name = options.name || this.constructor.name;
     }
+    static parse: (node: Node) => VNode[] | Set<Attribute>;
 }

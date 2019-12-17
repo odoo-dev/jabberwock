@@ -1,4 +1,4 @@
-import { VNode, VNodeType } from './VNode';
+import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 
 export class RangeNode extends VNode {
     static readonly atomic = true;

@@ -1,6 +1,7 @@
-import { VNode } from './VNode';
-import { VElement } from './VElement';
+import { VNode } from '../../../core/src/VNodes/VNode';
+import { VElement } from '../../../core/src/VNodes/VElement';
 import { RelativePosition } from '../../../utils/src/range';
+import { HTMLRendering } from '../../../core/src/BasicHtmlRenderingEngine';
 
 export class LineBreakNode extends VElement {
     static readonly atomic = true;
@@ -12,11 +13,6 @@ export class LineBreakNode extends VElement {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): LineBreakNode[] {
-        if (node.nodeName === 'BR') {
-            return [new LineBreakNode()];
-        }
-    }
     /**
      * Render the VNode to the given format.
      *
@@ -25,10 +21,10 @@ export class LineBreakNode extends VElement {
      */
     render<T>(to = 'html'): T {
         const t = this.renderingEngines[to].render(this) as T;
-        if (to === 'html' && !this.nextSibling() && t instanceof DocumentFragment) {
+        if (to === 'html' && !this.nextSibling()) {
             // If a LINE_BREAK has no next sibling, it must be rendered as two
             // BRs in order for it to be visible.
-            t.appendChild(document.createElement('br'));
+            ((t as unknown) as HTMLRendering).fragment.appendChild(document.createElement('br'));
         }
         return t;
     }

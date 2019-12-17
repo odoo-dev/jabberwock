@@ -2,6 +2,7 @@ import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRendering
 import { Predicate } from '../../../utils/src/Predicates';
 import { RelativePosition, withMarkers, isWithMarkers } from '../../../utils/src/range';
 import { utils } from '../../../utils/src/utils';
+import { Attribute, AttributeName, AttributeValue } from './Attribute';
 
 export enum VNodeType {
     NODE = 'node',
@@ -15,13 +16,14 @@ let id = 0;
 
 export class VNode {
     static readonly atomic: boolean = false;
-    readonly type: VNodeType;
+    readonly type: VNodeType = VNodeType.NODE;
     readonly id = id;
     parent: VNode;
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
-    name: string;
+    name = this.constructor.name;
+    attributes: Map<AttributeName, Attribute> = new Map();
     _children: VNode[] = [];
 
     constructor() {
@@ -44,12 +46,18 @@ export class VNode {
     get atomic(): boolean {
         return (this.constructor as typeof VNode).atomic;
     }
+    get attributesObject(): { [key: string]: AttributeValue } {
+        const result = {};
+        this.attributes.forEach((attribute, name) => {
+            result[name] = attribute.value;
+        });
+        return result;
+    }
 
     //--------------------------------------------------------------------------
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse: (node: Node) => VNode[];
     /**
      * Render the VNode to the given format.
      *

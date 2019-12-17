@@ -11,7 +11,7 @@ Object.keys(formatToTag).forEach(key => {
 
 const tags = Object.keys(formatToTag).map(key => formatToTag[key]);
 
-export const Format = {
+export const formatMap = {
     tags: Object.freeze(tags),
     fromTag: (tag: string): string => formatFromTag[tag],
     toTag: (format: string): string => formatToTag[format],

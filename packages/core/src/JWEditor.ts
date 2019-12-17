@@ -96,21 +96,26 @@ export class JWEditor {
      *
      * @param pluginClass
      */
-    addPlugin(pluginClass: typeof JWPlugin): void {
-        const plugin: JWPlugin = new pluginClass(this);
-        this.pluginsRegistry.push(plugin);
-        // Register the commands of this plugin.
-        Object.keys(plugin.commands).forEach(key => {
-            this.dispatcher.registerCommand(key, plugin.commands[key]);
+    addPlugin(...pluginClasses: Array<typeof JWPlugin>): void {
+        pluginClasses.forEach(pluginClass => {
+            const plugin: JWPlugin = new pluginClass(this);
+            this.pluginsRegistry.push(plugin);
+            // Register the commands of this plugin.
+            Object.keys(plugin.commands).forEach(key => {
+                this.dispatcher.registerCommand(key, plugin.commands[key]);
+            });
+            // Register the hooks of this plugin.
+            Object.keys(plugin.commandHooks).forEach(key => {
+                this.dispatcher.registerHook(key, plugin.commandHooks[key]);
+            });
+            // Register the nodes of this plugin.
+            if (pluginClass.nodes.length) {
+                this.parser.addVNode(...pluginClass.nodes);
+            }
+            if (pluginClass.parse) {
+                this.parser.addParseMethod(pluginClass.parse);
+            }
         });
-        // Register the hooks of this plugin.
-        Object.keys(plugin.commandHooks).forEach(key => {
-            this.dispatcher.registerHook(key, plugin.commandHooks[key]);
-        });
-        // Register the parsing functions of this plugin.
-        if (pluginClass.parsingFunctions.length) {
-            this.parser.addParsingFunction(...pluginClass.parsingFunctions);
-        }
     }
     /**
      * Load the given config in this editor instance.

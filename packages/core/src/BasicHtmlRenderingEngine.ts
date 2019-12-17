@@ -15,23 +15,32 @@ export interface RenderingEngine {
     render: (node: VNode) => {};
 }
 
+export type HTMLRendering = { fragment: DocumentFragment; vNodes: VNode[] };
+
 export const BasicHtmlRenderingEngine = {
     /**
      * Render the given node to HTML.
      *
      * @param node
      */
-    render: function(node: VElement): DocumentFragment {
+    render: function(node: VElement): HTMLRendering {
         const tagName = node.htmlTag;
         const fragment = document.createDocumentFragment();
-        const renderedElement = document.createElement(tagName);
-        fragment.appendChild(renderedElement);
-
-        // If a node is empty but could accomodate children,
-        // fill it to make it visible.
-        if (!node.hasChildren() && !node.atomic) {
-            renderedElement.appendChild(document.createElement('BR'));
+        let renderedElements = [document.createElement(tagName)] as Node[];
+        if (node.attributes.size) {
+            node.attributes.forEach(attribute => {
+                renderedElements = attribute.render(renderedElements);
+            });
         }
-        return fragment;
+        renderedElements.forEach(element => {
+            fragment.appendChild(element);
+
+            // If a node is empty but could accomodate children,
+            // fill it to make it visible.
+            if (!node.hasChildren() && !node.atomic) {
+                element.appendChild(document.createElement('BR'));
+            }
+        });
+        return { fragment: fragment, vNodes: [node] };
     },
 };

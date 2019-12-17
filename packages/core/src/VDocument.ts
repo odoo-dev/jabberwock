@@ -1,9 +1,10 @@
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
+import { CharNode } from '../../plugin-char/src/VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
 import { withMarkers } from '../../utils/src/range';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { AttributeName, Attribute } from './VNodes/Attribute';
 
 export class VDocument {
     root: VNode;
@@ -13,7 +14,7 @@ export class VDocument {
      * property.
      * This value is reset each time the range change in a document.
      */
-    formatCache: FormatType = null;
+    formatCache: Map<AttributeName, Attribute> = null;
 
     constructor(root: FragmentNode) {
         this.root = root;
@@ -57,7 +58,7 @@ export class VDocument {
      * @param text
      */
     insertText(text: string): void {
-        const format = this._getCurrentFormat();
+        // const format = this._getCurrentFormat();
         if (!this.range.isCollapsed()) {
             // Remove the contents of the selection if needed.
             this.deleteSelection();
@@ -65,7 +66,7 @@ export class VDocument {
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new CharNode(char, format);
+            const vNode = new CharNode(char);
             this.range.start.before(vNode);
         });
         this.formatCache = null;
@@ -74,8 +75,8 @@ export class VDocument {
     /**
      * Get the format for the next insertion.
      */
-    _getCurrentFormat(): FormatType {
-        let format: FormatType = {};
+    _getCurrentFormat(): Map<AttributeName, Attribute> {
+        let attributes: Map<AttributeName, Attribute> = new Map();
         if (this.formatCache) {
             return this.formatCache;
         } else if (this.range.isCollapsed()) {
@@ -83,14 +84,20 @@ export class VDocument {
                 this.range.start.nextSibling(isChar) || {
                     format: {},
                 }) as CharNode;
-            format = { ...charToCopyFormat.format };
+            attributes = new Map({ ...charToCopyFormat.attributes });
         } else {
             const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
-            FORMAT_TYPES.forEach(formatName => {
-                format[formatName] = selectedChars.some(char => char.format[formatName]);
+            attributes.forEach((attribute, attributeName) => {
+                const newAttribute = attribute.copy();
+                if (typeof newAttribute.value === 'boolean') {
+                    newAttribute.value = selectedChars.some(char =>
+                        char.attributes.get(attributeName),
+                    );
+                }
+                attributes.set(attributeName, newAttribute);
             });
         }
-        return format;
+        return attributes;
     }
 
     /**
@@ -143,7 +150,7 @@ export class VDocument {
 
             // If there is no char with the format `formatName` in the range, set the format to true
             // for all nodes.
-            if (!selectedChars.every(char => char.format[formatName])) {
+            if (!selectedChars.every(char => char.attributes.get(formatName))) {
                 selectedChars.forEach(char => {
                     char[formatName] = true;
                 });

@@ -1,11 +1,9 @@
 import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
-import { isMarker, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNodes/VNode';
-import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
-import { CharNode } from './VNodes/CharNode';
 import { RelativePosition } from '../../utils/src/range';
+import { HTMLRendering } from './BasicHtmlRenderingEngine';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
@@ -37,38 +35,12 @@ export class Renderer {
                 parentNode: fragment,
             };
             do {
-                context = this._renderVNode(context);
+                context = this._renderNext(context);
             } while ((context = this._nextRenderingContext(context)));
         }
         target.appendChild(fragment);
 
         this._renderRange(range, target);
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Return true if `a` has the same format properties as `b`.
-     *
-     * @param a
-     * @param b
-     */
-    _isSameTextNode(a: VNode, b: VNode): boolean {
-        if (isMarker(a) || isMarker(b)) {
-            // A Marker node is always considered to be part of the same text
-            // node as another node in the sense that the text node must not
-            // be broken up just because it contains a marker.
-            return true;
-        } else if (!isChar(a) || !isChar(b)) {
-            // Nodes that are not valid in a text node must end the text node.
-            return false;
-        } else {
-            // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...(a as CharNode).format, ...(b as CharNode).format });
-            return formats.every(k => !!(a as CharNode).format[k] === !!(b as CharNode).format[k]);
-        }
     }
     /**
      * Return the next rendering context, based on the given context. This
@@ -104,69 +76,6 @@ export class Renderer {
                 return;
             }
         }
-        return context;
-    }
-    /**
-     * Render the element matching the current vNode and append it.
-     *
-     * @param context
-     */
-    _renderElement(context: RenderingContext): RenderingContext {
-        const fragment = context.currentVNode.render<DocumentFragment>('html');
-        Array.from(fragment.childNodes).forEach((element: Node): void => {
-            context.parentNode.appendChild(element);
-            VDocumentMap.set(context.currentVNode, element);
-            element.childNodes.forEach(child => VDocumentMap.set(context.currentVNode, child));
-        });
-        return context;
-    }
-    /**
-     * Render a text node, based on consecutive char nodes.
-     *
-     * @param context
-     */
-    _renderTextNode(context: RenderingContext): RenderingContext {
-        // If the node has a format, render the format nodes first.
-        const renderedFormats = [];
-        const firstChar = context.currentVNode as CharNode;
-        Object.keys(firstChar.format).forEach(type => {
-            if (firstChar.format[type]) {
-                const formatNode = document.createElement(Format.toTag(type));
-                renderedFormats.push(formatNode);
-                context.parentNode.appendChild(formatNode);
-                // Update the parent so the text is inside the format node.
-                context.parentNode = formatNode;
-            }
-        });
-
-        // Consecutive compatible char nodes are rendered as a single text node.
-        let text = '' + firstChar.char;
-        let next = firstChar.nextSibling();
-        const charNodes = [firstChar];
-        while (next && this._isSameTextNode(firstChar, next)) {
-            context.currentVNode = next;
-            if (next instanceof CharNode) {
-                charNodes.push(next);
-                if (next.char === ' ' && text[text.length - 1] === ' ') {
-                    // Browsers don't render consecutive space chars otherwise.
-                    text += '\u00A0';
-                } else {
-                    text += next.char;
-                }
-            }
-            next = next.nextSibling();
-        }
-        // Browsers don't render leading/trailing space chars otherwise.
-        text = text.replace(/^ | $/g, '\u00A0');
-
-        // Create and append the text node, update the VDocumentMap.
-        const renderedNode = document.createTextNode(text);
-        context.parentNode.appendChild(renderedNode);
-        charNodes.forEach((charNode, nodeIndex) => {
-            VDocumentMap.set(charNode, renderedNode, nodeIndex);
-            renderedFormats.forEach(formatNode => VDocumentMap.set(charNode, formatNode));
-        });
-
         return context;
     }
     /**
@@ -222,12 +131,24 @@ export class Renderer {
      *
      * @param context
      */
-    _renderVNode(context: RenderingContext): RenderingContext {
-        if (isChar(context.currentVNode)) {
-            context = this._renderTextNode(context);
-        } else {
-            context = this._renderElement(context);
-        }
+    _renderNext(context: RenderingContext): RenderingContext {
+        const rendering = context.currentVNode.render<HTMLRendering>('html');
+        this._addRenderedNodes(
+            Array.from(rendering.fragment.childNodes) as Node[],
+            rendering.vNodes,
+            context.parentNode,
+        );
+        context.currentVNode = rendering.vNodes[rendering.vNodes.length - 1];
         return context;
+    }
+    // Append the rendered nodes to the DOM and map them.
+    _addRenderedNodes(domNodes: Node[], vNodes: VNode[], parent: Node): void {
+        domNodes.forEach(renderedNode => {
+            vNodes.forEach((vNode, index) => {
+                parent.appendChild(renderedNode);
+                VDocumentMap.set(vNode, renderedNode, index);
+                this._addRenderedNodes(Array.from(renderedNode.childNodes), vNodes, renderedNode);
+            });
+        });
     }
 }

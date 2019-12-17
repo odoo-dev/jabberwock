@@ -1,12 +1,11 @@
-import JWEditor from '../../packages/core/src/JWEditor';
+import basicEditor from '../../packages/bundles/basicEditor';
 import { jabberwocky } from '../utils/jabberwocky';
 import './index.css';
 
-const editor = new JWEditor();
-jabberwocky.init(editor.editable);
+jabberwocky.init(basicEditor.editable);
 
-editor.loadConfig({
+basicEditor.loadConfig({
     debug: true,
 });
 
-editor.start();
+basicEditor.start();
