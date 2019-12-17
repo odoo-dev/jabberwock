@@ -116,8 +116,14 @@ export class Memory {
             getSlice: (): Record<typeLinkedID, MemoryType> => this._slice,
             getSliceValue: (ID: typeLinkedID): MemoryCompiled => this._getValue(this._sliceKey, ID),
             isFrozen: (): boolean => this._sliceReference.children.length > 0,
+            // Is currently dirty (we may have switched from a slice to a very
+            // different one, thus setting "dirty" on a lot of objects along the
+            // way, all the ones that were modified at one point)
+            // Is your proxy unsynchronized
             isDirty: (ID: typeLinkedID): boolean => this._invalideCache[ID],
+            // Mark as "modified" in this slice
             markDirty: (ID: typeLinkedID): boolean => (this._sliceInvalideCache[ID] = true),
+            // I am the proxy, I tell you I synchornized the value
             markAsLoaded: (ID: typeLinkedID): boolean => (this._invalideCache[ID] = false),
             deleteSliceProxyParent: this._deleteSliceProxyParent.bind(this),
             addSliceProxyParent: this._addSliceProxyParent.bind(this),

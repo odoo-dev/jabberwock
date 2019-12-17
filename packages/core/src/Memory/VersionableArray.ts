@@ -19,14 +19,21 @@ type uniqSec = number[];
 type uniqID = string;
 type uniqIDMemoryTypeValues = Record<uniqID, MemoryTypeValues>;
 
+// Type that the memory handles in practice. This is how it is stored in memory.
 export class MemoryTypeArray {
     patch: uniqIDMemoryTypeValues = {};
     props: Record<string, MemoryTypeValues | Function> = {};
 }
+
+// Output of memory given to proxy to operate
 export class MemoryArrayCompiledWithPatch {
-    compiled: uniqIDMemoryTypeValues;
-    props: uniqIDMemoryTypeValues;
-    patch: MemoryTypeArray;
+    // the proxy has to differentiate between what was already there and what is
+    // being done in the current slice because deleting a key does not yield the
+    // same result if the key was already there before this slice or not (it
+    // would be marked as "removed" or ignored if wasn't already there.)
+    compiled: uniqIDMemoryTypeValues; // array as it appears in the slice right before the current one "array as of t-1"
+    props: uniqIDMemoryTypeValues; // new properties on the array at current time t
+    patch: MemoryTypeArray; // very last patch at current time t
     constructor(
         compiled: uniqIDMemoryTypeValues,
         props: uniqIDMemoryTypeValues,
