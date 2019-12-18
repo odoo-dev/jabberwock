@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { Memory } from '../../src/Memory/Memory';
 import { makeVersionable } from '../../src/Memory/Versionable';
 import { VersionableArray } from '../../src/Memory/VersionableArray';
+import { memoryProxyPramsKey } from '../../src/Memory/const';
 import { VersionableObject } from '../../src/Memory/VersionableObject';
 
 let ID = 0;
@@ -185,6 +186,47 @@ describe('core', () => {
                 }
                 const dt = Date.now() - d;
                 expect(dt).to.lessThan(10, 'Time to use 1000 * indexOf');
+            });
+            it('diff one move in array with 2000 items', () => {
+                const memory = new Memory();
+                memory.create('1');
+                memory.switchTo('1');
+                const array = new VersionableArray();
+                const ID = array[memoryProxyPramsKey].ID;
+                for (let k = 0; k < 2000; k++) {
+                    array.push(k);
+                }
+                memory.linkToMemory(array);
+
+                memory.create('test');
+                memory.switchTo('test');
+
+                const items = array.splice(500, 1);
+                array.splice(10, 0, ...items);
+
+                const diff = memory.diff('1', 'test');
+                const changes = {};
+                changes[ID + '•values•9,1'] = {
+                    path: [[array, 'values', '9,1']],
+                    type: 'values',
+                    new: 500,
+                };
+                changes[ID + '•values•500'] = {
+                    path: [[array, 'values', '500']],
+                    type: 'values',
+                    old: 500,
+                };
+                expect(diff.changes).to.deep.equal(changes);
+
+                const d = Date.now();
+                for (let k = 0; k < 10; k++) {
+                    memory.diff('1', 'test');
+                }
+                const dt = Date.now() - d;
+                setTimeout(() => {
+                    memory.diff('1', 'test');
+                }, 1000);
+                expect(dt).to.lessThan(50);
             });
         });
         describe('versionableNode', () => {

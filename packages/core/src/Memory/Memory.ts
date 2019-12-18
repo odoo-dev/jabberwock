@@ -1,9 +1,10 @@
-import { MemoryVersionable, typeLinkedID, MemoryCompiled } from './Versionable';
+import { MemoryVersionable, LinkedID, typeLinkedID, MemoryCompiled } from './Versionable';
 import { removedItem, memoryProxyPramsKey, NotVersionableErrorMessage } from './const';
 
 import { MemoryTypeObject, MemoryCompiledObject } from './VersionableObject';
 import { MemoryTypeArray, MemoryArrayCompiledWithPatch } from './VersionableArray';
 import { MemoryTypeSet, MemoryCompiledSet } from './VersionableSet';
+import { MemoryDiffArray } from './MemoryDiffArray';
 
 type sliceKey = string;
 export type AllowedMemory = MemoryTypeValues | AllowedObject;
@@ -161,6 +162,71 @@ export class Memory {
     create(sliceKey: sliceKey): Memory {
         this._create(sliceKey, this._sliceKey);
         return this;
+    }
+    diff(fromSliceKey: sliceKey, toSliceKey: sliceKey): Diff {
+        if (!(fromSliceKey in this._slicesReference)) {
+            throw new Error('You must create the "' + fromSliceKey + '" slice before try to diff');
+        }
+        if (!(toSliceKey in this._slicesReference)) {
+            throw new Error('You must create the "' + toSliceKey + '" slice before try to diff');
+        }
+        const ancestorKey = this._getCommonAncestor(fromSliceKey, toSliceKey);
+        const path = this._getChangesPath(fromSliceKey, toSliceKey, ancestorKey);
+        const dirtyProxIDs: Set<typeLinkedID> = new Set();
+        // for each slice in the path, look at the properties/values that have been changed in memory
+        while (path.length) {
+            const pathKey = path.pop();
+            Object.keys(this._slices[pathKey]).forEach(linkedID => {
+                dirtyProxIDs.add(+linkedID as typeLinkedID);
+            });
+        }
+
+        const changes: PreDiffChange[] = [];
+
+        dirtyProxIDs.forEach((ID: typeLinkedID) => {
+            const path = this._getAttributePath(toSliceKey, ID);
+            if (!path.length) {
+                return;
+            }
+            const newPatch = this._getPatches(ancestorKey, toSliceKey, ID);
+            const oldPatch = this._getPatches(ancestorKey, fromSliceKey, ID);
+            if (!newPatch && !oldPatch) {
+                return;
+            }
+            if ((newPatch || oldPatch).type === 'set') {
+                changes.push(
+                    ...this._diffSet(
+                        path,
+                        oldPatch && oldPatch.type === 'set' && oldPatch.patches,
+                        newPatch && newPatch.patches,
+                        ancestorKey,
+                        ID,
+                    ),
+                );
+            } else if ((newPatch || oldPatch).type === 'array') {
+                changes.push(
+                    ...this._diffArray(
+                        path,
+                        oldPatch && oldPatch.type === 'array' && oldPatch.patches,
+                        newPatch && newPatch.patches,
+                        ancestorKey,
+                        ID,
+                    ),
+                );
+            } else {
+                changes.push(
+                    ...this._diffObject(
+                        path,
+                        oldPatch && oldPatch.type === 'object' && oldPatch.patches,
+                        newPatch && newPatch.patches,
+                        ancestorKey,
+                        ID,
+                    ),
+                );
+            }
+        });
+
+        return this._addPathOnChanges(changes, toSliceKey);
     }
     linkToMemory(proxy: AllowedObject): void {
         const params = proxy[memoryProxyPramsKey];
@@ -411,6 +477,241 @@ export class Memory {
         this._slicesLinkedParentOfProxy[sliceKey] = {};
         this._slicesInvalideCache[sliceKey] = {};
         return ref;
+    }
+    _diffArray(
+        parented: PrePath[],
+        oldPatches: patches,
+        newPatches: patches,
+        ancestorKey: sliceKey,
+        ID: typeLinkedID,
+    ): PreDiffChange[] {
+        const patches = this._getPatches(undefined, ancestorKey, ID);
+        const diff = new MemoryDiffArray(
+            parented,
+            ID,
+            oldPatches,
+            newPatches,
+            patches ? this._compiledArrayPatches(patches.patches) : { patch: {}, props: {} },
+            this._diffValueToObject.bind(this),
+        );
+        return diff.getChanges();
+    }
+    _diffObject(
+        parented: PrePath[],
+        oldPatches: patches,
+        newPatches: patches,
+        ancestorKey: sliceKey,
+        ID: typeLinkedID,
+    ): PreDiffChange[] {
+        const changes: PreDiffChange[] = [];
+        const ancestorValue = this._getValue(ancestorKey, ID);
+        const newValue = Object.assign({}, ancestorValue);
+        while (newPatches && newPatches.length) {
+            Object.assign(newValue, newPatches.pop().value);
+        }
+        const oldValue = Object.assign({}, ancestorValue);
+        while (oldPatches && oldPatches.length) {
+            Object.assign(oldValue, oldPatches.pop().value);
+        }
+        Object.keys(newValue).forEach(key => {
+            if (oldValue[key] === newValue[key]) {
+                return;
+            }
+            const change: PreDiffChange = {
+                paths: parented.map(
+                    (path): PrePath => {
+                        return path.concat([[ID, 'attributes', key]]) as PrePath;
+                    },
+                ),
+                type: 'attribute',
+            };
+            if (key in oldValue && oldValue[key] !== removedItem) {
+                change.old = this._diffValueToObject(oldValue[key]);
+            }
+            if (newValue[key] !== removedItem) {
+                change.new = this._diffValueToObject(newValue[key]);
+            }
+            changes.push(change);
+        });
+        Object.keys(oldValue).forEach(key => {
+            if (oldValue[key] === removedItem || key in newValue) {
+                return;
+            }
+            const change: PreDiffChange = {
+                paths: parented.map(
+                    (path): PrePath => {
+                        return path.concat([[ID, 'attributes', key]]) as PrePath;
+                    },
+                ),
+                type: 'attribute',
+                old: this._diffValueToObject(oldValue[key]),
+            };
+            changes.push(change);
+        });
+        return changes;
+    }
+    _addPathOnChanges(changes: PreDiffChange[], toSliceKey: sliceKey): Diff {
+        const allChanges: Record<string, DiffChange> = {};
+        const arrays: Record<string, string[]> = {};
+
+        changes.forEach(change => {
+            const alterateChange = {
+                paths: [],
+                type: change.type,
+            } as DiffChange;
+
+            if ('old' in change) {
+                alterateChange.old = change.old;
+            }
+            if ('new' in change) {
+                alterateChange.new = change.new;
+            }
+            if ('add' in change) {
+                alterateChange.add = change.add;
+            }
+            if ('delete' in change) {
+                alterateChange.delete = change.delete;
+            }
+            alterateChange.paths.push(
+                ...change.paths.map(prePath => {
+                    const path = this._diffPreparePath(toSliceKey, arrays, prePath);
+
+                    const ID = prePath[0][0];
+                    const rootPath = path.slice(1) as string[];
+
+                    let pathName = ID.toString();
+                    pathName += diffSeparator + rootPath.join(diffSeparator);
+                    allChanges[pathName] = alterateChange;
+
+                    return path;
+                }),
+            );
+        });
+
+        return allChanges;
+    }
+    _diffPreparePath(
+        toSliceKey: sliceKey,
+        arrays: Record<string, string[]>,
+        prePath: PrePath,
+    ): Path {
+        const ID = prePath[0][0];
+        const proxy = this._proxies[ID];
+
+        const path: Path = [proxy];
+        prePath.forEach(([ID, type, prop]) => {
+            if (type === 'values') {
+                path.push('values');
+                if (prop !== undefined) {
+                    path.push(prop.toString());
+                }
+            } else if (type === 'attributes') {
+                if (prop[0] === '´') {
+                    if (!arrays[ID]) {
+                        const patch = this._getPatches(undefined, toSliceKey, ID);
+                        const patches = patch.patches;
+                        const arrayPatches = {};
+                        while (patches.length) {
+                            const patch = patches.pop();
+                            const step = patch.value as MemoryTypeArray;
+                            Object.assign(arrayPatches, step.patch);
+                        }
+                        arrays[ID] = [];
+                        Object.keys(arrayPatches).forEach(key => {
+                            arrays[ID].push(key);
+                        });
+                        arrays[ID].sort();
+                    }
+                    const index = arrays[ID].indexOf((prop as string).slice(1));
+                    path.push(index.toString());
+                } else {
+                    path.push(prop.toString());
+                }
+            }
+        });
+
+        return path;
+    }
+    _diffSet(
+        parented: PrePath[],
+        oldPatches: patches,
+        newPatches: patches,
+        ancestorKey: sliceKey,
+        ID: typeLinkedID,
+    ): PreDiffChange[] {
+        const oldAdd = new Set() as MemoryCompiledSet;
+        const oldDelete = new Set() as MemoryCompiledSet;
+        while (oldPatches && oldPatches.length) {
+            const patch = oldPatches.pop();
+            const step = patch.value as MemoryTypeSet;
+            step.add.forEach((item: MemoryTypeValues) => {
+                oldAdd.add(item);
+                oldDelete.delete(item);
+            });
+            step.delete.forEach((item: MemoryTypeValues) => {
+                oldAdd.delete(item);
+                oldDelete.add(item);
+            });
+        }
+        const newAdd = new Set() as MemoryCompiledSet;
+        const newDelete = new Set() as MemoryCompiledSet;
+        while (newPatches && newPatches.length) {
+            const patch = newPatches.pop();
+            const step = patch.value as MemoryTypeSet;
+            step.add.forEach((item: MemoryTypeValues) => {
+                newAdd.add(item);
+                newDelete.delete(item);
+            });
+            step.delete.forEach((item: MemoryTypeValues) => {
+                newAdd.delete(item);
+                newDelete.add(item);
+            });
+        }
+        const resultAdd = new Set() as MemoryCompiledSet;
+        const resultDelete = new Set() as MemoryCompiledSet;
+        newAdd.forEach(item => {
+            if (!oldAdd.has(item)) {
+                resultAdd.add(this._diffValueToObject(item));
+            }
+        });
+        newDelete.forEach(item => {
+            if (!oldDelete.has(item)) {
+                resultDelete.add(this._diffValueToObject(item));
+            }
+        });
+        oldAdd.forEach(item => {
+            if (!newAdd.has(item)) {
+                resultDelete.add(this._diffValueToObject(item));
+            }
+        });
+        oldDelete.forEach(item => {
+            if (!newDelete.has(item)) {
+                resultAdd.add(this._diffValueToObject(item));
+            }
+        });
+        if (!resultAdd.size && !resultDelete.size) {
+            return [];
+        }
+        return [
+            {
+                paths: parented.map(
+                    (path): PrePath => {
+                        const newPath = [[ID, 'values', undefined]] as PrePath;
+                        newPath.unshift(...path);
+                        return newPath;
+                    },
+                ),
+                type: 'set',
+                add: resultAdd,
+                delete: resultDelete,
+            },
+        ];
+    }
+    _diffValueToObject(value: MemoryTypeValues | object): MemoryTypeValues | object {
+        if (value && value instanceof LinkedID) {
+            return this._proxies[+value];
+        }
+        return value;
     }
     _getChangesPath(
         fromSliceKey: sliceKey,

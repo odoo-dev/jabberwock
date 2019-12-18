@@ -1,6 +1,6 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import { Memory } from '../../src/Memory/Memory';
+import { Memory, diffSeparator, markAsDiffRoot } from '../../src/Memory/Memory';
 import { VersionableObject } from '../../src/Memory/VersionableObject';
 import { VersionableArray } from '../../src/Memory/VersionableArray';
 import { VersionableSet } from '../../src/Memory/VersionableSet';
@@ -138,6 +138,14 @@ describe('core', () => {
                         }
                     }
                     expect((): SuperObject => new SuperObject()).to.throw('VersionableObject');
+                });
+                it('if try diff with unknown slice', () => {
+                    expect(() => {
+                        memory.diff('ddd', 'rrr');
+                    }).to.throw('ddd');
+                    expect(() => {
+                        memory.diff('1', 'rrr');
+                    }).to.throw('rrr');
                 });
                 it('if try to link an object in custom class', () => {
                     class SuperObject extends VersionableObject {
@@ -1697,6 +1705,1447 @@ describe('core', () => {
                     memory.switchTo('test-b');
                     iter = set.entries().next();
                     expect(iter.value).to.deep.equal([{ 'b': 1 }, { 'b': 1 }]);
+                });
+            });
+
+            describe('diff', () => {
+                const memory = new Memory();
+                const full = makeVersionable({
+                    a: 1,
+                    b: ['x', 'y', 'z'],
+                    c: new Set(['x', 'y', 'z']),
+                    d: {
+                        x: 1,
+                        y: {
+                            e: 1,
+                            y: 2,
+                        },
+                    },
+                    e: [],
+                    f: {},
+                    g: new Set(),
+                });
+                const ID = (+full[memoryProxyPramsKey].ID).toString();
+                function makeFlatDiffChanges(
+                    pathChanges: [Array<string | number>, object][],
+                ): object {
+                    const changes = {};
+                    pathChanges.forEach(pathChange => {
+                        changes[pathChange[0].join(diffSeparator)] = pathChange[1];
+                    });
+                    return changes;
+                }
+                memory.create('1');
+                memory.switchTo('1');
+                memory.linkToMemory(full);
+
+                it('no change', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+                    full.a = 5;
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const diff = memory.diff('test', '1-1');
+                    expect(diff).to.deep.equal({});
+                });
+                it('object change with multi parents (check parented root path)', () => {
+                    const memory = new Memory();
+                    const obj = makeVersionable({ array: [] });
+                    const objID = obj[memoryProxyPramsKey].ID;
+                    const arrayID = obj.array[memoryProxyPramsKey].ID;
+                    const o1 = makeVersionable({ a: 1, parent: obj });
+                    const o1ID = o1[memoryProxyPramsKey].ID;
+                    const o2 = makeVersionable({ a: 2, parent: obj });
+                    const o2ID = o2[memoryProxyPramsKey].ID;
+                    const o3 = makeVersionable({ a: 3, parent: obj });
+                    const o3ID = o3[memoryProxyPramsKey].ID;
+                    obj.array.push(o1, o2, o3);
+                    memory.linkToMemory(obj);
+
+                    expect(memory._getProxyParentedPath('', objID)).to.deep.equal([
+                        o1ID + diffSeparator + 'parent',
+                        o2ID + diffSeparator + 'parent',
+                        o3ID + diffSeparator + 'parent',
+                    ]);
+                    expect(memory._getProxyParentedPath('', arrayID)).to.deep.equal([
+                        objID + diffSeparator + 'array',
+                    ]);
+                    expect(memory._getProxyParentedPath('', o1ID)).to.deep.equal([
+                        arrayID + diffSeparator + '´080',
+                    ]);
+                    expect(memory._getProxyParentedPath('', o2ID)).to.deep.equal([
+                        arrayID + diffSeparator + '´084',
+                    ]);
+                    expect(memory._getProxyParentedPath('', o3ID)).to.deep.equal([
+                        arrayID + diffSeparator + '´088',
+                    ]);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+                    obj.array.splice(1, 1);
+                    o2.parent = null;
+
+                    expect(memory._getProxyParentedPath('test', objID)).to.deep.equal([
+                        o1ID + diffSeparator + 'parent',
+                        o3ID + diffSeparator + 'parent',
+                    ]);
+                    expect(memory._getProxyParentedPath('test', arrayID)).to.deep.equal([
+                        objID + diffSeparator + 'array',
+                    ]);
+                    expect(memory._getProxyParentedPath('test', o1ID)).to.deep.equal([
+                        arrayID + diffSeparator + '´080',
+                    ]);
+                    expect(memory._getProxyParentedPath('test', o2ID)).to.deep.equal([]);
+                    expect(memory._getProxyParentedPath('test', o3ID)).to.deep.equal([
+                        arrayID + diffSeparator + '´088',
+                    ]);
+
+                    const diff = memory.diff('', 'test');
+
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [objID, 'array', 'length'],
+                                {
+                                    paths: [[obj, 'array', 'length']],
+                                    type: 'attribute',
+                                    old: 3,
+                                    new: 2,
+                                },
+                            ],
+                            [
+                                [objID, 'array', 'values', '1'],
+                                {
+                                    paths: [[obj, 'array', 'values', '1']],
+                                    type: 'values',
+                                    old: o2,
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('update attribute with same value in child slide', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+                    full.a = 5;
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.a = 5;
+                    const diff = memory.diff('test', '1-1');
+                    expect(diff).to.deep.equal({});
+                });
+                it('update attribute with same value in two slides', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.a = 5;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.a = 5;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    expect(diff).to.deep.equal({});
+                });
+                it('update attribute', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.a = 5;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.a = 9;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'a']],
+                        type: 'attribute',
+                        old: 5,
+                        new: 9,
+                    };
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([[[ID, 'a'], change]]));
+                });
+                it('remove attribute', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.a = 5;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    delete full.a;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'a']],
+                        type: 'attribute',
+                        old: 5,
+                    };
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([[[ID, 'a'], change]]));
+                });
+                it('removed attribute', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    delete full.a;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.a = 42;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'a']],
+                        type: 'attribute',
+                        new: 42,
+                    };
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([[[ID, 'a'], change]]));
+                });
+                it('update attribute in children object', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.d.y.e = 5;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.d.y.e = 9;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'd', 'y', 'e']],
+                        type: 'attribute',
+                        old: 5,
+                        new: 9,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([[[ID, 'd', 'y', 'e'], change]]),
+                    );
+                });
+                it('update attribute in children object with use markAsDiffRoot', () => {
+                    const memory = new Memory();
+                    const obj = { array: [] };
+                    obj.array.push({ a: 1, parent: obj });
+                    const proxy = makeVersionable(obj);
+                    markAsDiffRoot(proxy.array[0]);
+                    memory.linkToMemory(proxy);
+                    memory.create('test');
+                    memory.switchTo('test');
+                    proxy.array[0].a = 42;
+
+                    const diff = memory.diff('', 'test');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [obj.array[0][memoryProxyPramsKey].ID, 'a'],
+                                {
+                                    paths: [[obj.array[0], 'a']],
+                                    type: 'attribute',
+                                    old: 1,
+                                    new: 42,
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('update attribute and attribute in children object', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.a = 5;
+                    full.d.y.e = 55;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.a = 9;
+                    full.d.y.e = 99;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const changeA = {
+                        paths: [[full, 'a']],
+                        type: 'attribute',
+                        old: 5,
+                        new: 9,
+                    };
+                    const change = {
+                        paths: [[full, 'd', 'y', 'e']],
+                        type: 'attribute',
+                        old: 55,
+                        new: 99,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([[[ID, 'a'], changeA], [[ID, 'd', 'y', 'e'], change]]),
+                    );
+                });
+                it('remove attribute in children object', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.d.y.e = 5;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    delete full.d.y.e;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'd', 'y', 'e']],
+                        type: 'attribute',
+                        old: 5,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([[[ID, 'd', 'y', 'e'], change]]),
+                    );
+                });
+                it('update attribute in children object and remove his parent', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.d.y.e = 5;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    const proxyD = full.d;
+                    full.d.y.e = 9;
+                    delete full.d;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'd']],
+                        type: 'attribute',
+                        old: proxyD,
+                    };
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([[[ID, 'd'], change]]));
+                });
+                it('update attribute by an object', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullE11 = makeVersionable({ 'a': 1, 'b': 2 });
+                    full.f = fullE11;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    const fullEB12 = makeVersionable({ 'u': 1, 'i': 2 });
+                    full.f = fullEB12;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'f']],
+                        type: 'attribute',
+                        old: fullE11,
+                        new: fullEB12,
+                    };
+                    const changeU = {
+                        paths: [[full, 'f', 'u']],
+                        type: 'attribute',
+                        new: 1,
+                    };
+                    const changeI = {
+                        paths: [[full, 'f', 'i']],
+                        type: 'attribute',
+                        new: 2,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'f'], change],
+                            [[ID, 'f', 'u'], changeU],
+                            [[ID, 'f', 'i'], changeI],
+                        ]),
+                    );
+                });
+                it('missing attribute in the "new" object', () => {
+                    const memory = new Memory();
+                    memory.create('test');
+                    memory.switchTo('test');
+                    const obj = makeVersionable({ 'a': 1, 'b': 2 });
+                    const ID = (+obj[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(obj);
+                    memory.create('1-1');
+                    memory.create('1-2');
+                    memory.switchTo('1-1');
+                    obj['a+b'] = 3;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[obj, 'a+b']],
+                        type: 'attribute',
+                        old: 3,
+                    };
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([[[ID, 'a+b'], change]]));
+                });
+                it('update attribute by an object and update it', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullE11 = makeVersionable({ 'a': 1, 'b': 2 });
+                    full.f = fullE11;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    const fullEB12 = (full.f = full.d.y);
+                    full.d.y.e = 42;
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'd', 'y', 'e'], [full, 'f', 'e']],
+                        type: 'attribute',
+                        old: 1,
+                        new: 42,
+                    };
+                    const changeAttribute = {
+                        paths: [[full, 'f']],
+                        type: 'attribute',
+                        old: fullE11,
+                        new: fullEB12,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'd', 'y', 'e'], change],
+                            [[ID, 'f'], changeAttribute],
+                            [[ID, 'f', 'e'], change],
+                        ]),
+                    );
+                });
+                it('update attribute by an array', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+                    const fullETest = full.e;
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullE11 = (full.e = makeVersionable(['a', 'b']));
+
+                    const diff = memory.diff('test', '1-1');
+                    const change = {
+                        paths: [[full, 'e']],
+                        type: 'attribute',
+                        old: fullETest,
+                        new: fullE11,
+                    };
+                    const changeArrayLength = {
+                        paths: [[full, 'e', 'length']],
+                        type: 'attribute',
+                        old: 0,
+                        new: 2,
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'e', 'values', '-1,1']],
+                        type: 'values',
+                        new: 'a',
+                    };
+                    const changeArray1 = {
+                        paths: [[full, 'e', 'values', '-1,2']],
+                        type: 'values',
+                        new: 'b',
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'e'], change],
+                            [[ID, 'e', 'length'], changeArrayLength],
+                            [[ID, 'e', 'values', '-1,1'], changeArray0],
+                            [[ID, 'e', 'values', '-1,2'], changeArray1],
+                        ]),
+                    );
+                });
+                it('update attribute by an array in two slides', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullE11 = (full.e = makeVersionable(['a', 'b']));
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    const fullEB12 = (full.e = makeVersionable(['u', 'i']));
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'e']],
+                        type: 'attribute',
+                        old: fullE11,
+                        new: fullEB12,
+                    };
+                    const changeArrayLength = {
+                        paths: [[full, 'e', 'length']],
+                        type: 'attribute',
+                        old: 0,
+                        new: 2,
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'e', 'values', '-1,1']],
+                        type: 'values',
+                        new: 'u',
+                    };
+                    const changeArray1 = {
+                        paths: [[full, 'e', 'values', '-1,2']],
+                        type: 'values',
+                        new: 'i',
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'e'], change],
+                            [[ID, 'e', 'length'], changeArrayLength],
+                            [[ID, 'e', 'values', '-1,1'], changeArray0],
+                            [[ID, 'e', 'values', '-1,2'], changeArray1],
+                        ]),
+                    );
+                });
+                it('update array push one item', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    array.push('66');
+
+                    const diff = memory.diff('test', '1-1');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'length'],
+                                {
+                                    paths: [[array, 'length']],
+                                    type: 'attribute',
+                                    old: 3,
+                                    new: 4,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '2,1'],
+                                {
+                                    paths: [[array, 'values', '2,1']],
+                                    type: 'values',
+                                    new: '66',
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('update array', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.b.push('66');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.b.shift();
+                    full.b.push('99');
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const changeArrayLength = {
+                        paths: [[full, 'b', 'length']],
+                        type: 'attribute',
+                        old: 4,
+                        new: 3,
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'b', 'values', '0']],
+                        type: 'values',
+                        old: 'x',
+                    };
+                    const changeArray2 = {
+                        paths: [[full, 'b', 'values', '2,1']],
+                        type: 'values',
+                        new: '99',
+                    };
+                    const changeArray3 = {
+                        paths: [[full, 'b', 'values', '3']],
+                        type: 'values',
+                        old: '66',
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'b', 'length'], changeArrayLength],
+                            [[ID, 'b', 'values', '0'], changeArray0],
+                            [[ID, 'b', 'values', '2,1'], changeArray2],
+                            [[ID, 'b', 'values', '3'], changeArray3],
+                        ]),
+                    );
+                });
+                it('update array properties', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.b['p+l'] = 5;
+
+                    memory.create('1-1b');
+                    memory.switchTo('1-1b');
+                    delete full.b['p+l'];
+                    full.b['x+y'] = 5;
+                    full.b['a+b'] = 2;
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.b['q+t'] = 5;
+
+                    memory.create('1-2b');
+                    memory.switchTo('1-2b');
+                    delete full.b['q+t'];
+                    full.b['x+y'] = 9;
+
+                    const diff = memory.diff('1-1b', '1-2b');
+                    const change = {
+                        paths: [[full, 'b', 'x+y']],
+                        type: 'attribute',
+                        old: 5,
+                        new: 9,
+                    };
+                    const change2 = {
+                        paths: [[full, 'b', 'a+b']],
+                        type: 'attribute',
+                        old: 2,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'b', 'a+b'], change2],
+                            [[ID, 'b', 'x+y'], change],
+                        ]),
+                    );
+                });
+                it('update array removed properties', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['a', 'x', 'y', 'z']);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+                    array['a+b'] = 5;
+                    array['c+d'] = 5;
+
+                    memory.create('1');
+                    memory.switchTo('1');
+                    delete array['a+b'];
+                    array['c+d'] = 42;
+
+                    memory.switchTo('test');
+                    memory.create('2');
+                    memory.switchTo('2');
+                    array['a+b'] = 42;
+                    delete array['c+d'];
+
+                    expect(memory.diff('1', '2')).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'a+b'],
+                                {
+                                    paths: [[array, 'a+b']],
+                                    type: 'attribute',
+                                    new: 42,
+                                },
+                            ],
+                            [
+                                [ID, 'c+d'],
+                                {
+                                    paths: [[array, 'c+d']],
+                                    type: 'attribute',
+                                    old: 42,
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('update array but no change (crdt or not)', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.b.push('A');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.b[3] = 'A';
+
+                    expect(memory.diff('1-1', '1-2')).to.deep.equal({});
+                });
+                it('move item in array', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+                    const value = full.b.pop();
+                    full.b.unshift(value);
+
+                    const diff = memory.diff('1', 'test');
+                    const changeArray2 = {
+                        paths: [[full, 'b', 'values', '2']],
+                        type: 'values',
+                        old: 'z',
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'b', 'values', '-1,1']],
+                        type: 'values',
+                        new: 'z',
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'b', 'values', '-1,1'], changeArray0],
+                            [[ID, 'b', 'values', '2'], changeArray2],
+                        ]),
+                    );
+                });
+                it('move item in array but no change', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const value = full.b.pop();
+                    full.b.unshift(value);
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.b.unshift(value);
+                    full.b.pop();
+
+                    expect(memory.diff('1-1', '1-2')).to.deep.equal({});
+                });
+                it('move item but finish at the same index', () => {
+                    const memory = new Memory();
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const array = makeVersionable([1, 2, 3]);
+                    memory.linkToMemory(array);
+
+                    memory.create('test-1');
+                    memory.switchTo('test-1');
+
+                    array.splice(2, 0, 6, 7);
+                    array.splice(1, 0, 4, 5);
+                    array.splice(1, 5);
+                    array.splice(1, 0, 2);
+
+                    expect(memory.diff('test', 'test-1')).to.deep.equal({});
+                });
+                it('diff array who push the same value', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    array.push('A');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    array.push('A');
+
+                    const diff = memory.diff('1-1', '1-2');
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([]));
+                });
+                it('diff array with same finished value', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    array[1] = 'A';
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    array[1] = 'A';
+
+                    const diff = memory.diff('1-1', '1-2');
+                    expect(diff).to.deep.equal(makeFlatDiffChanges([]));
+                });
+                it('diff array with inexistant change in other memory slice', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    array[2] = 'ZZZ';
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    array[1] = 'A';
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    array[0] = 'B';
+
+                    const diff = memory.diff('1-1', '1-2');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'values', '0'],
+                                {
+                                    paths: [[array, 'values', '0']],
+                                    type: 'values',
+                                    old: 'x',
+                                },
+                            ],
+                            [
+                                [ID, 'values', '1'],
+                                {
+                                    paths: [[array, 'values', '1']],
+                                    type: 'values',
+                                    old: 'A',
+                                },
+                            ],
+                            [
+                                [ID, 'values', '-1,1'],
+                                {
+                                    paths: [[array, 'values', '-1,1']],
+                                    type: 'values',
+                                    new: 'B',
+                                },
+                            ],
+                            [
+                                [ID, 'values', '-1,2'],
+                                {
+                                    paths: [[array, 'values', '-1,2']],
+                                    type: 'values',
+                                    new: 'y',
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('compare 2 arrays diff with same finished value', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    memory.linkToMemory(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    array.splice(1, 0, 'A'); // ['x', 'A', 'y', 'z']
+                    const b11 = array.slice();
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    array.splice(1, 0, 'B'); // ['x', 'B', 'y', 'z']
+                    array.push('z'); // ['x', 'B', 'y', 'z', 'z']
+                    array.splice(3, 0, 'A'); // ['x', 'B', 'y', 'A', 'z', 'z']
+                    array.splice(1, 2); // ['x', 'A', 'z', 'z']
+                    array[2] = 'y'; // ['x', 'A', 'y', 'z']
+                    const b12 = array.slice();
+
+                    expect(b11).to.deep.equal(b12, 'array have same value');
+
+                    const diff11 = memory.diff('test', '1-1');
+                    const diff12 = memory.diff('test', '1-2');
+
+                    expect(diff11).to.deep.equal(diff12);
+                });
+                it('compare 2 arrays diff with same finished value with remove', () => {
+                    const memory = new Memory();
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    memory.linkToMemory(array);
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    delete array[1];
+
+                    expect(array).to.deep.equal([1, undefined, 3, 4, 5], 'remove one item');
+                    const array1 = array.slice();
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    delete array[0];
+                    array[0] = 1;
+                    delete array[1];
+                    array[1] = 9;
+                    delete array[1];
+                    const array2 = array.slice();
+
+                    expect(array1).to.deep.equal(array2, 'array have same value');
+
+                    const diff11 = memory.diff('test', '1-1');
+                    const diff12 = memory.diff('test', '1-2');
+
+                    expect(diff11).to.deep.equal(diff12);
+                });
+                it('update objet inserted 3 times in array', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const obj = new VersionableObject();
+                    full.e.push(obj, obj, obj);
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+
+                    obj['x+y'] = 3;
+
+                    const diff = memory.diff('test', '1-1');
+                    const changeObj = {
+                        paths: [
+                            [full, 'e', '0', 'x+y'],
+                            [full, 'e', '1', 'x+y'],
+                            [full, 'e', '2', 'x+y'],
+                        ],
+                        type: 'attribute',
+                        new: 3,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'e', '0', 'x+y'], changeObj],
+                            [[ID, 'e', '1', 'x+y'], changeObj],
+                            [[ID, 'e', '2', 'x+y'], changeObj],
+                        ]),
+                    );
+                });
+                it('remplace an attribute inserted 3 times in array', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    full.e.push('a', 'a', 'a');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+
+                    full.e[1] = 'b';
+
+                    const diff = memory.diff('test', '1-1');
+                    const changeArray1 = {
+                        paths: [[full, 'e', 'values', '1']],
+                        type: 'values',
+                        old: 'a',
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'e', 'values', '0,1']],
+                        type: 'values',
+                        new: 'b',
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'e', 'values', '0,1'], changeArray0],
+                            [[ID, 'e', 'values', '1'], changeArray1],
+                        ]),
+                    );
+                });
+                it('remplace an objet inserted 3 times in array', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const obj = new VersionableObject();
+                    full.e.push(obj, obj, obj);
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+
+                    const array = new VersionableArray();
+                    full.e[1] = array;
+
+                    const diff = memory.diff('test', '1-1');
+                    const changeArray1 = {
+                        paths: [[full, 'e', 'values', '1']],
+                        type: 'values',
+                        old: obj,
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'e', 'values', '0,1']],
+                        type: 'values',
+                        new: array,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'e', 'values', '0,1'], changeArray0],
+                            [[ID, 'e', 'values', '1'], changeArray1],
+                        ]),
+                    );
+                });
+                it('update attribute by an array and update it', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullE11 = full.e;
+                    full.b.push('66');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.b.shift();
+                    full.b.push('99');
+                    const fullB12 = (full.e = full.b);
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const changeArrayLength = {
+                        paths: [[full, 'b', 'length'], [full, 'e', 'length']],
+                        type: 'attribute',
+                        old: 4,
+                        new: 3,
+                    };
+                    const changeArray0 = {
+                        paths: [[full, 'b', 'values', '0'], [full, 'e', 'values', '0']],
+                        type: 'values',
+                        old: 'x',
+                    };
+                    const changeArray2 = {
+                        paths: [[full, 'b', 'values', '2,1'], [full, 'e', 'values', '2,1']],
+                        type: 'values',
+                        new: '99',
+                    };
+                    const changeArray3 = {
+                        paths: [[full, 'b', 'values', '3'], [full, 'e', 'values', '3']],
+                        type: 'values',
+                        old: '66',
+                    };
+                    const changeAttribute = {
+                        paths: [[full, 'e']],
+                        type: 'attribute',
+                        old: fullE11,
+                        new: fullB12,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'b', 'length'], changeArrayLength],
+                            [[ID, 'b', 'values', '0'], changeArray0],
+                            [[ID, 'b', 'values', '2,1'], changeArray2],
+                            [[ID, 'b', 'values', '3'], changeArray3],
+                            [[ID, 'e'], changeAttribute],
+                            [[ID, 'e', 'length'], changeArrayLength],
+                            [[ID, 'e', 'values', '0'], changeArray0],
+                            [[ID, 'e', 'values', '2,1'], changeArray2],
+                            [[ID, 'e', 'values', '3'], changeArray3],
+                        ]),
+                    );
+                });
+                it('delete item in array and switch memory', () => {
+                    const memory = new Memory();
+                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+                    memory.create('test-1');
+                    memory.create('test-2');
+                    memory.switchTo('test-1');
+                    array.splice(1, 1);
+
+                    let diff = memory.diff('test-2', 'test-1');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'length'],
+                                {
+                                    paths: [[array, 'length']],
+                                    type: 'attribute',
+                                    old: 5,
+                                    new: 4,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '1'],
+                                {
+                                    paths: [[array, 'values', '1']],
+                                    type: 'values',
+                                    old: 2,
+                                },
+                            ],
+                        ]),
+                    );
+
+                    diff = memory.diff('test-1', 'test-2');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'length'],
+                                {
+                                    paths: [[array, 'length']],
+                                    type: 'attribute',
+                                    old: 4,
+                                    new: 5,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '0,1'],
+                                {
+                                    paths: [[array, 'values', '0,1']],
+                                    type: 'values',
+                                    new: 2,
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('delete item in array different slice memory', () => {
+                    const memory = new Memory();
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    const ID = (+array[memoryProxyPramsKey].ID).toString();
+                    memory.linkToMemory(array);
+
+                    memory.create('test-1');
+                    memory.switchTo('test-1');
+                    array.splice(1, 1);
+                    memory.create('test-1-1');
+                    memory.switchTo('test-1-1');
+                    array.splice(2, 1);
+                    array.push(6);
+
+                    expect(array).to.deep.equal([1, 3, 5, 6]);
+
+                    memory.switchTo('test');
+                    memory.create('test-2');
+                    memory.switchTo('test-2');
+                    array[1] = 99;
+
+                    expect(array).to.deep.equal([1, 99, 3, 4, 5]);
+
+                    let diff = memory.diff('test-2', 'test-1-1');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'length'],
+                                {
+                                    paths: [[array, 'length']],
+                                    type: 'attribute',
+                                    old: 5,
+                                    new: 4,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '1'],
+                                {
+                                    paths: [[array, 'values', '1']],
+                                    type: 'values',
+                                    old: 99,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '3'],
+                                {
+                                    paths: [[array, 'values', '3']],
+                                    type: 'values',
+                                    old: 4,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '4,1'],
+                                {
+                                    paths: [[array, 'values', '4,1']],
+                                    type: 'values',
+                                    new: 6,
+                                },
+                            ],
+                        ]),
+                    );
+
+                    diff = memory.diff('test-1-1', 'test-2');
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [
+                                [ID, 'length'],
+                                {
+                                    paths: [[array, 'length']],
+                                    type: 'attribute',
+                                    old: 4,
+                                    new: 5,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '0,1'],
+                                {
+                                    paths: [[array, 'values', '0,1']],
+                                    type: 'values',
+                                    new: 99,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '1,1'],
+                                {
+                                    paths: [[array, 'values', '1,1']],
+                                    type: 'values',
+                                    new: 4,
+                                },
+                            ],
+                            [
+                                [ID, 'values', '3'],
+                                {
+                                    paths: [[array, 'values', '3']],
+                                    type: 'values',
+                                    old: 6,
+                                },
+                            ],
+                        ]),
+                    );
+                });
+                it('update attribute by a set', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullE11 = (full.c = makeVersionable(new Set(['a', 'b'])));
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    const fullEB12 = (full.c = makeVersionable(new Set(['u', 'i'])));
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'c']],
+                        type: 'attribute',
+                        old: fullE11,
+                        new: fullEB12,
+                    };
+                    const changeSet = {
+                        paths: [[full, 'c', 'values']],
+                        type: 'set',
+                        add: new Set(['u', 'i']),
+                        delete: new Set(),
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'c'], change],
+                            [[ID, 'c', 'values'], changeSet],
+                        ]),
+                    );
+                });
+                it('add item in set', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.c.add('66');
+
+                    const diff = memory.diff('test', '1-1');
+                    const change = {
+                        paths: [[full, 'c', 'values']],
+                        type: 'set',
+                        add: new Set(['66']),
+                        delete: new Set(),
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([[[ID, 'c', 'values'], change]]),
+                    );
+                });
+                it('delete item in set', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.create('1-2');
+
+                    memory.switchTo('1-1');
+                    full.c.delete('x');
+
+                    memory.switchTo('1-2');
+                    full.c.delete('y');
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'c', 'values']],
+                        type: 'set',
+                        add: new Set('x'),
+                        delete: new Set(['y']),
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([[[ID, 'c', 'values'], change]]),
+                    );
+                });
+                it('update set', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    full.c.add('66');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.c.delete('x');
+                    full.c.add('99');
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'c', 'values']],
+                        type: 'set',
+                        add: new Set(['99']),
+                        delete: new Set(['x', '66']),
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([[[ID, 'c', 'values'], change]]),
+                    );
+                });
+                it('update set but no change', () => {
+                    const memory = new Memory();
+                    const set = new VersionableSet(['x', 'y', 'z']);
+                    memory.linkToMemory(set);
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    set.delete('y');
+                    set.add('A');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    set.delete('y');
+                    set.add('A');
+
+                    expect(memory.diff('1-1', '1-2')).to.deep.equal({});
+                });
+                it('update attribute by an set and update it', () => {
+                    memory.switchTo('1');
+                    memory.remove('test');
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    const fullB11 = full.g;
+                    full.c.add('66');
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    full.c.delete('x');
+                    full.c.add('99');
+                    const fullB12 = (full.g = full.c);
+
+                    const diff = memory.diff('1-1', '1-2');
+                    const change = {
+                        paths: [[full, 'c', 'values'], [full, 'g', 'values']],
+                        type: 'set',
+                        delete: new Set(['x', '66']),
+                        add: new Set(['99']),
+                    };
+                    const changeAttribute = {
+                        paths: [[full, 'g']],
+                        type: 'attribute',
+                        old: fullB11,
+                        new: fullB12,
+                    };
+                    expect(diff).to.deep.equal(
+                        makeFlatDiffChanges([
+                            [[ID, 'g'], changeAttribute],
+                            [[ID, 'c', 'values'], change],
+                            [[ID, 'g', 'values'], change],
+                        ]),
+                    );
                 });
             });
 
