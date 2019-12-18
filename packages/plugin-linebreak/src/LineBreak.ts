@@ -8,4 +8,16 @@ export class LineBreak extends JWPlugin {
             return [new LineBreakNode()];
         }
     }
+    commands = {
+        insertLineBreak: {
+            handler: this.insertLineBreak.bind(this),
+        },
+    };
+
+    /**
+     * Insert a line break at range.
+     */
+    insertLineBreak(): void {
+        this.editor.vDocument.insert(new LineBreakNode());
+    }
 }
