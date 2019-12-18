@@ -830,6 +830,39 @@ export class Memory {
             type: type,
         };
     }
+    _getParent(sliceKey: string, ID: typeLinkedID): proxyAttributePath {
+        // bubbling up magic for true, non-proxified values in memory
+        let ref = this._slicesReference[sliceKey];
+        while (ref) {
+            const slice = this._slicesLinkedParentOfProxy[ref.name];
+            if (slice && ID in slice) {
+                return slice[ID];
+            }
+            ref = ref.parent;
+        }
+    }
+    _getAttributePath(sliceKey: string, ID: typeLinkedID): PrePath[] {
+        const parented: PrePath[] = [];
+        const getParented = (ID: typeLinkedID, allPath: PrePath): void => {
+            if (this._rootProxies[ID]) {
+                allPath.unshift([ID, undefined, undefined]);
+                parented.push(allPath);
+                return;
+            }
+            const parents = this._getParent(sliceKey, ID);
+            if (parents && parents.length) {
+                parents.forEach((path: string): void => {
+                    const split = path.match(proxyParentsRegExp);
+                    const ID = +split[1];
+                    const newAllPath: PrePath = [[ID, 'attributes', split[3]]];
+                    newAllPath.push(...allPath);
+                    getParented(ID, newAllPath);
+                });
+            }
+        };
+        getParented(ID, ([] as unknown) as PrePath);
+        return parented;
+    }
     _linkToMemory(proxy: AllowedObject): void {
         if (typeof proxy === 'function') {
             return;
