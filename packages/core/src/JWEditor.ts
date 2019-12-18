@@ -92,9 +92,9 @@ export class JWEditor {
     //--------------------------------------------------------------------------
 
     /**
-     * Add the given plugin class to this editor instance.
+     * Add the given plugin class(es) to this editor instance.
      *
-     * @param pluginClass
+     * @param pluginClasses
      */
     addPlugin(...pluginClasses: Array<typeof JWPlugin>): void {
         pluginClasses.forEach(pluginClass => {
