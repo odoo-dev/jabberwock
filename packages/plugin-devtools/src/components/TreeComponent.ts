@@ -3,7 +3,6 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { VRangeDescription } from '../../../core/src/VRange';
 import { Direction, RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../../../utils/src/range';
-import { LineBreakNode } from '../../../plugin-linebreak/src/VNodes/LineBreakNode';
 
 interface NodeProps {
     isRoot: boolean;
@@ -120,14 +119,14 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      * @returns {string}
      */
     _getNodeRepr(node: VNode): string {
+        if (node.repr) {
+            return node.repr;
+        }
         if (node === this.env.editor.vDocument.range.anchor) {
             return RANGE_TAIL_CHAR;
         }
         if (node === this.env.editor.vDocument.range.focus) {
             return RANGE_HEAD_CHAR;
-        }
-        if (node instanceof LineBreakNode) {
-            return '↲';
         }
         if (node.name) {
             return utils.toUnicode(node.name);

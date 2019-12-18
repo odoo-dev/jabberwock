@@ -5,6 +5,7 @@ import { HTMLRendering } from '../../../core/src/BasicHtmlRenderingEngine';
 
 export class LineBreakNode extends VElement {
     static readonly atomic = true;
+    repr = '↲';
     constructor() {
         super('BR');
     }

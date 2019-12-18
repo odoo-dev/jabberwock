@@ -18,6 +18,7 @@ export class VNode {
     static readonly atomic: boolean = false;
     readonly type: VNodeType = VNodeType.NODE;
     readonly id = id;
+    repr: string;
     parent: VNode;
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
