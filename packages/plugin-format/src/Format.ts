@@ -36,9 +36,13 @@ export class Format extends JWPlugin {
         // For the parsing, encountering a format node generates a new format
         // context which inherits from the previous one.
         const node = context.node;
-        const isBold = !!context.attributes.get('bold') || node.nodeName === 'B';
-        const isItalic = !!context.attributes.get('italic') || node.nodeName === 'I';
-        const isUnderline = !!context.attributes.get('underline') || node.nodeName === 'U';
+        const isBold =
+            (context.attributes.get('bold') || { value: false }).value || node.nodeName === 'B';
+        const isItalic =
+            (context.attributes.get('italic') || { value: false }).value || node.nodeName === 'I';
+        const isUnderline =
+            (context.attributes.get('underline') || { value: false }).value ||
+            node.nodeName === 'U';
         context.attributes.set('bold', new FormatAttribute('bold', isBold));
         context.attributes.set('italic', new FormatAttribute('italic', isItalic));
         context.attributes.set('underline', new FormatAttribute('underline', isUnderline));
