@@ -7,7 +7,7 @@ export class Attribute {
         this.name = name;
         this.value = value;
     }
-    render(node: Node): Node {
+    renderToHtml(node: Node): Node {
         if (this.value && node instanceof Element) {
             node.setAttribute(this.name, this.value);
         }

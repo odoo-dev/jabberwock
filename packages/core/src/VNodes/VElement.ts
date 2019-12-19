@@ -16,10 +16,10 @@ export class VElement extends VNode {
     //--------------------------------------------------------------------------
 
     static parse(context: ParsingContext): ParsingContext {
-        return utils.contextToVNode(context, VElement, context.node.nodeName);
+        return utils.parse(context, VElement, context.node.nodeName);
     }
     static render(context: RenderingContext): RenderingContext {
-        return utils.contextToNode(context, (context.currentVNode as VElement).htmlTag);
+        return utils.render(context, (context.currentVNode as VElement).htmlTag);
     }
 
     //--------------------------------------------------------------------------

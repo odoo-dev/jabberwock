@@ -1,4 +1,3 @@
-import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
 import { Predicate } from '../../../utils/src/Predicates';
 import { RelativePosition, withMarkers, isWithMarkers } from '../../../utils/src/range';
 import { utils } from '../../../utils/src/utils';
@@ -20,9 +19,6 @@ export class VNode {
     readonly id = id;
     repr: string;
     parent: VNode;
-    renderingEngines: Record<string, RenderingEngine> = {
-        html: BasicHtmlRenderingEngine,
-    };
     name = this.constructor.name;
     attributes: Map<AttributeName, Attribute> = new Map();
     _children: VNode[] = [];

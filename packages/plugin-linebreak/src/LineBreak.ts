@@ -19,7 +19,7 @@ export class LineBreak extends JWPlugin {
         }
     }
     static parse(context: ParsingContext): ParsingContext {
-        return utils.contextToVNode(context, LineBreakNode);
+        return utils.parse(context, LineBreakNode);
     }
     /**
      * Render the VNode to the given format.
@@ -29,7 +29,7 @@ export class LineBreak extends JWPlugin {
      */
     static render(context: RenderingContext): RenderingContext {
         context = VElement.render({ ...context });
-        if (!context.currentVNode.nextSibling()) {
+        if (context.to === 'html' && !context.currentVNode.nextSibling()) {
             // If a LINE_BREAK has no next sibling, it must be rendered as two
             // BRs in order for it to be visible.
             context.parentNode.appendChild(document.createElement('br'));

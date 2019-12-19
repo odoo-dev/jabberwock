@@ -23,7 +23,10 @@ export const VDocumentMap = {
      *
      * @param vNode
      */
-    toDom: (vNode: VNode): Node => toDom.get(vNode)[0],
+    toDom: (vNode: VNode): Node => {
+        const domNode = toDom.get(vNode);
+        return domNode && domNode[0];
+    },
     /**
      * Return the DOM location corresponding to the given VNode as a tuple
      * containing a reference DOM Node and the offset of the DOM Node
@@ -32,8 +35,8 @@ export const VDocumentMap = {
      * @param vNode
      */
     toDomLocation: (vNode: VNode): [Node, number] => {
-        let [node, offset] = toDom.get(vNode);
-        if (node.nodeType !== Node.TEXT_NODE) {
+        let [node, offset] = toDom.get(vNode) || [];
+        if (node && node.nodeType !== Node.TEXT_NODE) {
             // Char nodes have their offset in the corresponding text nodes
             // registered in the map via `set` but other nodes don't. Their
             // location need to be computed with respect to their parents.

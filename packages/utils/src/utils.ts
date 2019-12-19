@@ -30,7 +30,7 @@ export const utils = {
         const content = isTextNode ? node.nodeValue : node.childNodes;
         return content.length;
     },
-    contextToVNode(
+    parse(
         context: ParsingContext,
         VNodeClass: typeof VNode,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +63,10 @@ export const utils = {
         }
         return context;
     },
-    contextToNode(context: RenderingContext, tagName: string): RenderingContext {
+    render(context: RenderingContext, tagName?: string): RenderingContext {
+        if (context.to !== 'html') {
+            return context;
+        }
         const vNode = context.currentVNode;
         const element = utils.renderAttributesTo(vNode.attributes, document.createElement(tagName));
         context.parentNode.appendChild(element);
@@ -86,7 +89,7 @@ export const utils = {
     },
     renderAttributesTo(attributes: Map<AttributeName, Attribute>, node: Node): Node {
         attributes.forEach(attribute => {
-            node = attribute.render(node);
+            node = attribute.renderToHtml(node);
         });
         return node;
     },

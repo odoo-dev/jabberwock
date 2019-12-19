@@ -39,6 +39,9 @@ export class Char extends JWPlugin {
      * html)
      */
     static render(context: RenderingContext): RenderingContext {
+        if (context.to !== 'html') {
+            return context;
+        }
         const charNode = context.currentVNode as CharNode;
         // Consecutive compatible char nodes are rendered as a single text node.
         let text = '' + charNode.char;

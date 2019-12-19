@@ -9,6 +9,7 @@ import { VElement } from './VNodes/VElement';
 export interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
     parentNode?: Node | DocumentFragment; // Node to render the VNode into.
+    to: string; // the name of the format to which we want to render
 }
 
 export class Renderer {
@@ -43,7 +44,7 @@ export class Renderer {
      * @param root
      * @param target
      */
-    render(vDocument: VDocument, target: Element): void {
+    render(vDocument: VDocument, target: Element, to = 'html'): void {
         const root = vDocument.root;
         const range = vDocument.range;
         target.innerHTML = ''; // TODO: update instead of recreate
@@ -55,6 +56,7 @@ export class Renderer {
             let context: RenderingContext = {
                 currentVNode: root.firstChild(),
                 parentNode: fragment,
+                to: to,
             };
             do {
                 context = this._renderVNode(context);
@@ -132,13 +134,15 @@ export class Renderer {
     _renderRange(range: VRange, target: Element): void {
         const [startContainer, startOffset] = this._getDomLocation(range.anchor);
         const [endContainer, endOffset] = this._getDomLocation(range.focus);
-        const domRange: Range = target.ownerDocument.createRange();
-        domRange.setStart(startContainer, startOffset);
-        domRange.collapse(true);
-        const selection = document.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(domRange);
-        selection.extend(endContainer, endOffset);
+        if (startContainer && startOffset && endContainer && endOffset) {
+            const domRange: Range = target.ownerDocument.createRange();
+            domRange.setStart(startContainer, startOffset);
+            domRange.collapse(true);
+            const selection = document.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(domRange);
+            selection.extend(endContainer, endOffset);
+        }
     }
     /**
      * Return the location in the DOM corresponding to the location in the

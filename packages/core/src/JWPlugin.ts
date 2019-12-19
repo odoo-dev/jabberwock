@@ -12,7 +12,6 @@ export type RenderingContextHook = (context: RenderingContext) => RenderingConte
 export type ParsePredicate = (node: Node) => ParseMethod;
 export type RenderPredicate = (node: VNode) => RenderMethod;
 export type ParseMethod = (context: ParsingContext) => ParsingContext;
-// TODO: make render method generic
 export type RenderMethod = (context: RenderingContext) => RenderingContext;
 
 export class JWPlugin {

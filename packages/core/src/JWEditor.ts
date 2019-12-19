@@ -11,6 +11,7 @@ import { DevTools } from '../../plugin-devtools/src/DevTools';
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
+    renderTo?: string;
 }
 
 export class JWEditor {
@@ -24,6 +25,7 @@ export class JWEditor {
     vDocument: VDocument;
     debugger: OwlUI;
     parser = new Parser();
+    renderTo = 'html';
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -33,7 +35,6 @@ export class JWEditor {
         this.dispatcher = new Dispatcher(this);
         this.pluginsRegistry = [];
 
-        // Render the contents of `vDocument`
         this.renderer = new Renderer();
 
         if (!editable) {
@@ -80,7 +81,8 @@ export class JWEditor {
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this);
 
-        this.renderer.render(this.vDocument, this.editable);
+        // Render the contents of `vDocument`
+        this.renderer.render(this.vDocument, this.editable, this.renderTo);
 
         if (this.debugger) {
             await this.debugger.start();
@@ -132,6 +134,9 @@ export class JWEditor {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
         }
+        if (config.renderTo) {
+            this.renderTo = config.renderTo;
+        }
     }
 
     /**
@@ -142,7 +147,7 @@ export class JWEditor {
      */
     execCommand(id: CommandIdentifier, args?: CommandArgs): void {
         this.dispatcher.dispatch(id, args);
-        this.renderer.render(this.vDocument, this.editable);
+        this.renderer.render(this.vDocument, this.editable, this.renderTo);
     }
 
     /**
