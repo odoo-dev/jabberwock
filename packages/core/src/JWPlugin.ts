@@ -1,18 +1,18 @@
 import JWEditor from './JWEditor';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
 import { VNode } from './VNodes/VNode';
-import { HTMLRendering } from './BasicHtmlRenderingEngine';
 import { ParsingContext } from './Parser';
+import { RenderingContext } from './Renderer';
 
 export interface JWPluginConfig {
     name?: string;
 }
+export type ParsingContextHook = (context: ParsingContext) => ParsingContext;
 export type ParsePredicate = (node: Node) => ParseMethod;
 export type RenderPredicate = (node: VNode) => RenderMethod;
 export type ParseMethod = (context: ParsingContext) => ParsingContext;
-export type ParsingContextHook = (context: ParsingContext) => ParsingContext;
 // TODO: make render method generic
-export type RenderMethod = (node: VNode) => HTMLRendering;
+export type RenderMethod = (context: RenderingContext) => RenderingContext;
 
 export class JWPlugin {
     static readonly nodes: Array<typeof VNode> = [];

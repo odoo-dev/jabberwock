@@ -3,7 +3,6 @@ import { VDocument } from './VDocument';
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { RelativePosition } from '../../utils/src/range';
-import { HTMLRendering } from './BasicHtmlRenderingEngine';
 import { RenderPredicate } from './JWPlugin';
 import { VElement } from './VNodes/VElement';
 
@@ -48,22 +47,27 @@ export class Renderer {
                 parentNode: fragment,
             };
             do {
-                context = this._renderNext(context);
+                context = this._renderVNode(context);
             } while ((context = this._nextRenderingContext(context)));
         }
         target.appendChild(fragment);
 
         this._renderRange(range, target);
     }
-    _renderFromPlugins(node: VNode): HTMLRendering {
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _renderFromPlugins(context: RenderingContext): RenderingContext {
         for (const renderPredicate of this._renderPredicates) {
-            const renderer = renderPredicate(node);
+            const renderer = renderPredicate(context.currentVNode);
             if (renderer) {
-                return renderer(node);
+                return renderer(context);
             }
         }
-        if (node instanceof VElement) {
-            return VElement.render(node);
+        if (context.currentVNode instanceof VElement) {
+            return VElement.render(context);
         }
     }
     /**
@@ -155,26 +159,7 @@ export class Renderer {
      *
      * @param context
      */
-    _renderNext(context: RenderingContext): RenderingContext {
-        const rendering = this._renderFromPlugins(context.currentVNode);
-        if (rendering) {
-            this._addRenderedNodes(
-                Array.from(rendering.fragment.childNodes) as Node[],
-                rendering.vNodes,
-                context.parentNode,
-            );
-            context.currentVNode = rendering.vNodes[rendering.vNodes.length - 1];
-        }
-        return context;
-    }
-    // Append the rendered nodes to the DOM and map them.
-    _addRenderedNodes(domNodes: Node[], vNodes: VNode[], parent: Node): void {
-        /* domNodes.forEach(renderedNode => {
-            vNodes.forEach((vNode, index) => {
-                parent.appendChild(renderedNode);
-                VDocumentMap.set(vNode, renderedNode, index);
-                this._addRenderedNodes(Array.from(renderedNode.childNodes), vNodes, renderedNode);
-            });
-        }); */
+    _renderVNode(context: RenderingContext): RenderingContext {
+        return this._renderFromPlugins({ ...context });
     }
 }

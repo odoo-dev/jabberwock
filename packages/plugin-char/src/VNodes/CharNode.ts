@@ -63,17 +63,12 @@ export class CharNode extends VNode {
         __current += this.char;
         return __current;
     }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
     /**
      * Return true if this VNode has the same format properties as `b`.
      *
      * @param b
      */
-    _isSameAs(b: VNode): boolean {
+    isSameAs(b: VNode): boolean {
         if (isMarker(this) || isMarker(b)) {
             // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
@@ -83,12 +78,15 @@ export class CharNode extends VNode {
             // Nodes that are not valid in a text node must end the text node.
             return false;
         } else {
-            // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({
-                ...this.attributes,
-                ...b.attributes,
+            // Char VNodes are the same text node if they have the same
+            // attributes.
+            let attributeNames = Array.from(this.attributes.keys());
+            attributeNames = attributeNames.concat(Array.from(b.attributes.keys()));
+            return Array.from(new Set(attributeNames)).every(name => {
+                const thisAttribute = this.attributes.get(name) || false;
+                const bAttribute = b.attributes.get(name) || false;
+                return (thisAttribute && thisAttribute.value) == (bAttribute && bAttribute.value);
             });
-            return formats.every(k => !!this.attributes.get(k) === !!b.attributes.get(k));
         }
     }
 }

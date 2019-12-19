@@ -60,15 +60,6 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Render the VNode to the given format.
-     *
-     * @param [to] the name of the format to which we want to render (default:
-     * html)
-     */
-    render<T>(to = 'html'): T {
-        return this.renderingEngines[to].render(this) as T;
-    }
-    /**
      * Locate where to set the range, when it targets this VNode, at a certain
      * offset. This allows us to handle special cases.
      *

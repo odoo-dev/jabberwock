@@ -1,5 +1,5 @@
-import { VNode } from './VNodes/VNode';
 import { VElement } from './VNodes/VElement';
+import { RenderingContext } from './Renderer';
 
 /**
  * Renderers exist to render a node into another, different format. Each
@@ -12,10 +12,8 @@ export interface RenderingEngine {
      * The type of the format that is implemented by each renderer cannot be
      * known from the interface itself and so will need to be casted when used.
      */
-    render: (node: VNode) => {};
+    render: (context: RenderingContext) => RenderingContext;
 }
-
-export type HTMLRendering = { fragment: DocumentFragment; vNodes: VNode[] };
 
 export const BasicHtmlRenderingEngine = {
     /**
@@ -23,7 +21,7 @@ export const BasicHtmlRenderingEngine = {
      *
      * @param node
      */
-    render: function(node: VElement): HTMLRendering {
-        return VElement.render(node);
+    render: function(context: RenderingContext): RenderingContext {
+        return VElement.render(context);
     },
 };

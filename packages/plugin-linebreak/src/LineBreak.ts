@@ -1,10 +1,10 @@
 import { JWPlugin, ParseMethod, RenderMethod } from '../../core/src/JWPlugin';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LineBreakNode } from './VNodes/LineBreakNode';
-import { HTMLRendering } from '../../core/src/BasicHtmlRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { ParsingContext } from '../../core/src/Parser';
 import { utils } from '../../utils/src/utils';
+import { RenderingContext } from '../../core/src/Renderer';
 
 export class LineBreak extends JWPlugin {
     static readonly nodes = [LineBreakNode];
@@ -27,14 +27,14 @@ export class LineBreak extends JWPlugin {
      * @param [to] the name of the format to which we want to render (default:
      * html)
      */
-    static render(node: LineBreakNode): HTMLRendering {
-        const rendering = VElement.render(node);
-        if (!node.nextSibling()) {
+    static render(context: RenderingContext): RenderingContext {
+        context = VElement.render({ ...context });
+        if (!context.currentVNode.nextSibling()) {
             // If a LINE_BREAK has no next sibling, it must be rendered as two
             // BRs in order for it to be visible.
-            rendering.fragment.appendChild(document.createElement('br'));
+            context.parentNode.appendChild(document.createElement('br'));
         }
-        return rendering;
+        return context;
     }
     commands = {
         insertLineBreak: {

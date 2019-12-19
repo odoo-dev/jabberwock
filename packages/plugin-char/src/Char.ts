@@ -2,9 +2,10 @@ import { JWPlugin, ParseMethod, RenderMethod } from '../../core/src/JWPlugin';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { CharNode } from './VNodes/CharNode';
 import { removeFormattingSpace } from '../../utils/src/formattingSpace';
-import { HTMLRendering } from '../../core/src/BasicHtmlRenderingEngine';
 import { ParsingContext } from '../../core/src/Parser';
 import { VDocumentMap } from '../../core/src/VDocumentMap';
+import { RenderingContext } from '../../core/src/Renderer';
+import { utils } from '../../utils/src/utils';
 
 export class Char extends JWPlugin {
     static readonly nodes = [CharNode];
@@ -37,12 +38,14 @@ export class Char extends JWPlugin {
      * @param [to] the name of the format to which we want to render (default:
      * html)
      */
-    static render(node: CharNode): HTMLRendering {
+    static render(context: RenderingContext): RenderingContext {
+        const charNode = context.currentVNode as CharNode;
         // Consecutive compatible char nodes are rendered as a single text node.
-        let text = '' + node.char;
-        let next = node.nextSibling();
-        const charNodes: CharNode[] = [node];
-        while (next && node._isSameAs(next)) {
+        let text = '' + charNode.char;
+        let next = charNode.nextSibling();
+        const charNodes: CharNode[] = [charNode];
+        while (next && charNode.isSameAs(next)) {
+            context.currentVNode = next;
             if (next instanceof CharNode) {
                 charNodes.push(next);
                 if (next.char === ' ' && text[text.length - 1] === ' ') {
@@ -58,14 +61,12 @@ export class Char extends JWPlugin {
         text = text.replace(/^ | $/g, '\u00A0');
 
         // Create and append the text node, update the VDocumentMap.
-        let renderedNodes = [document.createTextNode(text)] as Node[];
-        if (node.attributes.size) {
-            node.attributes.forEach(attribute => {
-                renderedNodes = attribute.render(renderedNodes);
-            });
-        }
-        const fragment = document.createDocumentFragment();
-        renderedNodes.forEach(node => fragment.appendChild(node));
-        return { fragment: fragment, vNodes: charNodes };
+        const renderedNode = utils.renderAttributesTo(
+            charNode.attributes,
+            document.createTextNode(text),
+        );
+        context.parentNode.appendChild(renderedNode);
+        utils.addToMap(renderedNode, charNode);
+        return context;
     }
 }
