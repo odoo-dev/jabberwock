@@ -1,5 +1,7 @@
 import { VNode } from './VNode';
 import { HTMLRendering } from '../BasicHtmlRenderingEngine';
+import { ParsingContext } from '../Parser';
+import { utils } from '../../../utils/src/utils';
 
 export class VElement extends VNode {
     htmlTag: string;
@@ -13,8 +15,8 @@ export class VElement extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): VElement[] {
-        return [new VElement(node.nodeName)];
+    static parse(context: ParsingContext): ParsingContext {
+        return utils.contextToVNode(context, VElement, context.node.nodeName);
     }
     static render(node: VElement): HTMLRendering {
         const tagName = node.htmlTag;

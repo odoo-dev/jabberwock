@@ -7,7 +7,7 @@ import { HTMLRendering } from './BasicHtmlRenderingEngine';
 import { RenderPredicate } from './JWPlugin';
 import { VElement } from './VNodes/VElement';
 
-interface RenderingContext {
+export interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
     parentNode?: Node | DocumentFragment; // Node to render the VNode into.
 }
@@ -169,12 +169,12 @@ export class Renderer {
     }
     // Append the rendered nodes to the DOM and map them.
     _addRenderedNodes(domNodes: Node[], vNodes: VNode[], parent: Node): void {
-        domNodes.forEach(renderedNode => {
+        /* domNodes.forEach(renderedNode => {
             vNodes.forEach((vNode, index) => {
                 parent.appendChild(renderedNode);
                 VDocumentMap.set(vNode, renderedNode, index);
                 this._addRenderedNodes(Array.from(renderedNode.childNodes), vNodes, renderedNode);
             });
-        });
+        }); */
     }
 }

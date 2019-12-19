@@ -3,6 +3,8 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { HTMLRendering } from '../../core/src/BasicHtmlRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { ParsingContext } from '../../core/src/Parser';
+import { utils } from '../../utils/src/utils';
 
 export class LineBreak extends JWPlugin {
     static readonly nodes = [LineBreakNode];
@@ -16,8 +18,8 @@ export class LineBreak extends JWPlugin {
             return LineBreak.render;
         }
     }
-    static parse(): LineBreakNode[] {
-        return [new LineBreakNode()];
+    static parse(context: ParsingContext): ParsingContext {
+        return utils.contextToVNode(context, LineBreakNode);
     }
     /**
      * Render the VNode to the given format.

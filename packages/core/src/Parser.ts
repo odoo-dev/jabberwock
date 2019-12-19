@@ -1,5 +1,4 @@
 import { VDocument } from './VDocument';
-import { formatMap } from '../../plugin-format/src/formatMap';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
@@ -8,10 +7,10 @@ import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { Attribute, AttributeName } from './VNodes/Attribute';
-import { ParsePredicate } from './JWPlugin';
+import { AttributeName, Attribute } from './VNodes/Attribute';
+import { ParsePredicate, ParsingContextHook } from './JWPlugin';
 
-interface ParsingContext {
+export interface ParsingContext {
     readonly rootNode?: Node;
     node?: Node;
     parentVNode?: VNode;
@@ -20,8 +19,8 @@ interface ParsingContext {
 }
 
 export class Parser {
-    _VNodes: Set<typeof VNode> = new Set();
     _parsePredicates: Set<ParsePredicate> = new Set();
+    _parsingContextHooks: Set<ParsingContextHook> = new Set();
 
     //--------------------------------------------------------------------------
     // Public
@@ -37,21 +36,13 @@ export class Parser {
         this._parsePredicates.add(parsePredicate);
     }
     /**
-     * Return a list of vNodes matching the given node.
+     * Register a hook on the evaluation of the next parsing context.
      *
-     * @param node
+     * @see _nextParsingContext
+     * @param parsingContextHook
      */
-    parseNode(node: Node): VNode[] | Set<Attribute> {
-        for (const parsePredicate of this._parsePredicates) {
-            const parser = parsePredicate(node);
-            if (parser) {
-                return parser(node);
-            }
-        }
-        // If the node could not be parsed, create a generic element node with
-        // the HTML tag of the DOM Node. This way we may not support the node
-        // but we don't break it either.
-        return VElement.parse(node);
+    registerParsingContextHook(parsingContextHook: ParsingContextHook): void {
+        this._parsingContextHooks.add(parsingContextHook);
     }
     /**
      * Parse an HTML element into the editor's virtual representation.
@@ -123,60 +114,40 @@ export class Parser {
     //--------------------------------------------------------------------------
 
     /**
+     * Return a list of vNodes matching the given node.
+     *
+     * @param node
+     */
+    _parseFromPlugins(currentContext: ParsingContext): ParsingContext {
+        for (const parsePredicate of this._parsePredicates) {
+            const parser = parsePredicate(currentContext.node);
+            if (parser) {
+                return parser(currentContext);
+            }
+        }
+        // If the node could not be parsed, create a generic element node with
+        // the HTML tag of the DOM Node. This way we may not support the node
+        // but we don't break it either.
+        return VElement.parse(currentContext);
+    }
+    /**
      * Parse a node depending on its DOM type.
      *
      * @param currentContext The current context
      * @returns The next parsing context
      */
     _parseNode(currentContext: ParsingContext): ParsingContext {
-        const context = { ...currentContext };
-        const node = context.node;
-        const parseResult = this.parseNode(node);
-        if (Array.isArray(parseResult)) {
-            parseResult.forEach(parsedNode => {
-                context.attributes.forEach(attribute => {
-                    parsedNode.attributes.set(attribute.name, attribute.copy());
-                });
-                VDocumentMap.set(parsedNode, node);
-                context.parentVNode.append(parsedNode);
-            });
-        } else {
-            parseResult.forEach(attribute => {
-                context.attributes.set(attribute.name, attribute.copy());
-            });
-        }
-        // A <br/> with no siblings is there only to make its parent visible.
-        // Consume it since it was just parsed as its parent element node.
-        // TODO: do this less naively to account for formatting space.
-        if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
-            context.node = node.childNodes[0];
-            if (Array.isArray(parseResult)) {
-                parseResult.forEach((parsedNode: VNode) => {
-                    VDocumentMap.set(parsedNode, context.node);
-                });
-            }
-        }
-        // A trailing <br/> after another <br/> is there only to make its previous
-        // sibling visible. Consume it since it was just parsed as a single BR
-        // within our abstraction.
-        // TODO: do this less naively to account for formatting space.
-        if (
-            node.nodeName === 'BR' &&
-            node.nextSibling &&
-            node.nextSibling.nodeName === 'BR' &&
-            !node.nextSibling.nextSibling
-        ) {
-            context.node = node.nextSibling;
-            if (Array.isArray(parseResult)) {
-                parseResult.forEach((parsedNode: VNode) => {
-                    VDocumentMap.set(parsedNode, context.node);
-                });
-            }
-        }
-        return this._nextParsingContext(context);
+        return this._nextParsingContext(this._parseFromPlugins({ ...currentContext }));
     }
     _nextParsingContext(currentContext: ParsingContext): ParsingContext {
-        const nextContext = { ...currentContext };
+        let nextContext = { ...currentContext };
+
+        for (const parsingContextHook of this._parsingContextHooks) {
+            const foundContext = parsingContextHook({ ...currentContext });
+            if (foundContext) {
+                nextContext = foundContext;
+            }
+        }
 
         const node = currentContext.node;
         if (node.childNodes.length) {
@@ -201,10 +172,10 @@ export class Parser {
             const rootNode = currentContext.rootNode;
             do {
                 ancestor = ancestor.parentNode;
-                if (ancestor && formatMap.tags.includes(ancestor.nodeName)) {
-                    // Pop last formatting context from the stack
-                    nextContext.attributes.clear();
-                }
+                // if (ancestor && Format.tags.includes(ancestor.nodeName)) {
+                //     // Pop last formatting context from the stack
+                //     nextContext.attributes.shift();
+                // }
             } while (ancestor && !ancestor.nextSibling && ancestor !== rootNode);
             // At this point, the found ancestor has a sibling.
             if (ancestor && ancestor !== rootNode) {

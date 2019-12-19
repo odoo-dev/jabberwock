@@ -108,15 +108,14 @@ export class JWEditor {
             Object.keys(plugin.commandHooks).forEach(key => {
                 this.dispatcher.registerHook(key, plugin.commandHooks[key]);
             });
-            // Register the nodes of this plugin.
-            if (pluginClass.nodes.length) {
-                this.parser.addVNode(...pluginClass.nodes);
-            }
             if (pluginClass.getParser) {
                 this.parser.addParsePredicate(pluginClass.getParser);
             }
             if (pluginClass.getRenderer) {
                 this.renderer.addRenderPredicate(pluginClass.getRenderer);
+            }
+            if (pluginClass.parsingContextHook) {
+                this.parser.registerParsingContextHook(pluginClass.parsingContextHook);
             }
         });
     }

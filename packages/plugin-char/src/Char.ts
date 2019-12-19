@@ -3,6 +3,8 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { CharNode } from './VNodes/CharNode';
 import { removeFormattingSpace } from '../../utils/src/formattingSpace';
 import { HTMLRendering } from '../../core/src/BasicHtmlRenderingEngine';
+import { ParsingContext } from '../../core/src/Parser';
+import { VDocumentMap } from '../../core/src/VDocumentMap';
 
 export class Char extends JWPlugin {
     static readonly nodes = [CharNode];
@@ -16,14 +18,18 @@ export class Char extends JWPlugin {
             return Char.render;
         }
     }
-    static parse(node: Node): CharNode[] {
-        const vNodes: CharNode[] = [];
+    static parse(context: ParsingContext): ParsingContext {
+        const node = context.node;
         const text = removeFormattingSpace(node);
         for (let i = 0; i < text.length; i++) {
-            const parsedVNode = new CharNode(text.charAt(i));
-            vNodes.push(parsedVNode);
+            const charNode = new CharNode(text.charAt(i));
+            context.attributes.forEach((attribute, name) => {
+                charNode.attributes.set(name, attribute);
+            });
+            VDocumentMap.set(charNode, node);
+            context.parentVNode.append(charNode);
         }
-        return vNodes;
+        return context;
     }
     /**
      * Render the VNode to the given format.
