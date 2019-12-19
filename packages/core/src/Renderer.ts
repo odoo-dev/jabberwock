@@ -3,7 +3,7 @@ import { VDocument } from './VDocument';
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { RelativePosition } from '../../utils/src/range';
-import { RenderPredicate } from './JWPlugin';
+import { RenderPredicate, RenderingContextHook } from './JWPlugin';
 import { VElement } from './VNodes/VElement';
 
 export interface RenderingContext {
@@ -13,6 +13,7 @@ export interface RenderingContext {
 
 export class Renderer {
     _renderPredicates: Set<RenderPredicate> = new Set();
+    _renderingContextHooks: Set<RenderingContextHook> = new Set();
 
     //--------------------------------------------------------------------------
     // Public
@@ -26,6 +27,15 @@ export class Renderer {
      */
     addRenderPredicate(renderPredicate: RenderPredicate): void {
         this._renderPredicates.add(renderPredicate);
+    }
+    /**
+     * Register a hook on the evaluation of the next rendering context.
+     *
+     * @see _nextRenderingContext
+     * @param renderingContextHook
+     */
+    registerRenderingContextHook(renderingContextHook: RenderingContextHook): void {
+        this._renderingContextHooks.add(renderingContextHook);
     }
     /**
      * Render the contents of a root VNode into a given target element.
@@ -78,6 +88,13 @@ export class Renderer {
      * @param context
      */
     _nextRenderingContext(context: RenderingContext): RenderingContext {
+        for (const renderingContextHook of this._renderingContextHooks) {
+            const foundContext = renderingContextHook({ ...context });
+            if (foundContext) {
+                context = foundContext;
+            }
+        }
+
         const vNode = context.currentVNode;
         if (vNode.hasChildren()) {
             // Render the first child with the current node as parent.

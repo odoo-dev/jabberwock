@@ -8,6 +8,7 @@ export interface JWPluginConfig {
     name?: string;
 }
 export type ParsingContextHook = (context: ParsingContext) => ParsingContext;
+export type RenderingContextHook = (context: RenderingContext) => RenderingContext;
 export type ParsePredicate = (node: Node) => ParseMethod;
 export type RenderPredicate = (node: VNode) => RenderMethod;
 export type ParseMethod = (context: ParsingContext) => ParsingContext;
@@ -19,6 +20,7 @@ export class JWPlugin {
     static getParser: ParsePredicate;
     static getRenderer: RenderPredicate;
     static parsingContextHook: ParsingContextHook;
+    static renderingContextHook: RenderingContextHook;
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};

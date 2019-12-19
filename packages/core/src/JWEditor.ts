@@ -117,6 +117,9 @@ export class JWEditor {
             if (pluginClass.parsingContextHook) {
                 this.parser.registerParsingContextHook(pluginClass.parsingContextHook);
             }
+            if (pluginClass.renderingContextHook) {
+                this.renderer.registerRenderingContextHook(pluginClass.renderingContextHook);
+            }
         });
     }
     /**
