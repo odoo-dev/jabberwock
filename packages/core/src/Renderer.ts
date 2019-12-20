@@ -64,6 +64,12 @@ export class Renderer {
      * @param [to] the name of the format to which we want to render
      */
     render(vDocument: VDocument, target: Element, to: RenderingEngineName = 'html'): void {
+        // TODO: Make this return-agnostic. The Rendering Engine should be the
+        // one to implement this. It then returns whatever it wants to return
+        // and some other thing renders for our view. HtmlRenderingEngine
+        // returns a DocumentFragment already so we can add it to the target.
+        // MarkdownRenderingEngine returns a string. We could simply add it as
+        // the target's innerHTML.
         const root = vDocument.root;
         const range = vDocument.range;
         target.innerHTML = ''; // TODO: update instead of recreate
@@ -150,6 +156,7 @@ export class Renderer {
                 return;
             }
         }
+        if (!context.parentNode) return;
         return context;
     }
     /**

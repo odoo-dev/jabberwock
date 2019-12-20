@@ -1,10 +1,9 @@
 import { RenderingContext } from '../../core/src/Renderer';
 import { VDocumentMap } from '../../core/src/VDocumentMap';
-import { VNode } from '../../core/src/VNodes/VNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { RenderingEngine } from '../../core/src/RenderingEngine';
 
-export const BasicMarkdownRenderingEngine: RenderingEngine<Node> = {
+export const BasicMarkdownRenderingEngine: RenderingEngine<string> = {
     /**
      * Render the given node to HTML.
      *
@@ -23,15 +22,12 @@ export const BasicMarkdownRenderingEngine: RenderingEngine<Node> = {
             element.appendChild(document.createElement('BR'));
         }
 
-        BasicMarkdownRenderingEngine.addToMap(element, vNode);
+        // BasicMarkdownRenderingEngine.addToMap(element, vNode);
         element.childNodes.forEach(child => VDocumentMap.set(vNode, child));
         return context;
     },
-    addToMap(element: Node, vNode: VNode, index?: number): void {
-        VDocumentMap.set(vNode, element, index);
-        element.childNodes.forEach((child, index) => {
-            BasicMarkdownRenderingEngine.addToMap(child, vNode, index);
-        });
+    addToMap(): void {
+        return;
     },
     renderAttributes(context: RenderingContext): RenderingContext {
         for (const attribute of context.currentVNode.attributes.values()) {
