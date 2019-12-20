@@ -29,7 +29,7 @@ export class LineBreak extends JWPlugin {
      */
     static render(context: RenderingContext): RenderingContext {
         context = VElement.render({ ...context });
-        if (context.to === 'html' && !context.currentVNode.nextSibling()) {
+        if (context.renderingEngine.name === 'html' && !context.currentVNode.nextSibling()) {
             // If a LINE_BREAK has no next sibling, it must be rendered as two
             // BRs in order for it to be visible.
             context.parentNode.appendChild(document.createElement('br'));

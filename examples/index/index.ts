@@ -6,6 +6,7 @@ jabberwocky.init(basicEditor.editable);
 
 basicEditor.loadConfig({
     debug: true,
+    // renderTo: 'markdown',
 });
 
 basicEditor.start();

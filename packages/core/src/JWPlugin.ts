@@ -3,6 +3,7 @@ import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatch
 import { VNode } from './VNodes/VNode';
 import { ParsingContext } from './Parser';
 import { RenderingContext } from './Renderer';
+import { RenderingEngineName, RenderingEngine } from './RenderingEngine';
 
 export interface JWPluginConfig {
     name?: string;
@@ -13,9 +14,12 @@ export type ParsePredicate = (node: Node) => ParseMethod;
 export type RenderPredicate = (node: VNode) => RenderMethod;
 export type ParseMethod = (context: ParsingContext) => ParsingContext;
 export type RenderMethod = (context: RenderingContext) => RenderingContext;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RenderingEngineRecord = Record<RenderingEngineName, RenderingEngine<any>>;
 
 export class JWPlugin {
     static readonly nodes: Array<typeof VNode> = [];
+    static readonly renderingEngines: RenderingEngineRecord;
     static getParser: ParsePredicate;
     static getRenderer: RenderPredicate;
     static parsingContextHook: ParsingContextHook;

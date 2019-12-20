@@ -5,7 +5,6 @@ import { removeFormattingSpace } from '../../utils/src/formattingSpace';
 import { ParsingContext } from '../../core/src/Parser';
 import { VDocumentMap } from '../../core/src/VDocumentMap';
 import { RenderingContext } from '../../core/src/Renderer';
-import { utils } from '../../utils/src/utils';
 
 export class Char extends JWPlugin {
     static readonly nodes = [CharNode];
@@ -39,9 +38,6 @@ export class Char extends JWPlugin {
      * html)
      */
     static render(context: RenderingContext): RenderingContext {
-        if (context.to !== 'html') {
-            return context;
-        }
         const charNode = context.currentVNode as CharNode;
         // Consecutive compatible char nodes are rendered as a single text node.
         let text = '' + charNode.char;
@@ -64,12 +60,12 @@ export class Char extends JWPlugin {
         text = text.replace(/^ | $/g, '\u00A0');
 
         // Create and append the text node, update the VDocumentMap.
-        const renderedNode = utils.renderAttributesTo(
+        const renderedNode = context.renderingEngine.engine.renderAttributesTo(
             charNode.attributes,
             document.createTextNode(text),
         );
         context.parentNode.appendChild(renderedNode);
-        utils.addToMap(renderedNode, charNode);
+        context.renderingEngine.engine.addToMap(renderedNode, charNode);
         return context;
     }
 }

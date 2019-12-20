@@ -7,11 +7,12 @@ import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
+import { RenderingEngineName } from './RenderingEngine';
 
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
-    renderTo?: string;
+    renderTo?: RenderingEngineName;
 }
 
 export class JWEditor {
@@ -25,7 +26,7 @@ export class JWEditor {
     vDocument: VDocument;
     debugger: OwlUI;
     parser = new Parser();
-    renderTo = 'html';
+    renderTo: RenderingEngineName = 'html';
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -110,6 +111,9 @@ export class JWEditor {
             Object.keys(plugin.commandHooks).forEach(key => {
                 this.dispatcher.registerHook(key, plugin.commandHooks[key]);
             });
+            if (pluginClass.renderingEngines) {
+                this.renderer.addRenderingEngines(pluginClass.renderingEngines);
+            }
             if (pluginClass.getParser) {
                 this.parser.addParsePredicate(pluginClass.getParser);
             }

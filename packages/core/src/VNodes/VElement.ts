@@ -19,7 +19,7 @@ export class VElement extends VNode {
         return utils.parse(context, VElement, context.node.nodeName);
     }
     static render(context: RenderingContext): RenderingContext {
-        return utils.render(context, (context.currentVNode as VElement).htmlTag);
+        return context.renderingEngine.engine.render(context);
     }
 
     //--------------------------------------------------------------------------

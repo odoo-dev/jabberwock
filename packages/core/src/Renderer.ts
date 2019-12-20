@@ -3,16 +3,24 @@ import { VDocument } from './VDocument';
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { RelativePosition } from '../../utils/src/range';
-import { RenderPredicate, RenderingContextHook } from './JWPlugin';
+import { RenderPredicate, RenderingContextHook, RenderingEngineRecord } from './JWPlugin';
 import { VElement } from './VNodes/VElement';
+import { RenderingEngineName, RenderingEngine } from './RenderingEngine';
 
 export interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
     parentNode?: Node | DocumentFragment; // Node to render the VNode into.
-    to: string; // the name of the format to which we want to render
+    renderingEngine: {
+        // Rendering engine to use for rendering
+        name: RenderingEngineName;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        engine: RenderingEngine<any>;
+    };
 }
 
 export class Renderer {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _renderingEngines: RenderingEngineRecord = {};
     _renderPredicates: Set<RenderPredicate> = new Set();
     _renderingContextHooks: Set<RenderingContextHook> = new Set();
 
@@ -20,6 +28,16 @@ export class Renderer {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Add rendering engines.
+     *
+     * @param renderingEngines
+     */
+    addRenderingEngines(renderingEngines: RenderingEngineRecord): void {
+        Object.keys(renderingEngines).forEach(name => {
+            this._renderingEngines[name] = renderingEngines[name];
+        });
+    }
     /**
      * Add a method to the ones this Parser uses to find which plugin parses
      * which node.
@@ -43,8 +61,9 @@ export class Renderer {
      *
      * @param root
      * @param target
+     * @param [to] the name of the format to which we want to render
      */
-    render(vDocument: VDocument, target: Element, to = 'html'): void {
+    render(vDocument: VDocument, target: Element, to: RenderingEngineName = 'html'): void {
         const root = vDocument.root;
         const range = vDocument.range;
         target.innerHTML = ''; // TODO: update instead of recreate
@@ -52,11 +71,19 @@ export class Renderer {
         VDocumentMap.clear(); // TODO: update instead of recreate
         VDocumentMap.set(root, fragment);
 
+        const renderingEngine = this._renderingEngines[to];
+        if (!renderingEngine) {
+            throw new Error('The specified rendering engine could not be found.');
+        }
+
         if (root.hasChildren()) {
             let context: RenderingContext = {
                 currentVNode: root.firstChild(),
                 parentNode: fragment,
-                to: to,
+                renderingEngine: {
+                    name: to,
+                    engine: renderingEngine,
+                },
             };
             do {
                 context = this._renderVNode(context);
