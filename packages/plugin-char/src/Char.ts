@@ -60,11 +60,10 @@ export class Char extends JWPlugin {
         text = text.replace(/^ | $/g, '\u00A0');
 
         // Create and append the text node, update the VDocumentMap.
-        const renderedNode = context.renderingEngine.engine.renderAttributesTo(
-            charNode.attributes,
-            document.createTextNode(text),
-        );
+        const renderedNode = document.createTextNode(text);
         context.parentNode.appendChild(renderedNode);
+        context.parentNode = renderedNode;
+        context = context.renderingEngine.engine.renderAttributes({ ...context });
         context.renderingEngine.engine.addToMap(renderedNode, charNode);
         return context;
     }

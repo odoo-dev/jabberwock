@@ -1,3 +1,5 @@
+import { RenderingContext } from '../Renderer';
+
 export type AttributeName = string;
 export type AttributeValue = string | boolean;
 export class Attribute {
@@ -7,11 +9,11 @@ export class Attribute {
         this.name = name;
         this.value = value;
     }
-    renderToHtml(node: Node): Node {
-        if (this.value && node instanceof Element) {
-            node.setAttribute(this.name, this.value);
+    render(context: RenderingContext): RenderingContext {
+        if (this.value && context instanceof Element) {
+            (context.parentNode as Element).setAttribute(this.name, this.value);
         }
-        return node;
+        return context;
     }
     copy(): Attribute {
         return new Attribute(this.name, this.value);

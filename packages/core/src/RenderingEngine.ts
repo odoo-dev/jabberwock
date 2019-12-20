@@ -1,5 +1,4 @@
 import { RenderingContext } from './Renderer';
-import { AttributeName, Attribute } from './VNodes/Attribute';
 import { VNode } from './VNodes/VNode';
 
 export type RenderingEngineName = string;
@@ -15,9 +14,6 @@ export interface RenderingEngine<ElementType> {
      * known from the interface itself and so will need to be casted when used.
      */
     render: (context: RenderingContext) => RenderingContext;
-    renderAttributesTo: (
-        attributes: Map<AttributeName, Attribute>,
-        node: ElementType,
-    ) => ElementType;
+    renderAttributes: (context: RenderingContext) => RenderingContext;
     addToMap: (element: ElementType, vNode: VNode, index?: number) => void;
 }

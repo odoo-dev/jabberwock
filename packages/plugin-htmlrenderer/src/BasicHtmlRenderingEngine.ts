@@ -1,6 +1,5 @@
 import { RenderingContext } from '../../core/src/Renderer';
 import { VDocumentMap } from '../../core/src/VDocumentMap';
-import { AttributeName, Attribute } from '../../core/src/VNodes/Attribute';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { RenderingEngine } from '../../core/src/RenderingEngine';
@@ -14,7 +13,8 @@ export const BasicHtmlRenderingEngine: RenderingEngine<Node> = {
     render(context: RenderingContext): RenderingContext {
         const vNode = context.currentVNode;
         const tagName = (context.currentVNode as VElement).htmlTag;
-        const element = this.renderAttributesTo(vNode.attributes, document.createElement(tagName));
+        const element = document.createElement(tagName);
+        // const element = BasicHtmlRenderingEngine.renderAttributesTo(vNode.attributes, document.createElement(tagName));
         context.parentNode.appendChild(element);
 
         // If a node is empty but could accomodate children,
@@ -23,20 +23,20 @@ export const BasicHtmlRenderingEngine: RenderingEngine<Node> = {
             element.appendChild(document.createElement('BR'));
         }
 
-        this.addToMap(element, vNode);
+        BasicHtmlRenderingEngine.addToMap(element, vNode);
         element.childNodes.forEach(child => VDocumentMap.set(vNode, child));
         return context;
     },
     addToMap(element: Node, vNode: VNode, index?: number): void {
         VDocumentMap.set(vNode, element, index);
         element.childNodes.forEach((child, index) => {
-            this.addToMap(child, vNode, index);
+            BasicHtmlRenderingEngine.addToMap(child, vNode, index);
         });
     },
-    renderAttributesTo(attributes: Map<AttributeName, Attribute>, node: Node): Node {
-        attributes.forEach(attribute => {
-            node = attribute.renderToHtml(node);
-        });
-        return node;
+    renderAttributes(context: RenderingContext): RenderingContext {
+        for (const attribute of context.currentVNode.attributes.values()) {
+            context = attribute.render(context);
+        }
+        return context;
     },
 };
