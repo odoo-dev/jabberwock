@@ -24,10 +24,7 @@ export class VNode {
     name: string;
     _children: VNode[] = [];
 
-    // We need to include ...args in the constructor's arguments so it can be
-    // freely extended with different arguments.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    constructor(...arg: any[]) {
+    constructor() {
         this.type = VNodeType.NODE;
         this.name = this.constructor.name;
         id++;
