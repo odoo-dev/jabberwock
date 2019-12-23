@@ -1,13 +1,13 @@
 import JWEditor from './JWEditor';
+import { ParsingFunction } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
-import { VNode } from './VNodes/VNode';
 
 export interface JWPluginConfig {
     name?: string;
 }
 
 export class JWPlugin {
-    static readonly nodes: Array<typeof VNode> = [];
+    static readonly parsingFunctions: Array<ParsingFunction> = [];
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};

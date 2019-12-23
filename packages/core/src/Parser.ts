@@ -19,22 +19,28 @@ interface ParsingContext {
     vDocument: VDocument;
 }
 
+export type ParsingFunction = (node: Node) => VNode[];
+
 export class Parser {
     // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
-    _VNodes: Set<typeof VNode> = new Set([CharNode, LineBreakNode, VElement]);
+    parsingFunctions: Set<ParsingFunction> = new Set([
+        CharNode.parse,
+        LineBreakNode.parse,
+        VElement.parse,
+    ]);
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
     /**
-     * Add an array of VNodes to the ones that this Parser can handle.
+     * Add parsing functions to the ones that this Parser can handle.
      *
-     * @param VNodeClasses
+     * @param parsingFunctions
      */
-    addVNode(...VNodeClasses: Array<typeof VNode>): void {
-        VNodeClasses.forEach(VNodeClass => {
-            this._VNodes.add(VNodeClass);
+    addParsingFunction(...parsingFunctions: Array<ParsingFunction>): void {
+        parsingFunctions.forEach(VNodeClass => {
+            this.parsingFunctions.add(VNodeClass);
         });
     }
     /**
@@ -43,8 +49,8 @@ export class Parser {
      * @param node
      */
     parseNode(node: Node): VNode[] {
-        for (const VNodeClass of this._VNodes) {
-            const vNodes = VNodeClass.parse(node);
+        for (const parse of this.parsingFunctions) {
+            const vNodes = parse(node);
             if (vNodes) {
                 return vNodes;
             }

@@ -1150,7 +1150,7 @@ describe('core', () => {
                         }
                     }
                     class MyCustomPlugin extends JWPlugin {
-                        static readonly nodes = [MyCustomNode];
+                        static readonly parsingFunctions = [MyCustomNode.parse];
                     }
                     editor.addPlugin(MyCustomPlugin);
                     editor.start();
