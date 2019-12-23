@@ -5,7 +5,7 @@ export class VElement extends VNode {
     constructor(tagName: string) {
         super();
         this.htmlTag = tagName;
-        this.name = tagName;
+        this.name = this.constructor.name + ': ' + tagName;
     }
 
     //--------------------------------------------------------------------------

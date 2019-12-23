@@ -57,12 +57,6 @@ export class CharNode extends VNode {
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * @override
-     */
-    toString(): string {
-        return this.char;
-    }
     get format(): FormatType {
         return {
             bold: this.bold,

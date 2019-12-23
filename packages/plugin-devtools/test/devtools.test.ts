@@ -581,7 +581,7 @@ describe('plugin-devtools', () => {
                 clientX: posI.left,
                 clientY: posI.top,
             });
-            expect(path.textContent).to.equal('FragmentNodePi.i');
+            expect(path.textContent).to.equal('FragmentNodeVElement: Pi.i');
 
             const u = devtools.querySelector('devtools-node .selectable-line.underline');
             const posU = u.getBoundingClientRect();
@@ -589,7 +589,7 @@ describe('plugin-devtools', () => {
                 clientX: posU.left,
                 clientY: posU.top,
             });
-            expect(path.textContent).to.equal('FragmentNodePu.u');
+            expect(path.textContent).to.equal('FragmentNodeVElement: Pu.u');
         });
         it('should select a parent node with the bottom path bar', async () => {
             await openDevTools(devtools);

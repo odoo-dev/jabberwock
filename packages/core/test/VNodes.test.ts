@@ -995,8 +995,8 @@ describe('core', () => {
                                 const a = editor.vDocument.root.firstLeaf();
                                 const ancestors = a.ancestors();
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
-                                    'P',
-                                    'H1',
+                                    'VElement: P',
+                                    'VElement: H1',
                                     'FragmentNode',
                                 ]);
                             },
@@ -1007,9 +1007,9 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const a = editor.vDocument.root.firstLeaf();
-                                const ancestors = a.ancestors(ancestor => ancestor.name !== 'H1');
+                                const ancestors = a.ancestors(ancestor => ancestor.name !== 'VElement: H1');
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
-                                    'P',
+                                    'VElement: P',
                                     'FragmentNode',
                                 ]);
                             },
@@ -1024,7 +1024,13 @@ describe('core', () => {
                                 const descendants = editor.vDocument.root.descendants();
                                 expect(
                                     descendants.map(descendant => descendant.name),
-                                ).to.deep.equal(['H1', 'P', 'a', 'H2', 'b']);
+                                ).to.deep.equal([
+                                    'VElement: H1',
+                                    'VElement: P',
+                                    'a',
+                                    'VElement: H2',
+                                    'b',
+                                ]);
                             },
                         });
                     });
@@ -1033,11 +1039,11 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const descendants = editor.vDocument.root.descendants(
-                                    descendant => descendant.name !== 'H2',
+                                    descendant => descendant.name !== 'VElement: H2',
                                 );
                                 expect(
                                     descendants.map(descendant => descendant.name),
-                                ).to.deep.equal(['H1', 'P', 'a', 'b']);
+                                ).to.deep.equal(['VElement: H1', 'VElement: P', 'a', 'b']);
                             },
                         });
                     });
