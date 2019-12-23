@@ -318,9 +318,7 @@ describe('core', () => {
                         p.append(head);
                         const c = new CharNode('c');
                         p.append(c);
-                        expect(root + '').to.deep.equal(
-                            '<FragmentNode><VElement:P><CharNode:a/><CharNode:b/><CharNode:c/></VElement:P></FragmentNode>',
-                        );
+                        expect(root + '').to.deep.equal('FragmentNode');
                     });
                 });
                 describe('children', () => {
