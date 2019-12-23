@@ -1,3 +1,5 @@
+import { utils } from './utils';
+
 /**
  * Return a string with the value of a text node stripped of its formatting
  * space, applying the w3 rules for white space processing
@@ -98,11 +100,7 @@ function _isSegment(node: Node): boolean {
     } else {
         // The W3 specification has many specific cases that defines what is
         // or is not a segment. For the moment, we only handle display: block.
-        const temporaryElement = document.createElement(node.nodeName);
-        document.body.appendChild(temporaryElement);
-        const display = window.getComputedStyle(temporaryElement).display;
-        document.body.removeChild(temporaryElement);
-        return display.includes('block');
+        return utils.isBlock(node);
     }
 }
 /**
