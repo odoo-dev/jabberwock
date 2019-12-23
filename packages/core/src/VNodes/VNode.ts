@@ -33,17 +33,7 @@ export class VNode {
      * @override
      */
     toString(): string {
-        let string = '<' + this.name;
-        if (this.hasChildren()) {
-            string += '>';
-            this.children.forEach(child => {
-                string += child.toString();
-            });
-            string += '</' + this.name + '>';
-        } else {
-            string += '/>';
-        }
-        return string;
+        return this.name;
     }
     /**
      * A node is atomic when it is not allowed to have children in the

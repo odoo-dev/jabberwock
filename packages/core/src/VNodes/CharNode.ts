@@ -61,17 +61,7 @@ export class CharNode extends VNode {
      * @override
      */
     toString(): string {
-        let string = '<' + this.constructor.name + ':' + this.name;
-        if (this.hasChildren()) {
-            string += '>';
-            this.children.forEach(child => {
-                string += child.toString();
-            });
-            string += '</' + this.constructor.name + ':' + this.name + '>';
-        } else {
-            string += '/>';
-        }
-        return string;
+        return this.char;
     }
     get format(): FormatType {
         return {
