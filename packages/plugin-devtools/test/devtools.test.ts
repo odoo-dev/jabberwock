@@ -20,7 +20,8 @@ describe('plugin-devtools', () => {
 
         const root = document.createElement('test-container');
         root.style.display = 'block';
-        root.innerHTML = '<h1>Title</h1><p>a<b>b</b>c</p><p>def<br>gh<i>i</i></p><div>div</div>';
+        root.innerHTML =
+            '<h1>Title</h1><p>a<b>b</b>c</p><p>def<br>gh<i>i</i><u>u</u></p><div>div</div>';
         wrapper.appendChild(root);
 
         Object.keys(localStorage).forEach(key => {
@@ -146,8 +147,8 @@ describe('plugin-devtools', () => {
                 '"</td></tr>' +
                 '<tr><td>length</td><td>4</td></tr>' +
                 '<tr><td>atomic</td><td>false</td></tr>' +
-                '<tr><td>text</td><td>"Titleabcdefghidiv"</td></tr>' +
-                '<tr><td>total length</td><td>22</td></tr>' +
+                '<tr><td>text</td><td>"Titleabcdefghiudiv"</td></tr>' +
+                '<tr><td>total length</td><td>23</td></tr>' +
                 '</tbody>' +
                 '</table>' +
                 '<div class="divider">📖 My Properties</div>' +
@@ -364,7 +365,7 @@ describe('plugin-devtools', () => {
             await keydown(node, 'Enter');
             expect(node.classList.contains('folded')).to.equal(false, 'node is unfolded');
             expect(node.querySelector('.children').children.length).to.equal(
-                7,
+                8,
                 'children are loaded',
             );
 
@@ -545,6 +546,35 @@ describe('plugin-devtools', () => {
         });
     });
     describe('PathComponent', () => {
+        it('should display the path in bottom bar', async () => {
+            await openDevTools(devtools);
+
+            const node = devtools.querySelector('devtools-node.element.folded:nth-child(3)');
+            const name = node.querySelector('.element-name');
+            const namePos = name.getBoundingClientRect();
+            await click(name, {
+                clientX: namePos.left,
+                clientY: namePos.top,
+            });
+
+            const path = devtools.querySelector('devtools-path');
+
+            const i = devtools.querySelector('devtools-node .selectable-line.italic');
+            const posI = i.getBoundingClientRect();
+            await click(i, {
+                clientX: posI.left,
+                clientY: posI.top,
+            });
+            expect(path.textContent).to.equal('fragmentnodenode.i');
+
+            const u = devtools.querySelector('devtools-node .selectable-line.underline');
+            const posU = u.getBoundingClientRect();
+            await click(u, {
+                clientX: posU.left,
+                clientY: posU.top,
+            });
+            expect(path.textContent).to.equal('fragmentnodenode.u');
+        });
         it('should select a parent node with the bottom path bar', async () => {
             await openDevTools(devtools);
 
