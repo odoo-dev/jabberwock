@@ -17,8 +17,8 @@ export enum Direction {
     BACKWARD = 'BACKWARD',
     FORWARD = 'FORWARD',
 }
-export const RANGE_TAIL_CHAR = '[';
-export const RANGE_HEAD_CHAR = ']';
+export const RANGE_ANCHOR_CHAR = '[';
+export const RANGE_FOCUS_CHAR = ']';
 
 export let isWithMarkers = false;
 /**

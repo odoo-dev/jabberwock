@@ -887,11 +887,10 @@ describe('plugin-devtools', () => {
                     '<table>' +
                     '<tbody>' +
                     '<tr><td>vRange</td><td><table><tbody>' +
-                    '<tr><td> direction </td><td>FORWARD</td></tr>' +
-                    '<tr><td> start </td><td> ' +
+                    '<tr><td> anchor </td><td>BEFORE ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
-                    '<tr><td> end </td><td> ' +
+                    '<tr><td> focus </td><td>AFTER ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
                     '</tbody></table></td></tr>' +

@@ -3,58 +3,23 @@ import { RelativePosition, Direction, withMarkers } from '../../utils/src/range'
 import { RangeNode } from './VNodes/RangeNode';
 
 export interface VRangeDescription {
-    start: VNode;
-    startPosition?: RelativePosition;
-    end?: VNode;
-    endPosition?: RelativePosition;
-    direction: Direction;
+    anchorNode: VNode;
+    anchorPosition: RelativePosition;
+    focusNode: VNode;
+    focusPosition: RelativePosition;
 }
 
 export class VRange {
-    readonly _tail = new RangeNode();
-    readonly _head = new RangeNode();
+    readonly anchor = new RangeNode();
+    readonly focus = new RangeNode();
     /**
      * The direction of the range depends on whether tail is before head or the
      * opposite. This is costly to compute and, as such, is only computed when
-     * needed by the `direction` getter. The `_direction` variable is the cache
-     * for this computation, as the direction will not change anymore until the
-     * range is changed, at which point this cache will be invalidated.
+     * needed by the `direction` getter.
      */
-    _direction: Direction;
-    constructor(direction: Direction = Direction.FORWARD) {
-        this._direction = direction;
-    }
     get direction(): Direction {
-        if (!this._direction) {
-            const forward = withMarkers(() => this._tail.isBefore(this._head));
-            this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
-        }
-        return this._direction;
-    }
-    /**
-     * Return the first range node in order of traversal.
-     */
-    get start(): RangeNode {
-        return this.direction === Direction.FORWARD ? this._tail : this._head;
-    }
-    /**
-     * Return the last range node in order of traversal.
-     */
-    get end(): RangeNode {
-        return this.direction === Direction.FORWARD ? this._head : this._tail;
-    }
-    /**
-     * Return the anchor range node: the one on which the selection was
-     * initiated.
-     */
-    get anchor(): VNode {
-        return this._tail;
-    }
-    /**
-     * Return the focus range node: the one to which the selection was extended.
-     */
-    get focus(): VNode {
-        return this._head;
+        const forward = withMarkers(() => this.anchor.isBefore(this.focus));
+        return forward ? Direction.FORWARD : Direction.BACKWARD;
     }
 
     //--------------------------------------------------------------------------
@@ -67,9 +32,9 @@ export class VRange {
     isCollapsed(): boolean {
         return withMarkers(() => {
             if (this.direction === Direction.FORWARD) {
-                return this._tail.nextSibling() === this._head;
+                return this.anchor.nextSibling() === this.focus;
             } else {
-                return this._head.nextSibling() === this._tail;
+                return this.focus.nextSibling() === this.anchor;
             }
         });
     }
@@ -79,9 +44,11 @@ export class VRange {
      */
     get selectedNodes(): VNode[] {
         const selectedNodes: VNode[] = [];
-        let node = this.start;
+        const start = this.direction === Direction.FORWARD ? this.anchor : this.focus;
+        const end = this.direction === Direction.FORWARD ? this.focus : this.anchor;
+        let node = start;
         withMarkers(() => {
-            while ((node = node.next()) && node !== this.end) {
+            while ((node = node.next()) && node !== end) {
                 selectedNodes.push(node);
             }
         });
@@ -97,14 +64,12 @@ export class VRange {
      *
      * @param [edge] range node on which to collapse
      */
-    collapse(edge = this._tail): VRange {
-        if (edge === this._tail) {
-            this._setHead(edge);
+    collapse(edge = this.anchor): VRange {
+        if (edge === this.anchor) {
+            this._setFocus(edge);
         } else {
-            this._setTail(edge);
+            this._setAnchor(edge);
         }
-        // When collapsing, we always set the head after the tail
-        this._direction = Direction.FORWARD;
         return this;
     }
     /**
@@ -112,17 +77,13 @@ export class VRange {
      *
      * @param range
      */
-    set(range: VRangeDescription): VRange {
-        if (range.direction === Direction.FORWARD) {
-            this.select(range.start, range.startPosition, range.end, range.endPosition);
-        } else {
-            this.select(range.end, range.endPosition, range.start, range.startPosition);
-        }
-        // If it is known, use of the given direction to populate the cache.
-        if (range.direction) {
-            this._direction = range.direction;
-        }
-        return this;
+    set(selection: VRangeDescription): VRange {
+        return this.select(
+            selection.anchorNode,
+            selection.anchorPosition,
+            selection.focusNode,
+            selection.focusPosition,
+        );
     }
     /**
      * Set a collapsed range at the given location, targetting a `reference`
@@ -133,11 +94,11 @@ export class VRange {
      * @param reference
      */
     setAt(reference: VNode, position = RelativePosition.BEFORE): VRange {
-        return this._setTail(reference, position).collapse();
+        return this._setAnchor(reference, position).collapse();
     }
     /**
      * Set a range selecting the given nodes.
-     * Consider `ab` ([ = `this._start`, ] = `this._end`):
+     * Consider `ab` ([ = `this.anchor`, ] = `this.focus`):
      * `select(a)` => `[a]b`
      * `select(a, b)` => `[ab]`
      * `select(a, RelativePosition.BEFORE, b, RelativePosition.BEFORE)` => `[a]b`
@@ -146,33 +107,33 @@ export class VRange {
      * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a[b]`
      *
      * @param tailNode
-     * @param [startPosition] default: `RelativePosition.BEFORE`
-     * @param [headNode] default: `startNode`
-     * @param [endPosition] default: `RelativePosition.AFTER`
+     * @param [anchorNode] default: `RelativePosition.BEFORE`
+     * @param [focusNode] default: `anchorNode`
+     * @param [focusOffset] default: `RelativePosition.AFTER`
      */
-    select(tailNode: VNode, headNode?: VNode): VRange;
+    select(anchorNode: VNode, focusNode?: VNode): VRange;
     select(
-        tailNode: VNode,
-        tailPosition: RelativePosition,
-        headNode: VNode,
-        headPosition: RelativePosition,
+        anchorNode: VNode,
+        anchorOffset: RelativePosition,
+        focusNode: VNode,
+        focusOffset: RelativePosition,
     ): VRange;
     select(
-        tailNode: VNode,
-        tailPosition: RelativePosition | VNode = RelativePosition.BEFORE,
-        headNode: VNode = tailNode,
-        headPosition: RelativePosition = RelativePosition.AFTER,
+        anchorNode: VNode,
+        anchorOffset: RelativePosition | VNode = RelativePosition.BEFORE,
+        focusNode: VNode = anchorNode,
+        focusOffset: RelativePosition = RelativePosition.AFTER,
     ): VRange {
-        if (tailPosition instanceof VNode) {
-            headNode = tailPosition;
-            tailPosition = RelativePosition.BEFORE;
+        if (anchorOffset instanceof VNode) {
+            focusNode = anchorOffset;
+            anchorOffset = RelativePosition.BEFORE;
         }
-        if (headPosition === RelativePosition.AFTER) {
-            this._setHead(headNode, headPosition);
-            this._setTail(tailNode, tailPosition);
+        if (focusOffset === RelativePosition.AFTER) {
+            this._setFocus(focusNode, focusOffset);
+            this._setAnchor(anchorNode, anchorOffset);
         } else {
-            this._setTail(tailNode, tailPosition);
-            this._setHead(headNode, headPosition);
+            this._setAnchor(anchorNode, anchorOffset);
+            this._setFocus(focusNode, focusOffset);
         }
         return this;
     }
@@ -189,9 +150,9 @@ export class VRange {
      */
     setStart(reference: VNode, position?: RelativePosition, direction = Direction.FORWARD): VRange {
         if (direction === Direction.FORWARD) {
-            return this._setTail(reference, position);
+            return this._setAnchor(reference, position);
         } else {
-            return this._setHead(reference, position);
+            return this._setFocus(reference, position);
         }
     }
     /**
@@ -207,9 +168,9 @@ export class VRange {
      */
     setEnd(reference: VNode, position?: RelativePosition, direction = Direction.FORWARD): VRange {
         if (direction === Direction.FORWARD) {
-            return this._setHead(reference, position);
+            return this._setFocus(reference, position);
         } else {
-            return this._setTail(reference, position);
+            return this._setAnchor(reference, position);
         }
     }
     /**
@@ -222,7 +183,7 @@ export class VRange {
      * @param [position]
      */
     setAnchor(reference: VNode, position = RelativePosition.BEFORE): VRange {
-        return this._setTail(reference, position);
+        return this._setAnchor(reference, position);
     }
     /**
      * Set the end of the range by targetting a `reference` VNode and specifying
@@ -234,7 +195,7 @@ export class VRange {
      * @param [position]
      */
     setFocus(reference: VNode, position = RelativePosition.AFTER): VRange {
-        return this._setHead(reference, position);
+        return this._setFocus(reference, position);
     }
     /**
      * Extend the range from its tail to the given location, targetting a
@@ -264,7 +225,7 @@ export class VRange {
             }
         }
         if (reference) {
-            this._setHead(reference, position);
+            this._setFocus(reference, position);
         }
     }
 
@@ -281,18 +242,17 @@ export class VRange {
      * @param reference
      * @param [position]
      */
-    _setTail(reference: VNode, position = RelativePosition.BEFORE): VRange {
+    _setAnchor(reference: VNode, position = RelativePosition.BEFORE): VRange {
         reference = reference.firstLeaf();
         if (!reference.hasChildren() && !reference.atomic) {
-            reference.prepend(this._tail);
-        } else if (position === RelativePosition.AFTER && reference !== this._head) {
+            reference.prepend(this.anchor);
+        } else if (position === RelativePosition.AFTER && reference !== this.focus) {
             // We check that `reference` isn't `_head` to avoid a backward
             // collapsed range.
-            reference.after(this._tail);
+            reference.after(this.anchor);
         } else {
-            reference.before(this._tail);
+            reference.before(this.anchor);
         }
-        this._direction = null; // Invalidate range direction cache.
         return this;
     }
     /**
@@ -304,18 +264,17 @@ export class VRange {
      * @param reference
      * @param [position]
      */
-    _setHead(reference: VNode, position = RelativePosition.AFTER): VRange {
+    _setFocus(reference: VNode, position = RelativePosition.AFTER): VRange {
         reference = reference.lastLeaf();
         if (!reference.hasChildren() && !reference.atomic) {
-            reference.append(this._head);
-        } else if (position === RelativePosition.BEFORE && reference !== this._tail) {
+            reference.append(this.focus);
+        } else if (position === RelativePosition.BEFORE && reference !== this.anchor) {
             // We check that `reference` isn't `_tail` to avoid a backward
             // collapsed range.
-            reference.before(this._head);
+            reference.before(this.focus);
         } else {
-            reference.after(this._head);
+            reference.after(this.focus);
         }
-        this._direction = null; // Invalidate range direction cache.
         return this;
     }
 }

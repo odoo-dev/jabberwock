@@ -1,7 +1,7 @@
 import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from './range';
-import { DomRangeDescription } from '../../core/src/EventNormalizer';
+import { RANGE_FOCUS_CHAR, RANGE_ANCHOR_CHAR } from './range';
+import { DomSelection } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 
 export interface TestEditorSpec {
@@ -48,44 +48,37 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
 
 /**
  * Return a description of a range from analysing the position of
- * `RANGE_TAIL_CHAR` and `RANGE_HEAD_CHAR` characters within a test container.
+ * `RANGE_ANCHOR_CHAR` and `RANGE_FOCUS_CHAR` characters within a test container.
  * Also remove these from the test container.
  */
-function _parseTextualRange(testContainer: Node): DomRangeDescription {
-    let startContainer: Node;
-    let endContainer: Node;
-    let startOffset: number;
-    let endOffset: number;
-    let direction = Direction.FORWARD;
+function _parseTextualRange(testContainer: Node): DomSelection {
+    let anchorNode: Node;
+    let focusNode: Node;
+    let anchorOffset: number;
+    let focusOffset: number;
 
     let node = testContainer;
-    while (node && !(startContainer && endContainer)) {
+    while (node && !(anchorNode && focusNode)) {
         let next: Node;
         if (node.nodeType === Node.TEXT_NODE) {
             // Look for range characters in the text content and remove them.
-            const startIndex = node.textContent.indexOf(RANGE_TAIL_CHAR);
-            node.textContent = node.textContent.replace(RANGE_TAIL_CHAR, '');
-            const endIndex = node.textContent.indexOf(RANGE_HEAD_CHAR);
-            node.textContent = node.textContent.replace(RANGE_HEAD_CHAR, '');
+            const anchorIndex = node.textContent.indexOf(RANGE_ANCHOR_CHAR);
+            node.textContent = node.textContent.replace(RANGE_ANCHOR_CHAR, '');
+            const focusIndex = node.textContent.indexOf(RANGE_FOCUS_CHAR);
+            node.textContent = node.textContent.replace(RANGE_FOCUS_CHAR, '');
 
             // Set the containers and offsets if we found the range characters.
-            if (startIndex !== -1) {
-                [startContainer, startOffset] = _toDomLocation(node, startIndex);
-                // If the end container was already found, change the range
-                // direction to BACKWARD.
-                if (endContainer) {
-                    direction = Direction.BACKWARD;
-                }
+            if (anchorIndex !== -1) {
+                [anchorNode, anchorOffset] = _toDomLocation(node, anchorIndex);
             }
-            if (endIndex !== -1) {
-                [endContainer, endOffset] = _toDomLocation(node, endIndex);
+            if (focusIndex !== -1) {
+                [focusNode, focusOffset] = _toDomLocation(node, focusIndex);
                 // If the start range character is within the same parent and
                 // comes before the end range character, change the range
                 // direction to BACKWARD and adapt the startOffset to account
                 // for this end range character that was removed.
-                if (startContainer === endContainer && startOffset > endOffset) {
-                    direction = Direction.BACKWARD;
-                    startOffset--;
+                if (anchorNode === focusNode && anchorOffset > focusOffset) {
+                    anchorOffset--;
                 }
             }
 
@@ -101,13 +94,12 @@ function _parseTextualRange(testContainer: Node): DomRangeDescription {
         }
         node = next;
     }
-    if (startContainer && endContainer) {
+    if (anchorNode && focusNode) {
         return {
-            startContainer: startContainer,
-            startOffset: startOffset,
-            endContainer: endContainer,
-            endOffset: endOffset,
-            direction: direction,
+            anchorNode: anchorNode,
+            anchorOffset: anchorOffset,
+            focusNode: focusNode,
+            focusOffset: focusOffset,
         };
     }
 }
@@ -116,14 +108,14 @@ function _parseTextualRange(testContainer: Node): DomRangeDescription {
  *
  * @param range
  */
-function _setRange(range: DomRangeDescription): void {
-    const domRange = document.createRange();
-    domRange.setStart(range.startContainer, range.startOffset);
-    domRange.collapse(true);
-    const selection = range.startContainer.ownerDocument.getSelection();
+function _setRange(range: DomSelection): void {
+    const domSelection = document.createRange();
+    domSelection.setStart(range.anchorNode, range.anchorOffset);
+    domSelection.collapse(true);
+    const selection = range.anchorNode.ownerDocument.getSelection();
     selection.removeAllRanges();
-    selection.addRange(domRange);
-    selection.extend(range.endContainer, range.endOffset);
+    selection.addRange(domSelection);
+    selection.extend(range.focusNode, range.focusOffset);
 }
 /**
  * Return a node and an offset corresponding to an index within a text node.
@@ -161,8 +153,8 @@ function _nextNode(node: Node): Node {
 }
 /**
  * Insert in the DOM:
- * - `RANGE_TAIL_CHAR` in place for the selection start
- * - `RANGE_HEAD_CHAR` in place for the selection end
+ * - `RANGE_ANCHOR_CHAR` in place for the selection start
+ * - `RANGE_FOCUS_CHAR` in place for the selection end
  *
  * This is used in the function `testEditor`.
  */
@@ -179,8 +171,8 @@ function _renderTextualRange(): void {
         end.offset++;
     }
 
-    _insertCharAt(RANGE_TAIL_CHAR, start.container, start.offset);
-    _insertCharAt(RANGE_HEAD_CHAR, end.container, end.offset);
+    _insertCharAt(RANGE_ANCHOR_CHAR, start.container, start.offset);
+    _insertCharAt(RANGE_FOCUS_CHAR, end.container, end.offset);
 }
 
 /**

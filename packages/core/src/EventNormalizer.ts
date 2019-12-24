@@ -1,5 +1,3 @@
-import { Direction } from '../../utils/src/range';
-
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -11,12 +9,11 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-export interface DomRangeDescription {
-    readonly startContainer: Node;
-    readonly startOffset: number;
-    readonly endContainer: Node;
-    readonly endOffset: number;
-    readonly direction: Direction;
+export interface DomSelection {
+    readonly anchorNode: Node;
+    readonly anchorOffset: number;
+    readonly focusNode: Node;
+    readonly focusOffset: number;
     origin?: string; // origin of the Range change
 }
 
@@ -57,7 +54,7 @@ interface EventListenerDeclaration {
 }
 
 interface NormalizedventPayload {
-    domRangeChange?: DomRangeDescription;
+    domSelectionChange?: DomSelection;
 
     origin: string;
 }
@@ -195,7 +192,7 @@ export class EventNormalizer {
 
         const range = this._getRange();
         // Look for closest block node starting from current text node
-        let format = range.startContainer;
+        let format = range.anchorNode;
         while (
             format.parentNode &&
             format !== this.editable &&
@@ -461,34 +458,24 @@ export class EventNormalizer {
      *
      * @private
      */
-    _getRange(): DomRangeDescription {
+    _getRange(): DomSelection {
         const selection = this.editable.ownerDocument.getSelection();
 
-        let ltr: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection means no range so a fake one is created
-            ltr = this.editable.dir === 'ltr';
             return {
-                startContainer: this.editable,
-                startOffset: 0,
-                endContainer: this.editable,
-                endOffset: 0,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+                anchorNode: this.editable,
+                anchorOffset: 0,
+                focusNode: this.editable,
+                focusOffset: 0,
             };
         } else {
             // The direction of the range is sorely missing from the DOM api
-            const nativeRange = selection.getRangeAt(0);
-            if (selection.anchorNode === selection.focusNode) {
-                ltr = selection.anchorOffset <= selection.focusOffset;
-            } else {
-                ltr = selection.anchorNode === nativeRange.startContainer;
-            }
             return {
-                startContainer: nativeRange.startContainer,
-                startOffset: nativeRange.startOffset,
-                endContainer: nativeRange.endContainer,
-                endOffset: nativeRange.endOffset,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+                anchorNode: selection.anchorNode,
+                anchorOffset: selection.anchorOffset,
+                focusNode: selection.focusNode,
+                focusOffset: selection.focusOffset,
             };
         }
     }
@@ -523,11 +510,11 @@ export class EventNormalizer {
         const range = this._getRange();
         let insertEnd = 0;
         while (insertEnd < currentLength) {
-            if (current.nodes[insertEnd] === range.endContainer) {
+            if (current.nodes[insertEnd] === range.focusNode) {
                 // The text has been flattened in the characters mapping. When
                 // the index of the node has been found, use the range offset
                 // to find the index of the character proper.
-                insertEnd += range.endOffset;
+                insertEnd += range.focusOffset;
                 break;
             }
             insertEnd++;
@@ -591,16 +578,15 @@ export class EventNormalizer {
         // their corresponding indices in the previous DOM.
         const insertPreviousStart = insertStart;
         const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const insertionRange: DomRangeDescription = {
-            startContainer: previousNodes[insertPreviousStart].origin,
-            startOffset: previous.offsets[insertPreviousStart],
-            endContainer: previousNodes[insertPreviousEnd].origin,
-            endOffset: previous.offsets[insertPreviousEnd],
-            direction: Direction.BACKWARD,
+        const insertionRange: DomSelection = {
+            anchorNode: previousNodes[insertPreviousStart].origin,
+            anchorOffset: previous.offsets[insertPreviousStart],
+            focusNode: previousNodes[insertPreviousEnd].origin,
+            focusOffset: previous.offsets[insertPreviousEnd],
             origin: 'composition',
         };
 
-        this._triggerEvent('setRange', { domRange: insertionRange });
+        this._triggerEvent('setRange', { domSelection: insertionRange });
         this._triggerEvent('insertText', { value: insertedText, elements: ev.elements });
     }
     /**
@@ -620,7 +606,7 @@ export class EventNormalizer {
             const range = this._getRange();
             range.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', { domRange: range, elements: ev.elements });
+            this._triggerEvent('setRange', { domSelection: range, elements: ev.elements });
         }
     }
     /**
@@ -628,11 +614,11 @@ export class EventNormalizer {
      *
      * @param range
      */
-    _isSelectAll(range: DomRangeDescription): boolean {
-        let startContainer = range.startContainer;
-        let startOffset = range.startOffset;
-        let endContainer = range.endContainer;
-        let endOffset = range.endOffset;
+    _isSelectAll(range: DomSelection): boolean {
+        let startContainer = range.anchorNode;
+        let startOffset = range.anchorOffset;
+        let endContainer = range.focusNode;
+        let endOffset = range.focusOffset;
 
         const body = this.editable.ownerDocument.body;
         // The selection might still be on a node which has since been removed
@@ -864,7 +850,7 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
-        this._selectAllOriginElement = this._getRange().startContainer;
+        this._selectAllOriginElement = this._getRange().anchorNode;
 
         // See comment on the same line in _onCompositionStart handler.
         if (this.editable.style.display === 'none') return;
@@ -893,7 +879,7 @@ export class EventNormalizer {
         this._mousedownInEditable = ev;
         this._selectAllOriginElement = ev.target as Node;
         setTimeout(() => {
-            this._selectAllOriginElement = this._getRange().startContainer;
+            this._selectAllOriginElement = this._getRange().anchorNode;
         }, 0);
     }
     /**
@@ -913,23 +899,21 @@ export class EventNormalizer {
             const target = this._mousedownInEditable.target as Node;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let range: DomRangeDescription = this._getRange();
-                if (!target.contains(range.startContainer) && target === ev.target) {
-                    const ltr = document.dir === 'ltr';
+                let range: DomSelection = this._getRange();
+                if (!target.contains(range.anchorNode) && target === ev.target) {
                     range = {
-                        startContainer: target,
-                        startOffset: 0,
-                        endContainer: target,
-                        endOffset:
+                        anchorNode: target,
+                        anchorOffset: 0,
+                        focusNode: target,
+                        focusOffset:
                             target.nodeType === Node.ELEMENT_NODE
                                 ? target.childNodes.length
                                 : target.nodeValue.length,
-                        direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
                         origin: 'pointer',
                     };
                 }
                 if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', { domRange: range });
+                    this._triggerEvent('setRange', { domSelection: range });
                 }
             }
         }, 0);
@@ -961,7 +945,7 @@ export class EventNormalizer {
                 this._triggerEvent('selectAll', {
                     origin: this._compiledEvent ? 'keypress' : 'pointer',
                     target: this._selectAllOriginElement,
-                    domRange: range,
+                    domSelection: range,
                 });
             }
         } else {

@@ -2,7 +2,7 @@ import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
-import { withMarkers } from '../../utils/src/range';
+import { withMarkers, Direction } from '../../utils/src/range';
 import { FragmentNode } from './VNodes/FragmentNode';
 
 export class VDocument {
@@ -31,7 +31,7 @@ export class VDocument {
         if (!this.range.isCollapsed()) {
             this.deleteSelection();
         }
-        this.range.start.parent.splitAt(this.range.start);
+        this.range.anchor.parent.splitAt(this.range.anchor);
     }
     /**
      * Insert something at range.
@@ -43,7 +43,7 @@ export class VDocument {
         if (!this.range.isCollapsed()) {
             this.deleteSelection();
         }
-        this.range.start.before(node);
+        this.range.anchor.before(node);
     }
     /**
      * Insert text at range.
@@ -66,7 +66,7 @@ export class VDocument {
         const characters = text.split('');
         characters.forEach(char => {
             const vNode = new CharNode(char, format);
-            this.range.start.before(vNode);
+            this.range.anchor.before(vNode);
         });
         this.formatCache = null;
     }
@@ -79,8 +79,8 @@ export class VDocument {
         if (this.formatCache) {
             return this.formatCache;
         } else if (this.range.isCollapsed()) {
-            const charToCopyFormat = (this.range.start.previousSibling(isChar) ||
-                this.range.start.nextSibling(isChar) || {
+            const charToCopyFormat = (this.range.anchor.previousSibling(isChar) ||
+                this.range.anchor.nextSibling(isChar) || {
                     format: {},
                 }) as CharNode;
             format = { ...charToCopyFormat.format };
@@ -101,8 +101,16 @@ export class VDocument {
         withMarkers(() => {
             const nodes = this.range.selectedNodes;
             if (!nodes.length) return;
-            this.range.collapse(this.range.start); // Reset the direction of the range.
-            let reference = this.range.end;
+
+            // Collapse the range at its starting point from a depth-first
+            // pre-order traversal point of view.
+            if (this.range.direction === Direction.FORWARD) {
+                this.range.collapse(this.range.anchor);
+            } else {
+                this.range.collapse(this.range.focus);
+            }
+
+            let reference = this.range.focus;
             nodes.forEach(vNode => {
                 // If the node has children, merge it with the container of the
                 // range. Children of the merged node that should be truncated

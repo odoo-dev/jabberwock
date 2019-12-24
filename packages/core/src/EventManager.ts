@@ -1,9 +1,9 @@
-import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
+import { EventNormalizer, DomSelection } from './EventNormalizer';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import JWEditor from './JWEditor';
 
 interface SetRangeParams {
-    domRange: DomRangeDescription;
+    domSelection: DomSelection;
 }
 
 export class EventManager {
@@ -38,7 +38,7 @@ export class EventManager {
             case 'setRange': {
                 const rangeParams = payload as SetRangeParams;
                 return this.editor.execCommand(customEvent.type, {
-                    vRange: this.editor.parser.parseRange(rangeParams.domRange),
+                    vRange: this.editor.parser.parseRange(rangeParams.domSelection),
                 });
             }
             case 'keydown': {

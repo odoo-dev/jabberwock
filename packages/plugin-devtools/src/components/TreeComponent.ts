@@ -2,7 +2,7 @@ import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { VRangeDescription } from '../../../core/src/VRange';
-import { Direction, RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../../../utils/src/range';
+import { RANGE_ANCHOR_CHAR, RANGE_FOCUS_CHAR, RelativePosition } from '../../../utils/src/range';
 import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
 
 interface NodeProps {
@@ -73,9 +73,10 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     }
     onDblClickNode(): void {
         const location: VRangeDescription = {
-            start: this.props.vNode,
-            end: this.props.vNode,
-            direction: Direction.FORWARD,
+            anchorNode: this.props.vNode,
+            anchorPosition: RelativePosition.BEFORE,
+            focusNode: this.props.vNode,
+            focusPosition: RelativePosition.AFTER,
         };
         this.env.editor.execCommand('setRange', { vRange: location });
     }
@@ -121,10 +122,10 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      */
     _getNodeRepr(node: VNode): string {
         if (node === this.env.editor.vDocument.range.anchor) {
-            return RANGE_TAIL_CHAR;
+            return RANGE_ANCHOR_CHAR;
         }
         if (node === this.env.editor.vDocument.range.focus) {
-            return RANGE_HEAD_CHAR;
+            return RANGE_FOCUS_CHAR;
         }
         if (node instanceof LineBreakNode) {
             return '↲';
@@ -139,12 +140,12 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      */
     _getRangeAncestors(): Set<number> {
         const rangeAncestors = new Set<number>();
-        let ancestor = this.env.editor.vDocument.range.end.parent;
+        let ancestor = this.env.editor.vDocument.range.focus.parent;
         while (ancestor) {
             rangeAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        ancestor = this.env.editor.vDocument.range.start.parent;
+        ancestor = this.env.editor.vDocument.range.anchor.parent;
         while (ancestor) {
             rangeAncestors.add(ancestor.id);
             ancestor = ancestor.parent;

@@ -2,9 +2,9 @@ import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
-import { Direction, RelativePosition } from '../../utils/src/range';
+import { RelativePosition } from '../../utils/src/range';
 import { VNode } from './VNodes/VNode';
-import { DomRangeDescription } from './EventNormalizer';
+import { DomSelection } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
@@ -87,15 +87,12 @@ export class Parser {
 
         // Parse the DOM range if any.
         const selection = node.ownerDocument.getSelection();
-        const range = selection.rangeCount && selection.getRangeAt(0);
-        if (range && node.contains(range.startContainer) && node.contains(range.endContainer)) {
-            const forward = range.startContainer === selection.anchorNode;
-            const vRange = this.parseRange(range, forward ? Direction.FORWARD : Direction.BACKWARD);
-            vDocument.range.set(vRange);
+        if (node.contains(selection.anchorNode) && node.contains(selection.focusNode)) {
+            vDocument.range.set(this.parseRange(selection));
         }
 
         // Set a default range in VDocument if none was set yet.
-        if (!vDocument.range.start.parent || !vDocument.range.end.parent) {
+        if (!vDocument.range.anchor.parent || !vDocument.range.focus.parent) {
             vDocument.range.setAt(vDocument.root);
         }
 
@@ -105,22 +102,18 @@ export class Parser {
      * Convert the DOM description of a range to the description of a VRange.
      *
      * @param range
-     * @param [direction]
      */
-    parseRange(range: DomRangeDescription): VRangeDescription;
-    parseRange(range: Range, direction: Direction): VRangeDescription;
-    parseRange(range: Range | DomRangeDescription, direction?: Direction): VRangeDescription {
-        const start = this._locate(range.startContainer, range.startOffset);
-        const end = this._locate(range.endContainer, range.endOffset);
-        if (start && end) {
-            const [startVNode, startPosition] = start;
-            const [endVNode, endPosition] = end;
+    parseRange(range: DomSelection): VRangeDescription {
+        const anchor = this._locate(range.anchorNode, range.anchorOffset);
+        const focus = this._locate(range.focusNode, range.focusOffset);
+        if (anchor && focus) {
+            const [anchorVNode, anchorPosition] = anchor;
+            const [focusVNode, focusPosition] = focus;
             return {
-                start: startVNode,
-                startPosition: startPosition,
-                end: endVNode,
-                endPosition: endPosition,
-                direction: range instanceof Range ? direction : range.direction,
+                anchorNode: anchorVNode,
+                anchorPosition: anchorPosition,
+                focusNode: focusVNode,
+                focusPosition: focusPosition,
             };
         }
     }

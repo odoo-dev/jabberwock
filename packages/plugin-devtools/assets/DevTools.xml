@@ -201,16 +201,12 @@
                         <td><t t-esc="env.editor.vDocument.range.direction"/></td>
                     </tr>
                     <tr>
-                        <td><strong class="range-node"><t
-                        t-if="env.editor.vDocument.range.start === env.editor.vDocument.range.anchor">[</t><t
-                        t-else="">]</t></strong> start</td>
-                        <td><t t-esc="_repr(env.editor.vDocument.range.start)"/></td>
+                        <td><strong class="range-node">[</strong> anchor</td>
+                        <td><t t-esc="_repr(env.editor.vDocument.range.anchor)"/></td>
                     </tr>
                     <tr>
-                        <td><strong class="range-node"><t
-                        t-if="env.editor.vDocument.range.end === env.editor.vDocument.range.focus">]</t><t
-                        t-else="">[</t></strong> end</td>
-                        <td><t t-esc="_repr(env.editor.vDocument.range.end)"/></td>
+                        <td><strong class="range-node">]</strong> focus</td>
+                        <td><t t-esc="_repr(env.editor.vDocument.range.focus)"/></td>
                     </tr>
                 </tbody>
             </table>
@@ -296,7 +292,9 @@
                         <t t-esc="key"/>
                     </td>
                     <td>
-                        <t t-if="value and key == 'vRange'" t-call="payloadVRange"/>
+                        <t t-if="value and key == 'vRange'">
+                        <t t-call="payloadVRange"/>
+                        </t>
                         <t t-else=""><t t-esc="formatPayloadValue(value)"/></t>
                     </td>
                 </tr>
@@ -309,26 +307,18 @@
             <tbody>
                 <tr>
                     <td>
-                        direction
+                        anchor
                     </td>
                     <td>
-                        <t t-esc="value.direction or 'unset'"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        start
-                    </td>
-                    <td>
-                        <t t-esc="value.startPosition"/> <t t-esc="value.start.id"/> (<t t-esc="value.start.name"/>)
+                        <t t-esc="value.anchorPosition"/> <t t-esc="value.anchorNode.id"/> (<t t-esc="value.anchorNode.name"/>)
                     </td>
                 </tr>
-                <tr>
+                <tr t-if="value.focusNode">
                     <td>
-                        end
+                        focus
                     </td>
                     <td>
-                        <t t-esc="value.endPosition"/> <t t-esc="value.end.id"/> (<t t-esc="value.end.name"/>)
+                        <t t-esc="value.focusPosition"/> <t t-esc="value.focusNode.id"/> (<t t-esc="value.focusNode.name"/>)
                     </td>
                 </tr>
             </tbody>

@@ -176,15 +176,15 @@ export class Renderer {
      * @param target
      */
     _renderRange(range: VRange, target: Element): void {
-        const [startContainer, startOffset] = this._getDomLocation(range.anchor);
-        const [endContainer, endOffset] = this._getDomLocation(range.focus);
-        const domRange: Range = target.ownerDocument.createRange();
-        domRange.setStart(startContainer, startOffset);
-        domRange.collapse(true);
+        const [anchorNode, anchorOffset] = this._getDomLocation(range.anchor);
+        const [focusNode, focusOffset] = this._getDomLocation(range.focus);
+        const domSelection: Range = target.ownerDocument.createRange();
+        domSelection.setStart(anchorNode, anchorOffset);
+        domSelection.collapse(true);
         const selection = document.getSelection();
         selection.removeAllRanges();
-        selection.addRange(domRange);
-        selection.extend(endContainer, endOffset);
+        selection.addRange(domSelection);
+        selection.extend(focusNode, focusOffset);
     }
     /**
      * Return the location in the DOM corresponding to the location in the

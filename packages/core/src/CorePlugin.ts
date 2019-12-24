@@ -88,7 +88,7 @@ export class CorePlugin extends JWPlugin {
     deleteBackward(): void {
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            const previous = range.start.previous();
+            const previous = range.anchor.previous();
             if (previous) {
                 range.extendTo(previous, Direction.BACKWARD);
             }
@@ -101,7 +101,7 @@ export class CorePlugin extends JWPlugin {
     deleteForward(): void {
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            const next = range.end.next();
+            const next = range.focus.next();
             if (next) {
                 range.extendTo(next, Direction.FORWARD);
             }
@@ -124,13 +124,12 @@ export class CorePlugin extends JWPlugin {
      *
      * @param params
      */
-    selectAll(params: VRangeParams): void {
+    selectAll(): void {
         this.editor.vDocument.range.set({
-            start: this.editor.vDocument.root.firstLeaf(),
-            startPosition: RelativePosition.BEFORE,
-            end: this.editor.vDocument.root.lastLeaf(),
-            endPosition: RelativePosition.AFTER,
-            direction: params.vRange.direction,
+            anchorNode: this.editor.vDocument.root.firstLeaf(),
+            anchorPosition: RelativePosition.BEFORE,
+            focusNode: this.editor.vDocument.root.lastLeaf(),
+            focusPosition: RelativePosition.AFTER,
         });
     }
 }
