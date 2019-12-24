@@ -80,6 +80,14 @@ export class InfoComponent extends OwlUIComponent<{}> {
         });
         return __current;
     }
+    /**
+     * Log a `VNode` to the console.
+     *
+     * @param vNode
+     */
+    logVNode(vNode: VNode): void {
+        console.log(vNode);
+    }
 
     //--------------------------------------------------------------------------
     // Private
