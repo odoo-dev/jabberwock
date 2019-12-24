@@ -173,9 +173,13 @@ export class VNode {
         // VNode is definitely first in traversal since the other is a
         // descendent of it. Otherwise, compare the ancestors indices. The
         // smaller of the two indicees gives us the first VNode in traversal.
-        const index = ancestor && withMarkers(() => ancestor.index);
-        const otherIndex = otherAncestor && withMarkers(() => otherAncestor.index);
-        return !ancestor || (otherAncestor && index < otherIndex);
+        if (ancestor && otherAncestor) {
+            const index = withMarkers(() => ancestor.index);
+            const otherIndex = withMarkers(() => otherAncestor.index);
+            return index < otherIndex;
+        } else {
+            return !ancestor && !!otherAncestor;
+        }
     }
     /**
      * Return true if this VNode comes after the given VNode in the pre-order
