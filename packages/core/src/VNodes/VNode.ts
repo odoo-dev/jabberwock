@@ -401,8 +401,10 @@ export class VNode {
     previousSiblings(predicate?: Predicate): VNode[] {
         const previousSiblings: VNode[] = [];
         let sibling = this.previousSibling();
-        while (sibling && (!predicate || predicate(sibling))) {
-            previousSiblings.push(sibling);
+        while (sibling) {
+            if (!predicate || predicate(sibling)) {
+                previousSiblings.push(sibling);
+            }
             sibling = sibling.previousSibling();
         }
         return previousSiblings;
@@ -417,8 +419,10 @@ export class VNode {
     nextSiblings(predicate?: Predicate): VNode[] {
         const nextSiblings: VNode[] = [];
         let sibling = this.nextSibling();
-        while (sibling && (!predicate || predicate(sibling))) {
-            nextSiblings.push(sibling);
+        while (sibling) {
+            if (!predicate || predicate(sibling)) {
+                nextSiblings.push(sibling);
+            }
             sibling = sibling.nextSibling();
         }
         return nextSiblings;

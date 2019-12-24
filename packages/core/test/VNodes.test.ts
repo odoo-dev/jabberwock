@@ -961,7 +961,7 @@ describe('core', () => {
                             p.previousSiblings(vNode => {
                                 return vNode instanceof CharNode;
                             }),
-                        ).to.deep.equal([c]);
+                        ).to.deep.equal([c, a]);
                     });
                 });
                 describe('nextSiblings', () => {
@@ -989,7 +989,7 @@ describe('core', () => {
                             p.previousSiblings(vNode => {
                                 return vNode instanceof CharNode;
                             }),
-                        ).to.deep.equal([c]);
+                        ).to.deep.equal([c, a]);
                     });
                 });
                 describe('walk', () => {
