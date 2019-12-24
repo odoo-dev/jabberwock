@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { FormatParams } from '../src/CorePlugin';
@@ -1118,6 +1119,35 @@ describe('stores', () => {
                             contentBefore: '<h1>ab</h1><p><br>[]</p>',
                             stepFunction: deleteBackward,
                             contentAfter: '<h1>ab[]</h1>',
+                        });
+                    });
+                    it('should merge with previous node (default behaviour)', async () => {
+                        await testEditor({
+                            contentBefore: '<jw-block-a>a</jw-block-a><jw-block-b>[]b</jw-block-b>',
+                            stepFunction: deleteBackward,
+                            contentAfter: '<jw-block-a>a[]b</jw-block-a>',
+                        });
+                        await testEditor({
+                            contentBefore:
+                                '<jw-block-a>a</jw-block-a><jw-block-b>[<br>]</jw-block-b>',
+                            stepFunction: deleteBackward,
+                            contentAfter: '<jw-block-a>a[]</jw-block-a>',
+                        });
+                    });
+                    it('should merge nested elements (default behaviour)', async () => {
+                        await testEditor({
+                            contentBefore:
+                                '<jw-block-a><jw-block-b>ab</jw-block-b></jw-block-a><jw-block-c><jw-block-d>[]cd</jw-block-d></jw-block-c>',
+                            stepFunction: deleteBackward,
+                            contentAfter:
+                                '<jw-block-a><jw-block-b>ab</jw-block-b><jw-block-d>[]cd</jw-block-d></jw-block-a>',
+                        });
+                        await testEditor({
+                            contentBefore:
+                                '<jw-block-a><jw-block-b>ab</jw-block-b></jw-block-a><jw-block-c><jw-block-d>[<br>]</jw-block-d></jw-block-c>',
+                            stepFunction: deleteBackward,
+                            contentAfter:
+                                '<jw-block-a><jw-block-b>ab</jw-block-b><jw-block-d>[]<br></jw-block-d></jw-block-a>',
                         });
                     });
                 });

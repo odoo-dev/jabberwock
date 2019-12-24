@@ -88,9 +88,32 @@ export class CorePlugin extends JWPlugin {
     deleteBackward(): void {
         const range = this.editor.vDocument.range;
         if (range.isCollapsed()) {
-            const previous = range.start.previous();
-            if (previous) {
-                range.extendTo(previous, Direction.BACKWARD);
+            let start = range.start;
+            let nested = 0;
+            while (start.parent && !start.previousSibling()) {
+                nested++;
+                start = start.parent;
+            }
+            if (nested > 1) {
+                const previous = start.previousSibling();
+                if (previous) {
+                    previous.append(range.start);
+                    start.prepend(range.end);
+                    this.editor.vDocument.deleteSelection();
+                    const next = range.start.next().firstLeaf();
+                    if (next.atomic) {
+                        next.before(range.start);
+                    } else {
+                        next.append(range.start);
+                    }
+                    range.start.after(range.end);
+                    return;
+                }
+            } else {
+                const previous = range.start.previous();
+                if (previous) {
+                    range.extendTo(previous, Direction.BACKWARD);
+                }
             }
         }
         this.editor.vDocument.deleteSelection();
