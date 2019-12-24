@@ -52,46 +52,6 @@ export class JWEditor {
         this.editable = editable;
     }
 
-    /**
-     * Start the editor on the editable DOM node set on this editor instance.
-     */
-    async start(): Promise<void> {
-        // Parse the editable in the internal format of the editor.
-        this.vDocument = this.parser.parse(this._originalEditable);
-
-        // Deep clone the given editable node in order to break free of any
-        // handler that might have been previously registered.
-        this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
-
-        // The original editable node is hidden until the editor stops.
-        this._originalEditable.style.display = 'none';
-        // Cloning the editable node might lead to duplicated id.
-        this.editable.id = this._originalEditable.id;
-        this._originalEditable.removeAttribute('id');
-
-        // The cloned editable element is then added to the main editor element
-        // which is itself added to the DOM.
-        this.editable.classList.add('jw-editable');
-        this.editable.setAttribute('contenteditable', 'true');
-        this.el.appendChild(this.editable);
-        document.body.appendChild(this.el);
-
-        // CorePlugin is a special mandatory plugin that handles the matching
-        // between the core commands and the VDocument.
-        this.addPlugin(CorePlugin);
-
-        // Init the event manager now that the cloned editable is in the DOM.
-        this.eventManager = new EventManager(this, {
-            keyMap: this.keyMap,
-        });
-
-        this.renderer.render(this.vDocument, this.editable);
-
-        if (this.debugger) {
-            await this.debugger.start();
-        }
-    }
-
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -129,6 +89,46 @@ export class JWEditor {
         }
         if (config.keyMap) {
             this.keyMap = new KeyMapping(config.keyMap);
+        }
+    }
+
+    /**
+     * Start the editor on the editable DOM node set on this editor instance.
+     */
+    async start(): Promise<void> {
+        // Parse the editable in the internal format of the editor.
+        this.vDocument = this.parser.parse(this._originalEditable);
+
+        // Deep clone the given editable node in order to break free of any
+        // handler that might have been previously registered.
+        this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
+
+        // The original editable node is hidden until the editor stops.
+        this._originalEditable.style.display = 'none';
+        // Cloning the editable node might lead to duplicated id.
+        this.editable.id = this._originalEditable.id;
+        this._originalEditable.removeAttribute('id');
+
+        // The cloned editable element is then added to the main editor element
+        // which is itself added to the DOM.
+        this.editable.classList.add('jw-editable');
+        this.editable.setAttribute('contenteditable', 'true');
+        this.el.appendChild(this.editable);
+        document.body.appendChild(this.el);
+
+        // CorePlugin is a special mandatory plugin that handles the matching
+        // between the core commands and the VDocument.
+        this.addPlugin(CorePlugin);
+
+        // Init the event manager now that the cloned editable is in the DOM.
+        this.eventManager = new EventManager(this, {
+            keyMap: this.keyMap,
+        });
+
+        this.renderer.render(this.vDocument, this.editable);
+
+        if (this.debugger) {
+            await this.debugger.start();
         }
     }
 
