@@ -78,7 +78,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             focusNode: this.props.vNode,
             focusPosition: RelativePosition.AFTER,
         };
-        this.env.editor.execCommand('setRange', { vRange: location });
+        this.env.editor.execCommand('setSelection', { vRange: location });
     }
     /**
      * Handle folding/unfolding on press Enter

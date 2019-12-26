@@ -29,8 +29,8 @@ export class CorePlugin extends JWPlugin {
         insertText: {
             handler: this.insertText.bind(this),
         },
-        setRange: {
-            handler: this.setRange.bind(this),
+        setSelection: {
+            handler: this.setSelection.bind(this),
         },
         deleteBackward: {
             handler: this.deleteBackward.bind(this),
@@ -113,7 +113,7 @@ export class CorePlugin extends JWPlugin {
      *
      * @param params
      */
-    setRange(params: VRangeParams): void {
+    setSelection(params: VRangeParams): void {
         this.editor.vDocument.range.set(params.vRange);
         // Each time the range changes, we reset its format.
         this.editor.vDocument.formatCache = null;

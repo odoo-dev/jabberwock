@@ -22,7 +22,7 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
     const rangeDescription = _parseTextualRange(wrapper);
     document.body.appendChild(wrapper);
     if (rangeDescription) {
-        _setRange(rangeDescription);
+        _setSelection(rangeDescription);
     }
 
     const editor = new JWEditor(wrapper);
@@ -108,7 +108,7 @@ function _parseTextualRange(testContainer: Node): DomSelection {
  *
  * @param range
  */
-function _setRange(range: DomSelection): void {
+function _setSelection(range: DomSelection): void {
     const domSelection = document.createRange();
     domSelection.setStart(range.anchorNode, range.anchorOffset);
     domSelection.collapse(true);

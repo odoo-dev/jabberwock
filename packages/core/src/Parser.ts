@@ -88,7 +88,7 @@ export class Parser {
         // Parse the DOM range if any.
         const selection = node.ownerDocument.getSelection();
         if (node.contains(selection.anchorNode) && node.contains(selection.focusNode)) {
-            vDocument.range.set(this.parseRange(selection));
+            vDocument.range.set(this.parseSelection(selection));
         }
 
         // Set a default range in VDocument if none was set yet.
@@ -101,11 +101,11 @@ export class Parser {
     /**
      * Convert the DOM description of a range to the description of a VRange.
      *
-     * @param range
+     * @param selection
      */
-    parseRange(range: DomSelection): VRangeDescription {
-        const anchor = this._locate(range.anchorNode, range.anchorOffset);
-        const focus = this._locate(range.focusNode, range.focusOffset);
+    parseSelection(selection: DomSelection): VRangeDescription {
+        const anchor = this._locate(selection.anchorNode, selection.anchorOffset);
+        const focus = this._locate(selection.focusNode, selection.focusOffset);
         if (anchor && focus) {
             const [anchorVNode, anchorPosition] = anchor;
             const [focusVNode, focusPosition] = focus;

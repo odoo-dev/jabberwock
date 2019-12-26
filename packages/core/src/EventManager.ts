@@ -2,7 +2,7 @@ import { EventNormalizer, DomSelection } from './EventNormalizer';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import JWEditor from './JWEditor';
 
-interface SetRangeParams {
+interface SetSelectionParams {
     domSelection: DomSelection;
 }
 
@@ -35,10 +35,10 @@ export class EventManager {
                     return this.editor.execCommand('insertParagraphBreak');
                 }
             case 'selectAll':
-            case 'setRange': {
-                const rangeParams = payload as SetRangeParams;
+            case 'setSelection': {
+                const rangeParams = payload as SetSelectionParams;
                 return this.editor.execCommand(customEvent.type, {
-                    vRange: this.editor.parser.parseRange(rangeParams.domSelection),
+                    vRange: this.editor.parser.parseSelection(rangeParams.domSelection),
                 });
             }
             case 'keydown': {
