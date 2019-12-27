@@ -228,7 +228,9 @@ function _insertCharAt(char: string, container: Node, offset: number): void {
  *
  */
 export async function nextTick(): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve));
+    await new Promise((resolve): void => {
+        setTimeout(resolve);
+    });
 }
 
 /**
@@ -236,7 +238,9 @@ export async function nextTick(): Promise<void> {
  *
  */
 export async function nextTickFrame(): Promise<void> {
-    await new Promise(resolve => window.requestAnimationFrame(resolve));
+    await new Promise((resolve): void => {
+        window.requestAnimationFrame(resolve);
+    });
     await nextTick();
 }
 
