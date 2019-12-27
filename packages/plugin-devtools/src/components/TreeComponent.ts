@@ -1,7 +1,7 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { VRangeDescription } from '../../../core/src/VRange';
+import { VRangeDescription } from '../../../core/src/VSelection';
 import { RANGE_ANCHOR_CHAR, RANGE_FOCUS_CHAR, RelativePosition } from '../../../utils/src/range';
 import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
 

@@ -1,6 +1,6 @@
 import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
-import { VRangeDescription } from './VRange';
+import { VRangeDescription } from './VSelection';
 import { Direction, RelativePosition } from '../../utils/src/range';
 import { VNode } from './VNodes/VNode';
 

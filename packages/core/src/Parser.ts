@@ -1,7 +1,7 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { VRangeDescription } from './VRange';
+import { VRangeDescription } from './VSelection';
 import { RelativePosition } from '../../utils/src/range';
 import { VNode } from './VNodes/VNode';
 import { DomSelection } from './EventNormalizer';

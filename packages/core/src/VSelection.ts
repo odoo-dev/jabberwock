@@ -1,6 +1,6 @@
 import { VNode } from './VNodes/VNode';
 import { RelativePosition, Direction, withMarkers } from '../../utils/src/range';
-import { RangeNode } from './VNodes/RangeNode';
+import { RangeNode } from './VNodes/MarkerNode';
 
 export interface VRangeDescription {
     anchorNode: VNode;

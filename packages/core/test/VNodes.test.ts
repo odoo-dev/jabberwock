@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../src/VNodes/CharNode';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
-import { RangeNode } from '../src/VNodes/RangeNode';
+import { RangeNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
 import { withMarkers } from '../../utils/src/range';

@@ -3,7 +3,7 @@ import { VDocument } from './VDocument';
 import { isMarker, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
-import { VRange } from './VRange';
+import { VRange } from './VSelection';
 import { CharNode } from './VNodes/CharNode';
 import { RelativePosition } from '../../utils/src/range';
 

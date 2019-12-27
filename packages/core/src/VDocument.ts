@@ -1,5 +1,5 @@
 import { VNode } from './VNodes/VNode';
-import { VRange } from './VRange';
+import { VRange } from './VSelection';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { isChar } from '../../utils/src/Predicates';
 import { withMarkers, Direction } from '../../utils/src/range';
