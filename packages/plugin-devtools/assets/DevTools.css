@@ -35,7 +35,7 @@ jw-devtools .underline {
     text-decoration: underline;
 }
 
-jw-devtools .range-node {
+jw-devtools .marker-node {
     color: red;
 }
 

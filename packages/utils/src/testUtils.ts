@@ -1,6 +1,6 @@
 import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { RANGE_FOCUS_CHAR, RANGE_ANCHOR_CHAR } from './range';
+import { SELECTION_FOCUS_CHAR, SELECTION_ANCHOR_CHAR } from './selection';
 import { DomSelection } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 
@@ -19,10 +19,10 @@ export interface TestEditorSpec {
 export async function testEditor(spec: TestEditorSpec): Promise<void> {
     const wrapper = document.createElement('p');
     wrapper.innerHTML = spec.contentBefore;
-    const rangeDescription = _parseTextualRange(wrapper);
+    const selectionDescription = _parseTextualSelection(wrapper);
     document.body.appendChild(wrapper);
-    if (rangeDescription) {
-        _setSelection(rangeDescription);
+    if (selectionDescription) {
+        _setSelection(selectionDescription);
     }
 
     const editor = new JWEditor(wrapper);
@@ -35,8 +35,8 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
     if (spec.stepFunction) {
         spec.stepFunction(editor);
     }
-    if (rangeDescription) {
-        _renderTextualRange();
+    if (selectionDescription) {
+        _renderTextualSelection();
     }
     if (spec.contentAfter) {
         expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
@@ -47,11 +47,11 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
 }
 
 /**
- * Return a description of a range from analysing the position of
- * `RANGE_ANCHOR_CHAR` and `RANGE_FOCUS_CHAR` characters within a test container.
- * Also remove these from the test container.
+ * Return a description of a selection from analysing the position of
+ * `SELECTION_ANCHOR_CHAR` and `SELECTION_FOCUS_CHAR` characters within a test
+ * container. Also remove these from the test container.
  */
-function _parseTextualRange(testContainer: Node): DomSelection {
+function _parseTextualSelection(testContainer: Node): DomSelection {
     let anchorNode: Node;
     let focusNode: Node;
     let anchorOffset: number;
@@ -61,22 +61,22 @@ function _parseTextualRange(testContainer: Node): DomSelection {
     while (node && !(anchorNode && focusNode)) {
         let next: Node;
         if (node.nodeType === Node.TEXT_NODE) {
-            // Look for range characters in the text content and remove them.
-            const anchorIndex = node.textContent.indexOf(RANGE_ANCHOR_CHAR);
-            node.textContent = node.textContent.replace(RANGE_ANCHOR_CHAR, '');
-            const focusIndex = node.textContent.indexOf(RANGE_FOCUS_CHAR);
-            node.textContent = node.textContent.replace(RANGE_FOCUS_CHAR, '');
+            // Look for selection markers in the text content and remove them.
+            const anchorIndex = node.textContent.indexOf(SELECTION_ANCHOR_CHAR);
+            node.textContent = node.textContent.replace(SELECTION_ANCHOR_CHAR, '');
+            const focusIndex = node.textContent.indexOf(SELECTION_FOCUS_CHAR);
+            node.textContent = node.textContent.replace(SELECTION_FOCUS_CHAR, '');
 
-            // Set the containers and offsets if we found the range characters.
+            // Set the containers and offsets if we found the markers.
             if (anchorIndex !== -1) {
                 [anchorNode, anchorOffset] = _toDomLocation(node, anchorIndex);
             }
             if (focusIndex !== -1) {
                 [focusNode, focusOffset] = _toDomLocation(node, focusIndex);
-                // If the start range character is within the same parent and
-                // comes before the end range character, change the range
+                // If the anchor marker character is within the same parent and
+                // comes before the focus marker character, change the selection
                 // direction to BACKWARD and adapt the startOffset to account
-                // for this end range character that was removed.
+                // for the focus marker character that was removed.
                 if (anchorNode === focusNode && anchorOffset > focusOffset) {
                     anchorOffset--;
                 }
@@ -85,7 +85,7 @@ function _parseTextualRange(testContainer: Node): DomSelection {
             // Get the next node to check.
             next = _nextNode(node);
             node.textContent = removeFormattingSpace(node);
-            // Remove the textual range node if it is empty.
+            // Remove the textual selection node if it is empty.
             if (!node.textContent.length) {
                 node.parentNode.removeChild(node);
             }
@@ -104,18 +104,18 @@ function _parseTextualRange(testContainer: Node): DomSelection {
     }
 }
 /**
- * Set a range in the DOM.
+ * Set a selection in the DOM.
  *
- * @param range
+ * @param selection
  */
-function _setSelection(range: DomSelection): void {
-    const domSelection = document.createRange();
-    domSelection.setStart(range.anchorNode, range.anchorOffset);
-    domSelection.collapse(true);
-    const selection = range.anchorNode.ownerDocument.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(domSelection);
-    selection.extend(range.focusNode, range.focusOffset);
+function _setSelection(selection: DomSelection): void {
+    const range = document.createRange();
+    range.setStart(selection.anchorNode, selection.anchorOffset);
+    range.collapse(true);
+    const domSelection = selection.anchorNode.ownerDocument.getSelection();
+    domSelection.removeAllRanges();
+    domSelection.addRange(range);
+    domSelection.extend(selection.focusNode, selection.focusOffset);
 }
 /**
  * Return a node and an offset corresponding to an index within a text node.
@@ -153,26 +153,26 @@ function _nextNode(node: Node): Node {
 }
 /**
  * Insert in the DOM:
- * - `RANGE_ANCHOR_CHAR` in place for the selection start
- * - `RANGE_FOCUS_CHAR` in place for the selection end
+ * - `SELECTION_ANCHOR_CHAR` in place for the selection start
+ * - `SELECTION_FOCUS_CHAR` in place for the selection end
  *
  * This is used in the function `testEditor`.
  */
-function _renderTextualRange(): void {
+function _renderTextualSelection(): void {
     const selection = document.getSelection();
 
     const start = _targetDeepest(selection.anchorNode, selection.anchorOffset);
     const end = _targetDeepest(selection.focusNode, selection.focusOffset);
 
-    // If the range characters have to be inserted within the same parent and
-    // the start range character has to be before the end range character, the
-    // end offset needs to be adapted to account for the first insertion.
+    // If the selection marker characters have to be inserted within the same
+    // parent and the anchor marker has to be before the focus marker, the end
+    // offset needs to be adapted to account for the first insertion.
     if (start.container === end.container && start.offset <= end.offset) {
         end.offset++;
     }
 
-    _insertCharAt(RANGE_ANCHOR_CHAR, start.container, start.offset);
-    _insertCharAt(RANGE_FOCUS_CHAR, end.container, end.offset);
+    _insertCharAt(SELECTION_ANCHOR_CHAR, start.container, start.offset);
+    _insertCharAt(SELECTION_FOCUS_CHAR, end.container, end.offset);
 }
 
 /**

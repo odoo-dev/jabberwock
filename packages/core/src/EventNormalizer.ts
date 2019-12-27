@@ -598,7 +598,7 @@ export class EventNormalizer {
         // The normalizer honors preventDefault for moves. If the selection was
         // moved regardless of the preventDefault setting, it must be restored.
         if (ev.defaultPrevented) {
-            this._triggerEvent('restoreRange');
+            this._triggerEvent('restoreSelection');
         } else {
             // Set the selection according to the current one. Set the origin
             // key in order to track the source of the move.
@@ -922,10 +922,10 @@ export class EventNormalizer {
      */
     _onSelectionChange(): void {
         if (this._selectionHasChanged) {
-            // The _rangeHasChanged hook will disappear once the renderer only
-            // re-renders what has changed rather than re-rendering everything.
+            // The _selectionHasChanged hook will disappear once the renderer
+            // only re-renders what has changed rather than re-rendering all.
             // Right now it is needed to avoid an infinite loop when selectAll
-            // triggers a new range set and the selection changes every time.
+            // triggers a new setSelection and the selection changes every time.
             return;
         }
         this._selectionHasChanged = true;

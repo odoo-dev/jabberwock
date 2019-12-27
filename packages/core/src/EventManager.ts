@@ -36,9 +36,9 @@ export class EventManager {
                 }
             case 'selectAll':
             case 'setSelection': {
-                const rangeParams = payload as SetSelectionParams;
+                const selectionParams = payload as SetSelectionParams;
                 return this.editor.execCommand(customEvent.type, {
-                    vRange: this.editor.parser.parseSelection(rangeParams.domSelection),
+                    vSelection: this.editor.parser.parseSelection(selectionParams.domSelection),
                 });
             }
             case 'keydown': {

@@ -1,8 +1,10 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { VRangeDescription } from '../../../core/src/VSelection';
-import { RANGE_ANCHOR_CHAR, RANGE_FOCUS_CHAR, RelativePosition } from '../../../utils/src/range';
+import { VSelectionDescription } from '../../../core/src/VSelection';
+import { SELECTION_ANCHOR_CHAR } from '../../../utils/src/selection';
+import { SELECTION_FOCUS_CHAR } from '../../../utils/src/selection';
+import { RelativePosition } from '../../../utils/src/selection';
 import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
 
 interface NodeProps {
@@ -38,7 +40,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     /**
      * Update `state.folded` when `props.selectedPath` changes if `props.vNode`
      * is in `props.selectedPath`, unless it is the last item. Also update
-     * `state.folded` for the ancestors of the range nodes.
+     * `state.folded` for the ancestors of the selection marker nodes.
      */
     async willUpdateProps(nextProps: NodeProps): Promise<void> {
         // The selected node itself should stay folded even when selected. Only
@@ -49,8 +51,8 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         if (path.some(node => node.id === nextProps.vNode.id)) {
             this.state.folded = false;
         }
-        const rangePath = this._getRangeAncestors();
-        if (rangePath.has(nextProps.vNode.id)) {
+        const selectionPath = this._getSelectionMarkersAncestors();
+        if (selectionPath.has(nextProps.vNode.id)) {
             this.state.folded = false;
         }
     }
@@ -72,13 +74,13 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         }
     }
     onDblClickNode(): void {
-        const location: VRangeDescription = {
+        const location: VSelectionDescription = {
             anchorNode: this.props.vNode,
             anchorPosition: RelativePosition.BEFORE,
             focusNode: this.props.vNode,
             focusPosition: RelativePosition.AFTER,
         };
-        this.env.editor.execCommand('setSelection', { vRange: location });
+        this.env.editor.execCommand('setSelection', { vSelection: location });
     }
     /**
      * Handle folding/unfolding on press Enter
@@ -121,11 +123,11 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      * @returns {string}
      */
     _getNodeRepr(node: VNode): string {
-        if (node === this.env.editor.vDocument.range.anchor) {
-            return RANGE_ANCHOR_CHAR;
+        if (node === this.env.editor.vDocument.selection.anchor) {
+            return SELECTION_ANCHOR_CHAR;
         }
-        if (node === this.env.editor.vDocument.range.focus) {
-            return RANGE_FOCUS_CHAR;
+        if (node === this.env.editor.vDocument.selection.focus) {
+            return SELECTION_FOCUS_CHAR;
         }
         if (node instanceof LineBreakNode) {
             return '↲';
@@ -136,20 +138,20 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         return '?';
     }
     /**
-     * Return a set of the IDs of all ancestors of both range nodes.
+     * Return a set of the IDs of all ancestors of both selection marker nodes.
      */
-    _getRangeAncestors(): Set<number> {
-        const rangeAncestors = new Set<number>();
-        let ancestor = this.env.editor.vDocument.range.focus.parent;
+    _getSelectionMarkersAncestors(): Set<number> {
+        const selectionAncestors = new Set<number>();
+        let ancestor = this.env.editor.vDocument.selection.focus.parent;
         while (ancestor) {
-            rangeAncestors.add(ancestor.id);
+            selectionAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        ancestor = this.env.editor.vDocument.range.anchor.parent;
+        ancestor = this.env.editor.vDocument.selection.anchor.parent;
         while (ancestor) {
-            rangeAncestors.add(ancestor.id);
+            selectionAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        return rangeAncestors;
+        return selectionAncestors;
     }
 }

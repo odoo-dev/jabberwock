@@ -1,21 +1,22 @@
 import { VNode } from './VNodes/VNode';
-import { RelativePosition, Direction, withMarkers } from '../../utils/src/range';
-import { RangeNode } from './VNodes/MarkerNode';
+import { RelativePosition, Direction } from '../../utils/src/selection';
+import { MarkerNode } from './VNodes/MarkerNode';
+import { withMarkers } from '../../utils/src/markers';
 
-export interface VRangeDescription {
+export interface VSelectionDescription {
     anchorNode: VNode;
     anchorPosition: RelativePosition;
     focusNode: VNode;
     focusPosition: RelativePosition;
 }
 
-export class VRange {
-    readonly anchor = new RangeNode();
-    readonly focus = new RangeNode();
+export class VSelection {
+    readonly anchor = new MarkerNode();
+    readonly focus = new MarkerNode();
     /**
-     * The direction of the range depends on whether tail is before head or the
-     * opposite. This is costly to compute and, as such, is only computed when
-     * needed by the `direction` getter.
+     * The direction of the selection depends on whether the anchor node is
+     * before the focus node or the opposite. If the anchor node is before the
+     * focus node, the selection is forward, otherwise it is backward.
      */
     get direction(): Direction {
         const forward = withMarkers(() => this.anchor.isBefore(this.focus));
@@ -27,7 +28,7 @@ export class VRange {
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if the range is collapsed.
+     * Return true if the selection is collapsed.
      */
     isCollapsed(): boolean {
         return withMarkers(() => {
@@ -39,13 +40,14 @@ export class VRange {
         });
     }
     /**
-     * Return a list of all the nodes implied in the selection between the first
-     * range node to the last (non-included).
+     * Return a list of all the nodes currently selected, that is all nodes
+     * located between the anchor node and the focus node of this selection.
      */
     get selectedNodes(): VNode[] {
         const selectedNodes: VNode[] = [];
-        const start = this.direction === Direction.FORWARD ? this.anchor : this.focus;
-        const end = this.direction === Direction.FORWARD ? this.focus : this.anchor;
+        const forward = this.direction === Direction.FORWARD;
+        const start = forward ? this.anchor : this.focus;
+        const end = forward ? this.focus : this.anchor;
         let node = start;
         withMarkers(() => {
             while ((node = node.next()) && node !== end) {
@@ -54,30 +56,25 @@ export class VRange {
         });
         return selectedNodes;
     }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
     /**
-     * Collapse the range. Return self.
+     * Collapse the selection. Return self.
      *
-     * @param [edge] range node on which to collapse
+     * @param [edge] marker node on which to collapse the selection
      */
-    collapse(edge = this.anchor): VRange {
+    collapse(edge = this.anchor): this {
         if (edge === this.anchor) {
-            this._setFocus(edge);
+            this.setFocus(edge);
         } else {
-            this._setAnchor(edge);
+            this.setAnchor(edge);
         }
         return this;
     }
     /**
-     * Update the range according to the given description. Return self.
+     * Update the selection according to the given description. Return self.
      *
-     * @param range
+     * @param selection
      */
-    set(selection: VRangeDescription): VRange {
+    set(selection: VSelectionDescription): this {
         return this.select(
             selection.anchorNode,
             selection.anchorPosition,
@@ -86,18 +83,18 @@ export class VRange {
         );
     }
     /**
-     * Set a collapsed range at the given location, targetting a `reference`
+     * Set a collapsed selection at the given location, targetting a `reference`
      * VNode and specifying the `position` in reference to that VNode ('BEFORE',
      * 'AFTER'), like in an `xpath`. Return self.
      *
      * @param position
      * @param reference
      */
-    setAt(reference: VNode, position = RelativePosition.BEFORE): VRange {
-        return this._setAnchor(reference, position).collapse();
+    setAt(reference: VNode, position = RelativePosition.BEFORE): this {
+        return this.setAnchor(reference, position).collapse();
     }
     /**
-     * Set a range selecting the given nodes.
+     * Set the selection such that it is selecting the given nodes.
      * Consider `ab` ([ = `this.anchor`, ] = `this.focus`):
      * `select(a)` => `[a]b`
      * `select(a, b)` => `[ab]`
@@ -106,75 +103,40 @@ export class VRange {
      * `select(a, RelativePosition.BEFORE, b, RelativePosition.AFTER)` => `[ab]`
      * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a[b]`
      *
-     * @param tailNode
-     * @param [anchorNode] default: `RelativePosition.BEFORE`
+     * @param anchorNode
+     * @param [anchorPostion] default: `RelativePosition.BEFORE`
      * @param [focusNode] default: `anchorNode`
-     * @param [focusOffset] default: `RelativePosition.AFTER`
+     * @param [focusPosition] default: `RelativePosition.AFTER`
      */
-    select(anchorNode: VNode, focusNode?: VNode): VRange;
+    select(anchorNode: VNode, focusNode?: VNode): this;
     select(
         anchorNode: VNode,
-        anchorOffset: RelativePosition,
+        anchorPostion: RelativePosition,
         focusNode: VNode,
-        focusOffset: RelativePosition,
-    ): VRange;
+        focusPosition: RelativePosition,
+    ): this;
     select(
         anchorNode: VNode,
-        anchorOffset: RelativePosition | VNode = RelativePosition.BEFORE,
+        anchorPosition: RelativePosition | VNode = RelativePosition.BEFORE,
         focusNode: VNode = anchorNode,
-        focusOffset: RelativePosition = RelativePosition.AFTER,
-    ): VRange {
-        if (anchorOffset instanceof VNode) {
-            focusNode = anchorOffset;
-            anchorOffset = RelativePosition.BEFORE;
+        focusPosition: RelativePosition = RelativePosition.AFTER,
+    ): this {
+        if (anchorPosition instanceof VNode) {
+            focusNode = anchorPosition;
+            anchorPosition = RelativePosition.BEFORE;
         }
-        if (focusOffset === RelativePosition.AFTER) {
-            this._setFocus(focusNode, focusOffset);
-            this._setAnchor(anchorNode, anchorOffset);
+        if (focusPosition === RelativePosition.AFTER) {
+            this.setFocus(focusNode, focusPosition);
+            this.setAnchor(anchorNode, anchorPosition);
         } else {
-            this._setAnchor(anchorNode, anchorOffset);
-            this._setFocus(focusNode, focusOffset);
+            this.setAnchor(anchorNode, anchorPosition);
+            this.setFocus(focusNode, focusPosition);
         }
         return this;
     }
     /**
-     * Set the range's start point (in traversal order) at the given location,
-     * targetting a `reference` VNode and specifying the `position` in reference
-     * to that VNode ('BEFORE', 'AFTER'), like in an `xpath`. If a direction is
-     * specified, the range's start point will be the head of the range.
-     * Return self.
-     *
-     * @param reference
-     * @param [position]
-     * @param [direction] default: Direction.FORWARD
-     */
-    setStart(reference: VNode, position?: RelativePosition, direction = Direction.FORWARD): VRange {
-        if (direction === Direction.FORWARD) {
-            return this._setAnchor(reference, position);
-        } else {
-            return this._setFocus(reference, position);
-        }
-    }
     /**
-     * Set the range's end point (in traversal order) at the given location,
-     * targetting a `reference` VNode and specifying the `position` in reference
-     * to that VNode ('BEFORE', 'AFTER'), like in an `xpath`. If a direction is
-     * specified, the range's end point will be the tail of the range.
-     * Return self.
-     *
-     * @param reference
-     * @param [position]
-     * @param [direction] default: Direction.FORWARD
-     */
-    setEnd(reference: VNode, position?: RelativePosition, direction = Direction.FORWARD): VRange {
-        if (direction === Direction.FORWARD) {
-            return this._setFocus(reference, position);
-        } else {
-            return this._setAnchor(reference, position);
-        }
-    }
-    /**
-     * Set the start of the range by targetting a `reference` VNode and
+     * Set the anchor of the selection by targetting a `reference` VNode and
      * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
      * like in an `xpath`. If no relative position if given, include the
      * reference node in the selection. Return self.
@@ -182,23 +144,43 @@ export class VRange {
      * @param reference
      * @param [position]
      */
-    setAnchor(reference: VNode, position = RelativePosition.BEFORE): VRange {
-        return this._setAnchor(reference, position);
+    setAnchor(reference: VNode, position = RelativePosition.BEFORE): this {
+        reference = reference.firstLeaf();
+        if (!reference.hasChildren() && !reference.atomic) {
+            reference.prepend(this.anchor);
+        } else if (position === RelativePosition.AFTER && reference !== this.focus) {
+            // We check that `reference` isn't `_head` to avoid a backward
+            // collapsed selection.
+            reference.after(this.anchor);
+        } else {
+            reference.before(this.anchor);
+        }
+        return this;
     }
     /**
-     * Set the end of the range by targetting a `reference` VNode and specifying
-     * the `position` in reference to that VNode ('BEFORE', 'AFTER'), like in an
-     * `xpath`. If no relative position if given, include the reference node in
-     * the selection. Return self.
+     * Set the focus of the selection by targetting a `reference` VNode and
+     * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
+     * like in an `xpath`. If no relative position if given, include the
+     * reference node in the selection. Return self.
      *
      * @param reference
      * @param [position]
      */
-    setFocus(reference: VNode, position = RelativePosition.AFTER): VRange {
-        return this._setFocus(reference, position);
+    setFocus(reference: VNode, position = RelativePosition.AFTER): this {
+        reference = reference.lastLeaf();
+        if (!reference.hasChildren() && !reference.atomic) {
+            reference.append(this.focus);
+        } else if (position === RelativePosition.BEFORE && reference !== this.anchor) {
+            // We check that `reference` isn't `_tail` to avoid a backward
+            // collapsed selection.
+            reference.before(this.focus);
+        } else {
+            reference.after(this.focus);
+        }
+        return this;
     }
     /**
-     * Extend the range from its tail to the given location, targetting a
+     * Extend the selection from its anchor to the given location, targetting a
      * `reference` VNode and specifying the `direction` of the extension.
      *
      * @param reference
@@ -225,56 +207,7 @@ export class VRange {
             }
         }
         if (reference) {
-            this._setFocus(reference, position);
+            this.setFocus(reference, position);
         }
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Set the end of the range by targetting a `reference` VNode and specifying
-     * the `position` in reference to that VNode ('BEFORE', 'AFTER'), like in an
-     * `xpath`. If no relative position if given, include the reference node in
-     * the selection. Return self.
-     *
-     * @param reference
-     * @param [position]
-     */
-    _setAnchor(reference: VNode, position = RelativePosition.BEFORE): VRange {
-        reference = reference.firstLeaf();
-        if (!reference.hasChildren() && !reference.atomic) {
-            reference.prepend(this.anchor);
-        } else if (position === RelativePosition.AFTER && reference !== this.focus) {
-            // We check that `reference` isn't `_head` to avoid a backward
-            // collapsed range.
-            reference.after(this.anchor);
-        } else {
-            reference.before(this.anchor);
-        }
-        return this;
-    }
-    /**
-     * Set the end of the range by targetting a `reference` VNode and specifying
-     * the `position` in reference to that VNode ('BEFORE', 'AFTER'), like in an
-     * `xpath`. If no relative position if given, include the reference node in
-     * the selection. Return self.
-     *
-     * @param reference
-     * @param [position]
-     */
-    _setFocus(reference: VNode, position = RelativePosition.AFTER): VRange {
-        reference = reference.lastLeaf();
-        if (!reference.hasChildren() && !reference.atomic) {
-            reference.append(this.focus);
-        } else if (position === RelativePosition.BEFORE && reference !== this.anchor) {
-            // We check that `reference` isn't `_tail` to avoid a backward
-            // collapsed range.
-            reference.before(this.focus);
-        } else {
-            reference.after(this.focus);
-        }
-        return this;
     }
 }

@@ -376,7 +376,7 @@ describe('plugin-devtools', () => {
                 'removed from devtools dom',
             );
         });
-        it('should change the range to select the paragraph', async () => {
+        it('should change the selection to select the paragraph', async () => {
             await openDevTools(devtools);
             const p = devtools.querySelector(
                 'devtools-tree > devtools-node > .children > devtools-node:nth-child(2)',
@@ -392,11 +392,11 @@ describe('plugin-devtools', () => {
             expect(pChildren.childNodes.length).to.equal(5);
             expect(pChildren.firstElementChild.classList.contains('self-closing')).to.equal(
                 true,
-                'previous is the range start',
+                'previous is the selection start',
             );
             expect(pChildren.lastElementChild.classList.contains('self-closing')).to.equal(
                 true,
-                'next is the range end',
+                'next is the selection end',
             );
         });
         it('should select the bold char', async () => {
@@ -475,7 +475,7 @@ describe('plugin-devtools', () => {
                 vNodeChar.type + '.' + vNodeChar.name,
             ]);
         });
-        it('should change the range to select the char', async () => {
+        it('should change the selection to select the char', async () => {
             await openDevTools(devtools);
             const node = devtools.querySelector('devtools-node.element.folded:nth-child(2)');
             const name = node.querySelector('.element-name');
@@ -497,16 +497,16 @@ describe('plugin-devtools', () => {
             expect(bold.parentNode.childNodes.length).to.equal(5);
             expect(bold.previousElementSibling.classList.contains('self-closing')).to.equal(
                 true,
-                'previous is the range start',
+                'previous is the selection start',
             );
             expect(bold.nextElementSibling.classList.contains('self-closing')).to.equal(
                 true,
-                'next is the range end',
+                'next is the selection end',
             );
 
-            const selection = document.getSelection();
-            expect(selection.rangeCount).to.equal(1, 'range exist');
-            const range = selection.getRangeAt(0);
+            const domSelection = document.getSelection();
+            expect(domSelection.rangeCount).to.equal(1, 'selection exist');
+            const range = domSelection.getRangeAt(0);
 
             const b = editor.el.querySelector('test-container b');
             expect(range.startContainer).to.equal(b.previousSibling);
@@ -655,8 +655,8 @@ describe('plugin-devtools', () => {
 
             expect(button.classList.contains('selected')).to.equal(true);
             const about = devtools.querySelector('devtools-info .about');
-            const aResult = '<div class="about"><span class="type">VRange</span> Selection </div>';
-            expect(about.outerHTML).to.equal(aResult);
+            const res = '<div class="about"><span class="type">VSelection</span> Selection </div>';
+            expect(about.outerHTML).to.equal(res);
         });
     });
     describe('CommandsComponent', () => {
@@ -886,7 +886,7 @@ describe('plugin-devtools', () => {
                 const pResult =
                     '<table>' +
                     '<tbody>' +
-                    '<tr><td>vRange</td><td><table><tbody>' +
+                    '<tr><td>vSelection</td><td><table><tbody>' +
                     '<tr><td> anchor </td><td>BEFORE ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +

@@ -1,7 +1,7 @@
 import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
-import { VRangeDescription } from './VSelection';
-import { Direction, RelativePosition } from '../../utils/src/range';
+import { VSelectionDescription } from './VSelection';
+import { Direction, RelativePosition } from '../../utils/src/selection';
 import { VNode } from './VNodes/VNode';
 
 export interface InsertParams {
@@ -10,8 +10,8 @@ export interface InsertParams {
 export interface InsertTextParams {
     value: string;
 }
-export interface VRangeParams {
-    vRange: VRangeDescription;
+export interface VSelectionParams {
+    vSelection: VSelectionDescription;
 }
 export interface FormatParams {
     format: 'bold' | 'italic' | 'underline';
@@ -61,7 +61,7 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.insertParagraphBreak();
     }
     /**
-     * Insert a VNode at range.
+     * Insert a VNode at the current position of the selection.
      *
      * @param params
      */
@@ -69,7 +69,7 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.insert(params.value);
     }
     /**
-     * Insert text at range.
+     * Insert text at the current position of the selection.
      *
      * @param params
      */
@@ -86,11 +86,11 @@ export class CorePlugin extends JWPlugin {
      * Delete in the backward direction (backspace key expected behavior).
      */
     deleteBackward(): void {
-        const range = this.editor.vDocument.range;
-        if (range.isCollapsed()) {
-            const previous = range.anchor.previous();
+        const selection = this.editor.vDocument.selection;
+        if (selection.isCollapsed()) {
+            const previous = selection.anchor.previous();
             if (previous) {
-                range.extendTo(previous, Direction.BACKWARD);
+                selection.extendTo(previous, Direction.BACKWARD);
             }
         }
         this.editor.vDocument.deleteSelection();
@@ -99,33 +99,33 @@ export class CorePlugin extends JWPlugin {
      * Delete in the forward direction (delete key expected behavior).
      */
     deleteForward(): void {
-        const range = this.editor.vDocument.range;
-        if (range.isCollapsed()) {
-            const next = range.focus.next();
+        const selection = this.editor.vDocument.selection;
+        if (selection.isCollapsed()) {
+            const next = selection.focus.next();
             if (next) {
-                range.extendTo(next, Direction.FORWARD);
+                selection.extendTo(next, Direction.FORWARD);
             }
         }
         this.editor.vDocument.deleteSelection();
     }
     /**
-     * Navigate to a given range.
+     * Set the selection to the given position.
      *
      * @param params
      */
-    setSelection(params: VRangeParams): void {
-        this.editor.vDocument.range.set(params.vRange);
-        // Each time the range changes, we reset its format.
+    setSelection(params: VSelectionParams): void {
+        this.editor.vDocument.selection.set(params.vSelection);
+        // Reset the current format each time the selection changes.
         this.editor.vDocument.formatCache = null;
     }
 
     /**
-     * Update the range such that it selects the entire document.
+     * Update the selection such that it selects the entire document.
      *
      * @param params
      */
     selectAll(): void {
-        this.editor.vDocument.range.set({
+        this.editor.vDocument.selection.set({
             anchorNode: this.editor.vDocument.root.firstLeaf(),
             anchorPosition: RelativePosition.BEFORE,
             focusNode: this.editor.vDocument.root.lastLeaf(),

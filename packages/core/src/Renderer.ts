@@ -3,9 +3,9 @@ import { VDocument } from './VDocument';
 import { isMarker, isChar } from '../../utils/src/Predicates';
 import { VNode } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
-import { VRange } from './VSelection';
+import { VSelection } from './VSelection';
 import { CharNode } from './VNodes/CharNode';
-import { RelativePosition } from '../../utils/src/range';
+import { RelativePosition } from '../../utils/src/selection';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
@@ -25,7 +25,7 @@ export class Renderer {
      */
     render(vDocument: VDocument, target: Element): void {
         const root = vDocument.root;
-        const range = vDocument.range;
+        const selection = vDocument.selection;
         target.innerHTML = ''; // TODO: update instead of recreate
         const fragment: DocumentFragment = document.createDocumentFragment();
         VDocumentMap.clear(); // TODO: update instead of recreate
@@ -42,7 +42,7 @@ export class Renderer {
         }
         target.appendChild(fragment);
 
-        this._renderRange(range, target);
+        this._renderSelection(selection, target);
     }
 
     //--------------------------------------------------------------------------
@@ -170,43 +170,42 @@ export class Renderer {
         return context;
     }
     /**
-     * Render the given VRange as a selection in the DOM in the given target.
+     * Render the given VSelection in the DOM in the given target.
      *
-     * @param range
+     * @param selection
      * @param target
      */
-    _renderRange(range: VRange, target: Element): void {
-        const [anchorNode, anchorOffset] = this._getDomLocation(range.anchor);
-        const [focusNode, focusOffset] = this._getDomLocation(range.focus);
-        const domSelection: Range = target.ownerDocument.createRange();
-        domSelection.setStart(anchorNode, anchorOffset);
-        domSelection.collapse(true);
-        const selection = document.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(domSelection);
-        selection.extend(focusNode, focusOffset);
+    _renderSelection(selection: VSelection, target: Element): void {
+        const [anchorNode, anchorOffset] = this._getDomLocation(selection.anchor);
+        const [focusNode, focusOffset] = this._getDomLocation(selection.focus);
+        const range: Range = target.ownerDocument.createRange();
+        range.setStart(anchorNode, anchorOffset);
+        range.collapse(true);
+        const domSelection = document.getSelection();
+        domSelection.removeAllRanges();
+        domSelection.addRange(range);
+        domSelection.extend(focusNode, focusOffset);
     }
     /**
-     * Return the location in the DOM corresponding to the location in the
-     * VDocument of the given range VNode. The location in the DOM is expressed
-     * as a tuple containing a reference Node and a relative position with
-     * respect to the reference Node.
+     * Return the DOM location corresponding to the VDocument location of the
+     * given VNode. The VDocument location is expressed as a tuple containing a
+     * reference Node and a relative position with respect to that Node.
      *
-     * @param rangeNode
+     * @param vNode
      */
-    _getDomLocation(rangeNode: VNode): [Node, number] {
-        let reference = rangeNode.previousSibling();
+    _getDomLocation(vNode: VNode): [Node, number] {
+        let reference = vNode.previousSibling();
         let position = RelativePosition.AFTER;
         if (reference) {
             reference = reference.lastLeaf();
         } else {
-            reference = rangeNode.nextSibling();
+            reference = vNode.nextSibling();
             position = RelativePosition.BEFORE;
         }
         if (reference) {
             reference = reference.firstLeaf();
         } else {
-            reference = rangeNode.parent;
+            reference = vNode.parent;
             position = RelativePosition.INSIDE;
         }
         // The location is a tuple [reference, offset] implemented by an array.

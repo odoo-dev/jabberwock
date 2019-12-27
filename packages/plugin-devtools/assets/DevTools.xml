@@ -46,7 +46,7 @@
         <t t-else="">
             <span t-if="props.vNode.type == 'marker'"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
-                class="selectable-line range-node" t-att-class="{
+                class="selectable-line marker-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <b><t t-esc="repr"/></b>
@@ -190,7 +190,7 @@
     <!-- INSPECTOR.Info.selection -->
     <t t-name="infoSelection">
         <div class="about">
-            <span class="type">VRange</span> Selection
+            <span class="type">VSelection</span> Selection
         </div>
         <div class="properties">
             <div class="divider">👤 About me</div>
@@ -198,15 +198,15 @@
                 <tbody>
                     <tr>
                         <td>direction</td>
-                        <td><t t-esc="env.editor.vDocument.range.direction"/></td>
+                        <td><t t-esc="env.editor.vDocument.selection.direction"/></td>
                     </tr>
                     <tr>
-                        <td><strong class="range-node">[</strong> anchor</td>
-                        <td><t t-esc="_repr(env.editor.vDocument.range.anchor)"/></td>
+                        <td><strong class="marker-node">[</strong> anchor</td>
+                        <td><t t-esc="_repr(env.editor.vDocument.selection.anchor)"/></td>
                     </tr>
                     <tr>
-                        <td><strong class="range-node">]</strong> focus</td>
-                        <td><t t-esc="_repr(env.editor.vDocument.range.focus)"/></td>
+                        <td><strong class="marker-node">]</strong> focus</td>
+                        <td><t t-esc="_repr(env.editor.vDocument.selection.focus)"/></td>
                     </tr>
                 </tbody>
             </table>
@@ -292,8 +292,8 @@
                         <t t-esc="key"/>
                     </td>
                     <td>
-                        <t t-if="value and key == 'vRange'">
-                        <t t-call="payloadVRange"/>
+                        <t t-if="value and key == 'vSelection'">
+                        <t t-call="payloadVSelection"/>
                         </t>
                         <t t-else=""><t t-esc="formatPayloadValue(value)"/></t>
                     </td>
@@ -302,7 +302,7 @@
         </table>
     </t>
 
-    <t t-name="payloadVRange">
+    <t t-name="payloadVSelection">
         <table>
             <tbody>
                 <tr>

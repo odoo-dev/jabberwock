@@ -9,7 +9,7 @@ describe('core', () => {
     describe('utils', () => {
         describe('testUtils', () => {
             describe('testEditor()', () => {
-                it('content should be the same (without range)', async () => {
+                it('content should be the same (no selection)', async () => {
                     let content;
                     content = 'a';
                     await testEditor({
@@ -23,7 +23,7 @@ describe('core', () => {
                         contentAfter: content,
                     });
                 });
-                it('should parse with range', () => {
+                it('should parse with selection', () => {
                     testEditor({
                         contentBefore: '<p>[a]</p>',
                         stepFunction: (editor: JWEditor) => {

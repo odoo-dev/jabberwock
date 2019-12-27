@@ -2,13 +2,13 @@ import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../src/VNodes/CharNode';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
-import { RangeNode } from '../src/VNodes/MarkerNode';
+import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { withMarkers } from '../../utils/src/range';
 import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
+import { withMarkers } from '../../utils/src/markers';
 
 describe('core', () => {
     describe('src', () => {
@@ -207,8 +207,8 @@ describe('core', () => {
                         expect(copy instanceof LineBreakNode).to.equal(true);
                     });
                 });
-                describe('locateRange', () => {
-                    it('should locate where to set the range at end', async () => {
+                describe('locate', () => {
+                    it('should locate where to set the selection at end', async () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
@@ -216,16 +216,16 @@ describe('core', () => {
                         p.append(lineBreak);
                         const doc = document.createElement('p');
                         doc.innerHTML = 'a<br><br>';
-                        expect(lineBreak.locateRange(doc.childNodes[1], 0)).to.deep.equal([
+                        expect(lineBreak.locate(doc.childNodes[1], 0)).to.deep.equal([
                             lineBreak,
                             'BEFORE',
                         ]);
-                        expect(lineBreak.locateRange(doc.childNodes[2], 0)).to.deep.equal([
+                        expect(lineBreak.locate(doc.childNodes[2], 0)).to.deep.equal([
                             lineBreak,
                             'AFTER',
                         ]);
                     });
-                    it('should locate where to set the range inside string', async () => {
+                    it('should locate where to set the selection inside string', async () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
@@ -235,7 +235,7 @@ describe('core', () => {
                         p.append(b);
                         const doc = document.createElement('p');
                         doc.innerHTML = 'a<br>b';
-                        expect(lineBreak.locateRange(doc.childNodes[1], 0)).to.deep.equal([
+                        expect(lineBreak.locate(doc.childNodes[1], 0)).to.deep.equal([
                             lineBreak,
                             'BEFORE',
                         ]);
@@ -250,12 +250,12 @@ describe('core', () => {
                     });
                 });
             });
-            describe('RangeNode', () => {
+            describe('MarkerNode', () => {
                 describe('constructor', () => {
-                    it('should create a range node', async () => {
-                        const rangeNode = new RangeNode();
-                        expect(rangeNode.type).to.equal(VNodeType.MARKER);
-                        expect(rangeNode.atomic).to.equal(true);
+                    it('should create a marker node', async () => {
+                        const selectionNode = new MarkerNode();
+                        expect(selectionNode.type).to.equal(VNodeType.MARKER);
+                        expect(selectionNode.atomic).to.equal(true);
                     });
                 });
             });
@@ -264,14 +264,14 @@ describe('core', () => {
                  * ROOT
                  * - a
                  * - H1
-                 *   - RangeTail
+                 *   - SelectionTail
                  *   - b
                  * - c
                  * - P
                  *   - d
                  *   - P
                  *     - e
-                 *      - RangeHead
+                 *      - SelectionHead
                  *     - f
                  */
                 const root = new FragmentNode();
@@ -281,7 +281,7 @@ describe('core', () => {
                 root.append(h1);
                 const b = new CharNode('b');
                 h1.append(b);
-                const tail = new RangeNode();
+                const tail = new MarkerNode();
                 h1.prepend(tail);
                 const c = new CharNode('c');
                 root.append(c);
@@ -293,7 +293,7 @@ describe('core', () => {
                 p.append(pp);
                 const e = new CharNode('e');
                 pp.append(e);
-                const head = new RangeNode();
+                const head = new MarkerNode();
                 pp.append(head);
                 const f = new CharNode('f');
                 pp.append(f);
@@ -311,11 +311,11 @@ describe('core', () => {
                         root.append(p);
                         const a = new CharNode('a');
                         p.append(a);
-                        const tail = new RangeNode();
+                        const tail = new MarkerNode();
                         p.append(tail);
                         const b = new CharNode('b');
                         p.append(b);
-                        const head = new RangeNode();
+                        const head = new MarkerNode();
                         p.append(head);
                         const c = new CharNode('c');
                         p.append(c);
@@ -323,11 +323,11 @@ describe('core', () => {
                     });
                 });
                 describe('children', () => {
-                    it('should return the children nodes (without range)', async () => {
+                    it('should return the children nodes (without selection)', async () => {
                         expect(root.children).to.deep.equal([a, h1, c, p]);
                         expect(h1.children).to.deep.equal([b]);
                     });
-                    it('should return the children nodes with the range', async () => {
+                    it('should return the children nodes with the selection', async () => {
                         withMarkers(() => {
                             expect(root.children).to.deep.equal([a, h1, c, p]);
                             expect(h1.children).to.deep.equal([tail, b]);
@@ -341,24 +341,24 @@ describe('core', () => {
                         expect(fragment.firstChild.nodeName).to.equal('UNDEFINED');
                     });
                 });
-                describe('locateRange', () => {
-                    it('should locate where to set the range at end', async () => {
+                describe('locate', () => {
+                    it('should locate where to set the selection at end', async () => {
                         const p = new VElement('P');
                         p.append(new VNode());
                         p.append(new LineBreakNode());
                         p.append(new VNode());
                         const doc = document.createElement('p');
                         doc.innerHTML = '<span><span><br><span><span>';
-                        expect(p.lastChild().locateRange(doc.lastChild, 0)).to.deep.equal([
+                        expect(p.lastChild().locate(doc.lastChild, 0)).to.deep.equal([
                             p.lastChild(),
                             'BEFORE',
                         ]);
-                        expect(p.lastChild().locateRange(doc.lastChild, 1)).to.deep.equal([
+                        expect(p.lastChild().locate(doc.lastChild, 1)).to.deep.equal([
                             p.lastChild(),
                             'AFTER',
                         ]);
                     });
-                    it('should locate where to set the range inside string', async () => {
+                    it('should locate where to set the selection inside string', async () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
@@ -368,14 +368,8 @@ describe('core', () => {
                         p.append(b);
                         const doc = document.createElement('p');
                         doc.innerHTML = 'a<span><span>b';
-                        expect(vNode.locateRange(doc.childNodes[1], 0)).to.deep.equal([
-                            vNode,
-                            'BEFORE',
-                        ]);
-                        expect(vNode.locateRange(doc.childNodes[1], 1)).to.deep.equal([
-                            vNode,
-                            'AFTER',
-                        ]);
+                        expect(vNode.locate(doc.childNodes[1], 0)).to.deep.equal([vNode, 'BEFORE']);
+                        expect(vNode.locate(doc.childNodes[1], 1)).to.deep.equal([vNode, 'AFTER']);
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -558,10 +552,10 @@ describe('core', () => {
                 describe('siblings', () => {
                     it('should return the node siblings', async () => {
                         expect(h1.siblings).to.deep.equal([a, h1, c, p]);
-                        expect(b.siblings).to.deep.equal([b], 'siblings without the range');
+                        expect(b.siblings).to.deep.equal([b], 'siblings without the selection');
                         expect(root.siblings).to.deep.equal([]);
                     });
-                    it('should return the node siblings with the range', async () => {
+                    it('should return the node siblings with the selection', async () => {
                         withMarkers(() => {
                             expect(h1.siblings).to.deep.equal([a, h1, c, p]);
                             expect(b.siblings).to.deep.equal([tail, b]);
@@ -574,7 +568,7 @@ describe('core', () => {
                         expect(root.firstChild()).to.deep.equal(a, 'root.firstChild = a');
                         expect(h1.firstChild()).to.deep.equal(
                             b,
-                            'h1.firstChild = b (not the range)',
+                            'h1.firstChild = b (not the selection)',
                         );
                         expect(p.firstChild()).to.deep.equal(d, 'p.firstChild = d');
                         expect(pp.firstChild()).to.deep.equal(e, 'pp.firstChild = e');
@@ -691,7 +685,7 @@ describe('core', () => {
                         expect(root.firstDescendant()).to.deep.equal(a, 'root.firstDescendant = a');
                         expect(h1.firstDescendant()).to.deep.equal(
                             b,
-                            'h1.firstDescendant = b (not the range)',
+                            'h1.firstDescendant = b (not the selection)',
                         );
                         expect(p.firstDescendant()).to.deep.equal(d, 'p.firstDescendant = d');
                         expect(pp.firstDescendant()).to.deep.equal(e, 'pp.firstDescendant = e');
@@ -722,7 +716,7 @@ describe('core', () => {
                         expect(root.lastDescendant()).to.deep.equal(f, 'root.lastDescendant = p');
                         expect(h1.lastDescendant()).to.deep.equal(
                             b,
-                            'h1.lastDescendant = b (not the range)',
+                            'h1.lastDescendant = b (not the selection)',
                         );
                         expect(p.lastDescendant()).to.deep.equal(f, 'p.lastDescendant = f');
                         expect(pp.lastDescendant()).to.deep.equal(f, 'pp.lastDescendant = f');
@@ -1172,17 +1166,17 @@ describe('core', () => {
                         expect(p.children).to.deep.equal([a]);
                         expect(p.nextSibling().children).to.deep.equal([b, c]);
                     });
-                    it('should split a paragraph with range', async () => {
+                    it('should split a paragraph with selection', async () => {
                         const root = new FragmentNode();
                         const p = new VElement('P');
                         root.append(p);
                         const a = new CharNode('a');
                         p.append(a);
-                        const tail = new RangeNode();
+                        const tail = new MarkerNode();
                         p.append(tail);
                         const b = new CharNode('b');
                         p.append(b);
-                        const head = new RangeNode();
+                        const head = new MarkerNode();
                         p.append(head);
                         const c = new CharNode('c');
                         p.append(c);

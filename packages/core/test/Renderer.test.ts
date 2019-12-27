@@ -45,32 +45,32 @@ describe('utils', () => {
                 element.remove();
             });
         });
-        describe('range', () => {
-            it('should render text range at the beginning', async () => {
+        describe('selection', () => {
+            it('should render text selection at the beginning', async () => {
                 const content = `<p>[a]bc</p>`;
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range at the end', async () => {
+            it('should render text selection at the end', async () => {
                 const content = `<p>ab[c]</p>`;
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range in the whole tag', async () => {
+            it('should render text selection in the whole tag', async () => {
                 const content = `<p>[abc]</p>`;
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range that is collapsed in the beginning', async () => {
+            it('should render text selection that is collapsed in the beginning', async () => {
                 const content = `<p>[]abc</p>`;
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range that is collapsed in the end', async () => {
+            it('should render text selection that is collapsed in the end', async () => {
                 const content = `<p>abc[]</p>`;
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render text range that is collapsed in the middle', async () => {
+            it('should render text selection that is collapsed in the middle', async () => {
                 const content = `<p>ab[]c</p>`;
                 await testEditor({ contentBefore: content, contentAfter: content });
             });
-            it('should render the range outside the tag', async () => {
+            it('should render the selection outside the tag', async () => {
                 await testEditor({
                     contentBefore: '<p>[<b>a</b>]</p>',
                     contentAfter: '<p><b>[a]</b></p>',

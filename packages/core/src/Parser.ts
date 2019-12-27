@@ -1,8 +1,8 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { VRangeDescription } from './VSelection';
-import { RelativePosition } from '../../utils/src/range';
+import { VSelectionDescription } from './VSelection';
+import { RelativePosition } from '../../utils/src/selection';
 import { VNode } from './VNodes/VNode';
 import { DomSelection } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
@@ -85,25 +85,26 @@ export class Parser {
             } while (context);
         }
 
-        // Parse the DOM range if any.
+        // Parse the DOM selection.
         const selection = node.ownerDocument.getSelection();
         if (node.contains(selection.anchorNode) && node.contains(selection.focusNode)) {
-            vDocument.range.set(this.parseSelection(selection));
+            vDocument.selection.set(this.parseSelection(selection));
         }
 
-        // Set a default range in VDocument if none was set yet.
-        if (!vDocument.range.anchor.parent || !vDocument.range.focus.parent) {
-            vDocument.range.setAt(vDocument.root);
+        // Set a default selection in VDocument if none was set yet.
+        if (!vDocument.selection.anchor.parent || !vDocument.selection.focus.parent) {
+            vDocument.selection.setAt(vDocument.root);
         }
 
         return vDocument;
     }
     /**
-     * Convert the DOM description of a range to the description of a VRange.
+     * Convert the DOM description of a selection to the description of a
+     * VSelection.
      *
      * @param selection
      */
-    parseSelection(selection: DomSelection): VRangeDescription {
+    parseSelection(selection: DomSelection): VSelectionDescription {
         const anchor = this._locate(selection.anchorNode, selection.anchorOffset);
         const focus = this._locate(selection.focusNode, selection.focusOffset);
         if (anchor && focus) {
@@ -315,7 +316,7 @@ export class Parser {
             } else {
                 reference = vNodes[0];
             }
-            return reference.locateRange(container, offset);
+            return reference.locate(container, offset);
         }
     }
 }

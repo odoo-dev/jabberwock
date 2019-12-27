@@ -13,8 +13,8 @@ describe('stores', () => {
     describe('VDocument', () => {
         describe('insertText', () => {
             describe('bold', () => {
-                describe('Range collapsed', () => {
-                    it('should insert char not bold when range in between two paragraphs', async () => {
+                describe('Selection collapsed', () => {
+                    it('should insert char not bold when selection in between two paragraphs', async () => {
                         await testEditor({
                             contentBefore: '<p><b>a</b></p><p>[]</p><p><b>b</b></p>',
                             stepFunction: (editor: JWEditor) => {
@@ -24,7 +24,7 @@ describe('stores', () => {
                             contentAfter: '<p><b>a</b></p><p>c[]</p><p><b>b</b></p>',
                         });
                     });
-                    it('should insert char bold when the range in first position and next char is bold', async () => {
+                    it('should insert char bold when the selection in first position and next char is bold', async () => {
                         await testEditor({
                             contentBefore: '<b>[]a</b>',
                             stepFunction: (editor: JWEditor) => {
@@ -34,7 +34,7 @@ describe('stores', () => {
                             contentAfter: '<b>b[]a</b>',
                         });
                     });
-                    it('should insert char not bold when the range in first position and next char is not bold', async () => {
+                    it('should insert char not bold when the selection in first position and next char is not bold', async () => {
                         await testEditor({
                             contentBefore: '[]a',
                             stepFunction: (editor: JWEditor) => {
@@ -86,8 +86,8 @@ describe('stores', () => {
                     });
                 });
 
-                describe('Range not collapsed', () => {
-                    it('should replace without bold when nothing bold between range and nothing bold outside range', async () => {
+                describe('Selection not collapsed', () => {
+                    it('should replace without bold when nothing bold between selection and nothing bold outside selection', async () => {
                         await testEditor({
                             contentBefore: '[a]',
                             stepFunction: (editor: JWEditor) => {
@@ -105,7 +105,7 @@ describe('stores', () => {
                             contentAfter: 'ad[]c',
                         });
                     });
-                    it('should replace without bold when nothing bold between range and everything bold outside range', async () => {
+                    it('should replace without bold when nothing bold between selection and everything bold outside selection', async () => {
                         await testEditor({
                             contentBefore: '<b>a</b>[b]<b>c</b>',
                             stepFunction: (editor: JWEditor) => {
@@ -115,7 +115,7 @@ describe('stores', () => {
                             contentAfter: '<b>a</b>d[]<b>c</b>',
                         });
                     });
-                    it('should replace with bold when anything inside the range is bold', async () => {
+                    it('should replace with bold when anything inside the selection is bold', async () => {
                         await testEditor({
                             contentBefore: '<b>[a</b>b]<b>c</b>',
                             stepFunction: (editor: JWEditor) => {
@@ -129,7 +129,7 @@ describe('stores', () => {
             });
         });
         describe('applyFormat', () => {
-            describe('Range collapsed', () => {
+            describe('Selection collapsed', () => {
                 it('should make bold the next insertion', async () => {
                     await testEditor({
                         contentBefore: '[]a',
@@ -244,7 +244,7 @@ describe('stores', () => {
                 });
             });
 
-            describe('Range not collapsed', () => {
+            describe('Selection not collapsed', () => {
                 it('should be bold when selected is not bold', async () => {
                     await testEditor({
                         contentBefore: 'a[b]c',
@@ -288,7 +288,7 @@ describe('stores', () => {
         // Note: implementing a test for deleteForward, make sure to implement
         // its equivalent for deleteBackward.
         describe('deleteForward', () => {
-            describe('Range collapsed', () => {
+            describe('Selection collapsed', () => {
                 describe('Basic', () => {
                     it('should do nothing', async () => {
                         await testEditor({
@@ -593,7 +593,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<p><b>abc</b>[]def</p>',
                             stepFunction: deleteForward,
-                            // The range is normalized so we only have one way
+                            // The selection is normalized so we only have one way
                             // to represent a position.
                             contentAfter: '<p><b>abc[]</b>ef</p>',
                         });
@@ -617,7 +617,7 @@ describe('stores', () => {
                 });
             });
 
-            describe('Range not collapsed', () => {
+            describe('Selection not collapsed', () => {
                 it('should delete part of the text within a paragraph', async () => {
                     // Forward selection
                     await testEditor({
@@ -741,7 +741,7 @@ describe('stores', () => {
         // Note: implementing a test for deleteBackward, make sure to implement
         // its equivalent for deleteForward.
         describe('deleteBackward', () => {
-            describe('Range collapsed', () => {
+            describe('Selection collapsed', () => {
                 describe('Basic', () => {
                     it('should do nothing', async () => {
                         await testEditor({
@@ -1084,7 +1084,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<p>abc<b>[]def</b></p>',
                             stepFunction: deleteBackward,
-                            // The range is normalized so we only have one way
+                            // The selection is normalized so we only have one way
                             // to represent a position.
                             contentAfter: '<p>ab[]<b>def</b></p>',
                         });
@@ -1123,7 +1123,7 @@ describe('stores', () => {
                 });
             });
 
-            describe('Range not collapsed', () => {
+            describe('Selection not collapsed', () => {
                 it('should delete part of the text within a paragraph', async () => {
                     // Forward selection
                     await testEditor({
@@ -1245,7 +1245,7 @@ describe('stores', () => {
             });
         });
         describe('insertParagraphBreak', () => {
-            describe('Range collapsed', () => {
+            describe('Selection collapsed', () => {
                 describe('Basic', () => {
                     it('should duplicate an empty paragraph', async () => {
                         await testEditor({
@@ -1389,7 +1389,7 @@ describe('stores', () => {
                             contentAfter: '<p>abc</p><p><b>[]def</b></p>',
                         });
                         await testEditor({
-                            // That range is equivalent to []<b>
+                            // That selection is equivalent to []<b>
                             contentBefore: '<p>abc<b>[]def</b></p>',
                             stepFunction: insertParagraphBreak,
                             contentAfter: '<p>abc</p><p><b>[]def</b></p>',
@@ -1418,7 +1418,7 @@ describe('stores', () => {
                             contentAfter: '<p><b>abc</b></p><p>[]def</p>',
                         });
                         await testEditor({
-                            // That range is equivalent to </b>[]
+                            // That selection is equivalent to </b>[]
                             contentBefore: '<p><b>abc[]</b>def</p>',
                             stepFunction: insertParagraphBreak,
                             contentAfter: '<p><b>abc</b></p><p>[]def</p>',
@@ -1446,7 +1446,7 @@ describe('stores', () => {
                             contentAfter: '<p><br></p><p><b>[]abc</b></p>',
                         });
                         await testEditor({
-                            // That range is equivalent to []<b>
+                            // That selection is equivalent to []<b>
                             contentBefore: '<p><b>[]abc</b></p>',
                             stepFunction: insertParagraphBreak,
                             contentAfter: '<p><br></p><p><b>[]abc</b></p>',
@@ -1486,7 +1486,7 @@ describe('stores', () => {
                             contentAfter: '<p><b>abc</b></p><p>[]<br></p>',
                         });
                         await testEditor({
-                            // That range is equivalent to </b>[]
+                            // That selection is equivalent to </b>[]
                             contentBefore: '<p><b>abc[]</b></p>',
                             stepFunction: insertParagraphBreak,
                             contentAfter: '<p><b>abc</b></p><p>[]<br></p>',
@@ -1500,7 +1500,7 @@ describe('stores', () => {
                     });
                 });
             });
-            describe('Range not collapsed', () => {
+            describe('Selection not collapsed', () => {
                 it('should delete the first half of a paragraph, then split it', async () => {
                     // Forward selection
                     await testEditor({
@@ -1560,7 +1560,7 @@ describe('stores', () => {
             });
         });
         describe('insertLineBreak', () => {
-            describe('Range collapsed', () => {
+            describe('Selection collapsed', () => {
                 describe('Basic', () => {
                     it('should insert a <br> into an empty paragraph', async () => {
                         await testEditor({
@@ -1690,11 +1690,11 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<p>abc[]<b>def</b></p>',
                             stepFunction: insertLineBreak,
-                            // That range is equivalent to []<b>
+                            // That selection is equivalent to []<b>
                             contentAfter: '<p>abc<br><b>[]def</b></p>',
                         });
                         await testEditor({
-                            // That range is equivalent to []<b>
+                            // That selection is equivalent to []<b>
                             contentBefore: '<p>abc<b>[]def</b></p>',
                             stepFunction: insertLineBreak,
                             contentAfter: '<p>abc<br><b>[]def</b></p>',
@@ -1723,7 +1723,7 @@ describe('stores', () => {
                             contentAfter: '<p><b>abc</b><br>[]def</p>',
                         });
                         await testEditor({
-                            // That range is equivalent to </b>[]
+                            // That selection is equivalent to </b>[]
                             contentBefore: '<p><b>abc[]</b>def</p>',
                             stepFunction: insertLineBreak,
                             contentAfter: '<p><b>abc</b><br>[]def</p>',
@@ -1752,7 +1752,7 @@ describe('stores', () => {
                             contentAfter: '<p><br><b>[]abc</b></p>',
                         });
                         await testEditor({
-                            // That range is equivalent to []<b>
+                            // That selection is equivalent to []<b>
                             contentBefore: '<p><b>[]abc</b></p>',
                             stepFunction: insertLineBreak,
                             contentAfter: '<p><br><b>[]abc</b></p>',
@@ -1794,7 +1794,7 @@ describe('stores', () => {
                             contentAfter: '<p><b>abc</b><br>[]<br></p>',
                         });
                         await testEditor({
-                            // That range is equivalent to </b>[]
+                            // That selection is equivalent to </b>[]
                             contentBefore: '<p><b>abc[]</b></p>',
                             stepFunction: insertLineBreak,
                             // The second <br> is needed to make the first
@@ -1812,7 +1812,7 @@ describe('stores', () => {
                     });
                 });
             });
-            describe('Range not collapsed', () => {
+            describe('Selection not collapsed', () => {
                 it('should delete the first half of a paragraph, then insert a <br>', async () => {
                     // Forward selection
                     await testEditor({
