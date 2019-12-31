@@ -1,8 +1,8 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { VRangeDescription } from '../../../core/src/VRange';
-import { Direction, RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../../../utils/src/range';
+import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
+import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
 import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
 
 interface NodeProps {
@@ -26,7 +26,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     // This is a recursive Component: each node of the tree is itself a tree
     static components = { TreeComponent };
     // User-friendly representation of the node
-    repr: string = this._getNodeRepr(this.props.vNode);
+    _repr: string = this._getNodeRepr(this.props.vNode);
     state: NodeState = {
         folded: !this.props.isRoot, // Fold everything but the root on init
     };
@@ -38,7 +38,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     /**
      * Update `state.folded` when `props.selectedPath` changes if `props.vNode`
      * is in `props.selectedPath`, unless it is the last item. Also update
-     * `state.folded` for the ancestors of the range nodes.
+     * `state.folded` for the ancestors of the selection marker nodes.
      */
     async willUpdateProps(nextProps: NodeProps): Promise<void> {
         // The selected node itself should stay folded even when selected. Only
@@ -49,8 +49,8 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         if (path.some(node => node.id === nextProps.vNode.id)) {
             this.state.folded = false;
         }
-        const rangePath = this._getRangeAncestors();
-        if (rangePath.has(nextProps.vNode.id)) {
+        const selectionMarkersPath = this._getSelectionMarkersAncestors();
+        if (selectionMarkersPath.has(nextProps.vNode.id)) {
             this.state.folded = false;
         }
     }
@@ -72,12 +72,12 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         }
     }
     onDblClickNode(): void {
-        const location: VRangeDescription = {
-            start: this.props.vNode,
-            end: this.props.vNode,
+        const location: VSelectionDescription = {
+            anchorNode: this.props.vNode,
+            focusNode: this.props.vNode,
             direction: Direction.FORWARD,
         };
-        this.env.editor.execCommand('setRange', { vRange: location });
+        this.env.editor.execCommand('setSelection', { vSelection: location });
     }
     /**
      * Handle folding/unfolding on press Enter
@@ -89,6 +89,16 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             event.preventDefault();
             this.toggleFolded();
             event.stopImmediatePropagation();
+        }
+    }
+    repr(): string {
+        if (this.props.vNode.type === 'marker') {
+            // Representation of marker nodes might change depending on the
+            // context in which they are referenced, even though they did not
+            // actually change per se.
+            return this._getNodeRepr(this.props.vNode);
+        } else {
+            return this._repr;
         }
     }
     /**
@@ -120,11 +130,11 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      * @returns {string}
      */
     _getNodeRepr(node: VNode): string {
-        if (node === this.env.editor.vDocument.range.anchor) {
-            return RANGE_TAIL_CHAR;
+        if (node === this.env.editor.vDocument.selection.anchor) {
+            return ANCHOR_CHAR;
         }
-        if (node === this.env.editor.vDocument.range.focus) {
-            return RANGE_HEAD_CHAR;
+        if (node === this.env.editor.vDocument.selection.focus) {
+            return FOCUS_CHAR;
         }
         if (node instanceof LineBreakNode) {
             return '↲';
@@ -135,20 +145,20 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         return '?';
     }
     /**
-     * Return a set of the IDs of all ancestors of both range nodes.
+     * Return a set of the IDs of all ancestors of both selection marker nodes.
      */
-    _getRangeAncestors(): Set<number> {
-        const rangeAncestors = new Set<number>();
-        let ancestor = this.env.editor.vDocument.range.end.parent;
+    _getSelectionMarkersAncestors(): Set<number> {
+        const selectionMarkersAncestors = new Set<number>();
+        let ancestor = this.env.editor.vDocument.selection.anchor.parent;
         while (ancestor) {
-            rangeAncestors.add(ancestor.id);
+            selectionMarkersAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        ancestor = this.env.editor.vDocument.range.start.parent;
+        ancestor = this.env.editor.vDocument.selection.focus.parent;
         while (ancestor) {
-            rangeAncestors.add(ancestor.id);
+            selectionMarkersAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        return rangeAncestors;
+        return selectionMarkersAncestors;
     }
 }

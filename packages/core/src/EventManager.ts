@@ -1,9 +1,10 @@
-import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
+import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import JWEditor from './JWEditor';
+import { VSelectionParams } from './CorePlugin';
 
-interface SetRangeParams {
-    domRange: DomRangeDescription;
+interface SetSelectionParams {
+    domSelection: DomSelectionDescription;
 }
 
 export class EventManager {
@@ -35,11 +36,12 @@ export class EventManager {
                     return this.editor.execCommand('insertParagraphBreak');
                 }
             case 'selectAll':
-            case 'setRange': {
-                const rangeParams = payload as SetRangeParams;
-                return this.editor.execCommand(customEvent.type, {
-                    vRange: this.editor.parser.parseRange(rangeParams.domRange),
-                });
+            case 'setSelection': {
+                const selectionParams = payload as SetSelectionParams;
+                const vSelectionParams: VSelectionParams = {
+                    vSelection: this.editor.parser.parseSelection(selectionParams.domSelection),
+                };
+                return this.editor.execCommand(customEvent.type, vSelectionParams);
             }
             case 'keydown': {
                 // TODO: keydown should be matched with existing shortcuts. If

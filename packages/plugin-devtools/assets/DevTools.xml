@@ -46,10 +46,10 @@
         <t t-else="">
             <span t-if="props.vNode.type == 'marker'"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
-                class="selectable-line range-node" t-att-class="{
+                class="selectable-line marker-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
                 }">
-                <b><t t-esc="repr"/></b>
+                <b><t t-esc="repr()"/></b>
             </span>
             <span t-elif="props.vNode.char" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
@@ -59,7 +59,7 @@
                     underline: props.vNode.underline,
                     selected: props.selectedID == props.vNode.id,
                 }">
-                <t t-esc="repr"/>
+                <t t-esc="repr()"/>
             </span>
             <t t-else="">
                 <span class="element-name selectable-line" t-on-click="onClickNode"
@@ -71,7 +71,7 @@
                         selected: props.selectedID == props.vNode.id,
                         'line-break': props.vNode.htmlTag === 'BR',
                     }">
-                    <t t-esc="repr"/>
+                    <t t-esc="repr()"/>
                 </span>
                 <t t-call="treeChildren"/>
             </t>
@@ -191,7 +191,7 @@
     <!-- INSPECTOR.Info.selection -->
     <t t-name="infoSelection">
         <div class="about">
-            <span class="type">VRange</span> Selection
+            <span class="type">VSelection</span> Selection
         </div>
         <div class="properties">
             <div class="divider">👤 About me</div>
@@ -199,19 +199,15 @@
                 <tbody>
                     <tr>
                         <td>direction</td>
-                        <td><t t-esc="env.editor.vDocument.range.direction"/></td>
+                        <td><t t-esc="env.editor.vDocument.selection.direction"/></td>
                     </tr>
                     <tr>
-                        <td><strong class="range-node"><t
-                        t-if="env.editor.vDocument.range.start === env.editor.vDocument.range.anchor">[</t><t
-                        t-else="">]</t></strong> start</td>
-                        <td><t t-esc="_repr(env.editor.vDocument.range.start)"/></td>
+                        <td><strong class="marker-node">[</strong> anchor</td>
+                        <td><t t-esc="_repr(env.editor.vDocument.selection.anchor)"/></td>
                     </tr>
                     <tr>
-                        <td><strong class="range-node"><t
-                        t-if="env.editor.vDocument.range.end === env.editor.vDocument.range.focus">]</t><t
-                        t-else="">[</t></strong> end</td>
-                        <td><t t-esc="_repr(env.editor.vDocument.range.end)"/></td>
+                        <td><strong class="marker-node">]</strong> focus</td>
+                        <td><t t-esc="_repr(env.editor.vDocument.selection.focus)"/></td>
                     </tr>
                 </tbody>
             </table>
@@ -297,7 +293,7 @@
                         <t t-esc="key"/>
                     </td>
                     <td>
-                        <t t-if="value and key == 'vRange'" t-call="payloadVRange"/>
+                        <t t-if="value and key == 'vSelection'" t-call="payloadVSelection"/>
                         <t t-else=""><t t-esc="formatPayloadValue(value)"/></t>
                     </td>
                 </tr>
@@ -305,7 +301,7 @@
         </table>
     </t>
 
-    <t t-name="payloadVRange">
+    <t t-name="payloadVSelection">
         <table>
             <tbody>
                 <tr>
@@ -318,18 +314,18 @@
                 </tr>
                 <tr>
                     <td>
-                        start
+                        anchor
                     </td>
                     <td>
-                        <t t-esc="value.startPosition"/> <t t-esc="value.start.id"/> (<t t-esc="value.start.name"/>)
+                        <t t-esc="value.anchorPosition"/> <t t-esc="value.anchorNode.id"/> (<t t-esc="value.anchorNode.name"/>)
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        end
+                        focus
                     </td>
                     <td>
-                        <t t-esc="value.endPosition"/> <t t-esc="value.end.id"/> (<t t-esc="value.end.name"/>)
+                        <t t-esc="value.focusPosition"/> <t t-esc="value.focusNode.id"/> (<t t-esc="value.focusNode.name"/>)
                     </td>
                 </tr>
             </tbody>

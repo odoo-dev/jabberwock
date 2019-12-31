@@ -2,10 +2,10 @@ import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../src/VNodes/CharNode';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
-import { RangeNode } from '../src/VNodes/RangeNode';
+import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { withMarkers } from '../../utils/src/range';
+import { withMarkers } from '../../utils/src/markers';
 import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
@@ -207,8 +207,8 @@ describe('core', () => {
                         expect(copy instanceof LineBreakNode).to.equal(true);
                     });
                 });
-                describe('locateRange', () => {
-                    it('should locate where to set the range at end', async () => {
+                describe('locate', () => {
+                    it('should locate where to set the selection marker at end', async () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
@@ -216,16 +216,16 @@ describe('core', () => {
                         p.append(lineBreak);
                         const doc = document.createElement('p');
                         doc.innerHTML = 'a<br><br>';
-                        expect(lineBreak.locateRange(doc.childNodes[1], 0)).to.deep.equal([
+                        expect(lineBreak.locate(doc.childNodes[1], 0)).to.deep.equal([
                             lineBreak,
                             'BEFORE',
                         ]);
-                        expect(lineBreak.locateRange(doc.childNodes[2], 0)).to.deep.equal([
+                        expect(lineBreak.locate(doc.childNodes[2], 0)).to.deep.equal([
                             lineBreak,
                             'AFTER',
                         ]);
                     });
-                    it('should locate where to set the range inside string', async () => {
+                    it('should locate where to set the selection marker inside string', async () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
@@ -235,7 +235,7 @@ describe('core', () => {
                         p.append(b);
                         const doc = document.createElement('p');
                         doc.innerHTML = 'a<br>b';
-                        expect(lineBreak.locateRange(doc.childNodes[1], 0)).to.deep.equal([
+                        expect(lineBreak.locate(doc.childNodes[1], 0)).to.deep.equal([
                             lineBreak,
                             'BEFORE',
                         ]);
@@ -250,12 +250,12 @@ describe('core', () => {
                     });
                 });
             });
-            describe('RangeNode', () => {
+            describe('MarkerNode', () => {
                 describe('constructor', () => {
-                    it('should create a range node', async () => {
-                        const rangeNode = new RangeNode();
-                        expect(rangeNode.type).to.equal(VNodeType.MARKER);
-                        expect(rangeNode.atomic).to.equal(true);
+                    it('should create a marker node', async () => {
+                        const markerNode = new MarkerNode();
+                        expect(markerNode.type).to.equal(VNodeType.MARKER);
+                        expect(markerNode.atomic).to.equal(true);
                     });
                 });
             });
@@ -264,14 +264,14 @@ describe('core', () => {
                  * ROOT
                  * - a
                  * - H1
-                 *   - RangeTail
+                 *   - Marker1
                  *   - b
                  * - c
                  * - P
                  *   - d
                  *   - P
                  *     - e
-                 *      - RangeHead
+                 *      - Marker2
                  *     - f
                  */
                 const root = new FragmentNode();
@@ -281,8 +281,8 @@ describe('core', () => {
                 root.append(h1);
                 const b = new CharNode('b');
                 h1.append(b);
-                const tail = new RangeNode();
-                h1.prepend(tail);
+                const marker1 = new MarkerNode();
+                h1.prepend(marker1);
                 const c = new CharNode('c');
                 root.append(c);
                 const p = new VElement('P');
@@ -293,8 +293,8 @@ describe('core', () => {
                 p.append(pp);
                 const e = new CharNode('e');
                 pp.append(e);
-                const head = new RangeNode();
-                pp.append(head);
+                const marker2 = new MarkerNode();
+                pp.append(marker2);
                 const f = new CharNode('f');
                 pp.append(f);
 
@@ -311,26 +311,26 @@ describe('core', () => {
                         root.append(p);
                         const a = new CharNode('a');
                         p.append(a);
-                        const tail = new RangeNode();
-                        p.append(tail);
+                        const marker1 = new MarkerNode();
+                        p.append(marker1);
                         const b = new CharNode('b');
                         p.append(b);
-                        const head = new RangeNode();
-                        p.append(head);
+                        const marker2 = new MarkerNode();
+                        p.append(marker2);
                         const c = new CharNode('c');
                         p.append(c);
                         expect(root + '').to.deep.equal('FragmentNode');
                     });
                 });
                 describe('children', () => {
-                    it('should return the children nodes (without range)', async () => {
+                    it('should return the children nodes (without markers)', async () => {
                         expect(root.children).to.deep.equal([a, h1, c, p]);
                         expect(h1.children).to.deep.equal([b]);
                     });
-                    it('should return the children nodes with the range', async () => {
+                    it('should return the children nodes with the markers', async () => {
                         withMarkers(() => {
                             expect(root.children).to.deep.equal([a, h1, c, p]);
-                            expect(h1.children).to.deep.equal([tail, b]);
+                            expect(h1.children).to.deep.equal([marker1, b]);
                         });
                     });
                 });
@@ -341,24 +341,24 @@ describe('core', () => {
                         expect(fragment.firstChild.nodeName).to.equal('UNDEFINED');
                     });
                 });
-                describe('locateRange', () => {
-                    it('should locate where to set the range at end', async () => {
+                describe('locate', () => {
+                    it('should locate where to set the selection at end', async () => {
                         const p = new VElement('P');
                         p.append(new VNode());
                         p.append(new LineBreakNode());
                         p.append(new VNode());
                         const doc = document.createElement('p');
                         doc.innerHTML = '<span><span><br><span><span>';
-                        expect(p.lastChild().locateRange(doc.lastChild, 0)).to.deep.equal([
+                        expect(p.lastChild().locate(doc.lastChild, 0)).to.deep.equal([
                             p.lastChild(),
                             'BEFORE',
                         ]);
-                        expect(p.lastChild().locateRange(doc.lastChild, 1)).to.deep.equal([
+                        expect(p.lastChild().locate(doc.lastChild, 1)).to.deep.equal([
                             p.lastChild(),
                             'AFTER',
                         ]);
                     });
-                    it('should locate where to set the range inside string', async () => {
+                    it('should locate where to set the selection inside string', async () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
@@ -368,14 +368,8 @@ describe('core', () => {
                         p.append(b);
                         const doc = document.createElement('p');
                         doc.innerHTML = 'a<span><span>b';
-                        expect(vNode.locateRange(doc.childNodes[1], 0)).to.deep.equal([
-                            vNode,
-                            'BEFORE',
-                        ]);
-                        expect(vNode.locateRange(doc.childNodes[1], 1)).to.deep.equal([
-                            vNode,
-                            'AFTER',
-                        ]);
+                        expect(vNode.locate(doc.childNodes[1], 0)).to.deep.equal([vNode, 'BEFORE']);
+                        expect(vNode.locate(doc.childNodes[1], 1)).to.deep.equal([vNode, 'AFTER']);
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -558,13 +552,13 @@ describe('core', () => {
                 describe('siblings', () => {
                     it('should return the node siblings', async () => {
                         expect(h1.siblings).to.deep.equal([a, h1, c, p]);
-                        expect(b.siblings).to.deep.equal([b], 'siblings without the range');
+                        expect(b.siblings).to.deep.equal([b], 'siblings without the markers');
                         expect(root.siblings).to.deep.equal([]);
                     });
-                    it('should return the node siblings with the range', async () => {
+                    it('should return the node siblings with the markers', async () => {
                         withMarkers(() => {
                             expect(h1.siblings).to.deep.equal([a, h1, c, p]);
-                            expect(b.siblings).to.deep.equal([tail, b]);
+                            expect(b.siblings).to.deep.equal([marker1, b]);
                             expect(root.siblings).to.deep.equal([]);
                         });
                     });
@@ -574,7 +568,7 @@ describe('core', () => {
                         expect(root.firstChild()).to.deep.equal(a, 'root.firstChild = a');
                         expect(h1.firstChild()).to.deep.equal(
                             b,
-                            'h1.firstChild = b (not the range)',
+                            'h1.firstChild = b (not the marker)',
                         );
                         expect(p.firstChild()).to.deep.equal(d, 'p.firstChild = d');
                         expect(pp.firstChild()).to.deep.equal(e, 'pp.firstChild = e');
@@ -641,7 +635,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             root.firstLeaf(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -671,7 +665,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             root.lastLeaf(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -691,7 +685,7 @@ describe('core', () => {
                         expect(root.firstDescendant()).to.deep.equal(a, 'root.firstDescendant = a');
                         expect(h1.firstDescendant()).to.deep.equal(
                             b,
-                            'h1.firstDescendant = b (not the range)',
+                            'h1.firstDescendant = b (not the marker)',
                         );
                         expect(p.firstDescendant()).to.deep.equal(d, 'p.firstDescendant = d');
                         expect(pp.firstDescendant()).to.deep.equal(e, 'pp.firstDescendant = e');
@@ -705,7 +699,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             root.firstDescendant(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -722,7 +716,7 @@ describe('core', () => {
                         expect(root.lastDescendant()).to.deep.equal(f, 'root.lastDescendant = p');
                         expect(h1.lastDescendant()).to.deep.equal(
                             b,
-                            'h1.lastDescendant = b (not the range)',
+                            'h1.lastDescendant = b (not the marker)',
                         );
                         expect(p.lastDescendant()).to.deep.equal(f, 'p.lastDescendant = f');
                         expect(pp.lastDescendant()).to.deep.equal(f, 'pp.lastDescendant = f');
@@ -736,7 +730,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             root.lastDescendant(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -765,7 +759,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             b.previousSibling(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -793,7 +787,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             f.nextSibling(vNode => {
-                                return vNode.id === head.id;
+                                return vNode.id === marker2.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -821,7 +815,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             b.previous(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -849,7 +843,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             a.next(vNode => {
-                                return vNode.id === head.id;
+                                return vNode.id === marker2.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -877,7 +871,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             b.previousLeaf(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -910,7 +904,7 @@ describe('core', () => {
                         ).to.be.undefined;
                         expect(
                             b.nextLeaf(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
@@ -953,7 +947,7 @@ describe('core', () => {
                         ).to.deep.equal([]);
                         expect(
                             b.previousSiblings(vNode => {
-                                return vNode.id === tail.id;
+                                return vNode.id === marker1.id;
                             }),
                         ).to.deep.equal([]);
                     });
@@ -981,7 +975,7 @@ describe('core', () => {
                         ).to.deep.equal([]);
                         expect(
                             e.nextSiblings(vNode => {
-                                return vNode.id === head.id;
+                                return vNode.id === marker2.id;
                             }),
                         ).to.deep.equal([]);
                     });
@@ -1172,23 +1166,23 @@ describe('core', () => {
                         expect(p.children).to.deep.equal([a]);
                         expect(p.nextSibling().children).to.deep.equal([b, c]);
                     });
-                    it('should split a paragraph with range', async () => {
+                    it('should split a paragraph with markers', async () => {
                         const root = new FragmentNode();
                         const p = new VElement('P');
                         root.append(p);
                         const a = new CharNode('a');
                         p.append(a);
-                        const tail = new RangeNode();
-                        p.append(tail);
+                        const marker1 = new MarkerNode();
+                        p.append(marker1);
                         const b = new CharNode('b');
                         p.append(b);
-                        const head = new RangeNode();
-                        p.append(head);
+                        const marker2 = new MarkerNode();
+                        p.append(marker2);
                         const c = new CharNode('c');
                         p.append(c);
                         p.splitAt(b);
-                        expect(p.children).to.deep.equal([a, tail]);
-                        expect(p.nextSibling().children).to.deep.equal([b, head, c]);
+                        expect(p.children).to.deep.equal([a, marker1]);
+                        expect(p.nextSibling().children).to.deep.equal([b, marker2, c]);
                     });
                 });
             });

@@ -1,8 +1,7 @@
 import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
-import { VRangeDescription } from './VRange';
-import { Direction, RelativePosition } from '../../utils/src/range';
-import { VNode } from './VNodes/VNode';
+import { VSelectionDescription } from './VSelection';
+import { VNode, RelativePosition } from './VNodes/VNode';
 
 export interface InsertParams {
     value: VNode;
@@ -10,8 +9,8 @@ export interface InsertParams {
 export interface InsertTextParams {
     value: string;
 }
-export interface VRangeParams {
-    vRange: VRangeDescription;
+export interface VSelectionParams {
+    vSelection: VSelectionDescription;
 }
 export interface FormatParams {
     format: 'bold' | 'italic' | 'underline';
@@ -29,8 +28,8 @@ export class CorePlugin extends JWPlugin {
         insertText: {
             handler: this.insertText.bind(this),
         },
-        setRange: {
-            handler: this.setRange.bind(this),
+        setSelection: {
+            handler: this.setSelection.bind(this),
         },
         deleteBackward: {
             handler: this.deleteBackward.bind(this),
@@ -61,7 +60,7 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.insertParagraphBreak();
     }
     /**
-     * Insert a VNode at range.
+     * Insert a VNode at the current position of the selection.
      *
      * @param params
      */
@@ -69,7 +68,7 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.insert(params.value);
     }
     /**
-     * Insert text at range.
+     * Insert text at the current position of the selection.
      *
      * @param params
      */
@@ -86,11 +85,11 @@ export class CorePlugin extends JWPlugin {
      * Delete in the backward direction (backspace key expected behavior).
      */
     deleteBackward(): void {
-        const range = this.editor.vDocument.range;
+        const range = this.editor.vDocument.selection.range;
         if (range.isCollapsed()) {
             const previous = range.start.previous();
             if (previous) {
-                range.extendTo(previous, Direction.BACKWARD);
+                range.extendTo(previous);
             }
         }
         this.editor.vDocument.deleteSelection();
@@ -99,11 +98,11 @@ export class CorePlugin extends JWPlugin {
      * Delete in the forward direction (delete key expected behavior).
      */
     deleteForward(): void {
-        const range = this.editor.vDocument.range;
+        const range = this.editor.vDocument.selection.range;
         if (range.isCollapsed()) {
             const next = range.end.next();
             if (next) {
-                range.extendTo(next, Direction.FORWARD);
+                range.extendTo(next);
             }
         }
         this.editor.vDocument.deleteSelection();
@@ -113,24 +112,24 @@ export class CorePlugin extends JWPlugin {
      *
      * @param params
      */
-    setRange(params: VRangeParams): void {
-        this.editor.vDocument.range.set(params.vRange);
-        // Each time the range changes, we reset its format.
+    setSelection(params: VSelectionParams): void {
+        this.editor.vDocument.selection.set(params.vSelection);
+        // Each time the selection changes, we reset its format.
         this.editor.vDocument.formatCache = null;
     }
 
     /**
-     * Update the range such that it selects the entire document.
+     * Update the selection in such a way that it selects the entire document.
      *
      * @param params
      */
-    selectAll(params: VRangeParams): void {
-        this.editor.vDocument.range.set({
-            start: this.editor.vDocument.root.firstLeaf(),
-            startPosition: RelativePosition.BEFORE,
-            end: this.editor.vDocument.root.lastLeaf(),
-            endPosition: RelativePosition.AFTER,
-            direction: params.vRange.direction,
+    selectAll(params: VSelectionParams): void {
+        this.editor.vDocument.selection.set({
+            anchorNode: this.editor.vDocument.root.firstLeaf(),
+            anchorPosition: RelativePosition.BEFORE,
+            focusNode: this.editor.vDocument.root.lastLeaf(),
+            focusPosition: RelativePosition.AFTER,
+            direction: params.vSelection.direction,
         });
     }
 }

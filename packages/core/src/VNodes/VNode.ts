@@ -1,6 +1,12 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
-import { RelativePosition, withMarkers, isWithMarkers } from '../../../utils/src/range';
+import { withMarkers, isWithMarkers } from '../../../utils/src/markers';
 import { utils } from '../../../utils/src/utils';
+
+export enum RelativePosition {
+    BEFORE = 'BEFORE',
+    AFTER = 'AFTER',
+    INSIDE = 'INSIDE',
+}
 
 export enum VNodeType {
     NODE = 'node',
@@ -70,13 +76,12 @@ export class VNode {
         return this.renderingEngines[to].render(this) as T;
     }
     /**
-     * Locate where to set the range, when it targets this VNode, at a certain
-     * offset. This allows us to handle special cases.
+     * Transform the given DOM location into its VDocument counterpart.
      *
-     * @param domNode
-     * @param offset
+     * @param domNode DOM node corresponding to this VNode
+     * @param offset The offset of the location in the given domNode
      */
-    locateRange(domNode: Node, offset: number): [VNode, RelativePosition] {
+    locate(domNode: Node, offset: number): [VNode, RelativePosition] {
         // Position `BEFORE` is preferred over `AFTER`, unless the offset
         // overflows the children list, in which case `AFTER` is needed.
         let position = RelativePosition.BEFORE;
@@ -730,7 +735,7 @@ export class VNode {
      *
      * @param child
      * @param index The index at which the insertion must take place within this
-     * VNode's parent, holding range nodes into account.
+     * VNode's parent, holding marker nodes into account.
      */
     _insertAtIndex(child: VNode, index: number): VNode {
         if (child.parent) {
@@ -747,7 +752,7 @@ export class VNode {
     /**
      * Remove the nth child from this node. Return self.
      *
-     * @param index The index of the child to remove, accounting for range nodes.
+     * @param index The index of the child to remove including marker nodes.
      */
     _removeAtIndex(index: number): VNode {
         this._children.splice(index, 1);

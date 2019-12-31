@@ -1,10 +1,9 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { VRangeDescription } from './VRange';
-import { Direction, RelativePosition } from '../../utils/src/range';
-import { VNode } from './VNodes/VNode';
-import { DomRangeDescription } from './EventNormalizer';
+import { Direction, VSelectionDescription } from './VSelection';
+import { VNode, RelativePosition } from './VNodes/VNode';
+import { DomSelectionDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
@@ -85,42 +84,57 @@ export class Parser {
             } while (context);
         }
 
-        // Parse the DOM range if any.
+        // Parse the DOM selection.
         const selection = node.ownerDocument.getSelection();
-        const range = selection.rangeCount && selection.getRangeAt(0);
-        if (range && node.contains(range.startContainer) && node.contains(range.endContainer)) {
-            const forward = range.startContainer === selection.anchorNode;
-            const vRange = this.parseRange(range, forward ? Direction.FORWARD : Direction.BACKWARD);
-            vDocument.range.set(vRange);
+        if (
+            selection &&
+            node.contains(selection.anchorNode) &&
+            node.contains(selection.focusNode)
+        ) {
+            vDocument.selection.set(this.parseSelection(selection));
         }
 
-        // Set a default range in VDocument if none was set yet.
-        if (!vDocument.range.start.parent || !vDocument.range.end.parent) {
-            vDocument.range.setAt(vDocument.root);
+        // Set a default selection in VDocument if none was set yet.
+        if (!vDocument.selection.anchor.parent || !vDocument.selection.focus.parent) {
+            vDocument.selection.setAt(vDocument.root);
         }
 
         return vDocument;
     }
     /**
-     * Convert the DOM description of a range to the description of a VRange.
+     * Parse the dom selection into the description of a VSelection.
      *
-     * @param range
+     * @param selection
      * @param [direction]
      */
-    parseRange(range: DomRangeDescription): VRangeDescription;
-    parseRange(range: Range, direction: Direction): VRangeDescription;
-    parseRange(range: Range | DomRangeDescription, direction?: Direction): VRangeDescription {
-        const start = this._locate(range.startContainer, range.startOffset);
-        const end = this._locate(range.endContainer, range.endOffset);
+    parseSelection(selection: Selection | DomSelectionDescription): VSelectionDescription {
+        const start = this._locate(selection.anchorNode, selection.anchorOffset);
+        const end = this._locate(selection.focusNode, selection.focusOffset);
         if (start && end) {
             const [startVNode, startPosition] = start;
             const [endVNode, endPosition] = end;
+
+            let direction: Direction;
+            if (selection instanceof Selection) {
+                const domRange = selection.rangeCount && selection.getRangeAt(0);
+                if (
+                    domRange.startContainer === selection.anchorNode &&
+                    domRange.startOffset === selection.anchorOffset
+                ) {
+                    direction = Direction.FORWARD;
+                } else {
+                    direction = Direction.BACKWARD;
+                }
+            } else {
+                direction = selection.direction;
+            }
+
             return {
-                start: startVNode,
-                startPosition: startPosition,
-                end: endVNode,
-                endPosition: endPosition,
-                direction: range instanceof Range ? direction : range.direction,
+                anchorNode: startVNode,
+                anchorPosition: startPosition,
+                focusNode: endVNode,
+                focusPosition: endPosition,
+                direction: direction,
             };
         }
     }
@@ -322,7 +336,7 @@ export class Parser {
             } else {
                 reference = vNodes[0];
             }
-            return reference.locateRange(container, offset);
+            return reference.locate(container, offset);
         }
     }
 }
