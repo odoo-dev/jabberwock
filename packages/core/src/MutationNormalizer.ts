@@ -3,6 +3,8 @@ interface CharMutation {
     current?: string;
     target?: Node;
 }
+// flattened character mapping (remove format)
+// it is like an innerText but with more information
 interface CharactersMapping {
     chars: string; // concatenated characters accross multiple nodes
     nodes: Array<Node>; // corresponding textual nodes
@@ -41,6 +43,15 @@ export class MutationNormalizer {
      * Extract a mapping of the separate characters, their corresponding text
      * nodes and their offsets in said nodes from the given node's subtree.
      *
+     * The goal of this function is to precisely find what was inserted by
+     * a keyboard supporting spell-checking and suggestions.
+     * Example (`|` represents the text cursor):
+     *   Previous content: 'My friend Christofe| was here.'
+     *   Current content:  'My friend Christophe Matthieu| was here.'
+     *   Actual text inserted by the keyboard: 'Christophe Matthieu'
+     *
+     * example: In the remove for instance we never have the information of what has been deleted
+     *
      * @private
      * @param charMutations
      * @returns { previous, current }
@@ -48,6 +59,13 @@ export class MutationNormalizer {
     getCharactersMapping(): {
         insert: string;
         remove: string;
+        // the index is the beggening of the changed found
+        // the beggeningn can be found
+        // The mutation can found:
+        // - we found the word inserted and the word removed tha has change and it's position (index)
+        // - the word but not it's position (in rare case: one sentence with repetition (ha ha ha))
+        // - Only part of the word (the only part that has been changed) and the position
+        // - Only part and no position (solde => solde de)
         index: number;
         previous: CharactersMapping;
         current: CharactersMapping;
@@ -284,6 +302,9 @@ export class MutationNormalizer {
             current: currentLinked,
         };
     }
+    /**
+     *
+     */
     getMutatedElements(): Set<Node> {
         const elements: Set<Node> = new Set();
         this._mutations.forEach(MutationRecord => {
@@ -400,6 +421,8 @@ export class MutationNormalizer {
 
     _onMutation(mutationsList: MutationRecord[]): void {
         if (this._listen) {
+            // we push the mutation because some browser (e.g. safari) separatens the mutations with
+            // microtask.
             this._mutations.push(...mutationsList);
         }
     }

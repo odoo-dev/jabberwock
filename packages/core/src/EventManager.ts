@@ -29,8 +29,6 @@ export class EventManager {
         switch (action.type) {
             case 'insertText':
                 return ['insertText', { value: action.text }];
-            case 'insertLineBreak':
-                return ['insert', { value: new VNode(VNodeType.LINE_BREAK, 'BR') }];
             case 'insertParagraph':
                 return ['insertParagraphBreak', {}];
             case 'selectAll':

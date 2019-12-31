@@ -40,12 +40,20 @@ const inputTypeCommands = new Set([
 ]);
 
 /*
- * sources:
+ * Regexp to test if a character is within an alphabet known by us.
+ *
+ * Note: Not all alphabets are taken into consideration and this RegExp is subject to be completed
+ *       as more alphabets will be covered.
+ *
+ * Unicode range source:
  * - wikipedia
  * - google translate
  * - https://jrgraphix.net/r/Unicode/
- * helper:
+ *
+ * Tool to generate RegExp range:
  * - https://apps.timwhitlock.info/js/regex
+ *
+ * The strategy is to separate any word by selecting subsequent characters of a common alphabet.
  */
 const alphabetsContainingSpaces = new RegExp(
     '(' +
@@ -64,9 +72,13 @@ const alphabetsContainingSpaces = new RegExp(
 );
 
 /**
- * These event types might, in specific cases of browsers or spell-checking
+ * These javascript event types might, in case of safari or spell-checking
  * keyboard, trigger dom events in multiple javascript stacks. They will require
  * to observe events during two ticks rather than after a single tick.
+ * Todo: Link some to case in the documentation
+ *
+ * Expamples:
+ * - Safari need multiples stacks for the input event.
  */
 const MultiStackEventTypes = ['input', 'compositionend', 'selectAll'];
 
@@ -78,26 +90,90 @@ export interface DomRangeDescription {
     readonly direction: Direction;
 }
 
-export interface NormalizedAction {
-    type: string;
-    domRange?: DomRangeDescription;
-    vRange?: object;
-    direction?: Direction;
-    text?: string;
+interface InsertTextAction {
+    type: 'insertText';
+    text: string;
+    // ? do we keep the `html` key?
     html?: string;
-    files?: File[];
-    format?: string;
-    target?: CaretPosition;
 }
+
+// ? why do we have InsertHtml if we have insertText?
+interface InsertHtmlAction {
+    type: 'insertHtml';
+    html: string;
+    text: string;
+}
+
+interface InsertParagraphAction {
+    type: 'insertParagraph';
+}
+
+interface InsertFilesAction {
+    type: 'insertFiles';
+    files: File[];
+}
+
+interface DeleteContentAction {
+    type: 'deleteContent';
+    direction: Direction;
+}
+interface DeleteWordAction {
+    type: 'deleteWord';
+    direction: Direction;
+    text: string;
+}
+
+interface DeleteHardLineAction {
+    type: 'deleteHardLine';
+    direction: Direction;
+    domRange: DomRangeDescription;
+}
+
+interface SelectAllAction {
+    type: 'selectAll';
+    carretPosition: CaretPosition;
+    domRange: DomRangeDescription;
+}
+
+interface SetRangeAction {
+    type: 'setRange';
+    domRange: DomRangeDescription;
+}
+
+interface ApplyFormatAction {
+    type: 'applyFormat';
+    format: string;
+    data: any; //todo: remove any
+}
+
+interface HistoryAction {
+    type: 'historyUndo' | 'historyRedo';
+}
+
+export type NormalizedAction =
+    | InsertTextAction
+    | InsertHtmlAction
+    | InsertParagraphAction
+    | InsertFilesAction
+    | DeleteContentAction
+    | DeleteWordAction
+    | DeleteHardLineAction
+    | SelectAllAction
+    | SetRangeAction
+    | ApplyFormatAction
+    | HistoryAction;
+
+// todo: [refactor] This object is not typed properly. It's not sementically correct.
 export interface NormalizedEvent {
+    // rename to deviceSource? hardwareSource? source?
     type: string;
     actions: NormalizedAction[];
     defaultPrevented: boolean;
-}
-export interface NormalizedCompositionEvent extends NormalizedEvent {
-    type: 'composition';
-    from: string;
-    to: string;
+    // ? what we do with this key?
+    caretPosition?: CaretPosition;
+    compositionFrom?: string;
+    compositionTo?: string;
+    inputType?: string;
 }
 export interface NormalizedKeyboardEvent extends NormalizedEvent {
     type: 'keyboard';
@@ -107,7 +183,6 @@ export interface NormalizedKeyboardEvent extends NormalizedEvent {
     ctrlKey: boolean;
     metaKey: boolean;
     shiftKey: boolean;
-    inputType?: string;
 }
 
 export interface CaretPosition {
@@ -117,16 +192,26 @@ export interface CaretPosition {
 
 export interface NormalizedPointerEvent extends NormalizedEvent {
     type: 'pointer';
-    target: CaretPosition;
-    inputType?: string;
 }
 
+/**
+ * One eventBatch contain all element being triggered and normalized from one javascript
+ * event stack (or two in some case in javascript)
+ */
 export interface EventBatch {
+    // We currently only need an array of event in the case of multikeypress.
     events: NormalizedEvent[];
     mutatedElements?: Set<Node>;
 }
 
-interface DataTransferDetail {
+// interface SpecialEventDetails {
+//     caretPosition: CaretPosition;
+//     actions: NormalizedAction[];
+//     defaultPrevented: boolean;
+// }
+
+interface DataTransferDetails {
+    type: string;
     'text/plain': string;
     'text/html': string;
     'text/uri-list': string;
@@ -136,22 +221,7 @@ interface DataTransferDetail {
     caretPosition: CaretPosition;
     range: DomRangeDescription;
 }
-
-interface CompiledEvent {
-    type: string; // main event type, e.g. 'keydown', 'composition', 'move', ...
-    key?: string; // the key pressed for keyboard events
-    code?: string;
-    altKey?: boolean;
-    ctrlKey?: boolean;
-    metaKey?: boolean;
-    shiftKey?: boolean;
-    data?: string; // specific data for input events
-    mutatedNodes?: Set<Node>; // the nodes that were mutated, if any
-    defaultPrevented?: boolean;
-    inputType?: string;
-    caretPosition?: CaretPosition;
-    dataTransfer?: DataTransferDetail;
-}
+type EventToProcess = Event | DataTransferDetails;
 
 interface EventListenerDeclaration {
     readonly target: EventTarget;
@@ -159,6 +229,254 @@ interface EventListenerDeclaration {
     readonly listener: EventListener;
 }
 
+interface CompositionData {
+    compositionFrom: string;
+    compositionTo: string;
+    actions: NormalizedAction[];
+}
+
+type TriggerEventBatchCallback = (batch: EventBatch) => void;
+
+/**
+ *
+ * ## The problems the normalizer solve
+ * Browser and virtual keyboards on mobile does not implement properly the w3c specification and
+ * are inconsistent.
+ *
+ * Here is a non exhaustive list of the differents problems:
+ * - No keydown is triggered from virtual keyboard
+ * - Drop event refresh the page
+ * - Mutation
+ * - <todo: list more case>
+ *
+ * A more compolete list can be found here: <todo: link to the ehaustive list of browsers problems>.
+ *
+ * ## Goal of the normalizer
+ * - To trigger the same event accross all browsers
+ * - To hook any change that happend in the (editable)[todo:link_to_the_editable_definition] in the
+ *   DOM.
+ *
+ * ## Strategy
+ * Hook all javascript events that 1) modify the editable element or 2) send inconsistents events accross
+ * browser. Then, trigger normalized events.
+ *
+ * To understand the following concepts, let's look at the triggered normalized event.
+ *
+ * ## Important naming convention
+ * ### Editable
+ * ### Javascript event
+ * ### Compiled event
+ * ### Normalized event
+ *
+ * ## How to use this normalizer?
+ * 1) We use the normalizer to update our `VDocument` in regard of triggered normalized events.
+ * 2) Once the update in the VDocument has been done, we render the updated `VDocument` to html.
+ *    Actually, only a diff of change has been "rendered".
+ * 3) Once we have the html diff, we create another diff but this time between the mutated elements
+ *    and the diff <todo: complete this informations later with chm>
+ *
+ * As the normalizer let most of the change in the editable happen (the exception for "paste" and
+ * "drop" event) (e.g. a key being inserted).
+ * It is the responsibility of the listener of the normalized events to remove dom nodes
+ * that are being inserted but not processed
+ *
+ * ## The Normalized event
+ * > Temporary note to make the doc: A draft document that reference all the events, type, eventype
+ * > normalized event can be found in the following google sheet:
+ * > https://docs.google.com/spreadsheets/d/1jj8lntmr9j5M3HExAbeUF1YeKxjatAupjZ4Wl3MopJU/edit#gid=0
+ *
+ * The normalized event have tree important key: `type`, `inputType`, `actions`.
+ *
+ * - (`type`)[todo:link_to_type] provide information about which mecanical device triggered it.
+ *   The value can be "keyboard", "pointer" or "composition".
+ * - (`inputType`)[todo:link_to_inputType] provide information about the intention of the user.
+ *   A complete list of the values can be found below. `inputType` is not present in the normalized
+ *   event if the `type` is "composition".
+ * - (`actions`)[todo:link_to_actions] provide informations about what happen in the editable in the
+ *    DOM. A complete list of values can be found below.
+ *
+ *
+ * ### Type
+ * The key `type` provide information about which mecanical device triggered it. The value
+ * can be "keyboard", "pointer" or "composition".
+ *
+ * #### Type "keyboard"
+ *
+ * The keyboard type is triggered by anything from the keyboard but not necessarily from a
+ * javascript keyboard event (keydown, keypress). A keyboard event can come from one of the
+ * following javascript event:
+ * - keydown
+ * - keypress
+ * - input
+ * - compositionstart
+ * - compositionupdate
+ * - compositionend
+ * - <todo: ask chm to have an exhaustive list>
+ * - ...
+ *
+ * If it's a keyboard event, there is potentially not the `key` and the `code` in case of virtual
+ * keyboard.
+ *
+ * #### Type "pointer"
+ * The pointer event can come from:
+ * - contextmenu
+ * - drop
+ * - <todo: ask chm to have an exhaustive list>
+ *
+ * #### Type "composition"
+ * The event is of type composition when we could not get the information if it came from a
+ * "keyboard" nor a "pointer".
+ *
+ * For example:
+ * - <todo: ask chm or find examples in tests>
+ *
+ * A CompiledEvent is of type "composition" if one of the two following rules apply:
+ * - The javascript event type is `compositionstart`, `compositionupdate` or `compositionent`
+ * - The javascript event type is `input` **and** it's key `inputType`:
+ *   - `replacementtext`
+ *   - `insertCompositionText`
+ *   - `insertFromComposition` (but we don't use it because `insertCompositionText` is sufficient)
+ *
+ * ## inputType
+ * The key `inputType` provide information about the intention of the user. The sementics of the
+ * values are the same as the w3c specification (see
+ * https://www.w3.org/TR/input-events-2/#interface-InputEvent-Attributes).
+ *
+ * This key is the most usefull to hook what the user actually wanted to perform.
+ *
+ * The key `inputType` can be found when the event `type` is "keyboard" or "pointer". Find below
+ * a table with all possible `inputType` and with wich `type` they are associated with.
+ *
+ * | inputType                    | type keyboard | type pointer |
+ * |------------------------------|---------------|--------------|
+ * | insertText                   |       x       |              |
+ * | insertCompositionText        |               |              |
+ * | insertParagraph              |               |              |
+ * | insertLineBreak              |               |              |
+ * | insertFromPaste              |               |              |
+ * | insertFromDrop               |               |              |
+ * | deleteContentBackward        |               |              |
+ * | deleteContentForward         |               |              |
+ * | deleteWordBackward           |               |              |
+ * | deleteHardLineBackward       |               |              |
+ * | deleteWordForward            |               |              |
+ * | deleteHardLineForward        |               |              |
+ * | deleteByCut                  |               |              |
+ * | historyUndo                  |               |              |
+ * | historyRedo                  |               |              |
+ * | formatBold                   |               |              |
+ * | formatItalic                 |               |              |
+ * | formatUnderline              |               |              |
+ * | formatStrikeThrough          |               |              |
+ * | formatSuperscript            |               |              |
+ * | formatSubscript              |               |              |
+ * | formatJustifyFull            |               |              |
+ * | formatJustifyCenter          |               |              |
+ * | formatJustifyRight           |               |              |
+ * | formatJustifyLeft            |               |              |
+ * | formatIndent                 |               |              |
+ * | formatOutdent                |               |              |
+ * | formatRemove                 |               |              |
+ * | formatSetBlockTextDirection  |               |              |
+ * | formatSetInlineTextDirection |               |              |
+ *
+ * We do not handle all inputTypes of the (DOM input event specification)[https://www.w3.org/TR/input-events-2/#interface-InputEvent-Attributes].
+ *
+ * Some events (such as "formatBackColor", "formatFontColor", "formatFontName") have additional
+ * informations attached. We currently do not attach them to the normalized event.
+ *
+ * Sometimes it is impossible to retrieve the inputType. For instance, when the user has only
+ * clicked, and only a mousdown is intercepted.
+ *
+ * ## Action
+ * The actions for each normalized events are there to show what happened in the editabe in the DOM.
+ *
+ * | actions         | In keyboard event | In pointer event |
+ * |-----------------|-------------------|------------------|
+ * | insertFiles     |                   |                  |
+ * | insertText      |                   |                  |
+ * | insertParagraph |                   |                  |
+ * | insertHtml      |                   |                  |
+ * | historyUndo     |                   |                  |
+ * | applyFormat     |                   |                  |
+ * | selectAll       |                   |                  |
+ * | setRange        |                   |                  |
+ * | deleteContent   |                   |                  |
+ * | deleteWord      |                   |                  |
+ * | deleteHardLine  |                   |                  |
+ *
+ * For example
+ * - historyBack
+ * - <todo: to complete>
+ *
+ *
+ * ### handeling javascript events
+ * A javascript event is never prevented and always alter the editable in the DOM.
+ *
+ * The reason that we do not prevent default is because we need more informations. The information
+ * modified in the dom. (e.g. observing mutations)
+ *
+ * There is an exception for the event 'paste' and 'drop'.
+ *
+ * The reason to preventDefault 'paste' is because most of the time, browsers paste content that
+ * need to be cleaned. For that reason we block it from being inserted in the editable element but
+ * the informations can be found in the triggered normalized events actions.
+ *
+ * The reason to preventDefault 'drop' is because some browsers change page when dropping an image
+ * or an url that comes from the address bar (e.g. chrome).
+ *
+ * Description of all javascript event that we handle and theirs tricky part:
+ * <todo: to complete>
+ *
+ * The javascript event of a stack is always in the following order:
+ *
+ *
+ * ### handeling mutations
+ *
+ * <explain why we need the mutations>
+ * - mutation
+ *   - whith the mutation events, the browser insert, remove and update nodes
+ *     inconsistently and in a buggy way.
+ *
+ * ## Supported browser & keyboard
+ * - Mac
+ *   - Chrome
+ *   - Firefox
+ *   - Edge
+ *   - Safari
+ * - Windows
+ *   - Chrome
+ *   - Firefox
+ *   - Edge
+ *   - Safari
+ * - Linux
+ *   - Chrome
+ *   - Firefox
+ * - Android
+ *   - Chrome
+ *   - Firefox
+ *   - Google keyboard
+ *   - Swift keyboard
+ * - IOS
+ *   - Chrome
+ *   - Firefox
+ *
+ * Here is an exhaustive list of the special cases of the browser:
+ * - Mac
+ *   - Safari
+ *     - We need two tick to get information because <ask christophe>
+ *
+ * ## to classify:
+ * ### composition events
+ * The events composition (for instance: googlekeyboard) are triggered for any event (like when
+ * the user click from one word to another). Theses events are considered useless and therfore
+ * we do not trigger when they happen.
+ *
+ * ### format of the events
+ * When there is a "composition" event and a "keyboard" event that is found at the same time, trigger
+ * two events ("composition" and "keyboard").
+ */
+// todo chm: drag/drop between two editor in the same page.
 export class EventNormalizer {
     /**
      * HTML element that represents the editable zone. Only events happening
@@ -177,12 +495,32 @@ export class EventNormalizer {
     _mutationNormalizer: MutationNormalizer;
     /**
      * Events fired during the current tick.
+     * _events with value null mean that we are not currently observing changes.
      */
-    _events: Event[];
+    _events: EventToProcess[] = null;
     /**
-     * Events fired during the previous action.
+     * Map is used to gather informations when multiples keys are found in the same stack.
      */
-    _lastEvents: Event[];
+    _multiKeyMap: {
+        keydown?: KeyboardEvent;
+        keypress?: KeyboardEvent;
+        input?: InputEvent;
+    }[] = [];
+    /**
+     * Map used to collect information about the last events that happened in one tick (or two tick
+     * in the case of safari where we need information).
+     */
+    _eventsMap: {
+        keydown?: KeyboardEvent;
+        keypress?: KeyboardEvent;
+        input?: InputEvent;
+        composition?: CompositionEvent;
+        cut?: DataTransferDetails;
+        drop?: DataTransferDetails;
+        paste?: DataTransferDetails;
+        customSelectAll?: CustomEvent;
+    } = {};
+    _lastEventType: string;
     /**
      * In some cases, the observation must be delayed to the next tick. In these
      * cases, this control variable will be set to true such that the analysis
@@ -192,7 +530,7 @@ export class EventNormalizer {
     /**
      * Callback function to trigger for each user action.
      */
-    _triggerEvent: (batch: EventBatch) => void;
+    _triggerEventBatch: TriggerEventBatchCallback;
     /**
      * Whether the current state of the selection is already recognized as being
      * a "select all".
@@ -208,6 +546,7 @@ export class EventNormalizer {
     _initialCaretPosition: CaretPosition;
     /**
      * TODO: ask CHM
+     * Set to true when `_onSelectionChange`. If set, don't process `_onContextMenu`.
      */
     _rangeHasChanged: boolean;
     /**
@@ -220,12 +559,27 @@ export class EventNormalizer {
      * The observation of the resulting range must thus be delayed to the next
      * tick as well. This variable stores the return value of the `setTimeout`
      * call in order to `clearTimeout` it later on.
+     * ? what happen if we don't do it? I erased the `clearTimeout`  from the tests and it works.
      */
     _clickTimeout: NodeJS.Timeout;
 
-    constructor(editable: HTMLElement, callback: (res: EventBatch) => void) {
+    constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
         this.editable = editable;
-        this._triggerEvent = callback;
+        // todo: to remove, for debugging only
+        // this._triggerEvent = (...args): void => {
+        //     args[0].events.forEach(event => {
+        //         allInputTypes.add((event as any).inputType);
+        //         event.actions.forEach(action => {
+        //             allActions.add(action.type);
+        //         });
+        //     });
+        //     console.log('args[0].events:', args[0].events);
+        //     console.log('allActions:', allActions);
+        //     console.log('allInputTypes:', allInputTypes);
+
+        //     callback(...args);
+        // };
+        this._triggerEventBatch = callback;
 
         const document = this.editable.ownerDocument;
         this._bindEvent(editable, 'compositionstart', this._registerEvent);
@@ -301,11 +655,24 @@ export class EventNormalizer {
      * analysis tries to extract the actions desired by the user such as insert,
      * delete, backspace, spell checking, special characters, etc.
      *
+     * Used in:
+     * - _onKeyDownOrKeyPress: called a javascript native `Event` of type 'keydown' or 'keypress'
+     * - _onDrop: called with a `DataTransferDetails`
+     * - _onClipboard: called with a `DataTransferDetails`
+     * - _onSelectionChange: called with a `DataTransferDetails`
+     *
+     *  Directly called for the following javascript native `Event`:
+     *  - compositionstart
+     *  - compositionupdate
+     *  - compositionend
+     *  - beforeinput
+     *  - input
+     *
      * @see _processEvents
      * @private
      */
-    _registerEvent(ev: Event): void {
-        if (!this._events) {
+    _registerEvent(ev: EventToProcess): void {
+        if (this._events === null) {
             // The queue is not initialized or has been reset, so this is a new
             // user action. Re-initialize the queue such that the analysis is
             // not polluted by previous observations.
@@ -316,10 +683,48 @@ export class EventNormalizer {
             // All events during this tick will be processed in the next one.
             setTimeout(this._processEvents.bind(this));
         }
+
+        let eventType = ev.type;
+        if (ev.type.startsWith('composition')) {
+            // We only need the last composition of the registred events. So 'compositionstart',
+            // 'compositionupdate' and 'compositionend' override the key 'composition'.
+            eventType = 'composition';
+        }
+
+        // It is possible to have multiples keys that must trigger multiples times that are
+        // being push in the same tick.
+        // To be able to handle this case in `_processEvents`, we aggregate the informations in
+        // `_keydownMap`.
+        if (['keydown', 'keypress', 'input'].includes(ev.type)) {
+            // In the multiples key case, a 'keydown' is always the first event triggered between
+            // the three (keydown, keypress, input).
+            // So we create a new map each time a 'keydown' is registred.
+            if (ev.type === 'keydown') {
+                this._multiKeyMap.push({});
+            }
+            const lastKeydownMap = this._multiKeyMap[this._multiKeyMap.length - 1];
+            if (lastKeydownMap) {
+                lastKeydownMap[ev.type] = ev;
+            }
+        }
+
+        this._eventsMap[eventType] = ev;
         this._events.push(ev);
     }
     /**
-     * Process the registered events and create the compiled event.
+     * Process the events registered with `_regiterEvent` and call `_triggerBatchEvent`
+     * with one or more `NormalizedEvent` when sufficient information has been gathered from all
+     * registred events.
+     *
+     * It could take up to two tick in the browser to gather all the sufficient information.
+     * For instance, Safari: <todo: link to safari case>.
+     *
+     * The strategy to process the events:
+     * <to compleet>
+     *
+     * Sometimes it is impossible to get the data from composision, so we need to get it from
+     * an analisis of the mutation.
+     * <todo: specify thoses cases>
      *
      * @private
      */
@@ -329,6 +734,13 @@ export class EventNormalizer {
         // events occuring during one tick is not enough so we need to delay the
         // analysis after we observe events during two ticks instead.
         const needSecondTickObservation = this._events.every(ev => {
+            // todo: Check simple insert tests fails when removing this condition. It should only
+            //       exist because of safari or keyboard devices
+            //
+            //       In the tests, a nextTick is trigger right after the keydown while in
+            //       reality, there is no tick that seems to separate them.
+            //       Ask CHM why did he make a nextTick afer the first keydown in the test
+            //       'insert char (chrome)' and other similar tests
             return !MultiStackEventTypes.includes(ev.type);
         });
         if (needSecondTickObservation && !this._secondTickObservation) {
@@ -337,440 +749,594 @@ export class EventNormalizer {
             return;
         }
 
-        this._mutationNormalizer.stop();
-        // Store and reset compiled event for the next stack.
-        const events = this._events;
-        this._lastEvents = events;
-        this._events = null;
+        let keyboardNormalizedEvent: NormalizedKeyboardEvent;
+        let pointerNormalizedEvent: NormalizedPointerEvent;
+        let keyboardNormalizedEvents: NormalizedKeyboardEvent[];
 
-        let compiledEvents: CompiledEvent[] = [];
-        events.forEach(ev => {
-            let lastCompiledEvent =
-                compiledEvents.length && compiledEvents[compiledEvents.length - 1];
-            if (['compositionstart', 'compositionupdate', 'compositionend'].includes(ev.type)) {
-                const compositionEvent = ev as CompositionEvent;
-                if (lastCompiledEvent) {
-                    if (lastCompiledEvent.type === 'composition') {
-                        if (compositionEvent.data) {
-                            lastCompiledEvent.data = compositionEvent.data;
-                            lastCompiledEvent.defaultPrevented =
-                                lastCompiledEvent.defaultPrevented ||
-                                compositionEvent.defaultPrevented;
-                        }
-                        return;
-                    }
-                }
-                const compiledEvent = {
-                    type: 'composition',
-                    data: compositionEvent.data,
-                    defaultPrevented: compositionEvent.defaultPrevented,
-                } as CompiledEvent;
-                if (lastCompiledEvent) {
-                    compiledEvent.inputType = lastCompiledEvent.inputType;
-                    compiledEvent.key = lastCompiledEvent.key;
-                    compiledEvent.code = lastCompiledEvent.code;
-                    compiledEvent.altKey = lastCompiledEvent.altKey;
-                    compiledEvent.ctrlKey = lastCompiledEvent.ctrlKey;
-                    compiledEvent.metaKey = lastCompiledEvent.metaKey;
-                    compiledEvent.shiftKey = lastCompiledEvent.shiftKey;
-                }
-                compiledEvents = [compiledEvent];
-            } else if (ev.type === 'selectAll') {
-                compiledEvents.push({ type: 'selectAll' });
-            } else if (
-                (ev.type === 'keydown' &&
-                    (!lastCompiledEvent ||
-                        (lastCompiledEvent.type !== 'composition' &&
-                            lastCompiledEvent.key !== 'Unidentified') ||
-                        lastCompiledEvent.code)) ||
-                (!lastCompiledEvent && ev.type === 'keypress')
-            ) {
-                // TODO comment: This is supposed to be the "keydown" section,
-                // but there is a case where we want to use the "keypress" event
-                // instead: In some cases(Mac), we can get a keypress without
-                // keydown. In such cases, we want to create the event with the
-                // keypress rather than only using keypress for enrichment.
+        const keydownEvent = this._eventsMap.keydown;
+        const keypressEvent = this._eventsMap.keypress;
+        const inputEvent = this._eventsMap.input;
+        const customSelectAllEvent = this._eventsMap.customSelectAll;
+        const compositionEvent = this._eventsMap.composition;
+        const cutEvent = this._eventsMap.cut;
+        const dropEvent = this._eventsMap.drop;
+        const pasteEvent = this._eventsMap.paste;
 
-                // browser like safari send composition for accent then trigger
-                // keydown we use keydown to enrich the composition with the key
-                // and code
-                const keyboardEv = ev as KeyboardEvent;
-                if (keyboardEv.key === 'Dead') {
-                    return;
-                }
-                compiledEvents.push({
-                    type: 'keydown',
-                    key: keyboardEv.key,
-                    code: keyboardEv.code,
-                    altKey: keyboardEv.altKey,
-                    ctrlKey: keyboardEv.ctrlKey,
-                    metaKey: keyboardEv.metaKey,
-                    shiftKey: keyboardEv.shiftKey,
-                    defaultPrevented: keyboardEv.defaultPrevented,
-                });
-            } else if (ev.type === 'cut' || ev.type === 'paste' || ev.type === 'drop') {
-                const evClipboardEvent = ev as CustomEvent<DataTransferDetail>;
-                if (!lastCompiledEvent) {
-                    const detail = evClipboardEvent.detail;
-                    lastCompiledEvent = {
-                        caretPosition: detail.caretPosition,
-                        type: 'pointer',
-                        defaultPrevented: detail.originalEvent.defaultPrevented,
-                    };
-                    compiledEvents.push(lastCompiledEvent);
-                }
-                if (ev.type === 'cut') {
-                    lastCompiledEvent.inputType = 'deleteByCut';
-                } else if (ev.type === 'drop') {
-                    lastCompiledEvent.inputType = 'insertFromDrop';
-                } else {
-                    lastCompiledEvent.inputType = 'insertFromPaste';
-                }
-                compiledEvents.push({
-                    type: ev.type,
-                    dataTransfer: evClipboardEvent.detail,
-                });
-            } else if (lastCompiledEvent) {
-                // The following event types enrich the current compiled event
-                // rather than creating a new one.
-                if (ev.type === 'keypress' || ev.type === 'keydown') {
-                    this._enrichByKeypress(lastCompiledEvent, ev as KeyboardEvent);
-                } else {
-                    this._enrichByInput(lastCompiledEvent, ev as InputEvent);
-                }
-            } else if (ev.type === 'input') {
-                const evInput = ev as InputEvent;
-                if (evInput.inputType === 'insertReplacementText' || !evInput.inputType) {
-                    // safari completion/correction
-                    compiledEvents = [
-                        {
-                            type: 'composition',
-                            inputType: 'insertReplacementText',
-                            data: evInput.data,
-                            defaultPrevented: ev.defaultPrevented,
-                        },
-                    ];
-                }
-                compiledEvents.push({
-                    type: evInput.type,
-                    data: evInput.data,
-                    inputType: evInput.inputType || (evInput.data && 'textInput'),
-                    defaultPrevented: evInput.defaultPrevented,
-                });
-            }
-        });
+        //
+        // First pass to get the informations
+        //
+        const key =
+            (keypressEvent &&
+                keypressEvent.key !== 'Unidentified' &&
+                keypressEvent.key !== 'Dead' &&
+                keypressEvent.key) ||
+            (keydownEvent &&
+                keydownEvent.key !== 'Unidentified' &&
+                keydownEvent.key !== 'Dead' &&
+                keydownEvent.key) ||
+            (inputEvent &&
+                inputEvent.data !== null &&
+                inputEvent.data.length === 1 &&
+                inputEvent.data) ||
+            (keydownEvent &&
+                keydownEvent.key === 'Unidentified' &&
+                this._inferKeyFromInput(inputEvent));
+        // todo: check if we keep this logic
+        // in the test "accent (mac safari)", an erroneous code is triggered (BracketLeft).
+        // to prevent the code from being set, we check if a key is dead.
+        const isDeadKey = keydownEvent && keydownEvent.key === 'Dead';
+        const code =
+            !isDeadKey &&
+            ((keydownEvent && keydownEvent.code) || (keypressEvent && keypressEvent.code));
+        //       (e. g. "^", "`").
+        // test: accent (mac safari)
+        const isAccentMac =
+            inputEvent &&
+            compositionEvent &&
+            compositionEvent.data &&
+            compositionEvent.data.length > 0;
+        const inputType =
+            (cutEvent && 'deleteByCut') ||
+            (dropEvent && 'insertFromDrop') ||
+            (pasteEvent && 'insertFromPaste') ||
+            (inputEvent && inputEvent.inputType) ||
+            // todo: check if we really need to set the inputType when making a "special accent" in mac
+            (isAccentMac && 'insertCompositionText');
+        const defaultPrevented =
+            (cutEvent && false) ||
+            (dropEvent && true) ||
+            (pasteEvent && true) ||
+            (keydownEvent && keydownEvent.defaultPrevented) ||
+            (keypressEvent && keypressEvent.defaultPrevented) ||
+            (inputEvent && inputEvent.defaultPrevented);
+        const caretPosition =
+            (cutEvent && cutEvent.caretPosition) ||
+            (dropEvent && dropEvent.caretPosition) ||
+            (pasteEvent && pasteEvent.caretPosition) ||
+            (inputEvent &&
+                inputTypeCommands.has(inputEvent.inputType) &&
+                this._initialCaretPosition);
+
+        const compositionData = this._getCompositionData(compositionEvent, inputEvent);
+
+        // In case of accent inserted from a Mac, check the char before was one of the special
+        // accent temporarily inserted in the DOM (e.g. '^', '`', ...).
+        // todo: Check the following heuristic that check this case could be erroneous in some case.
+        //       In order to be more specific, we might need to specify exacly thoses accents
+        //       ('^', '`', ...) rather than letting go anything that comes from only one char.
+        //       Which would reducte the margin of errors (but might not get them all).
+        const macAccent =
+            compositionData &&
+            compositionData.compositionFrom.length === 1 &&
+            compositionData.compositionTo.length === 1;
+        const macAccentOneChar =
+            compositionData &&
+            compositionData.compositionFrom === '' &&
+            compositionData.compositionTo.length === 1;
+        const isCompositionKeyboard = macAccentOneChar || macAccent;
+
+        // todo: to analyze carefully. It is odd to handle virtualkeyboards like that.
+        const virtualKeyboard = compositionEvent && key && key.length !== 1;
 
         // Compute the set of mutated elements accross all observed events.
+        // todo: review this
         const mutatedElements = this._mutationNormalizer.getMutatedElements();
+
+        // When the browser trigger multiples keydown at once, for each keydown there is always
+        // a keypress and an input that must be present.
+        const possibleMultiKeydown = this._multiKeyMap.every(
+            keydownMap => keydownMap.keydown && keydownMap.keypress && keydownMap.input,
+        );
+        if (this._multiKeyMap.length > 1 && possibleMultiKeydown) {
+            keyboardNormalizedEvents = this._multiKeyMap.map(keydownMap => {
+                const keyboardNormalizedEvent: NormalizedKeyboardEvent = {
+                    type: 'keyboard',
+                    key: keydownMap.keydown.key,
+                    code: keydownMap.keydown.code,
+                    ctrlKey: keydownMap.keydown.ctrlKey,
+                    metaKey: keydownMap.keydown.metaKey,
+                    shiftKey: keydownMap.keydown.shiftKey,
+                    altKey: keydownMap.keydown.altKey,
+                    actions: [],
+                    defaultPrevented:
+                        keydownMap.keydown.defaultPrevented ||
+                        keydownMap.keypress.defaultPrevented ||
+                        keydownMap.input.defaultPrevented,
+                    inputType: keydownMap.input.inputType,
+                };
+                const keyboardAction = this._getKeyboardAction(
+                    keydownMap.keydown.key,
+                    keydownMap.input.inputType,
+                    !!mutatedElements.size,
+                    true,
+                );
+                if (keyboardAction) {
+                    keyboardNormalizedEvent.actions.push(keyboardAction);
+                }
+                // todo: should we consider the specialEvents?
+                return keyboardNormalizedEvent;
+            });
+        } else if ((!compositionEvent && key) || isCompositionKeyboard || virtualKeyboard) {
+            keyboardNormalizedEvent = {
+                type: 'keyboard',
+                key: key,
+                code: code || '',
+                ctrlKey: keydownEvent && keydownEvent.ctrlKey,
+                metaKey: keydownEvent && keydownEvent.metaKey,
+                shiftKey: keydownEvent && keydownEvent.shiftKey,
+                altKey: keydownEvent && keydownEvent.altKey,
+                actions: [],
+                defaultPrevented: !!defaultPrevented,
+            };
+            if (inputType) {
+                keyboardNormalizedEvent.inputType = inputType;
+            }
+            if (caretPosition) {
+                keyboardNormalizedEvent.caretPosition = caretPosition;
+            }
+
+            if (customSelectAllEvent) {
+                keyboardNormalizedEvent.actions.push(this._getSelectAll());
+            }
+
+            const changeFromComposition =
+                keyboardNormalizedEvent.compositionFrom && keyboardNormalizedEvent.compositionTo;
+
+            if (!changeFromComposition) {
+                const keyboardAction = this._getKeyboardAction(
+                    key,
+                    inputType,
+                    !!mutatedElements.size,
+                );
+                if (keyboardAction) {
+                    keyboardNormalizedEvent.actions.push(keyboardAction);
+                }
+            }
+
+            if (macAccent) {
+                keyboardNormalizedEvent.actions = compositionData.actions;
+            }
+            // todo: refactor caretPosition is only used in "special event". Change this.
+        } else if (caretPosition || compositionData) {
+            pointerNormalizedEvent = {
+                type: 'pointer',
+                actions: [],
+                defaultPrevented: defaultPrevented,
+            };
+            // ? should we provide the inputType all the time when we know it?
+            //   It is sometimes wrong in case of aggregating two "input" events from of a
+            //   virtualKeyboard with a space added as the second "input" event.
+            // if (inputType) {
+            //     pointerNormalizedEvent.inputType = inputType;
+            // }
+            if (caretPosition) {
+                // todo: discuss with DMO: isn't it strange to only handle inputType for specialEvent?
+                pointerNormalizedEvent.inputType = inputType;
+                pointerNormalizedEvent.caretPosition = caretPosition;
+                // pointerNormalizedEvent.actions.push(...specialEvent.actions);
+            }
+
+            if (compositionData) {
+                // todo: discuss with DMO: should we add an inputType like insertCompositionText?
+                pointerNormalizedEvent.compositionFrom = compositionData.compositionFrom;
+                pointerNormalizedEvent.compositionTo = compositionData.compositionTo;
+                pointerNormalizedEvent.actions.push(...compositionData.actions);
+            }
+        }
+        const pointerOrKeyboardEvent = pointerNormalizedEvent || keyboardNormalizedEvent;
+        if (pointerOrKeyboardEvent) {
+            if (cutEvent) {
+                const deleteContentAction: DeleteContentAction = {
+                    type: 'deleteContent',
+                    direction: Direction.FORWARD,
+                };
+                pointerOrKeyboardEvent.actions.push(deleteContentAction);
+            } else if (dropEvent) {
+                pointerOrKeyboardEvent.actions.push(...this._getDropActions(dropEvent));
+            } else if (pasteEvent) {
+                pointerOrKeyboardEvent.actions.push(this._getDataTransferAction(pasteEvent));
+            } else if (inputEvent && inputEvent.inputType.indexOf('format') === 0) {
+                const formatName = inputEvent.inputType.replace('format', '').toLowerCase();
+
+                const applyFormatAction: ApplyFormatAction = {
+                    type: 'applyFormat',
+                    format: formatName,
+                    data: inputEvent.data,
+                };
+
+                pointerOrKeyboardEvent.actions.push(applyFormatAction);
+            } else if (
+                inputEvent &&
+                ['historyUndo', 'historyRedo'].includes(inputEvent.inputType)
+            ) {
+                const historyAction: HistoryAction = {
+                    type: inputEvent.inputType as 'historyUndo' | 'historyRedo',
+                };
+                pointerOrKeyboardEvent.actions.push(historyAction);
+            }
+        }
+
+        //
+        // 2) Create NormalizedEvent from the CompiledEvent
+        //
 
         // Create the custom events corresponding to the compiled data from
         // observed events.
-        let normalizedEvents: NormalizedEvent[] = [];
-        let actions: NormalizedAction[];
+        const normalizedEvents: NormalizedEvent[] = [];
+        if (keyboardNormalizedEvent) {
+            normalizedEvents.push(keyboardNormalizedEvent);
+        } else if (pointerNormalizedEvent) {
+            normalizedEvents.push(pointerNormalizedEvent);
+        }
 
-        compiledEvents.forEach(compiledEvent => {
-            if (compiledEvent.type === 'keydown' || compiledEvent.inputType === 'insertParagraph') {
-                actions = this._analyzeKeyboard(compiledEvent, mutatedElements);
-                const normalizedEvent = {
-                    type: 'keyboard',
-                    key:
-                        compiledEvent.data && compiledEvent.data.length === 1
-                            ? compiledEvent.data
-                            : compiledEvent.key,
-                    code: compiledEvent.code,
-                    altKey: compiledEvent.altKey,
-                    ctrlKey: compiledEvent.ctrlKey,
-                    metaKey: compiledEvent.metaKey,
-                    shiftKey: compiledEvent.shiftKey,
-                    defaultPrevented: compiledEvent.defaultPrevented,
-                    actions: actions,
-                } as NormalizedKeyboardEvent;
-                if (compiledEvent.inputType) {
-                    normalizedEvent.inputType = compiledEvent.inputType;
-                }
-                normalizedEvents.push(normalizedEvent);
-            } else if (compiledEvent.type === 'composition') {
-                normalizedEvents.push(...this._analyzeComposition(compiledEvent));
-            } else if (compiledEvent.type === 'pointer') {
-                actions = [];
-                normalizedEvents.push({
-                    type: 'pointer',
-                    target: compiledEvent.caretPosition,
-                    inputType: compiledEvent.inputType,
-                    defaultPrevented: compiledEvent.defaultPrevented,
-                    actions: actions,
-                } as NormalizedPointerEvent);
-            } else if (compiledEvent.type === 'cut') {
-                actions.push(...this._analyzeRemove(compiledEvent));
-            } else if (compiledEvent.type === 'paste') {
-                actions.push(...this._analyzePaste(compiledEvent));
-            } else if (compiledEvent.type === 'drop') {
-                actions.push(...this._analyzeDrop(compiledEvent));
-            } else if (compiledEvent.type === 'selectAll') {
-                actions.push(...this._makeSelectAll());
-            } else if (inputTypeCommands.has(compiledEvent.inputType)) {
-                const inputType = compiledEvent.inputType;
-                if (inputType.indexOf('format') === 0) {
-                    const format = inputType[6].toLowerCase() + inputType.slice(7);
-                    actions = [
-                        this._makePayload('applyFormat', {
-                            format: format,
-                            data: compiledEvent.data,
-                        }),
-                    ];
+        // We did not stopped if `needSecondTickObservation` is true because we need mutations
+        // informations between two ticks.
+        // Now, we do not need the mutation anymore as the events have been normalized.
+        this._mutationNormalizer.stop();
+
+        this._events = null;
+
+        // Select all on safari does not provide all the informations the first stack so wait for
+        // the second one.
+        if (
+            keyboardNormalizedEvent &&
+            !keyboardNormalizedEvent.actions.length &&
+            keyboardNormalizedEvent.type === 'keyboard' &&
+            keyboardNormalizedEvent.key === 'a' &&
+            keyboardNormalizedEvent.metaKey
+        ) {
+            return;
+        }
+
+        if (keyboardNormalizedEvents) {
+            this._triggerEventBatch({ events: keyboardNormalizedEvents, mutatedElements });
+        } else if (normalizedEvents.length || mutatedElements.size) {
+            this._triggerEventBatch({ events: normalizedEvents, mutatedElements });
+        }
+        this._secondTickObservation = false;
+        this._eventsMap = {};
+        this._lastEventType = null;
+        this._multiKeyMap = [];
+    }
+    _getCompositionData(
+        compositionEvent: CompositionEvent,
+        inputEvent: InputEvent,
+    ): CompositionData | undefined {
+        if (compositionEvent && inputEvent) {
+            let compositionDataString: string = compositionEvent.data;
+
+            // Specific case for SwiftKey. Swiftkey add a space in the inputEvent but not in
+            // the composition event.
+            // test: add space with auto-correction (SwiftKey)
+            const isSwiftKeyAutocorrect =
+                inputEvent.inputType === 'insertText' &&
+                inputEvent.data &&
+                inputEvent.data.length === 1 &&
+                inputEvent.data !== compositionDataString &&
+                inputEvent.data === ' ';
+            if (isSwiftKeyAutocorrect) {
+                compositionDataString += ' ';
+            }
+
+            return inputEvent && this._getComposition(compositionDataString);
+        } else {
+            // safari trigger an input with 'insertReplacementText' when it correct a word.
+            // We want to get the composition with this._getComposition(data);
+            // edge send an input with insertText
+            const isSafariCorrection =
+                inputEvent && inputEvent.inputType === 'insertReplacementText';
+            // todo: to remove when edge will not be covered anymore
+            const isEdgeCorrection = inputEvent && inputEvent.inputType === '';
+
+            if (isSafariCorrection || isEdgeCorrection) {
+                return this._getComposition(inputEvent.data);
+            }
+        }
+    }
+
+    /**
+     * If there is an event of type 'cut', 'dorp', 'paste' or 'input' within the `this._eventsMap`,
+     * Process them to use them to complement a NormalizedEvent.
+     */
+    // _getSpecialEventDetails(): SpecialEventDetails | undefined {
+    // const cutEvent = this._eventsMap.cut;
+    // const dropEvent = this._eventsMap.drop;
+    // const pasteEvent = this._eventsMap.paste;
+    // const inputEvent = this._eventsMap.input;
+    // if (cutEvent) {
+    //     const deleteContentAction: DeleteContentAction = {
+    //         type: 'deleteContent',
+    //         direction: Direction.FORWARD,
+    //     };
+    //     return {
+    //         // ? only few place (cut, drop) where we need target. can we place the key somewhere else
+    //         caretPosition: cutEvent.caretPosition,
+    //         actions: [this._makeAction(deleteContentAction)],
+    //         // todo: check if it's correct
+    //         defaultPrevented: false,
+    //     };
+    // } else if (dropEvent) {
+    //     return {
+    //         caretPosition: dropEvent.caretPosition,
+    //         actions: this._getDropActions(dropEvent),
+    //         // we always preventDefault for dropEvent
+    //         defaultPrevented: true,
+    //     };
+    // } else if (pasteEvent) {
+    //     return {
+    //         //? why there is no paste event here and the cut and drop are handeled in the top?
+    //         // ? why the caretPosition is sometimes got from 'detail.caretPosition' and sometimes 'target'?
+    //         caretPosition: pasteEvent.caretPosition,
+    //         actions: [this._getDataTransferAction(pasteEvent)],
+    //         defaultPrevented: true,
+    //     };
+    // } else if (inputEvent && inputTypeCommands.has(inputEvent.inputType)) {
+    //     let inputCommandAction;
+    //     if (inputEvent.inputType.indexOf('format') === 0) {
+    //         const formatName = inputEvent.inputType.replace('format', '').toLowerCase();
+    //         const applyFormatAction: ApplyFormatAction = {
+    //             type: 'applyFormat',
+    //             format: formatName,
+    //             data: inputEvent.data,
+    //         };
+    //         inputCommandAction = [this._makeAction(applyFormatAction)];
+    //     } else {
+    //         // ? Why do we let thoses kind of actions go through the system?
+    //         //   Shouldn't it be events instead?
+    //         // todo: review with DMO
+    //         inputCommandAction = [this._makeAction(inputEvent.inputType, {})];
+    //     }
+    //     return {
+    //         // As the keyboard events as already been processed, we can be sure that is
+    //         // a pointer event.
+    //         caretPosition: this._initialCaretPosition,
+    //         actions: inputCommandAction,
+    //         // todo: check if it's correct
+    //         defaultPrevented: false,
+    //     };
+    // }
+    // }
+
+    // todo: discuss with DMO, do we still try to infer the key from input?
+    _inferKeyFromInput(inputEvent: any): string {
+        // Case for virtual keyboard: Some virtual keyboards does not trigger keydown when a key
+        // is pushed but send an input instead.
+        // In that case, infer the key that has been pushed from the inputEvent.inputType.
+        if (inputEvent.inputType === 'insertParagraph') {
+            return 'Enter';
+        } else if (inputEvent.inputType === 'deleteContentBackward') {
+            return 'Backspace';
+        } else if (inputEvent.inputType === 'deleteContentForward') {
+            return 'Delete';
+        } else if (inputEvent.data && inputEvent.data.length === 1) {
+            return inputEvent.data;
+        }
+    }
+    /**
+     * Get a keyboard action if something has happned in the DOM (insert, delete, navigation).
+     *
+     * @param normalizedEvent
+     * @param hasMutatedElements
+     * @param isMultiKey
+     */
+    _getKeyboardAction(
+        key: string,
+        inputType: string,
+        hasMutatedElements: boolean,
+        isMultiKey = false,
+    ):
+        | InsertTextAction
+        | InsertParagraphAction
+        | InsertTextAction
+        | SetRangeAction
+        | DeleteWordAction
+        | DeleteHardLineAction
+        | DeleteContentAction {
+        const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
+        if (isInsertOrRemoveAction) {
+            // Keys ctrl+x (or another potential user mapping) can trigger an inputType 'deleteByCut'
+            if (key === 'Backspace' || key === 'Delete' || inputType === 'deleteByCut') {
+                return this._getRemoveAction(key, inputType, isMultiKey);
+            } else if (key === 'Enter') {
+                // ? why do we split create the action for the enter here if we can infer it?
+                if (inputType === 'insertLineBreak') {
+                    const insertTextAction: InsertTextAction = {
+                        type: 'insertText',
+                        text: '\n',
+                        // todo: see with DMO: is it usefull to add the html?
+                        html: '<br/>',
+                    };
+                    return insertTextAction;
                 } else {
-                    actions = [this._makePayload(inputType, {})];
+                    const insertParagraphAction: InsertParagraphAction = {
+                        type: 'insertParagraph',
+                    };
+                    return insertParagraphAction;
                 }
-                normalizedEvents.push({
-                    type: 'pointer',
-                    target: this._initialCaretPosition,
-                    inputType: compiledEvent.inputType,
-                    defaultPrevented: compiledEvent.defaultPrevented,
-                    actions: actions,
-                } as NormalizedPointerEvent);
+            } else if (key.length === 1) {
+                const insertTextAction: InsertTextAction = {
+                    type: 'insertText',
+                    text: key,
+                };
+                return insertTextAction;
             }
-        });
-
-        normalizedEvents = normalizedEvents.filter((normalizedEvent: NormalizedKeyboardEvent) => {
-            // max safari trigger the keyboard and later change the range to select all
-            return (
-                normalizedEvent.actions.length ||
-                normalizedEvent.type !== 'keyboard' ||
-                normalizedEvent.key !== 'a' ||
-                !normalizedEvent.metaKey
-            );
-        });
-
-        if (normalizedEvents.length || mutatedElements.size) {
-            this._triggerEvent({ events: normalizedEvents, mutatedElements });
-        }
-    }
-    /**
-     * @private
-     * @param {CompiledEvent} ev
-     * @param {KeyboardEvent} keypress
-     */
-    _enrichByKeypress(ev: CompiledEvent, keypress: KeyboardEvent): void {
-        if (keypress.key !== 'Dead') {
-            ev.key = keypress.key;
-        }
-        if (keypress.code) {
-            ev.code = keypress.code;
-        }
-        ev.altKey = keypress.altKey;
-        ev.ctrlKey = keypress.ctrlKey;
-        ev.metaKey = keypress.metaKey;
-        ev.shiftKey = keypress.shiftKey;
-        ev.defaultPrevented = ev.defaultPrevented || keypress.defaultPrevented;
-    }
-    /**
-     * @private
-     * @param {CompiledEvent} compiledEvent
-     * @param {InputEvent} ev
-     */
-    _enrichByInput(compiledEvent: CompiledEvent, ev: InputEvent): void {
-        compiledEvent.defaultPrevented = compiledEvent.defaultPrevented || ev.defaultPrevented;
-        const inputType = ev.inputType;
-        const type = compiledEvent.type;
-        const key = compiledEvent.key;
-        const data = compiledEvent.data;
-        const code = compiledEvent.code;
-        if (type === 'composition') {
-            if (['insertCompositionText', 'insertReplacementText'].includes(inputType)) {
-                // Some spell checking keyboards do not properly fill the textual
-                // data of the composition in the compositionend event. To protect
-                // against this, use the data from the input event instead.
-                compiledEvent.data = ev.data;
-            } else if (inputType === 'insertText') {
-                if (type === 'composition' && ev.data && ev.data.length === 1 && ev.data !== data) {
-                    // Some spell-checking keyboards automatically add a space
-                    // after the composition. Compile the two changes together.
-                    compiledEvent.data += ev.data;
-                }
-            }
-        } else if (key === 'Unidentified' || code === '') {
-            // Some spell-checking keyboards don't set a value for key in the
-            // keydown/keypress event, so we must guess it from the inputType.
-            if (inputType === 'insertParagraph' || inputType === 'insertLineBreak') {
-                compiledEvent.key = 'Enter';
-                compiledEvent.code = 'Enter';
-            } else if (inputType === 'deleteContentBackward') {
-                compiledEvent.key = 'Backspace';
-                compiledEvent.code = 'Backspace';
-            } else if (inputType === 'deleteContentForward') {
-                compiledEvent.key = 'Delete';
-                compiledEvent.code = 'Delete';
-            } else {
-                // The data property is supposed to contain the accentuated
-                // character, but it is an "Unidentified" key for some browsers.
-                compiledEvent.key = ev.data;
-            }
-        } else if (!data) {
-            // In most other cases, the data of the input event is more richer
-            // than the other events data property.
-            compiledEvent.data = ev.data;
-        }
-        compiledEvent.inputType = inputType || (data && 'textInput');
-    }
-    _analyzeKeyboard(compiledEvent: CompiledEvent, elements: Set<Node>): NormalizedAction[] {
-        const events = [];
-        const key = compiledEvent.key;
-        const data = compiledEvent.data;
-        const inputType = compiledEvent.inputType;
-        if (navigationKey.has(key)) {
+        } else if (navigationKey.has(key)) {
             // Set the range according to the current one. Set the origin key
             // in order to track the source of the move.
             const range = this._getRange();
-            // TODO: nagivation word/line ?
-            events.push(this._makePayload('setRange', { domRange: range }));
-        } else if (key === 'Backspace' || key === 'Delete' || inputType === 'deleteByCut') {
-            events.push(...this._analyzeRemove(compiledEvent));
-        } else if (key === 'Enter') {
-            if (compiledEvent.inputType === 'insertLineBreak') {
-                events.push(this._makePayload('insertText', { text: '\n', html: '<br/>' }));
-            } else {
-                events.push(this._makePayload('insertParagraph', {}));
-            }
-        } else if (inputTypeCommands.has(inputType)) {
-            if (inputType.indexOf('format') === 0) {
-                const format = inputType[6].toLowerCase() + inputType.slice(7);
-                events.push(this._makePayload('applyFormat', { format: format, data: data }));
-            } else {
-                events.push(this._makePayload(inputType, {}));
-            }
-        } else if (
-            elements.size &&
-            !compiledEvent.ctrlKey &&
-            !compiledEvent.altKey &&
-            (compiledEvent.code === 'Space' ||
-                (data && data.length === 1) ||
-                (key && key.length === 1))
-        ) {
-            events.push(...this._analyzeSampleInsert(compiledEvent));
+            const setRangeAction: SetRangeAction = {
+                type: 'setRange',
+                domRange: range,
+            };
+            return setRangeAction;
         }
-        return events;
     }
-    _analyzePaste(ev: CompiledEvent): NormalizedAction[] {
-        return [this._analyzeDataTransfer(ev.dataTransfer)];
-    }
-    _analyzeDrop(ev: CompiledEvent): NormalizedAction[] {
-        const events = [];
-        if (ev.dataTransfer.draggingFromEditable && !ev.dataTransfer.files.length) {
-            events.push(this._makePayload('deleteContent', { direction: Direction.FORWARD }));
+    _getDropActions(ev: DataTransferDetails): (DeleteContentAction | SetRangeAction)[] {
+        const actions = [];
+        if (ev.draggingFromEditable && !ev.files.length) {
+            const deleteContentAction: DeleteContentAction = {
+                type: 'deleteContent',
+                direction: Direction.FORWARD,
+            };
+            actions.push(deleteContentAction);
         }
-        events.push(this._makePayload('setRange', { domRange: ev.dataTransfer.range }));
-        events.push(this._analyzeDataTransfer(ev.dataTransfer));
-        return events;
+        const setRangeAction: SetRangeAction = {
+            type: 'setRange',
+            domRange: ev.range,
+        };
+        actions.push(setRangeAction);
+        actions.push(this._getDataTransferAction(ev));
+        return actions;
     }
-    _analyzeDataTransfer(dataTransfer: DataTransferDetail): NormalizedAction {
+    /**
+     * extract from dataTranser informations to know what has been done in the DOM and return
+     * it a normalizedAction.
+     *
+     * when drag and dropping, most browsers wrap the element with tags and styles.
+     * And when dropping in the (same or different) browser, there is many differents
+     * behavior.
+     *
+     * Some browser reload the page when dropping (img or link (from status bar)).
+     * For this reason, we block all the content from being added in the editable. (otherwise reloading happen).
+     *
+     */
+    _getDataTransferAction(
+        dataTransfer: DataTransferDetails,
+    ): InsertFilesAction | InsertHtmlAction | InsertTextAction {
+        // c'est traiter a un autre endtroit
+        // typically, when you drap drop in the image
+
+        // the insertFile
         if (dataTransfer.files.length) {
-            return this._makePayload('insertFiles', { files: dataTransfer.files });
+            const insertFilesAction: InsertFilesAction = {
+                type: 'insertFiles',
+                files: dataTransfer.files,
+            };
+            return insertFilesAction;
         }
         const uri = dataTransfer['text/uri-list'];
         // eslint-disable-next-line no-control-regex
         const html = dataTransfer['text/html'].replace(/\x00/g, ''); // replace for drag&drop from firefox to chrome
         const text = dataTransfer['text/plain'];
+
+        // from the browser, the URI list comes from an "imgage" or a "link"
+
+        // the user can drag and drop a link or an img, from the browser nav bar
         if (html) {
             if (uri) {
                 const temp = document.createElement('temp');
                 temp.innerHTML = html;
                 const element = temp.querySelector('a, img');
+                // ? why there would be no element?
                 if (element) {
+                    // ? why !dataTransfer.draggingFromEditable
+                    // ? why the innerHTML would be empty?
                     if (
                         !dataTransfer.draggingFromEditable &&
                         element.nodeName === 'A' &&
                         element.innerHTML === ''
                     ) {
                         // add default content if external link
-                        element.innerHTML = text;
+                        element.innerHTML = uri;
                     }
-                    return this._makePayload('insertHtml', { html: element.outerHTML });
+                    const insertHtmlAction: InsertHtmlAction = {
+                        type: 'insertHtml',
+                        html: element.outerHTML,
+                        text: uri,
+                    };
+                    return insertHtmlAction;
                 }
-                return this._makePayload('insertHtml', { html: html });
+                const insertHtmlAction: InsertHtmlAction = {
+                    type: 'insertHtml',
+                    html: html,
+                    text: uri,
+                };
+                return insertHtmlAction;
             }
-            return this._makePayload('insertHtml', {
+            const insertHtmlAction: InsertHtmlAction = {
+                type: 'insertHtml',
                 html: html && html.replace(/^<meta[^>]+>/, ''),
                 text: text,
-            });
+            };
+            return insertHtmlAction;
         }
         if (uri) {
-            return this._makePayload('insertHtml', {
+            const insertHtmlAction: InsertHtmlAction = {
+                type: 'insertHtml',
                 html: '<a href="' + uri + '">' + uri + '</a>',
-            });
+                text: uri,
+            };
+            return insertHtmlAction;
         }
-        return this._makePayload('insertText', { text: text });
-    }
-    _analyzeSampleInsert(ev: CompiledEvent): NormalizedAction[] {
-        const key = ev.key;
-        const data = ev.data;
-        // Different browsers handle the same action differently using
-        // triggering different events with different payloads. We listen
-        // to input events which uses data and keypress event which uses key.
-        // In some browsers, input event data is empty (empty string) which
-        // is wrong, hence we have to look at the keypress event.
-        // When we have data, data has more value than key.
-        // TODO comment: input > keypress > keydown
-        const keydata = data && data.length === 1 ? data : key;
-        const events = [];
-        if (keydata === ' ' || keydata === 'Space') {
-            // Some send space as ' ' and some send 'Space'.
-            // Insert a non-breaking space instead.
-            ev.code = 'Space';
-            ev.key = ' ';
-            events.push(this._makePayload('insertText', { text: ' ' }));
-        } else {
-            events.push(this._makePayload('insertText', { text: keydata }));
-        }
-        return events;
+        const insertTextAction: InsertTextAction = {
+            type: 'insertText',
+            text: text,
+        };
+        return insertTextAction;
     }
     /**
      * Process the given compiled event as a composition to identify the text
      * that was inserted and trigger the corresponding events on the listener.
      *
+     * Special case impossible to deal with:
+     * In the case of we don't have the event data and mutation and we have a sentence like (rather than a word)
+     * "a b" that has been change with a composition with "a c". we will receive the word change
+     * "b" to "c" instead of "a b" to "a c".
+     * This case exists but has not been found.
+     *
      * @private
      */
-    _analyzeComposition(
-        ev: CompiledEvent,
-    ): (NormalizedCompositionEvent | NormalizedKeyboardEvent)[] {
-        if (!ev.inputType) {
-            return [];
+    _getComposition(compositionData: string): CompositionData {
+        // With the google keyboard, if they were a composition start somewhere and nothing
+        // was updated from the user, when the composition changes, it trigger a compositionend
+        // even if no change have been made. In such a case we filter out these events.
+
+        // if (!eventData.inputType) {
+        //     return [];
+        // }
+
+        // move that logic
+        const charMap = this._mutationNormalizer.getCharactersMapping();
+
+        let index = charMap.index;
+        let insert = charMap.insert;
+        let remove = charMap.remove;
+
+        // we didn't found what was the intention or the action because it look the same
+        // most of the time (if not in all case) insert and remove will be both empty,
+        // other times, ev.data is always prioritary
+        if (insert === remove && compositionData) {
+            insert = compositionData;
+            remove = compositionData;
         }
 
-        // The goal of this function is to precisely find what was inserted by
-        // a keyboard supporting spell-checking and suggestions.
-        // Example (`|` represents the text cursor):
-        //   Previous content: 'My friend Christofe| was here.'
-        //   Current content:  'My friend Christophe Matthieu| was here.'
-        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
-        const res = this._mutationNormalizer.getCharactersMapping();
-
-        let index = res.index;
-        let insert = res.insert;
-        let remove = res.remove;
-        if (remove === '' && insert.length === 1 && ev.key) {
-            // virtual keyboard like swiftKey send composition event for each keypress
-            return [
-                {
-                    type: 'keyboard',
-                    key: ev.key,
-                    code: ev.code,
-                    altKey: ev.altKey,
-                    ctrlKey: ev.ctrlKey,
-                    metaKey: ev.metaKey,
-                    shiftKey: ev.shiftKey,
-                    inputType: 'insertCompositionText',
-                    defaultPrevented: ev.defaultPrevented,
-                    actions: [this._makePayload('insertText', { text: insert })],
-                },
-            ];
-        }
-        const data = ev.data;
-        if (insert === remove && data) {
-            insert = data;
-            remove = data;
-        }
+        // In mutation:
+        // - we get the changes
+        // - try to extract the word or a part of he word (with or without position)
+        // - locate: where the change has been made
 
         const range = this._getRange();
+        // if index === -1 it means we could not find the position in the mutated elements
         if (index === -1) {
             // It is possible that the index of the observed change are undefined
             // Example (`|` represents the collapsed selection):
@@ -786,23 +1352,24 @@ export class EventNormalizer {
             let insertEnd = 0;
             // The text has been flattened in the characters mapping. When
             // the index of the node has been found, use the range offset
-            // to find the index of the character proper.
+            // to find the index of the proper character.
             insertEnd += range.endOffset;
             index = insertEnd - insert.length;
         } else {
+            // it's the index not yet finished
             let offset = index + insert.length - 1;
             if (
-                res.current.nodes[offset] &&
-                (range.endContainer !== res.current.nodes[offset] ||
-                    range.endOffset !== res.current.offsets[offset] + 1)
+                charMap.current.nodes[offset] &&
+                (range.endContainer !== charMap.current.nodes[offset] ||
+                    range.endOffset !== charMap.current.offsets[offset] + 1)
             ) {
                 offset++;
                 while (
-                    res.current.nodes[offset] &&
-                    (range.endContainer !== res.current.nodes[offset] ||
-                        range.endOffset > res.current.offsets[offset])
+                    charMap.current.nodes[offset] &&
+                    (range.endContainer !== charMap.current.nodes[offset] ||
+                        range.endOffset > charMap.current.offsets[offset])
                 ) {
-                    const text = res.current.chars[offset];
+                    const text = charMap.current.chars[offset];
                     insert += text;
                     remove += text;
                     offset++;
@@ -810,7 +1377,7 @@ export class EventNormalizer {
             }
         }
 
-        const before = res.previous.chars.slice(0, index);
+        const before = charMap.previous.chars.slice(0, index);
         const match = before.match(alphabetsContainingSpaces);
         if (
             match &&
@@ -823,16 +1390,25 @@ export class EventNormalizer {
             remove = beginWord + remove;
             insert = beginWord + insert;
             index -= beginWord.length;
-        } else if (data && insert && (remove || insert !== ' ') && data !== insert) {
-            const charIndex = data.lastIndexOf(insert);
+            // when a virtual keyboard (at least swiftKey) add a space at the end of each composition
+            // in that case the insert will be ' '. So we filter out these events
+        } else if (
+            compositionData &&
+            insert &&
+            (remove || insert !== ' ') &&
+            compositionData !== insert
+        ) {
+            const charIndex = compositionData.lastIndexOf(insert);
             if (charIndex !== -1) {
                 index -= charIndex;
-                insert = data;
+                insert = compositionData;
                 const len = remove.length + charIndex;
-                remove = res.previous.chars.slice(index, index + len + 1);
+                remove = charMap.previous.chars.slice(index, index + len + 1);
             }
         }
 
+        // in the case the virtual keyboard add space, we want to remove it from the removed
+        // only if we had an end space before
         const hadEndSpace = remove[remove.length - 1] === ' ';
         const hasEndSpace = insert[insert.length - 1] === ' ';
         let rawRemove = remove;
@@ -844,126 +1420,139 @@ export class EventNormalizer {
             rawInsert = rawInsert.slice(0, -1);
         }
 
-        const nodes = res.previous.nodes;
-        const offsets = res.previous.offsets;
-        const last = nodes[nodes.length - 1];
-        const lastIndex = offsets[offsets.length - 1] + 1;
-        const end = index + rawRemove.length;
-        const actions = [
-            this._makePayload('setRange', {
-                domRange: {
-                    startContainer: nodes[index] || last,
-                    startOffset: index in offsets ? offsets[index] : lastIndex,
-                    endContainer: nodes[end] || last,
-                    endOffset: end in offsets ? offsets[end] : lastIndex,
-                    direction: Direction.BACKWARD,
-                } as DomRangeDescription,
-            }),
-            this._makePayload('insertText', { text: rawInsert }),
-        ];
+        const previousNodes = charMap.previous.nodes;
+        const previousOffsets = charMap.previous.offsets;
+        const lastPreviousNode = previousNodes[previousNodes.length - 1];
+        const lastPreviousOffset = previousOffsets[previousOffsets.length - 1] + 1;
+        const offsetEnd = index + rawRemove.length;
+        const setRangeAction: SetRangeAction = {
+            type: 'setRange',
+            domRange: {
+                startContainer: previousNodes[index] || lastPreviousNode,
+                startOffset: index in previousOffsets ? previousOffsets[index] : lastPreviousOffset,
+                endContainer: previousNodes[offsetEnd] || lastPreviousNode,
+                endOffset:
+                    offsetEnd in previousOffsets ? previousOffsets[offsetEnd] : lastPreviousOffset,
+                direction: Direction.BACKWARD,
+            },
+        };
+        const insertTextAction: InsertTextAction = {
+            type: 'insertText',
+            text: rawInsert,
+        };
+        const actions = [setRangeAction, insertTextAction];
 
         if (hasEndSpace) {
             if (hadEndSpace) {
                 index += rawRemove.length;
-                actions.push(
-                    this._makePayload('setRange', {
-                        domRange: {
-                            startContainer: nodes[index],
-                            startOffset: offsets[index],
-                            endContainer: nodes[end],
-                            endOffset: offsets[index + 1],
-                            direction: Direction.BACKWARD,
-                        } as DomRangeDescription,
-                    }),
-                );
+
+                const setRangeAction: SetRangeAction = {
+                    type: 'setRange',
+                    domRange: {
+                        startContainer: previousNodes[index],
+                        startOffset: previousOffsets[index],
+                        endContainer: previousNodes[offsetEnd],
+                        endOffset: previousOffsets[index + 1],
+                        direction: Direction.BACKWARD,
+                    },
+                };
+                actions.push(setRangeAction);
             }
-            actions.push(this._makePayload('insertText', { text: ' ' }));
+            const insertTextAction: InsertTextAction = {
+                type: 'insertText',
+                text: ' ',
+            };
+            actions.push(insertTextAction);
         }
 
-        return [
-            {
-                type: 'composition',
-                from: remove,
-                to: insert,
-                defaultPrevented: ev.defaultPrevented,
-                actions: actions,
-            },
-        ];
+        return {
+            compositionFrom: remove,
+            compositionTo: insert,
+            actions: actions,
+        };
     }
     /**
      * Process the given compiled event as a backspace/delete to identify the text
-     * that was removed and trigger the corresponding events on the listener.
+     * that was removed and return an array of the correspotind NormalizedAction.
+     *
+     * In the case we cut, the direction will be `Direction.FORWARD`.
      *
      * @private
      */
-    _analyzeRemove(ev: CompiledEvent): NormalizedAction[] {
-        const direction = ev.key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
+    // todo: change the signature?
+    _getRemoveAction(
+        key: string,
+        inputType: string,
+        isMultiKey: boolean,
+    ): DeleteWordAction | DeleteHardLineAction | DeleteContentAction {
+        // ? why do we set the direction instead of just letting the event continue and being
+        // the same name as the input events API?
+
+        // todo: comment to move: firefox has more info on the keypress.
+        // The key is defined because the compiledEvent has captured it from the keydown (or keypress?)
+        // At the exception of in some device (for instance some virtual keyboard) where we look at the
+        // inputType to gess it's key (see `enrichByInput`)
+        const direction = key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
+        // ? ask chm
+        // a word a been deleted. So we need to know which one it is.
+        // we need to retrieve what the person has deleted.
+        const characterMapping = this._mutationNormalizer.getCharactersMapping();
+        // todo: change insert with insertText and remove with removeText
+        // todo: check if we can remove this condition or get rid of `isMultiKey`
         if (
-            ev.inputType === 'deleteContentForward' ||
-            ev.inputType === 'deleteContentBackward' ||
-            ev.type === 'cut'
+            !isMultiKey &&
+            (characterMapping.insert === characterMapping.remove || characterMapping.remove === '')
         ) {
-            return [
-                this._makePayload('deleteContent', {
-                    direction: direction,
-                }),
-            ];
+            return;
         }
-        const res = this._mutationNormalizer.getCharactersMapping();
-        if (res.insert === res.remove || res.remove === '') {
-            return [];
-        }
-        if (ev.inputType === 'deleteWordForward' || ev.inputType === 'deleteWordBackward') {
-            return [
-                this._makePayload('deleteWord', {
-                    direction: direction,
-                    text: res.remove,
-                }),
-            ];
-        }
-        if (ev.inputType === 'deleteHardLineForward' || ev.inputType === 'deleteHardLineBackward') {
-            return [
-                this._makePayload('deleteHardLine', {
-                    direction: direction,
-                    domRange: {
-                        startContainer: res.previous.nodes[res.index],
-                        startOffset: res.previous.offsets[res.index],
-                        endContainer: res.previous.nodes[res.index + res.remove.length - 1],
-                        endOffset: res.previous.offsets[res.index + res.remove.length - 1] + 1,
-                        direction: direction,
-                    } as DomRangeDescription,
-                }),
-            ];
-        }
-        return [
-            this._makePayload('deleteContent', {
+        if (inputType === 'deleteWordForward' || inputType === 'deleteWordBackward') {
+            const deleteWordAction: DeleteWordAction = {
+                type: 'deleteWord',
                 direction: direction,
-            }),
-        ];
+                text: characterMapping.remove,
+            };
+            return deleteWordAction;
+        }
+        if (inputType === 'deleteHardLineForward' || inputType === 'deleteHardLineBackward') {
+            // todo: come to see me later
+            const deleteHardLineAction: DeleteHardLineAction = {
+                type: 'deleteHardLine',
+                direction: direction,
+                domRange: {
+                    startContainer: characterMapping.previous.nodes[characterMapping.index],
+                    startOffset: characterMapping.previous.offsets[characterMapping.index],
+                    endContainer:
+                        characterMapping.previous.nodes[
+                            characterMapping.index + characterMapping.remove.length - 1
+                        ],
+                    endOffset:
+                        characterMapping.previous.offsets[
+                            characterMapping.index + characterMapping.remove.length - 1
+                        ] + 1,
+                    // todo: why DeleteHardLineAction has a direction as well as DeleteHardLineAction.domRange
+                    direction: direction,
+                },
+            };
+            return deleteHardLineAction;
+        }
+        const deleteContentAction: DeleteContentAction = {
+            type: 'deleteContent',
+            direction: direction,
+        };
+        return deleteContentAction;
     }
     /**
      * @private
      * @param {KeyboardEvent} ev
      * @returns CompiledEvent
      */
-    _makeSelectAll(): NormalizedAction[] {
-        return [
-            this._makePayload('selectAll', {
-                target: this._initialCaretPosition,
-                domRange: this._getRange(),
-            }),
-        ];
-    }
-    /**
-     * Format a custom event.
-     *
-     * @param {string} type
-     * @param {object} [params]
-     */
-    _makePayload(type: string, params: object): NormalizedAction {
-        const detail = params as NormalizedAction;
-        detail.type = type;
-        return detail;
+    _getSelectAll(): SelectAllAction {
+        const selectAllAction: SelectAllAction = {
+            type: 'selectAll',
+            carretPosition: this._initialCaretPosition,
+            domRange: this._getRange(),
+        };
+        return selectAllAction;
     }
     /**
      * Return true if the given node can be considered a textual node, that is
@@ -987,7 +1576,7 @@ export class EventNormalizer {
     _getRange(ev?: MouseEvent | TouchEvent): DomRangeDescription {
         let range: DomRangeDescription;
         const selection = this.editable.ownerDocument.getSelection();
-        let ltr: boolean;
+        let leftToRight: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection means no range so a fake one is created
             range = {
@@ -1001,16 +1590,16 @@ export class EventNormalizer {
             // The direction of the range is sorely missing from the DOM api.
             const nativeRange = selection.getRangeAt(0);
             if (selection.anchorNode === selection.focusNode) {
-                ltr = selection.anchorOffset <= selection.focusOffset;
+                leftToRight = selection.anchorOffset <= selection.focusOffset;
             } else {
-                ltr = selection.anchorNode === nativeRange.startContainer;
+                leftToRight = selection.anchorNode === nativeRange.startContainer;
             }
             range = {
                 startContainer: nativeRange.startContainer,
                 startOffset: nativeRange.startOffset,
                 endContainer: nativeRange.endContainer,
                 endOffset: nativeRange.endOffset,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+                direction: leftToRight ? Direction.FORWARD : Direction.BACKWARD,
             };
         }
 
@@ -1018,6 +1607,8 @@ export class EventNormalizer {
         // contained in the target of the event, otherwise it means it took no
         // part in it. In this case, consider the caret position instead.
         // This can happen when target is an input or a contenteditable=false.
+        // ? why do we need a caret position instead in that case?
+        // why not selecting the whole element?
         if (ev && ev.target instanceof Node) {
             const target = ev.target;
             if (!target.contains(range.startContainer) && !target.contains(range.endContainer)) {
@@ -1035,10 +1626,12 @@ export class EventNormalizer {
         return range;
     }
     /**
-     * Return true if the given range is interpreted like a
+     * Return true if the given range is selecting the whole editable.
      *
      * @param range
      */
+    // ? is this really usefull to detect if the range has been fully selected.
+    // ? why do we need it?
     _isSelectAll(range: DomRangeDescription): boolean {
         let startContainer = range.startContainer;
         let startOffset = range.startOffset;
@@ -1062,7 +1655,7 @@ export class EventNormalizer {
             return false;
         }
 
-        // TODO: browser don't go to lowest possible depth
+        // TODO: browser range don't set `startContainer` and `endContainer` to lowest possible depth
         if (startContainer.childNodes[startOffset]) {
             startContainer = startContainer.childNodes[startOffset];
             startOffset = 0;
@@ -1091,6 +1684,11 @@ export class EventNormalizer {
      * node if there is no other visible element in editable that is located
      * beyond it in the given direction.
      *
+     * ? Why do we need this function?
+     *
+     * ? Where do we need this function?
+     * _isSelectAll
+     *
      * @param element to check whether it is at the visible edge
      * @param side from which to look for textual nodes ('start' or 'end')
      */
@@ -1100,6 +1698,7 @@ export class EventNormalizer {
         let node: Node = this.editable;
         const child = side === 'start' ? 'firstChild' : 'lastChild';
         const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
+        // ? what is cross visible?
         let crossVisible = false;
         while (node) {
             if (node === element) {
@@ -1122,11 +1721,17 @@ export class EventNormalizer {
                 node = node.parentNode[sibling];
             }
         }
+        // ?why I cannot return false?
+        //return false;
     }
+    /**
+     * Determine if a node is considered visible (see visible elements)[](todo: link).
+     */
     _isVisible(el: Node): boolean {
         if (el === this.editable) {
             // The editable node was reached without encountering a hidden
             // container. The editable node is supposed to be visible.
+            // ? why is it supposed to be visible? What kind of visible (if display: none)
             return true;
         }
         // A <br> element with no next sibling is never visible.
@@ -1134,16 +1739,32 @@ export class EventNormalizer {
             return false;
         }
         const element = el.nodeType === Node.TEXT_NODE ? el.parentElement : el;
+        // todo: check getComputedStyle perfs. This could be expensive and create a "Layout Thrashing"
         const style = window.getComputedStyle(element as Element);
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
         return this._isVisible(el.parentNode);
     }
+    /**
+     * Why do we need this function?
+     *
+     * nby supposition:
+     * Get the carret position for a MouseEvent or a touchEvent
+     * If the offsetNode is not in the editable, <ask chm>
+     *
+     * Used in:
+     * _getRange
+     * _onContextMenu
+     * _onPointerDown
+     * _onClick
+     * _onDrop
+     */
     _locateEvent(ev: MouseEvent | TouchEvent): CaretPosition {
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);
+        // ?
         if (!this.editable.contains(caretPosition.offsetNode)) {
             caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
@@ -1161,30 +1782,33 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
-        clearTimeout(this._clickTimeout);
+        // clearTimeout(this._clickTimeout); // ?
         this._clickTimeout = setTimeout(() => {
+            // ? How is calculated rangeHasChanged?
+            // ? Why should we return if the _currentlySelectingAll?
             if (!this._rangeHasChanged || this._currentlySelectingAll) {
                 return;
             }
             this._initialCaretPosition = this._locateEvent(ev);
-            this._triggerEvent({
+            const setRangeAction: SetRangeAction = {
+                type: 'setRange',
+                domRange: this._getRange(ev),
+            };
+            // why the _onContextMenu trigger an event, shouldn't it be on the _processEvents?
+            this._triggerEventBatch({
                 events: [
                     {
                         type: 'pointer',
-                        target: this._initialCaretPosition,
+                        caretPosition: this._initialCaretPosition,
                         defaultPrevented: ev.defaultPrevented,
-                        actions: [
-                            this._makePayload('setRange', {
-                                domRange: this._getRange(ev),
-                            }),
-                        ],
-                    } as NormalizedPointerEvent,
+                        actions: [setRangeAction],
+                    },
                 ],
                 mutatedElements: new Set([]),
             });
             this._rangeHasChanged = false;
         }, 0);
-        // The _mousedownInEditable property is used to assess whether the user
+        // The _clickedInEditable property is used to assess whether the user
         // is currently changing the selection by using the mouse. If the
         // context menu ends up opening, the user is definitely not selecting.
         this._clickedInEditable = false;
@@ -1217,7 +1841,8 @@ export class EventNormalizer {
             this._initialCaretPosition = this._locateEvent(ev);
             this._rangeHasChanged = false;
             // Mark the future event stack as following a single pointer action.
-            this._lastEvents = [ev];
+            this._lastEventType = ev.type;
+            this._eventsMap[ev.type] = ev;
         }
     }
     /**
@@ -1227,7 +1852,8 @@ export class EventNormalizer {
      */
     _onClick(ev: MouseEvent): void {
         // Mark the future event stack as following a single pointer action.
-        this._lastEvents = [ev];
+        this._lastEventType = ev.type;
+        this._eventsMap[ev.type] = ev;
 
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
@@ -1237,7 +1863,7 @@ export class EventNormalizer {
         // The observation of the resulting range must thus be delayed to the
         // next tick as well. Store the data we have now before it gets invalid.
         this._initialCaretPosition = this._locateEvent(ev);
-        clearTimeout(this._clickTimeout);
+        // clearTimeout(this._clickTimeout);
         this._clickTimeout = setTimeout(() => this._analyzeRangeChange(ev), 0);
     }
     /**
@@ -1249,14 +1875,19 @@ export class EventNormalizer {
         if (!this._rangeHasChanged) return;
 
         const range = this._getRange(ev);
-        this._triggerEvent({
+        const setRangeAction: SetRangeAction = {
+            type: 'setRange',
+            domRange: range,
+        };
+        // why the _analyzeRangeChange trigger an event, shouldn't it be on the _processEvents?
+        this._triggerEventBatch({
             events: [
                 {
                     type: 'pointer',
-                    target: this._initialCaretPosition,
+                    caretPosition: this._initialCaretPosition,
                     defaultPrevented: ev.defaultPrevented,
-                    actions: [{ type: 'setRange', domRange: range }],
-                } as NormalizedPointerEvent,
+                    actions: [setRangeAction],
+                },
             ],
             mutatedElements: new Set([]),
         });
@@ -1274,6 +1905,22 @@ export class EventNormalizer {
      * Convert the drop event into a custom pre-processed format in order to
      * store additional information that are specific to this point in time,
      * such as the current range and the initial caret position.
+     *
+     * ? why do we need to store thoses additional informations?
+     *
+     * In some browser the drop (maybe) exists. In other browser, we need to
+     * fetch it from others eventsf
+     *
+     * drop:
+     * - file
+     * - text drag/drop
+     *   - from another software
+     *   - fromm our vDocument
+     * when we paste or drop, the position is hard to get.
+     * depending of the browser, the position where is inserted is different.
+     * So we need to get the position before it's inserted.
+     *
+     * some browser add style on the image, the span inconsistently on the drop or paste
      *
      * @param ev
      */
@@ -1293,27 +1940,26 @@ export class EventNormalizer {
         }
 
         const caretPosition = this._locateEvent(ev);
-        const params: CustomEventInit<DataTransferDetail> = {
-            detail: {
-                'text/plain': transfer.getData('text/plain'),
-                'text/html': transfer.getData('text/html'),
-                'text/uri-list': transfer.getData('text/uri-list'),
-                files: files,
-                originalEvent: ev,
-                // TODO: This looks wrong. Shouldn't it give me the range from
-                // where I dragged the stuff if draggingFromEditable is true ?
-                range: {
-                    startContainer: caretPosition.offsetNode,
-                    startOffset: caretPosition.offset,
-                    endContainer: caretPosition.offsetNode,
-                    endOffset: caretPosition.offset,
-                    direction: Direction.FORWARD,
-                },
-                caretPosition: caretPosition,
-                draggingFromEditable: this._draggingFromEditable,
+        const dropEvent: DataTransferDetails = {
+            type: 'drop',
+            'text/plain': transfer.getData('text/plain'),
+            'text/html': transfer.getData('text/html'),
+            'text/uri-list': transfer.getData('text/uri-list'),
+            files: files,
+            originalEvent: ev,
+            // TODO: This looks wrong. Shouldn't it give me the range from
+            // where I dragged the stuff if draggingFromEditable is true ?
+            range: {
+                startContainer: caretPosition.offsetNode,
+                startOffset: caretPosition.offset,
+                endContainer: caretPosition.offsetNode,
+                endOffset: caretPosition.offset,
+                direction: Direction.FORWARD,
             },
+            caretPosition: caretPosition,
+            draggingFromEditable: this._draggingFromEditable,
         };
-        this._registerEvent(new CustomEvent('drop', params));
+        this._registerEvent(dropEvent);
 
         // Dragging is over, reset this property.
         this._draggingFromEditable = false;
@@ -1331,22 +1977,30 @@ export class EventNormalizer {
             ev.preventDefault();
         }
         const clipboard = ev.clipboardData;
-        const params: CustomEventInit<DataTransferDetail> = {
-            detail: {
-                'text/plain': clipboard.getData('text/plain'),
-                'text/html': clipboard.getData('text/html'),
-                'text/uri-list': clipboard.getData('text/uri-list'),
-                files: [],
-                originalEvent: ev,
-                range: this._getRange(),
-                caretPosition: this._initialCaretPosition,
-                draggingFromEditable: false,
-            },
+        const pasteEvent: DataTransferDetails = {
+            type: ev.type,
+            'text/plain': clipboard.getData('text/plain'),
+            'text/html': clipboard.getData('text/html'),
+            'text/uri-list': clipboard.getData('text/uri-list'),
+            files: [],
+            originalEvent: ev,
+            range: this._getRange(),
+            caretPosition: this._initialCaretPosition,
+            draggingFromEditable: false,
         };
-        this._registerEvent(new CustomEvent(ev.type, params));
+        this._registerEvent(pasteEvent);
     }
     /**
-     * On each change of selection, check if it might be a "Select All" action.
+     * On each change of selection, check if it might be a "selectAll" action.
+     *
+     * A "selectAll" action can be triggered by:
+     * - The shortcut 'ctrl+a'
+     * - From the context menu
+     * - A user mapping in the browser?
+     * - programmatically?
+     * - from somehing else?
+     *
+     * Why the event "selectAll" matter
      *
      * @private
      */
@@ -1360,25 +2014,16 @@ export class EventNormalizer {
         }
 
         this._rangeHasChanged = true;
-        // Testing whether the entire document is selected or not is a costly
-        // process, so we use the below heuristics before actually checking.
-        let events = this._events;
-        if (!events) {
-            // On Safari MacOS, the selectionchange event is triggered in the
-            // stack following the keyboard events rather than the same one.
-            events = this._lastEvents;
-        }
         // There are only a few cases where a selection change might actually be
         // a select all. Outside of these cases, there is no need to make the
         // costly check.
         // 1. Following a modified key being pressed. (e.g. Ctrl+A)
-        const modifiedKeyEvent = events.find((ev: KeyboardEvent) => {
-            return ev.type === 'keydown' && (ev.ctrlKey || ev.metaKey);
-        });
+        const modifiedKeyEvent =
+            this._eventsMap.keydown &&
+            (this._eventsMap.keydown.ctrlKey || this._eventsMap.keydown.metaKey);
         // 2. Following a single pointer action. (e.g. right click > Select All)
-        const single = this._lastEvents && this._lastEvents.length === 1;
-        const type = single && this._lastEvents[0].type;
-        const followsPointerAction = single && pointerEventTypes.includes(type);
+        const followsPointerAction =
+            this._lastEventType && pointerEventTypes.includes(this._lastEventType);
 
         // This heuristic protects against a costly `_isSelectAll` call.
         const heuristic = modifiedKeyEvent || followsPointerAction;
@@ -1389,35 +2034,30 @@ export class EventNormalizer {
                 // This select all was triggered from the keyboard. Add a fake
                 // selectAll event to the queue as a marker for `_processEvents`
                 // to register that a select all was triggered in this stack.
-                this._registerEvent(new CustomEvent('selectAll'));
-                if (events === this._lastEvents) {
-                    // On Safari MacOS, `this._lastEvents` is used for `events`.
-                    // In this case, the modified key event is missing from the
-                    // current event stack since Safari triggered the change in
-                    // the next stack. This fixes the event stack on Safari.
-                    this._events.unshift(modifiedKeyEvent);
-                }
+                this._registerEvent(new CustomEvent('customSelectAll'));
             } else {
                 // The target of the select all specifies where the user caret
                 // was when the select all was triggered.
-                const selectAll: NormalizedAction = {
+                const selectAllAction: SelectAllAction = {
                     type: 'selectAll',
-                    target: this._initialCaretPosition,
+                    carretPosition: this._initialCaretPosition,
                     domRange: this._getRange(),
                 };
                 // In this case, the select all was triggered from the pointer.
                 const normalizedPointerEvent: NormalizedPointerEvent = {
                     type: 'pointer',
-                    target: this._initialCaretPosition,
+                    caretPosition: this._initialCaretPosition,
                     defaultPrevented: false,
-                    actions: [selectAll],
+                    actions: [selectAllAction],
                 };
+                // why the _onSelectionChange trigger an event, shouldn't it be on the _processEvents?
+
                 // We did not find any case where a select all triggered from
                 // the mouse actually resulted in a mutation, so the mutation
                 // normalizer is not listnening in this case. If it happens to
                 // be insufficient later on, the mutated elements will need to
                 // be retrieved from the mutation normalizer.
-                this._triggerEvent({
+                this._triggerEventBatch({
                     events: [normalizedPointerEvent],
                     mutatedElements: new Set(),
                 });
