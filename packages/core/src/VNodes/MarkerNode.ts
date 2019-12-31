@@ -1,6 +1,6 @@
 import { VNode, VNodeType } from './VNode';
 
-export class RangeNode extends VNode {
+export class MarkerNode extends VNode {
     static readonly atomic = true;
     type = VNodeType.MARKER;
 }

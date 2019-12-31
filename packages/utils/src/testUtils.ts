@@ -1,8 +1,8 @@
 import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from './range';
-import { DomRangeDescription } from '../../core/src/EventNormalizer';
+import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
+import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -19,10 +19,10 @@ export interface TestEditorSpec {
 export async function testEditor(spec: TestEditorSpec): Promise<void> {
     const wrapper = document.createElement('p');
     wrapper.innerHTML = spec.contentBefore;
-    const rangeDescription = _parseTextualRange(wrapper);
+    const selection = _parseTextualSelection(wrapper);
     document.body.appendChild(wrapper);
-    if (rangeDescription) {
-        _setRange(rangeDescription);
+    if (selection) {
+        _setSelection(selection);
     }
 
     const editor = new JWEditor(wrapper);
@@ -35,8 +35,8 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
     if (spec.stepFunction) {
         spec.stepFunction(editor);
     }
-    if (rangeDescription) {
-        _renderTextualRange();
+    if (selection) {
+        _renderTextualSelection();
     }
     if (spec.contentAfter) {
         expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
@@ -47,45 +47,45 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
 }
 
 /**
- * Return a description of a range from analysing the position of
- * `RANGE_TAIL_CHAR` and `RANGE_HEAD_CHAR` characters within a test container.
- * Also remove these from the test container.
+ * Return a description of a selection from analysing the position of the
+ * characters representing the selection within a test container.
+ * Parsing the selection removes these characters from the test container.
  */
-function _parseTextualRange(testContainer: Node): DomRangeDescription {
-    let startContainer: Node;
-    let endContainer: Node;
-    let startOffset: number;
-    let endOffset: number;
+function _parseTextualSelection(testContainer: Node): DomSelectionDescription {
+    let anchorNode: Node;
+    let anchorOffset: number;
+    let focusNode: Node;
+    let focusOffset: number;
     let direction = Direction.FORWARD;
 
     let node = testContainer;
-    while (node && !(startContainer && endContainer)) {
+    while (node && !(anchorNode && focusNode)) {
         let next: Node;
         if (node.nodeType === Node.TEXT_NODE) {
-            // Look for range characters in the text content and remove them.
-            const startIndex = node.textContent.indexOf(RANGE_TAIL_CHAR);
-            node.textContent = node.textContent.replace(RANGE_TAIL_CHAR, '');
-            const endIndex = node.textContent.indexOf(RANGE_HEAD_CHAR);
-            node.textContent = node.textContent.replace(RANGE_HEAD_CHAR, '');
+            // Look for special characters in the text content and remove them.
+            const anchorIndex = node.textContent.indexOf(ANCHOR_CHAR);
+            node.textContent = node.textContent.replace(ANCHOR_CHAR, '');
+            const focusIndex = node.textContent.indexOf(FOCUS_CHAR);
+            node.textContent = node.textContent.replace(FOCUS_CHAR, '');
 
-            // Set the containers and offsets if we found the range characters.
-            if (startIndex !== -1) {
-                [startContainer, startOffset] = _toDomLocation(node, startIndex);
-                // If the end container was already found, change the range
-                // direction to BACKWARD.
-                if (endContainer) {
+            // Set the nodes and offsets if we found the selection characters.
+            if (anchorIndex !== -1) {
+                [anchorNode, anchorOffset] = _toDomLocation(node, anchorIndex);
+                // If the focus node has already been found by this point then
+                // it is before the anchor node, so the selection is backward.
+                if (focusNode) {
                     direction = Direction.BACKWARD;
                 }
             }
-            if (endIndex !== -1) {
-                [endContainer, endOffset] = _toDomLocation(node, endIndex);
-                // If the start range character is within the same parent and
-                // comes before the end range character, change the range
-                // direction to BACKWARD and adapt the startOffset to account
-                // for this end range character that was removed.
-                if (startContainer === endContainer && startOffset > endOffset) {
+            if (focusIndex !== -1) {
+                [focusNode, focusOffset] = _toDomLocation(node, focusIndex);
+                // If the anchor character is within the same parent and is
+                // after the focus character, then the selection is backward.
+                // Adapt the anchorOffset to account for the focus character
+                // that was removed.
+                if (anchorNode === focusNode && anchorOffset > focusOffset) {
                     direction = Direction.BACKWARD;
-                    startOffset--;
+                    anchorOffset--;
                 }
             }
 
@@ -101,12 +101,12 @@ function _parseTextualRange(testContainer: Node): DomRangeDescription {
         }
         node = next;
     }
-    if (startContainer && endContainer) {
+    if (anchorNode && focusNode) {
         return {
-            startContainer: startContainer,
-            startOffset: startOffset,
-            endContainer: endContainer,
-            endOffset: endOffset,
+            anchorNode: anchorNode,
+            anchorOffset: anchorOffset,
+            focusNode: focusNode,
+            focusOffset: focusOffset,
             direction: direction,
         };
     }
@@ -114,16 +114,21 @@ function _parseTextualRange(testContainer: Node): DomRangeDescription {
 /**
  * Set a range in the DOM.
  *
- * @param range
+ * @param selection
  */
-function _setRange(range: DomRangeDescription): void {
+function _setSelection(selection: DomSelectionDescription): void {
     const domRange = document.createRange();
-    domRange.setStart(range.startContainer, range.startOffset);
-    domRange.collapse(true);
-    const selection = range.startContainer.ownerDocument.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(domRange);
-    selection.extend(range.endContainer, range.endOffset);
+    if (selection.direction === Direction.FORWARD) {
+        domRange.setStart(selection.anchorNode, selection.anchorOffset);
+        domRange.collapse(true);
+    } else {
+        domRange.setEnd(selection.anchorNode, selection.anchorOffset);
+        domRange.collapse(false);
+    }
+    const domSelection = selection.anchorNode.ownerDocument.getSelection();
+    domSelection.removeAllRanges();
+    domSelection.addRange(domRange);
+    domSelection.extend(selection.focusNode, selection.focusOffset);
 }
 /**
  * Return a node and an offset corresponding to an index within a text node.
@@ -161,26 +166,26 @@ function _nextNode(node: Node): Node {
 }
 /**
  * Insert in the DOM:
- * - `RANGE_TAIL_CHAR` in place for the selection start
- * - `RANGE_HEAD_CHAR` in place for the selection end
+ * - `SELECTION_ANCHOR_CHAR` in place for the selection start
+ * - `SELECTION_FOCUS_CHAR` in place for the selection end
  *
  * This is used in the function `testEditor`.
  */
-function _renderTextualRange(): void {
+function _renderTextualSelection(): void {
     const selection = document.getSelection();
 
-    const start = _targetDeepest(selection.anchorNode, selection.anchorOffset);
-    const end = _targetDeepest(selection.focusNode, selection.focusOffset);
+    const anchor = _targetDeepest(selection.anchorNode, selection.anchorOffset);
+    const focus = _targetDeepest(selection.focusNode, selection.focusOffset);
 
     // If the range characters have to be inserted within the same parent and
     // the start range character has to be before the end range character, the
-    // end offset needs to be adapted to account for the first insertion.
-    if (start.container === end.container && start.offset <= end.offset) {
-        end.offset++;
+    // end offset needs to be adapted to account for the anchor insertion.
+    if (anchor.container === focus.container && anchor.offset <= focus.offset) {
+        focus.offset++;
     }
 
-    _insertCharAt(RANGE_TAIL_CHAR, start.container, start.offset);
-    _insertCharAt(RANGE_HEAD_CHAR, end.container, end.offset);
+    _insertCharAt(ANCHOR_CHAR, anchor.container, anchor.offset);
+    _insertCharAt(FOCUS_CHAR, focus.container, focus.offset);
 }
 
 /**

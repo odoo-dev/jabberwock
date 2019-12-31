@@ -1,4 +1,4 @@
-import { Direction } from '../../utils/src/range';
+import { Direction } from '../../core/src/VSelection';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -11,13 +11,13 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-export interface DomRangeDescription {
-    readonly startContainer: Node;
-    readonly startOffset: number;
-    readonly endContainer: Node;
-    readonly endOffset: number;
+export interface DomSelectionDescription {
+    readonly anchorNode: Node;
+    readonly anchorOffset: number;
+    readonly focusNode: Node;
+    readonly focusOffset: number;
     readonly direction: Direction;
-    origin?: string; // origin of the Range change
+    origin?: string; // origin of the selection change
 }
 
 interface CompiledEvent {
@@ -57,8 +57,7 @@ interface EventListenerDeclaration {
 }
 
 interface NormalizedventPayload {
-    domRangeChange?: DomRangeDescription;
-
+    domSelectionChange?: DomSelectionDescription;
     origin: string;
 }
 
@@ -70,7 +69,7 @@ export class EventNormalizer {
     _selectAllOriginElement: Node; // original selection/target before updating selection
     _mousedownInEditable: MouseEvent; // original mousedown event when starting selection in editable zone
     _eventCallback: (customEvent: CustomEvent) => void; // callback to trigger on events
-    _rangeHasChanged: boolean;
+    _selectionHasChanged: boolean;
     _selectAll: boolean;
 
     constructor(editable: HTMLElement, eventCallback: (customEvent: CustomEvent) => void) {
@@ -164,7 +163,7 @@ export class EventNormalizer {
         if (this._compiledEvent) {
             return this._compiledEvent;
         }
-        this._rangeHasChanged = false;
+        this._selectionHasChanged = false;
         this._compiledEvent = {
             type: null,
             key: 'Unidentified',
@@ -181,8 +180,8 @@ export class EventNormalizer {
     }
     /**
      * Create a partial clone of the DOM starting from the current position of
-     * the range up to its closest display:block parent. This partial clone of
-     * the DOM will be compared later on with the state of the DOM after the
+     * the selection up to its closest display:block parent. This partial clone
+     * of the DOM will be compared later on with the state of the DOM after the
      * composition has ended in order to indentify the change that was made.
      *
      * @private
@@ -193,9 +192,9 @@ export class EventNormalizer {
             return;
         }
 
-        const range = this._getRange();
+        const selection = this._getSelection();
         // Look for closest block node starting from current text node
-        let format = range.startContainer;
+        let format = selection.anchorNode;
         while (
             format.parentNode &&
             format !== this.editable &&
@@ -456,39 +455,38 @@ export class EventNormalizer {
         };
     }
     /**
-     * Get the current range from the current selection in DOM. If there is no
-     * range in the DOM, return a fake one at offset 0 of the editable element.
+     * Get the current selection from the DOM. If there is no selection in the
+     * DOM, return a fake one at offset 0 of the editable element.
      *
      * @private
      */
-    _getRange(): DomRangeDescription {
+    _getSelection(): DomSelectionDescription {
         const selection = this.editable.ownerDocument.getSelection();
 
-        let ltr: boolean;
         if (!selection || selection.rangeCount === 0) {
-            // No selection means no range so a fake one is created
-            ltr = this.editable.dir === 'ltr';
+            // No selection in the DOM. Create a fake one.
             return {
-                startContainer: this.editable,
-                startOffset: 0,
-                endContainer: this.editable,
-                endOffset: 0,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+                anchorNode: this.editable,
+                anchorOffset: 0,
+                focusNode: this.editable,
+                focusOffset: 0,
+                direction: Direction.FORWARD,
             };
         } else {
-            // The direction of the range is sorely missing from the DOM api
-            const nativeRange = selection.getRangeAt(0);
+            // The selection direction is sorely missing from the DOM api.
+            let forward: boolean;
+            const domRange = selection.getRangeAt(0);
             if (selection.anchorNode === selection.focusNode) {
-                ltr = selection.anchorOffset <= selection.focusOffset;
+                forward = selection.anchorOffset <= selection.focusOffset;
             } else {
-                ltr = selection.anchorNode === nativeRange.startContainer;
+                forward = selection.anchorNode === domRange.startContainer;
             }
             return {
-                startContainer: nativeRange.startContainer,
-                startOffset: nativeRange.startOffset,
-                endContainer: nativeRange.endContainer,
-                endOffset: nativeRange.endOffset,
-                direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
+                anchorNode: selection.anchorNode,
+                anchorOffset: selection.anchorOffset,
+                focusNode: selection.focusNode,
+                focusOffset: selection.focusOffset,
+                direction: forward ? Direction.FORWARD : Direction.BACKWARD,
             };
         }
     }
@@ -518,16 +516,16 @@ export class EventNormalizer {
         const previousLength = previous.length;
         const currentLength = current.length;
         // In the typical case, that is most spell-checking mobile keyboards,
-        // the range is set right after the inserted text. It can then be used
-        // as a marker to identify the end of the change.
-        const range = this._getRange();
+        // the selection is set right after the inserted text. It can then be
+        // used as a marker to identify the end of the change.
+        const selection = this._getSelection();
         let insertEnd = 0;
         while (insertEnd < currentLength) {
-            if (current.nodes[insertEnd] === range.endContainer) {
+            if (current.nodes[insertEnd] === selection.focusNode) {
                 // The text has been flattened in the characters mapping. When
-                // the index of the node has been found, use the range offset
-                // to find the index of the character proper.
-                insertEnd += range.endOffset;
+                // the index of the node has been found, use the selection focus
+                // offset to find the index of the character proper.
+                insertEnd += selection.focusOffset;
                 break;
             }
             insertEnd++;
@@ -540,31 +538,31 @@ export class EventNormalizer {
             insertStart -= ev.data.length;
         }
 
-        // In the optimal case where both the range is correctly placed and the
-        // data property of the composition event is correctly set, the above
-        // analysis is capable of finding the precise text that was inserted.
-        // However, if any of these two conditions are not met, the results
-        // might be spectacularly wrong. For example, spell checking suggestions
-        // on MacOS are displayed while hovering the mispelled word, regardless
-        // of the current position of the range, and the correction does not
-        // trigger an update of the range position either after correcting.
-        // Example (`|` represents the text cursor):
-        //   Previous content: 'My friend Christofe was here.|'
-        //   Current content:  'My friend Christophe Matthieu was here.|'
-        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
-        //   Result if data is set to 'Christophe' (length: 10): 'e was here'
-        //   Result if data is not set (regardless of the range): ''
+        // In the optimal case where both the selection is correctly updated and
+        // the data property of the composition event is correctly set, the
+        // above analysis is capable of finding the precise text that was
+        // inserted. However, if any of these two conditions are not met, the
+        // results might be spectacularly wrong. For example, spell checking
+        // suggestions on MacOS are displayed while hovering the mispelled word,
+        // regardless of the current position of the selection, and the
+        // correction does not trigger an update of the selection position
+        // either after correcting. Example (`|` represents the text cursor):
+        // Previous content: 'My friend Christofe was here.|' Current content:
+        // 'My friend Christophe Matthieu was here.|' Actual text inserted by
+        // the keyboard: 'Christophe Matthieu' Result if data is set to
+        // 'Christophe' (length: 10): 'e was here' Result if data is not set
+        // (regardless of the selection): ''
         //
         // Because the first analysis might not be enough in some cases, a
         // second analysis must be performed. This analysis aims at precisely
         // identifying the offset of the actual change in the text by comparing
         // the previous content with the current one from left to right to find
         // the start of the change and from right to left to find its end.
-        // Example (`|` represents the text cursor):
-        //   Previous content: 'My friend Christofe| was here.'
-        //   Current content:  'My friend Christophe Matthieu| was here.'
-        //   Observed change:  'My friend Christo[fe => phe Matthieu] was here.'
-        //   Change offsets in the current content: {left: 17, right: 29}
+        // Example (`|` represents the text cursor): Previous content: 'My
+        // friend Christofe| was here.' Current content:  'My friend Christophe
+        // Matthieu| was here.' Observed change:  'My friend Christo[fe => phe
+        // Matthieu] was here.' Change offsets in the current content: {left:
+        // 17, right: 29}
         const change = this._getChangeOffsets(previous.chars, current.chars);
 
         // It is possible that the left and right offsets of the observed change
@@ -581,26 +579,27 @@ export class EventNormalizer {
         // Reconstruct the inserted text from the computed indices.
         const insertedText = current.chars.slice(insertStart, insertEnd);
 
-        // Compute the range in the previous DOM corresponding to the range of
-        // the observed correction in current DOM. For this purpose, the nodes
-        // in the `previous` mapping were given a reference to their original
-        // self before cloning such that it can be retrieved now.
+        // Compute the selection in the previous DOM corresponding to the
+        // selection of the observed correction in current DOM. For this
+        // purpose, the nodes in the `previous` mapping were given a reference
+        // to their original self before cloning such that it can be retrieved
+        // now.
         const previousNodes = previous.nodes as ClonedNode[];
         // The indices in the current DOM must be offset by the difference in
         // length between the previous and current content in order to compute
         // their corresponding indices in the previous DOM.
         const insertPreviousStart = insertStart;
         const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const insertionRange: DomRangeDescription = {
-            startContainer: previousNodes[insertPreviousStart].origin,
-            startOffset: previous.offsets[insertPreviousStart],
-            endContainer: previousNodes[insertPreviousEnd].origin,
-            endOffset: previous.offsets[insertPreviousEnd],
+        const impliedSelection: DomSelectionDescription = {
+            anchorNode: previousNodes[insertPreviousStart].origin,
+            anchorOffset: previous.offsets[insertPreviousStart],
+            focusNode: previousNodes[insertPreviousEnd].origin,
+            focusOffset: previous.offsets[insertPreviousEnd],
             direction: Direction.BACKWARD,
             origin: 'composition',
         };
 
-        this._triggerEvent('setRange', { domRange: insertionRange });
+        this._triggerEvent('setSelection', { domSelection: impliedSelection });
         this._triggerEvent('insertText', { value: insertedText, elements: ev.elements });
     }
     /**
@@ -610,44 +609,47 @@ export class EventNormalizer {
      * @private
      */
     _processMove(ev: CompiledEvent): void {
-        // The normalizer honors preventDefault for moves. If the range was
+        // The normalizer honors preventDefault for moves. If the selection was
         // moved regardless of the preventDefault setting, it must be restored.
         if (ev.defaultPrevented) {
-            this._triggerEvent('restoreRange');
+            this._triggerEvent('restoreSelection');
         } else {
-            // Set the range according to the current one. Set the origin key
-            // in order to track the source of the move.
-            const range = this._getRange();
-            range.origin = ev.key;
+            // Set the selection according to the current one. Set the origin
+            // key in order to track the source of the move.
+            const selection = this._getSelection();
+            selection.origin = ev.key;
             // TODO: nagivation word/line ?
-            this._triggerEvent('setRange', { domRange: range, elements: ev.elements });
+            this._triggerEvent('setSelection', {
+                domSelection: selection,
+                elements: ev.elements,
+            });
         }
     }
     /**
-     * Return true if the given range is interpreted like a
+     * Return true if the given selection represents a "Select All".
      *
-     * @param range
+     * @param selection
      */
-    _isSelectAll(range: DomRangeDescription): boolean {
-        let startContainer = range.startContainer;
-        let startOffset = range.startOffset;
-        let endContainer = range.endContainer;
-        let endOffset = range.endOffset;
+    _isSelectAll(selection: DomSelectionDescription): boolean {
+        let startContainer = selection.anchorNode;
+        let startOffset = selection.anchorOffset;
+        let endContainer = selection.focusNode;
+        let endOffset = selection.focusOffset;
 
         const body = this.editable.ownerDocument.body;
-        // The selection might still be on a node which has since been removed
+        // The selection might still be on a node which has since been removed.
         const invalidStart = !startContainer || !body.contains(startContainer);
         const invalidEnd = !endContainer || !body.contains(endContainer);
         const invalidSelection = invalidStart || invalidEnd;
 
-        // The range might be collapsed in which case there is no selection
+        // The selection might be collapsed in which case there is no selection.
         const onlyOneNodeSelected = startContainer === endContainer;
         const noCharacterSelected = startOffset === endOffset;
-        const collapsedRange = onlyOneNodeSelected && noCharacterSelected;
+        const isCollapsed = onlyOneNodeSelected && noCharacterSelected;
 
-        // If the selection is invalid or the range is collapsed, it definitely
-        // does not correspond to a select all action.
-        if (invalidSelection || collapsedRange) {
+        // If the selection is invalid or the selection is collapsed, it
+        // definitely does not correspond to a select all action.
+        if (invalidSelection || isCollapsed) {
             return false;
         }
 
@@ -668,7 +670,7 @@ export class EventNormalizer {
             return false;
         }
 
-        // Look for visible nodes in editable that would be outside the range.
+        // Look for visible nodes in editable that would be outside the selection.
         return (
             this._isAtVisibleEdge(startContainer, 'start') &&
             this._isAtVisibleEdge(endContainer, 'end')
@@ -775,7 +777,7 @@ export class EventNormalizer {
         }
     }
     /**
-     * Catch setRange and selectAll actions
+     * Catch setSelection and selectAll actions
      *
      * @private
      * @param {MouseEvent} ev
@@ -845,7 +847,7 @@ export class EventNormalizer {
                 ev.data !== compiledEvent.data &&
                 compiledEvent.type === 'composition'
             ) {
-                // swiftKey add automatically a space after the composition, without this line the arch is correct but not the range
+                // swiftKey add automatically a space after the composition, without this line the arch is correct but not the selection
                 // remember that ev.data and compiledEvent.data are from the same event stack !
                 compiledEvent.data += ev.data;
             } else if (compiledEvent.key === 'Unidentified') {
@@ -864,7 +866,7 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
-        this._selectAllOriginElement = this._getRange().startContainer;
+        this._selectAllOriginElement = this._getSelection().anchorNode;
 
         // See comment on the same line in _onCompositionStart handler.
         if (this.editable.style.display === 'none') return;
@@ -882,23 +884,23 @@ export class EventNormalizer {
         compiledEvent.shiftKey = ev.shiftKey;
     }
     /**
-     * Catch setRange and selectAll actions
+     * Catch setSelection and selectAll actions
      *
      * @private
      * @param {MouseEvent} ev
      */
     _onMouseDown(ev: MouseEvent): void {
-        this._rangeHasChanged = false;
-        // store mousedown event to detect range change from mouse selection
+        this._selectionHasChanged = false;
+        // store mousedown event to detect selection change from mouse selection
         this._mousedownInEditable = ev;
         this._selectAllOriginElement = ev.target as Node;
         setTimeout(() => {
-            this._selectAllOriginElement = this._getRange().startContainer;
+            this._selectAllOriginElement = this._getSelection().anchorNode;
         }, 0);
     }
     /**
-     * Catch setRange actions
-     * After a tick (setTimeout 0) to have the new selection/range in the DOM
+     * Catch setSelection actions
+     * After a tick (setTimeout 0) to have the new selection in the DOM
      *
      * @see __onClick
      * @private
@@ -913,14 +915,14 @@ export class EventNormalizer {
             const target = this._mousedownInEditable.target as Node;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let range: DomRangeDescription = this._getRange();
-                if (!target.contains(range.startContainer) && target === ev.target) {
+                let selection: DomSelectionDescription = this._getSelection();
+                if (!target.contains(selection.anchorNode) && target === ev.target) {
                     const ltr = document.dir === 'ltr';
-                    range = {
-                        startContainer: target,
-                        startOffset: 0,
-                        endContainer: target,
-                        endOffset:
+                    selection = {
+                        anchorNode: target,
+                        anchorOffset: 0,
+                        focusNode: target,
+                        focusOffset:
                             target.nodeType === Node.ELEMENT_NODE
                                 ? target.childNodes.length
                                 : target.nodeValue.length,
@@ -928,8 +930,8 @@ export class EventNormalizer {
                         origin: 'pointer',
                     };
                 }
-                if (this._rangeHasChanged) {
-                    this._triggerEvent('setRange', { domRange: range });
+                if (this._selectionHasChanged) {
+                    this._triggerEvent('setSelection', { domSelection: selection });
                 }
             }
         }, 0);
@@ -941,27 +943,28 @@ export class EventNormalizer {
      * @param {Event} ev
      */
     _onSelectionChange(): void {
-        if (this._rangeHasChanged) {
-            // The _rangeHasChanged hook will disappear once the renderer only
-            // re-renders what has changed rather than re-rendering everything.
-            // Right now it is needed to avoid an infinite loop when selectAll
-            // triggers a new range set and the selection changes every time.
+        if (this._selectionHasChanged) {
+            // The _selectionHasChanged hook will disappear once the renderer
+            // only re-renders what has changed rather than re-rendering
+            // everything. Right now it is needed to avoid an infinite loop when
+            // selectAll triggers a new selection set and the selection changes
+            // every time.
             return;
         }
-        this._rangeHasChanged = true;
+        this._selectionHasChanged = true;
         // Testing whether the entire document is selected or not is a costly
         // process, so we use the below heuristics before actually checking.
         const isVisible = this.editable.style.display !== 'none';
         const isCurrentlySelecting = this._mousedownInEditable && isVisible;
         const trigger = !this._compiledEvent || this._compiledEvent.key === 'a';
-        const range = this._getRange();
-        if (!isCurrentlySelecting && trigger && this._isSelectAll(range)) {
+        const selection = this._getSelection();
+        if (!isCurrentlySelecting && trigger && this._isSelectAll(selection)) {
             if (!this._selectAll) {
                 this._selectAll = true;
                 this._triggerEvent('selectAll', {
                     origin: this._compiledEvent ? 'keypress' : 'pointer',
                     target: this._selectAllOriginElement,
-                    domRange: range,
+                    domSelection: selection,
                 });
             }
         } else {

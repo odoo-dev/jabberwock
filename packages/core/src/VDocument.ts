@@ -1,12 +1,12 @@
 import { VNode } from './VNodes/VNode';
-import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
-import { withMarkers } from '../../utils/src/range';
+import { withMarkers } from '../../utils/src/markers';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { VSelection } from './VSelection';
 
 export class VDocument {
     root: VNode;
-    range = new VRange();
+    selection = new VSelection();
     /**
      * When apply format on a collapsed range, cache the calculation of the format the following
      * property.
@@ -26,11 +26,12 @@ export class VDocument {
      * Insert a paragraph break.
      */
     insertParagraphBreak(): void {
-        // Remove the contents of the selection if needed.
-        if (!this.range.isCollapsed()) {
+        const range = this.selection.range;
+        // Remove the contents of the range if needed.
+        if (!range.isCollapsed()) {
             this.deleteSelection();
         }
-        this.range.start.parent.splitAt(this.range.start);
+        range.startContainer.splitAt(range.start);
     }
     /**
      * Insert something at range.
@@ -38,34 +39,36 @@ export class VDocument {
      * @param node
      */
     insert(node: VNode): void {
-        // Remove the contents of the selection if needed.
-        if (!this.range.isCollapsed()) {
+        const range = this.selection.range;
+        // Remove the contents of the range if needed.
+        if (!range.isCollapsed()) {
             this.deleteSelection();
         }
-        this.range.start.before(node);
+        range.start.before(node);
     }
     /**
-     * Insert text at range.
+     * Insert text at the current position of the selection.
      *
-     * If the range is collapsed, add `text` to the vDocument and copy the formating of the
-     * previous char or the next char.
+     * If the selection is collapsed, add `text` to the vDocument and copy the
+     * formating of the previous char or the next char.
      *
-     * If the range is not collapsed, replace the text with the formating that was present in the
-     * range.
+     * If the selection is not collapsed, replace the text with the formating
+     * that was present in the selection.
      *
      * @param text
      */
     insertText(text: string): void {
+        const range = this.selection.range;
         const format = this._getCurrentFormat();
-        if (!this.range.isCollapsed()) {
-            // Remove the contents of the selection if needed.
+        // Remove the contents of the range if needed.
+        if (!range.isCollapsed()) {
             this.deleteSelection();
         }
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
             const vNode = new CharNode(char, format);
-            this.range.start.before(vNode);
+            range.start.before(vNode);
         });
         this.formatCache = null;
     }
@@ -74,17 +77,18 @@ export class VDocument {
      * Get the format for the next insertion.
      */
     _getCurrentFormat(): FormatType {
+        const range = this.selection.range;
         let format: FormatType = {};
         if (this.formatCache) {
             return this.formatCache;
-        } else if (this.range.isCollapsed()) {
-            const charToCopyFormat = (this.range.start.previousSibling(CharNode) ||
-                this.range.start.nextSibling(CharNode) || {
+        } else if (range.isCollapsed()) {
+            const charToCopyFormat = range.start.previousSibling(CharNode) ||
+                range.start.nextSibling(CharNode) || {
                     format: {},
-                }) as CharNode;
+                };
             format = { ...charToCopyFormat.format };
         } else {
-            const selectedChars = this.range.selectedNodes(CharNode);
+            const selectedChars = range.selectedNodes(CharNode);
             FORMAT_TYPES.forEach(formatName => {
                 format[formatName] = selectedChars.some(char => char.format[formatName]);
             });
@@ -97,18 +101,18 @@ export class VDocument {
      * orphaned children into the parent of the first removed node.
      */
     deleteSelection(): void {
+        const range = this.selection.range;
         withMarkers(() => {
-            const nodes = this.range.selectedNodes();
+            const nodes = range.selectedNodes();
             if (!nodes.length) return;
-            this.range.collapse(this.range.start); // Reset the direction of the range.
-            let reference = this.range.end;
+            let reference = range.start;
             nodes.forEach(vNode => {
                 // If the node has children, merge it with the container of the
-                // range. Children of the merged node that should be truncated
-                // as well will be deleted in the following iterations since
-                // they appear in `nodes`. The children array must be cloned in
-                // order to modify it while iterating.
-                // TODO: test whether the node can be merged with the container.
+                // selection. Children of the merged node that should be
+                // truncated as well will be deleted in the following iterations
+                // since they appear in `nodes`. The children array must be
+                // cloned in order to modify it while iterating. TODO: test
+                // whether the node can be merged with the container.
                 if (vNode.hasChildren()) {
                     vNode.children.slice().forEach(child => {
                         reference.after(child);
@@ -126,28 +130,29 @@ export class VDocument {
     //--------------------------------------------------------------------------
 
     /**
-     * Apply the `format` to the range.
+     * Apply the `format` to the selection.
      *
-     * If the range is collapsed, set the format on the range so we know in the next insert
-     * which format should be used.
+     * If the selection is collapsed, set the format on the selection so we know
+     * in the next insert which format should be used.
      */
     applyFormat(formatName: string): void {
-        if (this.range.isCollapsed()) {
+        const range = this.selection.range;
+        if (range.isCollapsed()) {
             if (!this.formatCache) {
                 this.formatCache = this._getCurrentFormat();
             }
             this.formatCache[formatName] = !this.formatCache[formatName];
         } else {
-            const selectedChars = this.range.selectedNodes(CharNode);
+            const selectedChars = range.selectedNodes(CharNode);
 
-            // If there is no char with the format `formatName` in the range, set the format to true
-            // for all nodes.
+            // If there is no char with the format `formatName` in the
+            // selection, set the format to true for all nodes.
             if (!selectedChars.every(char => char.format[formatName])) {
                 selectedChars.forEach(char => {
                     char[formatName] = true;
                 });
-                // If there is at least one char in with the format `fomatName` in the range, set the
-                // format to false for all nodes.
+                // If there is at least one char in with the format `fomatName`
+                // in the selection, set the format to false for all nodes.
             } else {
                 selectedChars.forEach(char => {
                     char[formatName] = false;

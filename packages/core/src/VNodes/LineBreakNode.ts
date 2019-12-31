@@ -1,6 +1,5 @@
-import { VNode } from './VNode';
+import { VNode, RelativePosition } from './VNode';
 import { VElement } from './VElement';
-import { RelativePosition } from '../../../utils/src/range';
 
 export class LineBreakNode extends VElement {
     static readonly atomic = true;
@@ -46,20 +45,20 @@ export class LineBreakNode extends VElement {
         return new LineBreakNode();
     }
     /**
-     * Locate where to set the range, when it targets this VNode, at a certain
-     * offset. This allows us to handle special cases.
+     * Transform the given DOM location into its VDocument counterpart.
      *
-     * @param domNode
-     * @param offset
+     * @override
+     * @param domNode DOM node corresponding to this VNode
+     * @param offset The offset of the location in the given domNode
      */
-    locateRange(domNode: Node, offset: number): [VNode, RelativePosition] {
-        const rangeLocation = super.locateRange(domNode, offset);
+    locate(domNode: Node, offset: number): [VNode, RelativePosition] {
+        const location = super.locate(domNode, offset);
         // When clicking on a trailing line break, we need to target after the
         // line break. The DOM represents these as 2 <br> so this is a special
         // case.
         if (!this.nextSibling() && !domNode.nextSibling) {
-            rangeLocation[1] = RelativePosition.AFTER;
+            location[1] = RelativePosition.AFTER;
         }
-        return rangeLocation;
+        return location;
     }
 }

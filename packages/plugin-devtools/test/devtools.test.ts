@@ -378,7 +378,7 @@ describe('plugin-devtools', () => {
                 'removed from devtools dom',
             );
         });
-        it('should change the range to select the paragraph', async () => {
+        it('should change the selection to select the paragraph', async () => {
             await openDevTools(devtools);
             const p = devtools.querySelector(
                 'devtools-tree > devtools-node > .children > devtools-node:nth-child(2)',
@@ -394,11 +394,11 @@ describe('plugin-devtools', () => {
             expect(pChildren.childNodes.length).to.equal(5);
             expect(pChildren.firstElementChild.classList.contains('self-closing')).to.equal(
                 true,
-                'previous is the range start',
+                'previous is the selection anchor',
             );
             expect(pChildren.lastElementChild.classList.contains('self-closing')).to.equal(
                 true,
-                'next is the range end',
+                'next is the selection focus',
             );
         });
         it('should select the bold char', async () => {
@@ -479,7 +479,7 @@ describe('plugin-devtools', () => {
                 vNodeChar.type + '.' + vNodeChar.name,
             ]);
         });
-        it('should change the range to select the char', async () => {
+        it('should change the selection to select the char', async () => {
             await openDevTools(devtools);
             const node = devtools.querySelector('devtools-node.element.folded:nth-child(2)');
             const name = node.querySelector('.element-name');
@@ -501,11 +501,11 @@ describe('plugin-devtools', () => {
             expect(bold.parentNode.childNodes.length).to.equal(5);
             expect(bold.previousElementSibling.classList.contains('self-closing')).to.equal(
                 true,
-                'previous is the range start',
+                'previous is the selection anchor',
             );
             expect(bold.nextElementSibling.classList.contains('self-closing')).to.equal(
                 true,
-                'next is the range end',
+                'next is the selection focus',
             );
 
             const selection = document.getSelection();
@@ -662,7 +662,7 @@ describe('plugin-devtools', () => {
 
             expect(button.classList.contains('selected')).to.equal(true);
             const about = devtools.querySelector('devtools-info .about');
-            const aResult = '<div class="about"><span class="type">VRange</span> Selection </div>';
+            const aResult = '<div class="about"><span class="type">VSelection</span> Selection </div>';
             expect(about.outerHTML).to.equal(aResult);
         });
     });
@@ -695,7 +695,7 @@ describe('plugin-devtools', () => {
                 'insert',
                 'insertParagraphBreak',
                 'insertText',
-                'setRange',
+                'setSelection',
                 'deleteBackward',
                 'deleteForward',
                 'selectAll',
@@ -730,7 +730,7 @@ describe('plugin-devtools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.textContent).to.equal('insertTextsetRange');
+            expect(subpanel.textContent).to.equal('insertTextsetSelection');
         });
         it('should select "insertText"', async () => {
             await openDevTools(devtools);
@@ -878,7 +878,7 @@ describe('plugin-devtools', () => {
                     '<div class="about"><span class="type">Command</span> insertText</div>';
                 expect(about.outerHTML).to.equal(aResult);
             });
-            it('should select "setRange"', async () => {
+            it('should select "setSelection"', async () => {
                 const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line:nth-child(2)');
                 await click(line);
@@ -886,19 +886,19 @@ describe('plugin-devtools', () => {
 
                 const about = devtools.querySelector('devtools-info .about');
                 const aResult =
-                    '<div class="about"><span class="type">Command</span> setRange</div>';
+                    '<div class="about"><span class="type">Command</span> setSelection</div>';
                 expect(about.outerHTML).to.equal(aResult);
 
                 const properties = devtools.querySelector('devtools-info .properties table');
                 const pResult =
                     '<table>' +
                     '<tbody>' +
-                    '<tr><td>vRange</td><td><table><tbody>' +
+                    '<tr><td>vSelection</td><td><table><tbody>' +
                     '<tr><td> direction </td><td>FORWARD</td></tr>' +
-                    '<tr><td> start </td><td> ' +
+                    '<tr><td> anchor </td><td> ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
-                    '<tr><td> end </td><td> ' +
+                    '<tr><td> focus </td><td> ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
                     '</tbody></table></td></tr>' +
@@ -930,7 +930,7 @@ describe('plugin-devtools', () => {
                     '</table>';
                 expect(properties.outerHTML).to.equal(pResult);
             });
-            it('should select "setRange" with arrow', async () => {
+            it('should select "setSelection" with arrow', async () => {
                 const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line');
                 await click(line);
@@ -940,7 +940,7 @@ describe('plugin-devtools', () => {
 
                 const about = devtools.querySelector('devtools-info .about');
                 const aResult =
-                    '<div class="about"><span class="type">Command</span> setRange</div>';
+                    '<div class="about"><span class="type">Command</span> setSelection</div>';
                 expect(about.outerHTML).to.equal(aResult);
             });
             it('should not change the selection with other key', async () => {

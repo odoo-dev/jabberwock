@@ -93,11 +93,11 @@ export class InfoComponent extends OwlUIComponent<{}> {
     // Private
     //--------------------------------------------------------------------------
 
-    _repr(rangeNode: VNode): string {
-        const nextSibling = rangeNode.nextSibling();
-        const prevSibling = rangeNode.previousSibling();
+    _repr(vNode: VNode): string {
+        const nextSibling = vNode.nextSibling();
+        const prevSibling = vNode.previousSibling();
         const position = nextSibling ? 'BEFORE' : prevSibling ? 'AFTER' : 'INSIDE';
-        const reference = nextSibling || prevSibling || rangeNode.parent;
+        const reference = nextSibling || prevSibling || vNode.parent;
         return `${position} ${reference.id} (${reference.name})`;
     }
     /**
