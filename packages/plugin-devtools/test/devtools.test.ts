@@ -923,7 +923,7 @@ describe('plugin-devtools', () => {
                 const pResult =
                     '<table>' +
                     '<tbody>' +
-                    '<tr><td>value</td><td>z</td></tr>' +
+                    '<tr><td>text</td><td>z</td></tr>' +
                     '<tr><td>elements</td><td>[object Set]</td></tr>' +
                     '<tr><td>origin</td><td>EventNormalizer</td></tr>' +
                     '</tbody>' +

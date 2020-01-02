@@ -310,7 +310,7 @@ export class EventNormalizer {
             if (data === ' ' || data === 'Space') {
                 // Some send space as ' ' and some send 'Space'.
                 this._triggerEvent('insertText', {
-                    value: '\u00A0',
+                    text: '\u00A0',
                     elements: elements,
                 }); // nbsp
             } else if (data && data[0] === '\u000A') {
@@ -328,7 +328,7 @@ export class EventNormalizer {
                 this._triggerEvent('enter', enterEventPayload);
             } else {
                 this._triggerEvent('insertText', {
-                    value: data,
+                    text: data,
                     elements: elements,
                 });
             }
@@ -600,7 +600,7 @@ export class EventNormalizer {
         };
 
         this._triggerEvent('setSelection', { domSelection: impliedSelection });
-        this._triggerEvent('insertText', { value: insertedText, elements: ev.elements });
+        this._triggerEvent('insertText', { text: insertedText, elements: ev.elements });
     }
     /**
      * Process the given compiled event as a move and trigger the corresponding
