@@ -6,6 +6,7 @@ module.exports = {
     entry: {
         'index': './examples/index/index.ts',
         'koi-example': './examples/koi/koi.ts',
+        'get-keys-index': './examples/getKeys/index.ts',
     },
     devtool: 'inline-source-map',
     output: {

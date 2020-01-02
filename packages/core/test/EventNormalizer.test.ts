@@ -20,6 +20,53 @@ type TriggerNativeEventsOption =
     | ClipboardEventInit
     | TouchEventInit;
 
+export interface TestKeyboardEvent {
+    type: 'keydown' | 'keypress' | 'keyup';
+    key: string;
+    code: string;
+    ctrlKey?: boolean;
+    metaKey?: boolean;
+    altKey?: boolean;
+    shiftKey?: boolean;
+    defaultPrevented?: boolean;
+}
+export interface TestCompositionEvent {
+    type: 'compositionstart' | 'compositionupdate' | 'compositionend';
+    data: string;
+}
+export interface TestInputEvent {
+    type: 'beforeinput' | 'input';
+    data: string;
+    inputType: string;
+    defaultPrevented?: boolean;
+}
+export interface TestMutationEvent {
+    type: 'mutation';
+    textContent: string;
+    targetParentId: string;
+    targetOffset: number;
+}
+export interface TestSelectionEvent {
+    type: 'selection';
+    focus: {
+        id: string;
+        index: number;
+        offset: number;
+    };
+    anchor: {
+        id: string;
+        index: number;
+        offset: number;
+    };
+}
+
+export type TestEvent =
+    | TestKeyboardEvent
+    | TestCompositionEvent
+    | TestInputEvent
+    | TestMutationEvent
+    | TestSelectionEvent;
+
 /**
  * Get the event type based on its name.
  *
@@ -135,6 +182,36 @@ async function nextTick(): Promise<void> {
     return new Promise((resolve): number => setTimeout(resolve));
 }
 
+async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
+    const editableElement = document.getElementById('editable');
+    eventStackList.forEach(async eventStack => {
+        eventStack.forEach(testEvent => {
+            if (testEvent.type === 'mutation') {
+                const mutationEvent: TestMutationEvent = testEvent;
+                const mutatedElementParent = document.getElementById(mutationEvent.targetParentId);
+                const mutatedElement = mutatedElementParent.childNodes[mutationEvent.targetOffset];
+                mutatedElement.textContent = mutationEvent.textContent;
+            } else if (testEvent.type === 'selection') {
+                const selectionEvent: TestSelectionEvent = testEvent;
+                const focusElement = document.getElementById(selectionEvent.focus.id);
+                const anchorElement = document.getElementById(selectionEvent.anchor.id);
+                setRange(
+                    anchorElement.childNodes[selectionEvent.anchor.index],
+                    selectionEvent.anchor.offset,
+                    focusElement.childNodes[selectionEvent.focus.index],
+                    selectionEvent.focus.offset,
+                );
+            } else {
+                const { type, ...options } = testEvent;
+                triggerEvent(editableElement, type, options as TriggerNativeEventsOption);
+            }
+        });
+        await nextTick();
+        await nextTick();
+    });
+    return;
+}
+
 // ? is all the tests special cases that we handle because the browser are doing something
 // that is not conform to a standard or is it just a normal flow that we test?
 // We might want to separate the two tests to make the distinction clear.
@@ -161,6 +238,7 @@ describe('utils', () => {
             container.style.top = '0';
             container.style.left = '0';
             root = document.createElement('div');
+            root.id = 'editable';
             root.style.display = 'block';
             container.appendChild(root);
             // ? why do we create other?
@@ -453,6 +531,87 @@ describe('utils', () => {
                             ],
                         },
                     ];
+                    const batchEvents: EventBatch[] = [
+                        {
+                            events: keyboardEvents,
+                            mutatedElements: new Set([text]),
+                        },
+                    ];
+                    expect(eventBatchs).to.deep.equal(batchEvents);
+                });
+                it.skip('multi keypress with accent (mac)', async () => {
+                    const p = document.createElement('p');
+                    p.id = 'a';
+                    const text = document.createTextNode('hell');
+                    root.innerHTML = '';
+                    root.appendChild(p);
+                    p.appendChild(text);
+                    setRange(text, 4, text, 4);
+
+                    await nextTick();
+                    eventBatchs = [];
+                    await triggerEvents([
+                        [
+                            {
+                                type: 'selection',
+                                focus: { id: 'a', index: 0, offset: 4 },
+                                anchor: { id: 'a', index: 0, offset: 4 },
+                            },
+                        ],
+                        [
+                            { type: 'keydown', key: 's', code: 'KeyS' },
+                            { type: 'keypress', key: 's', code: 'KeyS' },
+                            { type: 'beforeinput', data: 's', inputType: 'insertText' },
+                            { type: 'input', data: 's', inputType: 'insertText' },
+                            {
+                                type: 'mutation',
+                                textContent: 'hells',
+                                targetParentId: 'a',
+                                targetOffset: 0,
+                            },
+                            {
+                                type: 'selection',
+                                focus: { id: 'a', index: 0, offset: 5 },
+                                anchor: { id: 'a', index: 0, offset: 5 },
+                            },
+                            { type: 'keydown', key: 'd', code: 'KeyD' },
+                            { type: 'keypress', key: 'd', code: 'KeyD' },
+                            { type: 'beforeinput', data: 'd', inputType: 'insertText' },
+                            { type: 'input', data: 'd', inputType: 'insertText' },
+                            {
+                                type: 'mutation',
+                                textContent: 'hellsd',
+                                targetParentId: 'a',
+                                targetOffset: 0,
+                            },
+                            {
+                                type: 'selection',
+                                focus: { id: 'a', index: 0, offset: 6 },
+                                anchor: { id: 'a', index: 0, offset: 6 },
+                            },
+                            { type: 'keydown', key: 'f', code: 'KeyF' },
+                            { type: 'keypress', key: 'f', code: 'KeyF' },
+                            { type: 'beforeinput', data: 'f', inputType: 'insertText' },
+                            { type: 'input', data: 'f', inputType: 'insertText' },
+                            {
+                                type: 'mutation',
+                                textContent: 'hellsdf',
+                                targetParentId: 'a',
+                                targetOffset: 0,
+                            },
+                            {
+                                type: 'selection',
+                                focus: { id: 'a', index: 0, offset: 7 },
+                                anchor: { id: 'a', index: 0, offset: 7 },
+                            },
+                        ],
+                        [{ type: 'keyup', key: 'f', code: 'KeyF' }],
+                        [{ type: 'keyup', key: 's', code: 'KeyS' }],
+                        [{ type: 'keyup', key: 'd', code: 'KeyD' }],
+                    ]);
+                    await nextTick();
+
+                    const keyboardEvents: NormalizedKeyboardEvent[] = [];
                     const batchEvents: EventBatch[] = [
                         {
                             events: keyboardEvents,
@@ -2426,30 +2585,30 @@ describe('utils', () => {
             describe('cut', () => {
                 it('ctrl + x to cut', async () => {
                     root.innerHTML = '<div>abc<br/>abc<br/>abc</div>';
-                    const p = root.firstChild;
-                    const text1 = p.childNodes[0];
-                    const br1 = p.childNodes[1];
-                    const text2 = p.childNodes[2];
-                    const br2 = p.childNodes[3];
-                    const text3 = p.childNodes[4];
+                    const div = root.firstChild;
+                    const text1 = div.childNodes[0];
+                    const br1 = div.childNodes[1];
+                    const text2 = div.childNodes[2];
+                    const br2 = div.childNodes[3];
+                    const text3 = div.childNodes[4];
                     setRange(text1, 1, text3, 2);
                     await nextTick();
 
                     eventBatchs = [];
 
                     triggerEvent(root, 'keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
-                    triggerEvent(p, 'beforeinput', { inputType: 'deleteByCut' });
+                    triggerEvent(div, 'beforeinput', { inputType: 'deleteByCut' });
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'bc\ndef\ngh');
                     dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
-                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
-                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
+                    triggerEvent(div, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(div, 'cut', { clipboardData: dataTransfer });
                     (text1 as Text).textContent = 'ab';
-                    p.removeChild(br1);
-                    p.removeChild(text2);
-                    p.removeChild(br2);
+                    div.removeChild(br1);
+                    div.removeChild(text2);
+                    div.removeChild(br2);
                     (text3 as Text).textContent = 'c';
-                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
+                    triggerEvent(div, 'input', { inputType: 'deleteByCut' });
                     setRange(text3, 0, text3, 0);
                     await nextTick();
                     await nextTick();
