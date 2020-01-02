@@ -662,7 +662,8 @@ describe('plugin-devtools', () => {
 
             expect(button.classList.contains('selected')).to.equal(true);
             const about = devtools.querySelector('devtools-info .about');
-            const aResult = '<div class="about"><span class="type">VSelection</span> Selection </div>';
+            const aResult =
+                '<div class="about"><span class="type">VSelection</span> Selection </div>';
             expect(about.outerHTML).to.equal(aResult);
         });
     });
