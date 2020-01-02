@@ -2,6 +2,8 @@ import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { FormatParams } from '../src/CorePlugin';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
+import { VRange, withRange } from '../src/VRange';
+import { RelativePosition, Point } from '../src/VNodes/VNode';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
@@ -1854,6 +1856,114 @@ describe('stores', () => {
                         stepFunction: insertLineBreak,
                         contentAfter: '<p><br>[]<br></p>',
                     });
+                });
+            });
+        });
+        describe('withRange', () => {
+            it('should work with VRange.at', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        withRange(VRange.at(aNode), range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'cab[]',
+                });
+            });
+            it('should work with VRange.selecting and default RangePosition.BEFORE and RangePosition.AFTER', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        withRange(VRange.selecting(aNode, aNode), range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'cb[]',
+                });
+            });
+            it('should work with VRange.selecting and RangePosition.BEFORE and RangePosition.BEFORE', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const rangeParams: [Point, Point] = [
+                            [aNode, RelativePosition.BEFORE],
+                            [aNode, RelativePosition.BEFORE],
+                        ];
+                        withRange(rangeParams, range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'cab[]',
+                });
+            });
+            it('should work with RangePosition.BEFORE and RangePosition.AFTER', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const rangeParams: [Point, Point] = [
+                            [aNode, RelativePosition.BEFORE],
+                            [aNode, RelativePosition.AFTER],
+                        ];
+                        withRange(rangeParams, range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'cb[]',
+                });
+            });
+            it('should work with same node and RangePosition.AFTER and RangePosition.AFTER', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const rangeParams: [Point, Point] = [
+                            [aNode, RelativePosition.AFTER],
+                            [aNode, RelativePosition.AFTER],
+                        ];
+                        withRange(rangeParams, range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'acb[]',
+                });
+            });
+            it('should work with different nodes and RangePosition.AFTER and RangePosition.BEFORE', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const bNode = editor.vDocument.root.next(node => node.name === 'b');
+                        const rangeParams: [Point, Point] = [
+                            [aNode, RelativePosition.AFTER],
+                            [bNode, RelativePosition.BEFORE],
+                        ];
+                        withRange(rangeParams, range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'acb[]',
+                });
+            });
+            it('should work with different nodes and RangePosition.AFTER and RangePosition.AFTER', async () => {
+                await testEditor({
+                    contentBefore: 'ab[]',
+                    stepFunction: (editor: JWEditor) => {
+                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const bNode = editor.vDocument.root.next(node => node.name === 'b');
+                        const rangeParams: [Point, Point] = [
+                            [aNode, RelativePosition.AFTER],
+                            [bNode, RelativePosition.AFTER],
+                        ];
+                        withRange(rangeParams, range => {
+                            editor.execCommand('insertText', { range: range, value: 'c' });
+                        });
+                    },
+                    contentAfter: 'ac[]',
                 });
             });
         });

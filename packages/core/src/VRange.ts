@@ -1,10 +1,72 @@
-import { VNode, RelativePosition, Constructor, Predicate, NodePredicate } from './VNodes/VNode';
+import { VNode, RelativePosition, Point } from './VNodes/VNode';
+import { Constructor, Predicate, NodePredicate } from './VNodes/VNode';
 import { withMarkers } from '../../utils/src/markers';
 import { MarkerNode } from './VNodes/MarkerNode';
 
 export class VRange {
     readonly start = new MarkerNode();
     readonly end = new MarkerNode();
+
+    /**
+     * Return the context of a collapsed range at the given location, targetting
+     * a reference VNode and specifying the position relative to that VNode.
+     *
+     * @param reference
+     * @param position
+     */
+    static at(reference: VNode, position = RelativePosition.BEFORE): [Point, Point] {
+        return VRange.selecting(reference, position, reference, position);
+    }
+    /**
+     * Return the context of a range selecting the given nodes.
+     * Consider `ab` (`[` = start, `]` = end):
+     * `select(a)` => `[a]b`
+     * `select(a, b)` => `[ab]`
+     * `select(a, RelativePosition.BEFORE, b, RelativePosition.BEFORE)` => `[a]b`
+     * `select(a, RelativePosition.AFTER, b, RelativePosition.BEFORE)` => `a[]b`
+     * `select(a, RelativePosition.BEFORE, b, RelativePosition.AFTER)` => `[ab]`
+     * `select(a, RelativePosition.AFTER, b, RelativePosition.AFTER)` => `a[b]`
+     *
+     * @param startNode
+     * @param [startPosition] default: `RelativePosition.BEFORE`
+     * @param [endNode] default: `startNode`
+     * @param [endPosition] default: `RelativePosition.AFTER`
+     */
+    static selecting(startNode: VNode, endNode?: VNode): [Point, Point];
+    static selecting(
+        startNode: VNode,
+        startPosition: RelativePosition,
+        endNode: VNode,
+        endPosition: RelativePosition,
+    ): [Point, Point];
+    static selecting(
+        startNode: VNode,
+        startPosition: RelativePosition | VNode = RelativePosition.BEFORE,
+        endNode: VNode = startNode,
+        endPosition: RelativePosition = RelativePosition.AFTER,
+    ): [Point, Point] {
+        if (startPosition instanceof VNode) {
+            endNode = startPosition;
+            startPosition = RelativePosition.BEFORE;
+        }
+        return [[startNode, startPosition], [endNode, endPosition]];
+    }
+
+    constructor(boundaryPoints?: [Point, Point]) {
+        // If a range context is given, adapt this range to match it.
+        if (boundaryPoints) {
+            const [start, end] = boundaryPoints;
+            const [startNode, startPosition] = start;
+            const [endNode, endPosition] = end;
+            if (endPosition === RelativePosition.AFTER) {
+                this.setEnd(endNode, endPosition);
+                this.setStart(startNode, startPosition);
+            } else {
+                this.setStart(startNode, startPosition);
+                this.setEnd(endNode, endPosition);
+            }
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Public
@@ -146,4 +208,19 @@ export class VRange {
         this.start.remove();
         this.end.remove();
     }
+}
+
+/**
+ * Create a temporary range corresponding to the given boundary points and
+ * call the given callback with the newly created range as argument. The
+ * range is automatically destroyed after calling the callback.
+ *
+ * @param bounds The points corresponding to the range boundaries.
+ * @param callback The callback to call with the newly created range.
+ */
+export function withRange<T>(bounds: [Point, Point], callback: (range: VRange) => T): T {
+    const range = new VRange(bounds);
+    const result = callback(range);
+    range.remove();
+    return result;
 }
