@@ -1,4 +1,5 @@
 import { VNode } from './VNodes/VNode';
+import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { withMarkers } from '../../utils/src/markers';
 import { FragmentNode } from './VNodes/FragmentNode';
@@ -25,11 +26,10 @@ export class VDocument {
     /**
      * Insert a paragraph break.
      */
-    insertParagraphBreak(): void {
-        const range = this.selection.range;
+    insertParagraphBreak(range = this.selection.range): void {
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
-            this.deleteSelection();
+            this.deleteSelection(range);
         }
         range.startContainer.splitAt(range.start);
     }
@@ -38,11 +38,10 @@ export class VDocument {
      *
      * @param node
      */
-    insert(node: VNode): void {
-        const range = this.selection.range;
+    insert(node: VNode, range = this.selection.range): void {
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
-            this.deleteSelection();
+            this.deleteSelection(range);
         }
         range.start.before(node);
     }
@@ -57,12 +56,11 @@ export class VDocument {
      *
      * @param text
      */
-    insertText(text: string): void {
-        const range = this.selection.range;
+    insertText(text: string, range = this.selection.range): void {
         const format = this._getCurrentFormat();
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
-            this.deleteSelection();
+            this.deleteSelection(range);
         }
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
@@ -76,8 +74,7 @@ export class VDocument {
     /**
      * Get the format for the next insertion.
      */
-    _getCurrentFormat(): FormatType {
-        const range = this.selection.range;
+    _getCurrentFormat(range = this.selection.range): FormatType {
         let format: FormatType = {};
         if (this.formatCache) {
             return this.formatCache;
@@ -100,8 +97,7 @@ export class VDocument {
      * Truncate the tree by removing the selected nodes and merging their
      * orphaned children into the parent of the first removed node.
      */
-    deleteSelection(): void {
-        const range = this.selection.range;
+    deleteSelection(range: VRange): void {
         withMarkers(() => {
             const nodes = range.selectedNodes();
             if (!nodes.length) return;
@@ -135,8 +131,7 @@ export class VDocument {
      * If the selection is collapsed, set the format on the selection so we know
      * in the next insert which format should be used.
      */
-    applyFormat(formatName: string): void {
-        const range = this.selection.range;
+    applyFormat(formatName: string, range = this.selection.range): void {
         if (range.isCollapsed()) {
             if (!this.formatCache) {
                 this.formatCache = this._getCurrentFormat();
