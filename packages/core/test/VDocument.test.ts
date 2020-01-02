@@ -18,8 +18,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<p><b>a</b></p><p>[]</p><p><b>b</b></p>',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('c');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'c' });
                             },
                             contentAfter: '<p><b>a</b></p><p>c[]</p><p><b>b</b></p>',
                         });
@@ -28,8 +27,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<b>[]a</b>',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('b');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'b' });
                             },
                             contentAfter: '<b>b[]a</b>',
                         });
@@ -38,8 +36,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '[]a',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('b');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'b' });
                             },
                             contentAfter: 'b[]a',
                         });
@@ -48,8 +45,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<b>a[]</b>b',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('c');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'c' });
                             },
                             contentAfter: '<b>ac[]</b>b',
                         });
@@ -58,8 +54,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: 'a[]b',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('c');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'c' });
                             },
                             contentAfter: 'ac[]b',
                         });
@@ -68,8 +63,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<b>a</b>[]b',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('c');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'c' });
                             },
                             contentAfter: '<b>ac[]</b>b',
                         });
@@ -78,8 +72,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<p><b>a</b></p><p>[]b</p>',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('c');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'c' });
                             },
                             contentAfter: '<p><b>a</b></p><p>c[]b</p>',
                         });
@@ -91,16 +84,14 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '[a]',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('b');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'b' });
                             },
                             contentAfter: 'b[]',
                         });
                         await testEditor({
                             contentBefore: 'a[b]c',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('d');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'd' });
                             },
                             contentAfter: 'ad[]c',
                         });
@@ -109,8 +100,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<b>a</b>[b]<b>c</b>',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('d');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'd' });
                             },
                             contentAfter: '<b>a</b>d[]<b>c</b>',
                         });
@@ -119,8 +109,7 @@ describe('stores', () => {
                         await testEditor({
                             contentBefore: '<b>[a</b>b]<b>c</b>',
                             stepFunction: (editor: JWEditor) => {
-                                editor.vDocument.insertText('d');
-                                editor.renderer.render(editor.vDocument, editor.editable);
+                                editor.execCommand('insertText', { value: 'd' });
                             },
                             contentAfter: '<b>d[]c</b>',
                         });
@@ -138,9 +127,8 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: '<b>b[]</b>a',
                     });
@@ -153,10 +141,9 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: 'b[]a',
                     });
@@ -169,9 +156,8 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: 'a<b>b[]</b>',
                     });
@@ -184,10 +170,9 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: 'ab[]',
                     });
@@ -200,9 +185,8 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: '<b>a</b>b[]',
                     });
@@ -215,10 +199,9 @@ describe('stores', () => {
                                 format: 'bold',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.dispatcher.dispatch('applyFormat', params);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: '<b>ab[]</b>',
                     });
@@ -234,10 +217,9 @@ describe('stores', () => {
                                 format: 'underline',
                             };
 
-                            editor.dispatcher.dispatch('applyFormat', formatBold);
-                            editor.dispatcher.dispatch('applyFormat', formatUnderline);
-                            editor.vDocument.insertText('b');
-                            editor.renderer.render(editor.vDocument, editor.editable);
+                            editor.execCommand('applyFormat', formatBold);
+                            editor.execCommand('applyFormat', formatUnderline);
+                            editor.execCommand('insertText', { value: 'b' });
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
                     });
