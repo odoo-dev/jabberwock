@@ -18,6 +18,8 @@ export type Predicate = (node: VNode) => boolean;
 export type Constructor<T extends VNode> = new (...args) => T;
 export type NodePredicate<T extends VNode> = Predicate | Constructor<T>;
 
+export type Point = [VNode, RelativePosition];
+
 let id = 0;
 export class VNode {
     static readonly atomic: boolean = false;
