@@ -13,10 +13,10 @@ export type DeleteBackwardParams = RangeParams;
 export type DeleteForwardParams = RangeParams;
 
 export interface InsertParams extends RangeParams {
-    value: VNode;
+    node: VNode;
 }
 export interface InsertTextParams extends RangeParams {
-    value: string;
+    text: string;
 }
 
 export interface VSelectionParams {
@@ -75,7 +75,7 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     insert(params: InsertParams): void {
-        this.editor.vDocument.insert(params.value, params.range);
+        this.editor.vDocument.insert(params.node, params.range);
     }
     /**
      * Insert text at the current position of the selection.
@@ -83,7 +83,7 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     insertText(params: InsertTextParams): void {
-        this.editor.vDocument.insertText(params.value, params.range);
+        this.editor.vDocument.insertText(params.text, params.range);
     }
     /**
      * Command to apply the format.

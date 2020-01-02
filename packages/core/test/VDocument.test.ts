@@ -1,6 +1,6 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { FormatParams } from '../src/CorePlugin';
+import { FormatParams, InsertParams, InsertTextParams } from '../src/CorePlugin';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
@@ -8,74 +8,70 @@ import { RelativePosition, Point } from '../src/VNodes/VNode';
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
 const insertParagraphBreak = (editor: JWEditor): void => editor.execCommand('insertParagraphBreak');
-const insertLineBreak = (editor: JWEditor): void =>
-    editor.execCommand('insert', { value: new LineBreakNode() });
+const insertLineBreak = (editor: JWEditor): void => {
+    const params: InsertParams = {
+        node: new LineBreakNode(),
+    };
+    editor.execCommand('insert', params);
+};
 
 describe('stores', () => {
     describe('VDocument', () => {
         describe('insertText', () => {
             describe('bold', () => {
+                const insertText = function(editor, text: string): void {
+                    const params: InsertTextParams = {
+                        text: text,
+                    };
+                    editor.execCommand('insertText', params);
+                };
                 describe('Selection collapsed', () => {
                     it('should insert char not bold when selection in between two paragraphs', async () => {
                         await testEditor({
                             contentBefore: '<p><b>a</b></p><p>[]</p><p><b>b</b></p>',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'c' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
                             contentAfter: '<p><b>a</b></p><p>c[]</p><p><b>b</b></p>',
                         });
                     });
                     it('should insert char bold when the selection in first position and next char is bold', async () => {
                         await testEditor({
                             contentBefore: '<b>[]a</b>',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'b' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
                             contentAfter: '<b>b[]a</b>',
                         });
                     });
                     it('should insert char not bold when the selection in first position and next char is not bold', async () => {
                         await testEditor({
                             contentBefore: '[]a',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'b' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
                             contentAfter: 'b[]a',
                         });
                     });
                     it('should insert char bold when previous char is bold and the next is not bold', async () => {
                         await testEditor({
                             contentBefore: '<b>a[]</b>b',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'c' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
                             contentAfter: '<b>ac[]</b>b',
                         });
                     });
                     it('should insert char not bold, when previous char is not bold, next is not bold', async () => {
                         await testEditor({
                             contentBefore: 'a[]b',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'c' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
                             contentAfter: 'ac[]b',
                         });
                     });
                     it('should insert char bold when previous char is bold and the next is not bold', async () => {
                         await testEditor({
                             contentBefore: '<b>a</b>[]b',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'c' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
                             contentAfter: '<b>ac[]</b>b',
                         });
                     });
                     it('should insert char not bold because char on a different parent should not be considered', async () => {
                         await testEditor({
                             contentBefore: '<p><b>a</b></p><p>[]b</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'c' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
                             contentAfter: '<p><b>a</b></p><p>c[]b</p>',
                         });
                     });
@@ -85,34 +81,26 @@ describe('stores', () => {
                     it('should replace without bold when nothing bold between selection and nothing bold outside selection', async () => {
                         await testEditor({
                             contentBefore: '[a]',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'b' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
                             contentAfter: 'b[]',
                         });
                         await testEditor({
                             contentBefore: 'a[b]c',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'd' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'd'),
                             contentAfter: 'ad[]c',
                         });
                     });
                     it('should replace without bold when nothing bold between selection and everything bold outside selection', async () => {
                         await testEditor({
                             contentBefore: '<b>a</b>[b]<b>c</b>',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'd' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'd'),
                             contentAfter: '<b>a</b>d[]<b>c</b>',
                         });
                     });
                     it('should replace with bold when anything inside the selection is bold', async () => {
                         await testEditor({
                             contentBefore: '<b>[a</b>b]<b>c</b>',
-                            stepFunction: (editor: JWEditor) => {
-                                editor.execCommand('insertText', { value: 'd' });
-                            },
+                            stepFunction: (editor: JWEditor) => insertText(editor, 'd'),
                             contentAfter: '<b>d[]c</b>',
                         });
                     });
@@ -125,12 +113,15 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
+                            const formatParams: FormatParams = {
                                 format: 'bold',
                             };
+                            editor.execCommand('applyFormat', formatParams);
 
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('insertText', { value: 'b' });
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: '<b>b[]</b>a',
                     });
@@ -139,13 +130,16 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
+                            const formatParams: FormatParams = {
                                 format: 'bold',
                             };
+                            editor.execCommand('applyFormat', formatParams);
+                            editor.execCommand('applyFormat', formatParams);
 
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('insertText', { value: 'b' });
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: 'b[]a',
                     });
@@ -157,9 +151,12 @@ describe('stores', () => {
                             const params: FormatParams = {
                                 format: 'bold',
                             };
-
                             editor.execCommand('applyFormat', params);
-                            editor.execCommand('insertText', { value: 'b' });
+
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: 'a<b>b[]</b>',
                     });
@@ -171,10 +168,13 @@ describe('stores', () => {
                             const params: FormatParams = {
                                 format: 'bold',
                             };
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('applyFormat', params);
 
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('insertText', { value: 'b' });
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: 'ab[]',
                     });
@@ -186,9 +186,12 @@ describe('stores', () => {
                             const params: FormatParams = {
                                 format: 'bold',
                             };
-
                             editor.execCommand('applyFormat', params);
-                            editor.execCommand('insertText', { value: 'b' });
+
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: '<b>a</b>b[]',
                     });
@@ -200,10 +203,13 @@ describe('stores', () => {
                             const params: FormatParams = {
                                 format: 'bold',
                             };
+                            editor.execCommand('applyFormat', params);
+                            editor.execCommand('applyFormat', params);
 
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('insertText', { value: 'b' });
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: '<b>ab[]</b>',
                     });
@@ -215,13 +221,17 @@ describe('stores', () => {
                             const formatBold: FormatParams = {
                                 format: 'bold',
                             };
+                            editor.execCommand('applyFormat', formatBold);
+
                             const formatUnderline: FormatParams = {
                                 format: 'underline',
                             };
-
-                            editor.execCommand('applyFormat', formatBold);
                             editor.execCommand('applyFormat', formatUnderline);
-                            editor.execCommand('insertText', { value: 'b' });
+
+                            const insertParams: InsertTextParams = {
+                                text: 'b',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
                     });
@@ -1866,7 +1876,11 @@ describe('stores', () => {
                     stepFunction: (editor: JWEditor) => {
                         const aNode = editor.vDocument.root.next(node => node.name === 'a');
                         withRange(VRange.at(aNode), range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'cab[]',
@@ -1878,7 +1892,11 @@ describe('stores', () => {
                     stepFunction: (editor: JWEditor) => {
                         const aNode = editor.vDocument.root.next(node => node.name === 'a');
                         withRange(VRange.selecting(aNode, aNode), range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'cb[]',
@@ -1894,7 +1912,11 @@ describe('stores', () => {
                             [aNode, RelativePosition.BEFORE],
                         ];
                         withRange(rangeParams, range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'cab[]',
@@ -1910,7 +1932,11 @@ describe('stores', () => {
                             [aNode, RelativePosition.AFTER],
                         ];
                         withRange(rangeParams, range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'cb[]',
@@ -1926,7 +1952,11 @@ describe('stores', () => {
                             [aNode, RelativePosition.AFTER],
                         ];
                         withRange(rangeParams, range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'acb[]',
@@ -1943,7 +1973,11 @@ describe('stores', () => {
                             [bNode, RelativePosition.BEFORE],
                         ];
                         withRange(rangeParams, range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'acb[]',
@@ -1960,7 +1994,11 @@ describe('stores', () => {
                             [bNode, RelativePosition.AFTER],
                         ];
                         withRange(rangeParams, range => {
-                            editor.execCommand('insertText', { range: range, value: 'c' });
+                            const insertParams: InsertTextParams = {
+                                range: range,
+                                text: 'c',
+                            };
+                            editor.execCommand('insertText', insertParams);
                         });
                     },
                     contentAfter: 'ac[]',
