@@ -843,7 +843,7 @@ export class EventNormalizer {
         const mutatedElements = this._mutationNormalizer.getMutatedElements();
 
         // When the browser trigger multiples keydown at once, for each keydown there is always
-        // a keypress and an input that must be present.
+        // also a keypress and an input that must be present.
         const possibleMultiKeydown = this._multiKeyMap.every(
             keydownMap => keydownMap.keydown && keydownMap.keypress && keydownMap.input,
         );
@@ -1158,7 +1158,6 @@ export class EventNormalizer {
             if (key === 'Backspace' || key === 'Delete' || inputType === 'deleteByCut') {
                 return this._getRemoveAction(key, inputType, isMultiKey);
             } else if (key === 'Enter') {
-                // ? why do we split create the action for the enter here if we can infer it?
                 if (inputType === 'insertLineBreak') {
                     const insertTextAction: InsertTextAction = {
                         type: 'insertText',
@@ -1168,6 +1167,8 @@ export class EventNormalizer {
                     };
                     return insertTextAction;
                 } else {
+                    // todo: see with DMO: is it really necessary as we can infer it from the
+                    //       previous action?
                     const insertParagraphAction: InsertParagraphAction = {
                         type: 'insertParagraph',
                     };
@@ -1181,12 +1182,11 @@ export class EventNormalizer {
                 return insertTextAction;
             }
         } else if (navigationKey.has(key)) {
-            // Set the range according to the current one. Set the origin key
-            // in order to track the source of the move.
-            const range = this._getRange();
             const setRangeAction: SetRangeAction = {
                 type: 'setRange',
-                domRange: range,
+                // Set the range according to the current one. Set the origin key
+                // in order to track the source of the move.
+                domRange: this._getRange(),
             };
             return setRangeAction;
         }

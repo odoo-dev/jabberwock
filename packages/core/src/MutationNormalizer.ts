@@ -302,9 +302,6 @@ export class MutationNormalizer {
             current: currentLinked,
         };
     }
-    /**
-     *
-     */
     getMutatedElements(): Set<Node> {
         const elements: Set<Node> = new Set();
         this._mutations.forEach(MutationRecord => {
