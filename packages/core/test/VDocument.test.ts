@@ -14,17 +14,23 @@ const insertLineBreak = (editor: JWEditor): void => {
     };
     editor.execCommand('insert', params);
 };
+const insertText = function(editor, text: string): void {
+    const params: InsertTextParams = {
+        text: text,
+    };
+    editor.execCommand('insertText', params);
+};
+const applyFormat = (editor: JWEditor, format: 'bold' | 'italic' | 'underline'): void => {
+    const formatParams: FormatParams = {
+        format: format,
+    };
+    editor.execCommand('applyFormat', formatParams);
+};
 
 describe('stores', () => {
     describe('VDocument', () => {
         describe('insertText', () => {
             describe('bold', () => {
-                const insertText = function(editor, text: string): void {
-                    const params: InsertTextParams = {
-                        text: text,
-                    };
-                    editor.execCommand('insertText', params);
-                };
                 describe('Selection collapsed', () => {
                     it('should insert char not bold when selection in between two paragraphs', async () => {
                         await testEditor({
@@ -113,15 +119,8 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const formatParams: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', formatParams);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            insertText(editor, 'b');
                         },
                         contentAfter: '<b>b[]</b>a',
                     });
@@ -130,16 +129,9 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const formatParams: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', formatParams);
-                            editor.execCommand('applyFormat', formatParams);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            applyFormat(editor, 'bold');
+                            insertText(editor, 'b');
                         },
                         contentAfter: 'b[]a',
                     });
@@ -148,15 +140,8 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: 'a[]',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', params);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            insertText(editor, 'b');
                         },
                         contentAfter: 'a<b>b[]</b>',
                     });
@@ -165,16 +150,9 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: 'a[]',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('applyFormat', params);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            applyFormat(editor, 'bold');
+                            insertText(editor, 'b');
                         },
                         contentAfter: 'ab[]',
                     });
@@ -183,15 +161,8 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '<b>a</b>[]',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', params);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            insertText(editor, 'b');
                         },
                         contentAfter: '<b>a</b>b[]',
                     });
@@ -200,16 +171,9 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '<b>a</b>[]',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', params);
-                            editor.execCommand('applyFormat', params);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            applyFormat(editor, 'bold');
+                            insertText(editor, 'b');
                         },
                         contentAfter: '<b>ab[]</b>',
                     });
@@ -218,20 +182,9 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: '[]a',
                         stepFunction: (editor: JWEditor) => {
-                            const formatBold: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', formatBold);
-
-                            const formatUnderline: FormatParams = {
-                                format: 'underline',
-                            };
-                            editor.execCommand('applyFormat', formatUnderline);
-
-                            const insertParams: InsertTextParams = {
-                                text: 'b',
-                            };
-                            editor.execCommand('insertText', insertParams);
+                            applyFormat(editor, 'bold');
+                            applyFormat(editor, 'underline');
+                            insertText(editor, 'b');
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
                     });
@@ -243,11 +196,7 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: 'a[b]c',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-
-                            editor.execCommand('applyFormat', params);
+                            applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[<b>b]</b>c',
                     });
@@ -256,10 +205,7 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: 'a<b>[b]</b>c',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-                            editor.execCommand('applyFormat', params);
+                            applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[b]c',
                     });
@@ -268,11 +214,7 @@ describe('stores', () => {
                     await testEditor({
                         contentBefore: 'a<b>[b</b>c]',
                         stepFunction: (editor: JWEditor) => {
-                            const params: FormatParams = {
-                                format: 'bold',
-                            };
-
-                            editor.execCommand('applyFormat', params);
+                            applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[<b>bc]</b>',
                     });
