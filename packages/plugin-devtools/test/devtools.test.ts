@@ -124,6 +124,7 @@ describe('plugin-devtools', () => {
                 editor.vDocument.root.name +
                 '</span> ' +
                 editor.vDocument.root.type +
+                '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
                 editor.vDocument.root.id +
                 '</span>' +
@@ -206,6 +207,7 @@ describe('plugin-devtools', () => {
                 editor.vDocument.root.children[1].constructor.name +
                 '</span> ' +
                 editor.vDocument.root.children[1].type +
+                '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
                 editor.vDocument.root.children[1].id +
                 '</span>' +
@@ -427,8 +429,10 @@ describe('plugin-devtools', () => {
                 '<div class="about">' +
                 '<span class="type">' +
                 vNodeChar.constructor.name +
-                '</span> node: "b" <span class="id">' +
-                vNodeChar.id +
+                '</span> node: "b" ' +
+                '<button class="logger">&gt;_</button>' +
+                '<span class="id">' +
+                +vNodeChar.id +
                 '</span>' +
                 '</div>';
             expect(about.outerHTML).to.equal(aResult);
@@ -623,6 +627,7 @@ describe('plugin-devtools', () => {
                 vNode.constructor.name +
                 '</span> ' +
                 vNode.type +
+                '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
                 vNode.id +
                 '</span>' +
@@ -641,7 +646,9 @@ describe('plugin-devtools', () => {
                 '<div class="about">' +
                 '<span class="type">' +
                 vNode.children[2].constructor.name +
-                '</span> node: "c" <span class="id">' +
+                '</span> node: "c" ' +
+                '<button class="logger">&gt;_</button>' +
+                '<span class="id">' +
                 vNode.children[2].id +
                 '</span>' +
                 '</div>';
