@@ -99,25 +99,21 @@ export class VDocument {
      */
     deleteSelection(range: VRange): void {
         withMarkers(() => {
-            const nodes = range.selectedNodes();
-            if (!nodes.length) return;
-            let reference = range.start;
-            nodes.forEach(vNode => {
-                // If the node has children, merge it with the container of the
-                // selection. Children of the merged node that should be
-                // truncated as well will be deleted in the following iterations
-                // since they appear in `nodes`. The children array must be
-                // cloned in order to modify it while iterating. TODO: test
-                // whether the node can be merged with the container.
+            const selectedNodes = range.selectedNodes();
+            if (!selectedNodes.length) return;
+            // If the node has children, merge it with the container of the
+            // range. Children of the merged node that should be truncated
+            // as well will be deleted in the following iterations since
+            // they appear in `nodes`. The children array must be cloned in
+            // order to modify it while iterating.
+            const newContainer = range.start.parent;
+            selectedNodes.forEach(vNode => {
                 if (vNode.hasChildren()) {
-                    vNode.children.slice().forEach(child => {
-                        reference.after(child);
-                        reference = child;
-                    });
+                    vNode.mergeWith(newContainer);
+                } else {
+                    vNode.remove();
                 }
             });
-            // Then remove.
-            nodes.forEach(vNode => vNode.remove());
         });
     }
 

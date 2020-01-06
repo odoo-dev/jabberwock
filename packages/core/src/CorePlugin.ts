@@ -97,12 +97,23 @@ export class CorePlugin extends JWPlugin {
     deleteBackward(params: DeleteForwardParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         if (range.isCollapsed()) {
-            const previous = range.start.previous();
-            if (previous) {
-                range.extendTo(previous);
+            // Basic case: remove the node directly preceding the range.
+            const previousSibling = range.start.previousSibling();
+            if (previousSibling) {
+                previousSibling.removeBackward();
+            } else {
+                // Otherwise delete nodes between range and previous leaf.
+                const previousLeaf = range.start.previousLeaf(node => {
+                    return node !== range.start.parent;
+                });
+                if (previousLeaf) {
+                    range.setStart(previousLeaf, RelativePosition.AFTER);
+                    this.editor.vDocument.deleteSelection(range);
+                }
             }
+        } else {
+            this.editor.vDocument.deleteSelection(range);
         }
-        this.editor.vDocument.deleteSelection(range);
     }
     /**
      * Delete in the forward direction (delete key expected behavior).
@@ -110,12 +121,21 @@ export class CorePlugin extends JWPlugin {
     deleteForward(params: DeleteForwardParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         if (range.isCollapsed()) {
-            const next = range.end.next();
-            if (next) {
-                range.extendTo(next);
+            // Basic case: remove the node directly following the range.
+            const nextSibling = range.end.nextSibling();
+            if (nextSibling) {
+                nextSibling.removeForward();
+            } else {
+                // Otherwise delete nodes between range and next leaf.
+                const nextLeaf = range.end.nextLeaf();
+                if (nextLeaf) {
+                    range.setEnd(nextLeaf, RelativePosition.BEFORE);
+                    this.editor.vDocument.deleteSelection(range);
+                }
             }
+        } else {
+            this.editor.vDocument.deleteSelection(range);
         }
-        this.editor.vDocument.deleteSelection(range);
     }
     /**
      * Navigate to a given range.

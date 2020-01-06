@@ -662,6 +662,18 @@ export class VNode {
         });
     }
     /**
+     * Remove this node in forward direction. (e.g. `Delete` key)
+     */
+    removeForward(): void {
+        this.remove();
+    }
+    /**
+     * Remove this node in backward direction. (e.g. `Backspace` key)
+     */
+    removeBackward(): void {
+        this.remove();
+    }
+    /**
      * Split this node at the given child, moving it and its next siblings into
      * a duplicate of this VNode that is inserted after the original. Return the
      * duplicated VNode.
@@ -675,6 +687,28 @@ export class VNode {
         this.after(duplicate);
         nodesToMove.forEach(sibling => duplicate.append(sibling));
         return duplicate;
+    }
+
+    /**
+     * Merge this node with the given VNode.
+     *
+     * @param newContainer the new container for this node's children
+     */
+    mergeWith(newContainer: VNode): void {
+        withMarkers(() => {
+            if (this.hasChildren()) {
+                let reference = newContainer.lastChild();
+                this.children.slice().forEach(child => {
+                    if (reference) {
+                        reference.after(child);
+                    } else {
+                        newContainer.append(child);
+                    }
+                    reference = child;
+                });
+            }
+            this.remove();
+        });
     }
 
     //--------------------------------------------------------------------------

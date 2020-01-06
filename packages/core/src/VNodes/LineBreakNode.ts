@@ -31,11 +31,6 @@ export class LineBreakNode extends VElement {
         }
         return t;
     }
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      *
