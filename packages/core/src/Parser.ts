@@ -389,14 +389,66 @@ function _locate(container: Node, offset: number): [VNode, RelativePosition] {
         let reference: VNode;
         if (container.nodeType === Node.TEXT_NODE) {
             // The reference is the index-th match (eg.: text split into chars).
-            const index = Math.min(offset, nodeLength(container) - 1);
+            const index = Math.min(offset, vNodes.length - 1);
             reference = vNodes[index];
         } else {
             reference = vNodes[0];
         }
-        return reference.locateRange(container, offset);
+        // if (reference) {
+        debugger;
+        return reference.locateRange(container, offset, vNodes.length - 1);
+        // } else {
+        // todo: this logic might be wrong in some case.
+        // I do this because when we add a letter at the end of a line in android. Because there
+        // is a mutation, the event is considered to be a mutation.
+        // When I go back to work on monday I should fix this specific issue (one char) to
+        // not generate a composition event but rather a keyboard event if possible.
+        //
+        // Nontheless, the problem might persist if the user select a word in his dictionnary.
+        // which should simply add a composition.
+        //
+        // In that case, the reference will not be set because the offset and nodeLength will
+        // be higher than vNodes.
+        //
+        // In the morning when I come back monday, also add tests:
+        // - add a char at the end of a sentence
+        // - add multiples chars at the end of a sentence
+        // - delete a char at the end of a sentence
+        // - delete multiples chars at the end of a sentence
+        //     debugger;
+        //     return [vNodes[vNodes.length - 1], RelativePosition.AFTER];
+        // }
     }
 }
+
+// function _locate(container: Node, offset: number): [VNode, RelativePosition] {
+//     // When targetting the end of a node, the DOM gives an offset that is
+//     // equal to the length of the container. In order to retrieve the last
+//     // descendent, we need to make sure we target an existing node, ie. an
+//     // existing index.
+//     const isAfterEnd = offset >= nodeLength(container);
+//     let index = isAfterEnd ? nodeLength(container) - 1 : offset;
+//     // Move to deepest child of container.
+//     while (container.hasChildNodes()) {
+//         container = container.childNodes[index];
+//         index = isAfterEnd ? nodeLength(container) - 1 : 0;
+//         // Adapt the offset to be its equivalent within the new container.
+//         offset = isAfterEnd ? nodeLength(container) : index;
+//     }
+//     // Get the VNodes matching the container.
+//     const vNodes = VDocumentMap.fromDom(container);
+//     if (vNodes && vNodes.length) {
+//         let reference: VNode;
+//         if (container.nodeType === Node.TEXT_NODE) {
+//             // The reference is the index-th match (eg.: text split into chars).
+//             reference = vNodes[index];
+//         } else {
+//             reference = vNodes[0];
+//         }
+//         debugger;
+//         return reference.locateRange(container, offset);
+//     }
+// }
 
 export const Parser = {
     /**

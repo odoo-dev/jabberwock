@@ -33,6 +33,8 @@ export class EventManager {
                 return ['insertParagraphBreak', {}];
             case 'selectAll':
             case 'setRange':
+                // This is wrong in case the normalizer provide a range in the DOM that is not
+                // present in the VDocument. 
                 return ['setRange', { vRange: Parser.parseRange(action.domRange) }];
             case 'deleteContent':
                 return [

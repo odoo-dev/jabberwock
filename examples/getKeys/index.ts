@@ -10,9 +10,24 @@ const editable = document.querySelector('.editable');
 const exportArea = document.querySelector('.exportArea');
 const clearButton = document.querySelector('.clearButton');
 const copyButton = document.querySelector('.copyButton');
+const templatesElement = document.querySelector('.templates');
 
 let currentEventStack = null;
 let allEventStacks = [];
+
+const templates = {
+    insertSpace: `<p id='a'>hello</p>`,
+    multiline: `<p id='a'>abc<br/>def</p>`,
+};
+Object.keys(templates).forEach(key => {
+    const keyElement = document.createElement('button');
+    keyElement.style.cursor = 'pointer';
+    keyElement.textContent = key;
+    keyElement.addEventListener('click', () => {
+        editable.innerHTML = templates[key];
+    });
+    templatesElement.appendChild(keyElement);
+});
 
 function registerTestEvent(testEvent: TestEvent): void {
     if (currentEventStack === null) {

@@ -145,8 +145,11 @@ export class JWEditor {
      * @param callback
      */
     execBatch(callback: (execCommand: CommandExec) => void): void {
+        // try {
         callback(this.dispatcher.dispatch.bind(this.dispatcher));
+        // } finally {
         this.renderer.render(this.vDocument, this.editable);
+        // }
     }
 
     /**

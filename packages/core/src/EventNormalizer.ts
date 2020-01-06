@@ -762,6 +762,15 @@ export class EventNormalizer {
         const dropEvent = this._eventsMap.drop;
         const pasteEvent = this._eventsMap.paste;
 
+        const compositionData = this._getCompositionData(compositionEvent, inputEvent);
+
+        const googleKeyboardBackspace =
+            false &&
+            compositionData &&
+            compositionData.compositionFrom.slice(0, -1) === compositionData.compositionTo &&
+            keydownEvent &&
+            keydownEvent.key === 'Unidentified';
+
         //
         // First pass to get the informations
         //
@@ -778,6 +787,7 @@ export class EventNormalizer {
                 inputEvent.data !== null &&
                 inputEvent.data.length === 1 &&
                 inputEvent.data) ||
+            (googleKeyboardBackspace && 'Backspace') ||
             (keydownEvent &&
                 keydownEvent.key === 'Unidentified' &&
                 this._inferKeyFromInput(inputEvent));
@@ -799,6 +809,7 @@ export class EventNormalizer {
             (cutEvent && 'deleteByCut') ||
             (dropEvent && 'insertFromDrop') ||
             (pasteEvent && 'insertFromPaste') ||
+            (googleKeyboardBackspace && 'deleteContentBackward') ||
             (inputEvent && inputEvent.inputType) ||
             // todo: check if we really need to set the inputType when making a "special accent" in mac
             (isAccentMac && 'insertCompositionText');
@@ -817,8 +828,6 @@ export class EventNormalizer {
                 inputTypeCommands.has(inputEvent.inputType) &&
                 this._initialCaretPosition);
 
-        const compositionData = this._getCompositionData(compositionEvent, inputEvent);
-
         // In case of accent inserted from a Mac, check the char before was one of the special
         // accent temporarily inserted in the DOM (e.g. '^', '`', ...).
         // todo: Check the following heuristic that check this case could be erroneous in some case.
@@ -829,6 +838,7 @@ export class EventNormalizer {
             compositionData &&
             compositionData.compositionFrom.length === 1 &&
             compositionData.compositionTo.length === 1;
+        // compositionData.compositionFrom !== compositionData.compositionTo;
         const macAccentOneChar =
             compositionData &&
             compositionData.compositionFrom === '' &&
@@ -836,7 +846,17 @@ export class EventNormalizer {
         const isCompositionKeyboard = macAccentOneChar || macAccent;
 
         // todo: to analyze carefully. It is odd to handle virtualkeyboards like that.
-        const virtualKeyboard = compositionEvent && key && key.length !== 1;
+        // key === ' ' is because Google keyboard, when writing a space, does not provide other
+        // way to understand if a space is typed
+        // const googleKeyboardSpace =
+        //     key && key === ' ' && this._events.filter(event => event.type === 'input').length === 1;
+        // const virtualKeyboard =
+        //     (compositionEvent && (key && key.length !== 1)) || googleKeyboardSpace;
+
+        const virtualKeyboard =
+            (compositionEvent && (key && key.length !== 1)) || googleKeyboardBackspace;
+        console.log('compositionData:', compositionData);
+        console.log('googleKeyboardBackspace:', googleKeyboardBackspace);
 
         // Compute the set of mutated elements accross all observed events.
         // todo: review this
@@ -902,6 +922,7 @@ export class EventNormalizer {
             const changeFromComposition =
                 keyboardNormalizedEvent.compositionFrom && keyboardNormalizedEvent.compositionTo;
 
+            console.log('changeFromComposition:', changeFromComposition);
             if (!changeFromComposition) {
                 const keyboardAction = this._getKeyboardAction(
                     key,
@@ -916,6 +937,7 @@ export class EventNormalizer {
             if (macAccent) {
                 keyboardNormalizedEvent.actions = compositionData.actions;
             }
+            debugger;
             // todo: refactor caretPosition is only used in "special event". Change this.
         } else if (caretPosition || compositionData) {
             pointerNormalizedEvent = {
@@ -994,6 +1016,7 @@ export class EventNormalizer {
         // Now, we do not need the mutation anymore as the events have been normalized.
         this._mutationNormalizer.stop();
 
+        console.log('this._events:', this._events);
         this._events = null;
 
         // Select all on safari does not provide all the informations the first stack so wait for
@@ -1009,10 +1032,13 @@ export class EventNormalizer {
         }
 
         if (keyboardNormalizedEvents) {
+            console.log('keyboardNormalizedEvents:', keyboardNormalizedEvents);
             this._triggerEventBatch({ events: keyboardNormalizedEvents, mutatedElements });
         } else if (normalizedEvents.length || mutatedElements.size) {
+            console.log('normalizedEvents:', normalizedEvents);
             this._triggerEventBatch({ events: normalizedEvents, mutatedElements });
         }
+        debugger;
         this._secondTickObservation = false;
         this._eventsMap = {};
         this._lastEventType = null;
@@ -1152,6 +1178,7 @@ export class EventNormalizer {
         | DeleteWordAction
         | DeleteHardLineAction
         | DeleteContentAction {
+            debugger
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
             // Keys ctrl+x (or another potential user mapping) can trigger an inputType 'deleteByCut'
@@ -1761,6 +1788,7 @@ export class EventNormalizer {
      * _onDrop
      */
     _locateEvent(ev: MouseEvent | TouchEvent): CaretPosition {
+        console.log('ev:', ev);
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);

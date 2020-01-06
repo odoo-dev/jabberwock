@@ -101,12 +101,16 @@ export class VNode {
      * @param domNode
      * @param offset
      */
-    locateRange(domNode: Node, offset: number): [VNode, RelativePosition] {
+    locateRange(
+        domNode: Node,
+        offset: number,
+        originalVNodeLastIndex?: number,
+    ): [VNode, RelativePosition] {
         // Position `BEFORE` is preferred over `AFTER`, unless the offset
         // overflows the children list, in which case `AFTER` is needed.
         let position = RelativePosition.BEFORE;
-        const domNodeLength = nodeLength(domNode);
-        if (domNodeLength && offset >= domNodeLength) {
+        // const domNodeLength = nodeLength(domNode);
+        if (typeof originalVNodeLastIndex === 'number' && originalVNodeLastIndex < offset) {
             position = RelativePosition.AFTER;
         }
         // When clicking on a trailing line break, we need to target after the

@@ -39,6 +39,7 @@ module.exports = {
     },
     devServer: {
         contentBase: './examples',
+        disableHostCheck: true,
     },
     // We might require this configuration in the future to
     // bundle the differents parts of the editor.

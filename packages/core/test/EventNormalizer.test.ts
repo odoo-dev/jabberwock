@@ -448,6 +448,109 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
+                // it('insert space (Google keyboard)', async () => {
+                //     root.innerHTML = '';
+                //     root.innerHTML = "<p id='a'>hello</p>";
+                //     const p = document.getElementById('a');
+                //     const text = p.childNodes[0];
+                //     await nextTick();
+                //     eventBatchs = [];
+                //     await triggerEvents([
+                //         [
+                //             {
+                //                 type: 'selection',
+                //                 focus: { id: 'a', index: 0, offset: 5 },
+                //                 anchor: { id: 'a', index: 0, offset: 5 },
+                //             },
+                //         ],
+                //         [
+                //             { type: 'compositionstart', data: '' },
+                //             { type: 'compositionupdate', data: 'hello' },
+                //         ],
+                //         [
+                //             { type: 'keydown', key: 'Unidentified', code: '' },
+                //             { type: 'beforeinput', data: ' ', inputType: 'insertText' },
+                //             { type: 'input', data: ' ', inputType: 'insertText' },
+                //             {
+                //                 type: 'mutation',
+                //                 textContent: 'hello ',
+                //                 targetParentId: 'a',
+                //                 targetOffset: 0,
+                //             },
+                //             {
+                //                 type: 'mutation',
+                //                 textContent: 'hello ',
+                //                 targetParentId: 'a',
+                //                 targetOffset: 0,
+                //             },
+                //             { type: 'keyup', key: 'Unidentified', code: '' },
+                //             {
+                //                 type: 'selection',
+                //                 focus: { id: 'a', index: 0, offset: 6 },
+                //                 anchor: { id: 'a', index: 0, offset: 6 },
+                //             },
+                //         ],
+                //     ]);
+                //     await nextTick();
+                //     const keyboardEvent: NormalizedKeyboardEvent = {
+                //         type: 'keyboard',
+                //         inputType: 'insertText',
+                //         key: ' ',
+                //         code: '',
+                //         altKey: false,
+                //         ctrlKey: false,
+                //         metaKey: false,
+                //         shiftKey: false,
+                //         defaultPrevented: false,
+                //         actions: [
+                //             {
+                //                 text: ' ',
+                //                 type: 'insertText',
+                //             },
+                //         ],
+                //     };
+                //     const batchEvents: EventBatch[] = [
+                //         {
+                //             events: [keyboardEvent],
+                //             mutatedElements: new Set([text]),
+                //         },
+                //     ];
+                //     expect(eventBatchs).to.deep.equal(batchEvents);
+                // });
+                it.skip('insert char at the end of line (Google keyboard)', async () => {
+                    root.innerHTML = '';
+                    root.innerHTML = "<p id='a'>hello</p>";
+                    const p = document.getElementById('a');
+                    const text = p.childNodes[0];
+                    await nextTick();
+                    eventBatchs = [];
+                    await triggerEvents([]);
+                    await nextTick();
+                    const keyboardEvent: NormalizedKeyboardEvent = {
+                        type: 'keyboard',
+                        inputType: 'insertText',
+                        key: ' ',
+                        code: '',
+                        altKey: false,
+                        ctrlKey: false,
+                        metaKey: false,
+                        shiftKey: false,
+                        defaultPrevented: false,
+                        actions: [
+                            {
+                                text: ' ',
+                                type: 'insertText',
+                            },
+                        ],
+                    };
+                    const batchEvents: EventBatch[] = [
+                        {
+                            events: [keyboardEvent],
+                            mutatedElements: new Set([text]),
+                        },
+                    ];
+                    expect(eventBatchs).to.deep.equal(batchEvents);
+                });
                 it('multi keypress (chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
@@ -1443,6 +1546,67 @@ describe('utils', () => {
                         ],
                     };
 
+                    const batchEvents: EventBatch[] = [
+                        {
+                            events: [keyboardEvent],
+                            mutatedElements: new Set([text]),
+                        },
+                    ];
+                    expect(eventBatchs).to.deep.equal(batchEvents);
+                });
+                it('delete = deleteContentForward (Google keyboard)', async () => {
+                    root.innerHTML = '';
+                    root.innerHTML = "<p id='a'>hello</p>";
+                    const p = document.getElementById('a');
+                    const text = p.childNodes[0];
+                    await nextTick();
+                    eventBatchs = [];
+                    await triggerEvents([
+                        [
+                            { type: 'compositionstart', data: '' },
+                            { type: 'compositionupdate', data: 'hello' },
+                        ],
+                        [
+                            { type: 'keydown', key: 'Unidentified', code: '' },
+                            {
+                                type: 'beforeinput',
+                                data: 'hell',
+                                inputType: 'insertCompositionText',
+                            },
+                            { type: 'compositionupdate', data: 'hell' },
+                            { type: 'input', data: 'hell', inputType: 'insertCompositionText' },
+                            {
+                                type: 'mutation',
+                                textContent: 'hell',
+                                targetParentId: 'a',
+                                targetOffset: 0,
+                            },
+                            { type: 'keyup', key: 'Unidentified', code: '' },
+                            {
+                                type: 'selection',
+                                focus: { id: 'a', index: 0, offset: 4 },
+                                anchor: { id: 'a', index: 0, offset: 4 },
+                            },
+                        ],
+                    ]);
+                    await nextTick();
+                    const keyboardEvent: NormalizedKeyboardEvent = {
+                        type: 'keyboard',
+                        inputType: 'deleteContentBackward',
+                        key: 'Backspace',
+                        code: '',
+                        altKey: false,
+                        ctrlKey: false,
+                        metaKey: false,
+                        shiftKey: false,
+                        defaultPrevented: false,
+                        actions: [
+                            {
+                                type: 'deleteContent',
+                                direction: Direction.BACKWARD,
+                            },
+                        ],
+                    };
                     const batchEvents: EventBatch[] = [
                         {
                             events: [keyboardEvent],
