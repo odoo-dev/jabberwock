@@ -59,8 +59,8 @@ export class MutationNormalizer {
     getCharactersMapping(): {
         insert: string;
         remove: string;
-        // the index is the beggening of the changed found
-        // the beggeningn can be found
+        // the index is the beginning of the changed found
+        // the beginning can be found
         // The mutation can found:
         // - we found the word inserted and the word removed tha has change and it's position (index)
         // - the word but not it's position (in rare case: one sentence with repetition (ha ha ha))

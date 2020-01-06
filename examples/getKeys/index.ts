@@ -18,6 +18,7 @@ let allEventStacks = [];
 const templates = {
     insertSpace: `<p id='a'>hello</p>`,
     multiline: `<p id='a'>abc<br/>def</p>`,
+    hellworld: `<p id='a'>hell<br/>world</p>`,
 };
 Object.keys(templates).forEach(key => {
     const keyElement = document.createElement('button');
@@ -81,6 +82,7 @@ function logComposition(compositionEvent: CompositionEvent): void {
     registerTestEvent(testCompositionEvent);
 }
 function logInput(inputEvent: InputEvent): void {
+    console.log('inputEvent:', inputEvent);
     const testInputEvent: TestInputEvent = {
         type: inputEvent.type as 'input' | 'beforeinput',
         data: inputEvent.data,

@@ -36,8 +36,9 @@ export interface TestCompositionEvent {
 }
 export interface TestInputEvent {
     type: 'beforeinput' | 'input';
-    data: string;
-    inputType: string;
+    // firefox does not provide data [or inputType, which is why theses key are optionnal
+    data?: string;
+    inputType?: string;
     defaultPrevented?: boolean;
 }
 export interface TestMutationEvent {
@@ -268,290 +269,468 @@ describe('utils', () => {
 
         describe('keyboard', () => {
             describe('insert', () => {
-                it('insert char (chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
+                describe('insert char', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let virtualKeyboardEvent: NormalizedKeyboardEvent;
+                    before(() => {
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertText',
+                            key: 'o',
+                            code: 'KeyO',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertText',
+                                    text: 'o',
+                                },
+                            ],
+                        };
+                        // virtual keyboards does not provide code
+                        virtualKeyboardEvent = { ...keyboardEvent, code: '' };
+                    });
+                    it('insert char (ubuntu chrome)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hell');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 4, text, 4);
 
-                    await nextTick();
-                    // ? why reset event batch each time here if we can do it in a beforeAll loop?
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'o',
-                        code: 'KeyO',
-                    });
-                    await nextTick();
-                    triggerEvent(root, 'keypress', {
-                        key: 'o',
-                        code: 'KeyO',
-                    });
-                    triggerEvent(root, 'beforeinput', {
-                        data: 'o',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    text.textContent = 'hello';
-                    triggerEvent(root, 'input', {
-                        data: 'o',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
+                        await nextTick();
+                        // ? why reset event batch each time here if we can do it in a beforeAll loop?
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', {
+                            key: 'o',
+                            code: 'KeyO',
+                        });
+                        await nextTick();
+                        triggerEvent(root, 'keypress', {
+                            key: 'o',
+                            code: 'KeyO',
+                        });
+                        triggerEvent(root, 'beforeinput', {
+                            data: 'o',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        text.textContent = 'hello';
+                        triggerEvent(root, 'input', {
+                            data: 'o',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: 'o',
-                        code: 'KeyO',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'insertText',
-                                text: 'o',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('insert space (chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 5, text, 5);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it.skip('insert char (ubuntu firefox)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
 
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: ' ',
-                        code: 'Space',
-                    });
-                    await nextTick();
-                    triggerEvent(root, 'keypress', {
-                        key: ' ',
-                        code: 'Space',
-                    });
-                    triggerEvent(root, 'beforeinput', {
-                        data: ' ',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    text.textContent = 'hello ';
-                    triggerEvent(root, 'input', {
-                        data: ' ',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    setRange(text, 6, text, 6);
-                    await nextTick();
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'o', code: 'KeyO' },
+                                { type: 'keypress', key: 'o', code: 'KeyO' },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'o', code: 'KeyO' }],
+                        ]);
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: ' ',
-                        code: 'Space',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                text: ' ',
-                                type: 'insertText',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    // todo: each time there we deep equal, if we set a type for the evaluated
-                    // variable, it is easier to rename
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('insert space (SwiftKey)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 5, text, 5);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it.skip('insert char (mac safari)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
 
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Unidentified',
-                        code: '',
-                    });
-                    await nextTick();
-                    triggerEvent(root, 'beforeinput', {
-                        data: ' ',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    text.textContent = 'hello ';
-                    triggerEvent(root, 'input', {
-                        data: ' ',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    setRange(text, 6, text, 6);
-                    await nextTick();
+                        await triggerEvents([]);
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: ' ',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                text: ' ',
-                                type: 'insertText',
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it.skip('insert char (mac chrome)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
 
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                // it('insert space (Google keyboard)', async () => {
-                //     root.innerHTML = '';
-                //     root.innerHTML = "<p id='a'>hello</p>";
-                //     const p = document.getElementById('a');
-                //     const text = p.childNodes[0];
-                //     await nextTick();
-                //     eventBatchs = [];
-                //     await triggerEvents([
-                //         [
-                //             {
-                //                 type: 'selection',
-                //                 focus: { id: 'a', index: 0, offset: 5 },
-                //                 anchor: { id: 'a', index: 0, offset: 5 },
-                //             },
-                //         ],
-                //         [
-                //             { type: 'compositionstart', data: '' },
-                //             { type: 'compositionupdate', data: 'hello' },
-                //         ],
-                //         [
-                //             { type: 'keydown', key: 'Unidentified', code: '' },
-                //             { type: 'beforeinput', data: ' ', inputType: 'insertText' },
-                //             { type: 'input', data: ' ', inputType: 'insertText' },
-                //             {
-                //                 type: 'mutation',
-                //                 textContent: 'hello ',
-                //                 targetParentId: 'a',
-                //                 targetOffset: 0,
-                //             },
-                //             {
-                //                 type: 'mutation',
-                //                 textContent: 'hello ',
-                //                 targetParentId: 'a',
-                //                 targetOffset: 0,
-                //             },
-                //             { type: 'keyup', key: 'Unidentified', code: '' },
-                //             {
-                //                 type: 'selection',
-                //                 focus: { id: 'a', index: 0, offset: 6 },
-                //                 anchor: { id: 'a', index: 0, offset: 6 },
-                //             },
-                //         ],
-                //     ]);
-                //     await nextTick();
-                //     const keyboardEvent: NormalizedKeyboardEvent = {
-                //         type: 'keyboard',
-                //         inputType: 'insertText',
-                //         key: ' ',
-                //         code: '',
-                //         altKey: false,
-                //         ctrlKey: false,
-                //         metaKey: false,
-                //         shiftKey: false,
-                //         defaultPrevented: false,
-                //         actions: [
-                //             {
-                //                 text: ' ',
-                //                 type: 'insertText',
-                //             },
-                //         ],
-                //     };
-                //     const batchEvents: EventBatch[] = [
-                //         {
-                //             events: [keyboardEvent],
-                //             mutatedElements: new Set([text]),
-                //         },
-                //     ];
-                //     expect(eventBatchs).to.deep.equal(batchEvents);
-                // });
-                it.skip('insert char at the end of line (Google keyboard)', async () => {
-                    root.innerHTML = '';
-                    root.innerHTML = "<p id='a'>hello</p>";
-                    const p = document.getElementById('a');
-                    const text = p.childNodes[0];
-                    await nextTick();
-                    eventBatchs = [];
-                    await triggerEvents([]);
-                    await nextTick();
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: ' ',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'o', code: 'KeyO' },
+                                { type: 'keypress', key: 'o', code: 'KeyO' },
+                                { type: 'beforeinput', data: 'o', inputType: 'insertText' },
+                                { type: 'input', data: 'o', inputType: 'insertText' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'o', code: 'KeyO' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                text: ' ',
-                                type: 'insertText',
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it.skip('insert char (mac firefox)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
+
+                        await triggerEvents([]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it.skip('insert char (google keyboard)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
+
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hellworld',
+                                    targetParentId: '',
+                                    targetOffset: 11,
+                                },
+                            ],
+                            [
+                                { type: 'compositionstart', data: '' },
+                                { type: 'compositionupdate', data: 'hell' },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Unidentified', code: '' },
+                                {
+                                    type: 'beforeinput',
+                                    data: 'hello',
+                                    inputType: 'insertCompositionText',
+                                },
+                                { type: 'compositionupdate', data: 'hello' },
+                                {
+                                    type: 'input',
+                                    data: 'hello',
+                                    inputType: 'insertCompositionText',
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                { type: 'keyup', key: 'Unidentified', code: '' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('insert char (swift key)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
+
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Unidentified', code: '' },
+                                { type: 'beforeinput', data: 'o', inputType: 'insertText' },
+                                { type: 'input', data: 'o', inputType: 'insertText' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                { type: 'keyup', key: 'Unidentified', code: '' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
-                it('multi keypress (chrome)', async () => {
+
+                describe('insert space', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let virtualKeyboardEvent: NormalizedKeyboardEvent;
+                    before(() => {
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertText',
+                            key: ' ',
+                            code: 'Space',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    text: ' ',
+                                    type: 'insertText',
+                                },
+                            ],
+                        };
+                        // virtual keyboards does not provide code
+                        virtualKeyboardEvent = { ...keyboardEvent, code: '' };
+                    });
+                    it('insert space (chrome)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hello');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 5, text, 5);
+
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', {
+                            key: ' ',
+                            code: 'Space',
+                        });
+                        await nextTick();
+                        triggerEvent(root, 'keypress', {
+                            key: ' ',
+                            code: 'Space',
+                        });
+                        triggerEvent(root, 'beforeinput', {
+                            data: ' ',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        text.textContent = 'hello ';
+                        triggerEvent(root, 'input', {
+                            data: ' ',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        setRange(text, 6, text, 6);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        // todo: each time there we deep equal, if we set a type for the evaluated
+                        // variable, it is easier to rename
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('insert space (SwiftKey)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hello');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 5, text, 5);
+
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', {
+                            key: 'Unidentified',
+                            code: '',
+                        });
+                        await nextTick();
+                        triggerEvent(root, 'beforeinput', {
+                            data: ' ',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        text.textContent = 'hello ';
+                        triggerEvent(root, 'input', {
+                            data: ' ',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        setRange(text, 6, text, 6);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('insert space (Google keyboard)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>abc<br/>def</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 3 },
+                                    anchor: { id: 'a', index: 0, offset: 3 },
+                                },
+                            ],
+                            [
+                                { type: 'compositionstart', data: '' },
+                                { type: 'compositionupdate', data: 'abc' },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Unidentified', code: '' },
+                                { type: 'beforeinput', data: ' ', inputType: 'insertText' },
+                                { type: 'input', data: ' ', inputType: 'insertText' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'abc ',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'abc ',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                { type: 'keyup', key: 'Unidentified', code: '' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                it('should insert multiples key in same stack (chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
                     root.innerHTML = '';
@@ -653,65 +832,7 @@ describe('utils', () => {
 
                     await nextTick();
                     eventBatchs = [];
-                    await triggerEvents([
-                        [
-                            {
-                                type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 4 },
-                                anchor: { id: 'a', index: 0, offset: 4 },
-                            },
-                        ],
-                        [
-                            { type: 'keydown', key: 's', code: 'KeyS' },
-                            { type: 'keypress', key: 's', code: 'KeyS' },
-                            { type: 'beforeinput', data: 's', inputType: 'insertText' },
-                            { type: 'input', data: 's', inputType: 'insertText' },
-                            {
-                                type: 'mutation',
-                                textContent: 'hells',
-                                targetParentId: 'a',
-                                targetOffset: 0,
-                            },
-                            {
-                                type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 5 },
-                                anchor: { id: 'a', index: 0, offset: 5 },
-                            },
-                            { type: 'keydown', key: 'd', code: 'KeyD' },
-                            { type: 'keypress', key: 'd', code: 'KeyD' },
-                            { type: 'beforeinput', data: 'd', inputType: 'insertText' },
-                            { type: 'input', data: 'd', inputType: 'insertText' },
-                            {
-                                type: 'mutation',
-                                textContent: 'hellsd',
-                                targetParentId: 'a',
-                                targetOffset: 0,
-                            },
-                            {
-                                type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 6 },
-                                anchor: { id: 'a', index: 0, offset: 6 },
-                            },
-                            { type: 'keydown', key: 'f', code: 'KeyF' },
-                            { type: 'keypress', key: 'f', code: 'KeyF' },
-                            { type: 'beforeinput', data: 'f', inputType: 'insertText' },
-                            { type: 'input', data: 'f', inputType: 'insertText' },
-                            {
-                                type: 'mutation',
-                                textContent: 'hellsdf',
-                                targetParentId: 'a',
-                                targetOffset: 0,
-                            },
-                            {
-                                type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 7 },
-                                anchor: { id: 'a', index: 0, offset: 7 },
-                            },
-                        ],
-                        [{ type: 'keyup', key: 'f', code: 'KeyF' }],
-                        [{ type: 'keyup', key: 's', code: 'KeyS' }],
-                        [{ type: 'keyup', key: 'd', code: 'KeyD' }],
-                    ]);
+                    await triggerEvents([[{ type: 'keydown', key: 'd', code: 'KeyD' }]]);
                     await nextTick();
 
                     const keyboardEvents: NormalizedKeyboardEvent[] = [];
@@ -1378,245 +1499,257 @@ describe('utils', () => {
             });
 
             describe('delete', () => {
-                it('backspace = deleteContentBackward (chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 5, text, 5);
+                describe('should deleteContentBackward', () => {
+                    it('should deleteContentBackward with backspace (ubuntu chrome)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hello');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 5, text, 5);
 
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
-                    triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
-                    triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
-                    text.textContent = 'hell';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
-                    setRange(text, 4, text, 4);
-                    await nextTick();
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                        triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
+                        text.textContent = 'hell';
+                        triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                        setRange(text, 4, text, 4);
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteContentBackward',
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteContentBackward',
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteContent',
+                                    direction: Direction.BACKWARD,
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'deleteContent',
-                                direction: Direction.BACKWARD,
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should deleteContentBackward with backspace (SwiftKey)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hello');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 5, text, 5);
 
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(root, 'keypress', { key: 'Unidentified', code: '' });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
+                        text.textContent = 'hell';
+                        triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                        setRange(text, 4, text, 4);
+                        await nextTick();
+
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteContentBackward',
+                            key: 'Backspace',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteContent',
+                                    direction: Direction.BACKWARD,
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should deleteContentBackward with backspace (Google keyboard)', async () => {
+                        root.innerHTML = '';
+                        root.innerHTML = "<p id='a'>hello</p>";
+                        const p = document.getElementById('a');
+                        const text = p.childNodes[0];
+                        await nextTick();
+                        eventBatchs = [];
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [
+                                { type: 'compositionstart', data: '' },
+                                { type: 'compositionupdate', data: 'hello' },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Unidentified', code: '' },
+                                {
+                                    type: 'beforeinput',
+                                    data: 'hell',
+                                    inputType: 'insertCompositionText',
+                                },
+                                { type: 'compositionupdate', data: 'hell' },
+                                { type: 'input', data: 'hell', inputType: 'insertCompositionText' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hell',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                { type: 'keyup', key: 'Unidentified', code: '' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                        ]);
+                        await nextTick();
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteContentBackward',
+                            key: 'Backspace',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteContent',
+                                    direction: Direction.BACKWARD,
+                                },
+                            ],
+                        };
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
-                it('delete = deleteContentForward (chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
 
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Delete', code: 'Delete' });
-                    triggerEvent(root, 'keypress', { key: 'Delete', code: 'Delete' });
-                    triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
-                    text.textContent = 'hell';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
-                    setRange(text, 4, text, 4);
-                    await nextTick();
+                describe('should deleteContentBackward', () => {
+                    it('should deleteContentForward with deleteContentForward (ubuntu chrome)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hello');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 4, text, 4);
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteContentForward',
-                        key: 'Delete',
-                        code: 'Delete',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Delete', code: 'Delete' });
+                        triggerEvent(root, 'keypress', { key: 'Delete', code: 'Delete' });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
+                        text.textContent = 'hell';
+                        triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
+                        setRange(text, 4, text, 4);
+                        await nextTick();
+
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteContentForward',
+                            key: 'Delete',
+                            code: 'Delete',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteContent',
+                                    direction: Direction.FORWARD,
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'deleteContent',
-                                direction: Direction.FORWARD,
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should deleteContentForward with deleteContentForward (SwiftKey)', async () => {
+                        const p = document.createElement('p');
+                        const text = document.createTextNode('hello');
+                        root.innerHTML = '';
+                        root.appendChild(p);
+                        p.appendChild(text);
+                        setRange(text, 5, text, 5);
 
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('backspace = deleteContentBackward (SwiftKey)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 5, text, 5);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(root, 'keypress', { key: 'Unidentified', code: '' });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
+                        text.textContent = 'hell';
+                        triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
+                        setRange(text, 4, text, 4);
+                        await nextTick();
 
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'keypress', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
-                    text.textContent = 'hell';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
-                    setRange(text, 4, text, 4);
-                    await nextTick();
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteContentForward',
+                            key: 'Delete',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteContent',
+                                    direction: Direction.FORWARD,
+                                },
+                            ],
+                        };
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteContentBackward',
-                        key: 'Backspace',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'deleteContent',
-                                direction: Direction.BACKWARD,
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('delete = deleteContentForward (SwiftKey)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 5, text, 5);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'keypress', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
-                    text.textContent = 'hell';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
-                    setRange(text, 4, text, 4);
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteContentForward',
-                        key: 'Delete',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteContent',
-                                direction: Direction.FORWARD,
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('delete = deleteContentForward (Google keyboard)', async () => {
-                    root.innerHTML = '';
-                    root.innerHTML = "<p id='a'>hello</p>";
-                    const p = document.getElementById('a');
-                    const text = p.childNodes[0];
-                    await nextTick();
-                    eventBatchs = [];
-                    await triggerEvents([
-                        [
-                            { type: 'compositionstart', data: '' },
-                            { type: 'compositionupdate', data: 'hello' },
-                        ],
-                        [
-                            { type: 'keydown', key: 'Unidentified', code: '' },
-                            {
-                                type: 'beforeinput',
-                                data: 'hell',
-                                inputType: 'insertCompositionText',
-                            },
-                            { type: 'compositionupdate', data: 'hell' },
-                            { type: 'input', data: 'hell', inputType: 'insertCompositionText' },
-                            {
-                                type: 'mutation',
-                                textContent: 'hell',
-                                targetParentId: 'a',
-                                targetOffset: 0,
-                            },
-                            { type: 'keyup', key: 'Unidentified', code: '' },
-                            {
-                                type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 4 },
-                                anchor: { id: 'a', index: 0, offset: 4 },
-                            },
-                        ],
-                    ]);
-                    await nextTick();
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteContentBackward',
-                        key: 'Backspace',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteContent',
-                                direction: Direction.BACKWARD,
-                            },
-                        ],
-                    };
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 // ? what if in mac?
-                it('backspace ending word (chrome)', async () => {
+                it('backspace ending word (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello toto');
                     root.innerHTML = '';
@@ -3421,8 +3554,8 @@ describe('utils', () => {
             });
 
             describe('completion/correction', () => {
-                // todo: place it properly
-                it('correction (SwiftKey)', async () => {
+                // todo: correct what?
+                it('should correct a word (SwiftKey)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a hillo b');
                     root.innerHTML = '';
@@ -3484,7 +3617,7 @@ describe('utils', () => {
                 });
 
                 // todo: displace in pointer section?
-                it('should auto-correction a word (safari)', async () => {
+                it('should auto-correct a word (safari)', async () => {
                     // same test in mutation normalizer for the change
                     // we test that the correction trigger only a input
                     // and don't trigger composition event
@@ -3546,7 +3679,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
 
-                it('correction with bold (SwiftKey)', async () => {
+                it('should correct with bold (SwiftKey)', async () => {
                     root.innerHTML = '<div>.<b>chr</b>is .</div>';
                     const div = root.childNodes[0];
                     const b = div.childNodes[1];
@@ -3631,7 +3764,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
 
-                it('completion with repeat (SwiftKey)', async () => {
+                it('should complete with repeat (SwiftKey)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('Ha ha ha ha ha');
                     root.innerHTML = '';
@@ -3697,7 +3830,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
 
-                it('correction (googleKeyboard)', async () => {
+                it('should correct (googleKeyboard)', async () => {
                     root.innerHTML = '<div>abc def</div>';
                     const p = root.firstChild;
                     const text = p.firstChild as Text;
@@ -3761,7 +3894,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
 
-                it('correction by same value (googleKeyboard)', async () => {
+                it('should correct by same value (googleKeyboard)', async () => {
                     root.innerHTML = '<div>abc def</div>';
                     const p = root.firstChild;
                     const text = p.firstChild as Text;
@@ -3895,7 +4028,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
 
-                it('correction (ubuntu chrome)', async () => {
+                it('should correct (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a brillig b');
                     root.innerHTML = '';
@@ -3963,7 +4096,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('correction in i tag (ubuntu chrome)', async () => {
+                it('should correct in i tag (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const i = document.createElement('i');
                     const text = document.createTextNode('a brillig b');
@@ -4044,7 +4177,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('correction at end (ubuntu chrome)', async () => {
+                it('should correct at end (ubuntu chrome)', async () => {
                     root.innerHTML = '<p><i>slithy toves</i></p>';
                     const p = root.firstChild;
                     const i = p.firstChild;
@@ -4099,7 +4232,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('correction at middle (ubuntu chrome)', async () => {
+                it('should correct at middle (ubuntu chrome)', async () => {
                     root.innerHTML = '<p><i>’Twas brillig, and the slithy toves</i><br/></p>';
                     const p = root.firstChild;
                     const i = p.firstChild;
@@ -4164,7 +4297,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('correction at end of i tag (ubuntu chrome)', async () => {
+                it('should correct at end of i tag (ubuntu chrome)', async () => {
                     root.innerHTML = '<p><i>slithy toves</i></p>';
                     const p = root.firstChild;
                     const i = p.firstChild;
@@ -4241,7 +4374,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('correction (Edge)', async () => {
+                it('should correct (Edge)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a brillig b');
                     root.innerHTML = '';

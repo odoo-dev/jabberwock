@@ -765,7 +765,7 @@ export class EventNormalizer {
         const compositionData = this._getCompositionData(compositionEvent, inputEvent);
 
         const googleKeyboardBackspace =
-            false &&
+            // false &&
             compositionData &&
             compositionData.compositionFrom.slice(0, -1) === compositionData.compositionTo &&
             keydownEvent &&
@@ -812,7 +812,7 @@ export class EventNormalizer {
             (googleKeyboardBackspace && 'deleteContentBackward') ||
             (inputEvent && inputEvent.inputType) ||
             // todo: check if we really need to set the inputType when making a "special accent" in mac
-            (isAccentMac && 'insertCompositionText');
+            (isAccentMac && 'insertCompositionText';
         const defaultPrevented =
             (cutEvent && false) ||
             (dropEvent && true) ||
@@ -972,7 +972,7 @@ export class EventNormalizer {
                     type: 'deleteContent',
                     direction: Direction.FORWARD,
                 };
-                pointerOrKeyboardEvent.actions.push(deleteContentAction);
+                pointerOrKeyboardEvent.actions = [deleteContentAction];
             } else if (dropEvent) {
                 pointerOrKeyboardEvent.actions.push(...this._getDropActions(dropEvent));
             } else if (pasteEvent) {
@@ -1178,7 +1178,7 @@ export class EventNormalizer {
         | DeleteWordAction
         | DeleteHardLineAction
         | DeleteContentAction {
-            debugger
+        debugger;
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
             // Keys ctrl+x (or another potential user mapping) can trigger an inputType 'deleteByCut'
@@ -1526,10 +1526,7 @@ export class EventNormalizer {
         const characterMapping = this._mutationNormalizer.getCharactersMapping();
         // todo: change insert with insertText and remove with removeText
         // todo: check if we can remove this condition or get rid of `isMultiKey`
-        if (
-            !isMultiKey &&
-            (characterMapping.insert === characterMapping.remove || characterMapping.remove === '')
-        ) {
+        if (!isMultiKey && characterMapping.insert === characterMapping.remove) {
             return;
         }
         if (inputType === 'deleteWordForward' || inputType === 'deleteWordBackward') {
