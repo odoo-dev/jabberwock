@@ -1,4 +1,5 @@
 import { VElement } from './VElement';
+import { VNode } from './VNode';
 
 export enum ListType {
     ORDERED = 'ordered',
@@ -19,6 +20,26 @@ export class ListNode extends VElement {
         const listType = tagToType.get(node.nodeName);
         if (listType) {
             return [new ListNode(listType)];
+        }
+    }
+
+    /**
+     * Merge this node with the given VNode.
+     * List nodes only merge their first item into the given container.
+     *
+     * @param newContainer The new container for this node's first item
+     */
+    mergeWith(newContainer: VNode): void {
+        if (this.hasChildren()) {
+            const firstItem = this.firstChild();
+            firstItem.children.slice().forEach(child => {
+                newContainer.append(child);
+            });
+            firstItem.remove();
+        }
+        // Remove the list if it is now empty after removal of its first item.
+        if (!this.hasChildren()) {
+            this.remove();
         }
     }
 }
