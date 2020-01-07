@@ -779,14 +779,14 @@ export class EventNormalizer {
                 keypressEvent.key !== 'Unidentified' &&
                 keypressEvent.key !== 'Dead' &&
                 keypressEvent.key) ||
-            (keydownEvent &&
-                keydownEvent.key !== 'Unidentified' &&
-                keydownEvent.key !== 'Dead' &&
-                keydownEvent.key) ||
             (inputEvent &&
                 inputEvent.data !== null &&
                 inputEvent.data.length === 1 &&
                 inputEvent.data) ||
+            (keydownEvent &&
+                keydownEvent.key !== 'Unidentified' &&
+                keydownEvent.key !== 'Dead' &&
+                keydownEvent.key) ||
             (googleKeyboardBackspace && 'Backspace') ||
             (keydownEvent &&
                 keydownEvent.key === 'Unidentified' &&

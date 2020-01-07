@@ -1,4 +1,5 @@
 import { TestMutationEvent } from '../../packages/core/test/EventNormalizer.test';
+import { testContentNormalizer } from '../../packages/core/test/testContentNormalizer';
 import {
     TestKeyboardEvent,
     TestInputEvent,
@@ -15,17 +16,12 @@ const templatesElement = document.querySelector('.templates');
 let currentEventStack = null;
 let allEventStacks = [];
 
-const templates = {
-    insertSpace: `<p id='a'>hello</p>`,
-    multiline: `<p id='a'>abc<br/>def</p>`,
-    hellworld: `<p id='a'>hell<br/>world</p>`,
-};
-Object.keys(templates).forEach(key => {
+Object.keys(testContentNormalizer).forEach(key => {
     const keyElement = document.createElement('button');
     keyElement.style.cursor = 'pointer';
     keyElement.textContent = key;
     keyElement.addEventListener('click', () => {
-        editable.innerHTML = templates[key];
+        editable.innerHTML = testContentNormalizer[key];
     });
     templatesElement.appendChild(keyElement);
 });

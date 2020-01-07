@@ -1,6 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { Direction } from '../src/VRange';
+import { testContentNormalizer } from './testContentNormalizer';
 import {
     EventNormalizer,
     EventBatch,
@@ -464,7 +465,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('insert char (google keyboard)', async () => {
+                    it.skip('insert char (GBoard)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -676,7 +677,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert space (Google keyboard)', async () => {
+                    it('insert space (GBoard)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>abc<br/>def</p>";
                         const p = document.getElementById('a');
@@ -730,6 +731,380 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                 });
+
+                describe('insert with accent', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let virtualKeyboardEvent: NormalizedKeyboardEvent;
+                    let macAccentKeyboardEvent: NormalizedKeyboardEvent;
+                    let macKeystrokeKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.hell;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
+
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertText',
+                            key: 'ô',
+                            code: 'KeyO',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertText',
+                                    text: 'ô',
+                                },
+                            ],
+                        };
+                        virtualKeyboardEvent = { ...keyboardEvent, code: '' };
+                        macAccentKeyboardEvent = {
+                            type: 'keyboard',
+                            // ? verify if it's the real inputType that whe want
+                            inputType: 'insertCompositionText',
+                            // ? should we insert compositionFrom and compositionTo?
+                            key: '^',
+                            // ? verify if it's the proper code ('')
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            // ? is it usefull to put the same key as compositionTo?
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    text: '^',
+                                    type: 'insertText',
+                                },
+                            ],
+                        };
+                        macKeystrokeKeyboardEvent = {
+                            type: 'keyboard',
+                            // todo: check 'ô'. For the same behavior in chrome it's 'o'.
+                            key: 'ô',
+                            code: 'KeyO',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            inputType: 'insertCompositionText',
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'setRange',
+                                    domRange: {
+                                        startContainer: text,
+                                        startOffset: 4,
+                                        endContainer: text,
+                                        endOffset: 5,
+                                        direction: Direction.BACKWARD,
+                                    },
+                                },
+                                {
+                                    text: 'ô',
+                                    type: 'insertText',
+                                },
+                            ],
+                        };
+                    });
+                    it('should insert char with accent (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
+                        await nextTick();
+                        await nextTick();
+                        triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
+                        await nextTick();
+                        triggerEvent(root, 'keypress', { key: 'ô', code: 'KeyO' });
+                        triggerEvent(root, 'beforeinput', {
+                            data: 'ô',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        triggerEvent(root, 'input', {
+                            data: 'ô',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        text.textContent = 'hellô';
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert char with accent (ubuntu firefox)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            // no keypress
+                            key: 'Dead',
+                            code: 'BracketLeft',
+                        });
+                        await nextTick();
+                        await nextTick();
+                        triggerEvent(root, 'keydown', {
+                            key: 'ô',
+                            code: 'KeyO',
+                        });
+                        await nextTick();
+                        triggerEvent(root, 'keypress', {
+                            key: 'ô',
+                            code: 'KeyO',
+                        });
+                        triggerEvent(root, 'beforeinput', {
+                            data: 'ô',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        text.textContent = 'hellô';
+                        triggerEvent(root, 'input', {
+                            data: 'ô',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert char with accent (mac safari)', async () => {
+                        triggerEvent(root, 'compositionstart', {});
+                        triggerEvent(root, 'compositionupdate', { data: '^' });
+                        triggerEvent(root, 'beforeInput', {
+                            data: '^',
+                            inputType: 'insertCompositionText',
+                        });
+                        text.textContent = 'hell^';
+                        triggerEvent(root, 'input', {
+                            data: '^',
+                            inputType: 'insertCompositionText',
+                        });
+                        triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+                        await nextTick();
+                        triggerEvent(root, 'beforeInput', {
+                            data: 'null',
+                            inputType: 'deleteContentBackwards',
+                        });
+                        triggerEvent(root, 'input', {
+                            data: 'null',
+                            inputType: 'deleteContentBackwards',
+                        });
+                        triggerEvent(root, 'beforeInput', {
+                            data: 'ô',
+                            inputType: 'insertFromComposition',
+                        });
+                        text.textContent = 'hellô';
+                        triggerEvent(root, 'input', {
+                            data: 'ô',
+                            inputType: 'insertFromComposition',
+                        });
+                        triggerEvent(root, 'compositionend', { data: 'ô' });
+                        triggerEvent(root, 'keydown', { key: 'ô', code: 'KeyO' });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+                        triggerEvent(root, 'keyup', { key: 'o', code: 'KeyO' });
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macAccentKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                            {
+                                events: [macKeystrokeKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert char with accent (mac chrome)', async () => {
+                        triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
+                        triggerEvent(root, 'compositionstart', {});
+                        triggerEvent(root, 'compositionupdate', { data: '^' });
+                        triggerEvent(root, 'beforeInput', {
+                            data: '^',
+                            inputType: 'insertCompositionText',
+                        });
+                        text.textContent = 'hell^';
+                        triggerEvent(root, 'input', {
+                            data: '^',
+                            inputType: 'insertCompositionText',
+                        });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+                        await nextTick();
+
+                        triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(root, 'beforeinput', {
+                            data: 'ô',
+                            inputType: 'insertCompositionText',
+                        });
+                        triggerEvent(root, 'compositionupdate', { data: 'ô' });
+                        text.textContent = 'hellô';
+                        triggerEvent(root, 'input', {
+                            data: 'ô',
+                            inputType: 'insertCompositionText',
+                        });
+                        triggerEvent(root, 'compositionend', { data: 'ô' });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macAccentKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                            {
+                                events: [macKeystrokeKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert char with accent (mac firefox)', async () => {
+                        triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
+                        triggerEvent(root, 'compositionstart', {});
+                        triggerEvent(root, 'compositionupdate', { data: '^' });
+                        text.textContent = 'hell^';
+                        triggerEvent(root, 'input', {
+                            data: '^',
+                            inputType: 'insertCompositionText',
+                        });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+                        await nextTick();
+
+                        triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(root, 'compositionupdate', { data: 'ô' });
+                        triggerEvent(root, 'compositionend', { data: 'ô' });
+                        text.textContent = 'hellô';
+                        triggerEvent(root, 'input', {
+                            data: 'ô',
+                            inputType: 'insertCompositionText',
+                        });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macAccentKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                            {
+                                events: [macKeystrokeKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert char with accent (SwiftKey)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Unidentified',
+                        });
+                        triggerEvent(root, 'beforeinput', {
+                            data: 'ô',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        text.textContent = 'hellô';
+                        triggerEvent(root, 'input', {
+                            data: 'ô',
+                            inputType: 'insertText',
+                            cancelable: false,
+                            composed: true,
+                        });
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertText',
+                            key: 'ô',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertText',
+                                    text: 'ô',
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert char with accent (GBoard)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    'type': 'selection',
+                                    'focus': { 'id': 'a', 'index': 0, 'offset': 4 },
+                                    'anchor': { 'id': 'a', 'index': 0, 'offset': 4 },
+                                },
+                            ],
+                            [
+                                { 'type': 'keydown', 'key': 'Unidentified', 'code': '' },
+                                { 'type': 'beforeinput', 'data': 'ô', 'inputType': 'insertText' },
+                                { 'type': 'input', 'data': 'ô', 'inputType': 'insertText' },
+                                {
+                                    'type': 'mutation',
+                                    'textContent': 'hellô',
+                                    'targetParentId': 'a',
+                                    'targetOffset': 0,
+                                },
+                                { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
+                                {
+                                    'type': 'selection',
+                                    'focus': { 'id': 'a', 'index': 0, 'offset': 5 },
+                                    'anchor': { 'id': 'a', 'index': 0, 'offset': 5 },
+                                },
+                            ],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [virtualKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+
                 it('should insert multiples key in same stack (chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
@@ -847,478 +1222,6 @@ describe('utils', () => {
             });
 
             describe('completion/correction', () => {
-                it('accent (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
-                    await nextTick();
-                    await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
-                    await nextTick();
-                    triggerEvent(root, 'keypress', { key: 'ô', code: 'KeyO' });
-                    triggerEvent(root, 'beforeinput', {
-                        data: 'ô',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    triggerEvent(root, 'input', {
-                        data: 'ô',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    text.textContent = 'hellô';
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: 'ô',
-                        code: 'KeyO',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'insertText',
-                                text: 'ô',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('accent (ubuntu firefox)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        // no keypress
-                        key: 'Dead',
-                        code: 'BracketLeft',
-                    });
-                    await nextTick();
-                    await nextTick();
-                    triggerEvent(root, 'keydown', {
-                        key: 'ô',
-                        code: 'KeyO',
-                    });
-                    await nextTick();
-                    triggerEvent(root, 'keypress', {
-                        key: 'ô',
-                        code: 'KeyO',
-                    });
-                    triggerEvent(root, 'beforeinput', {
-                        data: 'ô',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    text.textContent = 'hellô';
-                    triggerEvent(root, 'input', {
-                        data: 'ô',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: 'ô',
-                        code: 'KeyO',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'insertText',
-                                text: 'ô',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('accent (mac safari)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: '^' });
-                    triggerEvent(root, 'beforeInput', {
-                        data: '^',
-                        inputType: 'insertCompositionText',
-                    });
-                    text.textContent = 'hell^';
-                    triggerEvent(root, 'input', { data: '^', inputType: 'insertCompositionText' });
-                    triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-                    await nextTick();
-                    triggerEvent(root, 'beforeInput', {
-                        data: 'null',
-                        inputType: 'deleteContentBackwards',
-                    });
-                    triggerEvent(root, 'input', {
-                        data: 'null',
-                        inputType: 'deleteContentBackwards',
-                    });
-                    triggerEvent(root, 'beforeInput', {
-                        data: 'ô',
-                        inputType: 'insertFromComposition',
-                    });
-                    text.textContent = 'hellô';
-                    triggerEvent(root, 'input', { data: 'ô', inputType: 'insertFromComposition' });
-                    triggerEvent(root, 'compositionend', { data: 'ô' });
-                    triggerEvent(root, 'keydown', { key: 'ô', code: 'KeyO' });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-                    triggerEvent(root, 'keyup', { key: 'o', code: 'KeyO' });
-                    await nextTick();
-                    // ? theses events actions seems to be false.
-                    //   If we only look at the actions, it will insert twice a character rather
-                    //   than removing the "^"
-                    // ? also, this seems to be an incorrect event. We know that the device is a
-                    //   keyboard.
-                    const keyboardEvent1: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        // ? verify if it's the real inputType that whe want
-                        inputType: 'insertCompositionText',
-                        // ? should we insert compositionFrom and compositionTo?
-                        key: '^',
-                        // ? verify if it's the proper code ('')
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        // ? is it usefull to put the same key as compositionTo?
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                text: '^',
-                                type: 'insertText',
-                            },
-                        ],
-                    };
-                    const keyboardEvent2: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        // todo: check 'ô'. For the same behavior in chrome it's 'o'.
-                        key: 'ô',
-                        code: 'KeyO',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        inputType: 'insertCompositionText',
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'setRange',
-                                domRange: {
-                                    startContainer: text,
-                                    startOffset: 4,
-                                    endContainer: text,
-                                    endOffset: 5,
-                                    direction: Direction.BACKWARD,
-                                },
-                            },
-                            {
-                                text: 'ô',
-                                type: 'insertText',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent1],
-                            mutatedElements: new Set([text]),
-                        },
-                        {
-                            events: [keyboardEvent2],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('accent (mac chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: '^' });
-                    triggerEvent(root, 'beforeInput', {
-                        data: '^',
-                        inputType: 'insertCompositionText',
-                    });
-                    text.textContent = 'hell^';
-                    triggerEvent(root, 'input', { data: '^', inputType: 'insertCompositionText' });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-                    await nextTick();
-
-                    triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
-                    triggerEvent(root, 'beforeinput', {
-                        data: 'ô',
-                        inputType: 'insertCompositionText',
-                    });
-                    triggerEvent(root, 'compositionupdate', { data: 'ô' });
-                    text.textContent = 'hellô';
-                    triggerEvent(root, 'input', { data: 'ô', inputType: 'insertCompositionText' });
-                    triggerEvent(root, 'compositionend', { data: 'ô' });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-
-                    const keyboardEvent1: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        key: '^',
-                        // todo: check value
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        // todo: check value
-                        inputType: 'insertCompositionText',
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                text: '^',
-                                type: 'insertText',
-                            },
-                        ],
-                    };
-                    const keyboardEvent2: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        key: 'o',
-                        code: 'KeyO',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        // todo: check value
-                        inputType: 'insertCompositionText',
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'setRange',
-                                domRange: {
-                                    startContainer: text,
-                                    startOffset: 4,
-                                    endContainer: text,
-                                    endOffset: 5,
-                                    direction: Direction.BACKWARD,
-                                },
-                            },
-                            {
-                                text: 'ô',
-                                type: 'insertText',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent1],
-                            mutatedElements: new Set([text]),
-                        },
-                        {
-                            events: [keyboardEvent2],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('accent (mac firefox)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: '^' });
-                    text.textContent = 'hell^';
-                    triggerEvent(root, 'input', { data: '^', inputType: 'insertCompositionText' });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-                    await nextTick();
-
-                    triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
-                    triggerEvent(root, 'compositionupdate', { data: 'ô' });
-                    triggerEvent(root, 'compositionend', { data: 'ô' });
-                    text.textContent = 'hellô';
-                    triggerEvent(root, 'input', { data: 'ô', inputType: 'insertCompositionText' });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-
-                    const keyboardEvent1: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        key: '^',
-                        // todo: check value
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        // todo: check value
-                        inputType: 'insertCompositionText',
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                text: '^',
-                                type: 'insertText',
-                            },
-                        ],
-                    };
-                    const keyboardEvent2: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        key: 'o',
-                        // todo: check value
-                        code: 'KeyO',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        // todo: check value
-                        inputType: 'insertCompositionText',
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'setRange',
-                                domRange: {
-                                    startContainer: text,
-                                    startOffset: 4,
-                                    endContainer: text,
-                                    endOffset: 5,
-                                    direction: Direction.BACKWARD,
-                                },
-                            },
-                            {
-                                text: 'ô',
-                                type: 'insertText',
-                            },
-                        ],
-                    };
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent1],
-                            mutatedElements: new Set([text]),
-                        },
-                        {
-                            events: [keyboardEvent2],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('accent (SwiftKey)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 4, text, 4);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Unidentified',
-                    });
-                    triggerEvent(root, 'beforeinput', {
-                        data: 'ô',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    text.textContent = 'hellô';
-                    triggerEvent(root, 'input', {
-                        data: 'ô',
-                        inputType: 'insertText',
-                        cancelable: false,
-                        composed: true,
-                    });
-                    setRange(text, 5, text, 5);
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertText',
-                        key: 'ô',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'insertText',
-                                text: 'ô',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
                 it('add space (SwiftKey)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a hello');
@@ -1588,7 +1491,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should deleteContentBackward with backspace (Google keyboard)', async () => {
+                    it('should deleteContentBackward with backspace (GBoard)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hello</p>";
                         const p = document.getElementById('a');
