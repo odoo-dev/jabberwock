@@ -812,7 +812,7 @@ export class EventNormalizer {
             (googleKeyboardBackspace && 'deleteContentBackward') ||
             (inputEvent && inputEvent.inputType) ||
             // todo: check if we really need to set the inputType when making a "special accent" in mac
-            (isAccentMac && 'insertCompositionText';
+            (isAccentMac && 'insertCompositionText');
         const defaultPrevented =
             (cutEvent && false) ||
             (dropEvent && true) ||
