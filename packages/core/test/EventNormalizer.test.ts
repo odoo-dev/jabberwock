@@ -47,6 +47,7 @@ export interface TestMutationEvent {
     textContent: string;
     targetParentId: string;
     targetOffset: number;
+    removedNodes?: { id: string }[];
 }
 export interface TestSelectionEvent {
     type: 'selection';
@@ -192,7 +193,14 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
                 const mutationEvent: TestMutationEvent = testEvent;
                 const mutatedElementParent = document.getElementById(mutationEvent.targetParentId);
                 const mutatedElement = mutatedElementParent.childNodes[mutationEvent.targetOffset];
-                mutatedElement.textContent = mutationEvent.textContent;
+                if (testEvent.removedNodes) {
+                    testEvent.removedNodes.forEach(removedNode => {
+                        const removedNodeElement = document.getElementById(removedNode.id);
+                        removedNodeElement.parentNode.removeChild(removedNodeElement);
+                    });
+                } else {
+                    mutatedElement.textContent = mutationEvent.textContent;
+                }
             } else if (testEvent.type === 'selection') {
                 const selectionEvent: TestSelectionEvent = testEvent;
                 const focusElement = document.getElementById(selectionEvent.focus.id);
@@ -220,7 +228,7 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
 // maybe we simply add after each title (*special case*)?
 
 describe('utils', () => {
-    describe('EventNormalizer', () => {
+    describe.only('EventNormalizer', () => {
         let container: HTMLElement;
         let root: HTMLElement;
         let other: HTMLElement;
@@ -272,8 +280,19 @@ describe('utils', () => {
             describe('insert', () => {
                 describe('insert char', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let virtualKeyboardEvent: NormalizedKeyboardEvent;
-                    before(() => {
+                    let p: HTMLElement;
+                    let text: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.hell;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
+                        setRange(text, 4, text, 4);
+                        await nextTick();
+                        eventBatchs = [];
+
                         keyboardEvent = {
                             type: 'keyboard',
                             inputType: 'insertText',
@@ -291,20 +310,13 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                         // virtual keyboards does not provide code
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
                     it('insert char (ubuntu chrome)', async () => {
-                        const p = document.createElement('p');
-                        const text = document.createTextNode('hell');
-                        root.innerHTML = '';
-                        root.appendChild(p);
-                        p.appendChild(text);
-                        setRange(text, 4, text, 4);
-
-                        await nextTick();
-                        // ? why reset event batch each time here if we can do it in a beforeAll loop?
-                        eventBatchs = [];
                         triggerEvent(root, 'keydown', {
                             key: 'o',
                             code: 'KeyO',
@@ -338,14 +350,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('insert char (ubuntu firefox)', async () => {
-                        root.innerHTML = '';
-                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
-                        const p = document.getElementById('a');
-                        const text = p.childNodes[0];
-                        await nextTick();
-                        eventBatchs = [];
-
+                    it('insert char (ubuntu firefox)', async () => {
                         await triggerEvents([
                             [
                                 {
@@ -376,7 +381,7 @@ describe('utils', () => {
 
                         const batchEvents: EventBatch[] = [
                             {
-                                events: [keyboardEvent],
+                                events: [firefoxKeyboardEvent],
                                 mutatedElements: new Set([text]),
                             },
                         ];
@@ -523,7 +528,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert char (swift key)', async () => {
+                    it('insert char (SwiftKey)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -571,8 +576,19 @@ describe('utils', () => {
 
                 describe('insert space', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let virtualKeyboardEvent: NormalizedKeyboardEvent;
-                    before(() => {
+                    let p: HTMLElement;
+                    let text: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.hello;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
+                        setRange(text, 5, text, 5);
+                        await nextTick();
+                        eventBatchs = [];
+
                         keyboardEvent = {
                             type: 'keyboard',
                             inputType: 'insertText',
@@ -590,19 +606,14 @@ describe('utils', () => {
                                 },
                             ],
                         };
+
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                         // virtual keyboards does not provide code
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
-                    it('insert space (chrome)', async () => {
-                        const p = document.createElement('p');
-                        const text = document.createTextNode('hello');
-                        root.innerHTML = '';
-                        root.appendChild(p);
-                        p.appendChild(text);
-                        setRange(text, 5, text, 5);
-
-                        await nextTick();
-                        eventBatchs = [];
+                    it('insert space (ubuntu chrome)', async () => {
                         triggerEvent(root, 'keydown', {
                             key: ' ',
                             code: 'Space',
@@ -638,14 +649,62 @@ describe('utils', () => {
                         // variable, it is easier to rename
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert space (SwiftKey)', async () => {
-                        const p = document.createElement('p');
-                        const text = document.createTextNode('hello');
-                        root.innerHTML = '';
-                        root.appendChild(p);
-                        p.appendChild(text);
-                        setRange(text, 5, text, 5);
+                    it('insert space (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: ' ', code: 'Space' },
+                                { type: 'keypress', key: ' ', code: 'Space' },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'editable',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: ' ', code: 'Space' }],
+                        ]);
+                        await nextTick();
 
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('insert space (SwiftKey)', async () => {
                         await nextTick();
                         eventBatchs = [];
                         triggerEvent(root, 'keydown', {
@@ -678,23 +737,17 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('insert space (GBoard)', async () => {
-                        root.innerHTML = '';
-                        root.innerHTML = "<p id='a'>abc<br/>def</p>";
-                        const p = document.getElementById('a');
-                        const text = p.childNodes[0];
-                        await nextTick();
-                        eventBatchs = [];
                         await triggerEvents([
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 3 },
-                                    anchor: { id: 'a', index: 0, offset: 3 },
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
                                 },
                             ],
                             [
                                 { type: 'compositionstart', data: '' },
-                                { type: 'compositionupdate', data: 'abc' },
+                                { type: 'compositionupdate', data: 'hello' },
                             ],
                             [
                                 { type: 'keydown', key: 'Unidentified', code: '' },
@@ -702,21 +755,21 @@ describe('utils', () => {
                                 { type: 'input', data: ' ', inputType: 'insertText' },
                                 {
                                     type: 'mutation',
-                                    textContent: 'abc ',
+                                    textContent: 'hello ',
                                     targetParentId: 'a',
                                     targetOffset: 0,
                                 },
                                 {
                                     type: 'mutation',
-                                    textContent: 'abc ',
+                                    textContent: 'hello ',
                                     targetParentId: 'a',
                                     targetOffset: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
                                 },
                             ],
                         ]);
@@ -732,7 +785,7 @@ describe('utils', () => {
                     });
                 });
 
-                describe('insert with accent', () => {
+                describe('insert char with accent', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let virtualKeyboardEvent: NormalizedKeyboardEvent;
                     let macAccentKeyboardEvent: NormalizedKeyboardEvent;
@@ -1105,7 +1158,7 @@ describe('utils', () => {
                     });
                 });
 
-                it('should insert multiples key in same stack (chrome)', async () => {
+                it('should insert multiples key in same stack (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
                     root.innerHTML = '';
@@ -1222,16 +1275,15 @@ describe('utils', () => {
             });
 
             describe('completion/correction', () => {
-                it('add space (SwiftKey)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('a hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
+                it('should add space when hitting a word completion (SwiftKey)', async () => {
+                    root.innerHTML = testContentNormalizer.ahello;
+                    const p = document.getElementById('a');
+                    const text = p.childNodes[0];
                     setRange(text, 7, text, 7);
 
                     await nextTick();
                     eventBatchs = [];
+
                     triggerEvent(root, 'compositionstart', {});
                     triggerEvent(root, 'compositionupdate', { data: 'hello' });
                     triggerEvent(root, 'keydown', { key: 'Unidentified' });
@@ -1256,7 +1308,7 @@ describe('utils', () => {
                     await nextTick();
                     await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
+                    const virtualKeyboardEvent: NormalizedKeyboardEvent = {
                         type: 'keyboard',
                         key: ' ',
                         code: '',
@@ -1273,21 +1325,18 @@ describe('utils', () => {
                             },
                         ],
                     };
-
                     const batchEvents: EventBatch[] = [
                         {
-                            events: [keyboardEvent],
+                            events: [virtualKeyboardEvent],
                             mutatedElements: new Set([text]),
                         },
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('add space with auto-correction (SwiftKey)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('a hillo');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
+                it('should add space from auto-correction (SwiftKey)', async () => {
+                    root.innerHTML = testContentNormalizer.ahillo;
+                    const p = document.getElementById('a');
+                    const text = p.childNodes[0];
                     setRange(text, 7, text, 7);
 
                     await nextTick();
@@ -1354,8 +1403,6 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
 
-                // unwant preventDefault
-
                 // ? why?
                 it('prevent default the keypress', async () => {
                     const p = document.createElement('p');
@@ -1402,26 +1449,22 @@ describe('utils', () => {
             });
 
             describe('delete', () => {
-                describe('should deleteContentBackward', () => {
-                    it('should deleteContentBackward with backspace (ubuntu chrome)', async () => {
-                        const p = document.createElement('p');
-                        const text = document.createTextNode('hello');
-                        root.innerHTML = '';
-                        root.appendChild(p);
-                        p.appendChild(text);
-                        setRange(text, 5, text, 5);
+                describe('deleteContentBackward with backspace', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let virtualKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
 
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.hello;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
+                        setRange(text, 5, text, 5);
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
-                        triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
-                        text.textContent = 'hell';
-                        triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
-                        setRange(text, 4, text, 4);
-                        await nextTick();
 
-                        const keyboardEvent: NormalizedKeyboardEvent = {
+                        keyboardEvent = {
                             type: 'keyboard',
                             inputType: 'deleteContentBackward',
                             key: 'Backspace',
@@ -1439,6 +1482,21 @@ describe('utils', () => {
                             ],
                         };
 
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
+                        // virtual keyboards does not provide code
+                        virtualKeyboardEvent = { ...keyboardEvent, code: '' };
+                    });
+                    it('should deleteContentBackward with backspace (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                        triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
+                        text.textContent = 'hell';
+                        triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                        setRange(text, 4, text, 4);
+                        await nextTick();
+
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [keyboardEvent],
@@ -1447,14 +1505,43 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should deleteContentBackward with backspace (SwiftKey)', async () => {
-                        const p = document.createElement('p');
-                        const text = document.createTextNode('hello');
-                        root.innerHTML = '';
-                        root.appendChild(p);
-                        p.appendChild(text);
-                        setRange(text, 5, text, 5);
+                    it('should deleteContentBackward with backspace (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Backspace', code: 'Backspace' },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hell',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace' }],
+                        ]);
+                        await nextTick();
 
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should deleteContentBackward with backspace (SwiftKey)', async () => {
                         await nextTick();
                         eventBatchs = [];
                         triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
@@ -1465,39 +1552,15 @@ describe('utils', () => {
                         setRange(text, 4, text, 4);
                         await nextTick();
 
-                        const keyboardEvent: NormalizedKeyboardEvent = {
-                            type: 'keyboard',
-                            inputType: 'deleteContentBackward',
-                            key: 'Backspace',
-                            code: '',
-                            altKey: false,
-                            ctrlKey: false,
-                            metaKey: false,
-                            shiftKey: false,
-                            defaultPrevented: false,
-                            actions: [
-                                {
-                                    type: 'deleteContent',
-                                    direction: Direction.BACKWARD,
-                                },
-                            ],
-                        };
-
                         const batchEvents: EventBatch[] = [
                             {
-                                events: [keyboardEvent],
+                                events: [virtualKeyboardEvent],
                                 mutatedElements: new Set([text]),
                             },
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should deleteContentBackward with backspace (GBoard)', async () => {
-                        root.innerHTML = '';
-                        root.innerHTML = "<p id='a'>hello</p>";
-                        const p = document.getElementById('a');
-                        const text = p.childNodes[0];
-                        await nextTick();
-                        eventBatchs = [];
                         await triggerEvents([
                             [
                                 {
@@ -1534,53 +1597,31 @@ describe('utils', () => {
                             ],
                         ]);
                         await nextTick();
-                        const keyboardEvent: NormalizedKeyboardEvent = {
-                            type: 'keyboard',
-                            inputType: 'deleteContentBackward',
-                            key: 'Backspace',
-                            code: '',
-                            altKey: false,
-                            ctrlKey: false,
-                            metaKey: false,
-                            shiftKey: false,
-                            defaultPrevented: false,
-                            actions: [
-                                {
-                                    type: 'deleteContent',
-                                    direction: Direction.BACKWARD,
-                                },
-                            ],
-                        };
+
                         const batchEvents: EventBatch[] = [
                             {
-                                events: [keyboardEvent],
+                                events: [virtualKeyboardEvent],
                                 mutatedElements: new Set([text]),
                             },
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                 });
+                describe('deleteContentForward with delete', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
 
-                describe('should deleteContentBackward', () => {
-                    it('should deleteContentForward with deleteContentForward (ubuntu chrome)', async () => {
-                        const p = document.createElement('p');
-                        const text = document.createTextNode('hello');
-                        root.innerHTML = '';
-                        root.appendChild(p);
-                        p.appendChild(text);
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.hello;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
                         setRange(text, 4, text, 4);
-
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Delete', code: 'Delete' });
-                        triggerEvent(root, 'keypress', { key: 'Delete', code: 'Delete' });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
-                        text.textContent = 'hell';
-                        triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
-                        setRange(text, 4, text, 4);
-                        await nextTick();
 
-                        const keyboardEvent: NormalizedKeyboardEvent = {
+                        keyboardEvent = {
                             type: 'keyboard',
                             inputType: 'deleteContentForward',
                             key: 'Delete',
@@ -1597,6 +1638,18 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
+                    });
+                    it('should deleteContentForward with delete (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', { key: 'Delete', code: 'Delete' });
+                        triggerEvent(root, 'keypress', { key: 'Delete', code: 'Delete' });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
+                        text.textContent = 'hell';
+                        triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
+                        setRange(text, 4, text, 4);
+                        await nextTick();
 
                         const batchEvents: EventBatch[] = [
                             {
@@ -1606,7 +1659,39 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should deleteContentForward with deleteContentForward (SwiftKey)', async () => {
+                    it('should deleteContentForward with delete (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Delete', code: 'Delete' },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hell',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Delete', code: 'Delete' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    // todo: ask chm: how to trigger delete with SwiftKey?
+                    it.skip('should deleteContentForward with delete (SwiftKey)', async () => {
                         const p = document.createElement('p');
                         const text = document.createTextNode('hello');
                         root.innerHTML = '';
@@ -1624,24 +1709,6 @@ describe('utils', () => {
                         setRange(text, 4, text, 4);
                         await nextTick();
 
-                        const keyboardEvent: NormalizedKeyboardEvent = {
-                            type: 'keyboard',
-                            inputType: 'deleteContentForward',
-                            key: 'Delete',
-                            code: '',
-                            altKey: false,
-                            ctrlKey: false,
-                            metaKey: false,
-                            shiftKey: false,
-                            defaultPrevented: false,
-                            actions: [
-                                {
-                                    type: 'deleteContent',
-                                    direction: Direction.FORWARD,
-                                },
-                            ],
-                        };
-
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [keyboardEvent],
@@ -1651,433 +1718,650 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                 });
-                // ? what if in mac?
-                it('backspace ending word (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('hello toto');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 10, text, 10);
+                describe('deleteWordBackward at the end of word', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
 
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        ctrlKey: true,
-                    });
-                    triggerEvent(root, 'keypress', {
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        ctrlKey: true,
-                    });
-                    triggerEvent(root, 'beforeinput', { inputType: 'deleteWordBackward' });
-                    text.textContent = 'hello ';
-                    triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
-                    setRange(text, 6, text, 6);
-                    await nextTick();
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.hellototo;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
+                        setRange(text, 10, text, 10);
+                        await nextTick();
+                        eventBatchs = [];
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteWordBackward',
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteWord',
-                                direction: Direction.BACKWARD,
-                                text: 'toto',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('backspace word (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    const text = document.createTextNode('a test b');
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 6, text, 6);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        ctrlKey: true,
-                    });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
-                    text.textContent = 'a  b';
-                    text.textContent = 'a  b';
-                    text.textContent = 'a\u00A0 b';
-                    setRange(text, 2, text, 2);
-                    triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
-                    await nextTick();
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteWordBackward',
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteWord',
-                                direction: Direction.BACKWARD,
-                                text: 'test',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('backspace styled word (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    p.innerHTML = 'a <b>test</b>, b';
-                    const text = p.lastChild;
-                    const b = p.childNodes[1];
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 0, text, 0);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        ctrlKey: true,
-                    });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
-                    p.removeChild(b);
-                    setRange(text, 0, text, 0);
-                    triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
-                    await nextTick();
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteWordBackward',
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteWord',
-                                direction: Direction.BACKWARD,
-                                text: 'test',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([b]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('backspace multi-styled word (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    p.innerHTML = 'a <b>t<u>e</u>s</b>t b';
-                    const text = p.lastChild;
-                    const b = p.childNodes[1];
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text);
-                    setRange(text, 1, text, 1);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        ctrlKey: true,
-                    });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
-                    p.removeChild(b);
-                    text.textContent = ' b';
-                    text.textContent = '\u00A0b';
-                    setRange(text, 0, text, 0);
-                    triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
-                    await nextTick();
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteWordBackward',
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteWord',
-                                direction: Direction.BACKWARD,
-                                text: 'test',
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([b, text]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('backspace whole content (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    p.innerHTML = 'a <b>test</b> b, c';
-                    const text = p.firstChild;
-                    const text2 = p.lastChild;
-                    const b = p.childNodes[1];
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    p.appendChild(text2);
-                    setRange(text2, 2, text2, 2);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        ctrlKey: true,
-                        shiftKey: true,
-                    });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineBackward' });
-                    p.removeChild(text);
-                    p.removeChild(b);
-                    text2.textContent = ', c';
-                    setRange(text2, 0, text2, 0);
-                    triggerEvent(root, 'input', { inputType: 'deleteHardLineBackward' });
-                    await nextTick();
-                    await nextTick();
-
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteHardLineBackward',
-                        key: 'Backspace',
-                        code: 'Backspace',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: true,
-                        defaultPrevented: false,
-                        actions: [
-                            {
-                                type: 'deleteHardLine',
-                                direction: Direction.BACKWARD,
-                                domRange: {
-                                    startContainer: text,
-                                    startOffset: 0,
-                                    endContainer: text2,
-                                    endOffset: 2,
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteWordBackward',
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteWord',
                                     direction: Direction.BACKWARD,
+                                    text: 'toto',
                                 },
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text, b, text2]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('delete word (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    p.innerHTML = 'a <b>test</b> b, c<i>test</i> g';
-                    const text2 = p.childNodes[2];
-                    const i = p.childNodes[3];
-                    const text3 = p.childNodes[4];
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    setRange(text2, 3, text2, 3);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Delete',
-                        code: 'Delete',
-                        ctrlKey: true,
+                            ],
+                        };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                     });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteWordForward' });
-                    text2.textContent = ' b, ';
-                    p.removeChild(i);
-                    text3.textContent = '\u00A0g';
-                    setRange(text2, 4, text2, 4);
-                    triggerEvent(root, 'input', { inputType: 'deleteWordForward' });
-                    await nextTick();
-                    await nextTick();
+                    it('deleteWordBackward at the end of word (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            ctrlKey: true,
+                        });
+                        triggerEvent(root, 'keypress', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            ctrlKey: true,
+                        });
+                        triggerEvent(root, 'beforeinput', { inputType: 'deleteWordBackward' });
+                        text.textContent = 'hello ';
+                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        setRange(text, 6, text, 6);
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteWordForward',
-                        key: 'Delete',
-                        code: 'Delete',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'deleteWord',
-                                direction: Direction.FORWARD,
-                                text: 'ctest',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
                             },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text2, i, text3]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('delete whole content (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    p.innerHTML = 'a <b>test</b> b, c<i>test</i> g';
-                    const text2 = p.childNodes[2];
-                    const i = p.childNodes[3];
-                    const text3 = p.childNodes[4];
-                    root.innerHTML = '';
-                    root.appendChild(p);
-
-                    setRange(text2, 2, text2, 2);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Delete',
-                        code: 'Delete',
-                        ctrlKey: true,
-                        shiftKey: true,
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineForward' });
-                    text2.textContent = ' b';
-                    p.removeChild(i);
-                    p.removeChild(text3);
-                    setRange(text2, 2, text2, 2);
-                    triggerEvent(root, 'input', { inputType: 'deleteHardLineForward' });
-                    await nextTick();
-                    await nextTick();
+                    it('deleteWordBackward at the end of word (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 10 },
+                                    anchor: { id: 'a', index: 0, offset: 10 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    ctrlKey: true,
+                                },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteHardLineForward',
-                        key: 'Delete',
-                        code: 'Delete',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: true,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'deleteHardLine',
-                                direction: Direction.FORWARD,
-                                domRange: {
-                                    startContainer: text2,
-                                    startOffset: 2,
-                                    endContainer: text3,
-                                    endOffset: 2,
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('deleteWordBackward word in middle of sencence', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.atestb;
+                        p = document.getElementById('a');
+                        text = p.childNodes[0];
+                        setRange(text, 6, text, 6);
+                        await nextTick();
+                        eventBatchs = [];
+
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteWordBackward',
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteWord',
+                                    direction: Direction.BACKWARD,
+                                    text: 'test',
+                                },
+                            ],
+                        };
+                    });
+
+                    it('deleteWordBackward word in middle of sencence (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            ctrlKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
+                        text.textContent = 'a  b';
+                        text.textContent = 'a  b';
+                        text.textContent = 'a\u00A0 b';
+                        setRange(text, 2, text, 2);
+                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        await nextTick();
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('deleteWordBackward word in middle of sencence (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    ctrlKey: true,
+                                },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'a',
+                                    targetOffset: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('deleteWordBackward word in middle of sencence with style', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let lastText: ChildNode;
+                    let b: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.atestbBold;
+                        p = document.getElementById('a');
+                        lastText = p.lastChild;
+                        b = document.getElementById('b');
+                        setRange(lastText, 0, lastText, 0);
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteWordBackward',
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteWord',
+                                    direction: Direction.BACKWARD,
+                                    text: 'test',
+                                },
+                            ],
+                        };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
+                    });
+
+                    it('deleteWordBackward word in middle of sencence with style (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            ctrlKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
+                        p.removeChild(b);
+                        setRange(lastText, 0, lastText, 0);
+                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        await nextTick();
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([b]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('deleteWordBackward word in middle of sencence with style (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 0 },
+                                    anchor: { id: 'a', index: 2, offset: 0 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    ctrlKey: true,
+                                },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a , b',
+                                    targetParentId: 'editable',
+                                    targetOffset: 0,
+                                    removedNodes: [{ id: 'b' }],
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([b]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('backspace multi-styled word', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let lastText: ChildNode;
+                    let b: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.multiStyled;
+                        p = document.getElementById('a');
+                        lastText = p.lastChild;
+                        b = p.childNodes[1];
+                        setRange(lastText, 1, lastText, 1);
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteWordBackward',
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteWord',
+                                    direction: Direction.BACKWARD,
+                                    text: 'test',
+                                },
+                            ],
+                        };
+                    });
+
+                    it('backspace multi-styled word (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            ctrlKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
+                        p.removeChild(b);
+                        lastText.textContent = ' b';
+                        lastText.textContent = '\u00A0b';
+                        setRange(lastText, 0, lastText, 0);
+                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        await nextTick();
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([b, lastText]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('backspace whole line backward', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
+                    let text2: ChildNode;
+                    let b: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.atestbcBold;
+                        p = document.getElementById('a');
+                        text = p.firstChild;
+                        text2 = p.lastChild;
+                        b = p.childNodes[1];
+                        setRange(text2, 2, text2, 2);
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteHardLineBackward',
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: true,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteHardLine',
+                                    direction: Direction.BACKWARD,
+                                    domRange: {
+                                        startContainer: text,
+                                        startOffset: 0,
+                                        endContainer: text2,
+                                        endOffset: 2,
+                                        direction: Direction.BACKWARD,
+                                    },
+                                },
+                            ],
+                        };
+                    });
+                    it('backspace whole line backward (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            ctrlKey: true,
+                            shiftKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineBackward' });
+                        p.removeChild(text);
+                        p.removeChild(b);
+                        text2.textContent = ', c';
+                        setRange(text2, 0, text2, 0);
+                        triggerEvent(root, 'input', { inputType: 'deleteHardLineBackward' });
+                        await nextTick();
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text, b, text2]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('delete word', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text2: ChildNode;
+                    let text3: ChildNode;
+                    let i: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.abcg;
+                        p = document.getElementById('a');
+
+                        text2 = p.childNodes[2];
+                        i = p.childNodes[3];
+                        text3 = p.childNodes[4];
+                        setRange(text2, 3, text2, 3);
+
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteWordForward',
+                            key: 'Delete',
+                            code: 'Delete',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteWord',
                                     direction: Direction.FORWARD,
+                                    text: 'ctest',
                                 },
-                            },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text2, i, text3]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('delete whole at the end do nothing (ubuntu chrome)', async () => {
-                    const p = document.createElement('p');
-                    p.innerHTML = 'a <b>test</b> b, c<i>test</i> g';
-                    const text3 = p.childNodes[4];
-                    root.innerHTML = '';
-                    root.appendChild(p);
-                    setRange(text3, 2, text3, 2);
-
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
-                        key: 'Delete',
-                        code: 'Delete',
-                        ctrlKey: true,
-                        shiftKey: true,
+                            ],
+                        };
                     });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineForward' });
-                    text3.textContent = ' g';
-                    setRange(text3, 2, text3, 2);
-                    triggerEvent(root, 'input', { inputType: 'deleteHardLineForward' });
-                    await nextTick();
-                    await nextTick();
+                    it('delete word(ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Delete',
+                            code: 'Delete',
+                            ctrlKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordForward' });
+                        text2.textContent = ' b, ';
+                        p.removeChild(i);
+                        text3.textContent = '\u00A0g';
+                        setRange(text2, 4, text2, 4);
+                        triggerEvent(root, 'input', { inputType: 'deleteWordForward' });
+                        await nextTick();
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'deleteHardLineForward',
-                        key: 'Delete',
-                        code: 'Delete',
-                        altKey: false,
-                        ctrlKey: true,
-                        metaKey: false,
-                        shiftKey: true,
-                        defaultPrevented: false,
-                        actions: [],
-                    };
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text2, i, text3]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('delete whole line forward', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text2: ChildNode;
+                    let text3: ChildNode;
+                    let i: ChildNode;
 
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text3]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.abcg;
+                        p = document.getElementById('a');
+
+                        text2 = p.childNodes[2];
+                        i = p.childNodes[3];
+                        text3 = p.childNodes[4];
+                        setRange(text2, 2, text2, 2);
+
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteHardLineForward',
+                            key: 'Delete',
+                            code: 'Delete',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: true,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'deleteHardLine',
+                                    direction: Direction.FORWARD,
+                                    domRange: {
+                                        startContainer: text2,
+                                        startOffset: 2,
+                                        endContainer: text3,
+                                        endOffset: 2,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                        };
+                    });
+                    it('delete whole line forward (ubuntu chrome)', async () => {
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', {
+                            key: 'Delete',
+                            code: 'Delete',
+                            ctrlKey: true,
+                            shiftKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineForward' });
+                        text2.textContent = ' b';
+                        p.removeChild(i);
+                        p.removeChild(text3);
+                        setRange(text2, 2, text2, 2);
+                        triggerEvent(root, 'input', { inputType: 'deleteHardLineForward' });
+                        await nextTick();
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text2, i, text3]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                });
+                describe('delete whole line forward and do nothing', () => {
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text3: ChildNode;
+
+                    beforeEach(async () => {
+                        root.innerHTML = testContentNormalizer.abcg;
+                        p = document.getElementById('a');
+
+                        text3 = p.childNodes[4];
+                        setRange(text3, 2, text3, 2);
+
+                        await nextTick();
+                        eventBatchs = [];
+
+                        keyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'deleteHardLineForward',
+                            key: 'Delete',
+                            code: 'Delete',
+                            altKey: false,
+                            ctrlKey: true,
+                            metaKey: false,
+                            shiftKey: true,
+                            defaultPrevented: false,
+                            actions: [],
+                        };
+                    });
+                    it('delete whole line forward and do nothing (ubuntu chrome)', async () => {
+                        triggerEvent(root, 'keydown', {
+                            key: 'Delete',
+                            code: 'Delete',
+                            ctrlKey: true,
+                            shiftKey: true,
+                        });
+                        triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineForward' });
+                        text3.textContent = ' g';
+                        setRange(text3, 2, text3, 2);
+                        triggerEvent(root, 'input', { inputType: 'deleteHardLineForward' });
+                        await nextTick();
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text3]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 it('backspace (Edge)', async () => {
                     const p = document.createElement('p');
@@ -2219,7 +2503,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('enter before a word (googleKeyboard)', async () => {
+                it('enter before a word (Gboard)', async () => {
                     root.innerHTML = '<div>abc def</div>';
                     const p = root.firstChild;
                     const text = p.firstChild as Text;
@@ -2274,7 +2558,7 @@ describe('utils', () => {
                     ];
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
-                it('enter after a word (googleKeyboard)', async () => {
+                it('enter after a word (Gboard)', async () => {
                     root.innerHTML = '<div>abc def</div>';
                     const p = root.firstChild;
                     const text = p.firstChild as Text;

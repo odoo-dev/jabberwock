@@ -22,6 +22,7 @@ Object.keys(testContentNormalizer).forEach(key => {
     keyElement.textContent = key;
     keyElement.addEventListener('click', () => {
         editable.innerHTML = testContentNormalizer[key];
+        setTimeout(clear, 10);
     });
     templatesElement.appendChild(keyElement);
 });
@@ -135,18 +136,25 @@ function logMutation(mutation): void {
         targetParentId: targetParent.id,
         targetOffset: Array.prototype.indexOf.call(targetParent.childNodes, mutation.target),
     };
+    const removedNodes = Array.from(mutation.removedNodes);
+    if (removedNodes.length) {
+        testMutationEvent.removedNodes = removedNodes.map((node: HTMLElement) => {
+            return { id: node.id };
+        });
+    }
     registerTestEvent(testMutationEvent);
 }
 copyButton.addEventListener('click', () => {
     (exportArea as HTMLInputElement).select();
     document.execCommand('copy');
 });
-clearButton.addEventListener('click', () => {
+function clear(): void {
     console.clear();
     exportArea.textContent = '';
     currentEventStack = null;
     allEventStacks = [];
-});
+}
+clearButton.addEventListener('click', clear);
 
 editable.addEventListener('compositionstart', logComposition);
 editable.addEventListener('compositionupdate', logComposition);

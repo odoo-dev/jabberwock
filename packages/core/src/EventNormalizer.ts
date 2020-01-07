@@ -930,6 +930,7 @@ export class EventNormalizer {
                     !!mutatedElements.size,
                 );
                 if (keyboardAction) {
+                    debugger;
                     keyboardNormalizedEvent.actions.push(keyboardAction);
                 }
             }
@@ -1529,7 +1530,18 @@ export class EventNormalizer {
         if (!isMultiKey && characterMapping.insert === characterMapping.remove) {
             return;
         }
-        if (inputType === 'deleteWordForward' || inputType === 'deleteWordBackward') {
+        // firefox does not provide inputType so we split the words to count to deduce if the
+        // intention was to delete the whole word.
+        // todo: discuss with DMO: do we really want to infer it?
+        // todo: to check if a wrong deduction could been made (from a composition event for instance)
+        const words = characterMapping.remove.match(new RegExp(alphabetsContainingSpaces, 'g'));
+
+        if (
+            inputType === 'deleteWordForward' ||
+            inputType === 'deleteWordBackward' ||
+            // Case of firefox without inputType
+            (words && words.length === 1 && words[0].length > 1)
+        ) {
             const deleteWordAction: DeleteWordAction = {
                 type: 'deleteWord',
                 direction: direction,
