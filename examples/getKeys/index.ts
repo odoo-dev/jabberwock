@@ -13,18 +13,44 @@ const clearButton = document.querySelector('.clearButton');
 const copyButton = document.querySelector('.copyButton');
 const templatesElement = document.querySelector('.templates');
 
+/**
+ * When a mutation with removed nodes is triggered, the `index` of the removed nodes is imposible
+ * to retrieve.
+ * Each stack, reset the offsetCacheMap  (see `resetCurrentStack`).
+ */
+let offsetCacheMap: Map<Node, { index: number; parentId: string }>;
+
 let currentEventStack = null;
 let allEventStacks = [];
 
+/**
+ * Add `node` and all his `childNodes` recursively in the `offsetCacheMap`.
+ */
+function addNodeToOffsetCacheMap(node: Node): void {
+    const parentChildNodes = Array.from(node.parentNode.childNodes);
+    offsetCacheMap.set(node, {
+        index: parentChildNodes.indexOf(node as ChildNode),
+        parentId: (node.parentNode as HTMLElement).id,
+    });
+    node.childNodes.forEach(addNodeToOffsetCacheMap);
+}
+/**
+ * Reset `offsetCacheMap`.
+ */
+function resetOffsetCacheMap(): void {
+    offsetCacheMap = new Map();
+    addNodeToOffsetCacheMap(editable);
+}
 Object.keys(testContentNormalizer).forEach(key => {
-    const keyElement = document.createElement('button');
-    keyElement.style.cursor = 'pointer';
-    keyElement.textContent = key;
-    keyElement.addEventListener('click', () => {
+    const button = document.createElement('button');
+    button.style.cursor = 'pointer';
+    button.textContent = key;
+    button.addEventListener('click', () => {
         editable.innerHTML = testContentNormalizer[key];
         setTimeout(clear, 10);
+        resetOffsetCacheMap();
     });
-    templatesElement.appendChild(keyElement);
+    templatesElement.appendChild(button);
 });
 
 function registerTestEvent(testEvent: TestEvent): void {
@@ -42,6 +68,9 @@ function registerTestEvent(testEvent: TestEvent): void {
 }
 function resetCurrentStack(): void {
     currentEventStack = null;
+    // refresh the offsetCacheMap between each stacks.
+
+    resetOffsetCacheMap();
     renderAllStatcks();
 }
 function renderAllStatcks(): void {
@@ -129,20 +158,27 @@ function logSelection(): void {
     }
 }
 function logMutation(mutation): void {
-    const targetParent = mutation.target.parentElement;
+    console.log('mutation:', mutation);
+    // const targetParent = mutation.target.parentElement;
+    const offsetInfo = offsetCacheMap.get(mutation.target);
+    // the mutations that does not have parent are the one who are deleted.
+    // we do not need to record theses events.
+    // if (targetParent) {
     const testMutationEvent: TestMutationEvent = {
         type: 'mutation',
         textContent: mutation.target.textContent,
-        targetParentId: targetParent.id,
-        targetOffset: Array.prototype.indexOf.call(targetParent.childNodes, mutation.target),
+        targetParentId: offsetInfo.parentId,
+        // targetIndex: Array.prototype.indexOf.call(targetParent.childNodes, mutation.target),
+        targetIndex: offsetInfo.index,
     };
     const removedNodes = Array.from(mutation.removedNodes);
     if (removedNodes.length) {
-        testMutationEvent.removedNodes = removedNodes.map((node: HTMLElement) => {
-            return { id: node.id };
+        testMutationEvent.removedNodes = removedNodes.map((node: Node) => {
+            return offsetCacheMap.get(node);
         });
     }
     registerTestEvent(testMutationEvent);
+    // }
 }
 copyButton.addEventListener('click', () => {
     (exportArea as HTMLInputElement).select();
@@ -166,7 +202,10 @@ editable.addEventListener('beforeinput', logInput);
 editable.addEventListener('input', logInput);
 document.addEventListener('selectionchange', logSelection);
 
-const observer = new MutationObserver((mutationsList): void => mutationsList.forEach(logMutation));
+const observer = new MutationObserver((mutationsList): void => {
+    console.log('mutationsList:', mutationsList);
+    mutationsList.forEach(logMutation);
+});
 observer.observe(editable, {
     attributes: true,
     childList: true,

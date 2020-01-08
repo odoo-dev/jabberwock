@@ -477,6 +477,8 @@ type TriggerEventBatchCallback = (batch: EventBatch) => void;
  * two events ("composition" and "keyboard").
  */
 // todo chm: drag/drop between two editor in the same page.
+// todo nby: think about when user hit a modifier key trigger event. What should be
+//           triggered? all the modifier keys? (e.g. ctrl+alt+anything)
 export class EventNormalizer {
     /**
      * HTML element that represents the editable zone. Only events happening
@@ -1530,17 +1532,21 @@ export class EventNormalizer {
         if (!isMultiKey && characterMapping.insert === characterMapping.remove) {
             return;
         }
-        // firefox does not provide inputType so we split the words to count to deduce if the
-        // intention was to delete the whole word.
-        // todo: discuss with DMO: do we really want to infer it?
+        // firefox does not provide inputType so we deduce it fom the modifier keys
+        // todo: discuss with DMO: do we really want to deduce it?
         // todo: to check if a wrong deduction could been made (from a composition event for instance)
-        const words = characterMapping.remove.match(new RegExp(alphabetsContainingSpaces, 'g'));
+        const keydownEvent = this._eventsMap.keydown;
+        const deleteWordWithoutInputType =
+            !inputType && keydownEvent.ctrlKey && !keydownEvent.altKey && !keydownEvent.shiftKey;
+        const deleteHardLineWithoutInputType =
+            !inputType && keydownEvent.ctrlKey && !keydownEvent.altKey && keydownEvent.shiftKey;
+        // const words = characterMapping.remove.match(new RegExp(alphabetsContainingSpaces, 'g'));
 
         if (
             inputType === 'deleteWordForward' ||
             inputType === 'deleteWordBackward' ||
             // Case of firefox without inputType
-            (words && words.length === 1 && words[0].length > 1)
+            deleteWordWithoutInputType
         ) {
             const deleteWordAction: DeleteWordAction = {
                 type: 'deleteWord',
@@ -1549,7 +1555,11 @@ export class EventNormalizer {
             };
             return deleteWordAction;
         }
-        if (inputType === 'deleteHardLineForward' || inputType === 'deleteHardLineBackward') {
+        if (
+            inputType === 'deleteHardLineForward' ||
+            inputType === 'deleteHardLineBackward' ||
+            deleteHardLineWithoutInputType
+        ) {
             // todo: come to see me later
             const deleteHardLineAction: DeleteHardLineAction = {
                 type: 'deleteHardLine',
@@ -1569,6 +1579,7 @@ export class EventNormalizer {
                     direction: direction,
                 },
             };
+            debugger
             return deleteHardLineAction;
         }
         const deleteContentAction: DeleteContentAction = {

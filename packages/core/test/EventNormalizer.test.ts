@@ -46,8 +46,13 @@ export interface TestMutationEvent {
     type: 'mutation';
     textContent: string;
     targetParentId: string;
-    targetOffset: number;
-    removedNodes?: { id: string }[];
+    targetIndex: number;
+    removedNodes?: {
+        index?: number;
+        parentId?: string;
+        // todo: remove this key. it was introduced because of backward compatibility.
+        id?: string;
+    }[];
 }
 export interface TestSelectionEvent {
     type: 'selection';
@@ -185,21 +190,72 @@ async function nextTick(): Promise<void> {
     return new Promise((resolve): number => setTimeout(resolve));
 }
 
+/**
+ *
+ * For each `eventStackList` in `triggerEvents()`, we need to retrieve information of the `index`
+ * that is contained within a `parent` that has an `id`.
+ * It is possible that within the `eventStackList` loop, childs of a node are removed. However,
+ * the index of a childNode within his parent is encoded relative to the beggining of the stack
+ * when all nodes were still preset.
+ *
+ * For that reason we cannot retrieve a childNode with `parent.childNodes[index]` but we must do
+ * `offsetCacheMap[parentId + '$' + index]`.
+ *
+ * Encode the key of the offsetCacheMap with "<parentId>$<childIndex>" (e.g. if the parent id is
+ * 'a' and the offset is 0, the key will be encoded as "a$0").
+ */
+let offsetCacheMap: { [key: string]: Node };
+
+/**
+ * Add all childNodes of node retursively in `offsetCacheMap`.
+ */
+function addNodeToOffsetCacheMap(node: Node): void {
+    if (node.childNodes)
+        node.childNodes.forEach((childNode, index) => {
+            offsetCacheMap[(node as HTMLElement).id + '$' + index] = childNode;
+            addNodeToOffsetCacheMap(childNode);
+        });
+}
+function resetOffsetCacheMap(editableElement: HTMLElement): void {
+    offsetCacheMap = {};
+    addNodeToOffsetCacheMap(editableElement);
+}
+function getNodeFromOffsetCacheMap(parentId: string, index: number): Node {
+    return offsetCacheMap[parentId + '$' + index];
+}
+
 async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
     const editableElement = document.getElementById('editable');
+    resetOffsetCacheMap(editableElement);
     eventStackList.forEach(async eventStack => {
         eventStack.forEach(testEvent => {
             if (testEvent.type === 'mutation') {
                 const mutationEvent: TestMutationEvent = testEvent;
-                const mutatedElementParent = document.getElementById(mutationEvent.targetParentId);
-                const mutatedElement = mutatedElementParent.childNodes[mutationEvent.targetOffset];
+                // const mutatedElementParent = document.getElementById(mutationEvent.targetParentId);
+                // const mutatedNode = mutatedElementParent.childNodes[mutationEvent.targetIndex];
+                const mutatedNode = getNodeFromOffsetCacheMap(
+                    mutationEvent.targetParentId,
+                    mutationEvent.targetIndex,
+                );
                 if (testEvent.removedNodes) {
-                    testEvent.removedNodes.forEach(removedNode => {
-                        const removedNodeElement = document.getElementById(removedNode.id);
-                        removedNodeElement.parentNode.removeChild(removedNodeElement);
-                    });
+                    testEvent.removedNodes
+                        .map(removedNodeDescription => {
+                            // todo: remove this "if" and keep the "else" when regenerated events
+                            //       it was introduced to keep compatible with the `id` key
+                            if (removedNodeDescription.id) {
+                                return document.getElementById(removedNodeDescription.id);
+                            } else {
+                                return getNodeFromOffsetCacheMap(
+                                    removedNodeDescription.parentId,
+                                    removedNodeDescription.index,
+                                );
+                            }
+                        })
+                        .forEach(removedNode => {
+                            removedNode.parentNode.removeChild(removedNode);
+                        });
                 } else {
-                    mutatedElement.textContent = mutationEvent.textContent;
+                    mutatedNode.textContent = mutationEvent.textContent;
                 }
             } else if (testEvent.type === 'selection') {
                 const selectionEvent: TestSelectionEvent = testEvent;
@@ -367,7 +423,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
@@ -431,7 +487,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
@@ -484,7 +540,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hellworld',
                                     targetParentId: '',
-                                    targetOffset: 11,
+                                    targetIndex: 11,
                                 },
                             ],
                             [
@@ -508,7 +564,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
@@ -552,7 +608,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
@@ -666,25 +722,25 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'editable',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
@@ -757,13 +813,13 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
@@ -1136,7 +1192,7 @@ describe('utils', () => {
                                     'type': 'mutation',
                                     'textContent': 'hellô',
                                     'targetParentId': 'a',
-                                    'targetOffset': 0,
+                                    'targetIndex': 0,
                                 },
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
@@ -1521,7 +1577,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hell',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
@@ -1586,7 +1642,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hell',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
@@ -1675,7 +1731,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hell',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                             ],
                             [{ type: 'keyup', key: 'Delete', code: 'Delete' }],
@@ -1808,7 +1864,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'hello ',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
@@ -1919,7 +1975,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'a  b',
                                     targetParentId: 'a',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
@@ -2030,7 +2086,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     textContent: 'a , b',
                                     targetParentId: 'editable',
-                                    targetOffset: 0,
+                                    targetIndex: 0,
                                     removedNodes: [{ id: 'b' }],
                                 },
                                 {
@@ -2055,6 +2111,7 @@ describe('utils', () => {
                 });
                 describe('backspace multi-styled word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let lastText: ChildNode;
                     let b: ChildNode;
@@ -2086,6 +2143,9 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                     });
 
                     it('backspace multi-styled word (ubuntu chrome)', async () => {
@@ -2111,9 +2171,67 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('backspace multi-styled word (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 1 },
+                                    anchor: { id: 'a', index: 2, offset: 1 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    ctrlKey: true,
+                                },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([b, lastText]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('backspace whole line backward', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text: ChildNode;
                     let text2: ChildNode;
@@ -2153,6 +2271,9 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                     });
                     it('backspace whole line backward (ubuntu chrome)', async () => {
                         triggerEvent(root, 'keydown', {
@@ -2173,6 +2294,95 @@ describe('utils', () => {
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [keyboardEvent],
+                                mutatedElements: new Set([text, b, text2]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('backspace whole line backward (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 2 },
+                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                },
+                            ],
+                            [{ type: 'keydown', key: 'Shift', code: 'ShiftLeft', shiftKey: true }],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: '',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ', c',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ', c',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ', c',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 0, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'editable', index: 0, offset: 0 },
+                                    anchor: { id: 'editable', index: 0, offset: 0 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keyup',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keyup',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    shiftKey: true,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Shift', code: 'ShiftLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
                                 mutatedElements: new Set([text, b, text2]),
                             },
                         ];
