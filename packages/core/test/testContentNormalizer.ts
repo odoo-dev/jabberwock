@@ -14,7 +14,7 @@ export const testContentNormalizer = {
     atestbBold: `<p id='a'>a <b id='b'>test</b>, b</p>`,
     atestbcBold: `<p id='a'>a <b id='b'>test</b> b, c</p>`,
     multiStyled: `<p id='a'>a <b id='b'>t<u>e</u>s</b>t b</p>`,
-    abcg: `<p id='a'>a <b>test</b> b, c<i>test</i> g</p>`,
+    abcg: `<p id='a'>a <b id='b'>test</b> b, c<i id='c'>test</i> g</p>`,
     multiline: `<p id='a'>abc<br/>def</p>`,
     hellworld: `<p id='a'>hell<br/>world</p>`,
 };

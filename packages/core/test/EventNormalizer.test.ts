@@ -275,6 +275,7 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
         await nextTick();
         await nextTick();
     });
+    await nextTick();
     return;
 }
 
@@ -334,7 +335,7 @@ describe('utils', () => {
 
         describe('keyboard', () => {
             describe('insert', () => {
-                describe('insert char', () => {
+                describe('insert char at the end of a word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let virtualKeyboardEvent: NormalizedKeyboardEvent;
@@ -372,7 +373,7 @@ describe('utils', () => {
                         // virtual keyboards does not provide code
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
-                    it('insert char (ubuntu chrome)', async () => {
+                    it('should insert char at the end of a word (ubuntu chrome)', async () => {
                         triggerEvent(root, 'keydown', {
                             key: 'o',
                             code: 'KeyO',
@@ -406,7 +407,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert char (ubuntu firefox)', async () => {
+                    it('should insert char at the end of a word (ubuntu firefox)', async () => {
                         await triggerEvents([
                             [
                                 {
@@ -443,7 +444,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('insert char (mac safari)', async () => {
+                    it.skip('should insert char at the end of a word (mac safari)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -462,7 +463,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('insert char (mac chrome)', async () => {
+                    it.skip('should insert char at the end of a word (mac chrome)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -507,7 +508,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('insert char (mac firefox)', async () => {
+                    it.skip('should insert char at the end of a word (mac firefox)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -526,7 +527,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('insert char (GBoard)', async () => {
+                    it.skip('should insert char at the end of a word (GBoard)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -584,7 +585,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert char (SwiftKey)', async () => {
+                    it('should insert char at the end of a word (SwiftKey)', async () => {
                         root.innerHTML = '';
                         root.innerHTML = "<p id='a'>hell<br/>world</p>";
                         const p = document.getElementById('a');
@@ -629,8 +630,7 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                 });
-
-                describe('insert space', () => {
+                describe('insert space at the end of a word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let virtualKeyboardEvent: NormalizedKeyboardEvent;
@@ -669,7 +669,7 @@ describe('utils', () => {
                         // virtual keyboards does not provide code
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
-                    it('insert space (ubuntu chrome)', async () => {
+                    it('should insert space at the end of a word (ubuntu chrome)', async () => {
                         triggerEvent(root, 'keydown', {
                             key: ' ',
                             code: 'Space',
@@ -705,7 +705,7 @@ describe('utils', () => {
                         // variable, it is easier to rename
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert space (ubuntu firefox)', async () => {
+                    it('should insert space at the end of a word (ubuntu firefox)', async () => {
                         await triggerEvents([
                             [
                                 {
@@ -760,7 +760,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert space (SwiftKey)', async () => {
+                    it('should insert space at the end of a word (SwiftKey)', async () => {
                         await nextTick();
                         eventBatchs = [];
                         triggerEvent(root, 'keydown', {
@@ -792,7 +792,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('insert space (GBoard)', async () => {
+                    it('should insert space at the end of a word (GBoard)', async () => {
                         await triggerEvents([
                             [
                                 {
@@ -840,8 +840,7 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                 });
-
-                describe('insert char with accent', () => {
+                describe('insert char with accent at the end of a word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let virtualKeyboardEvent: NormalizedKeyboardEvent;
                     let macAccentKeyboardEvent: NormalizedKeyboardEvent;
@@ -925,7 +924,7 @@ describe('utils', () => {
                             ],
                         };
                     });
-                    it('should insert char with accent (ubuntu chrome)', async () => {
+                    it('should insert char with accent at the end of a word (ubuntu chrome)', async () => {
                         triggerEvent(root, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
                         await nextTick();
                         await nextTick();
@@ -956,7 +955,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should insert char with accent (ubuntu firefox)', async () => {
+                    it('should insert char with accent at the end of a word (ubuntu firefox)', async () => {
                         triggerEvent(root, 'keydown', {
                             // no keypress
                             key: 'Dead',
@@ -997,7 +996,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should insert char with accent (mac safari)', async () => {
+                    it('should insert char with accent at the end of a word (mac safari)', async () => {
                         triggerEvent(root, 'compositionstart', {});
                         triggerEvent(root, 'compositionupdate', { data: '^' });
                         triggerEvent(root, 'beforeInput', {
@@ -1049,7 +1048,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should insert char with accent (mac chrome)', async () => {
+                    it('should insert char with accent at the end of a word (mac chrome)', async () => {
                         triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
                         triggerEvent(root, 'compositionstart', {});
                         triggerEvent(root, 'compositionupdate', { data: '^' });
@@ -1093,7 +1092,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should insert char with accent (mac firefox)', async () => {
+                    it('should insert char with accent at the end of a word (mac firefox)', async () => {
                         triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
                         triggerEvent(root, 'compositionstart', {});
                         triggerEvent(root, 'compositionupdate', { data: '^' });
@@ -1129,7 +1128,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should insert char with accent (SwiftKey)', async () => {
+                    it('should insert char with accent at the end of a word (SwiftKey)', async () => {
                         triggerEvent(root, 'keydown', {
                             key: 'Unidentified',
                         });
@@ -1175,7 +1174,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('should insert char with accent (GBoard)', async () => {
+                    it('should insert char with accent at the end of a word (GBoard)', async () => {
                         await triggerEvents([
                             [
                                 {
@@ -1213,7 +1212,6 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                 });
-
                 it('should insert multiples key in same stack (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
@@ -2391,6 +2389,7 @@ describe('utils', () => {
                 });
                 describe('delete word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text2: ChildNode;
                     let text3: ChildNode;
@@ -2426,8 +2425,11 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                     });
-                    it('delete word(ubuntu chrome)', async () => {
+                    it('delete word (ubuntu chrome)', async () => {
                         triggerEvent(root, 'keydown', {
                             key: 'Delete',
                             code: 'Delete',
@@ -2450,9 +2452,57 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('delete word (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 4 },
+                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Delete', code: 'Delete', ctrlKey: true },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b, ',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a test b,  g',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Delete', code: 'Delete', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text2, i]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('delete whole line forward', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text2: ChildNode;
                     let text3: ChildNode;
@@ -2494,6 +2544,9 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                     });
                     it('delete whole line forward (ubuntu chrome)', async () => {
                         await nextTick();
@@ -2521,6 +2574,88 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('delete whole line forward (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 2 },
+                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                                {
+                                    type: 'keydown',
+                                    key: 'Shift',
+                                    code: 'ShiftLeft',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Delete',
+                                    code: 'Delete',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                                { type: 'input' },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a test b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: '',
+                                    targetParentId: 'a',
+                                    targetIndex: 4,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a test b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 4, parentId: 'a' }],
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keyup',
+                                    key: 'Delete',
+                                    code: 'Delete',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Shift', code: 'ShiftLeft', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text2, i, text3]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('delete whole line forward and do nothing', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
@@ -2539,7 +2674,9 @@ describe('utils', () => {
 
                         keyboardEvent = {
                             type: 'keyboard',
-                            inputType: 'deleteHardLineForward',
+                            // todo: discuss with DMO: the inputType can be found in the event
+                            //       'beforeInput' but only on google chrome. Do we add it ?
+                            // inputType: 'deleteHardLineForward',
                             key: 'Delete',
                             code: 'Delete',
                             altKey: false,
@@ -2551,23 +2688,123 @@ describe('utils', () => {
                         };
                     });
                     it('delete whole line forward and do nothing (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
-                            key: 'Delete',
-                            code: 'Delete',
-                            ctrlKey: true,
-                            shiftKey: true,
-                        });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineForward' });
-                        text3.textContent = ' g';
-                        setRange(text3, 2, text3, 2);
-                        triggerEvent(root, 'input', { inputType: 'deleteHardLineForward' });
-                        await nextTick();
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 4, offset: 2 },
+                                    anchor: { id: 'a', index: 4, offset: 2 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                                {
+                                    type: 'keydown',
+                                    key: 'Shift',
+                                    code: 'ShiftLeft',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Delete',
+                                    code: 'Delete',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteHardLineForward',
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keyup',
+                                    key: 'Delete',
+                                    code: 'Delete',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Shift', code: 'ShiftLeft', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
                         await nextTick();
 
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [keyboardEvent],
-                                mutatedElements: new Set([text3]),
+                                mutatedElements: new Set([]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('delete whole line forward and do nothing (ubuntu firefox)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 4, offset: 2 },
+                                    anchor: { id: 'a', index: 4, offset: 2 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                                {
+                                    type: 'keydown',
+                                    key: 'Shift',
+                                    code: 'ShiftLeft',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Delete',
+                                    code: 'Delete',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keyup',
+                                    key: 'Delete',
+                                    code: 'Delete',
+                                    ctrlKey: true,
+                                    shiftKey: true,
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keyup',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    shiftKey: true,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Shift', code: 'ShiftLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([]),
                             },
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
@@ -3505,6 +3742,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
             });
+
+            // todo: test modifier keys
+            describe('modifier keys', () => {});
         });
         describe('pointer', () => {
             describe('set range', () => {
