@@ -1120,10 +1120,9 @@ describe('stores', () => {
                         it('should merge an indented list item into a non-indented list item', async () => {
                             await testEditor({
                                 contentBefore:
-                                    '<ol><li>abc[]</li><li><ol><li>def</li><li>ghi</li></ol></li></ol>',
+                                    '<ol><li>abc[]<ol><li>def</li><li>ghi</li></ol></li></ol>',
                                 stepFunction: deleteForward,
-                                contentAfter:
-                                    '<ol><li>abc[]def</li><li><ol><li>ghi</li></ol></li></ol>',
+                                contentAfter: '<ol><li>abc[]def<ol><li>ghi</li></ol></li></ol>',
                             });
                         });
                         it('should merge a non-indented list item into an indented list item', async () => {
@@ -2080,10 +2079,9 @@ describe('stores', () => {
                             it('should merge an indented list item into a non-indented list item', async () => {
                                 await testEditor({
                                     contentBefore:
-                                        '<ol><li>abc</li><li><ol><li>[]def</li><li>ghi</li></ol></li></ol>',
+                                        '<ol><li>abc<ol><li>[]def</li><li>ghi</li></ol></li></ol>',
                                     stepFunction: deleteBackward,
-                                    contentAfter:
-                                        '<ol><li>abc[]def</li><li><ol><li>ghi</li></ol></li></ol>',
+                                    contentAfter: '<ol><li>abc[]def<ol><li>ghi</li></ol></li></ol>',
                                 });
                             });
                             it('should merge a non-indented list item into an indented list item', async () => {
@@ -2315,10 +2313,9 @@ describe('stores', () => {
                             it('should merge an indented list item into a non-indented list item', async () => {
                                 await testEditor({
                                     contentBefore:
-                                        '<ul><li>abc</li><li><ul><li>[]def</li><li>ghi</li></ul></li></ul>',
+                                        '<ul><li>abc<ul><li>[]def</li><li>ghi</li></ul></li></ul>',
                                     stepFunction: deleteBackward,
-                                    contentAfter:
-                                        '<ul><li>abc[]def</li><li><ul><li>ghi</li></ul></li></ul>',
+                                    contentAfter: '<ul><li>abc[]def<ul><li>ghi</li></ul></li></ul>',
                                 });
                             });
                             it('should merge a non-indented list item into an indented list item', async () => {
@@ -2508,10 +2505,9 @@ describe('stores', () => {
                             it('should merge an ordered list item that is in an unordered list item into a non-indented list item', async () => {
                                 await testEditor({
                                     contentBefore:
-                                        '<ul><li>abc</li><li><ol><li>[]def</li><li>ghi</li></ol></li></ul>',
+                                        '<ul><li>abc<ol><li>[]def</li><li>ghi</li></ol></li></ul>',
                                     stepFunction: deleteBackward,
-                                    contentAfter:
-                                        '<ul><li>abc[]def</li><li><ol><li>ghi</li></ol></li></ul>',
+                                    contentAfter: '<ul><li>abc[]def<ol><li>ghi</li></ol></li></ul>',
                                 });
                             });
                             it('should merge an ordered list item into an unordered list item that is in the same ordered list', async () => {
@@ -2609,10 +2605,9 @@ describe('stores', () => {
                             it('should merge an unordered list item that is in an ordered list item into a non-indented list item', async () => {
                                 await testEditor({
                                     contentBefore:
-                                        '<ol><li>abc</li><li><ul><li>[]def</li><li>ghi</li></ul></li></ol>',
+                                        '<ol><li>abc<ul><li>[]def</li><li>ghi</li></ul></li></ol>',
                                     stepFunction: deleteBackward,
-                                    contentAfter:
-                                        '<ol><li>abc[]def</li><li><ul><li>ghi</li></ul></li></ol>',
+                                    contentAfter: '<ol><li>abc[]def<ul><li>ghi</li></ul></li></ol>',
                                 });
                             });
                             it('should merge an unordered list item into an ordered list item that is in the same unordered list', async () => {

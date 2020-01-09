@@ -115,7 +115,13 @@ export class Renderer {
         const isInList = context.currentVNode.parent instanceof ListNode;
         Array.from(fragment.childNodes).forEach((element: Node): void => {
             if (isInList) {
-                const li = document.createElement('li');
+                let li = document.createElement('li') as Node;
+                const isList = element.nodeName === 'UL' || element.nodeName === 'OL';
+                if (isList && context.parentNode.hasChildNodes()) {
+                    // Render an indented list in the list item that precedes it
+                    // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
+                    li = context.parentNode.childNodes[context.parentNode.childNodes.length - 1];
+                }
                 if (element.nodeName === 'P') {
                     element.childNodes.forEach(child => li.appendChild(child));
                     element = li;
