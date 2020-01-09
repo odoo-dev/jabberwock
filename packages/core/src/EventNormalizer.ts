@@ -932,7 +932,6 @@ export class EventNormalizer {
                     !!mutatedElements.size,
                 );
                 if (keyboardAction) {
-                    debugger;
                     keyboardNormalizedEvent.actions.push(keyboardAction);
                 }
             }
@@ -940,7 +939,6 @@ export class EventNormalizer {
             if (macAccent) {
                 keyboardNormalizedEvent.actions = compositionData.actions;
             }
-            debugger;
             // todo: refactor caretPosition is only used in "special event". Change this.
         } else if (caretPosition || compositionData) {
             pointerNormalizedEvent = {
@@ -1181,7 +1179,6 @@ export class EventNormalizer {
         | DeleteWordAction
         | DeleteHardLineAction
         | DeleteContentAction {
-        debugger;
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
             // Keys ctrl+x (or another potential user mapping) can trigger an inputType 'deleteByCut'
@@ -1537,10 +1534,18 @@ export class EventNormalizer {
         // todo: to check if a wrong deduction could been made (from a composition event for instance)
         const keydownEvent = this._eventsMap.keydown;
         const deleteWordWithoutInputType =
-            !inputType && keydownEvent.ctrlKey && !keydownEvent.altKey && !keydownEvent.shiftKey;
+            !inputType &&
+            keydownEvent.ctrlKey &&
+            !keydownEvent.altKey &&
+            !keydownEvent.shiftKey &&
+            !keydownEvent.metaKey;
         const deleteHardLineWithoutInputType =
-            !inputType && keydownEvent.ctrlKey && !keydownEvent.altKey && keydownEvent.shiftKey;
-        // const words = characterMapping.remove.match(new RegExp(alphabetsContainingSpaces, 'g'));
+            !inputType &&
+            (keydownEvent.ctrlKey &&
+                !keydownEvent.altKey &&
+                keydownEvent.shiftKey &&
+                !keydownEvent.metaKey);
+        debugger;
 
         if (
             inputType === 'deleteWordForward' ||
@@ -1579,7 +1584,6 @@ export class EventNormalizer {
                     direction: direction,
                 },
             };
-            debugger
             return deleteHardLineAction;
         }
         const deleteContentAction: DeleteContentAction = {

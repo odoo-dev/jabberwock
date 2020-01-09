@@ -42,16 +42,44 @@ export interface TestInputEvent {
     inputType?: string;
     defaultPrevented?: boolean;
 }
+
+// todo: Maybe remove this. It was introduced because of backward compatibility.
+interface TargetMutationIndex {
+    parentId: string;
+    index: number;
+}
+// todo: Remove this. It was introduced because of backward compatibility.
+interface TargetMutationOnlyID {
+    id: string;
+}
+
+interface TargetMutationPreviousSibling {
+    parentId: string;
+    previousSiblingIndex: number;
+}
+// interface TargetMutationPreviousSibling {
+//     parentId: string;
+//     previousSiblingIndex: number;
+// }
+
+type TargetMutation = (
+    | TargetMutationIndex
+    | TargetMutationOnlyID
+    | TargetMutationPreviousSibling)[];
+
 export interface TestMutationEvent {
     type: 'mutation';
     textContent: string;
     targetParentId: string;
     targetIndex: number;
-    removedNodes?: {
-        index?: number;
-        parentId?: string;
-        // todo: remove this key. it was introduced because of backward compatibility.
-        id?: string;
+    removedNodes?: TargetMutation;
+    // removedNodes?:
+    //     | TargetMutation
+    //     | [];
+    addedNodes?: {
+        parentId: string;
+        previousSiblingIndex: number;
+        nodeValue: string;
     }[];
 }
 export interface TestSelectionEvent {
@@ -224,10 +252,11 @@ function getNodeFromOffsetCacheMap(parentId: string, index: number): Node {
     return offsetCacheMap[parentId + '$' + index];
 }
 
-async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
+async function triggerEvents(eventStackList: TestEvent[][]): Promise<Node[]> {
+    const addedNodes: Node[] = [];
     const editableElement = document.getElementById('editable');
-    resetOffsetCacheMap(editableElement);
     eventStackList.forEach(async eventStack => {
+        resetOffsetCacheMap(editableElement);
         eventStack.forEach(testEvent => {
             if (testEvent.type === 'mutation') {
                 const mutationEvent: TestMutationEvent = testEvent;
@@ -238,22 +267,60 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
                     mutationEvent.targetIndex,
                 );
                 if (testEvent.removedNodes) {
+                    console.log('testEvent.removedNodes:', testEvent.removedNodes);
                     testEvent.removedNodes
                         .map(removedNodeDescription => {
                             // todo: remove this "if" and keep the "else" when regenerated events
                             //       it was introduced to keep compatible with the `id` key
-                            if (removedNodeDescription.id) {
-                                return document.getElementById(removedNodeDescription.id);
-                            } else {
-                                return getNodeFromOffsetCacheMap(
-                                    removedNodeDescription.parentId,
-                                    removedNodeDescription.index,
+                            if ((removedNodeDescription as TargetMutationOnlyID).id) {
+                                return document.getElementById(
+                                    (removedNodeDescription as TargetMutationOnlyID).id,
                                 );
+                            } else if (
+                                typeof (removedNodeDescription as TargetMutationIndex).index ===
+                                'number'
+                            ) {
+                                return getNodeFromOffsetCacheMap(
+                                    (removedNodeDescription as TargetMutationIndex).parentId,
+                                    (removedNodeDescription as TargetMutationIndex).index,
+                                );
+                            } else {
+                                const description = removedNodeDescription as TargetMutationPreviousSibling;
+                                const previousSibling = getNodeFromOffsetCacheMap(
+                                    description.parentId,
+                                    description.previousSiblingIndex,
+                                );
+                                if (!previousSibling) debugger;
+                                const childNodes = Array.from(
+                                    previousSibling.parentNode.childNodes,
+                                );
+                                return childNodes[description.previousSiblingIndex + 1];
                             }
+                            // else if (
+                            //     (removedNodeDescription as TargetMutationPreviousSibling)
+                            //         .previousSiblingIndex
+                            // ) {
+                            //     const previousSibling = getNodeFromOffsetCacheMap(
+                            //         (removedNodeDescription as TargetMutationIndex).parentId,
+                            //         (removedNodeDescription as TargetMutationIndex).index,
+                            //     )
+                            //     return {previousSibling.}
+                            // };
                         })
                         .forEach(removedNode => {
                             removedNode.parentNode.removeChild(removedNode);
                         });
+                } else if (testEvent.addedNodes) {
+                    testEvent.addedNodes.forEach(addedNodeDescription => {
+                        const previousSibling = getNodeFromOffsetCacheMap(
+                            addedNodeDescription.parentId,
+                            addedNodeDescription.previousSiblingIndex,
+                        );
+                        const div = document.createElement('div');
+                        div.innerHTML = addedNodeDescription.nodeValue;
+                        addedNodes.push(div.firstChild);
+                        (previousSibling as ChildNode).after(div.firstChild);
+                    });
                 } else {
                     mutatedNode.textContent = mutationEvent.textContent;
                 }
@@ -276,7 +343,7 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
         await nextTick();
     });
     await nextTick();
-    return;
+    return addedNodes;
 }
 
 // ? is all the tests special cases that we handle because the browser are doing something
@@ -444,20 +511,38 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it.skip('should insert char at the end of a word (mac safari)', async () => {
-                        root.innerHTML = '';
-                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
-                        const p = document.getElementById('a');
-                        const text = p.childNodes[0];
-                        await nextTick();
-                        eventBatchs = [];
-
-                        await triggerEvents([]);
-                        await nextTick();
+                    it('should insert char at the end of a word (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'o', code: 'KeyO' },
+                                { type: 'keypress', key: 'o', code: 'KeyO' },
+                                { type: 'beforeinput', data: 'o', inputType: 'insertText' },
+                                { type: 'input', data: 'o', inputType: 'insertText' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'o', code: 'KeyO' }],
+                        ]);
 
                         const batchEvents: EventBatch[] = [
                             {
-                                events: [virtualKeyboardEvent],
+                                events: [keyboardEvent],
                                 mutatedElements: new Set([text]),
                             },
                         ];
@@ -755,6 +840,56 @@ describe('utils', () => {
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should insert space at the end of a word (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: ' ', code: 'Space' },
+                                { type: 'keypress', key: ' ', code: 'Space' },
+                                { type: 'beforeinput', data: ' ', inputType: 'insertText' },
+                                { type: 'input', data: ' ', inputType: 'insertText' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: ' ', code: 'Space' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
                                 mutatedElements: new Set([text]),
                             },
                         ];
@@ -1502,7 +1637,7 @@ describe('utils', () => {
                 });
             });
 
-            describe('delete', () => {
+            describe.only('delete', () => {
                 describe('deleteContentBackward with backspace', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
@@ -1590,6 +1725,47 @@ describe('utils', () => {
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [firefoxKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('should deleteContentBackward with backspace (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 5 },
+                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Backspace', code: 'Backspace' },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteContentBackward',
+                                },
+                                { type: 'input', data: null, inputType: 'deleteContentBackward' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hell',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
                                 mutatedElements: new Set([text]),
                             },
                         ];
@@ -1744,6 +1920,43 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('should deleteContentForward with delete (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 4 },
+                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Delete', code: 'Delete' },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteContentForward',
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hell',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                { type: 'input', data: null, inputType: 'deleteContentForward' },
+                            ],
+                            [{ type: 'keyup', key: 'Delete', code: 'Delete' }],
+                            [{ type: 'keyup', key: 'Meta', code: 'MetaLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                     // todo: ask chm: how to trigger delete with SwiftKey?
                     it.skip('should deleteContentForward with delete (SwiftKey)', async () => {
                         const p = document.createElement('p');
@@ -1774,6 +1987,7 @@ describe('utils', () => {
                 });
                 describe('deleteWordBackward at the end of word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text: ChildNode;
@@ -1804,6 +2018,7 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        macKeyboardEvent = { ...keyboardEvent, ctrlKey: false, altKey: true };
                         firefoxKeyboardEvent = { ...keyboardEvent };
                         // todo: discuss DMO: do we really want to remove inputType?
                         delete firefoxKeyboardEvent.inputType;
@@ -1883,9 +2098,75 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('deleteWordBackward at the end of word (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 10 },
+                                    anchor: { id: 'a', index: 0, offset: 10 },
+                                },
+                            ],
+                            [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    altKey: true,
+                                },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteWordBackward',
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'hello ',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                { type: 'input', data: null, inputType: 'deleteWordBackward' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
+                            [{ type: 'keyup', key: 'Alt', code: 'AltLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('deleteWordBackward word in middle of sencence', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text: ChildNode;
@@ -1898,9 +2179,6 @@ describe('utils', () => {
                         await nextTick();
                         eventBatchs = [];
 
-                        firefoxKeyboardEvent = { ...keyboardEvent };
-                        // todo: discuss DMO: do we really want to remove inputType?
-                        delete firefoxKeyboardEvent.inputType;
                         keyboardEvent = {
                             type: 'keyboard',
                             inputType: 'deleteWordBackward',
@@ -1919,6 +2197,10 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        macKeyboardEvent = { ...keyboardEvent, ctrlKey: false, altKey: true };
+                        firefoxKeyboardEvent = { ...keyboardEvent };
+                        // todo: discuss DMO: do we really want to remove inputType?
+                        delete firefoxKeyboardEvent.inputType;
                     });
 
                     it('deleteWordBackward word in middle of sencence (ubuntu chrome)', async () => {
@@ -1994,9 +2276,78 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('deleteWordBackward word in middle of sencence (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 6 },
+                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                },
+                            ],
+                            [
+                                { type: 'keyup', key: 'Alt', code: 'AltLeft' },
+                                { type: 'keyup', key: 'Meta', code: 'MetaLeft' },
+                            ],
+                            [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    altKey: true,
+                                },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteWordBackward',
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'a',
+                                    targetIndex: 0,
+                                },
+                                { type: 'input', data: null, inputType: 'deleteWordBackward' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
+                            [{ type: 'keyup', key: 'Alt', code: 'AltLeft' }],
+                            [
+                                { type: 'keyup', key: 'Alt', code: 'AltLeft' },
+                                { type: 'keyup', key: 'Meta', code: 'MetaLeft' },
+                            ],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macKeyboardEvent],
+                                mutatedElements: new Set([text]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('deleteWordBackward word in middle of sencence with style', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let lastText: ChildNode;
@@ -2029,6 +2380,7 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        macKeyboardEvent = { ...keyboardEvent, ctrlKey: false, altKey: true };
                         firefoxKeyboardEvent = { ...keyboardEvent };
                         // todo: discuss DMO: do we really want to remove inputType?
                         delete firefoxKeyboardEvent.inputType;
@@ -2106,9 +2458,81 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('deleteWordBackward word in middle of sencence with style (mac safari)', async () => {
+                        const addedNodes = await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'b', index: 0, offset: 4 },
+                                    anchor: { id: 'b', index: 0, offset: 4 },
+                                },
+                            ],
+                            [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    altKey: true,
+                                },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteWordBackward',
+                                },
+                                { type: 'input', data: null, inputType: 'deleteWordBackward' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a , b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 0 }],
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a , b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    addedNodes: [
+                                        {
+                                            parentId: 'a',
+                                            previousSiblingIndex: 1,
+                                            nodeValue:
+                                                '<span style="font-weight: bold; display: inline"></span>',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a , b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 1 }],
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
+                            [{ type: 'keyup', key: 'Alt', code: 'AltLeft' }],
+                        ]);
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macKeyboardEvent],
+                                mutatedElements: new Set([b, addedNodes[0]]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('backspace multi-styled word', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let lastText: ChildNode;
@@ -2141,6 +2565,7 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        macKeyboardEvent = { ...keyboardEvent, ctrlKey: false, altKey: true };
                         firefoxKeyboardEvent = { ...keyboardEvent };
                         // todo: discuss DMO: do we really want to remove inputType?
                         delete firefoxKeyboardEvent.inputType;
@@ -2226,10 +2651,105 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('backspace multi-styled word (mac safari)', async () => {
+                        const addedNodes = await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 1 },
+                                    anchor: { id: 'a', index: 2, offset: 1 },
+                                },
+                            ],
+                            [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    altKey: true,
+                                },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteWordBackward',
+                                },
+                                { type: 'input', data: null, inputType: 'deleteWordBackward' },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 0 }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 2 },
+                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    addedNodes: [
+                                        {
+                                            parentId: 'a',
+                                            previousSiblingIndex: 1,
+                                            nodeValue:
+                                                '<span style="font-weight: bold; display: inline"></span>',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a  b',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 1 }],
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
+                            [{ type: 'keyup', key: 'Alt', code: 'AltLeft' }],
+                        ]);
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macKeyboardEvent],
+                                mutatedElements: new Set([b, lastText, addedNodes[0]]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('backspace whole line backward', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text: ChildNode;
                     let text2: ChildNode;
@@ -2268,6 +2788,12 @@ describe('utils', () => {
                                     },
                                 },
                             ],
+                        };
+                        macKeyboardEvent = {
+                            ...keyboardEvent,
+                            metaKey: true,
+                            shiftKey: false,
+                            ctrlKey: false,
                         };
                         firefoxKeyboardEvent = { ...keyboardEvent };
                         // todo: discuss DMO: do we really want to remove inputType?
@@ -2386,10 +2912,74 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('backspace whole line backward (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 2 },
+                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                },
+                            ],
+                            [{ type: 'keydown', key: 'Meta', code: 'MetaLeft', metaKey: true }],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Backspace',
+                                    code: 'Backspace',
+                                    metaKey: true,
+                                },
+                                {
+                                    type: 'beforeinput',
+                                    data: null,
+                                    inputType: 'deleteHardLineBackward',
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ', c',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 0, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ', c',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ', c',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                { type: 'input', data: null, inputType: 'deleteHardLineBackward' },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 0, offset: 0 },
+                                    anchor: { id: 'a', index: 0, offset: 0 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Meta', code: 'MetaLeft' }],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macKeyboardEvent],
+                                mutatedElements: new Set([text, b, text2]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
-                describe('delete word', () => {
+                // todo?:
+                // describe.only('delete space+word in the middle of a sentence', () => {
+                describe('delete word in the middle of a sentence', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text2: ChildNode;
                     let text3: ChildNode;
@@ -2402,7 +2992,7 @@ describe('utils', () => {
                         text2 = p.childNodes[2];
                         i = p.childNodes[3];
                         text3 = p.childNodes[4];
-                        setRange(text2, 3, text2, 3);
+                        // setRange(text2, 2, text2, 2);
 
                         await nextTick();
                         eventBatchs = [];
@@ -2425,24 +3015,55 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        macKeyboardEvent = { ...keyboardEvent, ctrlKey: false, altKey: true };
                         firefoxKeyboardEvent = { ...keyboardEvent };
                         // todo: discuss DMO: do we really want to remove inputType?
                         delete firefoxKeyboardEvent.inputType;
                     });
-                    it('delete word (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
-                            key: 'Delete',
-                            code: 'Delete',
-                            ctrlKey: true,
-                        });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordForward' });
-                        text2.textContent = ' b, ';
-                        p.removeChild(i);
-                        text3.textContent = '\u00A0g';
-                        setRange(text2, 4, text2, 4);
-                        triggerEvent(root, 'input', { inputType: 'deleteWordForward' });
-                        await nextTick();
-                        await nextTick();
+                    it('delete word in the middle of a sentence (ubuntu chrome)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 4 },
+                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                },
+                            ],
+                            [
+                                {
+                                    type: 'keydown',
+                                    key: 'Control',
+                                    code: 'ControlLeft',
+                                    ctrlKey: true,
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Delete', code: 'Delete', ctrlKey: true },
+                                { type: 'beforeinput', data: null, inputType: 'deleteWordForward' },
+                                { type: 'input', data: null, inputType: 'deleteWordForward' },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b, ',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a test b,  g',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' g',
+                                    targetParentId: 'a',
+                                    targetIndex: 4,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Delete', code: 'Delete', ctrlKey: true }],
+                            [{ type: 'keyup', key: 'Control', code: 'ControlLeft' }],
+                        ]);
 
                         const batchEvents: EventBatch[] = [
                             {
@@ -2452,7 +3073,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
-                    it('delete word (ubuntu firefox)', async () => {
+                    it('delete word in the middle of a sentence (ubuntu firefox)', async () => {
                         await triggerEvents([
                             [
                                 {
@@ -2499,9 +3120,67 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    it('delete word in the middle of a sentence (mac safari)', async () => {
+                        await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'a', index: 2, offset: 4 },
+                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                },
+                            ],
+                            [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
+                            [
+                                { type: 'keydown', key: 'Delete', code: 'Delete', altKey: true },
+                                { type: 'beforeinput', data: null, inputType: 'deleteWordForward' },
+                                { type: 'input', data: null, inputType: 'deleteWordForward' },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' b, ',
+                                    targetParentId: 'a',
+                                    targetIndex: 2,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: 'a test b,  g',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' g',
+                                    targetParentId: 'a',
+                                    targetIndex: 4,
+                                },
+                                {
+                                    type: 'mutation',
+                                    textContent: ' g',
+                                    targetParentId: 'a',
+                                    targetIndex: 4,
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Delete', code: 'Delete', altKey: true }],
+                            [{ type: 'keyup', key: 'Alt', code: 'AltLeft' }],
+                            [
+                                { type: 'keyup', key: 'Alt', code: 'AltLeft' },
+                                { type: 'keyup', key: 'Meta', code: 'MetaLeft' },
+                            ],
+                        ]);
+                        await nextTick();
+
+                        const batchEvents: EventBatch[] = [
+                            {
+                                events: [macKeyboardEvent],
+                                mutatedElements: new Set([text2, i, text3]),
+                            },
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
                 describe('delete whole line forward', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;
+                    let macKeyboardEvent: NormalizedKeyboardEvent;
                     let firefoxKeyboardEvent: NormalizedKeyboardEvent;
                     let p: HTMLElement;
                     let text2: ChildNode;
@@ -2544,6 +3223,7 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        macKeyboardEvent = { ...keyboardEvent, ctrlKey: false, altKey: true };
                         firefoxKeyboardEvent = { ...keyboardEvent };
                         // todo: discuss DMO: do we really want to remove inputType?
                         delete firefoxKeyboardEvent.inputType;
@@ -2656,6 +3336,7 @@ describe('utils', () => {
                         ];
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
+                    // impossible to delete the whole line forward in mac
                 });
                 describe('delete whole line forward and do nothing', () => {
                     let keyboardEvent: NormalizedKeyboardEvent;

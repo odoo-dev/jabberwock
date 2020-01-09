@@ -157,28 +157,52 @@ function logSelection(): void {
         registerTestEvent(testSelectionEvent);
     }
 }
-function logMutation(mutation): void {
+function logMutation(mutation: MutationRecord): void {
     console.log('mutation:', mutation);
-    // const targetParent = mutation.target.parentElement;
     const offsetInfo = offsetCacheMap.get(mutation.target);
-    // the mutations that does not have parent are the one who are deleted.
-    // we do not need to record theses events.
-    // if (targetParent) {
     const testMutationEvent: TestMutationEvent = {
         type: 'mutation',
         textContent: mutation.target.textContent,
         targetParentId: offsetInfo.parentId,
-        // targetIndex: Array.prototype.indexOf.call(targetParent.childNodes, mutation.target),
         targetIndex: offsetInfo.index,
     };
     const removedNodes = Array.from(mutation.removedNodes);
+    const addedNodes = Array.from(mutation.addedNodes);
     if (removedNodes.length) {
         testMutationEvent.removedNodes = removedNodes.map((node: Node) => {
-            return offsetCacheMap.get(node);
+            const nodeInCache = offsetCacheMap.get(node);
+            if (nodeInCache) {
+                return nodeInCache;
+            } else {
+                return {
+                    parentId: offsetCacheMap.get(mutation.previousSibling).parentId,
+                    previousSiblingIndex: offsetCacheMap.get(mutation.previousSibling).index,
+                };
+            }
+        });
+    }
+    if (addedNodes.length) {
+        testMutationEvent.addedNodes = [];
+        addedNodes.forEach((node: ChildNode) => {
+            // sometimes mac safari does not provide parentNode.
+            // if (node.parentNode === null) {
+            testMutationEvent.addedNodes.push({
+                parentId: offsetCacheMap.get(mutation.previousSibling).parentId,
+                previousSiblingIndex: offsetCacheMap.get(mutation.previousSibling).index,
+                nodeValue: (node as HTMLElement).outerHTML,
+            });
+            // }
+            // else {
+            //     throw new Error('an added node with a parentNode has been fond');
+            // const childNodes = Array.from(node.parentNode.childNodes);
+            // testMutationEvent.addedNodes.push({
+            //     parentId: (node.parentNode as HTMLElement).id,
+            //     index: childNodes.indexOf(node),
+            // });
+            // }
         });
     }
     registerTestEvent(testMutationEvent);
-    // }
 }
 copyButton.addEventListener('click', () => {
     (exportArea as HTMLInputElement).select();
