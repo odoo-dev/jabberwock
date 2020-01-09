@@ -81,6 +81,7 @@ function renderAllStatcks(): void {
     let consequentSelect = [];
     const eventToRemove = new Set();
     allEventStacks.forEach(stack => {
+        stack.filter(event => event.type === 'characterData');
         return stack.filter(event => {
             if (event.type === 'selection') {
                 consequentSelect.push(event);
@@ -162,6 +163,10 @@ function logMutation(mutation: MutationRecord): void {
     const offsetInfo = offsetCacheMap.get(mutation.target);
     const testMutationEvent: TestMutationEvent = {
         type: 'mutation',
+        mutationType: mutation.type,
+        // todo: this is not accurate. When there is two mutations of type characterData in the same
+        //       stack, the textContent being set is not the proper one. We should watch on the
+        //       next mutation of type 'charData' ang
         textContent: mutation.target.textContent,
         targetParentId: offsetInfo.parentId,
         targetIndex: offsetInfo.index,

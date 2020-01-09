@@ -1515,10 +1515,6 @@ export class EventNormalizer {
         // ? why do we set the direction instead of just letting the event continue and being
         // the same name as the input events API?
 
-        // todo: comment to move: firefox has more info on the keypress.
-        // The key is defined because the compiledEvent has captured it from the keydown (or keypress?)
-        // At the exception of in some device (for instance some virtual keyboard) where we look at the
-        // inputType to gess it's key (see `enrichByInput`)
         const direction = key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
         // ? ask chm
         // a word a been deleted. So we need to know which one it is.
@@ -1563,6 +1559,8 @@ export class EventNormalizer {
         if (
             inputType === 'deleteHardLineForward' ||
             inputType === 'deleteHardLineBackward' ||
+            inputType === 'deleteSoftLineBackward' ||
+            inputType === 'deleteSoftLineForward' ||
             deleteHardLineWithoutInputType
         ) {
             // todo: come to see me later
