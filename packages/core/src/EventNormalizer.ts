@@ -167,7 +167,7 @@ export type NormalizedAction =
 export interface NormalizedEvent {
     // rename to deviceSource? hardwareSource? source?
     type: string;
-    actions: NormalizedAction[];
+    actions: NormalizedAction[]; 
     defaultPrevented: boolean;
     // ? what we do with this key?
     caretPosition?: CaretPosition;
@@ -516,7 +516,10 @@ export class EventNormalizer {
         keydown?: KeyboardEvent;
         keypress?: KeyboardEvent;
         input?: InputEvent;
-        composition?: CompositionEvent;
+        lastComposition?: CompositionEvent;
+        compositionstart?: CompositionEvent;
+        compositionupdate?: CompositionEvent;
+        compositionend?: CompositionEvent;
         cut?: DataTransferDetails;
         drop?: DataTransferDetails;
         paste?: DataTransferDetails;
@@ -710,7 +713,11 @@ export class EventNormalizer {
             }
         }
 
-        this._eventsMap[eventType] = ev;
+        this._eventsMap[ev.type] = ev;
+        if (ev.type.startsWith('composition')) {
+            // Most of the time only need the last composition of the registred events
+            this._eventsMap.lastComposition = ev as CompositionEvent;
+        }
         this._events.push(ev);
     }
     /**
@@ -759,19 +766,41 @@ export class EventNormalizer {
         const keypressEvent = this._eventsMap.keypress;
         const inputEvent = this._eventsMap.input;
         const customSelectAllEvent = this._eventsMap.customSelectAll;
-        const compositionEvent = this._eventsMap.composition;
+        const compositionEvent = this._eventsMap.lastComposition;
+        const compositionStartEvent = this._eventsMap.compositionstart;
         const cutEvent = this._eventsMap.cut;
         const dropEvent = this._eventsMap.drop;
         const pasteEvent = this._eventsMap.paste;
 
         const compositionData = this._getCompositionData(compositionEvent, inputEvent);
 
-        const googleKeyboardBackspace =
+        // todo: check if I can know that this is a google keyboardBackspace with the inputType
+        const isGoogleKeyboardBackspace =
             // false &&
             compositionData &&
             compositionData.compositionFrom.slice(0, -1) === compositionData.compositionTo &&
             keydownEvent &&
             keydownEvent.key === 'Unidentified';
+
+        const googleKeyboardKey =
+            keydownEvent &&
+            keydownEvent.key === 'Unidentified' &&
+            inputEvent &&
+            inputEvent.inputType === 'insertCompositionText' &&
+            compositionStartEvent &&
+            compositionStartEvent.data === '' &&
+            this._events.filter(event => event.type === 'compositionstart').length === 1 &&
+            this._events.filter(event => event.type === 'compositionupdate').length === 2 &&
+            this._events.filter(event => event.type === 'compositionend').length === 0 &&
+            inputEvent.data[inputEvent.data.length - 1];
+        const swiftKeyInsertKey =
+            keydownEvent &&
+            keydownEvent.key === 'Unidentified' &&
+            inputEvent &&
+            inputEvent.inputType === 'insertText' &&
+            !googleKeyboardKey &&
+            this._events.filter(event => event.type === 'input').length === 1 &&
+            inputEvent.data;
 
         //
         // First pass to get the informations
@@ -789,7 +818,9 @@ export class EventNormalizer {
                 keydownEvent.key !== 'Unidentified' &&
                 keydownEvent.key !== 'Dead' &&
                 keydownEvent.key) ||
-            (googleKeyboardBackspace && 'Backspace') ||
+            (isGoogleKeyboardBackspace && 'Backspace') ||
+            googleKeyboardKey ||
+            swiftKeyInsertKey ||
             (keydownEvent &&
                 keydownEvent.key === 'Unidentified' &&
                 this._inferKeyFromInput(inputEvent));
@@ -811,7 +842,8 @@ export class EventNormalizer {
             (cutEvent && 'deleteByCut') ||
             (dropEvent && 'insertFromDrop') ||
             (pasteEvent && 'insertFromPaste') ||
-            (googleKeyboardBackspace && 'deleteContentBackward') ||
+            (isGoogleKeyboardBackspace && 'deleteContentBackward') ||
+            (!!googleKeyboardKey && 'insertText') ||
             (inputEvent && inputEvent.inputType) ||
             // todo: check if we really need to set the inputType when making a "special accent" in mac
             (isAccentMac && 'insertCompositionText');
@@ -855,10 +887,13 @@ export class EventNormalizer {
         // const virtualKeyboard =
         //     (compositionEvent && (key && key.length !== 1)) || googleKeyboardSpace;
 
-        const virtualKeyboard =
-            (compositionEvent && (key && key.length !== 1)) || googleKeyboardBackspace;
+        const isVirtualKeyboard =
+            (compositionEvent && (key && key.length !== 1)) ||
+            isGoogleKeyboardBackspace ||
+            !!googleKeyboardKey ||
+            !!swiftKeyInsertKey;
         console.log('compositionData:', compositionData);
-        console.log('googleKeyboardBackspace:', googleKeyboardBackspace);
+        console.log('googleKeyboardBackspace:', isGoogleKeyboardBackspace);
 
         // Compute the set of mutated elements accross all observed events.
         // todo: review this
@@ -898,7 +933,7 @@ export class EventNormalizer {
                 // todo: should we consider the specialEvents?
                 return keyboardNormalizedEvent;
             });
-        } else if ((!compositionEvent && key) || isCompositionKeyboard || virtualKeyboard) {
+        } else if ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard) {
             keyboardNormalizedEvent = {
                 type: 'keyboard',
                 key: key,
@@ -1017,6 +1052,7 @@ export class EventNormalizer {
         // Now, we do not need the mutation anymore as the events have been normalized.
         this._mutationNormalizer.stop();
 
+        debugger;
         console.log('this._events:', this._events);
         this._events = null;
 
@@ -1039,7 +1075,6 @@ export class EventNormalizer {
             console.log('normalizedEvents:', normalizedEvents);
             this._triggerEventBatch({ events: normalizedEvents, mutatedElements });
         }
-        debugger;
         this._secondTickObservation = false;
         this._eventsMap = {};
         this._lastEventType = null;
@@ -1541,11 +1576,16 @@ export class EventNormalizer {
                 !keydownEvent.altKey &&
                 keydownEvent.shiftKey &&
                 !keydownEvent.metaKey);
-        debugger;
+        // todo: should we transform inputType from 'deleteContentBackward' or
+        //       'deleteContentForward' to 'deleteWordBackward' or 'deleteWordForward' ?
+        const isSwiftKeyDeleteWord =
+            (inputType === 'deleteContentForward' || inputType === 'deleteContentBackward') &&
+            characterMapping.remove.length > 1;
 
         if (
             inputType === 'deleteWordForward' ||
             inputType === 'deleteWordBackward' ||
+            isSwiftKeyDeleteWord ||
             // Case of firefox without inputType
             deleteWordWithoutInputType
         ) {
@@ -1559,8 +1599,8 @@ export class EventNormalizer {
         if (
             inputType === 'deleteHardLineForward' ||
             inputType === 'deleteHardLineBackward' ||
-            inputType === 'deleteSoftLineBackward' ||
             inputType === 'deleteSoftLineForward' ||
+            inputType === 'deleteSoftLineBackward' ||
             deleteHardLineWithoutInputType
         ) {
             // todo: come to see me later
