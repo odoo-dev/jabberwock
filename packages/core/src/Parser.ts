@@ -7,7 +7,6 @@ import { VNode } from './VNodes/VNode';
 import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
-import { LineBreakNode } from './VNodes/LineBreakNode';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType, CharNode } from '../../plugin-char/CharNode';
 
@@ -23,7 +22,7 @@ export type ParsingFunction = (node: Node) => VNode[];
 
 export class Parser {
     // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
-    parsingFunctions: Set<ParsingFunction> = new Set([LineBreakNode.parse, VElement.parse]);
+    parsingFunctions: Set<ParsingFunction> = new Set([VElement.parse]);
 
     //--------------------------------------------------------------------------
     // Public

@@ -1,6 +1,6 @@
-import { VNode } from './VNode';
-import { VElement } from './VElement';
-import { RelativePosition } from '../../../utils/src/range';
+import { VNode } from '../core/src/VNodes/VNode';
+import { VElement } from '../core/src/VNodes/VElement';
+import { RelativePosition } from '../utils/src/range';
 
 export class LineBreakNode extends VElement {
     static readonly atomic = true;

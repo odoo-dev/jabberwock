@@ -2,14 +2,15 @@ import { expect } from 'chai';
 import { CharNode } from '../../plugin-char/CharNode';
 import { Parser } from '../src/Parser';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { LineBreakNode } from '../src/VNodes/LineBreakNode';
+import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { VElement } from '../src/VNodes/VElement';
 import { Char } from '../../plugin-char/Char';
+import { LineBreak } from '../../plugin-linebreak/LineBreak';
 
 describe('utils', () => {
     describe('Parser', () => {
         const parser = new Parser();
-        parser.addParsingFunction(...Char.parsingFunctions);
+        parser.addParsingFunction(...Char.parsingFunctions.concat(LineBreak.parsingFunctions));
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {
                 const element = document.createElement('div');

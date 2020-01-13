@@ -3,7 +3,7 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { VRangeDescription } from '../../../core/src/VRange';
 import { Direction, RANGE_TAIL_CHAR, RANGE_HEAD_CHAR } from '../../../utils/src/range';
-import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
+import { LineBreakNode } from '../../../plugin-linebreak/LineBreakNode';
 
 interface NodeProps {
     isRoot: boolean;

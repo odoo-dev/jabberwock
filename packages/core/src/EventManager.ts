@@ -1,5 +1,5 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
-import { LineBreakNode } from './VNodes/LineBreakNode';
+import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import JWEditor from './JWEditor';
 
 interface SetRangeParams {
