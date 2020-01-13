@@ -112,8 +112,11 @@ export class JWEditor {
             if (pluginClass.nodes.length) {
                 this.parser.addVNode(...pluginClass.nodes);
             }
-            if (pluginClass.parse) {
-                this.parser.addParseMethod(pluginClass.parse);
+            if (pluginClass.getParser) {
+                this.parser.addParsePredicate(pluginClass.getParser);
+            }
+            if (pluginClass.getRenderer) {
+                this.renderer.addRenderPredicate(pluginClass.getRenderer);
             }
         });
     }

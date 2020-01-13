@@ -9,6 +9,7 @@ import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { Attribute, AttributeName } from './VNodes/Attribute';
+import { ParsePredicate } from './JWPlugin';
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -17,33 +18,23 @@ interface ParsingContext {
     attributes?: Map<AttributeName, Attribute>;
     vDocument: VDocument;
 }
-export type ParsingFunction = (node: Node) => VNode[] | Set<Attribute>;
 
 export class Parser {
     _VNodes: Set<typeof VNode> = new Set();
-    parsingFunctions: Set<ParsingFunction> = new Set();
+    _parsePredicates: Set<ParsePredicate> = new Set();
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
     /**
-     * Add parsing functions to the ones that this Parser can handle.
+     * Add a method to the ones this Parser uses to find which plugin parses
+     * which node.
      *
-     * @param parsingFunctions
+     * @param parsePredicate
      */
-    addParsingFunction(...parsingFunctions: Array<ParsingFunction>): void {
-        parsingFunctions.forEach(VNodeClass => {
-            this.parsingFunctions.add(VNodeClass);
-        });
-    }
-    /**
-     * Add a method to the ones that this Parser uses to parse DOM nodes.
-     *
-     * @param parseMethod
-     */
-    addParseMethod(parseMethod: ParsingFunction): void {
-        this.parsingFunctions.add(parseMethod);
+    addParsePredicate(parsePredicate: ParsePredicate): void {
+        this._parsePredicates.add(parsePredicate);
     }
     /**
      * Return a list of vNodes matching the given node.
@@ -51,16 +42,16 @@ export class Parser {
      * @param node
      */
     parseNode(node: Node): VNode[] | Set<Attribute> {
-        for (const parseMethod of this.parsingFunctions) {
-            const parseResult = parseMethod(node);
-            if (parseResult) {
-                return parseResult;
+        for (const parsePredicate of this._parsePredicates) {
+            const parser = parsePredicate(node);
+            if (parser) {
+                return parser(node);
             }
         }
         // If the node could not be parsed, create a generic element node with
         // the HTML tag of the DOM Node. This way we may not support the node
         // but we don't break it either.
-        return [new VElement(node.nodeName)];
+        return VElement.parse(node);
     }
     /**
      * Parse an HTML element into the editor's virtual representation.

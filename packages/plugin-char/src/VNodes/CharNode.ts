@@ -19,47 +19,6 @@ export class CharNode extends VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Render the VNode to the given format.
-     *
-     * @param [to] the name of the format to which we want to render (default:
-     * html)
-     */
-    render<T>(to = 'html'): T {
-        if (to === 'html') {
-            // Consecutive compatible char nodes are rendered as a single text node.
-            let text = '' + this.char;
-            let next = this.nextSibling();
-            const charNodes: CharNode[] = [this];
-            while (next && this._isSameAs(next)) {
-                if (next instanceof CharNode) {
-                    charNodes.push(next);
-                    if (next.char === ' ' && text[text.length - 1] === ' ') {
-                        // Browsers don't render consecutive space chars otherwise.
-                        text += '\u00A0';
-                    } else {
-                        text += next.char;
-                    }
-                }
-                next = next.nextSibling();
-            }
-            // Browsers don't render leading/trailing space chars otherwise.
-            text = text.replace(/^ | $/g, '\u00A0');
-
-            // Create and append the text node, update the VDocumentMap.
-            let renderedNodes = [document.createTextNode(text)] as Node[];
-            if (this.attributes.size) {
-                this.attributes.forEach(attribute => {
-                    renderedNodes = attribute.render(renderedNodes);
-                });
-            }
-            const fragment = document.createDocumentFragment();
-            renderedNodes.forEach(node => fragment.appendChild(node));
-            return ({ fragment: fragment, vNodes: charNodes } as unknown) as T;
-        } else {
-            return this.renderingEngines[to].render(this) as T;
-        }
-    }
-    /**
      * Return a new VNode with the same type and attributes as this VNode.
      *
      * @override

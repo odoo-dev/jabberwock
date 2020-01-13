@@ -1,33 +1,12 @@
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { VElement } from '../../../core/src/VNodes/VElement';
 import { RelativePosition } from '../../../utils/src/range';
-import { HTMLRendering } from '../../../core/src/BasicHtmlRenderingEngine';
 
 export class LineBreakNode extends VElement {
     static readonly atomic = true;
     repr = '↲';
     constructor() {
         super('BR');
-    }
-
-    //--------------------------------------------------------------------------
-    // Lifecycle
-    //--------------------------------------------------------------------------
-
-    /**
-     * Render the VNode to the given format.
-     *
-     * @param [to] the name of the format to which we want to render (default:
-     * html)
-     */
-    render<T>(to = 'html'): T {
-        const t = this.renderingEngines[to].render(this) as T;
-        if (to === 'html' && !this.nextSibling()) {
-            // If a LINE_BREAK has no next sibling, it must be rendered as two
-            // BRs in order for it to be visible.
-            ((t as unknown) as HTMLRendering).fragment.appendChild(document.createElement('br'));
-        }
-        return t;
     }
 
     //--------------------------------------------------------------------------
