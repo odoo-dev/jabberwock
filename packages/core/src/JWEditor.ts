@@ -113,6 +113,14 @@ export class JWEditor {
         }
     }
     /**
+     * Add the given plugin classes to this editor instance.
+     *
+     * @param pluginClasses
+     */
+    addPlugins(...pluginClasses: Array<typeof JWPlugin>): void {
+        pluginClasses.forEach(pluginClass => this.addPlugin(pluginClass));
+    }
+    /**
      * Load the given config in this editor instance.
      *
      * @param config

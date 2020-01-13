@@ -6,10 +6,7 @@ import { Paragraph } from '../plugin-paragraph/Paragraph';
 
 export function createBasicEditor(editable?: HTMLElement, config?: JWEditorConfig): JWEditor {
     const editor = new JWEditor(editable);
-    editor.addPlugin(Char);
-    editor.addPlugin(LineBreak);
-    editor.addPlugin(Heading);
-    editor.addPlugin(Paragraph);
+    editor.addPlugins(Char, LineBreak, Heading, Paragraph);
     editor.loadConfig(config || {});
     return editor;
 }
