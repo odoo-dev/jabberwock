@@ -10,6 +10,7 @@ import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { HeadingNode } from '../../plugin-heading/HeadingNode';
+import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 
 describe('core', () => {
     describe('src', () => {
@@ -110,28 +111,12 @@ describe('core', () => {
             });
             describe('VElement', () => {
                 describe('constructor', () => {
-                    it('should create a paragraph', async () => {
-                        const vNode = new VElement('P');
-                        expect(vNode.atomic).to.equal(false);
-                        expect(vNode.htmlTag).to.equal('P');
-                    });
                     it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new VElement('UNKNOWN-ELEMENT');
                             expect(vNode.atomic).to.equal(false);
                             expect(vNode.htmlTag).to.equal('UNKNOWN-ELEMENT');
                         }
-                    });
-                });
-                describe('parse', () => {
-                    it('should parse a paragraph', async () => {
-                        const node = document.createElement('p');
-                        const vNode = VElement.parse(node)[0];
-                        expect(vNode.htmlTag).to.equal('P');
-                    });
-                    it('should not parse a SPAN node', async () => {
-                        const span = document.createElement('span');
-                        expect(VElement.parse(span)).to.be.undefined;
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -141,6 +126,13 @@ describe('core', () => {
                         expect(copy).to.not.equal(vNode);
                         expect(copy.htmlTag).to.equal('P');
                     });
+                });
+            });
+            describe('ParagraphNode', () => {
+                it('should create a paragraph', async () => {
+                    const vNode = new ParagraphNode();
+                    expect(vNode.atomic).to.equal(false);
+                    expect(vNode.htmlTag).to.equal('P');
                 });
             });
             describe('HeadingNode', () => {

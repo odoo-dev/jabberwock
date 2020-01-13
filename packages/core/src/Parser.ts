@@ -22,7 +22,7 @@ export type ParsingFunction = (node: Node) => VNode[];
 
 export class Parser {
     // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
-    parsingFunctions: Set<ParsingFunction> = new Set([VElement.parse]);
+    parsingFunctions: Set<ParsingFunction> = new Set();
 
     //--------------------------------------------------------------------------
     // Public

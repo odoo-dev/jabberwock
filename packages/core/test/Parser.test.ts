@@ -7,6 +7,7 @@ import { VElement } from '../src/VNodes/VElement';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
 import { Heading } from '../../plugin-heading/Heading';
+import { Paragraph } from '../../plugin-paragraph/Paragraph';
 
 describe('utils', () => {
     describe('Parser', () => {
@@ -14,7 +15,8 @@ describe('utils', () => {
         parser.addParsingFunction(
             ...Char.parsingFunctions
                 .concat(LineBreak.parsingFunctions)
-                .concat(Heading.parsingFunctions),
+                .concat(Heading.parsingFunctions)
+                .concat(Paragraph.parsingFunctions),
         );
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {
