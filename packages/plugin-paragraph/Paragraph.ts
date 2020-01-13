@@ -3,10 +3,12 @@ import { ParsingFunction } from '../core/src/Parser';
 import { ParagraphNode } from './ParagraphNode';
 
 export class Paragraph extends JWPlugin {
-    static readonly parsingFunctions: Array<ParsingFunction> = [Paragraph.parse];
-    static parse(node: Node): ParagraphNode[] {
+    static parsingPredicate(node: Node): ParsingFunction {
         if (node.nodeName === 'P') {
-            return [new ParagraphNode()];
+            return Paragraph.parse;
         }
+    }
+    static parse(): ParagraphNode[] {
+        return [new ParagraphNode()];
     }
 }

@@ -17,25 +17,32 @@ interface ParsingContext {
     format?: FormatType[];
     vDocument: VDocument;
 }
-
+export type ParsingPredicate = (node: Node) => ParsingFunction;
 export type ParsingFunction = (node: Node) => VNode[];
 
 export class Parser {
-    // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
-    parsingFunctions: Set<ParsingFunction> = new Set();
+    parsingPredicates: Set<ParsingPredicate> = new Set();
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
     /**
-     * Add parsing functions to the ones that this Parser can handle.
+     * Add a parsing predicate to the ones that this Parser can handle.
      *
      * @param parsingFunctions
      */
-    addParsingFunction(...parsingFunctions: Array<ParsingFunction>): void {
-        parsingFunctions.forEach(parsingFunction => {
-            this.parsingFunctions.add(parsingFunction);
+    addParsingPredicate(parsingPredicate: ParsingPredicate): void {
+        this.parsingPredicates.add(parsingPredicate);
+    }
+    /**
+     * Add parsing predicates to the ones that this Parser can handle.
+     *
+     * @param parsingFunctions
+     */
+    addParsingPredicates(...parsingPredicates: Array<ParsingPredicate>): void {
+        parsingPredicates.forEach(parsingPredicate => {
+            this.parsingPredicates.add(parsingPredicate);
         });
     }
     /**
@@ -44,10 +51,13 @@ export class Parser {
      * @param node
      */
     parseNode(node: Node): VNode[] {
-        for (const parse of this.parsingFunctions) {
-            const vNodes = parse(node);
-            if (vNodes) {
-                return vNodes;
+        for (const parsingPredicate of this.parsingPredicates) {
+            const parsingFunction = parsingPredicate(node);
+            if (parsingFunction) {
+                const vNodes = parsingFunction(node);
+                if (vNodes) {
+                    return vNodes;
+                }
             }
         }
         // If the node could not be parsed, create a generic element node with

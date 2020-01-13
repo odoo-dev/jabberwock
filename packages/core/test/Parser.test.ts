@@ -12,11 +12,11 @@ import { Paragraph } from '../../plugin-paragraph/Paragraph';
 describe('utils', () => {
     describe('Parser', () => {
         const parser = new Parser();
-        parser.addParsingFunction(
-            ...Char.parsingFunctions
-                .concat(LineBreak.parsingFunctions)
-                .concat(Heading.parsingFunctions)
-                .concat(Paragraph.parsingFunctions),
+        parser.addParsingPredicates(
+            Char.parsingPredicate,
+            LineBreak.parsingPredicate,
+            Heading.parsingPredicate,
+            Paragraph.parsingPredicate,
         );
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {

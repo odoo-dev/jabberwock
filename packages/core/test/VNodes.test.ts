@@ -13,6 +13,7 @@ import { HeadingNode } from '../../plugin-heading/HeadingNode';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
+import { ParsingFunction } from '../src/Parser';
 
 describe('core', () => {
     describe('src', () => {
@@ -63,7 +64,7 @@ describe('core', () => {
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
-                        expect(Char.parse(span)).to.be.undefined;
+                        expect(Char.parsingPredicate(span)).to.be.undefined;
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -227,11 +228,13 @@ describe('core', () => {
                 describe('parse', () => {
                     it('should parse a BR node', async () => {
                         const br = document.createElement('br');
-                        expect(LineBreak.parse(br)[0].atomic).to.equal(true);
+                        const parsingFunction = LineBreak.parsingPredicate(br);
+                        expect(parsingFunction).not.to.be.undefined;
+                        expect(parsingFunction(br)[0].atomic).to.equal(true);
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
-                        expect(LineBreak.parse(span)).to.be.undefined;
+                        expect(LineBreak.parsingPredicate(span)).to.be.undefined;
                     });
                 });
             });
@@ -1192,11 +1195,13 @@ describe('core', () => {
                         customKey = 'yes';
                     }
                     class MyCustomPlugin extends JWPlugin {
-                        static readonly parsingFunctions = [MyCustomPlugin.parse];
-                        static parse(node: Node): MyCustomNode[] {
+                        static parsingPredicate(node: Node): ParsingFunction {
                             if (node.nodeName === 'CUSTOM-NODE') {
-                                return [new MyCustomNode()];
+                                return MyCustomPlugin.parse;
                             }
+                        }
+                        static parse(): MyCustomNode[] {
+                            return [new MyCustomNode()];
                         }
                     }
                     editor.addPlugin(MyCustomPlugin);

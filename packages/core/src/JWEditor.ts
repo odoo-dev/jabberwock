@@ -107,9 +107,9 @@ export class JWEditor {
         Object.keys(plugin.commandHooks).forEach(key => {
             this.dispatcher.registerHook(key, plugin.commandHooks[key]);
         });
-        // Register the parsing functions of this plugin.
-        if (pluginClass.parsingFunctions.length) {
-            this.parser.addParsingFunction(...pluginClass.parsingFunctions);
+        // Register the parsing predicate of this plugin if it has one.
+        if (pluginClass.parsingPredicate) {
+            this.parser.addParsingPredicate(pluginClass.parsingPredicate);
         }
     }
     /**

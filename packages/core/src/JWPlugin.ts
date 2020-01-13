@@ -1,5 +1,5 @@
 import JWEditor from './JWEditor';
-import { ParsingFunction } from './Parser';
+import { ParsingPredicate } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
 
 export interface JWPluginConfig {
@@ -7,7 +7,7 @@ export interface JWPluginConfig {
 }
 
 export class JWPlugin {
-    static readonly parsingFunctions: Array<ParsingFunction> = [];
+    static readonly parsingPredicate: ParsingPredicate;
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
