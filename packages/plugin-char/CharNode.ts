@@ -1,5 +1,4 @@
 import { VNode } from '../core/src/VNodes/VNode';
-import { removeFormattingSpace } from '../utils/src/formattingSpace';
 
 export interface FormatType {
     bold?: boolean;
@@ -32,17 +31,6 @@ export class CharNode extends VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): CharNode[] {
-        if (node.nodeType === Node.TEXT_NODE) {
-            const vNodes: CharNode[] = [];
-            const text = removeFormattingSpace(node);
-            for (let i = 0; i < text.length; i++) {
-                const parsedVNode = new CharNode(text.charAt(i));
-                vNodes.push(parsedVNode);
-            }
-            return vNodes;
-        }
-    }
     get name(): string {
         return this.char;
     }
