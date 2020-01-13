@@ -253,7 +253,24 @@ function resetOffsetCacheMap(editableElement: HTMLElement): void {
 function getNodeFromOffsetCacheMap(parentId: string, index: number): Node {
     return offsetCacheMap[parentId + '$' + index];
 }
-
+/**
+ * In order to target the elements in the function `triggerEvents`, we associate an ID to each
+ * elements that does not have ID inside the editable element.
+ */
+let lastElementId = 0;
+export function addIdToRemainingElements(): void {
+    const nodesWithoutId = [...document.getElementById('editable').querySelectorAll('*')].filter(
+        node => node.id === '',
+    );
+    nodesWithoutId.forEach(node => {
+        node.id = 'element-' + lastElementId;
+        lastElementId++;
+    });
+}
+function resetElementsIds(): void {
+    lastElementId = 0;
+    addIdToRemainingElements();
+}
 async function triggerEvents(eventStackList: TestEvent[][]): Promise<Node[]> {
     const addedNodes: Node[] = [];
     const editableElement = document.getElementById('editable');
@@ -413,7 +430,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.hell;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 4, text, 4);
                         await nextTick();
@@ -481,8 +499,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -492,13 +510,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'o', code: 'KeyO' }],
@@ -518,8 +536,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -530,13 +548,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'o', code: 'KeyO' }],
@@ -555,8 +573,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -567,13 +585,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'o', code: 'KeyO' }],
@@ -592,8 +610,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -617,19 +635,19 @@ describe('utils', () => {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: 'hello',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                         ]);
@@ -644,8 +662,8 @@ describe('utils', () => {
                     });
                     it('should insert char at the end of a word (SwiftKey)', async () => {
                         root.innerHTML = '';
-                        root.innerHTML = "<p id='a'>hell<br/>world</p>";
-                        const p = document.getElementById('a');
+                        root.innerHTML = "<p id='element-0'>hell<br/>world</p>";
+                        const p = document.getElementById('element-0');
                         const text = p.childNodes[0];
                         await nextTick();
                         eventBatchs = [];
@@ -654,8 +672,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -665,14 +683,14 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                         ]);
@@ -696,7 +714,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.hello;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 5, text, 5);
                         await nextTick();
@@ -767,8 +786,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -778,7 +797,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
@@ -790,19 +809,19 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [{ type: 'keyup', key: ' ', code: 'Space' }],
@@ -822,8 +841,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -834,25 +853,25 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [{ type: 'keyup', key: ' ', code: 'Space' }],
@@ -904,8 +923,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -919,20 +938,20 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                         ]);
@@ -957,7 +976,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.hell;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
 
                         await nextTick();
@@ -1286,8 +1306,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'id': 'a', 'index': 0, 'offset': 4 },
-                                    'anchor': { 'id': 'a', 'index': 0, 'offset': 4 },
+                                    'focus': { 'id': 'element-0', 'index': 0, 'offset': 4 },
+                                    'anchor': { 'id': 'element-0', 'index': 0, 'offset': 4 },
                                 },
                             ],
                             [
@@ -1297,14 +1317,14 @@ describe('utils', () => {
                                 {
                                     'type': 'mutation',
                                     'textContent': 'hellô',
-                                    'targetParentId': 'a',
+                                    'targetParentId': 'element-0',
                                     'targetIndex': 0,
                                 },
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'id': 'a', 'index': 0, 'offset': 5 },
-                                    'anchor': { 'id': 'a', 'index': 0, 'offset': 5 },
+                                    'focus': { 'id': 'element-0', 'index': 0, 'offset': 5 },
+                                    'anchor': { 'id': 'element-0', 'index': 0, 'offset': 5 },
                                 },
                             ],
                         ]);
@@ -1412,7 +1432,7 @@ describe('utils', () => {
                 });
                 it.skip('multi keypress with accent (mac)', async () => {
                     root.innerHTML = testContentNormalizer.hell;
-                    const p = document.getElementById('a');
+                    const p = document.getElementById('element-0');
                     const text = p.childNodes[0];
 
                     await nextTick();
@@ -1421,8 +1441,8 @@ describe('utils', () => {
                         [
                             {
                                 type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 4 },
-                                anchor: { id: 'a', index: 0, offset: 4 },
+                                focus: { id: 'element-0', index: 0, offset: 4 },
+                                anchor: { id: 'element-0', index: 0, offset: 4 },
                             },
                         ],
                         [
@@ -1435,13 +1455,13 @@ describe('utils', () => {
                                 type: 'mutation',
                                 mutationType: 'characterData',
                                 textContent: 'hell^',
-                                targetParentId: 'a',
+                                targetParentId: 'element-0',
                                 targetIndex: 0,
                             },
                             {
                                 type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 5 },
-                                anchor: { id: 'a', index: 0, offset: 5 },
+                                focus: { id: 'element-0', index: 0, offset: 5 },
+                                anchor: { id: 'element-0', index: 0, offset: 5 },
                             },
                             { type: 'keydown', key: 'ô', code: 'KeyO' },
                             { type: 'beforeinput', data: 'ô', inputType: 'insertCompositionText' },
@@ -1451,18 +1471,18 @@ describe('utils', () => {
                                 type: 'mutation',
                                 mutationType: 'characterData',
                                 textContent: 'hellô',
-                                targetParentId: 'a',
+                                targetParentId: 'element-0',
                                 targetIndex: 0,
                             },
                             {
                                 type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 5 },
-                                anchor: { id: 'a', index: 0, offset: 5 },
+                                focus: { id: 'element-0', index: 0, offset: 5 },
+                                anchor: { id: 'element-0', index: 0, offset: 5 },
                             },
                             {
                                 type: 'selection',
-                                focus: { id: 'a', index: 0, offset: 5 },
-                                anchor: { id: 'a', index: 0, offset: 5 },
+                                focus: { id: 'element-0', index: 0, offset: 5 },
+                                anchor: { id: 'element-0', index: 0, offset: 5 },
                             },
                         ],
                         [{ type: 'keyup', key: 'o', code: 'KeyO' }],
@@ -1483,7 +1503,8 @@ describe('utils', () => {
             describe('completion/correction', () => {
                 it('should add space when hitting a word completion (SwiftKey)', async () => {
                     root.innerHTML = testContentNormalizer.ahello;
-                    const p = document.getElementById('a');
+                    resetElementsIds();
+                    const p = document.getElementById('element-0');
                     const text = p.childNodes[0];
                     setRange(text, 7, text, 7);
 
@@ -1541,7 +1562,8 @@ describe('utils', () => {
                 });
                 it('should add space from auto-correction (SwiftKey)', async () => {
                     root.innerHTML = testContentNormalizer.ahillo;
-                    const p = document.getElementById('a');
+                    resetElementsIds();
+                    const p = document.getElementById('element-0');
                     const text = p.childNodes[0];
                     setRange(text, 7, text, 7);
 
@@ -1664,7 +1686,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.hello;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 5, text, 5);
                         await nextTick();
@@ -1716,8 +1739,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -1726,13 +1749,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace' }],
@@ -1752,8 +1775,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -1767,13 +1790,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace' }],
@@ -1793,8 +1816,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -1808,7 +1831,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Backspace', code: 'Backspace' },
@@ -1847,8 +1870,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 5 },
-                                    anchor: { id: 'a', index: 0, offset: 5 },
+                                    focus: { id: 'element-0', index: 0, offset: 5 },
+                                    anchor: { id: 'element-0', index: 0, offset: 5 },
                                 },
                             ],
                             [
@@ -1867,14 +1890,14 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                         ]);
@@ -1899,7 +1922,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.hellototo;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 10, text, 10);
                         await nextTick();
@@ -1964,8 +1988,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 10 },
-                                    anchor: { id: 'a', index: 0, offset: 10 },
+                                    focus: { id: 'element-0', index: 0, offset: 10 },
+                                    anchor: { id: 'element-0', index: 0, offset: 10 },
                                 },
                             ],
                             [
@@ -1987,13 +2011,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
@@ -2014,8 +2038,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 10 },
-                                    anchor: { id: 'a', index: 0, offset: 10 },
+                                    focus: { id: 'element-0', index: 0, offset: 10 },
+                                    anchor: { id: 'element-0', index: 0, offset: 10 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -2034,31 +2058,31 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'input', data: null, inputType: 'deleteWordBackward' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -2079,8 +2103,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 10 },
-                                    anchor: { id: 'a', index: 0, offset: 10 },
+                                    focus: { id: 'element-0', index: 0, offset: 10 },
+                                    anchor: { id: 'element-0', index: 0, offset: 10 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -2100,19 +2124,19 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -2132,8 +2156,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 10 },
-                                    anchor: { id: 'a', index: 0, offset: 10 },
+                                    focus: { id: 'element-0', index: 0, offset: 10 },
+                                    anchor: { id: 'element-0', index: 0, offset: 10 },
                                 },
                             ],
                             [
@@ -2148,26 +2172,26 @@ describe('utils', () => {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: 'hello ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                         ]);
@@ -2193,7 +2217,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.atestb;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 6, text, 6);
                         await nextTick();
@@ -2257,8 +2282,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [
@@ -2280,13 +2305,13 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
@@ -2307,8 +2332,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [
@@ -2331,26 +2356,26 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'input', data: null, inputType: 'deleteWordBackward' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -2375,8 +2400,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -2396,25 +2421,25 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -2434,8 +2459,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 6 },
-                                    anchor: { id: 'a', index: 0, offset: 6 },
+                                    focus: { id: 'element-0', index: 0, offset: 6 },
+                                    anchor: { id: 'element-0', index: 0, offset: 6 },
                                 },
                             ],
                             [
@@ -2450,33 +2475,33 @@ describe('utils', () => {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: 'a  b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                         ]);
@@ -2501,9 +2526,10 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.atestbBold;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         lastText = p.lastChild;
-                        b = document.getElementById('b');
+                        b = document.getElementById('element-1');
                         setRange(lastText, 0, lastText, 0);
                         await nextTick();
                         eventBatchs = [];
@@ -2564,8 +2590,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 0 },
-                                    anchor: { id: 'a', index: 2, offset: 0 },
+                                    focus: { id: 'element-0', index: 2, offset: 0 },
+                                    anchor: { id: 'element-0', index: 2, offset: 0 },
                                 },
                             ],
                             [
@@ -2589,12 +2615,12 @@ describe('utils', () => {
                                     textContent: 'a , b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ id: 'b' }],
+                                    removedNodes: [{ id: 'element-1' }],
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
@@ -2615,8 +2641,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'b', index: 0, offset: 4 },
-                                    anchor: { id: 'b', index: 0, offset: 4 },
+                                    focus: { id: 'element-1', index: 0, offset: 4 },
+                                    anchor: { id: 'element-1', index: 0, offset: 4 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -2639,12 +2665,12 @@ describe('utils', () => {
                                     textContent: 'a , b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [
@@ -2656,7 +2682,7 @@ describe('utils', () => {
                                     targetIndex: 0,
                                     addedNodes: [
                                         {
-                                            parentId: 'a',
+                                            parentId: 'element-0',
                                             previousSiblingIndex: 1,
                                             nodeValue:
                                                 '<span style="font-weight: bold; display: inline"></span>',
@@ -2669,7 +2695,9 @@ describe('utils', () => {
                                     textContent: 'a , b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 1 }],
+                                    removedNodes: [
+                                        { parentId: 'element-0', previousSiblingIndex: 1 },
+                                    ],
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -2693,8 +2721,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'b', index: 0, offset: 4 },
-                                    anchor: { id: 'b', index: 0, offset: 4 },
+                                    focus: { id: 'element-1', index: 0, offset: 4 },
+                                    anchor: { id: 'element-1', index: 0, offset: 4 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -2717,12 +2745,12 @@ describe('utils', () => {
                                     textContent: 'a , b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -2742,8 +2770,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'b', index: 0, offset: 4 },
-                                    anchor: { id: 'b', index: 0, offset: 4 },
+                                    focus: { id: 'element-1', index: 0, offset: 4 },
+                                    anchor: { id: 'element-1', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -2760,18 +2788,18 @@ describe('utils', () => {
                                     textContent: 'a , b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                         ]);
@@ -2796,7 +2824,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.multiStyled;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         lastText = p.lastChild;
                         b = p.childNodes[1];
                         setRange(lastText, 1, lastText, 1);
@@ -2861,8 +2890,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 1 },
-                                    anchor: { id: 'a', index: 2, offset: 1 },
+                                    focus: { id: 'element-0', index: 2, offset: 1 },
+                                    anchor: { id: 'element-0', index: 2, offset: 1 },
                                 },
                             ],
                             [
@@ -2886,18 +2915,18 @@ describe('utils', () => {
                                     textContent: 'a  b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', ctrlKey: true }],
@@ -2918,8 +2947,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 1 },
-                                    anchor: { id: 'a', index: 2, offset: 1 },
+                                    focus: { id: 'element-0', index: 2, offset: 1 },
+                                    anchor: { id: 'element-0', index: 2, offset: 1 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -2941,35 +2970,37 @@ describe('utils', () => {
                                     textContent: 'a  b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 0 }],
+                                    removedNodes: [
+                                        { parentId: 'element-0', previousSiblingIndex: 0 },
+                                    ],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [
@@ -2980,7 +3011,7 @@ describe('utils', () => {
                                     targetIndex: 0,
                                     addedNodes: [
                                         {
-                                            parentId: 'a',
+                                            parentId: 'element-0',
                                             previousSiblingIndex: 1,
                                             nodeValue:
                                                 '<span style="font-weight: bold; display: inline"></span>',
@@ -2992,7 +3023,9 @@ describe('utils', () => {
                                     textContent: 'a  b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ parentId: 'a', previousSiblingIndex: 1 }],
+                                    removedNodes: [
+                                        { parentId: 'element-0', previousSiblingIndex: 1 },
+                                    ],
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -3012,8 +3045,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 1 },
-                                    anchor: { id: 'a', index: 2, offset: 1 },
+                                    focus: { id: 'element-0', index: 2, offset: 1 },
+                                    anchor: { id: 'element-0', index: 2, offset: 1 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -3035,24 +3068,24 @@ describe('utils', () => {
                                     textContent: 'a  b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Backspace', code: 'Backspace', altKey: true }],
@@ -3072,8 +3105,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 1 },
-                                    anchor: { id: 'a', index: 2, offset: 1 },
+                                    focus: { id: 'element-0', index: 2, offset: 1 },
+                                    anchor: { id: 'element-0', index: 2, offset: 1 },
                                 },
                             ],
                             [
@@ -3090,32 +3123,32 @@ describe('utils', () => {
                                     textContent: 'a  b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 { type: 'keyup', key: 'Unidentified', code: '' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 2 },
-                                    anchor: { id: 'a', index: 0, offset: 2 },
+                                    focus: { id: 'element-0', index: 0, offset: 2 },
+                                    anchor: { id: 'element-0', index: 0, offset: 2 },
                                 },
                             ],
                         ]);
@@ -3141,7 +3174,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.atestbcBold;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.firstChild;
                         text2 = p.lastChild;
                         b = p.childNodes[1];
@@ -3219,8 +3253,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 2 },
-                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                    focus: { id: 'element-0', index: 2, offset: 2 },
+                                    anchor: { id: 'element-0', index: 2, offset: 2 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Shift', code: 'ShiftLeft', shiftKey: true }],
@@ -3245,7 +3279,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: '',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 {
@@ -3253,12 +3287,12 @@ describe('utils', () => {
                                     textContent: ', c',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ', c',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
@@ -3266,7 +3300,7 @@ describe('utils', () => {
                                     textContent: ', c',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 0, parentId: 'a' }],
+                                    removedNodes: [{ index: 0, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'selection',
@@ -3308,8 +3342,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 2 },
-                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                    focus: { id: 'element-0', index: 2, offset: 2 },
+                                    anchor: { id: 'element-0', index: 2, offset: 2 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Meta', code: 'MetaLeft', metaKey: true }],
@@ -3330,26 +3364,26 @@ describe('utils', () => {
                                     textContent: ', c',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 0, parentId: 'a' }],
+                                    removedNodes: [{ index: 0, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ', c',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ', c',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 { type: 'input', data: null, inputType: 'deleteHardLineBackward' },
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 0 },
-                                    anchor: { id: 'a', index: 0, offset: 0 },
+                                    focus: { id: 'element-0', index: 0, offset: 0 },
+                                    anchor: { id: 'element-0', index: 0, offset: 0 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Meta', code: 'MetaLeft' }],
@@ -3369,8 +3403,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 2 },
-                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                    focus: { id: 'element-0', index: 2, offset: 2 },
+                                    anchor: { id: 'element-0', index: 2, offset: 2 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Meta', code: 'MetaLeft', metaKey: true }],
@@ -3393,7 +3427,7 @@ describe('utils', () => {
                                     textContent: ', c',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 0, parentId: 'a' }],
+                                    removedNodes: [{ index: 0, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
@@ -3401,13 +3435,13 @@ describe('utils', () => {
                                     textContent: ', c',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 1, parentId: 'a' }],
+                                    removedNodes: [{ index: 1, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: ', c',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                             ],
@@ -3477,7 +3511,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.hello;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 4, text, 4);
                         await nextTick();
@@ -3526,8 +3561,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -3536,7 +3571,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                             ],
@@ -3557,8 +3592,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -3571,7 +3606,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                                 { type: 'input', data: null, inputType: 'deleteContentForward' },
@@ -3594,8 +3629,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 0, offset: 4 },
-                                    anchor: { id: 'a', index: 0, offset: 4 },
+                                    focus: { id: 'element-0', index: 0, offset: 4 },
+                                    anchor: { id: 'element-0', index: 0, offset: 4 },
                                 },
                             ],
                             [
@@ -3609,7 +3644,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: 'hell',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 0,
                                 },
                             ],
@@ -3664,7 +3699,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.abcg;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
 
                         text2 = p.childNodes[2];
                         i = p.childNodes[3];
@@ -3702,8 +3738,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 4 },
-                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                    focus: { id: 'element-0', index: 2, offset: 4 },
+                                    anchor: { id: 'element-0', index: 2, offset: 4 },
                                 },
                             ],
                             [
@@ -3721,7 +3757,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: ' b, ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
@@ -3729,12 +3765,12 @@ describe('utils', () => {
                                     textContent: 'a test b,  g',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                    removedNodes: [{ index: 3, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' g',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 4,
                                 },
                             ],
@@ -3755,8 +3791,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 4 },
-                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                    focus: { id: 'element-0', index: 2, offset: 4 },
+                                    anchor: { id: 'element-0', index: 2, offset: 4 },
                                 },
                             ],
                             [
@@ -3773,7 +3809,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: ' b, ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
@@ -3781,7 +3817,7 @@ describe('utils', () => {
                                     textContent: 'a test b,  g',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                    removedNodes: [{ index: 3, parentId: 'element-0' }],
                                 },
                             ],
                             [{ type: 'keyup', key: 'Delete', code: 'Delete', ctrlKey: true }],
@@ -3802,8 +3838,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 4 },
-                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                    focus: { id: 'element-0', index: 2, offset: 4 },
+                                    anchor: { id: 'element-0', index: 2, offset: 4 },
                                 },
                             ],
                             [{ type: 'keydown', key: 'Alt', code: 'AltLeft', altKey: true }],
@@ -3814,7 +3850,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: ' b, ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
@@ -3822,18 +3858,18 @@ describe('utils', () => {
                                     textContent: 'a test b,  g',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                    removedNodes: [{ index: 3, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' g',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 4,
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: ' g',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 4,
                                 },
                             ],
@@ -3859,8 +3895,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 4 },
-                                    anchor: { id: 'a', index: 2, offset: 4 },
+                                    focus: { id: 'element-0', index: 2, offset: 4 },
+                                    anchor: { id: 'element-0', index: 2, offset: 4 },
                                 },
                             ],
                             [{ type: 'keyup', key: 'Meta', code: 'MetaLeft' }],
@@ -3873,7 +3909,7 @@ describe('utils', () => {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: ' b, ',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
@@ -3882,13 +3918,13 @@ describe('utils', () => {
                                     textContent: 'a test b,  g',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                    removedNodes: [{ index: 3, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     mutationType: 'characterData',
                                     textContent: ' g',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 4,
                                 },
                             ],
@@ -3917,7 +3953,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.abcg;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
 
                         text2 = p.childNodes[2];
                         i = p.childNodes[3];
@@ -3987,8 +4024,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 2, offset: 2 },
-                                    anchor: { id: 'a', index: 2, offset: 2 },
+                                    focus: { id: 'element-0', index: 2, offset: 2 },
+                                    anchor: { id: 'element-0', index: 2, offset: 2 },
                                 },
                             ],
                             [
@@ -4018,7 +4055,7 @@ describe('utils', () => {
                                 {
                                     type: 'mutation',
                                     textContent: ' b',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 2,
                                 },
                                 {
@@ -4026,12 +4063,12 @@ describe('utils', () => {
                                     textContent: 'a test b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 3, parentId: 'a' }],
+                                    removedNodes: [{ index: 3, parentId: 'element-0' }],
                                 },
                                 {
                                     type: 'mutation',
                                     textContent: '',
-                                    targetParentId: 'a',
+                                    targetParentId: 'element-0',
                                     targetIndex: 4,
                                 },
                                 {
@@ -4039,7 +4076,7 @@ describe('utils', () => {
                                     textContent: 'a test b',
                                     targetParentId: 'editable',
                                     targetIndex: 0,
-                                    removedNodes: [{ index: 4, parentId: 'a' }],
+                                    removedNodes: [{ index: 4, parentId: 'element-0' }],
                                 },
                             ],
                             [
@@ -4073,7 +4110,8 @@ describe('utils', () => {
 
                     beforeEach(async () => {
                         root.innerHTML = testContentNormalizer.abcg;
-                        p = document.getElementById('a');
+                        resetElementsIds();
+                        p = document.getElementById('element-0');
 
                         text3 = p.childNodes[4];
                         setRange(text3, 2, text3, 2);
@@ -4101,8 +4139,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 4, offset: 2 },
-                                    anchor: { id: 'a', index: 4, offset: 2 },
+                                    focus: { id: 'element-0', index: 4, offset: 2 },
+                                    anchor: { id: 'element-0', index: 4, offset: 2 },
                                 },
                             ],
                             [
@@ -4161,8 +4199,8 @@ describe('utils', () => {
                             [
                                 {
                                     type: 'selection',
-                                    focus: { id: 'a', index: 4, offset: 2 },
-                                    anchor: { id: 'a', index: 4, offset: 2 },
+                                    focus: { id: 'element-0', index: 4, offset: 2 },
+                                    anchor: { id: 'element-0', index: 4, offset: 2 },
                                 },
                             ],
                             [
@@ -4223,259 +4261,268 @@ describe('utils', () => {
             });
 
             describe('enter', () => {
-                it('enter (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>abcd</div>';
-                    const p = root.firstChild;
-                    const text = p.firstChild;
-                    setRange(text, 2, text, 2);
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                describe('enter in the middle of the word', () => {
+                    it('enter in the middle of the word (ubuntu chrome)', async () => {
+                        root.innerHTML = '<div>abcd</div>';
+                        const p = root.firstChild;
+                        const text = p.firstChild;
+                        setRange(text, 2, text, 2);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
+                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
 
-                    const newText = document.createTextNode('ab');
-                    p.insertBefore(newText, text);
-                    text.textContent = 'cd';
-                    const newP = document.createElement('p');
-                    root.appendChild(newP);
-                    newP.appendChild(text);
-                    setRange(text, 0, text, 0);
+                        const newText = document.createTextNode('ab');
+                        p.insertBefore(newText, text);
+                        text.textContent = 'cd';
+                        const newP = document.createElement('p');
+                        root.appendChild(newP);
+                        newP.appendChild(text);
+                        setRange(text, 0, text, 0);
 
-                    triggerEvent(root, 'input', { inputType: 'insertParagraph' });
-                    await nextTick();
-                    await nextTick();
+                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        await nextTick();
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertParagraph',
-                        key: 'Enter',
-                        code: 'Enter',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertParagraph',
+                            key: 'Enter',
+                            code: 'Enter',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertParagraph',
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'insertParagraph',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([newText, text, newP]),
                             },
-                        ],
-                    };
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
+                    it('enter in the middle of the word (SwiftKey)', async () => {
+                        root.innerHTML = '<div>abcd</div>';
+                        const p = root.firstChild;
+                        const text = p.firstChild;
+                        setRange(text, 2, text, 2);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
+                        triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
+                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
 
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([newText, text, newP]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
-                });
-                it('enter (SwiftKey)', async () => {
-                    root.innerHTML = '<div>abcd</div>';
-                    const p = root.firstChild;
-                    const text = p.firstChild;
-                    setRange(text, 2, text, 2);
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
-                    triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                        const newText = document.createTextNode('ab');
+                        p.insertBefore(newText, text);
+                        text.textContent = 'cd';
+                        const newP = document.createElement('p');
+                        root.appendChild(newP);
+                        newP.appendChild(text);
+                        setRange(text, 0, text, 0);
 
-                    const newText = document.createTextNode('ab');
-                    p.insertBefore(newText, text);
-                    text.textContent = 'cd';
-                    const newP = document.createElement('p');
-                    root.appendChild(newP);
-                    newP.appendChild(text);
-                    setRange(text, 0, text, 0);
+                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        await nextTick();
+                        await nextTick();
 
-                    triggerEvent(root, 'input', { inputType: 'insertParagraph' });
-                    await nextTick();
-                    await nextTick();
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertParagraph',
+                            key: 'Enter',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertParagraph',
+                                },
+                            ],
+                        };
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertParagraph',
-                        key: 'Enter',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'insertParagraph',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([newText, text, newP]),
                             },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([newText, text, newP]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
-                it('enter before a word (Gboard)', async () => {
-                    root.innerHTML = '<div>abc def</div>';
-                    const p = root.firstChild;
-                    const text = p.firstChild as Text;
-                    setRange(text, 4, text, 4);
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'compositionend', { data: 'def' });
-                    await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
-                    triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                describe('enter before a word', () => {
+                    it('enter before a word (Gboard)', async () => {
+                        root.innerHTML = '<div>abc def</div>';
+                        const p = root.firstChild;
+                        const text = p.firstChild as Text;
+                        setRange(text, 4, text, 4);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'compositionend', { data: 'def' });
+                        await nextTick();
+                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
+                        triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
+                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
 
-                    text.textContent = 'abc def';
-                    const newText = document.createTextNode('abc\u00A0');
-                    p.insertBefore(newText, text);
-                    text.textContent = 'def';
-                    const newP = document.createElement('p');
-                    root.appendChild(newP);
-                    newP.appendChild(text);
-                    setRange(text, 0, text, 0);
+                        text.textContent = 'abc def';
+                        const newText = document.createTextNode('abc\u00A0');
+                        p.insertBefore(newText, text);
+                        text.textContent = 'def';
+                        const newP = document.createElement('p');
+                        root.appendChild(newP);
+                        newP.appendChild(text);
+                        setRange(text, 0, text, 0);
 
-                    triggerEvent(root, 'input', { inputType: 'insertParagraph' });
-                    triggerEvent(root, 'compositionstart', { data: '' });
-                    triggerEvent(root, 'compositionupdate', { data: 'def' });
+                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        triggerEvent(root, 'compositionstart', { data: '' });
+                        triggerEvent(root, 'compositionupdate', { data: 'def' });
 
-                    await nextTick();
-                    await nextTick();
+                        await nextTick();
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertParagraph',
-                        key: 'Enter',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertParagraph',
+                            key: 'Enter',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertParagraph',
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'insertParagraph',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([text, newText, newP]),
                             },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([text, newText, newP]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
-                it('enter after a word (Gboard)', async () => {
-                    root.innerHTML = '<div>abc def</div>';
-                    const p = root.firstChild;
-                    const text = p.firstChild as Text;
-                    setRange(text, 3, text, 3);
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'compositionend', { data: 'abc' });
-                    await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
-                    triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                describe('enter after a word', () => {
+                    it('enter after a word (Gboard)', async () => {
+                        root.innerHTML = '<div>abc def</div>';
+                        const p = root.firstChild;
+                        const text = p.firstChild as Text;
+                        setRange(text, 3, text, 3);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'compositionend', { data: 'abc' });
+                        await nextTick();
+                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
+                        triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
+                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
 
-                    const newText = document.createTextNode('abc');
-                    p.insertBefore(newText, text);
-                    text.textContent = ' def';
-                    const newP = document.createElement('p');
-                    root.appendChild(newP);
-                    newP.appendChild(text);
-                    text.textContent = 'def';
-                    text.textContent = '\u00A0def';
+                        const newText = document.createTextNode('abc');
+                        p.insertBefore(newText, text);
+                        text.textContent = ' def';
+                        const newP = document.createElement('p');
+                        root.appendChild(newP);
+                        newP.appendChild(text);
+                        text.textContent = 'def';
+                        text.textContent = '\u00A0def';
 
-                    setRange(text, 0, text, 0);
+                        setRange(text, 0, text, 0);
 
-                    triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
 
-                    await nextTick();
-                    await nextTick();
+                        await nextTick();
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertParagraph',
-                        key: 'Enter',
-                        code: '',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertParagraph',
+                            key: 'Enter',
+                            code: '',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertParagraph',
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'insertParagraph',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([newText, text, newP]),
                             },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([newText, text, newP]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
-                it('shift + enter (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>abcd</div>';
-                    const p = root.firstChild;
-                    const text = p.firstChild;
-                    setRange(text, 2, text, 2);
-                    await nextTick();
-                    eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertLineBreak' });
+                describe('shift + enter in the middle of a word ', () => {
+                    it('shift + enter in the middle of a word (ubuntu chrome)', async () => {
+                        root.innerHTML = '<div>abcd</div>';
+                        const p = root.firstChild;
+                        const text = p.firstChild;
+                        setRange(text, 2, text, 2);
+                        await nextTick();
+                        eventBatchs = [];
+                        triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
+                        triggerEvent(root, 'beforeInput', { inputType: 'insertLineBreak' });
 
-                    const newText = document.createTextNode('ab');
-                    p.insertBefore(newText, text);
-                    text.textContent = 'cd';
-                    const br = document.createElement('br');
-                    p.insertBefore(br, text);
-                    setRange(text, 0, text, 0);
+                        const newText = document.createTextNode('ab');
+                        p.insertBefore(newText, text);
+                        text.textContent = 'cd';
+                        const br = document.createElement('br');
+                        p.insertBefore(br, text);
+                        setRange(text, 0, text, 0);
 
-                    triggerEvent(root, 'input', { inputType: 'insertLineBreak' });
-                    await nextTick();
-                    await nextTick();
+                        triggerEvent(root, 'input', { inputType: 'insertLineBreak' });
+                        await nextTick();
+                        await nextTick();
 
-                    const keyboardEvent: NormalizedKeyboardEvent = {
-                        type: 'keyboard',
-                        inputType: 'insertLineBreak',
-                        key: 'Enter',
-                        code: 'Enter',
-                        altKey: false,
-                        ctrlKey: false,
-                        metaKey: false,
-                        shiftKey: false,
-                        defaultPrevented: false,
-                        actions: [
+                        const keyboardEvent: NormalizedKeyboardEvent = {
+                            type: 'keyboard',
+                            inputType: 'insertLineBreak',
+                            key: 'Enter',
+                            code: 'Enter',
+                            altKey: false,
+                            ctrlKey: false,
+                            metaKey: false,
+                            shiftKey: false,
+                            defaultPrevented: false,
+                            actions: [
+                                {
+                                    type: 'insertText',
+                                    text: '\n',
+                                    html: '<br/>',
+                                },
+                            ],
+                        };
+
+                        const batchEvents: EventBatch[] = [
                             {
-                                type: 'insertText',
-                                text: '\n',
-                                html: '<br/>',
+                                events: [keyboardEvent],
+                                mutatedElements: new Set([newText, text, br]),
                             },
-                        ],
-                    };
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            events: [keyboardEvent],
-                            mutatedElements: new Set([newText, text, br]),
-                        },
-                    ];
-                    expect(eventBatchs).to.deep.equal(batchEvents);
+                        ];
+                        expect(eventBatchs).to.deep.equal(batchEvents);
+                    });
                 });
+                // todo: shift+ctrl+enter
             });
 
             describe('arrow', () => {
