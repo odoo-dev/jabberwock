@@ -59,7 +59,6 @@ export class VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse: (node: Node) => VNode[];
     /**
      * Render the VNode to the given format.
      *
