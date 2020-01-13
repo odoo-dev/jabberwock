@@ -4,6 +4,8 @@ import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { withMarkers } from '../../utils/src/markers';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { VSelection } from './VSelection';
+import { ListNode, ListType } from './VNodes/ListNode';
+import { utils } from '../../utils/src/utils';
 
 export class VDocument {
     root: VNode;
@@ -150,5 +152,199 @@ export class VDocument {
                 });
             }
         }
+    }
+    /**
+     * Insert/remove a list at range.
+     *
+     * @param type
+     */
+    toggleList(type: ListType, range = this.selection.range): void {
+        // Retrieve the nodes in the selection.
+        let selectedNodes: Array<VNode>;
+        if (range.isCollapsed()) {
+            // Toggle the parent if the range is collapsed.
+            selectedNodes = [range.start.parent];
+        } else {
+            selectedNodes = range.selectedNodes();
+        }
+
+        // Check if all selected nodes are within a list of the same type.
+        const areAllInMatchingList = selectedNodes.every(node => {
+            const listAncestor = this._listAncestor(node);
+            return listAncestor && listAncestor.listType === type;
+        });
+
+        // Dispatch.
+        if (areAllInMatchingList) {
+            // If all selected nodes are within a list of the same type,
+            // "unlist" them.
+            this._unlist(selectedNodes);
+        } else {
+            this._convertToList(selectedNodes, type);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return the first common ancestor of two nodes.
+     *
+     * @param a
+     * @param b
+     */
+    _commonAncestor(a: VNode, b: VNode): VNode {
+        const firstAncestors = a.ancestors();
+        const lastAncestors = b.ancestors();
+        return firstAncestors.find(ancestor => lastAncestors.includes(ancestor));
+    }
+    /**
+     * Convert the given nodes to a list with the given `htmlTag`.
+     *
+     * @param nodes
+     * @param type
+     */
+    _convertToList(nodes: Array<VNode>, type: ListType): void {
+        let newList = new ListNode(type);
+        let duplicatedNodes = [];
+
+        // Lists cannot have atomic nodes as direct children.
+        nodes = Array.from(new Set(nodes.map(node => (node.atomic ? node.parent : node))));
+
+        // If the last node is within a list, we need to split that list.
+        const last = nodes[nodes.length - 1];
+        const lastListAncestor = this._listAncestor(last);
+        if (lastListAncestor) {
+            const duplicatedAncestors = this._splitUpToAncestor(last, lastListAncestor);
+            duplicatedNodes = [...duplicatedNodes, ...duplicatedAncestors];
+        }
+
+        // If the first node is within a list, we need to split that list.
+        // Then insert the new list to which the nodes will be appended.
+        const first = nodes[0];
+        const firstListAncestor = this._listAncestor(first);
+        if (firstListAncestor) {
+            const duplicatedAncestors = this._splitUpToAncestor(first, firstListAncestor);
+            duplicatedNodes = [...duplicatedNodes, ...duplicatedAncestors];
+
+            // Insert the new list before the first node's list ancestor.
+            // It was split so we need its duplicate as that is where the node is.
+            const newListAncestor = duplicatedAncestors[duplicatedAncestors.length - 1];
+            newListAncestor.before(newList);
+        } else {
+            // Insert the new list before the common ancestor to the first and
+            // last nodes.
+            const commonAncestor = this._commonAncestor(first, last);
+            const reference = first.ancestor(node => node.parent === commonAncestor) || first;
+            commonAncestor.insertBefore(newList, reference);
+        }
+
+        // Move the nodes to the list
+        withMarkers(() => {
+            // Remove the children of nested lists (they will be moved together
+            // with their parent) and convert nested lists to the new type.
+            const nestedLists = nodes.filter(this._isNestedList.bind(this));
+            const nonNestedNodes = nodes.filter(node => {
+                return !node.ancestor(ancestor => nestedLists.includes(ancestor));
+            });
+            nestedLists.forEach(nestedList => ((nestedList as ListNode).listType = type));
+            // Move the nodes.
+            nonNestedNodes.forEach(node => {
+                newList.append(node);
+            });
+            // Remove empty lists.
+            duplicatedNodes.concat(nodes).forEach(node => {
+                if (node.is(ListNode) && !node.hasChildren()) {
+                    node.remove();
+                }
+            });
+        });
+
+        // If the new list is after or before a list of the same type, merge
+        // them (eg: <ol><li>a</li></ol><ol><li>b</li></ol> =>
+        // <ol><li>a</li><li>b</li></ol>).
+        const previousSibling = newList.previousSibling();
+        if (previousSibling && previousSibling.is(ListNode) && previousSibling.listType === type) {
+            newList.children.slice().forEach(child => previousSibling.append(child));
+            newList.remove();
+            newList = previousSibling as ListNode;
+        }
+        const nextSibling = newList.nextSibling();
+        if (nextSibling && nextSibling.is(ListNode) && nextSibling.listType === type) {
+            nextSibling.children.slice().forEach(child => newList.append(child));
+            nextSibling.remove();
+        }
+    }
+    /**
+     * Return true if the given node is a nested `ListNode`, false otherwise.
+     *
+     * @param node
+     */
+    _isNestedList(node: VNode): node is ListNode {
+        return node.is(ListNode) && !!this._listAncestor(node);
+    }
+    /**
+     * Return a node's ancestor that is a `ListNode`, if any.
+     *
+     * @param node
+     */
+    _listAncestor(node: VNode): ListNode {
+        return node.ancestor(ancestor => ancestor.is(ListNode)) as ListNode;
+    }
+    /**
+     * Split a node and its ancestors up until the given ancestor.
+     *
+     * @param node
+     * @returns a list of the duplicated nodes generated during the splits.
+     */
+    _splitUpToAncestor(node: VNode, ancestor: VNode): VNode[] {
+        const duplicatedNodes = [];
+        let child = node;
+        let parent = child.parent;
+        do {
+            duplicatedNodes.push(parent.splitAt(child));
+            child = parent;
+            parent = child.parent;
+        } while (child !== ancestor);
+        if (!ancestor.hasChildren()) {
+            ancestor.remove();
+        }
+        return duplicatedNodes;
+    }
+    /**
+     * Turn list elements into non-list elements.
+     *
+     * @param nodes
+     */
+    _unlist(nodes: Array<VNode>): void {
+        // Get the direct children of each list to unlist.
+        const listItems = utils.distinct(
+            nodes.map(node => {
+                if (node.parent.is(ListNode)) {
+                    return node;
+                } else {
+                    return node.ancestor(ancestor => {
+                        return ancestor.parent.is(ListNode);
+                    });
+                }
+            }),
+        );
+
+        // Split the lists and move their contents to move out of them.
+        const lists = [];
+        listItems.forEach(item => {
+            lists.push(item.parent);
+            const newList = item.parent.splitAt(item);
+            newList.before(item);
+            lists.push(newList);
+        });
+
+        // Remove empty lists.
+        lists.forEach(list => {
+            if (!list.hasChildren()) {
+                list.remove();
+            }
+        });
     }
 }

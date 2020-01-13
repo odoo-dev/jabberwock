@@ -715,6 +715,7 @@ describe('plugin-devtools', () => {
                 'deleteForward',
                 'selectAll',
                 'applyFormat',
+                'toggleList',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {

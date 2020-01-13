@@ -71,6 +71,22 @@ export class EventManager {
                     payload.key === 'u'
                 ) {
                     return this.editor.execCommand('applyFormat', { format: 'underline' });
+                } else if (
+                    payload.ctrlKey &&
+                    !payload.altKey &&
+                    payload.shiftKey &&
+                    !payload.metaKey &&
+                    payload.key === '7'
+                ) {
+                    return this.editor.execCommand('toggleList', { type: 'ordered' });
+                } else if (
+                    payload.ctrlKey &&
+                    !payload.altKey &&
+                    payload.shiftKey &&
+                    !payload.metaKey &&
+                    payload.key === '8'
+                ) {
+                    return this.editor.execCommand('toggleList', { type: 'unordered' });
                 }
                 // TODO: keydown should be matched with existing shortcuts.
                 return;

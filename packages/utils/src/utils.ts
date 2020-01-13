@@ -39,6 +39,14 @@ export const utils = {
         const content = isTextNode ? node.nodeValue : node.childNodes;
         return content.length;
     },
+    /**
+     * Return a duplicate-free version of an array.
+     *
+     * @param array
+     */
+    distinct<T>(array: Array<T>): Array<T> {
+        return Array.from(new Set(array));
+    },
 
     //--------------------------------------------------------------------------
     // Private

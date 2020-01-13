@@ -3,6 +3,7 @@ import JWEditor from './JWEditor';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { VRange } from './VRange';
+import { ListType } from './VNodes/ListNode';
 
 export interface RangeParams {
     range?: VRange;
@@ -24,6 +25,9 @@ export interface VSelectionParams {
 }
 export interface FormatParams extends RangeParams {
     format: 'bold' | 'italic' | 'underline';
+}
+export interface ListParams extends RangeParams {
+    type: ListType;
 }
 
 export class CorePlugin extends JWPlugin {
@@ -52,6 +56,9 @@ export class CorePlugin extends JWPlugin {
         },
         applyFormat: {
             handler: this.applyFormat.bind(this),
+        },
+        toggleList: {
+            handler: this.toggleList.bind(this),
         },
     };
     constructor(editor) {
@@ -90,6 +97,14 @@ export class CorePlugin extends JWPlugin {
      */
     applyFormat(params: FormatParams): void {
         this.editor.vDocument.applyFormat(params.format, params.range);
+    }
+    /**
+     * Insert/remove a list at range.
+     *
+     * @param params
+     */
+    toggleList(params: ListParams): void {
+        this.editor.vDocument.toggleList(params.type, params.range);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).

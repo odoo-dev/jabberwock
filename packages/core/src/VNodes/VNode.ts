@@ -645,7 +645,9 @@ export class VNode {
      * Remove this node.
      */
     remove(): void {
-        this.parent.removeChild(this);
+        if (this.parent) {
+            this.parent.removeChild(this);
+        }
     }
     /**
      * Remove the given child from this VNode. Return self.
@@ -806,7 +808,8 @@ export class VNode {
      * @param index The index of the child to remove including marker nodes.
      */
     _removeAtIndex(index: number): VNode {
-        this._children.splice(index, 1);
+        const child = this._children.splice(index, 1)[0];
+        child.parent = undefined;
         return this;
     }
     /**

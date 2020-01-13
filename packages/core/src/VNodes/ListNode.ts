@@ -22,6 +22,32 @@ export class ListNode extends VElement {
             return [new ListNode(listType)];
         }
     }
+    get htmlTag(): string {
+        return typeToTag.get(this.listType);
+    }
+    set htmlTag(tag: string) {
+        const type = tagToType.get(tag);
+        if (!type) {
+            throw new Error(
+                `Cannot set a ListNode's htmlTag property to "${tag}" ListNodes correspond strictly to "OL" and "UL" elements.`,
+            );
+        } else {
+            this.listType = type;
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Lifecycle
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return a new VNode with the same type and attributes as this VNode.
+     *
+     *  @override
+     */
+    shallowDuplicate(): ListNode {
+        return new ListNode(this.listType);
+    }
 
     /**
      * Merge this node with the given VNode.
