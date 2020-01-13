@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
+import { createBasicEditor } from '../../bundles/basic';
 
 async function openDevTools(devtools: HTMLElement): Promise<void> {
     await click(devtools.querySelector('devtools-navbar'));
@@ -30,8 +31,7 @@ describe('plugin-devtools', () => {
             }
         });
 
-        editor = new JWEditor(root);
-        editor.loadConfig({
+        editor = createBasicEditor(root, {
             debug: true,
         });
 
