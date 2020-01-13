@@ -12,6 +12,8 @@ import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Char } from '../../plugin-char/Char';
+import { LineBreak } from '../../plugin-linebreak/LineBreak';
 
 describe('core', () => {
     describe('src', () => {
@@ -54,7 +56,7 @@ describe('core', () => {
                 describe('parse', () => {
                     it('should parse a textNode', async () => {
                         const text = document.createTextNode('abc');
-                        const nNodes = CharNode.parse(text);
+                        const nNodes = Char.parse(text);
                         expect(nNodes.length).to.equal(3);
                         expect(nNodes[0].char).to.equal('a');
                         expect(nNodes[1].char).to.equal('b');
@@ -62,7 +64,7 @@ describe('core', () => {
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
-                        expect(CharNode.parse(span)).to.be.undefined;
+                        expect(Char.parse(span)).to.be.undefined;
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -153,16 +155,6 @@ describe('core', () => {
                         expect(lineBreak.atomic).to.equal(true);
                     });
                 });
-                describe('parse', () => {
-                    it('should parse a BR node', async () => {
-                        const br = document.createElement('br');
-                        expect(LineBreakNode.parse(br)[0].atomic).to.equal(true);
-                    });
-                    it('should not parse a SPAN node', async () => {
-                        const span = document.createElement('span');
-                        expect(LineBreakNode.parse(span)).to.be.undefined;
-                    });
-                });
                 describe('render', () => {
                     it('should render an ending lineBreak (default html arg)', async () => {
                         const lineBreak = new LineBreakNode();
@@ -229,6 +221,18 @@ describe('core', () => {
                             lineBreak,
                             'BEFORE',
                         ]);
+                    });
+                });
+            });
+            describe('LineBreak', () => {
+                describe('parse', () => {
+                    it('should parse a BR node', async () => {
+                        const br = document.createElement('br');
+                        expect(LineBreak.parse(br)[0].atomic).to.equal(true);
+                    });
+                    it('should not parse a SPAN node', async () => {
+                        const span = document.createElement('span');
+                        expect(LineBreak.parse(span)).to.be.undefined;
                     });
                 });
             });
@@ -1329,14 +1333,14 @@ describe('core', () => {
                     const editor = new JWEditor();
                     class MyCustomNode extends VNode {
                         customKey = 'yes';
+                    }
+                    class MyCustomPlugin extends JWPlugin {
+                        static readonly parsingFunctions = [MyCustomPlugin.parse];
                         static parse(node: Node): MyCustomNode[] {
                             if (node.nodeName === 'CUSTOM-NODE') {
                                 return [new MyCustomNode()];
                             }
                         }
-                    }
-                    class MyCustomPlugin extends JWPlugin {
-                        static readonly parsingFunctions = [MyCustomNode.parse];
                     }
                     editor.addPlugin(MyCustomPlugin);
                     editor.start();

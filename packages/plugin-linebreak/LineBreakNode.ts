@@ -11,11 +11,6 @@ export class LineBreakNode extends VElement {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    static parse(node: Node): LineBreakNode[] {
-        if (node.nodeName === 'BR') {
-            return [new LineBreakNode()];
-        }
-    }
     /**
      * Render the VNode to the given format.
      *

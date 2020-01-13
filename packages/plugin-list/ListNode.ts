@@ -11,18 +11,6 @@ export class ListNode extends VNode {
         super();
         this.listType = listType;
     }
-    static parse(node: Node): ListNode[] {
-        let listType: ListType;
-        if (node.nodeName === 'UL') {
-            listType = ListType.UNORDERED;
-        } else if (node.nodeName === 'OL') {
-            listType = ListType.ORDERED;
-        }
-
-        if (listType) {
-            return [new ListNode(listType)];
-        }
-    }
     get name(): string {
         return super.name + ': ' + this.listType;
     }
