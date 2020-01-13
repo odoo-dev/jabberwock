@@ -9,6 +9,7 @@ import { withMarkers } from '../../utils/src/range';
 import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
+import { HeadingNode } from '../../plugin-heading/HeadingNode';
 
 describe('core', () => {
     describe('src', () => {
@@ -107,21 +108,14 @@ describe('core', () => {
                     });
                 });
             });
-            describe('SimpleElementNode', () => {
+            describe('VElement', () => {
                 describe('constructor', () => {
                     it('should create a paragraph', async () => {
                         const vNode = new VElement('P');
                         expect(vNode.atomic).to.equal(false);
                         expect(vNode.htmlTag).to.equal('P');
                     });
-                    it('should create a heading', async () => {
-                        for (let i = 1; i <= 6; i++) {
-                            const vNode = new VElement('H' + i);
-                            expect(vNode.atomic).to.equal(false);
-                            expect(vNode.htmlTag).to.equal('H' + i);
-                        }
-                    });
-                    it('should create a unknown', async () => {
+                    it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new VElement('UNKNOWN-ELEMENT');
                             expect(vNode.atomic).to.equal(false);
@@ -135,13 +129,6 @@ describe('core', () => {
                         const vNode = VElement.parse(node)[0];
                         expect(vNode.htmlTag).to.equal('P');
                     });
-                    it('should parse a heading', async () => {
-                        for (let i = 1; i <= 6; i++) {
-                            const node = document.createElement('h' + i);
-                            const vNode = VElement.parse(node)[0];
-                            expect(vNode.htmlTag).to.equal('H' + i);
-                        }
-                    });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
                         expect(VElement.parse(span)).to.be.undefined;
@@ -154,6 +141,16 @@ describe('core', () => {
                         expect(copy).to.not.equal(vNode);
                         expect(copy.htmlTag).to.equal('P');
                     });
+                });
+            });
+            describe('HeadingNode', () => {
+                it('should create a heading', async () => {
+                    for (let i = 1; i <= 6; i++) {
+                        const vNode = new HeadingNode(i);
+                        expect(vNode.atomic).to.equal(false);
+                        expect(vNode.htmlTag).to.equal('H' + i);
+                        expect(vNode.level).to.equal(i);
+                    }
                 });
             });
             describe('LineBreakNode', () => {

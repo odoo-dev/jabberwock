@@ -13,8 +13,8 @@ export class VElement extends VNode {
     //--------------------------------------------------------------------------
 
     static parse(node: Node): VElement[] {
-        if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P'].includes(node.nodeName)) {
-            return [new VElement(node.nodeName)];
+        if (node.nodeName === 'P') {
+            return [new VElement('P')];
         }
     }
 

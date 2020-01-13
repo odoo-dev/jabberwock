@@ -6,11 +6,16 @@ import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { VElement } from '../src/VNodes/VElement';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
+import { Heading } from '../../plugin-heading/Heading';
 
 describe('utils', () => {
     describe('Parser', () => {
         const parser = new Parser();
-        parser.addParsingFunction(...Char.parsingFunctions.concat(LineBreak.parsingFunctions));
+        parser.addParsingFunction(
+            ...Char.parsingFunctions
+                .concat(LineBreak.parsingFunctions)
+                .concat(Heading.parsingFunctions),
+        );
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {
                 const element = document.createElement('div');
