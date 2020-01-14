@@ -1,7 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { Direction } from '../src/VRange';
-import { testContentNormalizer } from './testContentNormalizer';
+import { testContentNormalizer, resetElementsIds } from './eventNormalizerUtils';
 import {
     EventNormalizer,
     EventBatch,
@@ -44,16 +44,16 @@ export interface TestInputEvent {
 }
 
 // todo: Maybe remove this. It was introduced because of backward compatibility.
-interface TargetMutationIndex {
+interface RemovedNodesTargetMutationIndex {
     parentId: string;
     index: number;
 }
 // todo: Remove this. It was introduced because of backward compatibility.
-interface TargetMutationOnlyID {
+interface RemovedNodesTargetMutationOnlyID {
     id: string;
 }
 
-interface TargetMutationPreviousSibling {
+interface RemovedNodesTargetMutationPreviousSibling {
     parentId: string;
     previousSiblingIndex: number;
 }
@@ -62,27 +62,48 @@ interface TargetMutationPreviousSibling {
 //     previousSiblingIndex: number;
 // }
 
-type TargetMutation = (
-    | TargetMutationIndex
-    | TargetMutationOnlyID
-    | TargetMutationPreviousSibling)[];
+type RemovedNodesTargetMutation = (
+    | RemovedNodesTargetMutationIndex
+    | RemovedNodesTargetMutationOnlyID
+    | RemovedNodesTargetMutationPreviousSibling)[];
+
+interface AddedNodesTargetMutationNoIndex {
+    parentId: string;
+    nodeType: number;
+    nodeValue: string;
+}
+interface AddedNodesTargetMutationPreviousSibling {
+    parentId: string;
+    previousSiblingIndex: number;
+    nodeType: number;
+    nodeValue: string;
+}
+interface AddedNodesTargetMutationNextSibling {
+    parentId: string;
+    nextSiblingIndex: number;
+    nodeType: number;
+    nodeValue: string;
+}
+
+type AddedNodesTargetMutation = (
+    | AddedNodesTargetMutationNoIndex
+    | AddedNodesTargetMutationPreviousSibling
+    | AddedNodesTargetMutationNextSibling)[];
 
 export interface TestMutationEvent {
     type: 'mutation';
     // todo: This is currently optionnal because of backward compatibility
     mutationType?: string;
     textContent: string;
-    targetParentId: string;
+    // if targetParentId is undefined, it means that we want to addNodes or removeNodes on the
+    // editable itself.
+    targetParentId?: string;
     targetIndex: number;
-    removedNodes?: TargetMutation;
+    removedNodes?: RemovedNodesTargetMutation;
     // removedNodes?:
     //     | TargetMutation
     //     | [];
-    addedNodes?: {
-        parentId: string;
-        previousSiblingIndex: number;
-        nodeValue: string;
-    }[];
+    addedNodes?: AddedNodesTargetMutation;
 }
 export interface TestSelectionEvent {
     type: 'selection';
@@ -235,13 +256,13 @@ async function nextTick(): Promise<void> {
  * 'a' and the offset is 0, the key will be encoded as "a$0").
  */
 let offsetCacheMap: { [key: string]: Node };
-
 /**
  * Add all childNodes of node retursively in `offsetCacheMap`.
  */
 function addNodeToOffsetCacheMap(node: Node): void {
     if (node.childNodes)
         node.childNodes.forEach((childNode, index) => {
+            if (!node) debugger;
             offsetCacheMap[(node as HTMLElement).id + '$' + index] = childNode;
             addNodeToOffsetCacheMap(childNode);
         });
@@ -253,24 +274,6 @@ function resetOffsetCacheMap(editableElement: HTMLElement): void {
 function getNodeFromOffsetCacheMap(parentId: string, index: number): Node {
     return offsetCacheMap[parentId + '$' + index];
 }
-/**
- * In order to target the elements in the function `triggerEvents`, we associate an ID to each
- * elements that does not have ID inside the editable element.
- */
-let lastElementId = 0;
-export function addIdToRemainingElements(): void {
-    const nodesWithoutId = [...document.getElementById('editable').querySelectorAll('*')].filter(
-        node => node.id === '',
-    );
-    nodesWithoutId.forEach(node => {
-        node.id = 'element-' + lastElementId;
-        lastElementId++;
-    });
-}
-function resetElementsIds(): void {
-    lastElementId = 0;
-    addIdToRemainingElements();
-}
 async function triggerEvents(eventStackList: TestEvent[][]): Promise<Node[]> {
     const addedNodes: Node[] = [];
     const editableElement = document.getElementById('editable');
@@ -279,68 +282,120 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<Node[]> {
         eventStack.forEach(testEvent => {
             if (testEvent.type === 'mutation') {
                 const mutationEvent: TestMutationEvent = testEvent;
-                // const mutatedElementParent = document.getElementById(mutationEvent.targetParentId);
-                // const mutatedNode = mutatedElementParent.childNodes[mutationEvent.targetIndex];
-                const mutatedNode = getNodeFromOffsetCacheMap(
-                    mutationEvent.targetParentId,
-                    mutationEvent.targetIndex,
-                );
-                if (testEvent.removedNodes) {
-                    console.log('testEvent.removedNodes:', testEvent.removedNodes);
-                    testEvent.removedNodes
-                        .map(removedNodeDescription => {
-                            // todo: remove this "if" and keep the "else" when regenerated events
-                            //       it was introduced to keep compatible with the `id` key
-                            if ((removedNodeDescription as TargetMutationOnlyID).id) {
-                                return document.getElementById(
-                                    (removedNodeDescription as TargetMutationOnlyID).id,
-                                );
-                            } else if (
-                                typeof (removedNodeDescription as TargetMutationIndex).index ===
-                                'number'
-                            ) {
-                                return getNodeFromOffsetCacheMap(
-                                    (removedNodeDescription as TargetMutationIndex).parentId,
-                                    (removedNodeDescription as TargetMutationIndex).index,
-                                );
-                            } else {
-                                const description = removedNodeDescription as TargetMutationPreviousSibling;
-                                const previousSibling = getNodeFromOffsetCacheMap(
-                                    description.parentId,
-                                    description.previousSiblingIndex,
-                                );
-                                if (!previousSibling) debugger;
-                                const childNodes = Array.from(
-                                    previousSibling.parentNode.childNodes,
-                                );
-                                return childNodes[description.previousSiblingIndex + 1];
-                            }
-                            // else if (
-                            //     (removedNodeDescription as TargetMutationPreviousSibling)
-                            //         .previousSiblingIndex
-                            // ) {
-                            //     const previousSibling = getNodeFromOffsetCacheMap(
-                            //         (removedNodeDescription as TargetMutationIndex).parentId,
-                            //         (removedNodeDescription as TargetMutationIndex).index,
-                            //     )
-                            //     return {previousSibling.}
-                            // };
-                        })
-                        .forEach(removedNode => {
-                            removedNode.parentNode.removeChild(removedNode);
-                        });
-                } else if (testEvent.addedNodes) {
-                    testEvent.addedNodes.forEach(addedNodeDescription => {
-                        const previousSibling = getNodeFromOffsetCacheMap(
-                            addedNodeDescription.parentId,
-                            addedNodeDescription.previousSiblingIndex,
-                        );
-                        const div = document.createElement('div');
-                        div.innerHTML = addedNodeDescription.nodeValue;
-                        addedNodes.push(div.firstChild);
-                        (previousSibling as ChildNode).after(div.firstChild);
-                    });
+                let mutatedNode: Node;
+                if (mutationEvent.targetParentId) {
+                    mutatedNode = getNodeFromOffsetCacheMap(
+                        mutationEvent.targetParentId,
+                        mutationEvent.targetIndex,
+                    );
                 } else {
+                    // todo: change this editable querySelector to be retrieved by an argument
+                    mutatedNode = editableElement;
+                }
+                if (testEvent.mutationType === 'childList') {
+                    if (testEvent.removedNodes) {
+                        console.log('testEvent.removedNodes:', testEvent.removedNodes);
+                        testEvent.removedNodes
+                            .map(removedNodeDescription => {
+                                // todo: remove this "if" and keep the "else" when regenerated events
+                                //       it was introduced to keep compatible with the `id` key
+                                if (
+                                    (removedNodeDescription as RemovedNodesTargetMutationOnlyID).id
+                                ) {
+                                    return document.getElementById(
+                                        (removedNodeDescription as RemovedNodesTargetMutationOnlyID)
+                                            .id,
+                                    );
+                                } else if (
+                                    typeof (removedNodeDescription as RemovedNodesTargetMutationIndex)
+                                        .index === 'number'
+                                ) {
+                                    return getNodeFromOffsetCacheMap(
+                                        (removedNodeDescription as RemovedNodesTargetMutationIndex)
+                                            .parentId,
+                                        (removedNodeDescription as RemovedNodesTargetMutationIndex)
+                                            .index,
+                                    );
+                                } else {
+                                    const description = removedNodeDescription as RemovedNodesTargetMutationPreviousSibling;
+                                    const previousSibling = getNodeFromOffsetCacheMap(
+                                        description.parentId,
+                                        description.previousSiblingIndex,
+                                    );
+                                    const childNodes = Array.from(
+                                        previousSibling.parentNode.childNodes,
+                                    );
+                                    return childNodes[description.previousSiblingIndex + 1];
+                                }
+                                // else if (
+                                //     (removedNodeDescription as TargetMutationPreviousSibling)
+                                //         .previousSiblingIndex
+                                // ) {
+                                //     const previousSibling = getNodeFromOffsetCacheMap(
+                                //         (removedNodeDescription as TargetMutationIndex).parentId,
+                                //         (removedNodeDescription as TargetMutationIndex).index,
+                                //     )
+                                //     return {previousSibling.}
+                                // };
+                            })
+                            .forEach(removedNode => {
+                                removedNode.parentNode.removeChild(removedNode);
+                            });
+                    } else if (testEvent.addedNodes) {
+                        testEvent.addedNodes.forEach(addedNodeDescription => {
+                            debugger;
+                            let addedNode: Node;
+                            if (addedNodeDescription.nodeType === Node.ELEMENT_NODE) {
+                                const div = document.createElement('div');
+                                div.innerHTML = addedNodeDescription.nodeValue;
+                                addedNode = div.firstChild;
+                                addedNodes.push(addedNode);
+
+                                // if a node is an element and is added, we need to cache it in the
+                                // offsetmap because other mutation event might reference this added
+                                // node in the same stack.
+                                console.log('add node to offsetcachemap', addedNode);
+                            } else if (addedNodeDescription.nodeType === Node.TEXT_NODE) {
+                                addedNode = document.createTextNode(addedNodeDescription.nodeValue);
+                                addedNodes.push(addedNode);
+                            } else {
+                                throw new Error('Unknown node type');
+                            }
+
+                            if (
+                                typeof (addedNodeDescription as AddedNodesTargetMutationPreviousSibling)
+                                    .previousSiblingIndex === 'number'
+                            ) {
+                                const previousSibling = getNodeFromOffsetCacheMap(
+                                    addedNodeDescription.parentId,
+                                    (addedNodeDescription as AddedNodesTargetMutationPreviousSibling)
+                                        .previousSiblingIndex,
+                                );
+                                (previousSibling as ChildNode).after(addedNode);
+                            } else if (
+                                typeof (addedNodeDescription as AddedNodesTargetMutationNextSibling)
+                                    .nextSiblingIndex === 'number'
+                            ) {
+                                const netxSibling = getNodeFromOffsetCacheMap(
+                                    addedNodeDescription.parentId,
+                                    (addedNodeDescription as AddedNodesTargetMutationNextSibling)
+                                        .nextSiblingIndex,
+                                );
+                                (netxSibling as ChildNode).before(addedNode);
+                            } else {
+                                const parentNode = document.getElementById(
+                                    addedNodeDescription.parentId,
+                                );
+                                if (!parentNode) debugger;
+                                parentNode.appendChild(addedNode);
+                            }
+                            if (!addedNode.parentNode) debugger;
+                            addNodeToOffsetCacheMap(addedNode.parentNode);
+                        });
+                    }
+                } else if (mutationEvent.mutationType === 'characterData') {
+                    debugger;
+                    console.log('mutationEvent:', mutationEvent);
                     mutatedNode.textContent = mutationEvent.textContent;
                 }
             } else if (testEvent.type === 'selection') {
@@ -373,7 +428,7 @@ async function triggerEvents(eventStackList: TestEvent[][]): Promise<Node[]> {
 describe('utils', () => {
     describe.only('EventNormalizer', () => {
         let container: HTMLElement;
-        let root: HTMLElement;
+        let editable: HTMLElement;
         let other: HTMLElement;
         let eventBatchs = [];
         let normalizer: EventNormalizer;
@@ -390,16 +445,16 @@ describe('utils', () => {
             container.style.position = 'absolute';
             container.style.top = '0';
             container.style.left = '0';
-            root = document.createElement('div');
-            root.id = 'editable';
-            root.style.display = 'block';
-            container.appendChild(root);
+            editable = document.createElement('div');
+            editable.id = 'editable';
+            editable.style.display = 'block';
+            container.appendChild(editable);
             // ? why do we create other?
             other = document.createElement('div');
             other.innerText = 'abc';
             container.appendChild(other);
             document.body.appendChild(container);
-            normalizer = new EventNormalizer(root, callback);
+            normalizer = new EventNormalizer(editable, callback);
             done();
         }
         function callbackAfter(done: Function): void {
@@ -412,8 +467,8 @@ describe('utils', () => {
         after(callbackAfter);
 
         it('Check if your browser have an available font (Courier) to have valid test', async () => {
-            root.innerHTML = '<span>i</span>';
-            const rect = (root.firstChild as HTMLElement).getBoundingClientRect();
+            editable.innerHTML = '<span>i</span>';
+            const rect = (editable.firstChild as HTMLElement).getBoundingClientRect();
             expect(rect.height).to.equal(20);
             expect(rect.width).to.gt(10.5);
             expect(rect.width).to.lt(11);
@@ -429,8 +484,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.hell;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.hell;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 4, text, 4);
@@ -461,23 +516,23 @@ describe('utils', () => {
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
                     it('should insert char at the end of a word (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'o',
                             code: 'KeyO',
                         });
                         await nextTick();
-                        triggerEvent(root, 'keypress', {
+                        triggerEvent(editable, 'keypress', {
                             key: 'o',
                             code: 'KeyO',
                         });
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'beforeinput', {
                             data: 'o',
                             inputType: 'insertText',
                             cancelable: false,
                             composed: true,
                         });
                         text.textContent = 'hello';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'o',
                             inputType: 'insertText',
                             cancelable: false,
@@ -661,8 +716,8 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (SwiftKey)', async () => {
-                        root.innerHTML = '';
-                        root.innerHTML = "<p id='element-0'>hell<br/>world</p>";
+                        editable.innerHTML = '';
+                        editable.innerHTML = "<p id='element-0'>hell<br/>world</p>";
                         const p = document.getElementById('element-0');
                         const text = p.childNodes[0];
                         await nextTick();
@@ -713,8 +768,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.hello;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.hello;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 5, text, 5);
@@ -746,23 +801,23 @@ describe('utils', () => {
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
                     it('should insert space at the end of a word (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: ' ',
                             code: 'Space',
                         });
                         await nextTick();
-                        triggerEvent(root, 'keypress', {
+                        triggerEvent(editable, 'keypress', {
                             key: ' ',
                             code: 'Space',
                         });
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'beforeinput', {
                             data: ' ',
                             inputType: 'insertText',
                             cancelable: false,
                             composed: true,
                         });
                         text.textContent = 'hello ';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: ' ',
                             inputType: 'insertText',
                             cancelable: false,
@@ -889,19 +944,19 @@ describe('utils', () => {
                     it('should insert space at the end of a word (SwiftKey)', async () => {
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Unidentified',
                             code: '',
                         });
                         await nextTick();
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'beforeinput', {
                             data: ' ',
                             inputType: 'insertText',
                             cancelable: false,
                             composed: true,
                         });
                         text.textContent = 'hello ';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: ' ',
                             inputType: 'insertText',
                             cancelable: false,
@@ -975,8 +1030,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.hell;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.hell;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
 
@@ -1052,19 +1107,19 @@ describe('utils', () => {
                         };
                     });
                     it('should insert char with accent at the end of a word (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
+                        triggerEvent(editable, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
                         await nextTick();
                         await nextTick();
-                        triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(editable, 'keydown', { key: 'o', code: 'KeyO' });
                         await nextTick();
-                        triggerEvent(root, 'keypress', { key: 'ô', code: 'KeyO' });
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'keypress', { key: 'ô', code: 'KeyO' });
+                        triggerEvent(editable, 'beforeinput', {
                             data: 'ô',
                             inputType: 'insertText',
                             cancelable: false,
                             composed: true,
                         });
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'ô',
                             inputType: 'insertText',
                             cancelable: false,
@@ -1083,30 +1138,30 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (ubuntu firefox)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             // no keypress
                             key: 'Dead',
                             code: 'BracketLeft',
                         });
                         await nextTick();
                         await nextTick();
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'ô',
                             code: 'KeyO',
                         });
                         await nextTick();
-                        triggerEvent(root, 'keypress', {
+                        triggerEvent(editable, 'keypress', {
                             key: 'ô',
                             code: 'KeyO',
                         });
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'beforeinput', {
                             data: 'ô',
                             inputType: 'insertText',
                             cancelable: false,
                             composed: true,
                         });
                         text.textContent = 'hellô';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'ô',
                             inputType: 'insertText',
                             cancelable: false,
@@ -1124,43 +1179,43 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (mac safari)', async () => {
-                        triggerEvent(root, 'compositionstart', {});
-                        triggerEvent(root, 'compositionupdate', { data: '^' });
-                        triggerEvent(root, 'beforeInput', {
+                        triggerEvent(editable, 'compositionstart', {});
+                        triggerEvent(editable, 'compositionupdate', { data: '^' });
+                        triggerEvent(editable, 'beforeInput', {
                             data: '^',
                             inputType: 'insertCompositionText',
                         });
                         text.textContent = 'hell^';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: '^',
                             inputType: 'insertCompositionText',
                         });
-                        triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
+                        triggerEvent(editable, 'keydown', { key: 'Dead', code: 'BracketLeft' });
                         setRange(text, 5, text, 5);
                         await nextTick();
                         await nextTick();
-                        triggerEvent(root, 'beforeInput', {
+                        triggerEvent(editable, 'beforeInput', {
                             data: 'null',
                             inputType: 'deleteContentBackwards',
                         });
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'null',
                             inputType: 'deleteContentBackwards',
                         });
-                        triggerEvent(root, 'beforeInput', {
+                        triggerEvent(editable, 'beforeInput', {
                             data: 'ô',
                             inputType: 'insertFromComposition',
                         });
                         text.textContent = 'hellô';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'ô',
                             inputType: 'insertFromComposition',
                         });
-                        triggerEvent(root, 'compositionend', { data: 'ô' });
-                        triggerEvent(root, 'keydown', { key: 'ô', code: 'KeyO' });
+                        triggerEvent(editable, 'compositionend', { data: 'ô' });
+                        triggerEvent(editable, 'keydown', { key: 'ô', code: 'KeyO' });
                         setRange(text, 5, text, 5);
                         await nextTick();
-                        triggerEvent(root, 'keyup', { key: 'o', code: 'KeyO' });
+                        triggerEvent(editable, 'keyup', { key: 'o', code: 'KeyO' });
                         await nextTick();
 
                         const batchEvents: EventBatch[] = [
@@ -1176,15 +1231,15 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (mac chrome)', async () => {
-                        triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
-                        triggerEvent(root, 'compositionstart', {});
-                        triggerEvent(root, 'compositionupdate', { data: '^' });
-                        triggerEvent(root, 'beforeInput', {
+                        triggerEvent(editable, 'keydown', { key: 'Dead', code: 'BracketLeft' });
+                        triggerEvent(editable, 'compositionstart', {});
+                        triggerEvent(editable, 'compositionupdate', { data: '^' });
+                        triggerEvent(editable, 'beforeInput', {
                             data: '^',
                             inputType: 'insertCompositionText',
                         });
                         text.textContent = 'hell^';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: '^',
                             inputType: 'insertCompositionText',
                         });
@@ -1192,18 +1247,18 @@ describe('utils', () => {
                         await nextTick();
                         await nextTick();
 
-                        triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(editable, 'beforeinput', {
                             data: 'ô',
                             inputType: 'insertCompositionText',
                         });
-                        triggerEvent(root, 'compositionupdate', { data: 'ô' });
+                        triggerEvent(editable, 'compositionupdate', { data: 'ô' });
                         text.textContent = 'hellô';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'ô',
                             inputType: 'insertCompositionText',
                         });
-                        triggerEvent(root, 'compositionend', { data: 'ô' });
+                        triggerEvent(editable, 'compositionend', { data: 'ô' });
                         setRange(text, 5, text, 5);
                         await nextTick();
 
@@ -1220,11 +1275,11 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (mac firefox)', async () => {
-                        triggerEvent(root, 'keydown', { key: 'Dead', code: 'BracketLeft' });
-                        triggerEvent(root, 'compositionstart', {});
-                        triggerEvent(root, 'compositionupdate', { data: '^' });
+                        triggerEvent(editable, 'keydown', { key: 'Dead', code: 'BracketLeft' });
+                        triggerEvent(editable, 'compositionstart', {});
+                        triggerEvent(editable, 'compositionupdate', { data: '^' });
                         text.textContent = 'hell^';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: '^',
                             inputType: 'insertCompositionText',
                         });
@@ -1232,11 +1287,11 @@ describe('utils', () => {
                         await nextTick();
                         await nextTick();
 
-                        triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
-                        triggerEvent(root, 'compositionupdate', { data: 'ô' });
-                        triggerEvent(root, 'compositionend', { data: 'ô' });
+                        triggerEvent(editable, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(editable, 'compositionupdate', { data: 'ô' });
+                        triggerEvent(editable, 'compositionend', { data: 'ô' });
                         text.textContent = 'hellô';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'ô',
                             inputType: 'insertCompositionText',
                         });
@@ -1256,17 +1311,17 @@ describe('utils', () => {
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (SwiftKey)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Unidentified',
                         });
-                        triggerEvent(root, 'beforeinput', {
+                        triggerEvent(editable, 'beforeinput', {
                             data: 'ô',
                             inputType: 'insertText',
                             cancelable: false,
                             composed: true,
                         });
                         text.textContent = 'hellô';
-                        triggerEvent(root, 'input', {
+                        triggerEvent(editable, 'input', {
                             data: 'ô',
                             inputType: 'insertText',
                             cancelable: false,
@@ -1342,30 +1397,30 @@ describe('utils', () => {
                 it('should insert multiples key in same stack (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
-                    triggerEvent(root, 'keypress', { key: 'o', code: 'KeyO' });
-                    triggerEvent(root, 'beforeinput', { data: 'o', inputType: 'insertText' });
+                    triggerEvent(editable, 'keydown', { key: 'o', code: 'KeyO' });
+                    triggerEvent(editable, 'keypress', { key: 'o', code: 'KeyO' });
+                    triggerEvent(editable, 'beforeinput', { data: 'o', inputType: 'insertText' });
                     text.textContent = 'hello';
-                    triggerEvent(root, 'input', { data: 'o', inputType: 'insertText' });
+                    triggerEvent(editable, 'input', { data: 'o', inputType: 'insertText' });
                     setRange(text, 5, text, 5);
-                    triggerEvent(root, 'keydown', { key: 'i', code: 'KeyI' });
-                    triggerEvent(root, 'keypress', { key: 'i', code: 'KeyI' });
-                    triggerEvent(root, 'beforeinput', { data: 'i', inputType: 'insertText' });
+                    triggerEvent(editable, 'keydown', { key: 'i', code: 'KeyI' });
+                    triggerEvent(editable, 'keypress', { key: 'i', code: 'KeyI' });
+                    triggerEvent(editable, 'beforeinput', { data: 'i', inputType: 'insertText' });
                     text.textContent = 'helloi';
-                    triggerEvent(root, 'input', { data: 'i', inputType: 'insertText' });
+                    triggerEvent(editable, 'input', { data: 'i', inputType: 'insertText' });
                     setRange(text, 6, text, 6);
-                    triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
-                    triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
-                    triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                    triggerEvent(editable, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                    triggerEvent(editable, 'beforeinput', { inputType: 'deleteContentBackward' });
                     text.textContent = 'hello';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
                     setRange(text, 5, text, 5);
                     await nextTick();
 
@@ -1431,7 +1486,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it.skip('multi keypress with accent (mac)', async () => {
-                    root.innerHTML = testContentNormalizer.hell;
+                    editable.innerHTML = testContentNormalizer.hell;
                     const p = document.getElementById('element-0');
                     const text = p.childNodes[0];
 
@@ -1502,8 +1557,8 @@ describe('utils', () => {
 
             describe('completion/correction', () => {
                 it('should add space when hitting a word completion (SwiftKey)', async () => {
-                    root.innerHTML = testContentNormalizer.ahello;
-                    resetElementsIds();
+                    editable.innerHTML = testContentNormalizer.ahello;
+                    resetElementsIds(editable);
                     const p = document.getElementById('element-0');
                     const text = p.childNodes[0];
                     setRange(text, 7, text, 7);
@@ -1511,26 +1566,26 @@ describe('utils', () => {
                     await nextTick();
                     eventBatchs = [];
 
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: 'hello' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'compositionstart', {});
+                    triggerEvent(editable, 'compositionupdate', { data: 'hello' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionupdate', { data: 'hello' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'hello' });
                     text.textContent = 'a hello';
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
-                    triggerEvent(root, 'compositionend', { data: 'hello' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'compositionend', { data: 'hello' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', { data: ' ', inputType: 'insertText' });
                     text.textContent = 'a hello ';
-                    triggerEvent(root, 'input', { data: ' ', inputType: 'insertText' });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'input', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
                     setRange(text, 8, text, 8);
                     await nextTick();
                     await nextTick();
@@ -1561,34 +1616,34 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('should add space from auto-correction (SwiftKey)', async () => {
-                    root.innerHTML = testContentNormalizer.ahillo;
-                    resetElementsIds();
+                    editable.innerHTML = testContentNormalizer.ahillo;
+                    resetElementsIds(editable);
                     const p = document.getElementById('element-0');
                     const text = p.childNodes[0];
                     setRange(text, 7, text, 7);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: 'hillo' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'compositionstart', {});
+                    triggerEvent(editable, 'compositionupdate', { data: 'hillo' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionupdate', { data: 'hello' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'hello' });
                     text.textContent = 'a hello';
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
-                    triggerEvent(root, 'compositionend', { data: 'hello' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'compositionend', { data: 'hello' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', { data: ' ', inputType: 'insertText' });
                     text.textContent = 'a hello ';
-                    triggerEvent(root, 'input', { data: ' ', inputType: 'insertText' });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'input', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
                     setRange(text, 8, text, 8);
                     await nextTick();
                     await nextTick();
@@ -1635,19 +1690,19 @@ describe('utils', () => {
                 it('prevent default the keypress', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
+                    triggerEvent(editable, 'keyup', { key: 'Dead', code: 'BracketLeft' }); // no keydown, no keypress
                     await nextTick();
                     await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'o', code: 'KeyO' });
+                    triggerEvent(editable, 'keydown', { key: 'o', code: 'KeyO' });
                     await nextTick();
-                    const ev = triggerEvent(root, 'keypress', { key: 'ô', code: 'KeyO' });
+                    const ev = triggerEvent(editable, 'keypress', { key: 'ô', code: 'KeyO' });
                     ev.preventDefault();
                     await nextTick();
                     await nextTick();
@@ -1685,8 +1740,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.hello;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.hello;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 5, text, 5);
@@ -1718,11 +1773,13 @@ describe('utils', () => {
                         virtualKeyboardEvent = { ...keyboardEvent, code: '' };
                     });
                     it('should deleteContentBackward with backspace (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
-                        triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
+                        triggerEvent(editable, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                        triggerEvent(editable, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                        triggerEvent(editable, 'beforeinput', {
+                            inputType: 'deleteContentBackward',
+                        });
                         text.textContent = 'hell';
-                        triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
                         setRange(text, 4, text, 4);
                         await nextTick();
 
@@ -1849,11 +1906,13 @@ describe('utils', () => {
                     it('should deleteContentBackward with backspace (SwiftKey)', async () => {
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                        triggerEvent(root, 'keypress', { key: 'Unidentified', code: '' });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentBackward' });
+                        triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(editable, 'keypress', { key: 'Unidentified', code: '' });
+                        triggerEvent(editable, 'beforeinput', {
+                            inputType: 'deleteContentBackward',
+                        });
                         text.textContent = 'hell';
-                        triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
                         setRange(text, 4, text, 4);
                         await nextTick();
 
@@ -1921,8 +1980,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.hellototo;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.hellototo;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 10, text, 10);
@@ -1959,19 +2018,19 @@ describe('utils', () => {
                         };
                     });
                     it('deleteWordBackward at the end of word (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Backspace',
                             code: 'Backspace',
                             ctrlKey: true,
                         });
-                        triggerEvent(root, 'keypress', {
+                        triggerEvent(editable, 'keypress', {
                             key: 'Backspace',
                             code: 'Backspace',
                             ctrlKey: true,
                         });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'beforeinput', { inputType: 'deleteWordBackward' });
                         text.textContent = 'hello ';
-                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteWordBackward' });
                         setRange(text, 6, text, 6);
                         await nextTick();
 
@@ -2216,8 +2275,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.atestb;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.atestb;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 6, text, 6);
@@ -2255,17 +2314,17 @@ describe('utils', () => {
                     });
 
                     it('deleteWordBackward word in middle of sencence (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Backspace',
                             code: 'Backspace',
                             ctrlKey: true,
                         });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'deleteWordBackward' });
                         text.textContent = 'a  b';
                         text.textContent = 'a  b';
                         text.textContent = 'a\u00A0 b';
                         setRange(text, 2, text, 2);
-                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteWordBackward' });
                         await nextTick();
                         await nextTick();
 
@@ -2525,8 +2584,8 @@ describe('utils', () => {
                     let b: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.atestbBold;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.atestbBold;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         lastText = p.lastChild;
                         b = document.getElementById('element-1');
@@ -2565,15 +2624,15 @@ describe('utils', () => {
                     });
 
                     it('deleteWordBackward word in middle of sencence with style (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Backspace',
                             code: 'Backspace',
                             ctrlKey: true,
                         });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'deleteWordBackward' });
                         p.removeChild(b);
                         setRange(lastText, 0, lastText, 0);
-                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteWordBackward' });
                         await nextTick();
                         await nextTick();
 
@@ -2684,6 +2743,7 @@ describe('utils', () => {
                                         {
                                             parentId: 'element-0',
                                             previousSiblingIndex: 1,
+                                            nodeType: 1,
                                             nodeValue:
                                                 '<span style="font-weight: bold; display: inline"></span>',
                                         },
@@ -2823,8 +2883,8 @@ describe('utils', () => {
                     let b: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.multiStyled;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.multiStyled;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         lastText = p.lastChild;
                         b = p.childNodes[1];
@@ -2863,17 +2923,17 @@ describe('utils', () => {
                     });
 
                     it('deleteWordBackward multi-styled word (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Backspace',
                             code: 'Backspace',
                             ctrlKey: true,
                         });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'deleteWordBackward' });
                         p.removeChild(b);
                         lastText.textContent = ' b';
                         lastText.textContent = '\u00A0b';
                         setRange(lastText, 0, lastText, 0);
-                        triggerEvent(root, 'input', { inputType: 'deleteWordBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteWordBackward' });
                         await nextTick();
                         await nextTick();
 
@@ -3013,6 +3073,7 @@ describe('utils', () => {
                                         {
                                             parentId: 'element-0',
                                             previousSiblingIndex: 1,
+                                            nodeType: 1,
                                             nodeValue:
                                                 '<span style="font-weight: bold; display: inline"></span>',
                                         },
@@ -3173,8 +3234,8 @@ describe('utils', () => {
                     let b: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.atestbcBold;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.atestbcBold;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.firstChild;
                         text2 = p.lastChild;
@@ -3225,18 +3286,20 @@ describe('utils', () => {
                         delete firefoxKeyboardEvent.inputType;
                     });
                     it('deleteHardLineBackward (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Backspace',
                             code: 'Backspace',
                             ctrlKey: true,
                             shiftKey: true,
                         });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineBackward' });
+                        triggerEvent(editable, 'beforeInput', {
+                            inputType: 'deleteHardLineBackward',
+                        });
                         p.removeChild(text);
                         p.removeChild(b);
                         text2.textContent = ', c';
                         setRange(text2, 0, text2, 0);
-                        triggerEvent(root, 'input', { inputType: 'deleteHardLineBackward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteHardLineBackward' });
                         await nextTick();
                         await nextTick();
 
@@ -3461,17 +3524,17 @@ describe('utils', () => {
                 it('backspace (Edge)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 5, text, 5);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
-                    triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                    triggerEvent(editable, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                    triggerEvent(editable, 'keypress', { key: 'Backspace', code: 'Backspace' });
                     text.textContent = 'hell';
-                    triggerEvent(root, 'input', {});
+                    triggerEvent(editable, 'input', {});
                     setRange(text, 4, text, 4);
                     await nextTick();
 
@@ -3510,8 +3573,8 @@ describe('utils', () => {
                     let text: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.hello;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.hello;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
                         text = p.childNodes[0];
                         setRange(text, 4, text, 4);
@@ -3540,11 +3603,13 @@ describe('utils', () => {
                         delete firefoxKeyboardEvent.inputType;
                     });
                     it('should deleteContentForward with delete (ubuntu chrome)', async () => {
-                        triggerEvent(root, 'keydown', { key: 'Delete', code: 'Delete' });
-                        triggerEvent(root, 'keypress', { key: 'Delete', code: 'Delete' });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
+                        triggerEvent(editable, 'keydown', { key: 'Delete', code: 'Delete' });
+                        triggerEvent(editable, 'keypress', { key: 'Delete', code: 'Delete' });
+                        triggerEvent(editable, 'beforeinput', {
+                            inputType: 'deleteContentForward',
+                        });
                         text.textContent = 'hell';
-                        triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteContentForward' });
                         setRange(text, 4, text, 4);
                         await nextTick();
 
@@ -3663,18 +3728,20 @@ describe('utils', () => {
                     it.skip('should deleteContentForward with delete (SwiftKey)', async () => {
                         const p = document.createElement('p');
                         const text = document.createTextNode('hello');
-                        root.innerHTML = '';
-                        root.appendChild(p);
+                        editable.innerHTML = '';
+                        editable.appendChild(p);
                         p.appendChild(text);
                         setRange(text, 5, text, 5);
 
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                        triggerEvent(root, 'keypress', { key: 'Unidentified', code: '' });
-                        triggerEvent(root, 'beforeinput', { inputType: 'deleteContentForward' });
+                        triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(editable, 'keypress', { key: 'Unidentified', code: '' });
+                        triggerEvent(editable, 'beforeinput', {
+                            inputType: 'deleteContentForward',
+                        });
                         text.textContent = 'hell';
-                        triggerEvent(root, 'input', { inputType: 'deleteContentForward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteContentForward' });
                         setRange(text, 4, text, 4);
                         await nextTick();
 
@@ -3698,8 +3765,8 @@ describe('utils', () => {
                     let i: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.abcg;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.abcg;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
 
                         text2 = p.childNodes[2];
@@ -3952,8 +4019,8 @@ describe('utils', () => {
                     let i: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.abcg;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.abcg;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
 
                         text2 = p.childNodes[2];
@@ -3996,18 +4063,20 @@ describe('utils', () => {
                     it('delete whole line forward (ubuntu chrome)', async () => {
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', {
+                        triggerEvent(editable, 'keydown', {
                             key: 'Delete',
                             code: 'Delete',
                             ctrlKey: true,
                             shiftKey: true,
                         });
-                        triggerEvent(root, 'beforeInput', { inputType: 'deleteHardLineForward' });
+                        triggerEvent(editable, 'beforeInput', {
+                            inputType: 'deleteHardLineForward',
+                        });
                         text2.textContent = ' b';
                         p.removeChild(i);
                         p.removeChild(text3);
                         setRange(text2, 2, text2, 2);
-                        triggerEvent(root, 'input', { inputType: 'deleteHardLineForward' });
+                        triggerEvent(editable, 'input', { inputType: 'deleteHardLineForward' });
                         await nextTick();
                         await nextTick();
 
@@ -4109,8 +4178,8 @@ describe('utils', () => {
                     let text3: ChildNode;
 
                     beforeEach(async () => {
-                        root.innerHTML = testContentNormalizer.abcg;
-                        resetElementsIds();
+                        editable.innerHTML = testContentNormalizer.abcg;
+                        resetElementsIds(editable);
                         p = document.getElementById('element-0');
 
                         text3 = p.childNodes[4];
@@ -4262,29 +4331,22 @@ describe('utils', () => {
 
             describe('enter', () => {
                 describe('enter in the middle of the word', () => {
-                    it('enter in the middle of the word (ubuntu chrome)', async () => {
-                        root.innerHTML = '<div>abcd</div>';
-                        const p = root.firstChild;
-                        const text = p.firstChild;
-                        setRange(text, 2, text, 2);
+                    let keyboardEvent: NormalizedKeyboardEvent;
+                    let firefoxKeyboardEvent: NormalizedKeyboardEvent;
+                    let virtualKeyboardEvent: NormalizedKeyboardEvent;
+                    let p: HTMLElement;
+                    let text: ChildNode;
+
+                    beforeEach(async () => {
+                        editable.innerHTML = testContentNormalizer.hello;
+                        resetElementsIds(editable);
+                        p = document.getElementById('element-0');
+                        text = p.childNodes[0];
+                        setRange(text, 4, text, 4);
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
-                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
 
-                        const newText = document.createTextNode('ab');
-                        p.insertBefore(newText, text);
-                        text.textContent = 'cd';
-                        const newP = document.createElement('p');
-                        root.appendChild(newP);
-                        newP.appendChild(text);
-                        setRange(text, 0, text, 0);
-
-                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
-                        await nextTick();
-                        await nextTick();
-
-                        const keyboardEvent: NormalizedKeyboardEvent = {
+                        keyboardEvent = {
                             type: 'keyboard',
                             inputType: 'insertParagraph',
                             key: 'Enter',
@@ -4300,35 +4362,170 @@ describe('utils', () => {
                                 },
                             ],
                         };
+                        // firefoxKeyboardEvent = { ...keyboardEvent };
+                        // // todo: discuss DMO: do we really want to remove inputType?
+                        // delete firefoxKeyboardEvent.inputType;
+                        // // virtual keyboards does not provide code
+                        // virtualKeyboardEvent = { ...keyboardEvent, code: '' };
+                    });
+
+                    it.only('enter in the middle of the word (ubuntu chrome)', async () => {
+                        // editable.innerHTML = '<div>abcd</div>';
+                        // const p = editable.firstChild;
+                        // const text = p.firstChild;
+                        // setRange(text, 2, text, 2);
+                        // await nextTick();
+                        // eventBatchs = [];
+                        // triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
+                        // triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+
+                        // const newText = document.createTextNode('ab');
+                        // p.insertBefore(newText, text);
+                        // text.textContent = 'cd';
+                        // const newP = document.createElement('p');
+                        // root.appendChild(newP);
+                        // newP.appendChild(text);
+                        // setRange(text, 0, text, 0);
+
+                        // triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        // await nextTick();
+                        // await nextTick();
+                        const addedNodes = await triggerEvents([
+                            [
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'element-0', index: 0, offset: 3 },
+                                    anchor: { id: 'element-0', index: 0, offset: 3 },
+                                },
+                            ],
+                            [
+                                { type: 'keydown', key: 'Enter', code: 'Enter' },
+                                { type: 'keypress', key: 'Enter', code: 'Enter' },
+                                { type: 'beforeinput', data: null, inputType: 'insertParagraph' },
+                                { type: 'input', data: null, inputType: 'insertParagraph' },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'childList',
+                                    textContent: 'hel',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    addedNodes: [
+                                        {
+                                            parentId: 'element-0',
+                                            nodeType: 3,
+                                            nextSiblingIndex: 0,
+                                            nodeValue: 'hel',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'characterData',
+                                    textContent: 'lo',
+                                    targetParentId: 'element-0',
+                                    targetIndex: 0,
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'childList',
+                                    textContent: 'hello',
+                                    targetParentId: '',
+                                    targetIndex: 11,
+                                    addedNodes: [
+                                        {
+                                            parentId: 'editable',
+                                            nodeType: 1,
+                                            previousSiblingIndex: 0,
+                                            nodeValue: '<p id="element-1">lo</p>',
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'childList',
+                                    textContent: 'hel',
+                                    targetParentId: 'editable',
+                                    targetIndex: 0,
+                                    removedNodes: [{ index: 0, parentId: 'element-1' }],
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'childList',
+                                    textContent: 'lo',
+                                    targetParentId: 'editable',
+                                    targetIndex: 1,
+                                    addedNodes: [
+                                        { parentId: 'element-1', nodeType: 3, nodeValue: 'lo' },
+                                    ],
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'attributes',
+                                    textContent: 'lo',
+                                    targetParentId: 'editable',
+                                    targetIndex: 1,
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'attributes',
+                                    textContent: 'lo',
+                                    targetParentId: 'editable',
+                                    targetIndex: 1,
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'attributes',
+                                    textContent: 'lo',
+                                    targetParentId: 'editable',
+                                    targetIndex: 1,
+                                },
+                                {
+                                    type: 'mutation',
+                                    mutationType: 'attributes',
+                                    textContent: 'lo',
+                                    targetParentId: 'editable',
+                                    targetIndex: 1,
+                                },
+                                {
+                                    type: 'selection',
+                                    focus: { id: 'element-1', index: 0, offset: 0 },
+                                    anchor: { id: 'element-1', index: 0, offset: 0 },
+                                },
+                            ],
+                            [{ type: 'keyup', key: 'Enter', code: 'Enter' }],
+                        ]);
+                        console.log('addedNodes:', addedNodes);
 
                         const batchEvents: EventBatch[] = [
                             {
                                 events: [keyboardEvent],
-                                mutatedElements: new Set([newText, text, newP]),
+                                // mutatedElements: new Set([newText, text, newP]),
+                                mutatedElements: new Set([...addedNodes]),
                             },
                         ];
+                        debugger;
                         expect(eventBatchs).to.deep.equal(batchEvents);
                     });
                     it('enter in the middle of the word (SwiftKey)', async () => {
-                        root.innerHTML = '<div>abcd</div>';
-                        const p = root.firstChild;
+                        editable.innerHTML = '<div>abcd</div>';
+                        const p = editable.firstChild;
                         const text = p.firstChild;
                         setRange(text, 2, text, 2);
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
-                        triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
-                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(editable, 'keydown', { key: 'Enter', code: '' });
+                        triggerEvent(editable, 'keypress', { key: 'Enter', code: '' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'insertParagraph' });
 
                         const newText = document.createTextNode('ab');
                         p.insertBefore(newText, text);
                         text.textContent = 'cd';
                         const newP = document.createElement('p');
-                        root.appendChild(newP);
+                        editable.appendChild(newP);
                         newP.appendChild(text);
                         setRange(text, 0, text, 0);
 
-                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        triggerEvent(editable, 'input', { inputType: 'insertParagraph' });
                         await nextTick();
                         await nextTick();
 
@@ -4360,31 +4557,31 @@ describe('utils', () => {
                 });
                 describe('enter before a word', () => {
                     it('enter before a word (Gboard)', async () => {
-                        root.innerHTML = '<div>abc def</div>';
-                        const p = root.firstChild;
+                        editable.innerHTML = '<div>abc def</div>';
+                        const p = editable.firstChild;
                         const text = p.firstChild as Text;
                         setRange(text, 4, text, 4);
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'compositionend', { data: 'def' });
+                        triggerEvent(editable, 'compositionend', { data: 'def' });
                         await nextTick();
-                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                        triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
-                        triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
-                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(editable, 'keydown', { key: 'Enter', code: '' });
+                        triggerEvent(editable, 'keypress', { key: 'Enter', code: '' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'insertParagraph' });
 
                         text.textContent = 'abc def';
                         const newText = document.createTextNode('abc\u00A0');
                         p.insertBefore(newText, text);
                         text.textContent = 'def';
                         const newP = document.createElement('p');
-                        root.appendChild(newP);
+                        editable.appendChild(newP);
                         newP.appendChild(text);
                         setRange(text, 0, text, 0);
 
-                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
-                        triggerEvent(root, 'compositionstart', { data: '' });
-                        triggerEvent(root, 'compositionupdate', { data: 'def' });
+                        triggerEvent(editable, 'input', { inputType: 'insertParagraph' });
+                        triggerEvent(editable, 'compositionstart', { data: '' });
+                        triggerEvent(editable, 'compositionupdate', { data: 'def' });
 
                         await nextTick();
                         await nextTick();
@@ -4417,31 +4614,31 @@ describe('utils', () => {
                 });
                 describe('enter after a word', () => {
                     it('enter after a word (Gboard)', async () => {
-                        root.innerHTML = '<div>abc def</div>';
-                        const p = root.firstChild;
+                        editable.innerHTML = '<div>abc def</div>';
+                        const p = editable.firstChild;
                         const text = p.firstChild as Text;
                         setRange(text, 3, text, 3);
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'compositionend', { data: 'abc' });
+                        triggerEvent(editable, 'compositionend', { data: 'abc' });
                         await nextTick();
-                        triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                        triggerEvent(root, 'keydown', { key: 'Enter', code: '' });
-                        triggerEvent(root, 'keypress', { key: 'Enter', code: '' });
-                        triggerEvent(root, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                        triggerEvent(editable, 'keydown', { key: 'Enter', code: '' });
+                        triggerEvent(editable, 'keypress', { key: 'Enter', code: '' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'insertParagraph' });
 
                         const newText = document.createTextNode('abc');
                         p.insertBefore(newText, text);
                         text.textContent = ' def';
                         const newP = document.createElement('p');
-                        root.appendChild(newP);
+                        editable.appendChild(newP);
                         newP.appendChild(text);
                         text.textContent = 'def';
                         text.textContent = '\u00A0def';
 
                         setRange(text, 0, text, 0);
 
-                        triggerEvent(root, 'input', { inputType: 'insertParagraph' });
+                        triggerEvent(editable, 'input', { inputType: 'insertParagraph' });
 
                         await nextTick();
                         await nextTick();
@@ -4474,14 +4671,14 @@ describe('utils', () => {
                 });
                 describe('shift + enter in the middle of a word ', () => {
                     it('shift + enter in the middle of a word (ubuntu chrome)', async () => {
-                        root.innerHTML = '<div>abcd</div>';
-                        const p = root.firstChild;
+                        editable.innerHTML = '<div>abcd</div>';
+                        const p = editable.firstChild;
                         const text = p.firstChild;
                         setRange(text, 2, text, 2);
                         await nextTick();
                         eventBatchs = [];
-                        triggerEvent(root, 'keydown', { key: 'Enter', code: 'Enter' });
-                        triggerEvent(root, 'beforeInput', { inputType: 'insertLineBreak' });
+                        triggerEvent(editable, 'keydown', { key: 'Enter', code: 'Enter' });
+                        triggerEvent(editable, 'beforeInput', { inputType: 'insertLineBreak' });
 
                         const newText = document.createTextNode('ab');
                         p.insertBefore(newText, text);
@@ -4490,7 +4687,7 @@ describe('utils', () => {
                         p.insertBefore(br, text);
                         setRange(text, 0, text, 0);
 
-                        triggerEvent(root, 'input', { inputType: 'insertLineBreak' });
+                        triggerEvent(editable, 'input', { inputType: 'insertLineBreak' });
                         await nextTick();
                         await nextTick();
 
@@ -4529,14 +4726,14 @@ describe('utils', () => {
                 it('arrow (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
+                    triggerEvent(editable, 'keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
                     setRange(text, 3, text, 3);
                     await nextTick();
                     await nextTick();
@@ -4576,13 +4773,13 @@ describe('utils', () => {
                 it('strange case arrow without range', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     document.getSelection().removeAllRanges();
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
+                    triggerEvent(editable, 'keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
                     await nextTick();
                     await nextTick();
 
@@ -4599,9 +4796,9 @@ describe('utils', () => {
                             {
                                 type: 'setRange',
                                 domRange: {
-                                    startContainer: root,
+                                    startContainer: editable,
                                     startOffset: 0,
-                                    endContainer: root,
+                                    endContainer: editable,
                                     endOffset: 0,
                                     direction: Direction.FORWARD,
                                 },
@@ -4620,14 +4817,14 @@ describe('utils', () => {
                 it('shift + arrow (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
+                    triggerEvent(editable, 'keydown', {
                         key: 'ArrowLeft',
                         code: 'ArrowLeft',
                         shiftKey: true,
@@ -4670,14 +4867,14 @@ describe('utils', () => {
                 it('shift + ctrl + arrow (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 3, text, 3);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
+                    triggerEvent(editable, 'keydown', {
                         key: 'ArrowRight',
                         code: 'ArrowRight',
                         shiftKey: true,
@@ -4722,20 +4919,25 @@ describe('utils', () => {
 
             describe('select all', () => {
                 it('ctrl + a (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>a</div><div>b</div><div>c</div>';
-                    setRange(root.childNodes[1].firstChild, 1, root.childNodes[1].firstChild, 1);
+                    editable.innerHTML = '<div>a</div><div>b</div><div>c</div>';
+                    setRange(
+                        editable.childNodes[1].firstChild,
+                        1,
+                        editable.childNodes[1].firstChild,
+                        1,
+                    );
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
+                    triggerEvent(editable, 'keydown', {
                         key: 'Control',
                         code: 'ControlLeft',
                         ctrlKey: true,
                     });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'a', code: 'KeyQ', ctrlKey: true });
-                    setRange(root.firstChild.firstChild, 0, root.lastChild.lastChild, 1);
+                    triggerEvent(editable, 'keydown', { key: 'a', code: 'KeyQ', ctrlKey: true });
+                    setRange(editable.firstChild.firstChild, 0, editable.lastChild.lastChild, 1);
                     await nextTick();
                     await nextTick();
 
@@ -4763,13 +4965,13 @@ describe('utils', () => {
                             {
                                 type: 'selectAll',
                                 carretPosition: {
-                                    offsetNode: root.childNodes[1].firstChild,
+                                    offsetNode: editable.childNodes[1].firstChild,
                                     offset: 1,
                                 },
                                 domRange: {
-                                    startContainer: root.firstChild.firstChild,
+                                    startContainer: editable.firstChild.firstChild,
                                     startOffset: 0,
-                                    endContainer: root.lastChild.lastChild,
+                                    endContainer: editable.lastChild.lastChild,
                                     endOffset: 1,
                                     direction: Direction.FORWARD,
                                 },
@@ -4789,23 +4991,28 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('ctrl + a on content finished by br (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/></div>';
-                    setRange(root.childNodes[1].firstChild, 1, root.childNodes[1].firstChild, 1);
+                    editable.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/></div>';
+                    setRange(
+                        editable.childNodes[1].firstChild,
+                        1,
+                        editable.childNodes[1].firstChild,
+                        1,
+                    );
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', {
+                    triggerEvent(editable, 'keydown', {
                         key: 'Control',
                         code: 'ControlLeft',
                         ctrlKey: true,
                     });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'a', code: 'KeyQ', ctrlKey: true });
+                    triggerEvent(editable, 'keydown', { key: 'a', code: 'KeyQ', ctrlKey: true });
                     setRange(
-                        root.firstChild.firstChild,
+                        editable.firstChild.firstChild,
                         0,
-                        root.lastChild.lastChild.previousSibling,
+                        editable.lastChild.lastChild.previousSibling,
                         0,
                     );
                     await nextTick();
@@ -4835,13 +5042,13 @@ describe('utils', () => {
                             {
                                 type: 'selectAll',
                                 carretPosition: {
-                                    offsetNode: root.childNodes[1].firstChild,
+                                    offsetNode: editable.childNodes[1].firstChild,
                                     offset: 1,
                                 },
                                 domRange: {
-                                    startContainer: root.firstChild.firstChild,
+                                    startContainer: editable.firstChild.firstChild,
                                     startOffset: 0,
-                                    endContainer: root.lastChild.lastChild.previousSibling,
+                                    endContainer: editable.lastChild.lastChild.previousSibling,
                                     endOffset: 0,
                                     direction: Direction.FORWARD,
                                 },
@@ -4861,19 +5068,28 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('ctrl + a (safari)', async () => {
-                    root.innerHTML = '<div>a</div><div>b</div><div>c</div>';
-                    setRange(root.childNodes[1].firstChild, 1, root.childNodes[1].firstChild, 1);
+                    editable.innerHTML = '<div>a</div><div>b</div><div>c</div>';
+                    setRange(
+                        editable.childNodes[1].firstChild,
+                        1,
+                        editable.childNodes[1].firstChild,
+                        1,
+                    );
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'Meta', code: 'MetaLeft', metaKey: true });
+                    triggerEvent(editable, 'keydown', {
+                        key: 'Meta',
+                        code: 'MetaLeft',
+                        metaKey: true,
+                    });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(root, 'keydown', { key: 'a', code: 'KeyQ', metaKey: true });
-                    triggerEvent(root, 'keypress', { key: 'a', code: 'KeyQ', metaKey: true });
+                    triggerEvent(editable, 'keydown', { key: 'a', code: 'KeyQ', metaKey: true });
+                    triggerEvent(editable, 'keypress', { key: 'a', code: 'KeyQ', metaKey: true });
                     await nextTick();
                     await nextTick();
-                    setRange(root.firstChild.firstChild, 0, root.lastChild.lastChild, 1);
+                    setRange(editable.firstChild.firstChild, 0, editable.lastChild.lastChild, 1);
                     await nextTick();
                     await nextTick();
 
@@ -4901,13 +5117,13 @@ describe('utils', () => {
                             {
                                 type: 'selectAll',
                                 carretPosition: {
-                                    offsetNode: root.childNodes[1].firstChild,
+                                    offsetNode: editable.childNodes[1].firstChild,
                                     offset: 1,
                                 },
                                 domRange: {
-                                    startContainer: root.firstChild.firstChild,
+                                    startContainer: editable.firstChild.firstChild,
                                     startOffset: 0,
-                                    endContainer: root.lastChild.lastChild,
+                                    endContainer: editable.lastChild.lastChild,
                                     endOffset: 1,
                                     direction: Direction.FORWARD,
                                 },
@@ -4930,8 +5146,8 @@ describe('utils', () => {
 
             describe('cut', () => {
                 it('ctrl + x to cut', async () => {
-                    root.innerHTML = '<div>abc<br/>abc<br/>abc</div>';
-                    const div = root.firstChild;
+                    editable.innerHTML = '<div>abc<br/>abc<br/>abc</div>';
+                    const div = editable.firstChild;
                     const text1 = div.childNodes[0];
                     const br1 = div.childNodes[1];
                     const text2 = div.childNodes[2];
@@ -4942,7 +5158,7 @@ describe('utils', () => {
 
                     eventBatchs = [];
 
-                    triggerEvent(root, 'keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
+                    triggerEvent(editable, 'keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
                     triggerEvent(div, 'beforeinput', { inputType: 'deleteByCut' });
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'bc\ndef\ngh');
@@ -4997,14 +5213,14 @@ describe('utils', () => {
 
             describe('paste', () => {
                 it('ctrl + v to paste', async () => {
-                    root.innerHTML = '<div>abc</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild;
                     setRange(text, 1, text, 1);
                     await nextTick();
 
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'v', code: 'KeyV', ctrlKey: true });
+                    triggerEvent(editable, 'keydown', { key: 'v', code: 'KeyV', ctrlKey: true });
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'b');
                     dataTransfer.setData('text/html', '<div>b</div>');
@@ -5053,18 +5269,18 @@ describe('utils', () => {
                 it('ctrl + z (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'z', code: 'KeyW', ctrlKey: true });
-                    triggerEvent(root, 'beforeinput', { inputType: 'historyUndo' });
+                    triggerEvent(editable, 'keydown', { key: 'z', code: 'KeyW', ctrlKey: true });
+                    triggerEvent(editable, 'beforeinput', { inputType: 'historyUndo' });
                     text.textContent = 'hell';
                     setRange(text, 3, text, 3);
-                    triggerEvent(root, 'input', { inputType: 'historyUndo' });
+                    triggerEvent(editable, 'input', { inputType: 'historyUndo' });
                     await nextTick();
                     await nextTick();
 
@@ -5099,15 +5315,15 @@ describe('utils', () => {
                 it('ctrl + b (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 1, text, 4);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'keydown', { key: 'b', code: 'KeyB', ctrlKey: true });
-                    triggerEvent(root, 'beforeinput', { inputType: 'formatBold' });
+                    triggerEvent(editable, 'keydown', { key: 'b', code: 'KeyB', ctrlKey: true });
+                    triggerEvent(editable, 'beforeinput', { inputType: 'formatBold' });
                     const text2 = document.createTextNode('h');
                     p.insertBefore(text2, text);
                     text.textContent = 'ello';
@@ -5121,7 +5337,7 @@ describe('utils', () => {
                     p.insertBefore(b, text3);
                     b.appendChild(text3);
                     setRange(text3, 0, text3, 3);
-                    triggerEvent(root, 'input', { inputType: 'formatBold' });
+                    triggerEvent(editable, 'input', { inputType: 'formatBold' });
                     await nextTick();
                     await nextTick();
 
@@ -5164,7 +5380,7 @@ describe('utils', () => {
         describe('pointer', () => {
             describe('set range', () => {
                 it('click outside do nothing (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>abc</div>';
+                    editable.innerHTML = '<div>abc</div>';
                     await nextTick();
                     eventBatchs = [];
                     triggerEvent(other, 'mousedown', {
@@ -5192,24 +5408,34 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal([]);
                 });
                 it('click on border set range at the begin (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div style="position: absolute; left: 250px;">abc</div>';
+                    editable.innerHTML = '<div style="position: absolute; left: 250px;">abc</div>';
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'mousedown', {
+                    triggerEvent(editable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 5,
                         clientY: 5,
                     });
                     setRange(other.firstChild, 1, other.firstChild, 1);
-                    triggerEvent(root, 'click', { button: 2, detail: 0, clientX: 5, clientY: 5 });
-                    triggerEvent(root, 'mouseup', { button: 2, detail: 0, clientX: 5, clientY: 5 });
+                    triggerEvent(editable, 'click', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 5,
+                        clientY: 5,
+                    });
+                    triggerEvent(editable, 'mouseup', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 5,
+                        clientY: 5,
+                    });
                     await nextTick();
                     await nextTick();
                     const pointerEvent: NormalizedPointerEvent = {
                         type: 'pointer',
                         caretPosition: {
-                            offsetNode: root,
+                            offsetNode: editable,
                             offset: 0,
                         },
                         defaultPrevented: false,
@@ -5217,9 +5443,9 @@ describe('utils', () => {
                             {
                                 type: 'setRange',
                                 domRange: {
-                                    startContainer: root,
+                                    startContainer: editable,
                                     startOffset: 0,
-                                    endContainer: root,
+                                    endContainer: editable,
                                     endOffset: 0,
                                     direction: Direction.FORWARD,
                                 },
@@ -5236,7 +5462,7 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('right click outside do nothing (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>abc</div>';
+                    editable.innerHTML = '<div>abc</div>';
                     await nextTick();
                     eventBatchs = [];
                     triggerEvent(other, 'mousedown', {
@@ -5258,10 +5484,10 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal([]);
                 });
                 it('mouse setRange (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/></div>';
-                    const p1 = root.firstChild;
+                    editable.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/></div>';
+                    const p1 = editable.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1];
+                    const p2 = editable.childNodes[1];
                     const text2 = p2.firstChild;
                     await nextTick();
                     eventBatchs = [];
@@ -5308,9 +5534,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('mouse setRange contenteditable false', async () => {
-                    root.innerHTML = 'abc<i contentEditable="false">test</i>def';
-                    const text = root.firstChild;
-                    const i = root.childNodes[1];
+                    editable.innerHTML = 'abc<i contentEditable="false">test</i>def';
+                    const text = editable.firstChild;
+                    const i = editable.childNodes[1];
                     await nextTick();
                     eventBatchs = [];
 
@@ -5356,8 +5582,8 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('touchdown setRange (googleKeyboard)', async () => {
-                    root.innerHTML = '<div>abc def</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc def</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild;
                     await nextTick();
                     eventBatchs = [];
@@ -5394,10 +5620,10 @@ describe('utils', () => {
                     triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 45, clientY: 10 });
                     setRange(text, 4, text, 4);
                     await nextTick();
-                    triggerEvent(root, 'compositionstart', { data: '' });
-                    triggerEvent(root, 'compositionupdate', { data: 'def' });
+                    triggerEvent(editable, 'compositionstart', { data: '' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'def' });
                     await nextTick();
-                    triggerEvent(root, 'compositionupdate', { data: 'def' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'def' });
                     await nextTick();
                     await nextTick();
 
@@ -5431,8 +5657,8 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('touchdown setRange move inside a word (googleKeyboard)', async () => {
-                    root.innerHTML = '<div>abc def</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc def</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild;
                     setRange(text, 3, text, 3);
 
@@ -5471,7 +5697,7 @@ describe('utils', () => {
                     triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 24, clientY: 10 });
                     setRange(text, 2, text, 2);
                     await nextTick();
-                    triggerEvent(root, 'compositionupdate', { data: 'def' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'def' });
                     await nextTick();
                     await nextTick();
 
@@ -5505,8 +5731,8 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('mouse setRange with contextMenu (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>abc</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild;
                     await nextTick();
                     eventBatchs = [];
@@ -5546,8 +5772,8 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('mouse setRange on input (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>ab<input/>cd</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>ab<input/>cd</div>';
+                    const p = editable.firstChild;
                     const text1 = p.firstChild;
                     const input = p.childNodes[1];
                     await nextTick();
@@ -5610,28 +5836,28 @@ describe('utils', () => {
                 it('should correct a word (SwiftKey)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a hillo b');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 7, text, 7);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: 'hillo' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'compositionstart', {});
+                    triggerEvent(editable, 'compositionupdate', { data: 'hillo' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
                     text.textContent = 'a hello b';
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionupdate', { data: 'hello' });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
-                    triggerEvent(root, 'compositionend', { data: 'hello' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'hello' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'compositionend', { data: 'hello' });
                     setRange(text, 7, text, 7);
                     await nextTick();
                     await nextTick();
@@ -5675,20 +5901,20 @@ describe('utils', () => {
                     // and don't trigger composition event
                     const p = document.createElement('p');
                     const text = document.createTextNode('And the mome rates outgrabe.');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 18, text, 18);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'raths',
                         inputType: 'insertReplacementText',
                     });
                     text.textContent = 'And the mome outgrabe.';
                     text.textContent = 'And the mome raths outgrabe.';
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'raths',
                         inputType: 'insertReplacementText',
                     });
@@ -5732,8 +5958,8 @@ describe('utils', () => {
                 });
 
                 it('should correct with bold (SwiftKey)', async () => {
-                    root.innerHTML = '<div>.<b>chr</b>is .</div>';
-                    const div = root.childNodes[0];
+                    editable.innerHTML = '<div>.<b>chr</b>is .</div>';
+                    const div = editable.childNodes[0];
                     const b = div.childNodes[1];
                     const firstText = div.firstChild;
                     const textB = b.firstChild;
@@ -5742,14 +5968,14 @@ describe('utils', () => {
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: 'chris' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'compositionstart', {});
+                    triggerEvent(editable, 'compositionupdate', { data: 'chris' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'Christophe',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionupdate', { data: 'Christophe' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'Christophe' });
 
                     div.removeChild(firstText); // remove first text node
                     b.removeChild(textB); // remove text in b
@@ -5761,11 +5987,11 @@ describe('utils', () => {
                     div.insertBefore(newB, text); // re-create b
                     text.textContent = '\u00A0.'; // update text node
 
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'Christophe',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionend', { data: 'Christophe' });
+                    triggerEvent(editable, 'compositionend', { data: 'Christophe' });
                     setRange(text, 1, text, 1);
                     await nextTick();
                     await nextTick();
@@ -5819,29 +6045,32 @@ describe('utils', () => {
                 it('should complete with repeat (SwiftKey)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('Ha ha ha ha ha');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 9, text, 9);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'compositionupdate', { data: '' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'compositionstart', {});
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'compositionstart', {});
+                    triggerEvent(editable, 'compositionupdate', { data: '' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'compositionstart', {});
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'ha',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionupdate', { data: 'ha' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'ha' });
                     text.textContent = 'Ha ha ha haha ha';
-                    triggerEvent(root, 'input', { data: 'ha', inputType: 'insertCompositionText' });
-                    triggerEvent(root, 'compositionend', { data: 'ha' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'input', {
+                        data: 'ha',
+                        inputType: 'insertCompositionText',
+                    });
+                    triggerEvent(editable, 'compositionend', { data: 'ha' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', { data: ' ', inputType: 'insertText' });
                     text.textContent = 'Ha ha ha ha ha ha';
-                    triggerEvent(root, 'input', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'input', { data: ' ', inputType: 'insertText' });
                     setRange(text, 12, text, 12);
                     await nextTick();
                     await nextTick();
@@ -5883,34 +6112,34 @@ describe('utils', () => {
                 });
 
                 it('should correct (googleKeyboard)', async () => {
-                    root.innerHTML = '<div>abc def</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc def</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild as Text;
                     setRange(text, 2, text, 2);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionend', { data: 'aXc' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'compositionend', { data: 'aXc' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'deleteContentBackward' });
                     text.textContent = 'c def';
                     // in real googleKeyboard realase the mutation just after input without
                     // timeout, in this test it's impositble to do that. But the implementation
                     // use a setTimeout, the mutation stack is the same.
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
                     setRange(text, 1, text, 1);
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'deleteContentBackward' });
                     text.textContent = ' def';
                     text.textContent = ' def';
                     text.textContent = ' def';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertText', data: 'aXc' });
+                    triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'insertText', data: 'aXc' });
                     text.textContent = 'aXc def';
                     text.textContent = 'aXc def';
                     setRange(text, 3, text, 3);
-                    triggerEvent(root, 'input', { inputType: 'insertText', data: 'aXc' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
+                    triggerEvent(editable, 'input', { inputType: 'insertText', data: 'aXc' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
                     await nextTick();
                     await nextTick();
 
@@ -5947,29 +6176,29 @@ describe('utils', () => {
                 });
 
                 it('should correct by same value (googleKeyboard)', async () => {
-                    root.innerHTML = '<div>abc def</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc def</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild as Text;
                     setRange(text, 2, text, 2);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionend', { data: 'abc' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'compositionend', { data: 'abc' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'deleteContentBackward' });
                     text.textContent = 'c def';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
                     setRange(text, 1, text, 1);
-                    triggerEvent(root, 'beforeInput', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'deleteContentBackward' });
                     text.textContent = ' def';
                     text.textContent = ' def';
-                    triggerEvent(root, 'input', { inputType: 'deleteContentBackward' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertText', data: 'abc' });
+                    triggerEvent(editable, 'input', { inputType: 'deleteContentBackward' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'insertText', data: 'abc' });
                     text.textContent = 'abc def';
                     setRange(text, 3, text, 3);
-                    triggerEvent(root, 'input', { inputType: 'insertText', data: 'abc' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified', code: '' });
+                    triggerEvent(editable, 'input', { inputType: 'insertText', data: 'abc' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified', code: '' });
                     await nextTick();
                     await nextTick();
 
@@ -6008,39 +6237,39 @@ describe('utils', () => {
                 it('completion on BR (SwiftKey)', async () => {
                     const p = document.createElement('p');
                     const br = document.createElement('br');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(br);
                     setRange(p, 0, p, 0);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'compositionstart', { data: '' });
-                    triggerEvent(root, 'compositionupdate', { data: '' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'compositionstart', { data: '' });
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'compositionstart', { data: '' });
+                    triggerEvent(editable, 'compositionupdate', { data: '' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'compositionstart', { data: '' });
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'compositionupdate', { data: 'hello' });
+                    triggerEvent(editable, 'compositionupdate', { data: 'hello' });
                     const text = document.createTextNode('');
                     p.insertBefore(text, br);
                     p.removeChild(br);
                     text.textContent = 'hello';
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
-                    triggerEvent(root, 'compositionend', { data: 'hello' });
-                    triggerEvent(root, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(root, 'beforeInput', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'compositionend', { data: 'hello' });
+                    triggerEvent(editable, 'keydown', { key: 'Unidentified' });
+                    triggerEvent(editable, 'beforeInput', { data: ' ', inputType: 'insertText' });
                     text.textContent = 'hello ';
                     text.textContent = 'hello\u00A0';
                     setRange(text, 6, text, 6);
-                    triggerEvent(root, 'input', { data: ' ', inputType: 'insertText' });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'input', { data: ' ', inputType: 'insertText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
                     await nextTick();
                     await nextTick();
 
@@ -6083,22 +6312,22 @@ describe('utils', () => {
                 it('should correct (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a brillig b');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'mousedown', {
+                    triggerEvent(editable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 20,
                         clientY: 10,
                     });
                     setRange(text, 2, text, 9);
-                    triggerEvent(root, 'contextmenu', {
+                    triggerEvent(editable, 'contextmenu', {
                         button: 2,
                         detail: 0,
                         clientX: 20,
@@ -6107,10 +6336,10 @@ describe('utils', () => {
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertReplacementText' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'insertReplacementText' });
                     text.textContent = 'a brill b';
-                    triggerEvent(root, 'input', { inputType: 'insertReplacementText' });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'input', { inputType: 'insertReplacementText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
                     setRange(text, 7, text, 7);
                     await nextTick();
                     await nextTick();
@@ -6152,8 +6381,8 @@ describe('utils', () => {
                     const p = document.createElement('p');
                     const i = document.createElement('i');
                     const text = document.createTextNode('a brillig b');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(i);
                     i.appendChild(text);
                     setRange(text, 4, text, 4);
@@ -6161,14 +6390,14 @@ describe('utils', () => {
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'mousedown', {
+                    triggerEvent(editable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 20,
                         clientY: 10,
                     });
                     setRange(text, 2, text, 9);
-                    triggerEvent(root, 'contextmenu', {
+                    triggerEvent(editable, 'contextmenu', {
                         button: 2,
                         detail: 0,
                         clientX: 20,
@@ -6177,7 +6406,7 @@ describe('utils', () => {
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeInput', { inputType: 'insertReplacementText' });
+                    triggerEvent(editable, 'beforeInput', { inputType: 'insertReplacementText' });
                     text.textContent = 'a  b';
                     text.textContent = 'a  b';
                     text.textContent = 'a  b';
@@ -6190,8 +6419,8 @@ describe('utils', () => {
                     newText.textContent = 'a ';
                     newText.textContent = 'a brill';
                     i.removeChild(newText2);
-                    triggerEvent(root, 'input', { inputType: 'insertReplacementText' });
-                    triggerEvent(root, 'keyup', { key: 'Unidentified' });
+                    triggerEvent(editable, 'input', { inputType: 'insertReplacementText' });
+                    triggerEvent(editable, 'keyup', { key: 'Unidentified' });
                     setRange(text, 0, text, 0);
                     await nextTick();
                     await nextTick();
@@ -6230,20 +6459,20 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('should correct at end (ubuntu chrome)', async () => {
-                    root.innerHTML = '<p><i>slithy toves</i></p>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<p><i>slithy toves</i></p>';
+                    const p = editable.firstChild;
                     const i = p.firstChild;
                     const text = i.firstChild;
                     setRange(text, 7, text, 12);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'toes',
                         inputType: 'insertReplacementText',
                     });
                     text.textContent = 'slithy toes';
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'toes',
                         inputType: 'insertReplacementText',
                     });
@@ -6285,15 +6514,15 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('should correct at middle (ubuntu chrome)', async () => {
-                    root.innerHTML = '<p><i>’Twas brillig, and the slithy toves</i><br/></p>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<p><i>’Twas brillig, and the slithy toves</i><br/></p>';
+                    const p = editable.firstChild;
                     const i = p.firstChild;
                     const text = i.firstChild as Text;
                     setRange(text, 6, text, 13);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'brill',
                         inputType: 'insertReplacementText',
                     });
@@ -6308,7 +6537,7 @@ describe('utils', () => {
                     text2.textContent = '’Twas brill';
                     i.removeChild(text3);
 
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'brill',
                         inputType: 'insertReplacementText',
                     });
@@ -6350,15 +6579,15 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('should correct at end of i tag (ubuntu chrome)', async () => {
-                    root.innerHTML = '<p><i>slithy toves</i></p>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<p><i>slithy toves</i></p>';
+                    const p = editable.firstChild;
                     const i = p.firstChild;
                     const text = i.firstChild;
                     setRange(text, 7, text, 12);
 
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeInput', {
+                    triggerEvent(editable, 'beforeInput', {
                         data: 'toes',
                         inputType: 'insertReplacementText',
                     });
@@ -6366,12 +6595,12 @@ describe('utils', () => {
                     text.textContent = 'slithy ';
                     text.textContent = 'slithy ';
                     const text2 = document.createTextNode('toes');
-                    root.appendChild(text2);
+                    editable.appendChild(text2);
                     const br = document.createElement('br');
-                    root.insertBefore(br, text2);
+                    editable.insertBefore(br, text2);
                     text2.textContent = '';
-                    root.removeChild(text2);
-                    root.removeChild(br);
+                    editable.removeChild(text2);
+                    editable.removeChild(br);
                     const span = document.createElement('span');
                     const text3 = document.createTextNode('toes');
                     span.appendChild(text3);
@@ -6385,7 +6614,7 @@ describe('utils', () => {
                     i2.insertBefore(text, text3);
                     p.removeChild(i);
 
-                    triggerEvent(root, 'input', {
+                    triggerEvent(editable, 'input', {
                         data: 'toes',
                         inputType: 'insertReplacementText',
                     });
@@ -6429,22 +6658,22 @@ describe('utils', () => {
                 it('should correct (Edge)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('a brillig b');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'mousedown', {
+                    triggerEvent(editable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 20,
                         clientY: 10,
                     });
                     setRange(text, 2, text, 9);
-                    triggerEvent(root, 'contextmenu', {
+                    triggerEvent(editable, 'contextmenu', {
                         button: 2,
                         detail: 0,
                         clientX: 20,
@@ -6456,7 +6685,7 @@ describe('utils', () => {
                     text.textContent = 'a  b';
                     text.textContent = 'a brill b';
                     // await nextTick(); TODO with Edge next version
-                    triggerEvent(root, 'input', {});
+                    triggerEvent(editable, 'input', {});
                     setRange(text, 7, text, 7);
                     await nextTick();
                     await nextTick();
@@ -6498,19 +6727,19 @@ describe('utils', () => {
 
             describe('select all', () => {
                 it('mouse select (ubuntu chrome)', async () => {
-                    root.innerHTML = 'a<br/>b';
-                    const text = root.firstChild;
+                    editable.innerHTML = 'a<br/>b';
+                    const text = editable.firstChild;
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'mousedown', {
+                    triggerEvent(editable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 8,
                         clientY: 10,
                     });
                     setRange(text, 1, text, 1);
-                    triggerEvent(root, 'contextmenu', {
+                    triggerEvent(editable, 'contextmenu', {
                         button: 2,
                         detail: 0,
                         clientX: 8,
@@ -6518,7 +6747,7 @@ describe('utils', () => {
                     });
                     await nextTick();
                     await nextTick();
-                    setRange(root, 0, other.firstChild, 3);
+                    setRange(editable, 0, other.firstChild, 3);
                     await nextTick();
                     await nextTick();
 
@@ -6558,7 +6787,7 @@ describe('utils', () => {
                                     offset: 1,
                                 },
                                 domRange: {
-                                    startContainer: root,
+                                    startContainer: editable,
                                     startOffset: 0,
                                     endContainer: other.firstChild,
                                     endOffset: 3,
@@ -6581,11 +6810,11 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('mouse select all on content wrap by br (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div><br/><br/>a</div><div>b</div><div>c<br/><br/></div>';
-                    const p1 = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div><br/><br/>a</div><div>b</div><div>c<br/><br/></div>';
+                    const p1 = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     const text2 = p2.firstChild;
-                    const p3 = root.childNodes[2];
+                    const p3 = editable.childNodes[2];
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
@@ -6666,13 +6895,13 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('mouse select all with invisible content (ubuntu chrome)', async () => {
-                    root.innerHTML =
+                    editable.innerHTML =
                         '<div>a</div><div>b</div><div>c<br/><br/><i style="display: none;">text</i></div>';
-                    const p1 = root.firstChild;
+                    const p1 = editable.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1] as HTMLElement;
+                    const p2 = editable.childNodes[1] as HTMLElement;
                     const text2 = p2.firstChild;
-                    const p3 = root.childNodes[2];
+                    const p3 = editable.childNodes[2];
                     await nextTick();
                     triggerEvent(p2, 'mousedown', {
                         button: 2,
@@ -6728,12 +6957,13 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('wrong mouse select all without event (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/><i>text</i></div>';
-                    const p1 = root.firstChild;
+                    editable.innerHTML =
+                        '<div>a</div><div>b</div><div>c<br/><br/><i>text</i></div>';
+                    const p1 = editable.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1];
+                    const p2 = editable.childNodes[1];
                     const text2 = p2.firstChild;
-                    const p3 = root.childNodes[2];
+                    const p3 = editable.childNodes[2];
                     await nextTick();
                     triggerEvent(p2, 'mousedown', { button: 2, detail: 1 });
                     setRange(text2, 0, text2, 1);
@@ -6747,12 +6977,13 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal([]);
                 });
                 it('wrong mouse select all without event 2 (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/><i>text</i></div>';
-                    const p1 = root.firstChild;
+                    editable.innerHTML =
+                        '<div>a</div><div>b</div><div>c<br/><br/><i>text</i></div>';
+                    const p1 = editable.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1];
+                    const p2 = editable.childNodes[1];
                     const text2 = p2.firstChild;
-                    const p3 = root.lastChild;
+                    const p3 = editable.lastChild;
                     const text3 = p3.lastChild.firstChild;
                     await nextTick();
                     triggerEvent(p2, 'mousedown', { button: 2, detail: 1 });
@@ -6767,13 +6998,13 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal([]);
                 });
                 it('touch select all (android)', async () => {
-                    root.innerHTML =
+                    editable.innerHTML =
                         '<div>a</div><div>b</div><div>c<br/><br/><i style="display: none;">text</i></div>';
-                    const p1 = root.firstChild;
+                    const p1 = editable.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1];
+                    const p2 = editable.childNodes[1];
                     const text2 = p2.firstChild;
-                    const p3 = root.childNodes[2];
+                    const p3 = editable.childNodes[2];
                     setRange(text1, 0, text1, 0);
                     await nextTick();
                     eventBatchs = [];
@@ -6878,9 +7109,9 @@ describe('utils', () => {
 
             describe('cut', () => {
                 it('use mouse cut (ubuntu chrome)', async () => {
-                    root.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
+                    editable.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
                     // todo: verify and changes the names for all the tests
-                    const p = root.firstChild;
+                    const p = editable.firstChild;
                     const text1 = p.childNodes[0];
                     const br1 = p.childNodes[1];
                     const text2 = p.childNodes[2];
@@ -6896,13 +7127,13 @@ describe('utils', () => {
                     });
                     setRange(text1, 1, text1, 1);
                     setRange(text1, 1, text3, 2);
-                    triggerEvent(root.lastChild, 'click', {
+                    triggerEvent(editable.lastChild, 'click', {
                         button: 2,
                         detail: 0,
                         clientX: 22,
                         clientY: 45,
                     });
-                    triggerEvent(root.lastChild, 'mouseup', {
+                    triggerEvent(editable.lastChild, 'mouseup', {
                         button: 2,
                         detail: 0,
                         clientX: 22,
@@ -6988,8 +7219,8 @@ describe('utils', () => {
                 });
                 // skip this test as we do not support Edge witout blink engine
                 it.skip('use mouse cut (Edge)', async () => {
-                    root.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
+                    const p = editable.firstChild;
                     const text1 = p.childNodes[0];
                     const br1 = p.childNodes[1];
                     const text2 = p.childNodes[2];
@@ -7005,13 +7236,13 @@ describe('utils', () => {
                     });
                     setRange(text1, 1, text1, 1);
                     setRange(text1, 1, text3, 2);
-                    triggerEvent(root.lastChild, 'click', {
+                    triggerEvent(editable.lastChild, 'click', {
                         button: 2,
                         detail: 0,
                         clientX: 22,
                         clientY: 45,
                     });
-                    triggerEvent(root.lastChild, 'mouseup', {
+                    triggerEvent(editable.lastChild, 'mouseup', {
                         button: 2,
                         detail: 0,
                         clientX: 22,
@@ -7101,8 +7332,8 @@ describe('utils', () => {
                 // todo: currently the offset is 0 but should be 1.
                 //       nby: I don't understand why. ask chm more infos
                 it.skip('paste with context menu', async () => {
-                    root.innerHTML = '<div>abc</div>';
-                    const p = root.firstChild;
+                    editable.innerHTML = '<div>abc</div>';
+                    const p = editable.firstChild;
                     const text = p.firstChild;
                     setRange(text, 1, text, 1);
                     await nextTick();
@@ -7148,9 +7379,9 @@ describe('utils', () => {
 
             describe('drag and drop', () => {
                 it('from self content', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7212,11 +7443,11 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from self empty link', async () => {
-                    root.innerHTML =
+                    editable.innerHTML =
                         '<div>a<a href="https://www.odoo.com"></a>c</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
+                    const p = editable.firstChild;
                     const a = p.childNodes[1];
-                    const p2 = root.childNodes[1];
+                    const p2 = editable.childNodes[1];
                     setRange(a, 0, a, 0);
                     await nextTick();
                     eventBatchs = [];
@@ -7280,10 +7511,10 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from self custom content', async () => {
-                    root.innerHTML = '<div>a<svg></svg>c</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const svg = root.querySelector('svg');
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>a<svg></svg>c</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const svg = editable.querySelector('svg');
+                    const p2 = editable.childNodes[1];
 
                     svg.style['-moz-user-select'] = 'none';
                     svg.style['-khtml-user-select'] = 'none';
@@ -7364,9 +7595,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from browser navbar link', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7422,9 +7653,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from external text', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7477,9 +7708,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from external content', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7534,9 +7765,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from external image', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7592,9 +7823,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from external link', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7650,9 +7881,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from external empty link', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7708,9 +7939,9 @@ describe('utils', () => {
                     expect(eventBatchs).to.deep.equal(batchEvents);
                 });
                 it('from pictures folder', async () => {
-                    root.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
-                    const p = root.firstChild;
-                    const p2 = root.childNodes[1];
+                    editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const p = editable.firstChild;
+                    const p2 = editable.childNodes[1];
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
@@ -7785,8 +8016,8 @@ describe('utils', () => {
                 it('mouse history undo (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
                     setRange(text, 4, text, 4);
 
@@ -7802,10 +8033,10 @@ describe('utils', () => {
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeinput', { inputType: 'historyUndo' });
+                    triggerEvent(editable, 'beforeinput', { inputType: 'historyUndo' });
                     text.textContent = 'hell';
                     setRange(text, 3, text, 3);
-                    triggerEvent(root, 'input', { inputType: 'historyUndo' });
+                    triggerEvent(editable, 'input', { inputType: 'historyUndo' });
                     await nextTick();
                     await nextTick();
 
@@ -7835,8 +8066,8 @@ describe('utils', () => {
                 it('apply bold with context menu (or menu bar) (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
-                    root.innerHTML = '';
-                    root.appendChild(p);
+                    editable.innerHTML = '';
+                    editable.appendChild(p);
                     p.appendChild(text);
 
                     await nextTick();
@@ -7848,7 +8079,7 @@ describe('utils', () => {
                     await nextTick();
 
                     eventBatchs = [];
-                    triggerEvent(root, 'beforeinput', { inputType: 'formatBold' });
+                    triggerEvent(editable, 'beforeinput', { inputType: 'formatBold' });
                     const text2 = document.createTextNode('h');
                     p.insertBefore(text2, text);
                     text.textContent = 'ello';
@@ -7862,7 +8093,7 @@ describe('utils', () => {
                     p.insertBefore(b, text3);
                     b.appendChild(text3);
                     setRange(text3, 0, text3, 3);
-                    triggerEvent(root, 'input', { inputType: 'formatBold' });
+                    triggerEvent(editable, 'input', { inputType: 'formatBold' });
                     await nextTick();
                     await nextTick();
 
