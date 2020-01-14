@@ -15,6 +15,7 @@ import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
 import { ParsingFunction, ParsingContext } from '../src/Parser';
 import { VDocument } from '../src/VDocument';
+import { createMap } from '../src/VDocumentMap';
 
 describe('core', () => {
     describe('src', () => {
@@ -57,15 +58,16 @@ describe('core', () => {
                 describe('parse', () => {
                     it('should parse a textNode', async () => {
                         const text = document.createTextNode('abc');
-                        const nNodes = Char.parse({
-                            node: text,
-                            lastParsed: [],
+                        const context = {
+                            currentNode: text,
                             vDocument: new VDocument(new FragmentNode()),
-                        }).lastParsed;
-                        expect(nNodes.length).to.equal(3);
-                        expect((nNodes[0] as CharNode).char).to.equal('a');
-                        expect((nNodes[1] as CharNode).char).to.equal('b');
-                        expect((nNodes[2] as CharNode).char).to.equal('c');
+                        };
+                        const parsingMap = Char.parse(context).parsingMap;
+                        const vNodes = Array.from(parsingMap.keys());
+                        expect(vNodes.length).to.equal(3);
+                        expect((vNodes[0] as CharNode).char).to.equal('a');
+                        expect((vNodes[1] as CharNode).char).to.equal('b');
+                        expect((vNodes[2] as CharNode).char).to.equal('c');
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
@@ -235,13 +237,14 @@ describe('core', () => {
                         const br = document.createElement('br');
                         const parsingFunction = LineBreak.parsingPredicate(br);
                         expect(parsingFunction).not.to.be.undefined;
-                        expect(
-                            parsingFunction({
-                                node: br,
-                                lastParsed: [],
-                                vDocument: new VDocument(new FragmentNode()),
-                            }).lastParsed[0].atomic,
-                        ).to.equal(true);
+                        const context = {
+                            currentNode: br,
+                            vDocument: new VDocument(new FragmentNode()),
+                        };
+                        const parsingMap = parsingFunction(context).parsingMap;
+                        expect(parsingMap.size).to.equal(1);
+                        const lineBreak = parsingMap.keys().next().value;
+                        expect(lineBreak.atomic).to.equal(true);
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
@@ -1212,7 +1215,8 @@ describe('core', () => {
                             }
                         }
                         static parse(context: ParsingContext): ParsingContext {
-                            context.lastParsed = [new MyCustomNode()];
+                            const parsedNode = new MyCustomNode();
+                            context.parsingMap = createMap([[parsedNode, context.currentNode]]);
                             return context;
                         }
                     }

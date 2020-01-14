@@ -74,3 +74,21 @@ export const VDocumentMap = {
         console.log(fromDom);
     },
 };
+export function createMap(items: Array<[VNode, Node | Node[]]>): Map<VNode, Node[]> {
+    const map = new Map();
+    items.forEach(item => {
+        const [vNode, domNode] = item;
+        if (Array.isArray(domNode)) {
+            if (map.has(vNode)) {
+                map.set(vNode, map.get(vNode).concat(domNode));
+            } else {
+                map.set(vNode, domNode);
+            }
+        } else if (map.has(vNode)) {
+            map.get(vNode).push(domNode);
+        } else {
+            map.set(vNode, [domNode]);
+        }
+    });
+    return map;
+}

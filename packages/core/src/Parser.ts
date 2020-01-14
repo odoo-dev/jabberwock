@@ -1,6 +1,6 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
-import { VDocumentMap } from './VDocumentMap';
+import { VDocumentMap, createMap } from './VDocumentMap';
 import { VRangeDescription } from './VRange';
 import { Direction, RelativePosition } from '../../utils/src/range';
 import { VNode } from './VNodes/VNode';
@@ -12,8 +12,8 @@ import { FormatType, CharNode } from '../../plugin-char/CharNode';
 
 export interface ParsingContext {
     readonly rootNode?: Node;
-    node?: Node;
-    lastParsed: VNode[];
+    currentNode?: Node;
+    parsingMap?: Map<VNode, Node[]>;
     parentVNode?: VNode;
     format?: FormatType[];
     vDocument: VDocument;
@@ -61,7 +61,7 @@ export class Parser {
      */
     parseNode(): ParsingContext {
         for (const parsingPredicate of this.parsingPredicates) {
-            const parsingFunction = parsingPredicate(this.currentContext.node);
+            const parsingFunction = parsingPredicate(this.currentContext.currentNode);
             if (parsingFunction) {
                 return parsingFunction(this.currentContext);
             }
@@ -70,7 +70,12 @@ export class Parser {
         // the HTML tag of the DOM Node. This way we may not support the node
         // but we don't break it either.
         const context = { ...this.currentContext };
-        context.lastParsed = [new VElement(this.currentContext.node.nodeName)];
+        context.parsingMap = createMap([
+            [
+                new VElement(this.currentContext.currentNode.nodeName),
+                this.currentContext.currentNode,
+            ],
+        ]);
         return context;
     }
     /**
@@ -88,8 +93,7 @@ export class Parser {
         if (node.childNodes.length) {
             this._contextStack.push({
                 rootNode: node,
-                node: node.childNodes[0],
-                lastParsed: [],
+                currentNode: node.childNodes[0],
                 parentVNode: root,
                 format: [],
                 vDocument: vDocument,
@@ -147,7 +151,7 @@ export class Parser {
      * Parse a node depending on its DOM type.
      */
     _parseNode(): void {
-        switch (this.currentContext.node.nodeType) {
+        switch (this.currentContext.currentNode.nodeType) {
             case Node.ELEMENT_NODE: {
                 this._parseElementNode();
                 break;
@@ -167,7 +171,7 @@ export class Parser {
             case Node.COMMENT_NODE:
             case Node.DOCUMENT_TYPE_NODE:
             default: {
-                throw `Unsupported node type: ${this.currentContext.node.nodeType}.`;
+                throw `Unsupported node type: ${this.currentContext.currentNode.nodeType}.`;
             }
         }
         this._nextParsingContext();
@@ -178,10 +182,10 @@ export class Parser {
     _parseElementNode(): void {
         const context = { ...this.currentContext };
 
-        const node = context.node;
+        const node = context.currentNode;
         const newContext = this.parseNode();
-        const parsedNode = newContext.lastParsed[newContext.lastParsed.length - 1];
-        if (Format.tags.includes(context.node.nodeName)) {
+        const parsedNode = newContext.parsingMap.keys().next().value;
+        if (Format.tags.includes(context.currentNode.nodeName)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our
             // internal representation but by the format of its children.
@@ -204,8 +208,8 @@ export class Parser {
         // Consume it since it was just parsed as its parent element node.
         // TODO: do this less naively to account for formatting space.
         if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
-            context.node = node.childNodes[0];
-            VDocumentMap.set(parsedNode, context.node);
+            context.currentNode = node.childNodes[0];
+            VDocumentMap.set(parsedNode, context.currentNode);
         }
         // A trailing <br/> after another <br/> is there only to make its previous
         // sibling visible. Consume it since it was just parsed as a single BR
@@ -217,8 +221,8 @@ export class Parser {
             node.nextSibling.nodeName === 'BR' &&
             !node.nextSibling.nextSibling
         ) {
-            context.node = node.nextSibling;
-            VDocumentMap.set(parsedNode, context.node);
+            context.currentNode = node.nextSibling;
+            VDocumentMap.set(parsedNode, context.currentNode);
         }
         this.currentContext = context;
     }
@@ -226,24 +230,25 @@ export class Parser {
      * Parse the given text node into VNode(s).
      */
     _parseTextNode(): void {
-        const node = this.currentContext.node;
+        const node = this.currentContext.currentNode;
         const parentVNode = this.currentContext.parentVNode;
         const format = this.currentContext.format[0];
         this.parseNode();
-        const parsedVNodes = this.currentContext.lastParsed as CharNode[];
-        parsedVNodes.forEach((parsedVNode: CharNode, index: number) => {
-            parsedVNode.format = { ...parsedVNode.format, ...format };
-            VDocumentMap.set(parsedVNode, node, index);
-            parentVNode.append(parsedVNode);
-        });
+        Array.from(this.currentContext.parsingMap.keys()).forEach(
+            (parsedVNode: CharNode, index: number) => {
+                parsedVNode.format = { ...parsedVNode.format, ...format };
+                VDocumentMap.set(parsedVNode, node, index);
+                parentVNode.append(parsedVNode);
+            },
+        );
     }
     _nextParsingContext(): void {
         let nextContext = { ...this.currentContext };
 
-        const node = this.currentContext.node;
+        const node = this.currentContext.currentNode;
         if (node.childNodes.length) {
             // Parse the first child with the current node as parent, if any.
-            nextContext.node = node.childNodes[0];
+            nextContext.currentNode = node.childNodes[0];
             // Text node cannot have children, therefore `node` is an Element, not
             // a text node. Only text nodes can be represented by multiple VNodes,
             // so the first matching VNode can safely be selected from the map.
@@ -256,7 +261,7 @@ export class Parser {
             this._contextStack.push(nextContext);
         } else if (node.nextSibling) {
             // Parse the siblings of the current node with the same parent, if any.
-            nextContext.node = node.nextSibling;
+            nextContext.currentNode = node.nextSibling;
         } else {
             // Parse the next ancestor sibling in the ancestor tree, if any.
             let ancestor = node;
@@ -275,7 +280,7 @@ export class Parser {
                 // Text node cannot have children, therefore parent is an Element,
                 // not a text node. Only text nodes can be represented by multiple
                 // VNodes so the first VNode can safely be selected from the map.
-                nextContext.node = ancestor.nextSibling;
+                nextContext.currentNode = ancestor.nextSibling;
                 // Traverse the DOM tree to search for the first parent present in the VDocumentMap.
                 // We do so because, some parent are not included in the VDocumentMap
                 // (e.g.formatting nodes).
