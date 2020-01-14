@@ -10,8 +10,8 @@ export enum RelativePosition {
 
 export enum VNodeType {
     NODE = 'node',
-    MARKER = 'marker',
-    FRAGMENT = 'fragment',
+    MARKER = 'markerNode',
+    FRAGMENT = 'fragmentNode',
 }
 
 export type Predicate = (node: VNode) => boolean;
