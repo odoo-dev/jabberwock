@@ -77,12 +77,9 @@ export class Parser {
         // If the node could not be parsed, create a generic element node with
         // the HTML tag of the DOM Node. This way we may not support the node
         // but we don't break it either.
-        const parsingMap = createMap([
-            [
-                new VElement(this.currentContext.currentNode.nodeName),
-                this.currentContext.currentNode,
-            ],
-        ]);
+        const parsedNode = new VElement(this.currentContext.currentNode.nodeName);
+        const parsingMap = createMap([[parsedNode, this.currentContext.currentNode]]);
+        this.currentContext.parentVNode.append(parsedNode);
         return [context, parsingMap];
     }
     /**
@@ -164,12 +161,8 @@ export class Parser {
                 const parsingResult = this.parseNode();
                 context = parsingResult[0];
                 const parsingMap = parsingResult[1];
-                const node = context.currentNode;
-                const parsedNode = parsingMap.keys().next().value;
 
-                // Map the parsed nodes to the DOM nodes they represent, and
-                // append them to the VDocument.
-                const parentVNode = context.parentVNode;
+                // Map the parsed nodes to the DOM nodes they represent.
                 Array.from(parsingMap.keys()).forEach(parsedVNode => {
                     const domNodes = parsingMap.get(parsedVNode);
                     if (domNodes.length === 1) {
@@ -179,28 +172,7 @@ export class Parser {
                             VDocumentMap.set(parsedVNode, domNode, index);
                         });
                     }
-                    parentVNode.append(parsedVNode);
                 });
-                // A <br/> with no siblings is there only to make its parent visible.
-                // Consume it since it was just parsed as its parent element node.
-                // TODO: do this less naively to account for formatting space.
-                if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
-                    context.currentNode = node.childNodes[0];
-                    VDocumentMap.set(parsedNode, context.currentNode);
-                }
-                // A trailing <br/> after another <br/> is there only to make its previous
-                // sibling visible. Consume it since it was just parsed as a single BR
-                // within our abstraction.
-                // TODO: do this less naively to account for formatting space.
-                if (
-                    node.nodeName === 'BR' &&
-                    node.nextSibling &&
-                    node.nextSibling.nodeName === 'BR' &&
-                    !node.nextSibling.nextSibling
-                ) {
-                    context.currentNode = node.nextSibling;
-                    VDocumentMap.set(parsedNode, context.currentNode);
-                }
 
                 break;
             }

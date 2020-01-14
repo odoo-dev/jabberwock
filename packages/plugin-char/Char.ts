@@ -30,6 +30,7 @@ export class Char extends JWPlugin {
                 return [vNode, domNodes];
             }),
         );
+        vNodes.forEach(node => context.parentVNode.append(node));
         return [context, parsingMap];
     }
 }

@@ -12,6 +12,7 @@ export class Paragraph extends JWPlugin {
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         const parsedNode = new ParagraphNode();
         const parsingMap = createMap([[parsedNode, context.currentNode]]);
+        context.parentVNode.append(parsedNode);
         return [context, parsingMap];
     }
 }
