@@ -1,5 +1,5 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction, ParsingContext } from '../core/src/Parser';
+import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
 import { HeadingNode } from './HeadingNode';
 import { createMap } from '../core/src/VDocumentMap';
 
@@ -9,9 +9,9 @@ export class Heading extends JWPlugin {
             return Heading.parse;
         }
     }
-    static parse(context: ParsingContext): ParsingContext {
+    static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         const parsedNode = new HeadingNode(parseInt(context.currentNode.nodeName[1]));
-        context.parsingMap = createMap([[parsedNode, context.currentNode]]);
-        return context;
+        const parsingMap = createMap([[parsedNode, context.currentNode]]);
+        return [context, parsingMap];
     }
 }

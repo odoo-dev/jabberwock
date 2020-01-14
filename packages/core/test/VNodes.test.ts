@@ -13,7 +13,7 @@ import { HeadingNode } from '../../plugin-heading/HeadingNode';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
-import { ParsingFunction, ParsingContext } from '../src/Parser';
+import { ParsingFunction, ParsingContext, ParsingMap } from '../src/Parser';
 import { VDocument } from '../src/VDocument';
 import { createMap } from '../src/VDocumentMap';
 
@@ -62,7 +62,7 @@ describe('core', () => {
                             currentNode: text,
                             vDocument: new VDocument(new FragmentNode()),
                         };
-                        const parsingMap = Char.parse(context).parsingMap;
+                        const parsingMap = Char.parse(context)[1];
                         const vNodes = Array.from(parsingMap.keys());
                         expect(vNodes.length).to.equal(3);
                         expect((vNodes[0] as CharNode).char).to.equal('a');
@@ -241,7 +241,7 @@ describe('core', () => {
                             currentNode: br,
                             vDocument: new VDocument(new FragmentNode()),
                         };
-                        const parsingMap = parsingFunction(context).parsingMap;
+                        const parsingMap = parsingFunction(context)[1];
                         expect(parsingMap.size).to.equal(1);
                         const lineBreak = parsingMap.keys().next().value;
                         expect(lineBreak.atomic).to.equal(true);
@@ -1214,10 +1214,10 @@ describe('core', () => {
                                 return MyCustomPlugin.parse;
                             }
                         }
-                        static parse(context: ParsingContext): ParsingContext {
+                        static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
                             const parsedNode = new MyCustomNode();
-                            context.parsingMap = createMap([[parsedNode, context.currentNode]]);
-                            return context;
+                            const parsingMap = createMap([[parsedNode, context.currentNode]]);
+                            return [context, parsingMap];
                         }
                     }
                     editor.addPlugin(MyCustomPlugin);

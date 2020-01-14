@@ -10,16 +10,16 @@ import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType, CharNode } from '../../plugin-char/CharNode';
 
+export type ParsingMap = Map<VNode, Node[]>;
 export interface ParsingContext {
     readonly rootNode?: Node;
     currentNode?: Node;
-    parsingMap?: Map<VNode, Node[]>;
     parentVNode?: VNode;
     format?: FormatType[];
     vDocument: VDocument;
 }
 export type ParsingPredicate = (node: Node) => ParsingFunction;
-export type ParsingFunction = (context: ParsingContext) => ParsingContext;
+export type ParsingFunction = (context: ParsingContext) => [ParsingContext, ParsingMap];
 
 export class Parser {
     parsingPredicates: Set<ParsingPredicate> = new Set();
@@ -59,7 +59,7 @@ export class Parser {
      *
      * @param node
      */
-    parseNode(): ParsingContext {
+    parseNode(): [ParsingContext, ParsingMap] {
         for (const parsingPredicate of this.parsingPredicates) {
             const parsingFunction = parsingPredicate(this.currentContext.currentNode);
             if (parsingFunction) {
@@ -70,13 +70,13 @@ export class Parser {
         // the HTML tag of the DOM Node. This way we may not support the node
         // but we don't break it either.
         const context = { ...this.currentContext };
-        context.parsingMap = createMap([
+        const parsingMap = createMap([
             [
                 new VElement(this.currentContext.currentNode.nodeName),
                 this.currentContext.currentNode,
             ],
         ]);
-        return context;
+        return [context, parsingMap];
     }
     /**
      * Parse an HTML element into the editor's virtual representation.
@@ -180,11 +180,9 @@ export class Parser {
      * Parse the given DOM Element into VNode(s).
      */
     _parseElementNode(): void {
-        const context = { ...this.currentContext };
-
+        const [context, parsingMap] = this.parseNode();
         const node = context.currentNode;
-        const newContext = this.parseNode();
-        const parsedNode = newContext.parsingMap.keys().next().value;
+        const parsedNode = parsingMap.keys().next().value;
         if (Format.tags.includes(context.currentNode.nodeName)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our
@@ -233,14 +231,12 @@ export class Parser {
         const node = this.currentContext.currentNode;
         const parentVNode = this.currentContext.parentVNode;
         const format = this.currentContext.format[0];
-        this.parseNode();
-        Array.from(this.currentContext.parsingMap.keys()).forEach(
-            (parsedVNode: CharNode, index: number) => {
-                parsedVNode.format = { ...parsedVNode.format, ...format };
-                VDocumentMap.set(parsedVNode, node, index);
-                parentVNode.append(parsedVNode);
-            },
-        );
+        const parsingMap = this.parseNode()[1];
+        Array.from(parsingMap.keys()).forEach((parsedVNode: CharNode, index: number) => {
+            parsedVNode.format = { ...parsedVNode.format, ...format };
+            VDocumentMap.set(parsedVNode, node, index);
+            parentVNode.append(parsedVNode);
+        });
     }
     _nextParsingContext(): void {
         let nextContext = { ...this.currentContext };
