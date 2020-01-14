@@ -1,6 +1,6 @@
 import { JWPlugin } from '../core/src/JWPlugin';
+import { ParsingFunction, ParsingContext } from '../core/src/Parser';
 import { CharNode } from './CharNode';
-import { ParsingFunction } from '../core/src/Parser';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 
 export class Char extends JWPlugin {
@@ -9,13 +9,14 @@ export class Char extends JWPlugin {
             return Char.parse;
         }
     }
-    static parse(node: Node): CharNode[] {
+    static parse(context: ParsingContext): ParsingContext {
         const vNodes: CharNode[] = [];
-        const text = removeFormattingSpace(node);
+        const text = removeFormattingSpace(context.node);
         for (let i = 0; i < text.length; i++) {
             const parsedVNode = new CharNode(text.charAt(i));
             vNodes.push(parsedVNode);
         }
-        return vNodes;
+        context.lastParsed = vNodes;
+        return context;
     }
 }

@@ -1,5 +1,5 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction } from '../core/src/Parser';
+import { ParsingFunction, ParsingContext } from '../core/src/Parser';
 import { ParagraphNode } from './ParagraphNode';
 
 export class Paragraph extends JWPlugin {
@@ -8,7 +8,8 @@ export class Paragraph extends JWPlugin {
             return Paragraph.parse;
         }
     }
-    static parse(): ParagraphNode[] {
-        return [new ParagraphNode()];
+    static parse(context: ParsingContext): ParsingContext {
+        context.lastParsed = [new ParagraphNode()];
+        return context;
     }
 }

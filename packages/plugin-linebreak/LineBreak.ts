@@ -1,6 +1,6 @@
 import { JWPlugin } from '../core/src/JWPlugin';
+import { ParsingFunction, ParsingContext } from '../core/src/Parser';
 import { LineBreakNode } from './LineBreakNode';
-import { ParsingFunction } from '../core/src/Parser';
 
 export class LineBreak extends JWPlugin {
     static parsingPredicate(node: Node): ParsingFunction {
@@ -8,7 +8,8 @@ export class LineBreak extends JWPlugin {
             return LineBreak.parse;
         }
     }
-    static parse(): LineBreakNode[] {
-        return [new LineBreakNode()];
+    static parse(context: ParsingContext): ParsingContext {
+        context.lastParsed = [new LineBreakNode()];
+        return context;
     }
 }

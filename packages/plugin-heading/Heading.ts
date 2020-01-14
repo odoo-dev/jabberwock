@@ -1,5 +1,5 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction } from '../core/src/Parser';
+import { ParsingFunction, ParsingContext } from '../core/src/Parser';
 import { HeadingNode } from './HeadingNode';
 
 export class Heading extends JWPlugin {
@@ -8,7 +8,8 @@ export class Heading extends JWPlugin {
             return Heading.parse;
         }
     }
-    static parse(node: Node): HeadingNode[] {
-        return [new HeadingNode(parseInt(node.nodeName[1]))];
+    static parse(context: ParsingContext): ParsingContext {
+        context.lastParsed = [new HeadingNode(parseInt(context.node.nodeName[1]))];
+        return context;
     }
 }

@@ -13,7 +13,8 @@ import { HeadingNode } from '../../plugin-heading/HeadingNode';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
-import { ParsingFunction } from '../src/Parser';
+import { ParsingFunction, ParsingContext } from '../src/Parser';
+import { VDocument } from '../src/VDocument';
 
 describe('core', () => {
     describe('src', () => {
@@ -56,11 +57,15 @@ describe('core', () => {
                 describe('parse', () => {
                     it('should parse a textNode', async () => {
                         const text = document.createTextNode('abc');
-                        const nNodes = Char.parse(text);
+                        const nNodes = Char.parse({
+                            node: text,
+                            lastParsed: [],
+                            vDocument: new VDocument(new FragmentNode()),
+                        }).lastParsed;
                         expect(nNodes.length).to.equal(3);
-                        expect(nNodes[0].char).to.equal('a');
-                        expect(nNodes[1].char).to.equal('b');
-                        expect(nNodes[2].char).to.equal('c');
+                        expect((nNodes[0] as CharNode).char).to.equal('a');
+                        expect((nNodes[1] as CharNode).char).to.equal('b');
+                        expect((nNodes[2] as CharNode).char).to.equal('c');
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
@@ -230,7 +235,13 @@ describe('core', () => {
                         const br = document.createElement('br');
                         const parsingFunction = LineBreak.parsingPredicate(br);
                         expect(parsingFunction).not.to.be.undefined;
-                        expect(parsingFunction(br)[0].atomic).to.equal(true);
+                        expect(
+                            parsingFunction({
+                                node: br,
+                                lastParsed: [],
+                                vDocument: new VDocument(new FragmentNode()),
+                            }).lastParsed[0].atomic,
+                        ).to.equal(true);
                     });
                     it('should not parse a SPAN node', async () => {
                         const span = document.createElement('span');
@@ -1200,8 +1211,9 @@ describe('core', () => {
                                 return MyCustomPlugin.parse;
                             }
                         }
-                        static parse(): MyCustomNode[] {
-                            return [new MyCustomNode()];
+                        static parse(context: ParsingContext): ParsingContext {
+                            context.lastParsed = [new MyCustomNode()];
+                            return context;
                         }
                     }
                     editor.addPlugin(MyCustomPlugin);
