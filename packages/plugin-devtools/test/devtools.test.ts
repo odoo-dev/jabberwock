@@ -1,7 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { VNode } from '../../core/src/VNodes/VNode';
+import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
 
 async function openDevTools(devtools: HTMLElement): Promise<void> {
@@ -121,7 +121,7 @@ describe('plugin-devtools', () => {
             const aResult =
                 '<div class="about">' +
                 '<span class="type">' +
-                editor.vDocument.root.name +
+                editor.vDocument.root.constructor.name +
                 '</span> ' +
                 editor.vDocument.root.type +
                 '<button class="logger">&gt;_</button>' +
@@ -241,9 +241,15 @@ describe('plugin-devtools', () => {
                 '<tbody>' +
                 '<tr><td>index</td><td>1</td></tr>' +
                 '<tr><td>parent</td><td>' +
-                editor.vDocument.root.constructor.name +
+                editor.vDocument.root.name +
                 '</td></tr>' +
-                '<tr><td>children</td><td><ol><li>node</li><li>node</li><li>node</li></ol></td></tr>' +
+                '<tr><td>children</td><td><ol><li>' +
+                editor.vDocument.root.children[0].type +
+                '</li><li>' +
+                editor.vDocument.root.children[1].type +
+                '</li><li>' +
+                editor.vDocument.root.children[2].type +
+                '</li></ol></td></tr>' +
                 '<tr><td>siblings</td><td><ol style="list-style-type: none"><li> previous: ' +
                 editor.vDocument.root.children[0].type +
                 '</li><li> next: ' +
@@ -429,7 +435,9 @@ describe('plugin-devtools', () => {
                 '<div class="about">' +
                 '<span class="type">' +
                 vNodeChar.constructor.name +
-                '</span> node: "b" ' +
+                '</span> ' +
+                vNodeChar.type +
+                ': "b" ' +
                 '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
                 +vNodeChar.id +
@@ -467,16 +475,20 @@ describe('plugin-devtools', () => {
                 vNodeChar.parent.name +
                 '</td></tr>' +
                 '<tr><td>children</td><td>none</td></tr>' +
-                '<tr><td>siblings</td><td><ol style="list-style-type: none"><li> previous: node</li><li> next: node</li></ol></td></tr>' +
+                '<tr><td>siblings</td><td><ol style="list-style-type: none"><li> previous: ' +
+                vNodeChar.previousSibling().type +
+                '</li><li> next: ' +
+                vNodeChar.previousSibling().type +
+                '</li></ol></td></tr>' +
                 '</tbody>' +
                 '</table>';
             expect(family.outerHTML).to.equal(familyResult);
 
             const path = devtools.querySelector('devtools-path');
             expect([].map.call(path.childNodes, (n: Node) => n.textContent)).to.deep.equal([
-                editor.vDocument.root.type,
-                vNodeChar.parent.type,
-                vNodeChar.type + '.' + vNodeChar.name,
+                editor.vDocument.root.name,
+                vNodeChar.parent.name,
+                vNodeChar.name + '.' + vNodeChar.name,
             ]);
         });
         it('should change the selection to select the char', async () => {
@@ -569,7 +581,7 @@ describe('plugin-devtools', () => {
                 clientX: posI.left,
                 clientY: posI.top,
             });
-            expect(path.textContent).to.equal('fragmentnodenode.i');
+            expect(path.textContent).to.equal('FragmentNodePi.i');
 
             const u = devtools.querySelector('devtools-node .selectable-line.underline');
             const posU = u.getBoundingClientRect();
@@ -577,7 +589,7 @@ describe('plugin-devtools', () => {
                 clientX: posU.left,
                 clientY: posU.top,
             });
-            expect(path.textContent).to.equal('fragmentnodenode.u');
+            expect(path.textContent).to.equal('FragmentNodePu.u');
         });
         it('should select a parent node with the bottom path bar', async () => {
             await openDevTools(devtools);
@@ -638,7 +650,7 @@ describe('plugin-devtools', () => {
                 .filter(tr => tr.firstElementChild.textContent === 'children')
                 .pop();
             const li = tr.querySelector('li:last-child');
-            expect(li.textContent).to.equal('node');
+            expect(li.textContent).to.equal(VNodeType.NODE);
             await click(li);
 
             about = devtools.querySelector('devtools-info .about');
@@ -646,7 +658,9 @@ describe('plugin-devtools', () => {
                 '<div class="about">' +
                 '<span class="type">' +
                 vNode.children[2].constructor.name +
-                '</span> node: "c" ' +
+                '</span> ' +
+                vNode.children[2].type +
+                ': "c" ' +
                 '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
                 vNode.children[2].id +

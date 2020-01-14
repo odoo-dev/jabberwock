@@ -1,6 +1,6 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { VNode } from '../../../core/src/VNodes/VNode';
+import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
 import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
@@ -92,7 +92,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         }
     }
     repr(): string {
-        if (this.props.vNode.type === 'marker') {
+        if (this.props.vNode.type === VNodeType.MARKER) {
             // Representation of marker nodes might change depending on the
             // context in which they are referenced, even though they did not
             // actually change per se.
