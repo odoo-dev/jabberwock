@@ -1,5 +1,5 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
-import { withMarkers, isWithMarkers } from '../../../utils/src/markers';
+import { withMarkers, ignoreMarkers } from '../../../utils/src/markers';
 import { utils } from '../../../utils/src/utils';
 
 export enum RelativePosition {
@@ -108,10 +108,10 @@ export class VNode {
      * Return the VNode's children.
      */
     get children(): VNode[] {
-        if (isWithMarkers) {
-            return this._children;
+        if (ignoreMarkers) {
+            return this._children.filter(child => !isMarker(child));
         }
-        return this._children.filter(child => !isMarker(child));
+        return this._children;
     }
     /**
      * Return the length of this VNode.
@@ -680,7 +680,7 @@ export class VNode {
             return this.nthChild(direction === 'next' ? index + 1 : index - 1);
         });
         // Ignore marker nodes by default.
-        if (!isWithMarkers && adjacentChild && isMarker(adjacentChild)) {
+        if (ignoreMarkers && adjacentChild && isMarker(adjacentChild)) {
             return this._adjacentChild(adjacentChild, direction);
         } else {
             return adjacentChild;
