@@ -1,19 +1,21 @@
 import { JWPlugin } from '../core/src/JWPlugin';
+import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
 import { ListNode, ListType } from './ListNode';
-import { ParsingFunction } from '../core/src/Parser';
 
 export class List extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [List.parse];
-    static parse(node: Node): ListNode[] {
+    static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         let listType: ListType;
-        if (node.nodeName === 'UL') {
+        if (context.currentNode.nodeName === 'UL') {
             listType = ListType.UNORDERED;
-        } else if (node.nodeName === 'OL') {
+        } else if (context.currentNode.nodeName === 'OL') {
             listType = ListType.ORDERED;
         }
 
         if (listType) {
-            return [new ListNode(listType)];
+            const listNode = new ListNode(listType);
+            const parsingMap = new Map([[listNode, [context.currentNode]]]);
+            return [context, parsingMap];
         }
     }
 }
