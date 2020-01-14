@@ -1,19 +1,32 @@
 import { JWPlugin } from '../core/src/JWPlugin';
+import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
 import { CharNode } from './CharNode';
-import { ParsingFunction } from '../core/src/Parser';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
+import { Format } from '../utils/src/Format';
 
 export class Char extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [Char.parse];
-    static parse(node: Node): CharNode[] {
-        if (node.nodeType === Node.TEXT_NODE) {
+    static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
+        if (context.currentNode.nodeType === Node.TEXT_NODE) {
             const vNodes: CharNode[] = [];
-            const text = removeFormattingSpace(node);
+            const text = removeFormattingSpace(context.currentNode);
+            const format = context.format;
             for (let i = 0; i < text.length; i++) {
-                const parsedVNode = new CharNode(text.charAt(i));
+                const parsedVNode = new CharNode(text.charAt(i), { ...format });
                 vNodes.push(parsedVNode);
             }
-            return vNodes;
+            const parsingMap = new Map(
+                vNodes.map(vNode => {
+                    const domNodes = [context.currentNode];
+                    let parent = context.currentNode.parentNode;
+                    while (parent && Format.tags.includes(parent.nodeName)) {
+                        domNodes.unshift(parent);
+                        parent = parent.parentNode;
+                    }
+                    return [vNode, domNodes];
+                }),
+            );
+            return [context, parsingMap];
         }
     }
 }

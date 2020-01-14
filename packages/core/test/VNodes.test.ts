@@ -14,6 +14,8 @@ import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
+import { ParsingContext, ParsingMap } from '../src/Parser';
+import { VDocument } from '../src/VDocument';
 
 describe('core', () => {
     describe('src', () => {
@@ -56,15 +58,23 @@ describe('core', () => {
                 describe('parse', () => {
                     it('should parse a textNode', async () => {
                         const text = document.createTextNode('abc');
-                        const nNodes = Char.parse(text);
-                        expect(nNodes.length).to.equal(3);
-                        expect(nNodes[0].char).to.equal('a');
-                        expect(nNodes[1].char).to.equal('b');
-                        expect(nNodes[2].char).to.equal('c');
+                        const context = {
+                            currentNode: text,
+                            vDocument: new VDocument(new FragmentNode()),
+                        };
+                        const parsingMap = Char.parse(context)[1];
+                        const vNodes = Array.from(parsingMap.keys());
+                        expect(vNodes.length).to.equal(3);
+                        expect((vNodes[0] as CharNode).char).to.equal('a');
+                        expect((vNodes[1] as CharNode).char).to.equal('b');
+                        expect((vNodes[2] as CharNode).char).to.equal('c');
                     });
                     it('should not parse a SPAN node', async () => {
-                        const span = document.createElement('span');
-                        expect(Char.parse(span)).to.be.undefined;
+                        const context = {
+                            currentNode: document.createElement('span'),
+                            vDocument: new VDocument(new FragmentNode()),
+                        };
+                        expect(Char.parse(context)).to.be.undefined;
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -228,11 +238,21 @@ describe('core', () => {
                 describe('parse', () => {
                     it('should parse a BR node', async () => {
                         const br = document.createElement('br');
-                        expect(LineBreak.parse(br)[0].atomic).to.equal(true);
+                        const context = {
+                            currentNode: br,
+                            vDocument: new VDocument(new FragmentNode()),
+                        };
+                        const parsingMap = LineBreak.parse(context)[1];
+                        expect(parsingMap.size).to.equal(1);
+                        const lineBreak = parsingMap.keys().next().value;
+                        expect(lineBreak.atomic).to.equal(true);
                     });
                     it('should not parse a SPAN node', async () => {
-                        const span = document.createElement('span');
-                        expect(LineBreak.parse(span)).to.be.undefined;
+                        const context = {
+                            currentNode: document.createElement('span'),
+                            vDocument: new VDocument(new FragmentNode()),
+                        };
+                        expect(LineBreak.parse(context)).to.be.undefined;
                     });
                 });
             });
@@ -1336,9 +1356,11 @@ describe('core', () => {
                     }
                     class MyCustomPlugin extends JWPlugin {
                         static readonly parsingFunctions = [MyCustomPlugin.parse];
-                        static parse(node: Node): MyCustomNode[] {
-                            if (node.nodeName === 'CUSTOM-NODE') {
-                                return [new MyCustomNode()];
+                        static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
+                            if (context.currentNode.nodeName === 'CUSTOM-NODE') {
+                                const parsedNode = new MyCustomNode();
+                                const parsingMap = new Map([[parsedNode, [context.currentNode]]]);
+                                return [context, parsingMap];
                             }
                         }
                     }
