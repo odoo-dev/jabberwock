@@ -1,7 +1,6 @@
 import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
-import { isMarker, isChar } from '../../utils/src/Predicates';
-import { VNode } from './VNodes/VNode';
+import { VNode, isMarker } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
 import { CharNode } from './VNodes/CharNode';
@@ -61,7 +60,7 @@ export class Renderer {
             // node as another node in the sense that the text node must not
             // be broken up just because it contains a marker.
             return true;
-        } else if (!isChar(a) || !isChar(b)) {
+        } else if (!a.is(CharNode) || !b.is(CharNode)) {
             // Nodes that are not valid in a text node must end the text node.
             return false;
         } else {
@@ -223,7 +222,7 @@ export class Renderer {
      * @param context
      */
     _renderVNode(context: RenderingContext): RenderingContext {
-        if (isChar(context.currentVNode)) {
+        if (context.currentVNode.is(CharNode)) {
             context = this._renderTextNode(context);
         } else {
             context = this._renderElement(context);
