@@ -92,12 +92,3 @@ export class CharNode extends VNode {
         return __current;
     }
 }
-
-/**
- * Return true if the given node is a character node.
- *
- * @param node node to check
- */
-export function isChar(node: VNode): boolean {
-    return node instanceof CharNode;
-}

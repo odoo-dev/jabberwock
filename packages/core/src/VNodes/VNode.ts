@@ -1,5 +1,4 @@
 import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
-import { Predicate } from '../../../utils/src/Predicates';
 import { RelativePosition, withMarkers, isWithMarkers } from '../../../utils/src/range';
 import { utils } from '../../../utils/src/utils';
 
@@ -8,11 +7,12 @@ export enum VNodeType {
     MARKER = 'marker',
     FRAGMENT = 'fragment',
 }
-export function isMarker(node: VNode): boolean {
-    return node.type === VNodeType.MARKER;
-}
-let id = 0;
 
+export type Predicate = (node: VNode) => boolean;
+export type Constructor<T extends VNode> = new (...args) => T;
+export type NodePredicate<T extends VNode> = Predicate | Constructor<T>;
+
+let id = 0;
 export class VNode {
     static readonly atomic: boolean = false;
     readonly type: VNodeType;
@@ -28,6 +28,16 @@ export class VNode {
         this.type = VNodeType.NODE;
         this.name = this.constructor.name;
         id++;
+    }
+    /**
+     * Return whether the given predicate is a constructor of a VNode class.
+     *
+     * @param predicate The predicate to check.
+     */
+    static isConstructor<T extends VNode>(
+        predicate: NodePredicate<T> | typeof VNode,
+    ): predicate is Constructor<T> {
+        return predicate.prototype instanceof VNode || predicate === VNode;
     }
     /**
      * @override
@@ -177,6 +187,34 @@ export class VNode {
     isAfter(vNode: VNode): boolean {
         return vNode.isBefore(this);
     }
+    /**
+     * Return whether this node is an instance of the given VNode class.
+     *
+     * @param constructor The subclass of VNode to test this node against.
+     */
+    is<T extends VNode>(constructor: Constructor<T>): this is T {
+        return this instanceof constructor;
+    }
+    /**
+     * Test this node against the given predicate.
+     *
+     * If the predicate is falsy, return true. If the predicate is a constructor
+     * of a VNode class, return whether this node is an instance of that class.
+     * If the predicate is a standard function, return the result of this
+     * function when called with the node as parameter.
+     *
+     *
+     * @param predicate The predicate to test this node against.
+     */
+    test<T extends VNode>(predicate?: NodePredicate<T>): boolean {
+        if (!predicate) {
+            return true;
+        } else if (VNode.isConstructor(predicate)) {
+            return this.is(predicate);
+        } else {
+            return predicate(this);
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Browsing
@@ -203,7 +241,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    firstChild(predicate?: Predicate): VNode {
+    firstChild(predicate?: Predicate): VNode;
+    firstChild<T extends VNode>(predicate?: Constructor<T>): T;
+    firstChild<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const firstChild = this.nthChild(0);
         if (firstChild && predicate) {
             return firstChild.walk((node: VNode) => node.nextSibling(), predicate);
@@ -217,7 +257,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    lastChild(predicate?: Predicate): VNode {
+    lastChild(predicate?: Predicate): VNode;
+    lastChild<T extends VNode>(predicate?: Constructor<T>): T;
+    lastChild<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const lastChild = this.nthChild(this.children.length - 1);
         if (lastChild && predicate) {
             return lastChild.walk((node: VNode) => node.previousSibling(), predicate);
@@ -231,9 +273,11 @@ export class VNode {
      *
      * @param [predicate]
      */
-    firstLeaf(predicate?: Predicate): VNode {
+    firstLeaf(predicate?: Predicate): VNode;
+    firstLeaf<T extends VNode>(predicate?: Constructor<T>): T;
+    firstLeaf<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return isLeaf(node) && (!predicate || predicate(node));
+            return isLeaf(node) && node.test(predicate);
         };
         if (isValidLeaf(this)) {
             return this;
@@ -247,9 +291,11 @@ export class VNode {
      *
      * @param [predicate]
      */
-    lastLeaf(predicate?: Predicate): VNode {
+    lastLeaf(predicate?: Predicate): VNode;
+    lastLeaf<T extends VNode>(predicate?: Constructor<T>): T;
+    lastLeaf<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return isLeaf(node) && (!predicate || predicate(node));
+            return isLeaf(node) && node.test(predicate);
         };
         if (isValidLeaf(this)) {
             return this;
@@ -263,7 +309,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    firstDescendant(predicate?: Predicate): VNode {
+    firstDescendant(predicate?: Predicate): VNode;
+    firstDescendant<T extends VNode>(predicate?: Constructor<T>): T;
+    firstDescendant<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const firstDescendant = this.firstChild();
         if (firstDescendant && predicate) {
             return firstDescendant.walk((node: VNode) => this._descendantAfter(node), predicate);
@@ -277,7 +325,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    lastDescendant(predicate?: Predicate): VNode {
+    lastDescendant(predicate?: Predicate): VNode;
+    lastDescendant<T extends VNode>(predicate?: Constructor<T>): T;
+    lastDescendant<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         let lastDescendant = this.lastChild();
         while (lastDescendant && lastDescendant.hasChildren()) {
             lastDescendant = lastDescendant.lastChild();
@@ -294,7 +344,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previousSibling(predicate?: Predicate): VNode {
+    previousSibling(predicate?: Predicate): VNode;
+    previousSibling<T extends VNode>(predicate?: Constructor<T>): T;
+    previousSibling<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const previousSibling = this.parent && this.parent._adjacentChild(this, 'previous');
         if (previousSibling && predicate) {
             return previousSibling.walk((node: VNode) => node.previousSibling(), predicate);
@@ -308,7 +360,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    nextSibling(predicate?: Predicate): VNode {
+    nextSibling(predicate?: Predicate): VNode;
+    nextSibling<T extends VNode>(predicate?: Constructor<T>): T;
+    nextSibling<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         const nextSibling = this.parent && this.parent._adjacentChild(this, 'next');
         if (nextSibling && predicate) {
             return nextSibling.walk((node: VNode) => node.nextSibling(), predicate);
@@ -323,7 +377,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previous(predicate?: Predicate): VNode {
+    previous(predicate?: Predicate): VNode;
+    previous<T extends VNode>(predicate?: Constructor<T>): T;
+    previous<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         let previous = this.previousSibling();
         if (previous) {
             // The previous node is the last leaf of the previous sibling.
@@ -345,7 +401,9 @@ export class VNode {
      *
      * @param [predicate]
      */
-    next(predicate?: Predicate): VNode {
+    next(predicate?: Predicate): VNode;
+    next<T extends VNode>(predicate?: Constructor<T>): T;
+    next<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         // The node after node is its first child.
         let next = this.firstChild();
         if (!next) {
@@ -374,9 +432,11 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previousLeaf(predicate?: Predicate): VNode {
+    previousLeaf(predicate?: Predicate): VNode;
+    previousLeaf<T extends VNode>(predicate?: Constructor<T>): T;
+    previousLeaf<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         return this.previous((node: VNode): boolean => {
-            return isLeaf(node) && (!predicate || predicate(node));
+            return isLeaf(node) && node.test(predicate);
         });
     }
     /**
@@ -386,9 +446,11 @@ export class VNode {
      *
      * @param [predicate]
      */
-    nextLeaf(predicate?: Predicate): VNode {
+    nextLeaf(predicate?: Predicate): VNode;
+    nextLeaf<T extends VNode>(predicate?: Constructor<T>): T;
+    nextLeaf<T extends VNode>(predicate?: NodePredicate<T>): VNode {
         return this.next((node: VNode): boolean => {
-            return isLeaf(node) && (!predicate || predicate(node));
+            return isLeaf(node) && node.test(predicate);
         });
     }
     /**
@@ -398,11 +460,13 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previousSiblings(predicate?: Predicate): VNode[] {
+    previousSiblings(predicate?: Predicate): VNode[];
+    previousSiblings<T extends VNode>(predicate?: Constructor<T>): T[];
+    previousSiblings<T extends VNode>(predicate?: NodePredicate<T>): VNode[] {
         const previousSiblings: VNode[] = [];
         let sibling = this.previousSibling();
         while (sibling) {
-            if (!predicate || predicate(sibling)) {
+            if (sibling.test(predicate)) {
                 previousSiblings.push(sibling);
             }
             sibling = sibling.previousSibling();
@@ -416,11 +480,13 @@ export class VNode {
      *
      * @param [predicate]
      */
-    nextSiblings(predicate?: Predicate): VNode[] {
+    nextSiblings(predicate?: Predicate): VNode[];
+    nextSiblings<T extends VNode>(predicate?: Constructor<T>): T[];
+    nextSiblings<T extends VNode>(predicate?: NodePredicate<T>): VNode[] {
         const nextSiblings: VNode[] = [];
         let sibling = this.nextSibling();
         while (sibling) {
-            if (!predicate || predicate(sibling)) {
+            if (sibling.test(predicate)) {
                 nextSiblings.push(sibling);
             }
             sibling = sibling.nextSibling();
@@ -434,11 +500,13 @@ export class VNode {
      *
      * @param [predicate]
      */
-    ancestors(predicate?: Predicate): VNode[] {
+    ancestors(predicate?: Predicate): VNode[];
+    ancestors<T extends VNode>(predicate?: Constructor<T>): T[];
+    ancestors<T extends VNode>(predicate?: NodePredicate<T>): VNode[] {
         const ancestors: VNode[] = [];
         let parent = this.parent;
         while (parent) {
-            if (!predicate || predicate(parent)) {
+            if (parent.test(predicate)) {
                 ancestors.push(parent);
             }
             parent = parent.parent;
@@ -452,12 +520,14 @@ export class VNode {
      *
      * @param [predicate]
      */
-    descendants(predicate?: Predicate): VNode[] {
+    descendants(predicate?: Predicate): VNode[];
+    descendants<T extends VNode>(predicate?: Constructor<T>): T[];
+    descendants<T extends VNode>(predicate?: NodePredicate<T>): VNode[] {
         const descendants = [];
         if (this.children) {
             let currentDescendant = this.firstChild();
             do {
-                if (!predicate || predicate(currentDescendant)) {
+                if (currentDescendant.test(predicate)) {
                     descendants.push(currentDescendant);
                 }
                 currentDescendant = this._descendantAfter(currentDescendant);
@@ -473,10 +543,13 @@ export class VNode {
      * @param next
      * @param [predicate]
      */
-    walk(next: (node: VNode) => VNode, predicate: Predicate): VNode {
+    walk(next: (node: VNode) => VNode, predicate: Predicate): VNode;
+    walk<T extends VNode>(next: (node: VNode) => VNode, predicate: Constructor<T>): T;
+    walk<T extends VNode>(next: (node: VNode) => VNode, predicate: NodePredicate<T>): VNode;
+    walk<T extends VNode>(next: (node: VNode) => VNode, predicate: NodePredicate<T>): VNode {
         let node: VNode;
         node = this;
-        while (node && !predicate(node)) {
+        while (node && !node.test(predicate)) {
             node = next(node);
         }
         return node;
@@ -680,6 +753,15 @@ export class VNode {
         this._children.splice(index, 1);
         return this;
     }
+}
+
+/**
+ * Return true if the given node is a node of type `Marker`.
+ *
+ * @param node node to check
+ */
+export function isMarker(node: VNode): boolean {
+    return node.type === VNodeType.MARKER;
 }
 
 /**

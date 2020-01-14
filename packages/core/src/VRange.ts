@@ -1,4 +1,4 @@
-import { VNode } from './VNodes/VNode';
+import { VNode, Predicate, Constructor, NodePredicate } from './VNodes/VNode';
 import { RelativePosition, Direction, withMarkers } from '../../utils/src/range';
 import { RangeNode } from './VNodes/RangeNode';
 
@@ -77,12 +77,16 @@ export class VRange {
      * Return a list of all the nodes implied in the selection between the first
      * range node to the last (non-included).
      */
-    get selectedNodes(): VNode[] {
+    selectedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
+    selectedNodes(predicate?: Predicate): VNode[];
+    selectedNodes<T extends VNode>(predicate?: NodePredicate<T>): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
         withMarkers(() => {
             while ((node = node.next()) && node !== this.end) {
-                selectedNodes.push(node);
+                if (node.test(predicate)) {
+                    selectedNodes.push(node);
+                }
             }
         });
         return selectedNodes;

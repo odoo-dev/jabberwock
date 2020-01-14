@@ -1,7 +1,6 @@
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
-import { isChar } from '../../utils/src/Predicates';
 import { withMarkers } from '../../utils/src/range';
 import { FragmentNode } from './VNodes/FragmentNode';
 
@@ -79,13 +78,13 @@ export class VDocument {
         if (this.formatCache) {
             return this.formatCache;
         } else if (this.range.isCollapsed()) {
-            const charToCopyFormat = (this.range.start.previousSibling(isChar) ||
-                this.range.start.nextSibling(isChar) || {
+            const charToCopyFormat = (this.range.start.previousSibling(CharNode) ||
+                this.range.start.nextSibling(CharNode) || {
                     format: {},
                 }) as CharNode;
             format = { ...charToCopyFormat.format };
         } else {
-            const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
+            const selectedChars = this.range.selectedNodes(CharNode);
             FORMAT_TYPES.forEach(formatName => {
                 format[formatName] = selectedChars.some(char => char.format[formatName]);
             });
@@ -99,7 +98,7 @@ export class VDocument {
      */
     deleteSelection(): void {
         withMarkers(() => {
-            const nodes = this.range.selectedNodes;
+            const nodes = this.range.selectedNodes();
             if (!nodes.length) return;
             this.range.collapse(this.range.start); // Reset the direction of the range.
             let reference = this.range.end;
@@ -139,7 +138,7 @@ export class VDocument {
             }
             this.formatCache[formatName] = !this.formatCache[formatName];
         } else {
-            const selectedChars = this.range.selectedNodes.filter(isChar) as CharNode[];
+            const selectedChars = this.range.selectedNodes(CharNode);
 
             // If there is no char with the format `formatName` in the range, set the format to true
             // for all nodes.
