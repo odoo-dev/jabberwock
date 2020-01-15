@@ -39,9 +39,6 @@ export class CorePlugin extends JWPlugin {
         insertParagraphBreak: {
             handler: this.insertParagraphBreak.bind(this),
         },
-        insertText: {
-            handler: this.insertText.bind(this),
-        },
         setSelection: {
             handler: this.setSelection.bind(this),
         },
@@ -53,9 +50,6 @@ export class CorePlugin extends JWPlugin {
         },
         selectAll: {
             handler: this.selectAll.bind(this),
-        },
-        applyFormat: {
-            handler: this.applyFormat.bind(this),
         },
         toggleList: {
             handler: this.toggleList.bind(this),
@@ -83,20 +77,6 @@ export class CorePlugin extends JWPlugin {
      */
     insert(params: InsertParams): void {
         this.editor.vDocument.insert(params.node, params.range);
-    }
-    /**
-     * Insert text at the current position of the selection.
-     *
-     * @param params
-     */
-    insertText(params: InsertTextParams): void {
-        this.editor.vDocument.insertText(params.text, params.range);
-    }
-    /**
-     * Command to apply the format.
-     */
-    applyFormat(params: FormatParams): void {
-        this.editor.vDocument.applyFormat(params.format, params.range);
     }
     /**
      * Insert/remove a list at range.
