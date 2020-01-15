@@ -4,6 +4,11 @@ import { LineBreakNode } from './LineBreakNode';
 
 export class LineBreak extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [LineBreak.parse];
+    commands = {
+        insertLineBreak: {
+            handler: this.insertLineBreak.bind(this),
+        },
+    };
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (context.currentNode.nodeName === 'BR') {
             const node = context.currentNode;
@@ -26,5 +31,16 @@ export class LineBreak extends JWPlugin {
             context.parentVNode.append(parsedNode);
             return [context, parsingMap];
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Insert a line break node at range.
+     */
+    insertLineBreak(): void {
+        this.editor.vDocument.insert(new LineBreakNode());
     }
 }

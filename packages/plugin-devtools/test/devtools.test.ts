@@ -707,6 +707,7 @@ describe('plugin-devtools', () => {
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
             expect(subpanel.firstElementChild.nodeName).to.equal('DIV');
             expect(Array.from(subpanel.childNodes).map((n: Node) => n.textContent)).to.deep.equal([
+                'insertLineBreak',
                 'insert',
                 'insertParagraphBreak',
                 'insertText',
@@ -748,7 +749,7 @@ describe('plugin-devtools', () => {
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
             expect(subpanel.textContent).to.equal('insertTextsetSelection');
         });
-        it('should select "insertText"', async () => {
+        it('should select "insertParagraphBreak"', async () => {
             await openDevTools(devtools);
             await click(devtools.querySelector('devtools-navbar button:not(.selected)'));
 
@@ -763,10 +764,11 @@ describe('plugin-devtools', () => {
             expect(line.classList.contains('selected')).to.equal(true);
 
             const about = devtools.querySelector('devtools-info .about');
-            const aResult = '<div class="about"><span class="type">Command</span> insertText</div>';
+            const aResult =
+                '<div class="about"><span class="type">Command</span> insertParagraphBreak</div>';
             expect(about.outerHTML).to.equal(aResult);
         });
-        it('should select "insertParagraphBreak" with arrow', async () => {
+        it('should select "insert" with arrow', async () => {
             await openDevTools(devtools);
             await click(devtools.querySelector('devtools-navbar button:not(.selected)'));
 
@@ -783,11 +785,10 @@ describe('plugin-devtools', () => {
             expect(line.previousElementSibling.classList.contains('selected')).to.equal(true);
 
             const about = devtools.querySelector('devtools-info .about');
-            const aResult =
-                '<div class="about"><span class="type">Command</span> insertParagraphBreak</div>';
+            const aResult = '<div class="about"><span class="type">Command</span> insert</div>';
             expect(about.outerHTML).to.equal(aResult);
         });
-        it('should select "insertText" with arrow', async () => {
+        it('should select "insertParagraphBreak" with arrow', async () => {
             await openDevTools(devtools);
             await click(devtools.querySelector('devtools-navbar button:not(.selected)'));
 
@@ -804,7 +805,8 @@ describe('plugin-devtools', () => {
             expect(line.nextElementSibling.classList.contains('selected')).to.equal(true);
 
             const about = devtools.querySelector('devtools-info .about');
-            const aResult = '<div class="about"><span class="type">Command</span> insertText</div>';
+            const aResult =
+                '<div class="about"><span class="type">Command</span> insertParagraphBreak</div>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should not change the selection with other key', async () => {
