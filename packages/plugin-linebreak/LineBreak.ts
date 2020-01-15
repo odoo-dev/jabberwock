@@ -4,6 +4,11 @@ import { LineBreakNode } from './LineBreakNode';
 import { createMap } from '../core/src/VDocumentMap';
 
 export class LineBreak extends JWPlugin {
+    commands = {
+        insertLineBreak: {
+            handler: this.insertLineBreak.bind(this),
+        },
+    };
     static parsingPredicate(node: Node): ParsingFunction {
         if (node.nodeName === 'BR') {
             return LineBreak.parse;
@@ -29,5 +34,16 @@ export class LineBreak extends JWPlugin {
         const parsingMap = createMap([[parsedNode, domNodes]]);
         context.parentVNode.append(parsedNode);
         return [context, parsingMap];
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Insert a line break node at range.
+     */
+    insertLineBreak(): void {
+        this.editor.vDocument.insert(new LineBreakNode());
     }
 }

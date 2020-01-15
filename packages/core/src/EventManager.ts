@@ -1,5 +1,4 @@
 import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
-import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import JWEditor from './JWEditor';
 
 interface SetRangeParams {
@@ -30,7 +29,7 @@ export class EventManager {
         switch (customEvent.type) {
             case 'enter':
                 if (customEvent.detail.shiftKey) {
-                    return this.editor.execCommand('insert', { value: new LineBreakNode() });
+                    return this.editor.execCommand('insertLineBreak');
                 } else {
                     return this.editor.execCommand('insertParagraphBreak');
                 }
