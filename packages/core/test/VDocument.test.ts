@@ -1,7 +1,6 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { FormatParams, InsertParams, InsertTextParams } from '../src/CorePlugin';
-import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
+import { FormatParams, InsertTextParams } from '../src/CorePlugin';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
@@ -9,12 +8,7 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
 const insertParagraphBreak = (editor: JWEditor): void => editor.execCommand('insertParagraphBreak');
-const insertLineBreak = (editor: JWEditor): void => {
-    const params: InsertParams = {
-        node: new LineBreakNode(),
-    };
-    editor.execCommand('insert', params);
-};
+const insertLineBreak = (editor: JWEditor): void => editor.execCommand('insertLineBreak');
 const insertText = function(editor, text: string): void {
     const params: InsertTextParams = {
         text: text,
