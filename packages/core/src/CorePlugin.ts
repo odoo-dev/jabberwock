@@ -26,9 +26,6 @@ export class CorePlugin extends JWPlugin {
         insertParagraphBreak: {
             handler: this.insertParagraphBreak.bind(this),
         },
-        insertText: {
-            handler: this.insertText.bind(this),
-        },
         setRange: {
             handler: this.setRange.bind(this),
         },
@@ -40,9 +37,6 @@ export class CorePlugin extends JWPlugin {
         },
         selectAll: {
             handler: this.selectAll.bind(this),
-        },
-        applyFormat: {
-            handler: this.applyFormat.bind(this),
         },
     };
     constructor(editor) {
@@ -67,20 +61,6 @@ export class CorePlugin extends JWPlugin {
      */
     insert(params: InsertParams): void {
         this.editor.vDocument.insert(params.value);
-    }
-    /**
-     * Insert text at range.
-     *
-     * @param params
-     */
-    insertText(params: InsertTextParams): void {
-        this.editor.vDocument.insertText(params.value);
-    }
-    /**
-     * Command to apply the format.
-     */
-    applyFormat(params: FormatParams): void {
-        this.editor.vDocument.applyFormat(params.format);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
