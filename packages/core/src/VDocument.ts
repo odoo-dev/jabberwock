@@ -1,6 +1,6 @@
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
+import { CharNode, FormatType, FORMAT_TYPES } from '../../plugin-char/CharNode';
 import { withMarkers } from '../../utils/src/range';
 import { FragmentNode } from './VNodes/FragmentNode';
 

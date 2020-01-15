@@ -3,7 +3,7 @@ import { VDocument } from './VDocument';
 import { VNode, isMarker } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VRange } from './VRange';
-import { CharNode } from './VNodes/CharNode';
+import { CharNode } from '../../plugin-char/CharNode';
 import { RelativePosition } from '../../utils/src/range';
 
 interface RenderingContext {

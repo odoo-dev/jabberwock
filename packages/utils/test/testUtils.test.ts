@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { testEditor } from '../src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
-import { CharNode } from '../../core/src/VNodes/CharNode';
+import { CharNode } from '../../plugin-char/CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 

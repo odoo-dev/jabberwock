@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
-import { CharNode } from '../src/VNodes/CharNode';
+import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
 import { RangeNode } from '../src/VNodes/RangeNode';
 import { VElement } from '../src/VNodes/VElement';

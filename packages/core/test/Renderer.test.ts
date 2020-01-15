@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { createBasicEditor } from '../../bundles/basic';
 import { Renderer } from '../src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
-import { CharNode } from '../src/VNodes/CharNode';
+import { CharNode } from '../../plugin-char/CharNode';
 
 describe('utils', () => {
     describe('Renderer', () => {

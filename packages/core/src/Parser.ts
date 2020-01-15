@@ -9,7 +9,7 @@ import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { FormatType, CharNode } from './VNodes/CharNode';
+import { FormatType, CharNode } from '../../plugin-char/CharNode';
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -23,11 +23,7 @@ export type ParsingFunction = (node: Node) => VNode[];
 
 export class Parser {
     // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
-    parsingFunctions: Set<ParsingFunction> = new Set([
-        CharNode.parse,
-        LineBreakNode.parse,
-        VElement.parse,
-    ]);
+    parsingFunctions: Set<ParsingFunction> = new Set([LineBreakNode.parse, VElement.parse]);
 
     //--------------------------------------------------------------------------
     // Public
@@ -39,8 +35,8 @@ export class Parser {
      * @param parsingFunctions
      */
     addParsingFunction(...parsingFunctions: Array<ParsingFunction>): void {
-        parsingFunctions.forEach(VNodeClass => {
-            this.parsingFunctions.add(VNodeClass);
+        parsingFunctions.forEach(parsingFunction => {
+            this.parsingFunctions.add(parsingFunction);
         });
     }
     /**
