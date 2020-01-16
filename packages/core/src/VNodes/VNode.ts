@@ -161,28 +161,22 @@ export class VNode {
      * @param vNode
      */
     isBefore(vNode: VNode): boolean {
-        const path = [].concat(this, ...this.ancestors());
-        const otherPath = [].concat(vNode, ...vNode.ancestors());
-        let ancestor = path.pop();
-        let otherAncestor = otherPath.pop();
-        // Compare the ancestors of each nodes one by one, in a path to the
-        // root. While the ancestors are the same in both, continue on the path.
-        while (ancestor && otherAncestor && ancestor === otherAncestor) {
-            ancestor = path.pop();
-            otherAncestor = otherPath.pop();
-        }
-        // If we reached the end of one of the paths, that is when one of the
-        // ancestors is undefined, then the VNode that originally generated this
-        // path is itself part of the ancestors path of the other VNode. This
-        // VNode is definitely first in traversal since the other is a
-        // descendent of it. Otherwise, compare the ancestors indices. The
-        // smaller of the two indicees gives us the first VNode in traversal.
-        if (ancestor && otherAncestor) {
-            const index = withMarkers(() => ancestor.index);
-            const otherIndex = withMarkers(() => otherAncestor.index);
-            return index < otherIndex;
+        const thisPath = [this, ...this.ancestors()];
+        const nodePath = [vNode, ...vNode.ancestors()];
+        // Find the last distinct ancestors in the path to the root.
+        let thisAncestor: VNode;
+        let nodeAncestor: VNode;
+        do {
+            thisAncestor = thisPath.pop();
+            nodeAncestor = nodePath.pop();
+        } while (thisAncestor && nodeAncestor && thisAncestor === nodeAncestor);
+
+        if (thisAncestor && nodeAncestor) {
+            // Compare the indices of both ancestors in their shared parent.
+            return withMarkers(() => thisAncestor.index < nodeAncestor.index);
         } else {
-            return !ancestor && !!otherAncestor;
+            // One of the nodes was in the ancestors path of the other.
+            return !thisAncestor && !!nodeAncestor;
         }
     }
     /**

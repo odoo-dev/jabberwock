@@ -271,7 +271,7 @@ describe('core', () => {
                  *   - d
                  *   - P
                  *     - e
-                 *      - Marker2
+                 *     - Marker2
                  *     - f
                  */
                 const root = new FragmentNode();
@@ -498,6 +498,62 @@ describe('core', () => {
                         expect(c.isAfter(a)).to.equal(true);
                     });
                     it('should return if the is after (after in an other parent)', async () => {
+                        /*
+                         * <root>                     root
+                         *     a                      a
+                         *     <h1>                   h1
+                         *         [                  tail
+                         *         b                  b
+                         *         <cite>             cite
+                         *             x              x
+                         *         </cite>
+                         *     </h1>
+                         *     c                      c
+                         *     <p>                    p
+                         *         d                  d
+                         *         <p>                pp
+                         *             e              e
+                         *             ]              head
+                         *             f              f
+                         *         </p>
+                         *     </p>
+                         * </root>
+                         * <root>                     root2
+                         *     a                      a2
+                         * </root>
+                         */
+                        const root = new FragmentNode();
+                        const a = new CharNode('a');
+                        root.append(a);
+                        const h1 = new VElement('H1');
+                        root.append(h1);
+                        const b = new CharNode('b');
+                        h1.append(b);
+                        const cite = new VElement('CITE');
+                        h1.append(cite);
+                        const x = new CharNode('x');
+                        cite.append(x);
+                        const tail = new MarkerNode();
+                        h1.prepend(tail);
+                        const c = new CharNode('c');
+                        root.append(c);
+                        const p = new VElement('P');
+                        root.append(p);
+                        const d = new CharNode('d');
+                        p.append(d);
+                        const pp = new VElement('P');
+                        p.append(pp);
+                        const e = new CharNode('e');
+                        pp.append(e);
+                        const head = new MarkerNode();
+                        pp.append(head);
+                        const f = new CharNode('f');
+                        pp.append(f);
+
+                        const root2 = new FragmentNode();
+                        const a2 = new CharNode('a');
+                        root2.append(a2);
+
                         expect(a.isAfter(a)).to.equal(false, 'a isAfter a');
                         expect(a.isAfter(b)).to.equal(false, 'a isAfter b');
                         expect(a.isAfter(c)).to.equal(false, 'a isAfter c');
@@ -539,6 +595,16 @@ describe('core', () => {
                         expect(f.isAfter(d)).to.equal(true, 'f isAfter d');
                         expect(f.isAfter(e)).to.equal(true, 'f isAfter e');
                         expect(f.isAfter(f)).to.equal(false, 'f isAfter f');
+
+                        expect(b.isAfter(h1)).to.equal(true, 'b isAfter h1');
+                        expect(h1.isAfter(b)).to.equal(false, 'h1 isAfter b');
+                        expect(e.isAfter(x)).to.equal(true, 'e is after x');
+                        expect(x.isAfter(e)).to.equal(false, 'x is after e');
+
+                        expect(root2.isAfter(a2)).to.equal(false, 'root2 isAfter a2');
+                        expect(a2.isAfter(root2)).to.equal(true, 'a2 isAfter root2');
+                        expect(a.isAfter(a2)).to.equal(false, 'a isAfter a2');
+                        expect(a2.isAfter(a)).to.equal(false, 'a2 isAfter a');
                     });
                 });
                 describe('commonAncestor', () => {
@@ -578,7 +644,7 @@ describe('core', () => {
                         h1.append(cite);
                         const x = new CharNode('x');
                         cite.append(x);
-                        const tail = new RangeNode();
+                        const tail = new MarkerNode();
                         h1.prepend(tail);
                         const c = new CharNode('c');
                         root.append(c);
@@ -590,7 +656,7 @@ describe('core', () => {
                         p.append(pp);
                         const e = new CharNode('e');
                         pp.append(e);
-                        const head = new RangeNode();
+                        const head = new MarkerNode();
                         pp.append(head);
                         const f = new CharNode('f');
                         pp.append(f);
