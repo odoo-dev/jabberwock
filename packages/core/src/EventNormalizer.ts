@@ -117,7 +117,7 @@ interface DeleteContentAction {
     type: 'deleteContent';
     direction: Direction;
 }
-interface DeleteWordAction {
+export interface DeleteWordAction {
     type: 'deleteWord';
     direction: Direction;
     text: string;
@@ -143,6 +143,7 @@ interface SetRangeAction {
 interface ApplyFormatAction {
     type: 'applyFormat';
     format: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: any; //todo: remove any
 }
 
@@ -167,7 +168,7 @@ export type NormalizedAction =
 export interface NormalizedEvent {
     // rename to deviceSource? hardwareSource? source?
     type: string;
-    actions: NormalizedAction[]; 
+    actions: NormalizedAction[];
     defaultPrevented: boolean;
     // ? what we do with this key?
     caretPosition?: CaretPosition;
@@ -200,7 +201,7 @@ export interface NormalizedPointerEvent extends NormalizedEvent {
  */
 export interface EventBatch {
     // We currently only need an array of event in the case of multikeypress.
-    events: NormalizedEvent[];
+    events: (NormalizedKeyboardEvent | NormalizedPointerEvent)[];
     mutatedElements?: Set<Node>;
 }
 
@@ -689,13 +690,6 @@ export class EventNormalizer {
             setTimeout(this._processEvents.bind(this));
         }
 
-        let eventType = ev.type;
-        if (ev.type.startsWith('composition')) {
-            // We only need the last composition of the registred events. So 'compositionstart',
-            // 'compositionupdate' and 'compositionend' override the key 'composition'.
-            eventType = 'composition';
-        }
-
         // It is possible to have multiples keys that must trigger multiples times that are
         // being push in the same tick.
         // To be able to handle this case in `_processEvents`, we aggregate the informations in
@@ -831,7 +825,6 @@ export class EventNormalizer {
         const code =
             !isDeadKey &&
             ((keydownEvent && keydownEvent.code) || (keypressEvent && keypressEvent.code));
-        //       (e. g. "^", "`").
         // test: accent (mac safari)
         const isAccentMac =
             inputEvent &&
@@ -892,8 +885,6 @@ export class EventNormalizer {
             isGoogleKeyboardBackspace ||
             !!googleKeyboardKey ||
             !!swiftKeyInsertKey;
-        console.log('compositionData:', compositionData);
-        console.log('googleKeyboardBackspace:', isGoogleKeyboardBackspace);
 
         // Compute the set of mutated elements accross all observed events.
         // todo: review this
@@ -959,7 +950,6 @@ export class EventNormalizer {
             const changeFromComposition =
                 keyboardNormalizedEvent.compositionFrom && keyboardNormalizedEvent.compositionTo;
 
-            console.log('changeFromComposition:', changeFromComposition);
             if (!changeFromComposition) {
                 const keyboardAction = this._getKeyboardAction(
                     key,
@@ -1013,7 +1003,11 @@ export class EventNormalizer {
                 pointerOrKeyboardEvent.actions.push(...this._getDropActions(dropEvent));
             } else if (pasteEvent) {
                 pointerOrKeyboardEvent.actions.push(this._getDataTransferAction(pasteEvent));
-            } else if (inputEvent && inputEvent.inputType.indexOf('format') === 0) {
+            } else if (
+                inputEvent &&
+                inputEvent.inputType &&
+                inputEvent.inputType.indexOf('format') === 0
+            ) {
                 const formatName = inputEvent.inputType.replace('format', '').toLowerCase();
 
                 const applyFormatAction: ApplyFormatAction = {
@@ -1040,7 +1034,7 @@ export class EventNormalizer {
 
         // Create the custom events corresponding to the compiled data from
         // observed events.
-        const normalizedEvents: NormalizedEvent[] = [];
+        const normalizedEvents: (NormalizedKeyboardEvent | NormalizedPointerEvent)[] = [];
         if (keyboardNormalizedEvent) {
             normalizedEvents.push(keyboardNormalizedEvent);
         } else if (pointerNormalizedEvent) {
@@ -1051,9 +1045,7 @@ export class EventNormalizer {
         // informations between two ticks.
         // Now, we do not need the mutation anymore as the events have been normalized.
         this._mutationNormalizer.stop();
-
         debugger;
-        console.log('this._events:', this._events);
         this._events = null;
 
         // Select all on safari does not provide all the informations the first stack so wait for
@@ -1069,10 +1061,8 @@ export class EventNormalizer {
         }
 
         if (keyboardNormalizedEvents) {
-            console.log('keyboardNormalizedEvents:', keyboardNormalizedEvents);
             this._triggerEventBatch({ events: keyboardNormalizedEvents, mutatedElements });
         } else if (normalizedEvents.length || mutatedElements.size) {
-            console.log('normalizedEvents:', normalizedEvents);
             this._triggerEventBatch({ events: normalizedEvents, mutatedElements });
         }
         this._secondTickObservation = false;
@@ -1180,7 +1170,7 @@ export class EventNormalizer {
     // }
 
     // todo: discuss with DMO, do we still try to infer the key from input?
-    _inferKeyFromInput(inputEvent: any): string {
+    _inferKeyFromInput(inputEvent: InputEvent): string {
         // Case for virtual keyboard: Some virtual keyboards does not trigger keydown when a key
         // is pushed but send an input instead.
         // In that case, infer the key that has been pushed from the inputEvent.inputType.
@@ -1850,7 +1840,6 @@ export class EventNormalizer {
      * _onDrop
      */
     _locateEvent(ev: MouseEvent | TouchEvent): CaretPosition {
-        console.log('ev:', ev);
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);

@@ -1,16 +1,21 @@
-import { TestMutationEvent } from '../../packages/core/test/EventNormalizer.test';
+import { NodeIndexContainer } from '../../packages/core/test/eventNormalizerUtils';
+import {
+    RemovedNodesTargetMutationId,
+    AddedNodesTargetMutationId,
+} from '../../packages/core/test/eventNormalizerUtils';
+import {
+    TestEvent,
+    TestCompositionEvent,
+    TestInputEvent,
+    TestKeyboardEvent,
+    TestSelectionEvent,
+    TestMutationEvent,
+} from '../../packages/core/test/eventNormalizerUtils';
 import {
     testContentNormalizer,
     addIdToRemainingElements,
     resetElementsIds,
 } from '../../packages/core/test/eventNormalizerUtils';
-import {
-    TestKeyboardEvent,
-    TestInputEvent,
-    TestSelectionEvent,
-    TestCompositionEvent,
-    TestEvent,
-} from '../../packages/core/test/EventNormalizer.test';
 const editable = document.querySelector('.editable');
 const exportArea = document.querySelector('.exportArea');
 const clearButton = document.querySelector('.clearButton');
@@ -30,6 +35,7 @@ let offsetCacheMap: Map<Node, { index: number; parentId: string }>;
 let currentEventStack = null;
 let allEventStacks = [];
 
+const nodeIndexContainer = new NodeIndexContainer(editable);
 /**
  * Add `node` and all his `childNodes` recursively in the `offsetCacheMap`.
  */
@@ -98,6 +104,7 @@ function renderAllStatcks(): void {
     exportArea.textContent = JSON.stringify(newEventStack);
 }
 function logComposition(compositionEvent: CompositionEvent): void {
+    console.log('compositionEvent:', compositionEvent);
     const testCompositionEvent: TestCompositionEvent = {
         type: compositionEvent.type as 'compositionstart' | 'compositionupdate' | 'compositionend',
         data: compositionEvent.data,
@@ -136,18 +143,14 @@ function logSelection(): void {
         selection.anchorNode === editable ||
         editable.contains(selection.anchorNode)
     ) {
-        const focusParent = selection.focusNode.parentElement;
-        const anchorParent = selection.anchorNode.parentElement;
         const testSelectionEvent: TestSelectionEvent = {
             type: 'selection',
             focus: {
-                id: focusParent.id,
-                index: Array.prototype.indexOf.call(focusParent.childNodes, selection.focusNode),
+                targetSelectionId: nodeIndexContainer.getId(selection.focusNode),
                 offset: selection.focusOffset,
             },
             anchor: {
-                id: anchorParent.id,
-                index: Array.prototype.indexOf.call(anchorParent.childNodes, selection.anchorNode),
+                targetSelectionId: nodeIndexContainer.getId(selection.anchorNode),
                 offset: selection.anchorOffset,
             },
         };
@@ -155,10 +158,7 @@ function logSelection(): void {
     }
 }
 function logMutation(mutation: MutationRecord): void {
-    console.log('mutation:', mutation);
     addIdToRemainingElements(editable);
-    const offsetInfo = offsetCacheMap.get(mutation.target);
-    if (!offsetInfo) debugger;
 
     const testMutationEvent: TestMutationEvent = {
         type: 'mutation',
@@ -167,66 +167,50 @@ function logMutation(mutation: MutationRecord): void {
         //       stack, the textContent being set is not the proper one. We should watch on the
         //       next mutation of type 'charData' ang
         textContent: mutation.target.textContent,
-        // if there is no offsetInfo, it means that we are on the root element
-        targetParentId: offsetInfo.parentId,
-        targetIndex: offsetInfo.index,
+        targetId: nodeIndexContainer.getId(mutation.target),
     };
     const removedNodes = Array.from(mutation.removedNodes);
     const addedNodes = Array.from(mutation.addedNodes);
     if (removedNodes.length) {
         testMutationEvent.removedNodes = removedNodes.map((node: Node) => {
-            const nodeInCache = offsetCacheMap.get(node);
-            if (nodeInCache) {
-                return nodeInCache;
-            } else {
-                return {
-                    parentId: offsetCacheMap.get(mutation.previousSibling).parentId,
-                    previousSiblingIndex: offsetCacheMap.get(mutation.previousSibling).index,
-                };
-            }
+            const removeMutationInfo: RemovedNodesTargetMutationId = {
+                nodeId: nodeIndexContainer.getId(node),
+                mutationSpecType: 'id',
+            };
+            return removeMutationInfo;
         });
     }
     if (addedNodes.length) {
-        // addedNodes.forEach((node: ChildNode) => {
-        // if a node is an element and is added, we need to cache it in the offsetmap
-        // because other mutation event might reference this added node in the same stack.
-        // if (node.nodeType === Node.ELEMENT_NODE) {
-        // addNodeToOffsetCacheMap(node);
-        // }
-        // });
         testMutationEvent.addedNodes = addedNodes.map((node: ChildNode) => {
-            // if there is no nextSibling, it means that this is the last element.
             const nodeValue =
                 (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).outerHTML) ||
                 (node.nodeType === Node.TEXT_NODE && node.nodeValue);
-            if (mutation.nextSibling) {
-                // otherwise, we must get the reference from the previousSibling
-                console.log('node.nodeType:', node.nodeType);
-                const nodeInCache = offsetCacheMap.get(mutation.nextSibling);
+            const existingId = nodeIndexContainer.getId(node);
+            if (typeof existingId === 'number') {
                 return {
-                    parentId: nodeInCache.parentId,
-                    nodeType: node.nodeType,
-                    nextSiblingIndex: nodeInCache.index,
-                    nodeValue: nodeValue,
-                };
-            } else if (mutation.previousSibling) {
-                console.log('node.nodeType:', node.nodeType);
-                const nodeInCache = offsetCacheMap.get(mutation.previousSibling);
-                return {
-                    parentId: nodeInCache.parentId,
-                    nodeType: node.nodeType,
-                    previousSiblingIndex: nodeInCache.index,
-                    nodeValue: nodeValue,
+                    mutationSpecType: 'id',
+                    parentId: nodeIndexContainer.getId(mutation.target),
+                    nodeId: existingId,
                 };
             } else {
-                // debugger;
-                console.log('node.nodeType:', node.nodeType);
-                const nodeInCache = offsetCacheMap.get(node);
-                return {
-                    parentId: nodeInCache.parentId,
-                    nodeType: node.nodeType,
+                nodeIndexContainer.addIdToAllNodes(node);
+                const addMutationInfo: AddedNodesTargetMutationId = {
+                    parentId: nodeIndexContainer.getId(mutation.target),
+                    mutationSpecType: 'id',
                     nodeValue: nodeValue,
+                    nodeType: Node.ELEMENT_NODE,
                 };
+                if (mutation.previousSibling) {
+                    addMutationInfo.previousSiblingId = nodeIndexContainer.getId(
+                        mutation.previousSibling,
+                    );
+                }
+                if (mutation.nextSibling) {
+                    addMutationInfo.previousSiblingId = nodeIndexContainer.getId(
+                        mutation.previousSibling,
+                    );
+                }
+                return addMutationInfo;
             }
         });
     }
@@ -238,27 +222,34 @@ copyButton.addEventListener('click', () => {
 });
 function clear(): void {
     console.clear();
+    nodeIndexContainer.resetContainerElement();
     exportArea.textContent = '';
     currentEventStack = null;
     allEventStacks = [];
 }
 
+function setContentNormalizer(key): void {
+    editable.innerHTML = testContentNormalizer[key];
+    resetOffsetCacheMap();
+    setTimeout(clear, 10);
+}
 Object.keys(testContentNormalizer).forEach(key => {
     const button = document.createElement('button');
     button.style.cursor = 'pointer';
     button.textContent = key;
     button.addEventListener('click', () => {
-        editable.innerHTML = testContentNormalizer[key];
-        setTimeout(clear, 10);
-        resetOffsetCacheMap();
+        nodeIndexContainer.resetContainerElement();
+        setContentNormalizer(key);
     });
     templatesElement.appendChild(button);
 });
+// directly set the contentNormalizer
+setContentNormalizer(Object.keys(testContentNormalizer)[0]);
 clearButton.addEventListener('click', clear);
 
 editable.addEventListener('compositionstart', logComposition);
 editable.addEventListener('compositionupdate', logComposition);
-editable.addEventListener('compositioned', logComposition);
+editable.addEventListener('compositionend', logComposition);
 editable.addEventListener('keydown', logKey);
 editable.addEventListener('keypress', logKey);
 editable.addEventListener('keyup', logKey);
