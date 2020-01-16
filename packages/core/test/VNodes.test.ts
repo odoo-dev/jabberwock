@@ -541,6 +541,86 @@ describe('core', () => {
                         expect(f.isAfter(f)).to.equal(false, 'f isAfter f');
                     });
                 });
+                describe('commonAncestor', () => {
+                    it('should return the common ancestor', async () => {
+                        /*
+                         * <root>                     root
+                         *     a                      a
+                         *     <h1>                   h1
+                         *         [                  tail
+                         *         b                  b
+                         *         <cite>             cite
+                         *             x              x
+                         *         </cite>
+                         *     </h1>
+                         *     c                      c
+                         *     <p>                    p
+                         *         d                  d
+                         *         <p>                pp
+                         *             e              e
+                         *             ]              head
+                         *             f              f
+                         *         </p>
+                         *     </p>
+                         * </root>
+                         * <root>                     root2
+                         *     a                      a2
+                         * </root>
+                         */
+                        const root = new FragmentNode();
+                        const a = new CharNode('a');
+                        root.append(a);
+                        const h1 = new VElement('H1');
+                        root.append(h1);
+                        const b = new CharNode('b');
+                        h1.append(b);
+                        const cite = new VElement('CITE');
+                        h1.append(cite);
+                        const x = new CharNode('x');
+                        cite.append(x);
+                        const tail = new RangeNode();
+                        h1.prepend(tail);
+                        const c = new CharNode('c');
+                        root.append(c);
+                        const p = new VElement('P');
+                        root.append(p);
+                        const d = new CharNode('d');
+                        p.append(d);
+                        const pp = new VElement('P');
+                        p.append(pp);
+                        const e = new CharNode('e');
+                        pp.append(e);
+                        const head = new RangeNode();
+                        pp.append(head);
+                        const f = new CharNode('f');
+                        pp.append(f);
+
+                        const root2 = new FragmentNode();
+                        const a2 = new CharNode('a');
+                        root2.append(a2);
+
+                        expect(a.commonAncestor(a)).to.equal(root, 'a commonAncestor a');
+                        expect(a.commonAncestor(b)).to.equal(root, 'a commonAncestor b');
+                        expect(b.commonAncestor(a)).to.equal(root, 'b commonAncestor a');
+                        expect(b.commonAncestor(b)).to.equal(h1, 'b commonAncestor b');
+                        expect(b.commonAncestor(x)).to.equal(h1, 'b commonAncestor x');
+                        expect(x.commonAncestor(b)).to.equal(h1, 'x commonAncestor b');
+                        expect(x.commonAncestor(x)).to.equal(cite, 'x commonAncestor x');
+                        expect(e.commonAncestor(b)).to.equal(root, 'e commonAncestor b');
+                        expect(b.commonAncestor(e)).to.equal(root, 'b commonAncestor e');
+                        expect(e.commonAncestor(c)).to.equal(root, 'e commonAncestor c');
+                        expect(c.commonAncestor(e)).to.equal(root, 'c commonAncestor e');
+                        expect(e.commonAncestor(d)).to.equal(p, 'e commonAncestor d');
+                        expect(e.commonAncestor(p)).to.equal(p, 'e commonAncestor p');
+                        expect(p.commonAncestor(e)).to.equal(p, 'p commonAncestor e');
+                        expect(d.commonAncestor(e)).to.equal(p, 'd commonAncestor e');
+                        expect(e.commonAncestor(f)).to.equal(pp, 'e commonAncestor f');
+                        expect(f.commonAncestor(e)).to.equal(pp, 'f commonAncestor e');
+                        expect(a2.commonAncestor(root2)).to.equal(root2, 'a2 commonAncestor root2');
+                        expect(a.commonAncestor(a2)).to.be.undefined;
+                        expect(f.commonAncestor(e, FragmentNode)).to.equal(root);
+                    });
+                });
                 describe('nthChild', () => {
                     it('should return the child at given index', async () => {
                         expect(root.nthChild(0)).to.equal(a);

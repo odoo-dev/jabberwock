@@ -574,6 +574,26 @@ export class VNode {
         return descendants;
     }
     /**
+     * Return the lowest common ancestor between this VNode and the given one.
+     *
+     * @param node
+     */
+    commonAncestor(node: VNode, predicate?: Predicate): VNode;
+    commonAncestor<T extends VNode>(node: VNode, predicate?: Constructor<T>): T;
+    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
+    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
+        if (this.parent === node.parent && this.parent.test(predicate)) {
+            return this.parent;
+        }
+        const thisPath = [this, ...this.ancestors(predicate)];
+        const nodePath = [node, ...node.ancestors(predicate)];
+        let commonAncestor: VNode;
+        while (thisPath[thisPath.length - 1] === nodePath.pop()) {
+            commonAncestor = thisPath.pop();
+        }
+        return commonAncestor;
+    }
+    /**
      * Walk the document tree starting from the current node (included) by
      * calling the `next` iterator until the returned node satisfies the given
      * predicate or is falsy.
