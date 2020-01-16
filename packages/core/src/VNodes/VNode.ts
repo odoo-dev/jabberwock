@@ -261,12 +261,11 @@ export class VNode {
     firstChild<T extends VNode>(predicate?: Constructor<T>): T;
     firstChild<T>(predicate?: Predicate<T>): VNode;
     firstChild<T>(predicate?: Predicate<T>): VNode {
-        const firstChild = this.nthChild(0);
-        if (firstChild && predicate) {
-            return firstChild.walk((node: VNode) => node.nextSibling(), predicate);
-        } else {
-            return firstChild;
+        let firstChild = this.nthChild(0);
+        while (firstChild && !firstChild.test(predicate)) {
+            firstChild = firstChild.nextSibling();
         }
+        return firstChild;
     }
     /**
      * Return the last child of this VNode that satisfies the given predicate.
@@ -278,12 +277,11 @@ export class VNode {
     lastChild<T extends VNode>(predicate?: Constructor<T>): T;
     lastChild<T>(predicate?: Predicate<T>): VNode;
     lastChild<T>(predicate?: Predicate<T>): VNode {
-        const lastChild = this.nthChild(this.children.length - 1);
-        if (lastChild && predicate) {
-            return lastChild.walk((node: VNode) => node.previousSibling(), predicate);
-        } else {
-            return lastChild;
+        let lastChild = this.nthChild(this.children.length - 1);
+        while (lastChild && !lastChild.test(predicate)) {
+            lastChild = lastChild.previousSibling();
         }
+        return lastChild;
     }
     /**
      * Return the first leaf of this VNode that satisfies the given predicate.
@@ -333,12 +331,11 @@ export class VNode {
     firstDescendant<T extends VNode>(predicate?: Constructor<T>): T;
     firstDescendant<T>(predicate?: Predicate<T>): VNode;
     firstDescendant<T>(predicate?: Predicate<T>): VNode {
-        const firstDescendant = this.firstChild();
-        if (firstDescendant && predicate) {
-            return firstDescendant.walk((node: VNode) => this._descendantAfter(node), predicate);
-        } else {
-            return firstDescendant;
+        let firstDescendant = this.firstChild();
+        while (firstDescendant && !firstDescendant.test(predicate)) {
+            firstDescendant = this._descendantAfter(firstDescendant);
         }
+        return firstDescendant;
     }
     /**
      * Return the last descendant of this VNode that satisfies the predicate.
@@ -354,11 +351,10 @@ export class VNode {
         while (lastDescendant && lastDescendant.hasChildren()) {
             lastDescendant = lastDescendant.lastChild();
         }
-        if (lastDescendant && predicate) {
-            return lastDescendant.walk((node: VNode) => this._descendantBefore(node), predicate);
-        } else {
-            return lastDescendant;
+        while (lastDescendant && !lastDescendant.test(predicate)) {
+            lastDescendant = this._descendantBefore(lastDescendant);
         }
+        return lastDescendant;
     }
     /**
      * Return the previous sibling of this VNode that satisfies the predicate.
@@ -370,12 +366,11 @@ export class VNode {
     previousSibling<T extends VNode>(predicate?: Constructor<T>): T;
     previousSibling<T>(predicate?: Predicate<T>): VNode;
     previousSibling<T>(predicate?: Predicate<T>): VNode {
-        const previousSibling = this.parent && this.parent._adjacentChild(this, 'previous');
-        if (previousSibling && predicate) {
-            return previousSibling.walk((node: VNode) => node.previousSibling(), predicate);
-        } else {
-            return previousSibling;
+        let previousSibling = this.parent && this.parent._adjacentChild(this, 'previous');
+        while (previousSibling && !previousSibling.test(predicate)) {
+            previousSibling = previousSibling.previousSibling();
         }
+        return previousSibling;
     }
     /**
      * Return the next sibling of this VNode that satisfies the given predicate.
@@ -387,12 +382,11 @@ export class VNode {
     nextSibling<T extends VNode>(predicate?: Constructor<T>): T;
     nextSibling<T>(predicate?: Predicate<T>): VNode;
     nextSibling<T>(predicate?: Predicate<T>): VNode {
-        const nextSibling = this.parent && this.parent._adjacentChild(this, 'next');
-        if (nextSibling && predicate) {
-            return nextSibling.walk((node: VNode) => node.nextSibling(), predicate);
-        } else {
-            return nextSibling;
+        let nextSibling = this.parent && this.parent._adjacentChild(this, 'next');
+        while (nextSibling && !nextSibling.test(predicate)) {
+            nextSibling = nextSibling.nextSibling();
         }
+        return nextSibling;
     }
     /**
      * Return the previous node in a depth-first pre-order traversal of the
@@ -413,11 +407,10 @@ export class VNode {
             // If it has no previous sibling then climb up to the parent.
             previous = this.parent;
         }
-        if (previous && predicate) {
-            return previous.walk((node: VNode) => node.previous(), predicate);
-        } else {
-            return previous;
+        while (previous && !previous.test(predicate)) {
+            previous = previous.previous();
         }
+        return previous;
     }
     /**
      * Return the next node in a depth-first pre-order traversal of the tree
@@ -445,11 +438,10 @@ export class VNode {
             }
             next = ancestor && ancestor.nextSibling();
         }
-        if (next && predicate) {
-            return next.walk((node: VNode) => node.next(), predicate);
-        } else {
-            return next;
+        while (next && !next.test(predicate)) {
+            next = next.next();
         }
+        return next;
     }
     /**
      * Return the previous leaf in a depth-first pre-order traversal of the
@@ -586,25 +578,6 @@ export class VNode {
             commonAncestor = thisPath.pop();
         }
         return commonAncestor;
-    }
-    /**
-     * Walk the document tree starting from the current node (included) by
-     * calling the `next` iterator until the returned node satisfies the given
-     * predicate or is falsy.
-     *
-     * @param next
-     * @param [predicate]
-     */
-    walk(next: (node: VNode) => VNode, predicate: Predicate): VNode;
-    walk<T extends VNode>(next: (node: VNode) => VNode, predicate: Constructor<T>): T;
-    walk<T>(next: (node: VNode) => VNode, predicate: Predicate<T>): VNode;
-    walk<T>(next: (node: VNode) => VNode, predicate: Predicate<T>): VNode {
-        let node: VNode;
-        node = this;
-        while (node && !node.test(predicate)) {
-            node = next(node);
-        }
-        return node;
     }
 
     //--------------------------------------------------------------------------
