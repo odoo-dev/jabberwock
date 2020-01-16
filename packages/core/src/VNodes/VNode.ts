@@ -243,6 +243,21 @@ export class VNode {
         return (this.parent && this.parent.children) || [];
     }
     /**
+     * Return the first ancestor of this VNode that satisfies the given
+     * predicate.
+     *
+     * @param [predicate]
+     */
+    ancestor(predicate?: Predicate): VNode;
+    ancestor<T extends VNode>(predicate?: Constructor<T>): T;
+    ancestor<T extends VNode>(predicate?: NodePredicate<T>): VNode {
+        let ancestor = this.parent;
+        while (ancestor && !ancestor.test(predicate)) {
+            ancestor = ancestor.parent;
+        }
+        return ancestor;
+    }
+    /**
      * Return the first child of this VNode that satisfies the given predicate.
      * If no predicate is given, return the first child of this VNode.
      *
