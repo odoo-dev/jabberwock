@@ -1196,13 +1196,6 @@ describe('core', () => {
                         });
                     });
                 });
-                describe('walk', () => {
-                    it('should walk', async () => {
-                        expect(
-                            h1.walk(vNode => vNode.next(), vNode => vNode instanceof CharNode),
-                        ).to.deep.equal(b);
-                    });
-                });
                 describe('before', () => {
                     it('should insert before node', async () => {
                         const root = new VNode();
