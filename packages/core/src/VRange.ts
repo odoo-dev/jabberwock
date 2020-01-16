@@ -1,5 +1,5 @@
 import { VNode, RelativePosition, Point } from './VNodes/VNode';
-import { Constructor, Predicate, NodePredicate } from './VNodes/VNode';
+import { Predicate, Constructor } from './VNodes/VNode';
 import { withMarkers } from '../../utils/src/markers';
 import { MarkerNode } from './VNodes/MarkerNode';
 
@@ -89,9 +89,10 @@ export class VRange {
     /**
      * Return a list of all the nodes between the start and end of this range.
      */
-    selectedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
     selectedNodes(predicate?: Predicate): VNode[];
-    selectedNodes<T extends VNode>(predicate?: NodePredicate<T>): VNode[] {
+    selectedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
+    selectedNodes<T>(predicate?: Predicate<T>): VNode[];
+    selectedNodes<T>(predicate?: Predicate<T>): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
         withMarkers(() => {
