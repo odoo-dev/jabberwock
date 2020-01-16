@@ -1,11 +1,12 @@
 import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
-import { VNode, RelativePosition, isMarker, NodePredicate } from './VNodes/VNode';
+import { VNode, RelativePosition, Predicate } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VSelection, Direction } from './VSelection';
 import { CharNode } from './VNodes/CharNode';
 import { ListNode, ListType } from './VNodes/ListNode';
 import { VElement } from './VNodes/VElement';
+import { MarkerNode } from './VNodes/MarkerNode';
 
 interface RenderingContext<T extends VNode = VNode> {
     root: VNode; // Root VNode of the current rendering.
@@ -69,18 +70,18 @@ export class Renderer {
      * @param b
      */
     _isSameTextNode(a: VNode, b: VNode): boolean {
-        if (isMarker(a) || isMarker(b)) {
+        if (a.is(CharNode) && b.is(CharNode)) {
+            // Char VNodes are the same text node if they have the same format.
+            const formats = Object.keys({ ...a.format, ...b.format });
+            return formats.every(k => !!a.format[k] === !!b.format[k]);
+        } else if (a.is(MarkerNode) || b.is(MarkerNode)) {
             // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
             // be broken up just because it contains a marker.
             return true;
-        } else if (!a.is(CharNode) || !b.is(CharNode)) {
+        } else {
             // Nodes that are not valid in a text node must end the text node.
             return false;
-        } else {
-            // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...(a as CharNode).format, ...(b as CharNode).format });
-            return formats.every(k => !!(a as CharNode).format[k] === !!(b as CharNode).format[k]);
         }
     }
     /**
@@ -260,7 +261,7 @@ export class Renderer {
      */
     _match<T extends VNode>(
         context: RenderingContext,
-        predicate: NodePredicate<T>,
+        predicate: Predicate<T>,
     ): context is RenderingContext<T> {
         return context.currentVNode.test(predicate);
     }
