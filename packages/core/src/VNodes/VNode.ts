@@ -363,11 +363,13 @@ export class VNode {
     previousSibling<T extends VNode>(predicate?: Constructor<T>): T;
     previousSibling<T>(predicate?: Predicate<T>): VNode;
     previousSibling<T>(predicate?: Predicate<T>): VNode {
-        let previousSibling = this.parent && this.parent._adjacentChild(this, 'previous');
-        while (previousSibling && !previousSibling.test(predicate)) {
-            previousSibling = previousSibling.previousSibling();
+        if (!this.parent) return;
+        let sibling = withMarkers(() => this.parent.nthChild(this.index - 1));
+        // Skip ignored siblings and those failing the predicate test.
+        while (sibling && (isIgnored(sibling) || !sibling.test(predicate))) {
+            sibling = sibling.previousSibling();
         }
-        return previousSibling;
+        return sibling;
     }
     /**
      * Return the next sibling of this VNode that satisfies the given predicate.
@@ -379,11 +381,13 @@ export class VNode {
     nextSibling<T extends VNode>(predicate?: Constructor<T>): T;
     nextSibling<T>(predicate?: Predicate<T>): VNode;
     nextSibling<T>(predicate?: Predicate<T>): VNode {
-        let nextSibling = this.parent && this.parent._adjacentChild(this, 'next');
-        while (nextSibling && !nextSibling.test(predicate)) {
-            nextSibling = nextSibling.nextSibling();
+        if (!this.parent) return;
+        let sibling = withMarkers(() => this.parent.nthChild(this.index + 1));
+        // Skip ignored siblings and those failing the predicate test.
+        while (sibling && (isIgnored(sibling) || !sibling.test(predicate))) {
+            sibling = sibling.nextSibling();
         }
-        return nextSibling;
+        return sibling;
     }
     /**
      * Return the previous node in a depth-first pre-order traversal of the
@@ -717,26 +721,6 @@ export class VNode {
     // Private
     //--------------------------------------------------------------------------
 
-    /**
-     * Return the child's next (`direction === 'forward'`) or previous
-     * (`direction === 'backward'`) sibling.
-     *
-     * @param child
-     * @param direction ('backward' for the previous child,
-     *                   'forward' for the next child)
-     */
-    _adjacentChild(child: VNode, direction: 'previous' | 'next'): VNode {
-        const adjacentChild = withMarkers(() => {
-            const index = this.indexOf(child);
-            return this.nthChild(direction === 'next' ? index + 1 : index - 1);
-        });
-        // Ignore marker nodes by default.
-        if (adjacentChild && isIgnored(adjacentChild)) {
-            return this._adjacentChild(adjacentChild, direction);
-        } else {
-            return adjacentChild;
-        }
-    }
     /**
      * Return the descendant of this node that directly precedes the given node
      * in depth-first pre-order traversal.
