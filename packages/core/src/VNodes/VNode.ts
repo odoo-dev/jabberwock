@@ -108,10 +108,7 @@ export class VNode {
      * Return the VNode's children.
      */
     get children(): VNode[] {
-        if (ignoreMarkers) {
-            return this._children.filter(child => !isMarker(child));
-        }
-        return this._children;
+        return this._children.filter(child => !isIgnored(child));
     }
     /**
      * Return the length of this VNode.
@@ -734,7 +731,7 @@ export class VNode {
             return this.nthChild(direction === 'next' ? index + 1 : index - 1);
         });
         // Ignore marker nodes by default.
-        if (ignoreMarkers && adjacentChild && isMarker(adjacentChild)) {
+        if (adjacentChild && isIgnored(adjacentChild)) {
             return this._adjacentChild(adjacentChild, direction);
         } else {
             return adjacentChild;
@@ -832,12 +829,12 @@ export class VNode {
 }
 
 /**
- * Return true if the given node is a node of type `Marker`.
+ * Return true if the given node is ignored from traversal.
  *
  * @param node node to check
  */
-export function isMarker(node: VNode): boolean {
-    return node.type === VNodeType.MARKER;
+export function isIgnored(node: VNode): boolean {
+    return ignoreMarkers && node.type === VNodeType.MARKER;
 }
 
 /**
