@@ -988,7 +988,7 @@ describe('core', () => {
                     });
                 });
                 describe('ancestors', () => {
-                    it("should get a list of all ancestors of the root node's first leaf", async () => {
+                    it('should get a list of all ancestors of the node', async () => {
                         await testEditor({
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
@@ -1002,12 +1002,14 @@ describe('core', () => {
                             },
                         });
                     });
-                    it("should get a list of all ancestors of the root node's first leaf up until HEADING1", async () => {
+                    it('should get a list of all ancestors of the node satisfying the predicate', async () => {
                         await testEditor({
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const a = editor.vDocument.root.firstLeaf();
-                                const ancestors = a.ancestors(ancestor => ancestor.name !== 'VElement: H1');
+                                const ancestors = a.ancestors(ancestor => {
+                                    return ancestor.name !== 'VElement: H1';
+                                });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'VElement: P',
                                     'FragmentNode',
