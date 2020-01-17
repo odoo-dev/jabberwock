@@ -9,13 +9,6 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-export interface DomRangeDescription {
-    readonly startContainer: Node;
-    readonly startOffset: number;
-    readonly endContainer: Node;
-    readonly endOffset: number;
-}
-
 interface CompiledEvent {
     type: string; // main event type, e.g. 'keydown', 'composition', 'move', ...
     key?: string; // the key pressed for keyboard events
@@ -559,12 +552,16 @@ export class EventNormalizer {
         // their corresponding indices in the previous DOM.
         const insertPreviousStart = insertStart;
         const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const insertionRange: DomRangeDescription = {
-            startContainer: previousNodes[insertPreviousStart].origin,
-            startOffset: previous.offsets[insertPreviousStart],
-            endContainer: previousNodes[insertPreviousEnd].origin,
-            endOffset: previous.offsets[insertPreviousEnd],
-        };
+
+        // Materialize the insertion range.
+        const startContainer = previousNodes[insertPreviousStart].origin;
+        const startOffset = previous.offsets[insertPreviousStart];
+        const endContainer = previousNodes[insertPreviousEnd].origin;
+        const endOffset = previous.offsets[insertPreviousEnd];
+        const insertionRange = document.createRange();
+        insertionRange.setStart(startContainer, startOffset);
+        insertionRange.setEnd(endContainer, endOffset);
+
         this._triggerEvent('insertText', {
             value: insertedText,
             range: insertionRange,

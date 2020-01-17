@@ -1,4 +1,4 @@
-import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
+import { EventNormalizer } from './EventNormalizer';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import JWEditor from './JWEditor';
 import { VSelectionParams, InsertTextParams } from './CorePlugin';
@@ -6,7 +6,7 @@ import { withRange } from './VRange';
 
 interface DomInsertTextParams {
     text: string;
-    range: DomRangeDescription;
+    range: Range;
 }
 
 interface DomSetSelectionParams {

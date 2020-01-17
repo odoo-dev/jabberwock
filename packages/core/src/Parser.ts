@@ -3,7 +3,6 @@ import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { Direction, VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition, Point } from './VNodes/VNode';
-import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
@@ -134,7 +133,7 @@ export class Parser {
      * @param selection
      * @param [direction]
      */
-    parseRange(range: DomRangeDescription): [Point, Point] {
+    parseRange(range: Range): [Point, Point] {
         const start = this._locate(range.startContainer, range.startOffset);
         const end = this._locate(range.endContainer, range.endOffset);
         return [start, end];
