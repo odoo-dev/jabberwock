@@ -1,9 +1,9 @@
 import { utils } from '../../../../packages/utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
-import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
 import { LineBreakNode } from '../../../core/src/VNodes/LineBreakNode';
+import { SetSelectionParams } from '../../../core/src/CorePlugin';
 
 interface NodeProps {
     isRoot: boolean;
@@ -72,12 +72,11 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         }
     }
     onDblClickNode(): void {
-        const location: VSelectionDescription = {
+        const params: SetSelectionParams = {
             anchorNode: this.props.vNode,
             focusNode: this.props.vNode,
-            direction: Direction.FORWARD,
         };
-        this.env.editor.execCommand('setSelection', { vSelection: location });
+        this.env.editor.execCommand('setSelection', params);
     }
     /**
      * Handle folding/unfolding on press Enter

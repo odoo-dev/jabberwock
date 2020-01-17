@@ -256,19 +256,25 @@
             <devtools-sidepane>
                 <devtools-info t-if="state.currentTab == 'queue'">
                     <t t-set="selectedCommand" t-value="props.commands[state.selectedCommandIndex]"/>
-                    <div class="about" t-if="selectedCommand">
-                        <span class="type">Command</span> <t t-esc="selectedCommand[0]"/>
-                    </div>
-                    <div class="properties" t-if="selectedCommand">
-                        <div class="divider">Arguments</div>
-                        <div class="properties">
-                            <t t-if="selectedCommand">
-                                <t t-set="payload" t-value="selectedCommand[1]"/>
-                                <t t-call="commandArgs"/>
-                            </t>
-                            <t t-call="commandHandlers"/>
+                    <t t-if="selectedCommand">
+                        <t t-set="commandName" t-value="selectedCommand[0]"/>
+                        <div class="about">
+                            <span class="type">Command</span> <t t-esc="commandName"/>
                         </div>
-                    </div>
+                        <div class="properties">
+                            <div class="divider">Arguments</div>
+                            <div class="properties">
+                                <t t-set="payload" t-value="selectedCommand[1]"/>
+                                <t t-if="commandName === 'setSelection'">
+                                    <t t-call="payloadVSelection"/>
+                                </t>
+                                <t t-else="">
+                                    <t t-call="commandArgs"/>
+                                </t>
+                                <t t-call="commandHandlers"/>
+                            </div>
+                        </div>
+                    </t>
                 </devtools-info>
                 <devtools-info t-elif="state.currentTab == 'registry'">
                     <t t-if="state.registry">
@@ -293,8 +299,7 @@
                         <t t-esc="key"/>
                     </td>
                     <td>
-                        <t t-if="value and key == 'vSelection'" t-call="payloadVSelection"/>
-                        <t t-else=""><t t-esc="formatPayloadValue(value)"/></t>
+                        <t t-esc="formatPayloadValue(payload[key])"/>
                     </td>
                 </tr>
             </tbody>
@@ -306,18 +311,10 @@
             <tbody>
                 <tr>
                     <td>
-                        direction
-                    </td>
-                    <td>
-                        <t t-esc="value.direction or 'unset'"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
                         anchor
                     </td>
                     <td>
-                        <t t-esc="value.anchorPosition"/> <t t-esc="value.anchorNode.id"/> (<t t-esc="value.anchorNode.name"/>)
+                        <t t-esc="payload.anchorPosition"/> <t t-esc="payload.anchorNode.id"/> (<t t-esc="payload.anchorNode.name"/>)
                     </td>
                 </tr>
                 <tr>
@@ -325,7 +322,7 @@
                         focus
                     </td>
                     <td>
-                        <t t-esc="value.focusPosition"/> <t t-esc="value.focusNode.id"/> (<t t-esc="value.focusNode.name"/>)
+                        <t t-esc="payload.focusPosition"/> <t t-esc="payload.focusNode.id"/> (<t t-esc="payload.focusNode.name"/>)
                     </td>
                 </tr>
             </tbody>

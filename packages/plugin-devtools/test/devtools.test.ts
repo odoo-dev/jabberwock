@@ -908,15 +908,12 @@ describe('plugin-devtools', () => {
                 const pResult =
                     '<table>' +
                     '<tbody>' +
-                    '<tr><td>vSelection</td><td><table><tbody>' +
-                    '<tr><td> direction </td><td>FORWARD</td></tr>' +
                     '<tr><td> anchor </td><td> ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
                     '<tr><td> focus </td><td> ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
-                    '</tbody></table></td></tr>' +
                     '</tbody>' +
                     '</table>';
                 expect(properties.outerHTML).to.equal(pResult);

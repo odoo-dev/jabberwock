@@ -9,14 +9,6 @@ export enum Direction {
     FORWARD = 'FORWARD',
 }
 
-export interface VSelectionDescription {
-    anchorNode: VNode;
-    anchorPosition?: RelativePosition;
-    focusNode?: VNode;
-    focusPosition?: RelativePosition;
-    direction: Direction;
-}
-
 export class VSelection {
     readonly range: VRange = new VRange();
     _direction: Direction = Direction.FORWARD;
@@ -35,21 +27,6 @@ export class VSelection {
 
     isCollapsed(): boolean {
         return this.range.isCollapsed();
-    }
-    /**
-     * Update the selection according to the given description. Return self.
-     *
-     * @param selection
-     */
-    set(selection: VSelectionDescription): this {
-        this._direction = selection.direction;
-        this.select(
-            selection.anchorNode,
-            selection.anchorPosition,
-            selection.focusNode,
-            selection.focusPosition,
-        );
-        return this;
     }
     /**
      * Set a collapsed selection at the given location, targetting a `reference`
@@ -113,10 +90,22 @@ export class VSelection {
      * @param [position]
      */
     setAnchor(reference: VNode, position = RelativePosition.BEFORE): this {
-        if (this.direction === Direction.FORWARD) {
-            this.range.setStart(reference, position);
+        if (this._direction === Direction.FORWARD) {
+            if (reference.isAfter(this.focus)) {
+                this.range.collapse(this.range.end);
+                this.range.setEnd(reference, position);
+                this._direction = Direction.BACKWARD;
+            } else {
+                this.range.setStart(reference, position);
+            }
         } else {
-            this.range.setEnd(reference, position);
+            if (reference.isBefore(this.focus)) {
+                this.range.collapse(this.range.start);
+                this.range.setStart(reference, position);
+                this._direction = Direction.FORWARD;
+            } else {
+                this.range.setEnd(reference, position);
+            }
         }
         return this;
     }
@@ -130,10 +119,22 @@ export class VSelection {
      * @param [position]
      */
     setFocus(reference: VNode, position = RelativePosition.AFTER): this {
-        if (this.direction === Direction.FORWARD) {
-            this.range.setEnd(reference, position);
+        if (this._direction === Direction.FORWARD) {
+            if (reference.isBefore(this.anchor)) {
+                this.range.collapse(this.range.start);
+                this.range.setStart(reference, position);
+                this._direction = Direction.BACKWARD;
+            } else {
+                this.range.setEnd(reference, position);
+            }
         } else {
-            this.range.setStart(reference, position);
+            if (reference.isAfter(this.focus)) {
+                this.range.collapse(this.range.end);
+                this.range.setEnd(reference, position);
+                this._direction = Direction.FORWARD;
+            } else {
+                this.range.setStart(reference, position);
+            }
         }
         return this;
     }

@@ -1,13 +1,13 @@
 import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
-import { Direction, VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition, Point } from './VNodes/VNode';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType, CharNode } from './VNodes/CharNode';
+import { SetSelectionParams } from './CorePlugin';
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -90,7 +90,13 @@ export class Parser {
             node.contains(selection.anchorNode) &&
             node.contains(selection.focusNode)
         ) {
-            vDocument.selection.set(this.parseSelection(selection));
+            const selectionParams = this.parseSelection(selection);
+            vDocument.setSelection(
+                selectionParams.anchorNode,
+                selectionParams.anchorPosition,
+                selectionParams.focusNode,
+                selectionParams.focusPosition,
+            );
         }
 
         // Set a default selection in VDocument if none was set yet.
@@ -106,24 +112,18 @@ export class Parser {
      * @param domSelection
      * @param [direction]
      */
-    parseSelection(domSelection: Selection): VSelectionDescription {
+    parseSelection(domSelection: Selection): SetSelectionParams {
         if (domSelection.rangeCount) {
-            const domRange = domSelection.getRangeAt(0);
             const anchor = this._locate(domSelection.anchorNode, domSelection.anchorOffset);
             const focus = this._locate(domSelection.focusNode, domSelection.focusOffset);
             const [anchorVNode, anchorPosition] = anchor;
             const [focusVNode, focusPosition] = focus;
-
-            const forward =
-                domSelection.anchorNode === domRange.startContainer &&
-                domSelection.anchorOffset === domRange.startOffset;
 
             return {
                 anchorNode: anchorVNode,
                 anchorPosition: anchorPosition,
                 focusNode: focusVNode,
                 focusPosition: focusPosition,
-                direction: forward ? Direction.FORWARD : Direction.BACKWARD,
             };
         }
     }

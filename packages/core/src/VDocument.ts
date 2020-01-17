@@ -1,4 +1,4 @@
-import { VNode } from './VNodes/VNode';
+import { VNode, RelativePosition } from './VNodes/VNode';
 import { VRange } from './VRange';
 import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
 import { withMarkers } from '../../utils/src/markers';
@@ -70,7 +70,22 @@ export class VDocument {
         });
         this.formatCache = null;
     }
+    /**
+     * Update the selection of the document to match the one in given params.
+     *
+     * @param params
+     */
 
+    setSelection(
+        anchorNode: VNode,
+        anchorPosition: RelativePosition,
+        focusNode: VNode,
+        focusPosition: RelativePosition,
+    ): void {
+        this.selection.select(anchorNode, anchorPosition, focusNode, focusPosition);
+        // Each time the selection changes, we reset its format.
+        this.formatCache = null;
+    }
     /**
      * Get the format for the next insertion.
      */

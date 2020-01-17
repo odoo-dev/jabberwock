@@ -1,6 +1,5 @@
 import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
-import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { VRange } from './VRange';
 
@@ -18,9 +17,11 @@ export interface InsertParams extends RangeParams {
 export interface InsertTextParams extends RangeParams {
     text: string;
 }
-
-export interface VSelectionParams {
-    vSelection: VSelectionDescription;
+export interface SetSelectionParams {
+    anchorNode: VNode;
+    anchorPosition?: RelativePosition;
+    focusNode?: VNode;
+    focusPosition?: RelativePosition;
 }
 export interface FormatParams extends RangeParams {
     format: 'bold' | 'italic' | 'underline';
@@ -118,14 +119,17 @@ export class CorePlugin extends JWPlugin {
         this.editor.vDocument.deleteSelection(range);
     }
     /**
-     * Navigate to a given range.
+     * Update the selection of the document to match the one in given params.
      *
      * @param params
      */
-    setSelection(params: VSelectionParams): void {
-        this.editor.vDocument.selection.set(params.vSelection);
-        // Each time the selection changes, we reset its format.
-        this.editor.vDocument.formatCache = null;
+    setSelection(params: SetSelectionParams): void {
+        this.editor.vDocument.setSelection(
+            params.anchorNode,
+            params.anchorPosition,
+            params.focusNode,
+            params.focusPosition,
+        );
     }
 
     /**
@@ -133,13 +137,12 @@ export class CorePlugin extends JWPlugin {
      *
      * @param params
      */
-    selectAll(params: VSelectionParams): void {
-        this.editor.vDocument.selection.set({
-            anchorNode: this.editor.vDocument.root.firstLeaf(),
-            anchorPosition: RelativePosition.BEFORE,
-            focusNode: this.editor.vDocument.root.lastLeaf(),
-            focusPosition: RelativePosition.AFTER,
-            direction: params.vSelection.direction,
-        });
+    selectAll(): void {
+        this.editor.vDocument.setSelection(
+            this.editor.vDocument.root.firstLeaf(),
+            RelativePosition.BEFORE,
+            this.editor.vDocument.root.lastLeaf(),
+            RelativePosition.AFTER,
+        );
     }
 }
