@@ -122,15 +122,18 @@ export class VRange {
         return this;
     }
     /**
-     * Set the range's start point (in traversal order) at the given location,
-     * targetting a `reference` VNode and specifying the `position` in reference
-     * to that VNode ('BEFORE', 'AFTER'), like in an `xpath.
-     * Return self.
+     * Move the range start node to the given location, targetting a `reference`
+     * VNode and specifying the `position` in reference to that VNode. Raise an
+     * error if the location is after the end of the range.
      *
      * @param reference
      * @param [position]
      */
     setStart(reference: VNode, position = RelativePosition.BEFORE): this {
+        if (reference.isAfter(this.end)) {
+            throw 'The start of a range cannot be set after its end.' +
+                'Collapse the range on its end then call setEnd instead.';
+        }
         reference = reference.firstLeaf();
         if (!reference.hasChildren() && !reference.atomic) {
             reference.prepend(this.start);
@@ -144,15 +147,18 @@ export class VRange {
         return this;
     }
     /**
-     * Set the range's end point (in traversal order) at the given location,
-     * targetting a `reference` VNode and specifying the `position` in reference
-     * to that VNode ('BEFORE', 'AFTER'), like in an `xpath.
-     * Return self.
+     * Move the range end node to the given location, targetting a `reference`
+     * VNode and specifying the `position` in reference to that VNode. Raise an
+     * error if the location is before the start of the range.
      *
      * @param reference
      * @param [position]
      */
     setEnd(reference: VNode, position = RelativePosition.AFTER): this {
+        if (reference.isBefore(this.start)) {
+            throw 'The end of a range cannot be set before its start.' +
+                'Collapse the range then call setStart instead.';
+        }
         reference = reference.lastLeaf();
         if (!reference.hasChildren() && !reference.atomic) {
             reference.append(this.end);
