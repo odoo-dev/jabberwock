@@ -939,8 +939,6 @@ describe('plugin-devtools', () => {
                     '<table>' +
                     '<tbody>' +
                     '<tr><td>text</td><td>z</td></tr>' +
-                    '<tr><td>elements</td><td>[object Set]</td></tr>' +
-                    '<tr><td>origin</td><td>EventNormalizer</td></tr>' +
                     '</tbody>' +
                     '</table>';
                 expect(properties.outerHTML).to.equal(pResult);

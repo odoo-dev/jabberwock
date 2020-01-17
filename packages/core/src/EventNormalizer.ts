@@ -1,5 +1,3 @@
-import { Direction } from '../../core/src/VSelection';
-
 const navigationKey = new Set([
     'ArrowUp',
     'ArrowDown',
@@ -11,13 +9,11 @@ const navigationKey = new Set([
     'Home',
 ]);
 
-export interface DomSelectionDescription {
-    readonly anchorNode: Node;
-    readonly anchorOffset: number;
-    readonly focusNode: Node;
-    readonly focusOffset: number;
-    readonly direction: Direction;
-    origin?: string; // origin of the selection change
+export interface DomRangeDescription {
+    readonly startContainer: Node;
+    readonly startOffset: number;
+    readonly endContainer: Node;
+    readonly endOffset: number;
 }
 
 interface CompiledEvent {
@@ -57,7 +53,7 @@ interface EventListenerDeclaration {
 }
 
 interface NormalizedventPayload {
-    domSelectionChange?: DomSelectionDescription;
+    domSelectionChange?: Selection;
     origin: string;
 }
 
@@ -460,35 +456,8 @@ export class EventNormalizer {
      *
      * @private
      */
-    _getSelection(): DomSelectionDescription {
-        const selection = this.editable.ownerDocument.getSelection();
-
-        if (!selection || selection.rangeCount === 0) {
-            // No selection in the DOM. Create a fake one.
-            return {
-                anchorNode: this.editable,
-                anchorOffset: 0,
-                focusNode: this.editable,
-                focusOffset: 0,
-                direction: Direction.FORWARD,
-            };
-        } else {
-            // The selection direction is sorely missing from the DOM api.
-            let forward: boolean;
-            const domRange = selection.getRangeAt(0);
-            if (selection.anchorNode === selection.focusNode) {
-                forward = selection.anchorOffset <= selection.focusOffset;
-            } else {
-                forward = selection.anchorNode === domRange.startContainer;
-            }
-            return {
-                anchorNode: selection.anchorNode,
-                anchorOffset: selection.anchorOffset,
-                focusNode: selection.focusNode,
-                focusOffset: selection.focusOffset,
-                direction: forward ? Direction.FORWARD : Direction.BACKWARD,
-            };
-        }
+    _getSelection(): Selection {
+        return this.editable.ownerDocument.getSelection();
     }
     /**
      * Process the given compiled event as a composition to identify the text
@@ -590,17 +559,17 @@ export class EventNormalizer {
         // their corresponding indices in the previous DOM.
         const insertPreviousStart = insertStart;
         const insertPreviousEnd = insertEnd + previousLength - currentLength;
-        const impliedSelection: DomSelectionDescription = {
-            anchorNode: previousNodes[insertPreviousStart].origin,
-            anchorOffset: previous.offsets[insertPreviousStart],
-            focusNode: previousNodes[insertPreviousEnd].origin,
-            focusOffset: previous.offsets[insertPreviousEnd],
-            direction: Direction.BACKWARD,
-            origin: 'composition',
+        const insertionRange: DomRangeDescription = {
+            startContainer: previousNodes[insertPreviousStart].origin,
+            startOffset: previous.offsets[insertPreviousStart],
+            endContainer: previousNodes[insertPreviousEnd].origin,
+            endOffset: previous.offsets[insertPreviousEnd],
         };
-
-        this._triggerEvent('setSelection', { domSelection: impliedSelection });
-        this._triggerEvent('insertText', { text: insertedText, elements: ev.elements });
+        this._triggerEvent('insertText', {
+            value: insertedText,
+            range: insertionRange,
+            elements: ev.elements,
+        });
     }
     /**
      * Process the given compiled event as a move and trigger the corresponding
@@ -617,7 +586,6 @@ export class EventNormalizer {
             // Set the selection according to the current one. Set the origin
             // key in order to track the source of the move.
             const selection = this._getSelection();
-            selection.origin = ev.key;
             // TODO: nagivation word/line ?
             this._triggerEvent('setSelection', {
                 domSelection: selection,
@@ -630,7 +598,7 @@ export class EventNormalizer {
      *
      * @param selection
      */
-    _isSelectAll(selection: DomSelectionDescription): boolean {
+    _isSelectAll(selection: Selection): boolean {
         let startContainer = selection.anchorNode;
         let startOffset = selection.anchorOffset;
         let endContainer = selection.focusNode;
@@ -912,26 +880,12 @@ export class EventNormalizer {
         }
         setTimeout(() => {
             this._selectAllOriginElement = ev.target as Node;
-            const target = this._mousedownInEditable.target as Node;
             this._mousedownInEditable = null;
             if (ev.target instanceof Element) {
-                let selection: DomSelectionDescription = this._getSelection();
-                if (!target.contains(selection.anchorNode) && target === ev.target) {
-                    const ltr = document.dir === 'ltr';
-                    selection = {
-                        anchorNode: target,
-                        anchorOffset: 0,
-                        focusNode: target,
-                        focusOffset:
-                            target.nodeType === Node.ELEMENT_NODE
-                                ? target.childNodes.length
-                                : target.nodeValue.length,
-                        direction: ltr ? Direction.FORWARD : Direction.BACKWARD,
-                        origin: 'pointer',
-                    };
-                }
                 if (this._selectionHasChanged) {
-                    this._triggerEvent('setSelection', { domSelection: selection });
+                    this._triggerEvent('setSelection', {
+                        domSelection: this._getSelection(),
+                    });
                 }
             }
         }, 0);

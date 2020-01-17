@@ -2,8 +2,8 @@ import { VDocument } from './VDocument';
 import { Format } from '../../utils/src/Format';
 import { VDocumentMap } from './VDocumentMap';
 import { Direction, VSelectionDescription } from './VSelection';
-import { VNode, RelativePosition } from './VNodes/VNode';
-import { DomSelectionDescription } from './EventNormalizer';
+import { VNode, RelativePosition, Point } from './VNodes/VNode';
+import { DomRangeDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
@@ -104,39 +104,40 @@ export class Parser {
     /**
      * Parse the dom selection into the description of a VSelection.
      *
+     * @param domSelection
+     * @param [direction]
+     */
+    parseSelection(domSelection: Selection): VSelectionDescription {
+        if (domSelection.rangeCount) {
+            const domRange = domSelection.getRangeAt(0);
+            const anchor = this._locate(domSelection.anchorNode, domSelection.anchorOffset);
+            const focus = this._locate(domSelection.focusNode, domSelection.focusOffset);
+            const [anchorVNode, anchorPosition] = anchor;
+            const [focusVNode, focusPosition] = focus;
+
+            const forward =
+                domSelection.anchorNode === domRange.startContainer &&
+                domSelection.anchorOffset === domRange.startOffset;
+
+            return {
+                anchorNode: anchorVNode,
+                anchorPosition: anchorPosition,
+                focusNode: focusVNode,
+                focusPosition: focusPosition,
+                direction: forward ? Direction.FORWARD : Direction.BACKWARD,
+            };
+        }
+    }
+    /**
+     * Parse a dom range into its corresponding VDocument boundary points.
+     *
      * @param selection
      * @param [direction]
      */
-    parseSelection(selection: Selection | DomSelectionDescription): VSelectionDescription {
-        const start = this._locate(selection.anchorNode, selection.anchorOffset);
-        const end = this._locate(selection.focusNode, selection.focusOffset);
-        if (start && end) {
-            const [startVNode, startPosition] = start;
-            const [endVNode, endPosition] = end;
-
-            let direction: Direction;
-            if (selection instanceof Selection) {
-                const domRange = selection.rangeCount && selection.getRangeAt(0);
-                if (
-                    domRange.startContainer === selection.anchorNode &&
-                    domRange.startOffset === selection.anchorOffset
-                ) {
-                    direction = Direction.FORWARD;
-                } else {
-                    direction = Direction.BACKWARD;
-                }
-            } else {
-                direction = selection.direction;
-            }
-
-            return {
-                anchorNode: startVNode,
-                anchorPosition: startPosition,
-                focusNode: endVNode,
-                focusPosition: endPosition,
-                direction: direction,
-            };
-        }
+    parseRange(range: DomRangeDescription): [Point, Point] {
+        const start = this._locate(range.startContainer, range.startOffset);
+        const end = this._locate(range.endContainer, range.endOffset);
+        return [start, end];
     }
 
     //--------------------------------------------------------------------------

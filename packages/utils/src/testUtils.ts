@@ -1,8 +1,15 @@
 import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
+
+interface DomSelectionDescription {
+    readonly anchorNode: Node;
+    readonly anchorOffset: number;
+    readonly focusNode: Node;
+    readonly focusOffset: number;
+    readonly direction: Direction;
+}
 
 export interface TestEditorSpec {
     contentBefore: string;

@@ -1,10 +1,16 @@
-import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
+import { EventNormalizer, DomRangeDescription } from './EventNormalizer';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import JWEditor from './JWEditor';
-import { VSelectionParams } from './CorePlugin';
+import { VSelectionParams, InsertTextParams } from './CorePlugin';
+import { withRange } from './VRange';
 
-interface SetSelectionParams {
-    domSelection: DomSelectionDescription;
+interface DomInsertTextParams {
+    text: string;
+    range: DomRangeDescription;
+}
+
+interface DomSetSelectionParams {
+    domSelection: Selection;
 }
 
 export class EventManager {
@@ -35,9 +41,24 @@ export class EventManager {
                 } else {
                     return this.editor.execCommand('insertParagraphBreak');
                 }
+            case 'insertText': {
+                const params = payload as DomInsertTextParams;
+                const insertTextParams: InsertTextParams = {
+                    text: params.text,
+                };
+                if (params.range) {
+                    const rangeBounds = this.editor.parser.parseRange(params.range);
+                    return withRange(rangeBounds, range => {
+                        insertTextParams.range = range;
+                        return this.editor.execCommand(customEvent.type, insertTextParams);
+                    });
+                } else {
+                    return this.editor.execCommand(customEvent.type, insertTextParams);
+                }
+            }
             case 'selectAll':
             case 'setSelection': {
-                const selectionParams = payload as SetSelectionParams;
+                const selectionParams = payload as DomSetSelectionParams;
                 const vSelectionParams: VSelectionParams = {
                     vSelection: this.editor.parser.parseSelection(selectionParams.domSelection),
                 };
