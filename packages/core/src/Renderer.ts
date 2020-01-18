@@ -4,6 +4,7 @@ import { VNode, RelativePosition, isMarker } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VSelection, Direction } from './VSelection';
 import { CharNode } from './VNodes/CharNode';
+import { ListNode } from './VNodes/ListNode';
 
 interface RenderingContext {
     currentVNode?: VNode; // Current VNode rendered at this step.
@@ -111,8 +112,20 @@ export class Renderer {
      */
     _renderElement(context: RenderingContext): RenderingContext {
         const fragment = context.currentVNode.render<DocumentFragment>('html');
+        const isInList = context.currentVNode.parent instanceof ListNode;
         Array.from(fragment.childNodes).forEach((element: Node): void => {
-            context.parentNode.appendChild(element);
+            if (isInList) {
+                const li = document.createElement('li');
+                if (element.nodeName === 'P') {
+                    element.childNodes.forEach(child => li.appendChild(child));
+                    element = li;
+                } else {
+                    li.appendChild(element);
+                }
+                context.parentNode.appendChild(li);
+            } else {
+                context.parentNode.appendChild(element);
+            }
             VDocumentMap.set(context.currentVNode, element);
             element.childNodes.forEach(child => VDocumentMap.set(context.currentVNode, child));
         });

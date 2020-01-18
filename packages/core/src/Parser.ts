@@ -9,6 +9,7 @@ import { VElement } from './VNodes/VElement';
 import { LineBreakNode } from './VNodes/LineBreakNode';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType, CharNode } from './VNodes/CharNode';
+import { ListNode } from './VNodes/ListNode';
 
 interface ParsingContext {
     readonly rootNode?: Node;
@@ -25,6 +26,7 @@ export class Parser {
     parsingFunctions: Set<ParsingFunction> = new Set([
         CharNode.parse,
         LineBreakNode.parse,
+        ListNode.parse,
         VElement.parse,
     ]);
 
@@ -151,9 +153,27 @@ export class Parser {
      */
     _parseNode(currentContext: ParsingContext): ParsingContext {
         let context;
+
         switch (currentContext.node.nodeType) {
             case Node.ELEMENT_NODE: {
-                context = this._parseElementNode(currentContext);
+                if (
+                    this._isIndentedList(currentContext.node) &&
+                    !(currentContext.parentVNode instanceof ListNode)
+                ) {
+                    // We're about to parse an indented list, we may need to correct the
+                    // new parentVNode to move up to the parent list (<ol><li>a<ul>...,
+                    // where ul is what we're about to parse, ol is the new parentVNode,
+                    // and the li is essentially what we have as parentVNode before
+                    // correction).
+                    currentContext.parentVNode = currentContext.parentVNode.ancestor(node =>
+                        node.is(ListNode),
+                    );
+                    context = this._parseElementNode(currentContext);
+                } else if (currentContext.node.nodeName === 'LI') {
+                    context = this._parseListElement(currentContext);
+                } else {
+                    context = this._parseElementNode(currentContext);
+                }
                 break;
             }
             case Node.TEXT_NODE: {
@@ -176,6 +196,43 @@ export class Parser {
             }
         }
         return this._nextParsingContext(context);
+    }
+    /**
+     * Parse a list element (LI).
+     *
+     * @param context
+     */
+    _parseListElement(currentContext: ParsingContext): ParsingContext {
+        const context = { ...currentContext };
+        const children = Array.from(context.node.childNodes);
+        // An empty text node as first child should be skipped.
+        while (children.length && this._isEmptyTextNode(children[0])) {
+            children.shift();
+        }
+        // A list item with no children should be skipped.
+        if (!children.length) {
+            return context;
+        }
+        // A list item containing only a BR should be replaced with an
+        // empty paragraph.
+        if (children.length === 1 && children[0].nodeName === 'BR') {
+            const paragraph = new VElement('P');
+            context.parentVNode.append(paragraph);
+            VDocumentMap.set(paragraph, context.node);
+            VDocumentMap.set(paragraph, children[0]);
+            return { ...context, ...{ node: children[0] } };
+        }
+        // Inline elements in a list item should be wrapped in a paragraph.
+        if (!utils.isBlock(children[0]) || children[0].nodeName === 'BR') {
+            const paragraph = new VElement('P');
+            context.parentVNode.append(paragraph);
+            context.parentVNode = paragraph;
+            VDocumentMap.set(paragraph, context.node);
+        }
+        // Now we can move on to the list item's contents, to be added to
+        // the paragraph created above, or to the list itself in the case of
+        // blocks.
+        return context;
     }
     /**
      * Parse the given DOM Element into VNode(s).
@@ -303,6 +360,34 @@ export class Parser {
             }
         }
         return nextContext;
+    }
+    /**
+     * Return true if the node is a text node containing only whitespace or nothing.
+     *
+     * @param node
+     */
+    _isEmptyTextNode(node: Node): boolean {
+        return node.nodeType === Node.TEXT_NODE && /^\s*$/.test(node.textContent);
+    }
+    /**
+     * Return true if the given DOM node is a list node (OL, UL).
+     *
+     * @param node
+     */
+    _isList(node: Node): boolean {
+        return node.nodeName === 'UL' || node.nodeName === 'OL';
+    }
+    /**
+     * Return true if the given DOM node is an indented list node.
+     *
+     * @param node
+     */
+    _isIndentedList(node: Node): boolean {
+        return (
+            this._isList(node) &&
+            node.parentNode &&
+            (node.parentNode.nodeName === 'LI' || this._isList(node.parentNode))
+        );
     }
     /**
      * Return a position in the `VDocument` as a tuple containing a reference
