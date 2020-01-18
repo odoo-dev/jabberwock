@@ -775,6 +775,20 @@ export class VNode {
         this._children.splice(index, 1);
         return this;
     }
+    /**
+     * Return a convenient string representation of this node and its
+     * descendants.
+     *
+     * @param __repr
+     * @param level
+     */
+    _repr(__repr = '', level = 0): string {
+        __repr += Array(level * 4 + 1).join(' ') + this.name + '\n';
+        this.children.forEach(child => {
+            __repr = child._repr(__repr, level + 1);
+        });
+        return __repr;
+    }
 }
 
 /**
