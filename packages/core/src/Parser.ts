@@ -11,6 +11,9 @@ import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType, CharNode } from './VNodes/CharNode';
 import { ListNode } from './VNodes/ListNode';
 
+const listTags = ['UL', 'OL'];
+const listContextTags = listTags.concat('LI');
+
 interface ParsingContext {
     readonly rootNode?: Node;
     node?: Node;
@@ -156,21 +159,10 @@ export class Parser {
 
         switch (currentContext.node.nodeType) {
             case Node.ELEMENT_NODE: {
-                if (
-                    this._isIndentedList(currentContext.node) &&
-                    !(currentContext.parentVNode instanceof ListNode)
-                ) {
-                    // We're about to parse an indented list, we may need to correct the
-                    // new parentVNode to move up to the parent list (<ol><li>a<ul>...,
-                    // where ul is what we're about to parse, ol is the new parentVNode,
-                    // and the li is essentially what we have as parentVNode before
-                    // correction).
-                    currentContext.parentVNode = currentContext.parentVNode.ancestor(node =>
-                        node.is(ListNode),
-                    );
-                    context = this._parseElementNode(currentContext);
+                if (listTags.includes(currentContext.node.nodeName)) {
+                    context = this._parseList(currentContext);
                 } else if (currentContext.node.nodeName === 'LI') {
-                    context = this._parseListElement(currentContext);
+                    context = this._parseListItem(currentContext);
                 } else {
                     context = this._parseElementNode(currentContext);
                 }
@@ -197,12 +189,29 @@ export class Parser {
         }
         return this._nextParsingContext(context);
     }
+    _parseList(currentContext: ParsingContext): ParsingContext {
+        const parentNode = currentContext.node.parentNode;
+        const parentName = parentNode && parentNode.nodeName;
+        const parentVNode = currentContext.parentVNode;
+        if (listContextTags.includes(parentName) && !parentVNode.is(ListNode)) {
+            // We're about to parse an indented list. In our abstraction, an
+            // indented list is a direct child of its parent list, regardless
+            // of what was already in its <li> parent. So the following example:
+            // <ul><li>abc<ul><li>def</li></ul></li></ul>
+            // when parsed in our abstraction is equivalent to:
+            // <ul><li>abc</li><li><ul><li>def</li></ul></li></ul>
+            // Both will eventually be rendered as the former.
+            // Set the parent to be the list node rather than the list item.
+            currentContext.parentVNode = parentVNode.ancestor(ListNode);
+        }
+        return this._parseElementNode(currentContext);
+    }
     /**
      * Parse a list element (LI).
      *
      * @param context
      */
-    _parseListElement(currentContext: ParsingContext): ParsingContext {
+    _parseListItem(currentContext: ParsingContext): ParsingContext {
         const context = { ...currentContext };
         const children = Array.from(context.node.childNodes);
         // An empty text node as first child should be skipped.
@@ -368,26 +377,6 @@ export class Parser {
      */
     _isEmptyTextNode(node: Node): boolean {
         return node.nodeType === Node.TEXT_NODE && /^\s*$/.test(node.textContent);
-    }
-    /**
-     * Return true if the given DOM node is a list node (OL, UL).
-     *
-     * @param node
-     */
-    _isList(node: Node): boolean {
-        return node.nodeName === 'UL' || node.nodeName === 'OL';
-    }
-    /**
-     * Return true if the given DOM node is an indented list node.
-     *
-     * @param node
-     */
-    _isIndentedList(node: Node): boolean {
-        return (
-            this._isList(node) &&
-            node.parentNode &&
-            (node.parentNode.nodeName === 'LI' || this._isList(node.parentNode))
-        );
     }
     /**
      * Return a position in the `VDocument` as a tuple containing a reference
