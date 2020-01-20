@@ -23,7 +23,6 @@ export class CharNode extends VNode {
             );
         }
         this.char = char;
-        this.name = char;
         this.bold = !!format.bold;
         this.italic = !!format.italic;
         this.underline = !!format.underline;
@@ -43,6 +42,9 @@ export class CharNode extends VNode {
             }
             return vNodes;
         }
+    }
+    get name(): string {
+        return this.char;
     }
     /**
      * Return a new VNode with the same type and attributes as this VNode.

@@ -29,12 +29,10 @@ export class VNode {
     renderingEngines: Record<string, RenderingEngine> = {
         html: BasicHtmlRenderingEngine,
     };
-    name: string;
     _children: VNode[] = [];
 
     constructor() {
         this.type = VNodeType.NODE;
-        this.name = this.constructor.name;
         id++;
     }
     /**
@@ -46,6 +44,9 @@ export class VNode {
         predicate: NodePredicate<T> | typeof VNode,
     ): predicate is Constructor<T> {
         return predicate.prototype instanceof VNode || predicate === VNode;
+    }
+    get name(): string {
+        return this.constructor.name;
     }
     /**
      * @override

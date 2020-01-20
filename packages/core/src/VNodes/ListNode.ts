@@ -35,6 +35,9 @@ export class ListNode extends VElement {
             this.listType = type;
         }
     }
+    get name(): string {
+        return super.name + ': ' + this.listType;
+    }
 
     //--------------------------------------------------------------------------
     // Lifecycle

@@ -5,7 +5,6 @@ export class VElement extends VNode {
     constructor(tagName: string) {
         super();
         this.htmlTag = tagName;
-        this.name = this.constructor.name + ': ' + tagName;
     }
 
     //--------------------------------------------------------------------------
@@ -16,6 +15,10 @@ export class VElement extends VNode {
         if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P'].includes(node.nodeName)) {
             return [new VElement(node.nodeName)];
         }
+    }
+
+    get name(): string {
+        return super.name + ': ' + this.htmlTag;
     }
 
     //--------------------------------------------------------------------------
