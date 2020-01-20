@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../LineBreakNode';
 import { VElement } from '../../core/src/VNodes/VElement';
@@ -8,10 +7,11 @@ import { CharNode } from '../../plugin-char/CharNode';
 import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { LineBreak } from '../LineBreak';
+import { describePlugin } from '../../utils/src/testUtils';
 
 const insertLineBreak = (editor: JWEditor): void => editor.execCommand('insertLineBreak');
 
-describe('plugin-linebreak', () => {
+describePlugin(LineBreak, testEditor => {
     describe('parse', () => {
         it('should not parse a placeholder BR node', async () => {
             const br = document.createElement('br');

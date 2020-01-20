@@ -10,7 +10,7 @@ import { Parser } from '../../core/src/Parser';
 import { CharNode } from '../../plugin-char/CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { Renderer } from '../../core/src/Renderer';
-import { testEditor } from '../../utils/src/testUtils';
+import { describePlugin } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { List, ListParams } from '../List';
@@ -37,7 +37,7 @@ const toggleUnorderedList = (editor: JWEditor): void => {
     editor.execCommand('toggleList', params);
 };
 
-describe('plugin-list', () => {
+describePlugin(List, testEditor => {
     describe('parse', () => {
         const parser = new Parser();
         parser.addParsingFunction(
