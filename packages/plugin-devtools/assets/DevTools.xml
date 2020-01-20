@@ -44,7 +44,7 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <span t-if="props.vNode.type == 'marker'"
+            <span t-if="props.vNode.type == 'markerNode'"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line marker-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
