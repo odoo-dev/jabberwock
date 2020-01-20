@@ -4,6 +4,7 @@ import { Parser } from '../src/Parser';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
 import { LineBreakNode } from '../src/VNodes/LineBreakNode';
 import { VElement } from '../src/VNodes/VElement';
+import { ListNode, ListType } from '../src/VNodes/ListNode';
 
 describe('utils', () => {
     describe('Parser', () => {
@@ -113,8 +114,9 @@ describe('utils', () => {
                     const vDocument = parser.parse(element);
 
                     expect(vDocument.root.children.length).to.equal(1);
-                    const list = vDocument.root.firstChild();
-                    expect(list.toString()).to.equal('ListNode: UL');
+                    const list = vDocument.root.firstChild() as ListNode;
+                    expect(list.toString()).to.equal('ListNode: unordered');
+                    expect(list.listType).to.equal(ListType.UNORDERED);
                     expect(list.children.length).to.equal(4);
 
                     const li0 = list.nthChild(0);
@@ -122,8 +124,9 @@ describe('utils', () => {
                     expect(li0.children.length).to.equal(1);
                     expect(li0.firstChild().toString()).to.equal('a');
 
-                    const li1 = list.nthChild(1);
-                    expect(li1.toString()).to.equal('ListNode: UL');
+                    const li1 = list.nthChild(1) as ListNode;
+                    expect(li1.toString()).to.equal('ListNode: unordered');
+                    expect(li1.listType).to.equal(ListType.UNORDERED);
                     expect(li1.children.length).to.equal(5);
 
                     /* eslint-disable @typescript-eslint/camelcase */
@@ -156,8 +159,9 @@ describe('utils', () => {
                     expect(li1_3.nthChild(1).toString()).to.equal('.');
                     expect(li1_3.nthChild(2).toString()).to.equal('d');
 
-                    const li1_4 = li1.nthChild(4);
-                    expect(li1_4.toString()).to.equal('ListNode: UL');
+                    const li1_4 = li1.nthChild(4) as ListNode;
+                    expect(li1_4.toString()).to.equal('ListNode: unordered');
+                    expect(li1_4.listType).to.equal(ListType.UNORDERED);
                     expect(li1_4.children.length).to.equal(1);
 
                     const li1_4_0 = li1_4.firstChild();
@@ -174,8 +178,9 @@ describe('utils', () => {
                     expect(li2.children.length).to.equal(1);
                     expect(li2.firstChild().toString()).to.equal('b');
 
-                    const li3 = list.nthChild(3);
-                    expect(li3.toString()).to.equal('ListNode: OL');
+                    const li3 = list.nthChild(3) as ListNode;
+                    expect(li3.toString()).to.equal('ListNode: ordered');
+                    expect(li3.listType).to.equal(ListType.ORDERED);
                     expect(li3.children.length).to.equal(4);
 
                     const li3_0 = li3.nthChild(0);

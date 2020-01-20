@@ -1,38 +1,26 @@
-import { VElement } from './VElement';
 import { VNode } from './VNode';
 
 export enum ListType {
     ORDERED = 'ordered',
     UNORDERED = 'unordered',
 }
-const typeToTag = new Map<ListType, string>([[ListType.ORDERED, 'OL'], [ListType.UNORDERED, 'UL']]);
-const tagToType = new Map<string, ListType>(
-    Array.from(typeToTag.keys()).map(type => [typeToTag.get(type), type]),
-);
 
-export class ListNode extends VElement {
+export class ListNode extends VNode {
     listType: ListType;
     constructor(listType: ListType) {
-        super(typeToTag.get(listType));
+        super();
         this.listType = listType;
     }
     static parse(node: Node): ListNode[] {
-        const listType = tagToType.get(node.nodeName);
+        let listType: ListType;
+        if (node.nodeName === 'UL') {
+            listType = ListType.UNORDERED;
+        } else if (node.nodeName === 'OL') {
+            listType = ListType.ORDERED;
+        }
+
         if (listType) {
             return [new ListNode(listType)];
-        }
-    }
-    get htmlTag(): string {
-        return typeToTag.get(this.listType);
-    }
-    set htmlTag(tag: string) {
-        const type = tagToType.get(tag);
-        if (!type) {
-            throw new Error(
-                `Cannot set a ListNode's htmlTag property to "${tag}" ListNodes correspond strictly to "OL" and "UL" elements.`,
-            );
-        } else {
-            this.listType = type;
         }
     }
     get name(): string {
