@@ -23,7 +23,10 @@ export const VDocumentMap = {
      *
      * @param vNode
      */
-    toDom: (vNode: VNode): Node => toDom.get(vNode)[0],
+    toDom: (vNode: VNode): Node => {
+        const nodes = toDom.get(vNode);
+        return nodes && nodes[0];
+    },
     /**
      * Return the DOM location corresponding to the given VNode as a tuple
      * containing a reference DOM Node and the offset of the DOM Node

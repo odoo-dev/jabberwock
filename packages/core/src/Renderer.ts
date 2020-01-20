@@ -1,13 +1,15 @@
 import { VDocumentMap } from './VDocumentMap';
 import { VDocument } from './VDocument';
-import { VNode, RelativePosition, isMarker } from './VNodes/VNode';
+import { VNode, RelativePosition, isMarker, NodePredicate } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VSelection, Direction } from './VSelection';
 import { CharNode } from './VNodes/CharNode';
-import { ListNode } from './VNodes/ListNode';
+import { ListNode, ListType } from './VNodes/ListNode';
+import { VElement } from './VNodes/VElement';
 
-interface RenderingContext {
-    currentVNode?: VNode; // Current VNode rendered at this step.
+interface RenderingContext<T extends VNode = VNode> {
+    root: VNode; // Root VNode of the current rendering.
+    currentVNode?: T; // Current VNode rendered at this step.
     parentNode?: Node | DocumentFragment; // Node to render the VNode into.
 }
 
@@ -22,26 +24,38 @@ export class Renderer {
      * @param root
      * @param target
      */
-    render(vDocument: VDocument, target: Element): void {
-        const root = vDocument.root;
-        const selection = vDocument.selection;
-        target.innerHTML = ''; // TODO: update instead of recreate
-        const fragment: DocumentFragment = document.createDocumentFragment();
-        VDocumentMap.clear(); // TODO: update instead of recreate
-        VDocumentMap.set(root, fragment);
+    render(content: VDocument | VNode, target: Element): void {
+        const root = content instanceof VDocument ? content.root : content;
+        if (content instanceof VDocument) {
+            // TODO: the map should be on the VDocument.
+            VDocumentMap.clear(); // TODO: update instead of recreate
+            const fragment = document.createDocumentFragment();
+            VDocumentMap.set(root, fragment);
+            target.innerHTML = ''; // TODO: update instead of recreate
+        }
+
+        // Don't render `root` itself if already rendered, render its children.
+        const renderedRoot = VDocumentMap.toDom(root);
+        const parentNode = renderedRoot ? renderedRoot : target;
+        const firstVNode = renderedRoot ? root.firstChild() : root;
 
         if (root.hasChildren()) {
             let context: RenderingContext = {
-                currentVNode: root.firstChild(),
-                parentNode: fragment,
+                root: root,
+                currentVNode: firstVNode,
+                parentNode: parentNode,
             };
             do {
                 context = this._renderVNode(context);
             } while ((context = this._nextRenderingContext(context)));
         }
-        target.appendChild(fragment);
 
-        this._renderSelection(selection, target);
+        if (content instanceof VDocument) {
+            // Append the fragment corresponding to the VDocument to `target`.
+            target.appendChild(renderedRoot);
+            VDocumentMap.set(root, target);
+            this._renderSelection(content.selection, target);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -90,10 +104,10 @@ export class Renderer {
             // Render the next ancestor sibling in the ancestor tree.
             let ancestor = vNode.parent;
             // Climb up the ancestor tree to the first parent having a sibling.
-            while (ancestor && !ancestor.nextSibling()) {
+            while (ancestor && !ancestor.nextSibling() && ancestor != context.root) {
                 ancestor = ancestor.parent;
             }
-            if (ancestor) {
+            if (ancestor && ancestor != context.root) {
                 // At this point, the found ancestor has a sibling.
                 context.currentVNode = ancestor.nextSibling();
                 context.parentNode = VDocumentMap.toDom(ancestor.parent) as Element;
@@ -112,26 +126,8 @@ export class Renderer {
      */
     _renderElement(context: RenderingContext): RenderingContext {
         const fragment = context.currentVNode.render<DocumentFragment>('html');
-        const isInList = context.currentVNode.parent instanceof ListNode;
         Array.from(fragment.childNodes).forEach((element: Node): void => {
-            if (isInList) {
-                let li = document.createElement('li') as Node;
-                const isList = element.nodeName === 'UL' || element.nodeName === 'OL';
-                if (isList && context.parentNode.hasChildNodes()) {
-                    // Render an indented list in the list item that precedes it
-                    // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
-                    li = context.parentNode.childNodes[context.parentNode.childNodes.length - 1];
-                }
-                if (element.nodeName === 'P') {
-                    element.childNodes.forEach(child => li.appendChild(child));
-                    element = li;
-                } else {
-                    li.appendChild(element);
-                }
-                context.parentNode.appendChild(li);
-            } else {
-                context.parentNode.appendChild(element);
-            }
+            context.parentNode.appendChild(element);
             VDocumentMap.set(context.currentVNode, element);
             element.childNodes.forEach(child => VDocumentMap.set(context.currentVNode, child));
         });
@@ -247,9 +243,68 @@ export class Renderer {
     _renderVNode(context: RenderingContext): RenderingContext {
         if (context.currentVNode.is(CharNode)) {
             context = this._renderTextNode(context);
+        } else if (this._match(context, ListNode)) {
+            context = this._renderListNode(context);
         } else {
             context = this._renderElement(context);
         }
         return context;
+    }
+
+    /**
+     * Return whether the current VNode of the given rendering context matches
+     * the given predicate.
+     *
+     * @param context
+     * @param predicate
+     */
+    _match<T extends VNode>(
+        context: RenderingContext,
+        predicate: NodePredicate<T>,
+    ): context is RenderingContext<T> {
+        return context.currentVNode.test(predicate);
+    }
+
+    /**
+     * Render the ListNode in currentContext.
+     *
+     * @param currentContext
+     */
+    _renderListNode(currentContext: RenderingContext<ListNode>): RenderingContext {
+        const currentVNode = currentContext.currentVNode;
+        const tag = currentVNode.listType === ListType.ORDERED ? 'OL' : 'UL';
+        const domListNode = document.createElement(tag);
+        currentContext.parentNode.appendChild(domListNode);
+        VDocumentMap.set(currentVNode, domListNode);
+        // The ListNode has to handle the rendering of its direct children by
+        // itself since some of them are rendered inside "LI" nodes while others
+        // are rendered *as* "LI" nodes.
+        Array.from(currentVNode.children).forEach((listItem: VNode) => {
+            // Check if previous "LI" can be reused or create a new one.
+            let liNode: Element;
+            if (listItem.is(ListNode) && domListNode.children.length) {
+                // Render an indented list in the list item that precedes it.
+                // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
+                liNode = domListNode.children[domListNode.children.length - 1];
+            } else {
+                liNode = document.createElement('li');
+                domListNode.appendChild(liNode);
+            }
+
+            // Direct ListNode's VElement children "P" are rendered as "LI"
+            // while other nodes will be rendered inside the "LI".
+            if (listItem.is(VElement) && listItem.htmlTag === 'P') {
+                // Mark the "P" as rendered by the "LI".
+                VDocumentMap.set(listItem, liNode);
+                // TODO: this should be generic.
+                if (!listItem.hasChildren()) {
+                    liNode.appendChild(document.createElement('BR'));
+                }
+            }
+            // Call the generic rendering for grandchildren.
+            this.render(listItem, liNode);
+        });
+        // Mark the ListNode as completely rendered up to its last leaf.
+        return { ...currentContext, currentVNode: currentVNode.lastLeaf() };
     }
 }
