@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
+import { describePlugin } from '../../utils/src/testUtils';
 
 const insertText = function(editor, text: string): void {
     const params: InsertTextParams = {
@@ -21,7 +21,7 @@ const applyFormat = (editor: JWEditor, format: 'bold' | 'italic' | 'underline'):
     editor.execCommand('applyFormat', formatParams);
 };
 
-describe('plugin-char', () => {
+describePlugin(Char, testEditor => {
     describe('parse', () => {
         it('should parse a textNode', async () => {
             const text = document.createTextNode('abc');

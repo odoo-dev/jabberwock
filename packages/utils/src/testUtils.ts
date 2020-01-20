@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
+import { JWPlugin } from '../../core/src/JWPlugin';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -11,41 +12,112 @@ export interface TestEditorSpec {
     debug?: boolean;
 }
 
+export type EditorTestSuite = (tesEditor: (spec: TestEditorSpec) => Promise<void>) => void;
+
 /**
- * Test the editor
+ * Describe the given plugin by the given test suite callback. The test suite
+ * callback will be called with a `testEditor` argument which has the same
+ * signature as the classic `testEditor` but will automatically be loaded with
+ * the described plugin.
+ *
+ * Example:
+ * describePlugin(PluginClass, testEditor => {
+ *     // The JWEditor instance will have the described plugin installed.
+ *     testEditor({
+ *         // test specs
+ *     });
+ *     // The EditorClass instance will have the described plugin installed.
+ *     testEditor(EditorClass, {
+ *         // test specs
+ *     });
+ * });
+ *
+ * @param Plugin
+ * @param callback
+ */
+export function describePlugin(Plugin: typeof JWPlugin, callback: EditorTestSuite): void {
+    const testEditor = testPlugin.bind(this, Plugin);
+    describe('Plugin: ' + Plugin.name, callback.bind(this, testEditor));
+}
+
+/**
+ * Automatically spawn a new editor to test the given spec.
  *
  * @param spec
  */
 export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec): Promise<void> {
-    const wrapper = document.createElement('p');
-    wrapper.innerHTML = spec.contentBefore;
-    const selection = _parseTextualSelection(wrapper);
-    document.body.appendChild(wrapper);
+    const container = document.createElement('p');
+    const editor = initSpec(Editor, spec, container);
+    await testSpec(editor, spec);
+    container.remove();
+}
+
+/**
+ * Automatically spawn a new editor with given plugin to test the given spec.
+ *
+ * @param Plugin
+ * @param spec
+ */
+async function testPlugin(
+    Plugin: typeof JWPlugin,
+    Editor: typeof JWEditor,
+    spec: TestEditorSpec,
+): Promise<void> {
+    const container = document.createElement('p');
+    const editor = initSpec(Editor, spec, container);
+    editor.addPlugin(Plugin);
+    await testSpec(editor, spec);
+    container.remove();
+}
+
+/**
+ * Init a new editor with the given spec in the given test container.
+ *
+ * @param container
+ * @param spec
+ */
+function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTMLElement): JWEditor {
+    container.innerHTML = spec.contentBefore;
+    const selection = _parseTextualSelection(container);
+    document.body.appendChild(container);
     if (selection) {
         _setSelection(selection);
     }
+    return new Editor(container);
+}
 
-    const editor = new Editor(wrapper);
-    editor.loadConfig({ debug: spec.debug });
+/**
+ * Test the given spec on the given editor.
+ *
+ * @param editor
+ * @param spec
+ */
+async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
+    // Forward debug mode from the spec to the editor.
+    editor.loadConfig({
+        debug: spec.debug,
+    });
+
+    // Start the editor and execute the step code.
     await editor.start();
     if (spec.stepFunction) {
         spec.stepFunction(editor);
     }
-    if (selection) {
-        _renderTextualSelection();
-    }
+
+    // Render the selection in the test container and test the result.
+    _renderTextualSelection();
     if (spec.contentAfter) {
         expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
     }
-
     editor.stop();
-    wrapper.remove();
 }
 
 /**
  * Return a description of a selection from analysing the position of the
  * characters representing the selection within a test container.
  * Parsing the selection removes these characters from the test container.
+ *
+ * @param testContainer
  */
 function _parseTextualSelection(testContainer: Node): DomSelectionDescription {
     let anchorNode: Node;
@@ -169,6 +241,7 @@ function _nextNode(node: Node): Node {
  */
 function _renderTextualSelection(): void {
     const selection = document.getSelection();
+    if (selection.rangeCount === 0) return;
 
     const anchor = _targetDeepest(selection.anchorNode, selection.anchorOffset);
     const focus = _targetDeepest(selection.focusNode, selection.focusOffset);
