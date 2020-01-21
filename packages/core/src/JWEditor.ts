@@ -11,6 +11,7 @@ import { DevTools } from '../../plugin-devtools/src/DevTools';
 export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
+    plugins?: Array<typeof JWPlugin>;
 }
 
 export class JWEditor {
@@ -121,6 +122,9 @@ export class JWEditor {
         if (config.debug) {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
+        }
+        if (config.plugins) {
+            config.plugins.forEach(pluginClass => this.addPlugin(pluginClass));
         }
     }
 
