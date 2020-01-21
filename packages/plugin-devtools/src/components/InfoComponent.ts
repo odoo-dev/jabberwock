@@ -98,7 +98,11 @@ export class InfoComponent extends OwlUIComponent<{}> {
         const prevSibling = vNode.previousSibling();
         const position = nextSibling ? 'BEFORE' : prevSibling ? 'AFTER' : 'INSIDE';
         const reference = nextSibling || prevSibling || vNode.parent;
-        return `${position} ${reference.id} (${reference.name})`;
+        if (reference) {
+            return `${position} ${reference.id} (${reference.name})`;
+        } else {
+            return 'Not in VDocument';
+        }
     }
     /**
      * Return a string representing the contents of a property of a VNode.

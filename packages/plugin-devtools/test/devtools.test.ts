@@ -352,7 +352,7 @@ describe('plugin-devtools', () => {
                 clientY: pos.top,
             });
 
-            const node = devtools.querySelector('devtools-node.element.folded');
+            const node = devtools.querySelectorAll('devtools-node.element.folded')[1];
             const name = node.querySelector('.element-name');
             const namePos = name.getBoundingClientRect();
             await click(name, {

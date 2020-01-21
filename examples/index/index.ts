@@ -6,6 +6,7 @@ const editor = new BasicEditor();
 jabberwocky.init(editor.editable);
 
 editor.loadConfig({
+    autoFocus: true,
     debug: true,
 });
 

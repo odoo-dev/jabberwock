@@ -9,6 +9,7 @@ import { Parser } from './Parser';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 
 export interface JWEditorConfig {
+    autoFocus?: boolean;
     debug?: boolean;
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
@@ -23,6 +24,7 @@ export class JWEditor {
     pluginsRegistry: JWPlugin[];
     renderer: Renderer;
     vDocument: VDocument;
+    autoFocus = false;
     debugger: OwlUI;
     parser = new Parser();
 
@@ -56,6 +58,13 @@ export class JWEditor {
     async start(): Promise<void> {
         // Parse the editable in the internal format of the editor.
         this.vDocument = this.parser.parse(this._originalEditable);
+
+        if (
+            this.autoFocus &&
+            (!this.vDocument.selection.anchor.parent || !this.vDocument.selection.focus.parent)
+        ) {
+            this.vDocument.selection.setAt(this.vDocument.root);
+        }
 
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
@@ -119,6 +128,9 @@ export class JWEditor {
      * @param config
      */
     loadConfig(config: JWEditorConfig): void {
+        if (config.autoFocus) {
+            this.autoFocus = config.autoFocus;
+        }
         if (config.debug) {
             this.debugger = new OwlUI(this);
             this.debugger.addPlugin(DevTools);
