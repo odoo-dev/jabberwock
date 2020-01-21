@@ -8,10 +8,8 @@ import { List } from '../packages/plugin-list/List';
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
         super(editable);
-        this.addPlugin(Char);
-        this.addPlugin(LineBreak);
-        this.addPlugin(Heading);
-        this.addPlugin(Paragraph);
-        this.addPlugin(List);
+        this.loadConfig({
+            plugins: [Char, LineBreak, Heading, Paragraph, List],
+        });
     }
 }
