@@ -190,6 +190,7 @@ export class Renderer {
      * @param target
      */
     _renderSelection(selection: VSelection, target: Element): void {
+        if (!selection.anchor.parent || !selection.focus.parent) return;
         const [anchorNode, anchorOffset] = this._getDomLocation(selection.anchor);
         const [focusNode, focusOffset] = this._getDomLocation(selection.focus);
         const domRange = target.ownerDocument.createRange();

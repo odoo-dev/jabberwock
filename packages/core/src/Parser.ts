@@ -133,11 +133,6 @@ export class Parser {
             vDocument.selection.set(this.parseSelection(selection));
         }
 
-        // Set a default selection in VDocument if none was set yet.
-        if (!vDocument.selection.anchor.parent || !vDocument.selection.focus.parent) {
-            vDocument.selection.setAt(vDocument.root);
-        }
-
         return vDocument;
     }
     /**
