@@ -39,8 +39,18 @@ export class OwlUI {
      *
      */
     async start(): Promise<void> {
-        for (let i = 0; i < this.pluginsRegistry.length; i++) {
-            await this.pluginsRegistry[i].start();
+        for (const plugin of this.pluginsRegistry) {
+            await plugin.start();
+        }
+    }
+
+    /**
+     * Stop the Owl UI by starting all its registered plugins.
+     *
+     */
+    async stop(): Promise<void> {
+        for (const plugin of this.pluginsRegistry) {
+            await plugin.stop();
         }
     }
 }
