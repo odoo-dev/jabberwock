@@ -25,8 +25,19 @@ export class JWOwlUIPlugin {
 
         // Mount components.
         const target: HTMLElement = this.env.editor.el;
-        for (let i = 0; i < this.components.length; i++) {
-            await this.components[i].mount(target);
+        for (const component of this.components) {
+            await component.mount(target);
+        }
+    }
+
+    /**
+     * Unmount all of a plugin's Components to Owl.
+     * Return a promise that resolves to the mounted components.
+     *
+     */
+    async stop(): Promise<void> {
+        for (const component of this.components) {
+            await component.unmount();
         }
     }
 }

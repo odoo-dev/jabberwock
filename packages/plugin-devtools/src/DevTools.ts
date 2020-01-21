@@ -1,10 +1,20 @@
-import { DevToolsComponent } from './components/DevToolsComponent';
-import { JWOwlUIPlugin } from '../../owl-ui/src/JWOwlUIPlugin';
-import devtoolsTemplates from '../assets/DevTools.xml';
-import { OwlUIComponent } from '../../owl-ui/src/OwlUIComponent';
-import '../assets/DevTools.css';
+import { JWPlugin } from '../../core/src/JWPlugin';
+import { OwlUI } from '../../owl-ui/src/OwlUI';
+import { DevToolsUI } from './DevToolsUI';
 
-export class DevTools extends JWOwlUIPlugin {
-    static templates = devtoolsTemplates;
-    Components = [DevToolsComponent as typeof OwlUIComponent];
+export class DevTools extends JWPlugin {
+    ui = new OwlUI(this.editor);
+    /**
+     * Start the ui when the editor stops.
+     */
+    async start(): Promise<void> {
+        this.ui.addPlugin(DevToolsUI);
+        await this.ui.start();
+    }
+    /**
+     * Stop the ui when the editor stops.
+     */
+    async stop(): Promise<void> {
+        await this.ui.stop();
+    }
 }

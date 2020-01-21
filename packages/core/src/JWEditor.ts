@@ -3,10 +3,8 @@ import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { Renderer } from './Renderer';
 import { VDocument } from './VDocument';
-import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
-import { DevTools } from '../../plugin-devtools/src/DevTools';
 
 export interface JWEditorConfig {
     autoFocus?: boolean;
@@ -25,7 +23,6 @@ export class JWEditor {
     renderer: Renderer;
     vDocument: VDocument;
     autoFocus = false;
-    debugger: OwlUI;
     parser = new Parser();
 
     constructor(editable?: HTMLElement) {
@@ -87,14 +84,14 @@ export class JWEditor {
         // between the core commands and the VDocument.
         this.addPlugin(CorePlugin);
 
+        for (const plugin of this.pluginsRegistry) {
+            await plugin.start();
+        }
+
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this);
 
         this.renderer.render(this.vDocument, this.editable);
-
-        if (this.debugger) {
-            await this.debugger.start();
-        }
     }
 
     //--------------------------------------------------------------------------
@@ -131,10 +128,6 @@ export class JWEditor {
         if (config.autoFocus) {
             this.autoFocus = config.autoFocus;
         }
-        if (config.debug) {
-            this.debugger = new OwlUI(this);
-            this.debugger.addPlugin(DevTools);
-        }
         if (config.plugins) {
             config.plugins.forEach(pluginClass => this.addPlugin(pluginClass));
         }
@@ -154,7 +147,10 @@ export class JWEditor {
     /**
      * Stop this editor instance.
      */
-    stop(): void {
+    async stop(): Promise<void> {
+        for (const plugin of this.pluginsRegistry) {
+            await plugin.stop();
+        }
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();

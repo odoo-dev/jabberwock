@@ -19,4 +19,20 @@ export class JWPlugin {
         // todo: namespace
         this.name = options.name || this.constructor.name;
     }
+
+    /**
+     * Start the plugin. Called when the editor starts.
+     */
+    async start(): Promise<void> {
+        // This is where plugins can do asynchronous work when the editor is
+        // starting (e.g. retrieve data from a server, render stuff, etc).
+    }
+
+    /**
+     * Stop the plugin. Called when the editor stops.
+     */
+    async stop(): Promise<void> {
+        // This is where plugins can do asynchronous work when the editor is
+        // stopping (e.g. save on a server, close connections, etc).
+    }
 }

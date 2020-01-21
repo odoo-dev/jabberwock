@@ -4,6 +4,7 @@ import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 import { JWPlugin } from '../../core/src/JWPlugin';
+import { DevTools } from '../../plugin-devtools/src/DevTools';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -115,9 +116,9 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
  */
 async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     // Forward debug mode from the spec to the editor.
-    editor.loadConfig({
-        debug: spec.debug,
-    });
+    if (spec.debug) {
+        editor.addPlugin(DevTools);
+    }
 
     // Start the editor and execute the step code.
     await editor.start();

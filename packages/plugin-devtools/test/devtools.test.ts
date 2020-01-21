@@ -2,13 +2,14 @@
 import { expect } from 'chai';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
+import { DevTools } from '../src/DevTools';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
 
 async function openDevTools(devtools: HTMLElement): Promise<void> {
     await click(devtools.querySelector('devtools-navbar'));
 }
 
-describe('plugin-devtools', () => {
+describe('Plugin: DevTools', () => {
     let wrapper: HTMLElement;
     let devtools: HTMLElement;
     let editor: BasicEditor;
@@ -31,9 +32,7 @@ describe('plugin-devtools', () => {
         });
 
         editor = new BasicEditor(root);
-        editor.loadConfig({
-            debug: true,
-        });
+        editor.addPlugin(DevTools);
 
         await editor.start();
 
