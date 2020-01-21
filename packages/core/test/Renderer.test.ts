@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { createBasicEditor } from '../../bundles/basic';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Renderer } from '../src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
 import { CharNode } from '../../plugin-char/CharNode';
@@ -12,7 +12,7 @@ describe('utils', () => {
                 element.innerHTML = 'a';
                 document.body.appendChild(element);
 
-                const editor = createBasicEditor(element);
+                const editor = new BasicEditor(element);
                 editor.start();
                 editor.vDocument.root.append(new CharNode(' '));
                 editor.vDocument.root.append(new CharNode(' '));
@@ -30,7 +30,7 @@ describe('utils', () => {
                 element.innerHTML = 'a';
                 document.body.appendChild(element);
 
-                const editor = createBasicEditor(element);
+                const editor = new BasicEditor(element);
                 editor.start();
                 editor.vDocument.root.append(new CharNode(' '));
                 editor.vDocument.root.append(new CharNode(' '));

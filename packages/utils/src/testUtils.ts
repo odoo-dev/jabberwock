@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { RANGE_HEAD_CHAR, RANGE_TAIL_CHAR, Direction } from './range';
 import { DomRangeDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
-import { createBasicEditor } from '../../bundles/basic';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -26,7 +26,8 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
         _setRange(rangeDescription);
     }
 
-    const editor = createBasicEditor(wrapper, { debug: spec.debug });
+    const editor = new BasicEditor(wrapper);
+    editor.loadConfig({ debug: spec.debug });
     await editor.start();
     if (spec.stepFunction) {
         spec.stepFunction(editor);

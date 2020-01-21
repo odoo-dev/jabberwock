@@ -1,9 +1,8 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import JWEditor from '../../core/src/JWEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
-import { createBasicEditor } from '../../bundles/basic';
 
 async function openDevTools(devtools: HTMLElement): Promise<void> {
     await click(devtools.querySelector('devtools-navbar'));
@@ -12,7 +11,7 @@ async function openDevTools(devtools: HTMLElement): Promise<void> {
 describe('plugin-devtools', () => {
     let wrapper: HTMLElement;
     let devtools: HTMLElement;
-    let editor: JWEditor;
+    let editor: BasicEditor;
 
     beforeEach(async () => {
         wrapper = document.createElement('test-wrapper');
@@ -31,7 +30,8 @@ describe('plugin-devtools', () => {
             }
         });
 
-        editor = createBasicEditor(root, {
+        editor = new BasicEditor(root);
+        editor.loadConfig({
             debug: true,
         });
 
