@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import JWEditor from '../src/JWEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Renderer } from '../src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
 import { CharNode } from '../src/VNodes/CharNode';
@@ -14,7 +15,7 @@ describe('utils', () => {
                 element.innerHTML = 'a';
                 document.body.appendChild(element);
 
-                const editor = new JWEditor(element);
+                const editor = new BasicEditor(element);
                 editor.start();
                 editor.vDocument.root.append(new CharNode(' '));
                 editor.vDocument.root.append(new CharNode(' '));
@@ -32,7 +33,7 @@ describe('utils', () => {
                 element.innerHTML = 'a';
                 document.body.appendChild(element);
 
-                const editor = new JWEditor(element);
+                const editor = new BasicEditor(element);
                 editor.start();
                 editor.vDocument.root.append(new CharNode(' '));
                 editor.vDocument.root.append(new CharNode(' '));
