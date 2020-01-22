@@ -51,30 +51,30 @@ describe('utils', () => {
         describe('selection', () => {
             it('should render textual selection at the beginning', async () => {
                 const content = `<p>[a]bc</p>`;
-                await testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor(BasicEditor, { contentBefore: content, contentAfter: content });
             });
             it('should render textual selection at the end', async () => {
                 const content = `<p>ab[c]</p>`;
-                await testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor(BasicEditor, { contentBefore: content, contentAfter: content });
             });
             it('should render textual selection in the whole tag', async () => {
                 const content = `<p>[abc]</p>`;
-                await testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor(BasicEditor, { contentBefore: content, contentAfter: content });
             });
             it('should render textual selection that is collapsed in the beginning', async () => {
                 const content = `<p>[]abc</p>`;
-                await testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor(BasicEditor, { contentBefore: content, contentAfter: content });
             });
             it('should render textual selection that is collapsed in the end', async () => {
                 const content = `<p>abc[]</p>`;
-                await testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor(BasicEditor, { contentBefore: content, contentAfter: content });
             });
             it('should render textual selection that is collapsed in the middle', async () => {
                 const content = `<p>ab[]c</p>`;
-                await testEditor({ contentBefore: content, contentAfter: content });
+                await testEditor(BasicEditor, { contentBefore: content, contentAfter: content });
             });
             it('should render the selection outside the tag', async () => {
-                await testEditor({
+                await testEditor(BasicEditor, {
                     contentBefore: '<p>[<b>a</b>]</p>',
                     contentAfter: '<p><b>[a]</b></p>',
                 });

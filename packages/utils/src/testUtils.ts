@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
-import { BasicEditor } from '../../../bundles/BasicEditor';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -17,7 +16,7 @@ export interface TestEditorSpec {
  *
  * @param spec
  */
-export async function testEditor(spec: TestEditorSpec): Promise<void> {
+export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec): Promise<void> {
     const wrapper = document.createElement('p');
     wrapper.innerHTML = spec.contentBefore;
     const selection = _parseTextualSelection(wrapper);
@@ -26,7 +25,7 @@ export async function testEditor(spec: TestEditorSpec): Promise<void> {
         _setSelection(selection);
     }
 
-    const editor = new BasicEditor(wrapper);
+    const editor = new Editor(wrapper);
     editor.loadConfig({ debug: spec.debug });
     await editor.start();
     if (spec.stepFunction) {

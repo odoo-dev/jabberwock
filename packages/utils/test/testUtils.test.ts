@@ -4,6 +4,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { CharNode } from '../../core/src/VNodes/CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 
 describe('core', () => {
     describe('utils', () => {
@@ -12,19 +13,19 @@ describe('core', () => {
                 it('content should be the same (without range)', async () => {
                     let content;
                     content = 'a';
-                    await testEditor({
+                    await testEditor(BasicEditor, {
                         contentBefore: content,
                         contentAfter: content,
                     });
 
                     content = '<b>a</b>';
-                    await testEditor({
+                    await testEditor(BasicEditor, {
                         contentBefore: content,
                         contentAfter: content,
                     });
                 });
                 it('should parse with range', () => {
-                    testEditor({
+                    testEditor(BasicEditor, {
                         contentBefore: '<p>[a]</p>',
                         stepFunction: (editor: JWEditor) => {
                             const vDocument = editor.vDocument;

@@ -9,6 +9,7 @@ import { withMarkers } from '../../utils/src/markers';
 import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 
 describe('core', () => {
     describe('src', () => {
@@ -1135,7 +1136,7 @@ describe('core', () => {
                 });
                 describe('ancestors', () => {
                     it('should get a list of all ancestors of the node', async () => {
-                        await testEditor({
+                        await testEditor(BasicEditor, {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const a = editor.vDocument.root.firstLeaf();
@@ -1149,7 +1150,7 @@ describe('core', () => {
                         });
                     });
                     it('should get a list of all ancestors of the node satisfying the predicate', async () => {
-                        await testEditor({
+                        await testEditor(BasicEditor, {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const a = editor.vDocument.root.firstLeaf();
@@ -1166,7 +1167,7 @@ describe('core', () => {
                 });
                 describe('descendants', () => {
                     it('should get a list of all descendants of the root node ', async () => {
-                        await testEditor({
+                        await testEditor(BasicEditor, {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const descendants = editor.vDocument.root.descendants();
@@ -1183,7 +1184,7 @@ describe('core', () => {
                         });
                     });
                     it('should get a list of all non-HEADING2 descendants of the root node ', async () => {
-                        await testEditor({
+                        await testEditor(BasicEditor, {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const descendants = editor.vDocument.root.descendants(
