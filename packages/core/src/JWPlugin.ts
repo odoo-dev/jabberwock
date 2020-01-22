@@ -7,6 +7,7 @@ export interface JWPluginConfig {
 }
 
 export class JWPlugin {
+    static readonly dependencies: Array<typeof JWPlugin> = [];
     static readonly parsingFunctions: Array<ParsingFunction> = [];
     name: string;
     editor: JWEditor;
