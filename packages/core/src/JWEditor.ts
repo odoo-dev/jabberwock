@@ -19,7 +19,7 @@ export class JWEditor {
     editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
-    pluginsRegistry: JWPlugin[];
+    plugins: JWPlugin[];
     renderer: Renderer;
     vDocument: VDocument;
     autoFocus = false;
@@ -31,7 +31,7 @@ export class JWEditor {
         // We need to guarantee it's a block so it can contain other blocks.
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
-        this.pluginsRegistry = [];
+        this.plugins = [];
 
         // Render the contents of `vDocument`
         this.renderer = new Renderer();
@@ -84,7 +84,7 @@ export class JWEditor {
         // between the core commands and the VDocument.
         this.addPlugin(CorePlugin);
 
-        for (const plugin of this.pluginsRegistry) {
+        for (const plugin of this.plugins) {
             await plugin.start();
         }
 
@@ -99,24 +99,46 @@ export class JWEditor {
     //--------------------------------------------------------------------------
 
     /**
-     * Add the given plugin class to this editor instance.
+     * Load the given plugin into this editor instance.
      *
-     * @param pluginClass
+     * @param Plugin
      */
-    addPlugin(pluginClass: typeof JWPlugin): void {
-        const plugin: JWPlugin = new pluginClass(this);
-        this.pluginsRegistry.push(plugin);
-        // Register the commands of this plugin.
-        Object.keys(plugin.commands).forEach(key => {
-            this.dispatcher.registerCommand(key, plugin.commands[key]);
-        });
-        // Register the hooks of this plugin.
-        Object.keys(plugin.commandHooks).forEach(key => {
-            this.dispatcher.registerHook(key, plugin.commandHooks[key]);
-        });
-        // Register the parsing functions of this plugin.
-        if (pluginClass.parsingFunctions.length) {
-            this.parser.addParsingFunction(...pluginClass.parsingFunctions);
+    addPlugin(Plugin: typeof JWPlugin): void {
+        // Resolve dependencies.
+        const pluginsToLoad = [Plugin];
+        let offset = 1;
+        while (offset <= pluginsToLoad.length) {
+            const Plugin = pluginsToLoad[pluginsToLoad.length - offset];
+            if (this.plugins.find(plugin => plugin instanceof Plugin)) {
+                // Protect against loading the same plugin twice.
+                pluginsToLoad.splice(pluginsToLoad.length - offset, 1);
+            } else {
+                // Add new dependencies to check.
+                for (const dependency of Plugin.dependencies) {
+                    if (!pluginsToLoad.includes(dependency)) {
+                        pluginsToLoad.unshift(dependency);
+                    }
+                }
+                offset++;
+            }
+        }
+
+        // Load plugins.
+        for (const pluginClass of pluginsToLoad) {
+            const plugin: JWPlugin = new pluginClass(this);
+            this.plugins.push(plugin);
+            // Register the commands of this plugin.
+            Object.keys(plugin.commands).forEach(key => {
+                this.dispatcher.registerCommand(key, plugin.commands[key]);
+            });
+            // Register the hooks of this plugin.
+            Object.keys(plugin.commandHooks).forEach(key => {
+                this.dispatcher.registerHook(key, plugin.commandHooks[key]);
+            });
+            // Register the parsing functions of this plugin.
+            if (pluginClass.parsingFunctions.length) {
+                this.parser.addParsingFunction(...pluginClass.parsingFunctions);
+            }
         }
     }
     /**
@@ -148,7 +170,7 @@ export class JWEditor {
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
-        for (const plugin of this.pluginsRegistry) {
+        for (const plugin of this.plugins) {
             await plugin.stop();
         }
         this._originalEditable.id = this.editable.id;
