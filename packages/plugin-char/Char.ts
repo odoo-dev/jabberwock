@@ -3,7 +3,14 @@ import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser'
 import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
-import { FormatParams, InsertTextParams } from '../core/src/CorePlugin';
+import { RangeParams } from '../core/src/CorePlugin';
+
+export interface InsertTextParams extends RangeParams {
+    text: string;
+}
+export interface FormatParams extends RangeParams {
+    format: 'bold' | 'italic' | 'underline';
+}
 
 export class Char extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [Char.parse];

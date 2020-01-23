@@ -1,6 +1,6 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { FormatParams, InsertTextParams } from '../src/CorePlugin';
+import { FormatParams, InsertTextParams } from '../../plugin-char/Char';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
