@@ -72,9 +72,9 @@ export class Parser {
         // If the node could not be parsed, create a generic element node with
         // the HTML tag of the DOM Node. This way we may not support the node
         // but we don't break it either.
-        const parsingMap = new Map([
-            [new VElement(currentContext.currentNode.nodeName), [currentContext.currentNode]],
-        ]);
+        const parsedNode = new VElement(currentContext.currentNode.nodeName);
+        const parsingMap = new Map([[parsedNode, [currentContext.currentNode]]]);
+        currentContext.parentVNode.append(parsedNode);
         return [context, parsingMap];
     }
     /**
@@ -169,7 +169,7 @@ export class Parser {
     /**
      * Parse a list node.
      */
-    _parseList(currentContext: ParsingContext): ParsingContext {
+    _parseList(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
         const parentNode = currentContext.currentNode.parentNode;
         const parentName = parentNode && parentNode.nodeName;
         const parentVNode = currentContext.parentVNode;
@@ -184,63 +184,62 @@ export class Parser {
             // Set the parent to be the list node rather than the list item.
             currentContext.parentVNode = parentVNode.ancestor(ListNode);
         }
-        return currentContext;
+        return this.parseNode(currentContext);
     }
     /**
      * Parse a list element (LI).
      *
      * @param context
      */
-    _parseListItem(currentContext: ParsingContext): ParsingContext {
+    _parseListItem(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
         const context = { ...currentContext };
         const children = Array.from(context.currentNode.childNodes);
+        const parsingMap: ParsingMap = new Map();
         // An empty text node as first child should be skipped.
         while (children.length && this._isEmptyTextNode(children[0])) {
             children.shift();
         }
         // A list item with no children should be skipped.
         if (!children.length) {
-            return context;
+            return [context, parsingMap];
         }
         // A list item containing only a BR should be replaced with an
         // empty paragraph.
         if (children.length === 1 && children[0].nodeName === 'BR') {
             const paragraph = new ParagraphNode(); // todo: remove reference to plugin
             context.parentVNode.append(paragraph);
-            VDocumentMap.set(paragraph, context.currentNode);
-            VDocumentMap.set(paragraph, children[0]);
+            parsingMap.set(paragraph, [context.currentNode, children[0]]);
             this._contextStack.push({ ...context }); // todo: find a better way
-            return { ...context, currentNode: children[0] };
+            return [{ ...context, currentNode: children[0] }, parsingMap];
         }
         // Inline elements in a list item should be wrapped in a paragraph.
         if (!utils.isBlock(children[0]) || children[0].nodeName === 'BR') {
             const paragraph = new ParagraphNode(); // todo: remove reference to plugin
             context.parentVNode.append(paragraph);
             context.parentVNode = paragraph;
-            VDocumentMap.set(paragraph, context.currentNode);
+            parsingMap.set(paragraph, [context.currentNode]);
         }
         // Now we can move on to the list item's contents, to be added to
         // the paragraph created above, or to the list itself in the case of
         // blocks.
-        return context;
+        return [context, parsingMap];
     }
     /**
      * Parse a node depending on its DOM type.
      */
     _parseOne(currentContext: ParsingContext): ParsingContext {
+        let parseResult;
         if (listTags.includes(currentContext.currentNode.nodeName)) {
-            currentContext = this._parseList({ ...currentContext });
+            parseResult = this._parseList({ ...currentContext });
         } else if (currentContext.currentNode.nodeName === 'LI') {
-            // todo: find a better way
-            return this._nextParsingContext(this._parseListItem({ ...currentContext }));
+            parseResult = this._parseListItem({ ...currentContext });
+        } else {
+            parseResult = this.parseNode({ ...currentContext });
         }
-        const [context, parsingMap] = this.parseNode({ ...currentContext });
-        const node = context.currentNode;
-        const parsedNode = parsingMap.keys().next().value;
+        const context: ParsingContext = parseResult[0];
+        const parsingMap: ParsingMap = parseResult[1];
 
-        // Map the parsed nodes to the DOM nodes they represent, and
-        // append them to the VDocument.
-        const parentVNode = context.parentVNode;
+        // Map the parsed nodes to the DOM nodes they represent.
         Array.from(parsingMap.keys()).forEach(parsedVNode => {
             const domNodes = parsingMap.get(parsedVNode);
             if (domNodes.length === 1) {
@@ -250,28 +249,7 @@ export class Parser {
                     VDocumentMap.set(parsedVNode, domNode, index);
                 });
             }
-            parentVNode.append(parsedVNode);
         });
-        // A <br/> with no siblings is there only to make its parent visible.
-        // Consume it since it was just parsed as its parent element node.
-        // TODO: do this less naively to account for formatting space.
-        if (node.childNodes.length === 1 && node.childNodes[0].nodeName === 'BR') {
-            context.currentNode = node.childNodes[0];
-            VDocumentMap.set(parsedNode, context.currentNode);
-        }
-        // A trailing <br/> after another <br/> is there only to make its previous
-        // sibling visible. Consume it since it was just parsed as a single BR
-        // within our abstraction.
-        // TODO: do this less naively to account for formatting space.
-        if (
-            node.nodeName === 'BR' &&
-            node.nextSibling &&
-            node.nextSibling.nodeName === 'BR' &&
-            !node.nextSibling.nextSibling
-        ) {
-            context.currentNode = node.nextSibling;
-            VDocumentMap.set(parsedNode, context.currentNode);
-        }
 
         return this._nextParsingContext(context);
     }

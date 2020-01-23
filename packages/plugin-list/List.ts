@@ -15,6 +15,7 @@ export class List extends JWPlugin {
         if (listType) {
             const listNode = new ListNode(listType);
             const parsingMap = new Map([[listNode, [context.currentNode]]]);
+            context.parentVNode.append(listNode);
             return [context, parsingMap];
         }
     }
