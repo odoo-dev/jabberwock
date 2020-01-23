@@ -12,9 +12,7 @@ import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { LineBreak } from '../../plugin-linebreak/LineBreak';
 import { ParsingContext, ParsingMap } from '../src/Parser';
-import { VDocument } from '../src/VDocument';
 
 describe('core', () => {
     describe('src', () => {
@@ -53,126 +51,6 @@ describe('core', () => {
                         expect(vNode.htmlTag).to.equal('H' + i);
                         expect(vNode.level).to.equal(i);
                     }
-                });
-            });
-            describe('LineBreakNode', () => {
-                describe('constructor', () => {
-                    it('should create a LineBreakNode', async () => {
-                        const lineBreak = new LineBreakNode();
-                        expect(lineBreak.atomic).to.equal(true);
-                    });
-                });
-                describe('render', () => {
-                    it('should render an ending lineBreak (default html arg)', async () => {
-                        const lineBreak = new LineBreakNode();
-                        const fragment = lineBreak.render<DocumentFragment>();
-                        expect(fragment.childNodes.length).to.equal(2);
-                        expect(fragment.firstChild.nodeName).to.equal('BR');
-                        expect(fragment.lastChild.nodeName).to.equal('BR');
-                    });
-                    it('should render an ending lineBreak', async () => {
-                        const lineBreak = new LineBreakNode();
-                        const fragment = lineBreak.render<DocumentFragment>('html');
-                        expect(fragment.childNodes.length).to.equal(2);
-                        expect(fragment.firstChild.nodeName).to.equal('BR');
-                        expect(fragment.lastChild.nodeName).to.equal('BR');
-                    });
-                    it('should render a lineBreak with char after', async () => {
-                        const p = new VElement('P');
-                        const lineBreak = new LineBreakNode();
-                        p.append(lineBreak);
-                        const c = new CharNode(' ');
-                        p.append(c);
-                        const fragment = lineBreak.render<DocumentFragment>('html');
-                        expect(fragment.childNodes.length).to.equal(1);
-                        expect(fragment.firstChild.nodeName).to.equal('BR');
-                    });
-                });
-                describe('shallowDuplicate', () => {
-                    it('should duplicate a LineBreakNode', async () => {
-                        const lineBreak = new LineBreakNode();
-                        const copy = lineBreak.shallowDuplicate();
-                        expect(copy).to.not.equal(lineBreak);
-                        expect(copy instanceof LineBreakNode).to.equal(true);
-                    });
-                });
-                describe('locate', () => {
-                    it('should locate where to set the selection marker at end', async () => {
-                        const p = new VElement('P');
-                        const a = new CharNode('a');
-                        p.append(a);
-                        const lineBreak = new LineBreakNode();
-                        p.append(lineBreak);
-                        const doc = document.createElement('p');
-                        doc.innerHTML = 'a<br><br>';
-                        expect(lineBreak.locate(doc.childNodes[1], 0)).to.deep.equal([
-                            lineBreak,
-                            'BEFORE',
-                        ]);
-                        expect(lineBreak.locate(doc.childNodes[2], 0)).to.deep.equal([
-                            lineBreak,
-                            'AFTER',
-                        ]);
-                    });
-                    it('should locate where to set the selection marker inside string', async () => {
-                        const p = new VElement('P');
-                        const a = new CharNode('a');
-                        p.append(a);
-                        const lineBreak = new LineBreakNode();
-                        p.append(lineBreak);
-                        const b = new CharNode('b');
-                        p.append(b);
-                        const doc = document.createElement('p');
-                        doc.innerHTML = 'a<br>b';
-                        expect(lineBreak.locate(doc.childNodes[1], 0)).to.deep.equal([
-                            lineBreak,
-                            'BEFORE',
-                        ]);
-                    });
-                });
-            });
-            describe('LineBreak', () => {
-                describe('parse', () => {
-                    it('should not parse a placeholder BR node', async () => {
-                        const br = document.createElement('br');
-                        const fakeParent = new ParagraphNode();
-                        const context = {
-                            currentNode: br,
-                            parentVNode: fakeParent,
-                            vDocument: new VDocument(new FragmentNode()),
-                        };
-                        const parsingMap = LineBreak.parse(context)[1];
-                        expect(parsingMap.size).to.equal(1);
-                        const node = parsingMap.keys().next().value;
-                        expect(node).to.equal(fakeParent);
-                        expect(parsingMap.get(node)).to.deep.equal([br]);
-                    });
-                    it('should parse two BR node as one line break', async () => {
-                        const p = document.createElement('p');
-                        const br1 = document.createElement('br');
-                        const br2 = document.createElement('br');
-                        p.appendChild(br1);
-                        p.appendChild(br2);
-                        const context = {
-                            currentNode: br1,
-                            parentVNode: new ParagraphNode(),
-                            vDocument: new VDocument(new FragmentNode()),
-                        };
-                        const parsingMap = LineBreak.parse(context)[1];
-                        expect(parsingMap.size).to.equal(1);
-                        const lineBreak = parsingMap.keys().next().value;
-                        expect(lineBreak.atomic).to.equal(true);
-                        const node = parsingMap.keys().next().value;
-                        expect(node).to.equal(lineBreak);
-                        expect(parsingMap.get(node)).to.deep.equal([br1, br2]);
-                    });
-                    it('should not parse a SPAN node', async () => {
-                        const context = {
-                            currentNode: document.createElement('span'),
-                            vDocument: new VDocument(new FragmentNode()),
-                        };
-                        expect(LineBreak.parse(context)).to.be.undefined;
-                    });
                 });
             });
             describe('FragmentNode', () => {
