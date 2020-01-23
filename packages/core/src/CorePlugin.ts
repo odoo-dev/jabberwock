@@ -51,9 +51,6 @@ export class CorePlugin extends JWPlugin {
         selectAll: {
             handler: this.selectAll.bind(this),
         },
-        toggleList: {
-            handler: this.toggleList.bind(this),
-        },
     };
     constructor(editor) {
         super(editor.dispatcher);
@@ -77,14 +74,6 @@ export class CorePlugin extends JWPlugin {
      */
     insert(params: InsertParams): void {
         this.editor.vDocument.insert(params.node, params.range);
-    }
-    /**
-     * Insert/remove a list at range.
-     *
-     * @param params
-     */
-    toggleList(params: ListParams): void {
-        this.editor.vDocument.toggleList(params.type, params.range);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).

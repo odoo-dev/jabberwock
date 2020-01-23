@@ -710,13 +710,13 @@ describe('plugin-devtools', () => {
                 'insertText',
                 'applyFormat',
                 'insertLineBreak',
+                'toggleList',
                 'insert',
                 'insertParagraphBreak',
                 'setSelection',
                 'deleteBackward',
                 'deleteForward',
                 'selectAll',
-                'toggleList',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {
