@@ -1,10 +1,10 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { FormatParams, InsertParams, InsertTextParams, ListParams } from '../src/CorePlugin';
-import { LineBreakNode } from '../src/VNodes/LineBreakNode';
+import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
-import { ListType } from '../src/VNodes/ListNode';
+import { ListType } from '../../plugin-list/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');

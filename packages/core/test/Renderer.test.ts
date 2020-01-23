@@ -3,8 +3,8 @@ import JWEditor from '../src/JWEditor';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Renderer } from '../src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
-import { CharNode } from '../src/VNodes/CharNode';
-import { ListNode, ListType } from '../src/VNodes/ListNode';
+import { CharNode } from '../../plugin-char/CharNode';
+import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { VElement } from '../src/VNodes/VElement';
 
 describe('utils', () => {

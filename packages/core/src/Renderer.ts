@@ -3,8 +3,8 @@ import { VDocument } from './VDocument';
 import { VNode, RelativePosition, Predicate } from './VNodes/VNode';
 import { Format } from '../../utils/src/Format';
 import { VSelection, Direction } from './VSelection';
-import { CharNode } from './VNodes/CharNode';
-import { ListNode, ListType } from './VNodes/ListNode';
+import { CharNode } from '../../plugin-char/CharNode';
+import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { VElement } from './VNodes/VElement';
 import { MarkerNode } from './VNodes/MarkerNode';
 

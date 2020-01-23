@@ -1,6 +1,6 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { CharNode } from '../../../core/src/VNodes/CharNode';
+import { CharNode } from '../../../plugin-char/CharNode';
 
 export class PathComponent extends OwlUIComponent<{}> {
     getNodeRepr(vNode: VNode): string {

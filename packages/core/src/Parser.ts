@@ -6,10 +6,10 @@ import { VNode, RelativePosition } from './VNodes/VNode';
 import { DomSelectionDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
-import { LineBreakNode } from './VNodes/LineBreakNode';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { FormatType, CharNode } from './VNodes/CharNode';
-import { ListNode } from './VNodes/ListNode';
+import { FormatType, CharNode } from '../../plugin-char/CharNode';
+import { ListNode } from '../../plugin-list/ListNode';
+import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 
 const listTags = ['UL', 'OL'];
 const listContextTags = listTags.concat('LI');
@@ -25,13 +25,7 @@ interface ParsingContext {
 export type ParsingFunction = (node: Node) => VNode[];
 
 export class Parser {
-    // TODO: Make this Parser node agnostic so these VNodes can be optional plugins.
-    parsingFunctions: Set<ParsingFunction> = new Set([
-        CharNode.parse,
-        LineBreakNode.parse,
-        ListNode.parse,
-        VElement.parse,
-    ]);
+    parsingFunctions: Set<ParsingFunction> = new Set();
 
     //--------------------------------------------------------------------------
     // Public
@@ -43,8 +37,8 @@ export class Parser {
      * @param parsingFunctions
      */
     addParsingFunction(...parsingFunctions: Array<ParsingFunction>): void {
-        parsingFunctions.forEach(VNodeClass => {
-            this.parsingFunctions.add(VNodeClass);
+        parsingFunctions.forEach(parsingFunction => {
+            this.parsingFunctions.add(parsingFunction);
         });
     }
     /**
@@ -225,7 +219,7 @@ export class Parser {
         // A list item containing only a BR should be replaced with an
         // empty paragraph.
         if (children.length === 1 && children[0].nodeName === 'BR') {
-            const paragraph = new VElement('P');
+            const paragraph = new ParagraphNode(); // todo: remove reference to plugin
             context.parentVNode.append(paragraph);
             VDocumentMap.set(paragraph, context.node);
             VDocumentMap.set(paragraph, children[0]);
@@ -233,7 +227,7 @@ export class Parser {
         }
         // Inline elements in a list item should be wrapped in a paragraph.
         if (!utils.isBlock(children[0]) || children[0].nodeName === 'BR') {
-            const paragraph = new VElement('P');
+            const paragraph = new ParagraphNode(); // todo: remove reference to plugin
             context.parentVNode.append(paragraph);
             context.parentVNode = paragraph;
             VDocumentMap.set(paragraph, context.node);

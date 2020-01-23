@@ -1,5 +1,5 @@
-import { VNode, RelativePosition } from './VNode';
-import { VElement } from './VElement';
+import { VElement } from '../core/src/VNodes/VElement';
+import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 
 export class LineBreakNode extends VElement {
     static readonly atomic = true;
