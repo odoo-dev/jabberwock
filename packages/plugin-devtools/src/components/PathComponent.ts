@@ -4,7 +4,7 @@ import { CharNode } from '../../../plugin-char/CharNode';
 
 export class PathComponent extends OwlUIComponent<{}> {
     getNodeRepr(vNode: VNode): string {
-        const name: string = vNode.name || '?';
+        const name: string = vNode.prettyName || '?';
         let format = '';
         if (vNode instanceof CharNode) {
             if (vNode.format.bold) {

@@ -48,10 +48,16 @@ export class VNode {
         return this.constructor.name;
     }
     /**
+     * Override this to give the node an alternate representation.
+     */
+    get prettyName(): string {
+        return this.name;
+    }
+    /**
      * @override
      */
     toString(): string {
-        return this.name;
+        return this.prettyName;
     }
     /**
      * A node is atomic when it is not allowed to have children in the
@@ -799,13 +805,14 @@ export class VNode {
      * Return a convenient string representation of this node and its
      * descendants.
      *
+     * @param pretty true to use `prettyName` instead of `name` (default: true)
      * @param __repr
-     * @param level
+     * @param __level
      */
-    _repr(__repr = '', level = 0): string {
-        __repr += Array(level * 4 + 1).join(' ') + this.name + '\n';
+    _repr(pretty = true, __repr = '', __level = 0): string {
+        __repr += Array(__level * 4 + 1).join(' ') + (pretty ? this.prettyName : this.name) + '\n';
         this.children.forEach(child => {
-            __repr = child._repr(__repr, level + 1);
+            __repr = child._repr(pretty, __repr, __level + 1);
         });
         return __repr;
     }

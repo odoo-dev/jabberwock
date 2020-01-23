@@ -1212,9 +1212,9 @@ describe('core', () => {
                                 ).to.deep.equal([
                                     'HeadingNode: 1',
                                     'ParagraphNode',
-                                    'a',
+                                    'CharNode: a',
                                     'HeadingNode: 2',
-                                    'b',
+                                    'CharNode: b',
                                 ]);
                             },
                         });
@@ -1229,7 +1229,12 @@ describe('core', () => {
                                 );
                                 expect(
                                     descendants.map(descendant => descendant.name),
-                                ).to.deep.equal(['HeadingNode: 1', 'ParagraphNode', 'a', 'b']);
+                                ).to.deep.equal([
+                                    'HeadingNode: 1',
+                                    'ParagraphNode',
+                                    'CharNode: a',
+                                    'CharNode: b',
+                                ]);
                             },
                         });
                     });

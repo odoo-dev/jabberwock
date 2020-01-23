@@ -32,6 +32,9 @@ export class CharNode extends VNode {
     //--------------------------------------------------------------------------
 
     get name(): string {
+        return this.constructor.name + ': ' + this.char;
+    }
+    get prettyName(): string {
         return this.char;
     }
     /**

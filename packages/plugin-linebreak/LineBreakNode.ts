@@ -6,6 +6,9 @@ export class LineBreakNode extends VElement {
     constructor() {
         super('BR');
     }
+    get prettyName(): string {
+        return '↲';
+    }
 
     //--------------------------------------------------------------------------
     // Lifecycle

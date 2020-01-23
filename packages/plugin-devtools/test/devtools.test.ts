@@ -488,7 +488,7 @@ describe('plugin-devtools', () => {
             expect([].map.call(path.childNodes, (n: Node) => n.textContent)).to.deep.equal([
                 editor.vDocument.root.name,
                 vNodeChar.parent.name,
-                vNodeChar.name + '.' + vNodeChar.name,
+                vNodeChar.prettyName + '.b', // .b because it's bold, not because that's its char
             ]);
         });
         it('should change the selection to select the char', async () => {
@@ -916,10 +916,10 @@ describe('plugin-devtools', () => {
                     '<tr><td> direction </td><td>FORWARD</td></tr>' +
                     '<tr><td> anchor </td><td> ' +
                     charBeforeChange.id +
-                    ' (b) </td></tr>' +
+                    ' (CharNode: b) </td></tr>' +
                     '<tr><td> focus </td><td> ' +
                     charBeforeChange.id +
-                    ' (b) </td></tr>' +
+                    ' (CharNode: b) </td></tr>' +
                     '</tbody></table></td></tr>' +
                     '</tbody>' +
                     '</table>';

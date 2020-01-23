@@ -1839,7 +1839,7 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
                         withRange(VRange.at(aNode), range => {
                             const insertParams: InsertTextParams = {
                                 range: range,
@@ -1855,7 +1855,7 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
                         withRange(VRange.selecting(aNode, aNode), range => {
                             const insertParams: InsertTextParams = {
                                 range: range,
@@ -1871,7 +1871,7 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
                         const rangeParams: [Point, Point] = [
                             [aNode, RelativePosition.BEFORE],
                             [aNode, RelativePosition.BEFORE],
@@ -1891,7 +1891,7 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
                         const rangeParams: [Point, Point] = [
                             [aNode, RelativePosition.BEFORE],
                             [aNode, RelativePosition.AFTER],
@@ -1911,7 +1911,7 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
                         const rangeParams: [Point, Point] = [
                             [aNode, RelativePosition.AFTER],
                             [aNode, RelativePosition.AFTER],
@@ -1931,8 +1931,8 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
-                        const bNode = editor.vDocument.root.next(node => node.name === 'b');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
+                        const bNode = editor.vDocument.root.next(node => node.prettyName === 'b');
                         const rangeParams: [Point, Point] = [
                             [aNode, RelativePosition.AFTER],
                             [bNode, RelativePosition.BEFORE],
@@ -1952,8 +1952,8 @@ describe('stores', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: 'ab[]',
                     stepFunction: (editor: JWEditor) => {
-                        const aNode = editor.vDocument.root.next(node => node.name === 'a');
-                        const bNode = editor.vDocument.root.next(node => node.name === 'b');
+                        const aNode = editor.vDocument.root.next(node => node.prettyName === 'a');
+                        const bNode = editor.vDocument.root.next(node => node.prettyName === 'b');
                         const rangeParams: [Point, Point] = [
                             [aNode, RelativePosition.AFTER],
                             [bNode, RelativePosition.AFTER],
