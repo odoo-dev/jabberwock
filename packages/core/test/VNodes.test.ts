@@ -3,7 +3,6 @@ import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { HeadingNode } from '../../plugin-heading/HeadingNode';
-import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
@@ -34,13 +33,6 @@ describe('core', () => {
                         expect(copy).to.not.equal(vNode);
                         expect(copy.htmlTag).to.equal('P');
                     });
-                });
-            });
-            describe('ParagraphNode', () => {
-                it('should create a paragraph', async () => {
-                    const vNode = new ParagraphNode();
-                    expect(vNode.atomic).to.equal(false);
-                    expect(vNode.htmlTag).to.equal('P');
                 });
             });
             describe('FragmentNode', () => {
