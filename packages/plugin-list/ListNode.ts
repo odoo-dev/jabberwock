@@ -1,4 +1,4 @@
-import { VNode } from './VNode';
+import { VNode } from '../core/src/VNodes/VNode';
 
 export enum ListType {
     ORDERED = 'ordered',

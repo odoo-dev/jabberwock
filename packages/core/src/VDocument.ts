@@ -1,10 +1,10 @@
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { CharNode, FormatType, FORMAT_TYPES } from './VNodes/CharNode';
+import { CharNode, FormatType, FORMAT_TYPES } from '../../plugin-char/CharNode';
 import { withMarkers } from '../../utils/src/markers';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { VSelection } from './VSelection';
-import { ListNode, ListType } from './VNodes/ListNode';
+import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { utils } from '../../utils/src/utils';
 
 export class VDocument {

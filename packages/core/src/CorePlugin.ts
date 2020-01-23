@@ -3,7 +3,7 @@ import JWEditor from './JWEditor';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { ListType } from './VNodes/ListNode';
+import { ListType } from '../../plugin-list/ListNode';
 
 export interface RangeParams {
     range?: VRange;

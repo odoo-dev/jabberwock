@@ -1,7 +1,9 @@
 import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
-import { CharNode } from '../src/VNodes/CharNode';
-import { LineBreakNode } from '../src/VNodes/LineBreakNode';
+import { CharNode } from '../../plugin-char/CharNode';
+import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
+import { HeadingNode } from '../../plugin-heading/HeadingNode';
+import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
@@ -108,44 +110,14 @@ describe('core', () => {
                     });
                 });
             });
-            describe('SimpleElementNode', () => {
+            describe('VElement', () => {
                 describe('constructor', () => {
-                    it('should create a paragraph', async () => {
-                        const vNode = new VElement('P');
-                        expect(vNode.atomic).to.equal(false);
-                        expect(vNode.htmlTag).to.equal('P');
-                    });
-                    it('should create a heading', async () => {
-                        for (let i = 1; i <= 6; i++) {
-                            const vNode = new VElement('H' + i);
-                            expect(vNode.atomic).to.equal(false);
-                            expect(vNode.htmlTag).to.equal('H' + i);
-                        }
-                    });
-                    it('should create a unknown', async () => {
+                    it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new VElement('UNKNOWN-ELEMENT');
                             expect(vNode.atomic).to.equal(false);
                             expect(vNode.htmlTag).to.equal('UNKNOWN-ELEMENT');
                         }
-                    });
-                });
-                describe('parse', () => {
-                    it('should parse a paragraph', async () => {
-                        const node = document.createElement('p');
-                        const vNode = VElement.parse(node)[0];
-                        expect(vNode.htmlTag).to.equal('P');
-                    });
-                    it('should parse a heading', async () => {
-                        for (let i = 1; i <= 6; i++) {
-                            const node = document.createElement('h' + i);
-                            const vNode = VElement.parse(node)[0];
-                            expect(vNode.htmlTag).to.equal('H' + i);
-                        }
-                    });
-                    it('should not parse a SPAN node', async () => {
-                        const span = document.createElement('span');
-                        expect(VElement.parse(span)).to.be.undefined;
                     });
                 });
                 describe('shallowDuplicate', () => {
@@ -155,6 +127,23 @@ describe('core', () => {
                         expect(copy).to.not.equal(vNode);
                         expect(copy.htmlTag).to.equal('P');
                     });
+                });
+            });
+            describe('ParagraphNode', () => {
+                it('should create a paragraph', async () => {
+                    const vNode = new ParagraphNode();
+                    expect(vNode.atomic).to.equal(false);
+                    expect(vNode.htmlTag).to.equal('P');
+                });
+            });
+            describe('HeadingNode', () => {
+                it('should create a heading', async () => {
+                    for (let i = 1; i <= 6; i++) {
+                        const vNode = new HeadingNode(i);
+                        expect(vNode.atomic).to.equal(false);
+                        expect(vNode.htmlTag).to.equal('H' + i);
+                        expect(vNode.level).to.equal(i);
+                    }
                 });
             });
             describe('LineBreakNode', () => {
@@ -1142,8 +1131,8 @@ describe('core', () => {
                                 const a = editor.vDocument.root.firstLeaf();
                                 const ancestors = a.ancestors();
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
-                                    'VElement: P',
-                                    'VElement: H1',
+                                    'ParagraphNode',
+                                    'HeadingNode: 1',
                                     'FragmentNode',
                                 ]);
                             },
@@ -1155,10 +1144,10 @@ describe('core', () => {
                             stepFunction: (editor: JWEditor) => {
                                 const a = editor.vDocument.root.firstLeaf();
                                 const ancestors = a.ancestors(ancestor => {
-                                    return ancestor.name !== 'VElement: H1';
+                                    return !ancestor.is(HeadingNode) || ancestor.level !== 1;
                                 });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
-                                    'VElement: P',
+                                    'ParagraphNode',
                                     'FragmentNode',
                                 ]);
                             },
@@ -1174,10 +1163,10 @@ describe('core', () => {
                                 expect(
                                     descendants.map(descendant => descendant.name),
                                 ).to.deep.equal([
-                                    'VElement: H1',
-                                    'VElement: P',
+                                    'HeadingNode: 1',
+                                    'ParagraphNode',
                                     'a',
-                                    'VElement: H2',
+                                    'HeadingNode: 2',
                                     'b',
                                 ]);
                             },
@@ -1188,11 +1177,12 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const descendants = editor.vDocument.root.descendants(
-                                    descendant => descendant.name !== 'VElement: H2',
+                                    descendant =>
+                                        !descendant.is(HeadingNode) || descendant.level !== 2,
                                 );
                                 expect(
                                     descendants.map(descendant => descendant.name),
-                                ).to.deep.equal(['VElement: H1', 'VElement: P', 'a', 'b']);
+                                ).to.deep.equal(['HeadingNode: 1', 'ParagraphNode', 'a', 'b']);
                             },
                         });
                     });

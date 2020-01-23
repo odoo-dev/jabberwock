@@ -1,14 +1,26 @@
 import { expect } from 'chai';
-import { CharNode } from '../src/VNodes/CharNode';
+import { Char } from '../../plugin-char/Char';
+import { CharNode } from '../../plugin-char/CharNode';
 import { Parser } from '../src/Parser';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { LineBreakNode } from '../src/VNodes/LineBreakNode';
+import { LineBreak } from '../../plugin-linebreak/LineBreak';
+import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
+import { Heading } from '../../plugin-heading/Heading';
+import { Paragraph } from '../../plugin-paragraph/Paragraph';
 import { VElement } from '../src/VNodes/VElement';
-import { ListNode, ListType } from '../src/VNodes/ListNode';
+import { List } from '../../plugin-list/List';
+import { ListNode, ListType } from '../../plugin-list/ListNode';
 
 describe('utils', () => {
     describe('Parser', () => {
         const parser = new Parser();
+        parser.addParsingFunction(
+            ...Char.parsingFunctions,
+            ...LineBreak.parsingFunctions,
+            ...Heading.parsingFunctions,
+            ...Paragraph.parsingFunctions,
+            ...List.parsingFunctions,
+        );
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {
                 const element = document.createElement('div');
@@ -120,7 +132,7 @@ describe('utils', () => {
                     expect(list.children.length).to.equal(4);
 
                     const li0 = list.nthChild(0);
-                    expect(li0.toString()).to.equal('VElement: P');
+                    expect(li0.toString()).to.equal('ParagraphNode');
                     expect(li0.children.length).to.equal(1);
                     expect(li0.firstChild().toString()).to.equal('a');
 
@@ -131,7 +143,7 @@ describe('utils', () => {
 
                     /* eslint-disable @typescript-eslint/camelcase */
                     const li1_0 = li1.nthChild(0);
-                    expect(li1_0.toString()).to.equal('VElement: P');
+                    expect(li1_0.toString()).to.equal('ParagraphNode');
                     expect(li1_0.children.length).to.equal(3);
                     expect(li1_0.nthChild(0).toString()).to.equal('a');
                     expect(li1_0.nthChild(1).toString()).to.equal('.');
@@ -139,21 +151,21 @@ describe('utils', () => {
                     expect(li1_0.nthChild(2).toString()).to.equal('a');
 
                     const li1_1 = li1.nthChild(1);
-                    expect(li1_1.toString()).to.equal('VElement: P');
+                    expect(li1_1.toString()).to.equal('ParagraphNode');
                     expect(li1_1.children.length).to.equal(3);
                     expect(li1_1.nthChild(0).toString()).to.equal('a');
                     expect(li1_1.nthChild(1).toString()).to.equal('.');
                     expect(li1_1.nthChild(2).toString()).to.equal('b');
 
                     const li1_2 = li1.nthChild(2);
-                    expect(li1_2.toString()).to.equal('VElement: H1');
+                    expect(li1_2.toString()).to.equal('HeadingNode: 1');
                     expect(li1_2.children.length).to.equal(3);
                     expect(li1_2.nthChild(0).toString()).to.equal('a');
                     expect(li1_2.nthChild(1).toString()).to.equal('.');
                     expect(li1_2.nthChild(2).toString()).to.equal('c');
 
                     const li1_3 = li1.nthChild(3);
-                    expect(li1_3.toString()).to.equal('VElement: P');
+                    expect(li1_3.toString()).to.equal('ParagraphNode');
                     expect(li1_3.children.length).to.equal(3);
                     expect(li1_3.nthChild(0).toString()).to.equal('a');
                     expect(li1_3.nthChild(1).toString()).to.equal('.');
@@ -165,7 +177,7 @@ describe('utils', () => {
                     expect(li1_4.children.length).to.equal(1);
 
                     const li1_4_0 = li1_4.firstChild();
-                    expect(li1_4_0.toString()).to.equal('VElement: P');
+                    expect(li1_4_0.toString()).to.equal('ParagraphNode');
                     expect(li1_4_0.children.length).to.equal(5);
                     expect(li1_4_0.nthChild(0).toString()).to.equal('a');
                     expect(li1_4_0.nthChild(1).toString()).to.equal('.');
@@ -174,7 +186,7 @@ describe('utils', () => {
                     expect(li1_4_0.nthChild(4).toString()).to.equal('a');
 
                     const li2 = list.nthChild(2);
-                    expect(li2.toString()).to.equal('VElement: P');
+                    expect(li2.toString()).to.equal('ParagraphNode');
                     expect(li2.children.length).to.equal(1);
                     expect(li2.firstChild().toString()).to.equal('b');
 
@@ -184,28 +196,28 @@ describe('utils', () => {
                     expect(li3.children.length).to.equal(4);
 
                     const li3_0 = li3.nthChild(0);
-                    expect(li3_0.toString()).to.equal('VElement: P');
+                    expect(li3_0.toString()).to.equal('ParagraphNode');
                     expect(li3_0.children.length).to.equal(3);
                     expect(li3_0.nthChild(0).toString()).to.equal('b');
                     expect(li3_0.nthChild(1).toString()).to.equal('.');
                     expect(li3_0.nthChild(2).toString()).to.equal('1');
 
                     const li3_1 = li3.nthChild(1);
-                    expect(li3_1.toString()).to.equal('VElement: P');
+                    expect(li3_1.toString()).to.equal('ParagraphNode');
                     expect(li3_1.children.length).to.equal(3);
                     expect(li3_1.nthChild(0).toString()).to.equal('b');
                     expect(li3_1.nthChild(1).toString()).to.equal('.');
                     expect(li3_1.nthChild(2).toString()).to.equal('2');
 
                     const li3_2 = li3.nthChild(2);
-                    expect(li3_2.toString()).to.equal('VElement: H1');
+                    expect(li3_2.toString()).to.equal('HeadingNode: 1');
                     expect(li3_2.children.length).to.equal(3);
                     expect(li3_2.nthChild(0).toString()).to.equal('b');
                     expect(li3_2.nthChild(1).toString()).to.equal('.');
                     expect(li3_2.nthChild(2).toString()).to.equal('3');
 
                     const li3_3 = li3.nthChild(3);
-                    expect(li3_3.toString()).to.equal('VElement: P');
+                    expect(li3_3.toString()).to.equal('ParagraphNode');
                     expect(li3_3.children.length).to.equal(3);
                     expect(li3_3.nthChild(0).toString()).to.equal('b');
                     expect(li3_3.nthChild(1).toString()).to.equal('.');
