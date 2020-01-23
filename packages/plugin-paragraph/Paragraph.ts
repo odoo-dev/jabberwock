@@ -8,6 +8,7 @@ export class Paragraph extends JWPlugin {
         if (context.currentNode.nodeName === 'P') {
             const parsedNode = new ParagraphNode();
             const parsingMap = new Map([[parsedNode, [context.currentNode]]]);
+            context.parentVNode.append(parsedNode);
             return [context, parsingMap];
         }
     }
