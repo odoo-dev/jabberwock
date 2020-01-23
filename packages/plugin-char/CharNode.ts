@@ -1,5 +1,5 @@
-import { VNode } from './VNode';
-import { removeFormattingSpace } from '../../../utils/src/formattingSpace';
+import { VNode } from '../core/src/VNodes/VNode';
+import { removeFormattingSpace } from '../utils/src/formattingSpace';
 
 export interface FormatType {
     bold?: boolean;

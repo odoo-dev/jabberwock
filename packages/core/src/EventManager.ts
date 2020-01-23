@@ -1,5 +1,5 @@
 import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
-import { LineBreakNode } from './VNodes/LineBreakNode';
+import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import JWEditor from './JWEditor';
 import { VSelectionParams } from './CorePlugin';
 
