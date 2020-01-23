@@ -3,9 +3,13 @@ import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser'
 import { ListNode, ListType } from './ListNode';
 import { ParagraphNode } from '../plugin-paragraph/ParagraphNode';
 import { utils } from '../utils/src/utils';
-import { ListParams } from '../core/src/CorePlugin';
 import { VNode } from '../core/src/VNodes/VNode';
 import { withMarkers } from '../utils/src/markers';
+import { RangeParams } from '../core/src/CorePlugin';
+
+export interface ListParams extends RangeParams {
+    type: ListType;
+}
 
 const listTags = ['UL', 'OL'];
 const listContextTags = listTags.concat('LI');

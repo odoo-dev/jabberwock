@@ -3,7 +3,6 @@ import JWEditor from './JWEditor';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { ListType } from '../../plugin-list/ListNode';
 
 export interface RangeParams {
     range?: VRange;
@@ -16,18 +15,9 @@ export type DeleteForwardParams = RangeParams;
 export interface InsertParams extends RangeParams {
     node: VNode;
 }
-export interface InsertTextParams extends RangeParams {
-    text: string;
-}
 
 export interface VSelectionParams {
     vSelection: VSelectionDescription;
-}
-export interface FormatParams extends RangeParams {
-    format: 'bold' | 'italic' | 'underline';
-}
-export interface ListParams extends RangeParams {
-    type: ListType;
 }
 
 export class CorePlugin extends JWPlugin {

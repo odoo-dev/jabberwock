@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { ListParams, InsertParams } from '../../core/src/CorePlugin';
+import { InsertParams } from '../../core/src/CorePlugin';
 import { ListType, ListNode } from '../ListNode';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
@@ -13,7 +13,7 @@ import { Renderer } from '../../core/src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
-import { List } from '../List';
+import { List, ListParams } from '../List';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
