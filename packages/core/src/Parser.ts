@@ -8,11 +8,6 @@ import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType } from '../../plugin-char/CharNode';
-import { ListNode } from '../../plugin-list/ListNode';
-import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
-
-const listTags = ['UL', 'OL'];
-const listContextTags = listTags.concat('LI');
 
 export type ParsingMap = Map<VNode, Node[]>;
 export interface ParsingContext {
@@ -167,75 +162,10 @@ export class Parser {
     //--------------------------------------------------------------------------
 
     /**
-     * Parse a list node.
-     */
-    _parseList(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
-        const parentNode = currentContext.currentNode.parentNode;
-        const parentName = parentNode && parentNode.nodeName;
-        const parentVNode = currentContext.parentVNode;
-        if (listContextTags.includes(parentName) && !parentVNode.is(ListNode)) {
-            // We're about to parse an indented list. In our abstraction, an
-            // indented list is a direct child of its parent list, regardless
-            // of what was already in its <li> parent. So the following example:
-            // <ul><li>abc<ul><li>def</li></ul></li></ul>
-            // when parsed in our abstraction is equivalent to:
-            // <ul><li>abc</li><li><ul><li>def</li></ul></li></ul>
-            // Both will eventually be rendered as the former.
-            // Set the parent to be the list node rather than the list item.
-            currentContext.parentVNode = parentVNode.ancestor(ListNode);
-        }
-        return this.parseNode(currentContext);
-    }
-    /**
-     * Parse a list element (LI).
-     *
-     * @param context
-     */
-    _parseListItem(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
-        const context = { ...currentContext };
-        const children = Array.from(context.currentNode.childNodes);
-        const parsingMap: ParsingMap = new Map();
-        // An empty text node as first child should be skipped.
-        while (children.length && this._isEmptyTextNode(children[0])) {
-            children.shift();
-        }
-        // A list item with no children should be skipped.
-        if (!children.length) {
-            return [context, parsingMap];
-        }
-        // A list item containing only a BR should be replaced with an
-        // empty paragraph.
-        if (children.length === 1 && children[0].nodeName === 'BR') {
-            const paragraph = new ParagraphNode(); // todo: remove reference to plugin
-            context.parentVNode.append(paragraph);
-            parsingMap.set(paragraph, [context.currentNode, children[0]]);
-            this._contextStack.push({ ...context }); // todo: find a better way
-            return [{ ...context, currentNode: children[0] }, parsingMap];
-        }
-        // Inline elements in a list item should be wrapped in a paragraph.
-        if (!utils.isBlock(children[0]) || children[0].nodeName === 'BR') {
-            const paragraph = new ParagraphNode(); // todo: remove reference to plugin
-            context.parentVNode.append(paragraph);
-            context.parentVNode = paragraph;
-            parsingMap.set(paragraph, [context.currentNode]);
-        }
-        // Now we can move on to the list item's contents, to be added to
-        // the paragraph created above, or to the list itself in the case of
-        // blocks.
-        return [context, parsingMap];
-    }
-    /**
      * Parse a node depending on its DOM type.
      */
     _parseOne(currentContext: ParsingContext): ParsingContext {
-        let parseResult;
-        if (listTags.includes(currentContext.currentNode.nodeName)) {
-            parseResult = this._parseList({ ...currentContext });
-        } else if (currentContext.currentNode.nodeName === 'LI') {
-            parseResult = this._parseListItem({ ...currentContext });
-        } else {
-            parseResult = this.parseNode({ ...currentContext });
-        }
+        const parseResult = this.parseNode({ ...currentContext });
         const context: ParsingContext = parseResult[0];
         const parsingMap: ParsingMap = parseResult[1];
 
@@ -294,14 +224,6 @@ export class Parser {
             }
         }
         return this._contextStack[this._contextStack.length - 1];
-    }
-    /**
-     * Return true if the node is a text node containing only whitespace or nothing.
-     *
-     * @param node
-     */
-    _isEmptyTextNode(node: Node): boolean {
-        return node.nodeType === Node.TEXT_NODE && /^\s*$/.test(node.textContent);
     }
     /**
      * Return a position in the `VDocument` as a tuple containing a reference
