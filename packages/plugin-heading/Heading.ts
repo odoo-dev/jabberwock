@@ -8,6 +8,7 @@ export class Heading extends JWPlugin {
         if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(context.currentNode.nodeName)) {
             const parsedNode = new HeadingNode(parseInt(context.currentNode.nodeName[1]));
             const parsingMap = new Map([[parsedNode, [context.currentNode]]]);
+            context.parentVNode.append(parsedNode);
             return [context, parsingMap];
         }
     }

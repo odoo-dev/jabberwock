@@ -60,6 +60,7 @@ describe('core', () => {
                         const text = document.createTextNode('abc');
                         const context = {
                             currentNode: text,
+                            parentVNode: new ParagraphNode(),
                             vDocument: new VDocument(new FragmentNode()),
                         };
                         const parsingMap = Char.parse(context)[1];
@@ -236,16 +237,38 @@ describe('core', () => {
             });
             describe('LineBreak', () => {
                 describe('parse', () => {
-                    it('should parse a BR node', async () => {
+                    it('should not parse a placeholder BR node', async () => {
                         const br = document.createElement('br');
+                        const fakeParent = new ParagraphNode();
                         const context = {
                             currentNode: br,
+                            parentVNode: fakeParent,
+                            vDocument: new VDocument(new FragmentNode()),
+                        };
+                        const parsingMap = LineBreak.parse(context)[1];
+                        expect(parsingMap.size).to.equal(1);
+                        const node = parsingMap.keys().next().value;
+                        expect(node).to.equal(fakeParent);
+                        expect(parsingMap.get(node)).to.deep.equal([br]);
+                    });
+                    it('should parse two BR node as one line break', async () => {
+                        const p = document.createElement('p');
+                        const br1 = document.createElement('br');
+                        const br2 = document.createElement('br');
+                        p.appendChild(br1);
+                        p.appendChild(br2);
+                        const context = {
+                            currentNode: br1,
+                            parentVNode: new ParagraphNode(),
                             vDocument: new VDocument(new FragmentNode()),
                         };
                         const parsingMap = LineBreak.parse(context)[1];
                         expect(parsingMap.size).to.equal(1);
                         const lineBreak = parsingMap.keys().next().value;
                         expect(lineBreak.atomic).to.equal(true);
+                        const node = parsingMap.keys().next().value;
+                        expect(node).to.equal(lineBreak);
+                        expect(parsingMap.get(node)).to.deep.equal([br1, br2]);
                     });
                     it('should not parse a SPAN node', async () => {
                         const context = {
@@ -1360,6 +1383,7 @@ describe('core', () => {
                             if (context.currentNode.nodeName === 'CUSTOM-NODE') {
                                 const parsedNode = new MyCustomNode();
                                 const parsingMap = new Map([[parsedNode, [context.currentNode]]]);
+                                context.parentVNode.append(parsedNode);
                                 return [context, parsingMap];
                             }
                         }
