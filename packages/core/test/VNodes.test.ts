@@ -12,7 +12,6 @@ import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
 import { ParsingContext, ParsingMap } from '../src/Parser';
 import { VDocument } from '../src/VDocument';
@@ -20,109 +19,6 @@ import { VDocument } from '../src/VDocument';
 describe('core', () => {
     describe('src', () => {
         describe('VNodes', () => {
-            describe('CharNode', () => {
-                describe('constructor', () => {
-                    it('should create a CharNode', async () => {
-                        const c = new CharNode(' ');
-                        expect(c.char).to.equal(' ');
-                        expect(c.atomic).to.equal(true);
-                        expect(c.format).to.deep.equal({
-                            bold: false,
-                            italic: false,
-                            underline: false,
-                        });
-                        expect(c.length).to.equal(1);
-                    });
-                    it('should create a CharNode with format', async () => {
-                        const c = new CharNode(' ', { bold: true });
-                        expect(c.char).to.equal(' ');
-                        expect(c.atomic).to.equal(true);
-                        expect(c.bold).to.equal(true);
-                        expect(c.format).to.deep.equal({
-                            bold: true,
-                            italic: false,
-                            underline: false,
-                        });
-                    });
-                    it('should throw an exception if create a CharNode with wrong value', async () => {
-                        expect(() => {
-                            // eslint-disable-next-line no-new
-                            new CharNode('ab');
-                        }).to.throw('Char', 'length greater than 1');
-                        expect(() => {
-                            // eslint-disable-next-line no-new
-                            new CharNode('');
-                        }).to.throw('Char', 'empty text');
-                    });
-                });
-                describe('parse', () => {
-                    it('should parse a textNode', async () => {
-                        const text = document.createTextNode('abc');
-                        const context = {
-                            currentNode: text,
-                            parentVNode: new ParagraphNode(),
-                            vDocument: new VDocument(new FragmentNode()),
-                        };
-                        const parsingMap = Char.parse(context)[1];
-                        const vNodes = Array.from(parsingMap.keys());
-                        expect(vNodes.length).to.equal(3);
-                        expect((vNodes[0] as CharNode).char).to.equal('a');
-                        expect((vNodes[1] as CharNode).char).to.equal('b');
-                        expect((vNodes[2] as CharNode).char).to.equal('c');
-                    });
-                    it('should not parse a SPAN node', async () => {
-                        const context = {
-                            currentNode: document.createElement('span'),
-                            vDocument: new VDocument(new FragmentNode()),
-                        };
-                        expect(Char.parse(context)).to.be.undefined;
-                    });
-                });
-                describe('shallowDuplicate', () => {
-                    it('should duplicate a simple char', async () => {
-                        const c = new CharNode('a');
-                        const copy = c.shallowDuplicate();
-                        expect(copy).to.not.equal(c);
-                        expect(copy instanceof CharNode).to.equal(true);
-                        expect(copy.char).to.equal(c.char);
-                        expect(copy.format).to.deep.equal(c.format);
-                    });
-                    it('should duplicate a char with format', async () => {
-                        const c = new CharNode('a');
-                        c.bold = true;
-                        const copy = c.shallowDuplicate();
-                        expect(copy).to.not.equal(c);
-                        expect(copy.format.bold).to.equal(true, 'copy is bold');
-                        expect(copy.char).to.equal(c.char);
-                        expect(copy.format).to.deep.equal(c.format);
-                    });
-                    it('should mark as italic a duplicate a char', async () => {
-                        const c = new CharNode('a');
-                        const copy = c.shallowDuplicate();
-                        copy.italic = true;
-                        expect(copy.format.italic).to.equal(true, 'copy is now italic');
-                        expect(c.format.italic).to.equal(false, 'original char is not italic');
-                    });
-                    it('should update the format for a duplicate a char', async () => {
-                        const c = new CharNode('a');
-                        const copy = c.shallowDuplicate();
-                        copy.format = { italic: true };
-                        expect(copy.format.italic).to.equal(true, 'copy is now italic');
-                        expect(c.format.italic).to.equal(false, 'original char is not italic');
-                    });
-                });
-                describe('text', () => {
-                    it('should concat the CharNodes value', async () => {
-                        const a = new CharNode('a');
-                        const b = new CharNode('b');
-                        const c = new CharNode('c');
-                        let text = a.text();
-                        text = b.text(text);
-                        text = c.text(text);
-                        expect(text).to.equal('abc');
-                    });
-                });
-            });
             describe('VElement', () => {
                 describe('constructor', () => {
                     it('should create an unknown element', async () => {
