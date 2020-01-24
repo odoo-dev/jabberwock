@@ -1,4 +1,3 @@
-import { BasicHtmlRenderingEngine, RenderingEngine } from '../BasicHtmlRenderingEngine';
 import { withMarkers, ignoreMarkers } from '../../../utils/src/markers';
 import { utils } from '../../../utils/src/utils';
 
@@ -32,9 +31,6 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
-    renderingEngines: Record<string, RenderingEngine> = {
-        html: BasicHtmlRenderingEngine,
-    };
     _children: VNode[] = [];
 
     constructor() {
@@ -74,15 +70,6 @@ export class VNode {
     // Lifecycle
     //--------------------------------------------------------------------------
 
-    /**
-     * Render the VNode to the given format.
-     *
-     * @param [to] the name of the format to which we want to render (default:
-     * html)
-     */
-    render<T>(to = 'html'): T {
-        return this.renderingEngines[to].render(this) as T;
-    }
     /**
      * Transform the given DOM location into its VDocument counterpart.
      *

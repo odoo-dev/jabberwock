@@ -4,6 +4,10 @@ import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
+import { RenderingFunction } from '../core/src/Renderer';
+import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
+import { VNode } from '../core/src/VNodes/VNode';
+import { MarkerNode } from '../core/src/VNodes/MarkerNode';
 
 export interface InsertTextParams extends RangeParams {
     text: string;
@@ -14,6 +18,10 @@ export interface FormatParams extends RangeParams {
 
 export class Char extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [Char.parse];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
+        dom: Char.renderToDom,
+    };
     commands = {
         insertText: {
             handler: this.insertText.bind(this),
@@ -61,6 +69,54 @@ export class Char extends JWPlugin {
             );
             vNodes.forEach(node => context.parentVNode.append(node));
             return [context, parsingMap];
+        }
+    }
+    static renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
+        const node = context.currentVNode;
+        if (node.is(CharNode)) {
+            // If the node has a format, render the format nodes first.
+            const fragment = document.createDocumentFragment();
+            let parent: Node = fragment;
+            const renderedFormats = [];
+            Object.keys(node.format).forEach(type => {
+                if (node.format[type]) {
+                    const formatNode = document.createElement(Format.toTag(type));
+                    renderedFormats.push(formatNode);
+                    parent.appendChild(formatNode);
+                    // Update the parent so the text is inside the format node.
+                    parent = formatNode;
+                }
+            });
+
+            // Consecutive compatible char nodes are rendered as a single text node.
+            let text = '' + node.char;
+            let next = node.nextSibling();
+            const charNodes = [node];
+            while (next && Char._isSameTextNode(node, next)) {
+                context.currentVNode = next;
+                if (next instanceof CharNode) {
+                    charNodes.push(next);
+                    if (next.char === ' ' && text[text.length - 1] === ' ') {
+                        // Browsers don't render consecutive space chars otherwise.
+                        text += '\u00A0';
+                    } else {
+                        text += next.char;
+                    }
+                }
+                next = next.nextSibling();
+            }
+            // Browsers don't render leading/trailing space chars otherwise.
+            text = text.replace(/^ | $/g, '\u00A0');
+
+            // Create and append the text node, update the VDocumentMap.
+            const renderedNode = document.createTextNode(text);
+            parent.appendChild(renderedNode);
+            context.parentNode.appendChild(fragment);
+            const renderingMap: DomRenderingMap = new Map([
+                [renderedNode, [...charNodes, ...renderedFormats]],
+            ]);
+
+            return [context, renderingMap];
         }
     }
 
@@ -154,5 +210,26 @@ export class Char extends JWPlugin {
             });
         }
         return format;
+    }
+    /**
+     * Return true if `a` has the same format properties as `b`.
+     *
+     * @param a
+     * @param b
+     */
+    static _isSameTextNode(a: VNode, b: VNode): boolean {
+        if (a.is(CharNode) && b.is(CharNode)) {
+            // Char VNodes are the same text node if they have the same format.
+            const formats = Object.keys({ ...a.format, ...b.format });
+            return formats.every(k => !!a.format[k] === !!b.format[k]);
+        } else if (a.is(MarkerNode) || b.is(MarkerNode)) {
+            // A Marker node is always considered to be part of the same text
+            // node as another node in the sense that the text node must not
+            // be broken up just because it contains a marker.
+            return true;
+        } else {
+            // Nodes that are not valid in a text node must end the text node.
+            return false;
+        }
     }
 }

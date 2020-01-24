@@ -177,7 +177,7 @@ describePlugin(List, testEditor => {
             /* eslint-enable @typescript-eslint/camelcase */
         });
     });
-    describe('render', () => {
+    describe.skip('render', () => {
         it('should render a complex list', async () => {
             /**
              * ListNode: UL                 motherList
@@ -312,7 +312,7 @@ describePlugin(List, testEditor => {
             element.remove();
         });
     });
-    describe('toggleList', () => {
+    describe.skip('toggleList', () => {
         describe('Range collapsed', () => {
             describe('Unordered', () => {
                 describe('Insert', () => {
@@ -788,7 +788,7 @@ describePlugin(List, testEditor => {
             });
         });
     });
-    describe('VDocument', () => {
+    describe.skip('VDocument', () => {
         describe('deleteForward', () => {
             describe('Selection collapsed', () => {
                 describe('Basic', () => {

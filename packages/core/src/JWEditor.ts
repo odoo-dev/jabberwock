@@ -34,7 +34,8 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     plugins: JWPlugin[];
-    renderers: Record<string, Renderer> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    renderers: Record<string, Renderer<any, any>> = {};
     vDocument: VDocument;
     autoFocus = false;
     parser = new Parser();
@@ -174,10 +175,18 @@ export class JWEditor {
             // If two renderers exist with the same id, the last one to be added
             // will replace the previous one.
             if (pluginClass.renderers) {
-                pluginClass.renderers.forEach(Renderer => {
-                    this.renderers[Renderer.id] = new Renderer();
+                pluginClass.renderers.forEach(renderer => {
+                    this.renderers[renderer.id] = renderer;
                 });
             }
+            // Register the parsing predicate of this plugin if it has any.
+            Object.keys(pluginClass.renderingFunctions).forEach(rendererId => {
+                if (Object.keys(this.renderers).includes(rendererId)) {
+                    this.renderers[rendererId].addRenderingFunction(
+                        pluginClass.renderingFunctions[rendererId],
+                    );
+                }
+            });
         }
     }
     /**

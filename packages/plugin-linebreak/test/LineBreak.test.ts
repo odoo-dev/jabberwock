@@ -8,6 +8,7 @@ import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { LineBreak } from '../LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
+import { DomRenderer } from '../../plugin-dom/DomRenderer';
 
 const insertLineBreak = (editor: JWEditor): void => editor.execCommand('insertLineBreak');
 
@@ -62,29 +63,37 @@ describePlugin(LineBreak, testEditor => {
             });
         });
         describe('render', () => {
-            it('should render an ending lineBreak (default html arg)', async () => {
-                const lineBreak = new LineBreakNode();
-                const fragment = lineBreak.render<DocumentFragment>();
-                expect(fragment.childNodes.length).to.equal(2);
-                expect(fragment.firstChild.nodeName).to.equal('BR');
-                expect(fragment.lastChild.nodeName).to.equal('BR');
+            let renderer: DomRenderer;
+            let element: Element;
+            beforeEach(() => {
+                renderer = new DomRenderer();
+                renderer.addRenderingFunction(LineBreak.renderToDom);
+                element = document.createElement('div');
             });
             it('should render an ending lineBreak', async () => {
-                const lineBreak = new LineBreakNode();
-                const fragment = lineBreak.render<DocumentFragment>('html');
-                expect(fragment.childNodes.length).to.equal(2);
-                expect(fragment.firstChild.nodeName).to.equal('BR');
-                expect(fragment.lastChild.nodeName).to.equal('BR');
-            });
-            it('should render a lineBreak with char after', async () => {
-                const p = new VElement('P');
+                const p = new VElement('fake-p');
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                const c = new CharNode(' ');
+                renderer.render(p, element);
+                expect(element.childNodes.length).to.equal(1);
+                const domP = element.firstChild;
+                expect(domP.childNodes.length).to.equal(2);
+                expect(domP.firstChild.nodeName).to.equal('BR');
+                expect(domP.lastChild.nodeName).to.equal('BR');
+            });
+            it('should render a lineBreak with node after', async () => {
+                const p = new VElement('FAKE-P');
+                const lineBreak = new LineBreakNode();
+                p.append(lineBreak);
+                const c = new VElement('FAKE-CHAR');
                 p.append(c);
-                const fragment = lineBreak.render<DocumentFragment>('html');
-                expect(fragment.childNodes.length).to.equal(1);
-                expect(fragment.firstChild.nodeName).to.equal('BR');
+                renderer.render(p, element);
+                expect(element.childNodes.length).to.equal(1);
+                const domP = element.firstChild;
+                expect(domP.nodeName).to.equal('FAKE-P');
+                expect(domP.childNodes.length).to.equal(2);
+                expect(domP.firstChild.nodeName).to.equal('BR');
+                expect(domP.childNodes[1].nodeName).to.equal('FAKE-CHAR');
             });
         });
         describe('clone', () => {
