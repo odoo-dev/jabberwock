@@ -12,6 +12,7 @@ import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { ParsingContext, ParsingMap } from '../src/Parser';
+import { DomRenderer } from '../../plugin-dom/DomRenderer';
 
 describe('core', () => {
     describe('src', () => {
@@ -129,9 +130,12 @@ describe('core', () => {
                 });
                 describe('Render', () => {
                     it('should render a VNode', async () => {
-                        const root = new VNode();
-                        const fragment = root.render<DocumentFragment>();
-                        expect(fragment.firstChild.nodeName).to.equal('UNDEFINED');
+                        const root = new FragmentNode();
+                        const node = new VNode();
+                        root.append(node);
+                        const element = document.createElement('div');
+                        new DomRenderer().render(root, element);
+                        expect(element.firstChild.nodeName).to.equal('UNKNOWN-NODE');
                     });
                 });
                 describe('locate', () => {
