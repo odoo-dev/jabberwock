@@ -1,16 +1,23 @@
-import { Renderer, RenderingContext } from '../core/src/Renderer';
+import { Renderer } from '../core/src/Renderer';
 import { VDocumentMap } from '../core/src/VDocumentMap';
 import { VDocument } from '../core/src/VDocument';
 import { VNode, RelativePosition, Predicate } from '../core/src/VNodes/VNode';
-import { Format } from '../utils/src/Format';
 import { VSelection, Direction } from '../core/src/VSelection';
-import { CharNode } from '../plugin-char/CharNode';
-import { ListNode, ListType } from '../plugin-list/ListNode';
 import { VElement } from '../core/src/VNodes/VElement';
-import { MarkerNode } from '../core/src/VNodes/MarkerNode';
 
-export class DomRenderer extends Renderer<DocumentFragment> {
+export interface DomRenderingContext {
+    root: VNode; // Root VNode of the current rendering.
+    currentVNode?: VNode; // Current VNode rendered at this step.
+    parentNode?: Node | DocumentFragment; // Node to render the VNode into.
+}
+export type DomRenderingMap = Map<Node, VNode[]>;
+
+export class DomRenderer extends Renderer<
+    DomRenderingContext,
+    [DomRenderingContext, DomRenderingMap]
+> {
     readonly id = 'dom';
+
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -37,13 +44,13 @@ export class DomRenderer extends Renderer<DocumentFragment> {
         const firstVNode = renderedRoot ? root.firstChild() : root;
 
         if (root.hasChildren()) {
-            let context: RenderingContext = {
+            let context: DomRenderingContext = {
                 root: root,
                 currentVNode: firstVNode,
                 parentNode: parentNode,
             };
             do {
-                context = this._renderVNode(context);
+                context = this._renderNode(context);
             } while ((context = this._nextRenderingContext(context)));
         }
 
@@ -54,31 +61,67 @@ export class DomRenderer extends Renderer<DocumentFragment> {
             this._renderSelection(content.selection, target);
         }
     }
+    /**
+     * Render the element matching the current vNode and append it.
+     *
+     * @param context
+     */
+    renderNode(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
+        const node = context.currentVNode;
+
+        for (const renderingFunction of this.renderingFunctions) {
+            const renderingResult = renderingFunction({ ...context });
+            if (renderingResult) {
+                return renderingResult;
+            }
+        }
+
+        const tagName = node.is(VElement) ? node.htmlTag : 'UNKNOWN-NODE';
+        const fragment = document.createDocumentFragment();
+        const renderedDomNodes: Node[] = [];
+        const renderedElement = document.createElement(tagName);
+        renderedDomNodes.push(renderedElement);
+        fragment.appendChild(renderedElement);
+
+        // If a node is empty but could accomodate children,
+        // fill it to make it visible.
+        if (!node.hasChildren() && !node.atomic) {
+            const placeholderBr = document.createElement('BR');
+            renderedElement.appendChild(placeholderBr);
+            renderedDomNodes.push(placeholderBr);
+        }
+
+        context.parentNode.appendChild(fragment);
+
+        const renderingMap: DomRenderingMap = new Map(
+            renderedDomNodes.map(domNode => {
+                return [domNode, [node]];
+            }),
+        );
+        return [context, renderingMap];
+    }
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
     /**
-     * Return true if `a` has the same format properties as `b`.
+     * Render a VNode and trigger the rendering of the next one, recursively.
      *
-     * @param a
-     * @param b
+     * @param context
      */
-    _isSameTextNode(a: VNode, b: VNode): boolean {
-        if (a.is(CharNode) && b.is(CharNode)) {
-            // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...a.format, ...b.format });
-            return formats.every(k => !!a.format[k] === !!b.format[k]);
-        } else if (a.is(MarkerNode) || b.is(MarkerNode)) {
-            // A Marker node is always considered to be part of the same text
-            // node as another node in the sense that the text node must not
-            // be broken up just because it contains a marker.
-            return true;
-        } else {
-            // Nodes that are not valid in a text node must end the text node.
-            return false;
-        }
+    _renderNode(context: DomRenderingContext): DomRenderingContext {
+        let renderingMap: DomRenderingMap;
+        [context, renderingMap] = this.renderNode({ ...context });
+
+        // Map the parsed nodes to the DOM nodes they represent.
+        renderingMap.forEach((nodes: VNode[], domNode: Node) => {
+            nodes.forEach((node: VNode, index: number) => {
+                VDocumentMap.set(node, domNode, index);
+            });
+        });
+
+        return context;
     }
     /**
      * Return the next rendering context, based on the given context. This
@@ -87,7 +130,7 @@ export class DomRenderer extends Renderer<DocumentFragment> {
      *
      * @param context
      */
-    _nextRenderingContext(context: RenderingContext): RenderingContext {
+    _nextRenderingContext(context: DomRenderingContext): DomRenderingContext {
         const vNode = context.currentVNode;
         if (vNode.hasChildren()) {
             // Render the first child with the current node as parent.
@@ -114,89 +157,6 @@ export class DomRenderer extends Renderer<DocumentFragment> {
                 return;
             }
         }
-        return context;
-    }
-    /**
-     * Render the element matching the current vNode and append it.
-     *
-     * @param context
-     */
-    _renderElement(context: RenderingContext): RenderingContext {
-        const node = context.currentVNode;
-        // Default rendering
-        const tagName = node.is(VElement) ? node.htmlTag : 'UNKNOWN-NODE';
-        let fragment = document.createDocumentFragment();
-        const renderedElement = document.createElement(tagName);
-        fragment.appendChild(renderedElement);
-
-        // If a node is empty but could accomodate children,
-        // fill it to make it visible.
-        if (!node.hasChildren() && !node.atomic) {
-            renderedElement.appendChild(document.createElement('BR'));
-        }
-
-        // Special rendering
-        for (const renderingFunction of this.renderingFunctions) {
-            const renderingResult = renderingFunction(node, fragment);
-            if (renderingResult) {
-                fragment = renderingResult;
-                break;
-            }
-        }
-        Array.from(fragment.childNodes).forEach((element: Node): void => {
-            context.parentNode.appendChild(element);
-            VDocumentMap.set(node, element);
-            element.childNodes.forEach(child => VDocumentMap.set(node, child));
-        });
-        return context;
-    }
-    /**
-     * Render a text node, based on consecutive char nodes.
-     *
-     * @param context
-     */
-    _renderTextNode(context: RenderingContext): RenderingContext {
-        // If the node has a format, render the format nodes first.
-        const renderedFormats = [];
-        const firstChar = context.currentVNode as CharNode;
-        Object.keys(firstChar.format).forEach(type => {
-            if (firstChar.format[type]) {
-                const formatNode = document.createElement(Format.toTag(type));
-                renderedFormats.push(formatNode);
-                context.parentNode.appendChild(formatNode);
-                // Update the parent so the text is inside the format node.
-                context.parentNode = formatNode;
-            }
-        });
-
-        // Consecutive compatible char nodes are rendered as a single text node.
-        let text = '' + firstChar.char;
-        let next = firstChar.nextSibling();
-        const charNodes = [firstChar];
-        while (next && this._isSameTextNode(firstChar, next)) {
-            context.currentVNode = next;
-            if (next instanceof CharNode) {
-                charNodes.push(next);
-                if (next.char === ' ' && text[text.length - 1] === ' ') {
-                    // Browsers don't render consecutive space chars otherwise.
-                    text += '\u00A0';
-                } else {
-                    text += next.char;
-                }
-            }
-            next = next.nextSibling();
-        }
-        // Browsers don't render leading/trailing space chars otherwise.
-        text = text.replace(/^ | $/g, '\u00A0');
-
-        // Create and append the text node, update the VDocumentMap.
-        const renderedNode = document.createTextNode(text);
-        context.parentNode.appendChild(renderedNode);
-        charNodes.forEach((charNode, nodeIndex) => {
-            VDocumentMap.set(charNode, renderedNode, nodeIndex);
-            renderedFormats.forEach(formatNode => VDocumentMap.set(charNode, formatNode));
-        });
-
         return context;
     }
     /**
@@ -253,22 +213,6 @@ export class DomRenderer extends Renderer<DocumentFragment> {
         return location;
     }
     /**
-     * Render a VNode and trigger the rendering of the next one, recursively.
-     *
-     * @param context
-     */
-    _renderVNode(context: RenderingContext): RenderingContext {
-        if (context.currentVNode.is(CharNode)) {
-            context = this._renderTextNode(context);
-        } else if (this._match(context, ListNode)) {
-            context = this._renderListNode(context);
-        } else {
-            context = this._renderElement(context);
-        }
-        return context;
-    }
-
-    /**
      * Return whether the current VNode of the given rendering context matches
      * the given predicate.
      *
@@ -276,52 +220,9 @@ export class DomRenderer extends Renderer<DocumentFragment> {
      * @param predicate
      */
     _match<T extends VNode>(
-        context: RenderingContext,
+        context: DomRenderingContext,
         predicate: Predicate<T>,
-    ): context is RenderingContext<T> {
+    ): context is DomRenderingContext {
         return context.currentVNode.test(predicate);
-    }
-
-    /**
-     * Render the ListNode in currentContext.
-     *
-     * @param currentContext
-     */
-    _renderListNode(currentContext: RenderingContext<ListNode>): RenderingContext {
-        const currentVNode = currentContext.currentVNode;
-        const tag = currentVNode.listType === ListType.ORDERED ? 'OL' : 'UL';
-        const domListNode = document.createElement(tag);
-        currentContext.parentNode.appendChild(domListNode);
-        VDocumentMap.set(currentVNode, domListNode);
-        // The ListNode has to handle the rendering of its direct children by
-        // itself since some of them are rendered inside "LI" nodes while others
-        // are rendered *as* "LI" nodes.
-        Array.from(currentVNode.children).forEach((listItem: VNode) => {
-            // Check if previous "LI" can be reused or create a new one.
-            let liNode: Element;
-            if (listItem.is(ListNode) && domListNode.children.length) {
-                // Render an indented list in the list item that precedes it.
-                // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
-                liNode = domListNode.children[domListNode.children.length - 1];
-            } else {
-                liNode = document.createElement('li');
-                domListNode.appendChild(liNode);
-            }
-
-            // Direct ListNode's VElement children "P" are rendered as "LI"
-            // while other nodes will be rendered inside the "LI".
-            if (listItem.is(VElement) && listItem.htmlTag === 'P') {
-                // Mark the "P" as rendered by the "LI".
-                VDocumentMap.set(listItem, liNode);
-                // TODO: this should be generic.
-                if (!listItem.hasChildren()) {
-                    liNode.appendChild(document.createElement('BR'));
-                }
-            }
-            // Call the generic rendering for grandchildren.
-            this.render(listItem, liNode);
-        });
-        // Mark the ListNode as completely rendered up to its last leaf.
-        return { ...currentContext, currentVNode: currentVNode.lastLeaf() };
     }
 }

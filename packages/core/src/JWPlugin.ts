@@ -9,10 +9,10 @@ export interface JWPluginConfig {
 
 export class JWPlugin {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderers: Array<Renderer<any>>;
+    static readonly renderers: Array<Renderer<any, any>>;
     static readonly parsingFunctions: Array<ParsingFunction> = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions: Record<string, RenderingFunction<any>> = {};
+    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {};
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};

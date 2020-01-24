@@ -81,11 +81,11 @@ describe('plugin-linebreak', () => {
                 expect(domP.firstChild.nodeName).to.equal('BR');
                 expect(domP.lastChild.nodeName).to.equal('BR');
             });
-            it('should render a lineBreak with char after', async () => {
+            it('should render a lineBreak with node after', async () => {
                 const p = new VElement('FAKE-P');
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                const c = new CharNode(' ');
+                const c = new VElement('FAKE-CHAR');
                 p.append(c);
                 renderer.render(p, element);
                 expect(element.childNodes.length).to.equal(1);
@@ -93,7 +93,7 @@ describe('plugin-linebreak', () => {
                 expect(domP.nodeName).to.equal('FAKE-P');
                 expect(domP.childNodes.length).to.equal(2);
                 expect(domP.firstChild.nodeName).to.equal('BR');
-                expect(domP.childNodes[1].textContent).to.equal('\u00A0');
+                expect(domP.childNodes[1].nodeName).to.equal('FAKE-CHAR');
             });
         });
         describe('shallowDuplicate', () => {

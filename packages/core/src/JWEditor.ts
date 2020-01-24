@@ -24,7 +24,7 @@ export class JWEditor {
     eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    renderers: Record<string, Renderer<any>> = {};
+    renderers: Record<string, Renderer<any, any>> = {};
     vDocument: VDocument;
     debugger: OwlUI;
     parser = new Parser();
