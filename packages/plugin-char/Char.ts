@@ -55,7 +55,7 @@ export class Char extends JWPlugin {
         }
     }
     static renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
-        const node = context.currentVNode;
+        const node = context.currentNode;
         if (node.is(CharNode)) {
             // If the node has a format, render the format nodes first.
             const fragment = document.createDocumentFragment();
@@ -76,7 +76,7 @@ export class Char extends JWPlugin {
             let next = node.nextSibling();
             const charNodes = [node];
             while (next && Char._isSameTextNode(node, next)) {
-                context.currentVNode = next;
+                context.currentNode = next;
                 if (next instanceof CharNode) {
                     charNodes.push(next);
                     if (next.char === ' ' && text[text.length - 1] === ' ') {

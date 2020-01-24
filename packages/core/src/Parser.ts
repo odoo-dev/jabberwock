@@ -91,7 +91,7 @@ export class Parser {
             }
         }
 
-        return this._nextParsingContext(context);
+        return context;
     }
     /**
      * Parse an HTML element into the editor's virtual representation.
@@ -120,7 +120,7 @@ export class Parser {
             this._contextStack.push(currentContext);
             do {
                 currentContext = this.parseNode({ ...currentContext });
-            } while (currentContext);
+            } while ((currentContext = this._nextParsingContext(currentContext)));
         }
 
         // Parse the DOM selection.
