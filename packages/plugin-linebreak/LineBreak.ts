@@ -4,6 +4,9 @@ import { LineBreakNode } from './LineBreakNode';
 
 export class LineBreak extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [LineBreak.parse];
+    static readonly renderingFunctions = {
+        dom: LineBreak.renderToDom,
+    };
     commands = {
         insertLineBreak: {
             handler: this.insertLineBreak.bind(this),
@@ -31,6 +34,20 @@ export class LineBreak extends JWPlugin {
             context.parentVNode.append(parsedNode);
             return [context, parsingMap];
         }
+    }
+    /**
+     * Render the VNode to the given format.
+     *
+     * @param [to] the name of the format to which we want to render (default:
+     * html)
+     */
+    static renderToDom(node: LineBreakNode, defaultRendering?: DocumentFragment): DocumentFragment {
+        if (node.is(LineBreakNode) && !node.nextSibling()) {
+            // If a LINE_BREAK has no next sibling, it must be rendered as two
+            // BRs in order for it to be visible.
+            defaultRendering.appendChild(document.createElement('br'));
+        }
+        return defaultRendering;
     }
 
     //--------------------------------------------------------------------------

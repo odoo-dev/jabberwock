@@ -1,3 +1,4 @@
+import { Renderer, RenderingContext } from '../core/src/Renderer';
 import { VDocumentMap } from '../core/src/VDocumentMap';
 import { VDocument } from '../core/src/VDocument';
 import { VNode, RelativePosition, Predicate } from '../core/src/VNodes/VNode';
@@ -8,14 +9,8 @@ import { ListNode, ListType } from '../plugin-list/ListNode';
 import { VElement } from '../core/src/VNodes/VElement';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
 
-interface RenderingContext<T extends VNode = VNode> {
-    root: VNode; // Root VNode of the current rendering.
-    currentVNode?: T; // Current VNode rendered at this step.
-    parentNode?: Node | DocumentFragment; // Node to render the VNode into.
-}
-
-export class DomRenderer {
-    static readonly id = 'dom';
+export class DomRenderer extends Renderer<DocumentFragment> {
+    readonly id = 'dom';
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -127,11 +122,31 @@ export class DomRenderer {
      * @param context
      */
     _renderElement(context: RenderingContext): RenderingContext {
-        const fragment = context.currentVNode.render<DocumentFragment>('html');
+        const node = context.currentVNode;
+        // Default rendering
+        const tagName = node.is(VElement) ? node.htmlTag : 'UNKNOWN-NODE';
+        let fragment = document.createDocumentFragment();
+        const renderedElement = document.createElement(tagName);
+        fragment.appendChild(renderedElement);
+
+        // If a node is empty but could accomodate children,
+        // fill it to make it visible.
+        if (!node.hasChildren() && !node.atomic) {
+            renderedElement.appendChild(document.createElement('BR'));
+        }
+
+        // Special rendering
+        for (const renderingFunction of this.renderingFunctions) {
+            const renderingResult = renderingFunction(node, fragment);
+            if (renderingResult) {
+                fragment = renderingResult;
+                break;
+            }
+        }
         Array.from(fragment.childNodes).forEach((element: Node): void => {
             context.parentNode.appendChild(element);
-            VDocumentMap.set(context.currentVNode, element);
-            element.childNodes.forEach(child => VDocumentMap.set(context.currentVNode, child));
+            VDocumentMap.set(node, element);
+            element.childNodes.forEach(child => VDocumentMap.set(node, child));
         });
         return context;
     }

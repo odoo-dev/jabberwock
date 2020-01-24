@@ -1,15 +1,18 @@
 import JWEditor from './JWEditor';
 import { ParsingFunction } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
-import { Renderer } from './Renderer';
+import { Renderer, RenderingFunction } from './Renderer';
 
 export interface JWPluginConfig {
     name?: string;
 }
 
 export class JWPlugin {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static readonly renderers: Array<Renderer<any>>;
     static readonly parsingFunctions: Array<ParsingFunction> = [];
-    static readonly renderers: Array<typeof Renderer>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static readonly renderingFunctions: Record<string, RenderingFunction<any>> = {};
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
