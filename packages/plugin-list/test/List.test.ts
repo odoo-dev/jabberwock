@@ -36,7 +36,7 @@ const toggleUnorderedList = (editor: JWEditor): void => {
     editor.execCommand('toggleList', params);
 };
 
-describe.skip('plugin-list', () => {
+describe('plugin-list', () => {
     describe('parse', () => {
         const parser = new Parser();
         parser.addParsingFunction(
@@ -208,7 +208,7 @@ describe.skip('plugin-list', () => {
              *              b.4
              */
             const element = document.createElement('div');
-            const editor = new JWEditor(element);
+            const editor = new BasicEditor(element);
             editor.start();
             const root = editor.vDocument.root;
             const motherList = new ListNode(ListType.UNORDERED);

@@ -75,7 +75,10 @@ export class DomRenderer extends Renderer<
         for (const renderingFunction of this.renderingFunctions) {
             const renderingResult = renderingFunction({ ...context });
             if (renderingResult) {
-                return renderingResult;
+                context = renderingResult[0];
+                if (renderingResult[1]) {
+                    return renderingResult;
+                }
             }
         }
 
