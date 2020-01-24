@@ -1128,7 +1128,7 @@ describe('core', () => {
                 });
             });
             describe('Custom VNode', () => {
-                it('should create and parse a custom node', () => {
+                it('should create and parse a custom node', async () => {
                     const editor = new JWEditor();
                     class MyCustomNode extends VNode {
                         customKey = 'yes';
@@ -1145,7 +1145,7 @@ describe('core', () => {
                         }
                     }
                     editor.addPlugin(MyCustomPlugin);
-                    editor.start();
+                    await editor.start();
                     const root = document.createElement('ROOT-NODE');
                     const element = document.createElement('CUSTOM-NODE');
                     root.appendChild(element);
