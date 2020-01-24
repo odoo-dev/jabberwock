@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { Renderer } from '../src/Renderer';
+import { DomRenderer } from '../../plugin-dom/DomRenderer';
 import { testEditor } from '../../utils/src/testUtils';
 import { CharNode } from '../../plugin-char/CharNode';
 
@@ -18,7 +18,7 @@ describe('utils', () => {
                 editor.vDocument.root.append(new CharNode(' '));
                 editor.vDocument.root.append(new CharNode('b'));
 
-                const renderer = new Renderer();
+                const renderer = new DomRenderer();
                 renderer.render(editor.vDocument, editor.editable);
                 expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
                 editor.stop();
@@ -38,7 +38,7 @@ describe('utils', () => {
                 editor.vDocument.root.append(new CharNode(' '));
                 editor.vDocument.root.append(new CharNode('b'));
 
-                const renderer = new Renderer();
+                const renderer = new DomRenderer();
                 renderer.render(editor.vDocument, editor.editable);
                 expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
                 editor.stop();

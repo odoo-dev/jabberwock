@@ -9,7 +9,6 @@ import { Paragraph } from '../../plugin-paragraph/Paragraph';
 import { Parser } from '../../core/src/Parser';
 import { CharNode } from '../../plugin-char/CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { Renderer } from '../../core/src/Renderer';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
@@ -282,8 +281,7 @@ describe('plugin-list', () => {
             ol.append(p9);
             motherList.append(ol);
 
-            const renderer = new Renderer();
-            renderer.render(editor.vDocument, editor.editable);
+            editor.renderers.dom.render(editor.vDocument, editor.editable);
             /* eslint-disable prettier/prettier */
             expect(editor.editable.innerHTML).to.equal([
                 '<ul>',
