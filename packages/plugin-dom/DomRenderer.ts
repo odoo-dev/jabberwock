@@ -7,7 +7,7 @@ import { VElement } from '../core/src/VNodes/VElement';
 
 export interface DomRenderingContext {
     root: VNode; // Root VNode of the current rendering.
-    currentVNode?: VNode; // Current VNode rendered at this step.
+    currentNode?: VNode; // Current VNode rendered at this step.
     parentNode?: Node | DocumentFragment; // Node to render the VNode into.
 }
 export type DomRenderingMap = Map<Node, VNode[]>;
@@ -17,6 +17,7 @@ export class DomRenderer extends Renderer<
     [DomRenderingContext, DomRenderingMap]
 > {
     readonly id = 'dom';
+    _contextStack: Array<DomRenderingContext> = [];
 
     //--------------------------------------------------------------------------
     // Public
@@ -42,16 +43,18 @@ export class DomRenderer extends Renderer<
         const renderedRoot = VDocumentMap.toDom(root);
         const parentNode = renderedRoot ? renderedRoot : target;
         const firstVNode = renderedRoot ? root.firstChild() : root;
+        const rootContext: DomRenderingContext = {
+            root: root,
+            currentNode: firstVNode,
+            parentNode: parentNode,
+        };
+        this._contextStack.push(rootContext);
 
         if (root.hasChildren()) {
-            let context: DomRenderingContext = {
-                root: root,
-                currentVNode: firstVNode,
-                parentNode: parentNode,
-            };
+            let currentContext: DomRenderingContext = { ...rootContext };
             do {
-                context = this._renderNode(context);
-            } while ((context = this._nextRenderingContext(context)));
+                currentContext = this._renderOne(currentContext);
+            } while ((currentContext = this._nextRenderingContext(currentContext)));
         }
 
         if (content instanceof VDocument) {
@@ -67,7 +70,7 @@ export class DomRenderer extends Renderer<
      * @param context
      */
     renderNode(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
-        const node = context.currentVNode;
+        const node = context.currentNode;
 
         for (const renderingFunction of this.renderingFunctions) {
             const renderingResult = renderingFunction({ ...context });
@@ -110,7 +113,7 @@ export class DomRenderer extends Renderer<
      *
      * @param context
      */
-    _renderNode(context: DomRenderingContext): DomRenderingContext {
+    _renderOne(context: DomRenderingContext): DomRenderingContext {
         let renderingMap: DomRenderingMap;
         [context, renderingMap] = this.renderNode({ ...context });
 
@@ -128,36 +131,41 @@ export class DomRenderer extends Renderer<
      * includes the next VNode to render and the next parent element to render
      * it into.
      *
-     * @param context
+     * @param currentContext
      */
-    _nextRenderingContext(context: DomRenderingContext): DomRenderingContext {
-        const vNode = context.currentVNode;
-        if (vNode.hasChildren()) {
+    _nextRenderingContext(currentContext: DomRenderingContext): DomRenderingContext {
+        const node = currentContext.currentNode;
+        if (node.hasChildren()) {
+            currentContext.currentNode = node.firstChild();
             // Render the first child with the current node as parent.
-            context.currentVNode = context.currentVNode.children[0];
-            context.parentNode = VDocumentMap.toDom(vNode) as Element;
-        } else if (vNode.nextSibling()) {
+            const renderedParent = VDocumentMap.toDom(node);
+            if (renderedParent) {
+                currentContext.parentNode = renderedParent;
+            }
+            this._contextStack.push({ ...currentContext });
+        } else if (node.nextSibling()) {
             // Render the siblings of the current node with the same parent.
-            context.currentVNode = context.currentVNode.nextSibling();
-            context.parentNode = VDocumentMap.toDom(vNode.parent) as Element;
+            this._contextStack[this._contextStack.length - 1].currentNode = node.nextSibling();
         } else {
             // Render the next ancestor sibling in the ancestor tree.
-            let ancestor = vNode.parent;
+            let ancestor = node;
             // Climb up the ancestor tree to the first parent having a sibling.
-            while (ancestor && !ancestor.nextSibling() && ancestor != context.root) {
+            while (ancestor && !ancestor.nextSibling() && ancestor != currentContext.root) {
                 ancestor = ancestor.parent;
+                this._contextStack.pop();
             }
-            if (ancestor && ancestor != context.root) {
+            if (ancestor && ancestor != currentContext.root) {
                 // At this point, the found ancestor has a sibling.
-                context.currentVNode = ancestor.nextSibling();
-                context.parentNode = VDocumentMap.toDom(ancestor.parent) as Element;
+                this._contextStack[
+                    this._contextStack.length - 1
+                ].currentNode = ancestor.nextSibling();
             } else {
                 // If no next ancestor having a sibling could be found then the
                 // tree has been fully rendered.
                 return;
             }
         }
-        return context;
+        return this._contextStack[this._contextStack.length - 1];
     }
     /**
      * Render the given VSelection as a DOM selection in the given target.
@@ -224,6 +232,6 @@ export class DomRenderer extends Renderer<
         context: DomRenderingContext,
         predicate: Predicate<T>,
     ): context is DomRenderingContext {
-        return context.currentVNode.test(predicate);
+        return context.currentNode.test(predicate);
     }
 }
