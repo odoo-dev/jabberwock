@@ -1,12 +1,14 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { testEditor } from '../../utils/src/testUtils';
+import { testEditor, parseTestingDOM, reprForTests } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 const insertText = function(editor, text: string): void {
     const params: InsertTextParams = {
@@ -43,6 +45,19 @@ describe('plugin-char', () => {
                 vDocument: new VDocument(new FragmentNode()),
             };
             expect(Char.parse(context)).to.be.undefined;
+        });
+        it('handles nested formatted nodes', () => {
+            const vDocument = parseTestingDOM('<p>a<i>b<b>c</b>d</i></p>', [Char.parse]);
+            expect(reprForTests(vDocument.root)).to.equal(
+                [
+                    'FragmentNode',
+                    '    VElement: P',
+                    '        CharNode: a',
+                    '        CharNode: b {italic}',
+                    '        CharNode: c {bold,italic}',
+                    '        CharNode: d {italic}',
+                ].join('\n') + '\n',
+            );
         });
     });
     describe('CharNode', () => {
@@ -122,6 +137,22 @@ describe('plugin-char', () => {
                 text = b.text(text);
                 text = c.text(text);
                 expect(text).to.equal('abc');
+            });
+            it('should concat all children CharNodes value', async () => {
+                const root = new VNode();
+                const a = new CharNode('a');
+                root.append(a);
+                const b = new CharNode('b');
+                root.append(b);
+                const c = new CharNode('c');
+                root.append(c);
+                const p = new VElement('P');
+                root.append(p);
+                const d = new CharNode('d');
+                p.append(d);
+                const e = new CharNode('e');
+                p.append(e);
+                expect(root.text()).to.equal('abcde');
             });
         });
     });

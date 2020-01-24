@@ -1,10 +1,10 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { testEditor } from '../../utils/src/testUtils';
+import { testEditor, parseTestingDOM, reprForTests, CharNodeTest } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../LineBreakNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { CharNode } from '../../plugin-char/CharNode';
 import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { LineBreak } from '../LineBreak';
@@ -53,6 +53,23 @@ describe('plugin-linebreak', () => {
             };
             expect(LineBreak.parse(context)).to.be.undefined;
         });
+        it('should parse a "p" tag with no content', () => {
+            const vDocument = parseTestingDOM('<p><br></p>', [LineBreak.parse]);
+            expect(reprForTests(vDocument.root)).to.equal(
+                ['FragmentNode', '    VElement: P'].join('\n') + '\n',
+            );
+        });
+        it('should parse two trailing consecutive <br> as one LINE_BREAK', () => {
+            const vDocument = parseTestingDOM('<p>a<br><br>', [LineBreak.parse]);
+            expect(reprForTests(vDocument.root)).to.equal(
+                [
+                    'FragmentNode',
+                    '    VElement: P',
+                    '        CharNodeTest: a',
+                    '        LineBreakNode',
+                ].join('\n') + '\n',
+            );
+        });
     });
     describe('LineBreakNode', () => {
         describe('constructor', () => {
@@ -80,7 +97,7 @@ describe('plugin-linebreak', () => {
                 const p = new VElement('P');
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                const c = new CharNode(' ');
+                const c = new CharNodeTest(' ');
                 p.append(c);
                 const fragment = lineBreak.render<DocumentFragment>('html');
                 expect(fragment.childNodes.length).to.equal(1);
@@ -98,7 +115,7 @@ describe('plugin-linebreak', () => {
         describe('locate', () => {
             it('should locate where to set the selection marker at end', async () => {
                 const p = new VElement('P');
-                const a = new CharNode('a');
+                const a = new CharNodeTest('a');
                 p.append(a);
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
@@ -109,11 +126,11 @@ describe('plugin-linebreak', () => {
             });
             it('should locate where to set the selection marker inside string', async () => {
                 const p = new VElement('P');
-                const a = new CharNode('a');
+                const a = new CharNodeTest('a');
                 p.append(a);
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                const b = new CharNode('b');
+                const b = new CharNodeTest('b');
                 p.append(b);
                 const doc = document.createElement('p');
                 doc.innerHTML = 'a<br>b';

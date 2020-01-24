@@ -7,6 +7,13 @@ export class VElement extends VNode {
         this.htmlTag = tagName;
     }
 
+    get name(): string {
+        if (this.constructor.name === 'VElement') {
+            return 'VElement: ' + this.htmlTag;
+        }
+        return this.constructor.name;
+    }
+
     //--------------------------------------------------------------------------
     // Lifecycle
     //--------------------------------------------------------------------------

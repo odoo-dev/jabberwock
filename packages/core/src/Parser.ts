@@ -12,6 +12,7 @@ import { FormatType } from '../../plugin-char/CharNode';
 export type ParsingMap = Map<VNode, Node[]>;
 export interface ParsingContext {
     readonly rootNode?: Node;
+    readonly parseNode?: ParsingFunction;
     currentNode?: Node;
     parentVNode?: VNode;
     format?: FormatType;
@@ -104,6 +105,7 @@ export class Parser {
         VDocumentMap.set(root, node);
         const vDocument = new VDocument(root);
         const rootContext: ParsingContext = {
+            parseNode: this.parseNode.bind(this),
             rootNode: node,
             currentNode: node,
             parentVNode: root,

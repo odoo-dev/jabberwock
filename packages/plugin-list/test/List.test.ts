@@ -1,16 +1,14 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { InsertParams } from '../../core/src/CorePlugin';
-import { ListType, ListNode } from '../ListNode';
+import { ListType } from '../ListNode';
 import { Char } from '../../plugin-char/Char';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
-import { Heading } from '../../plugin-heading/Heading';
-import { Paragraph } from '../../plugin-paragraph/Paragraph';
 import { Parser } from '../../core/src/Parser';
-import { CharNode } from '../../plugin-char/CharNode';
-import { VElement } from '../../core/src/VNodes/VElement';
 import { Renderer } from '../../core/src/Renderer';
-import { testEditor } from '../../utils/src/testUtils';
+import { testEditor, parseTestingDOM, reprForTests, parseTextChars } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { List, ListParams } from '../List';
@@ -39,17 +37,8 @@ const toggleUnorderedList = (editor: JWEditor): void => {
 
 describe('plugin-list', () => {
     describe('parse', () => {
-        const parser = new Parser();
-        parser.addParsingFunction(
-            ...Char.parsingFunctions
-                .concat(LineBreak.parsingFunctions)
-                .concat(Heading.parsingFunctions)
-                .concat(Paragraph.parsingFunctions)
-                .concat(List.parsingFunctions),
-        );
         it('should parse a complex list', () => {
-            const element = document.createElement('div');
-            element.innerHTML = [
+            const html = [
                 '<ul>',
                 '    <li>', // li0: becomes P
                 '        a',
@@ -76,216 +65,63 @@ describe('plugin-list', () => {
                 '    </ol>',
                 '</ul>',
             ].join('\n');
-            const vDocument = parser.parse(element);
-
-            expect(vDocument.root.children.length).to.equal(1);
-            const list = vDocument.root.firstChild() as ListNode;
-            expect(list.toString()).to.equal('ListNode: unordered');
-            expect(list.listType).to.equal(ListType.UNORDERED);
-            expect(list.children.length).to.equal(4);
-
-            const li0 = list.nthChild(0);
-            expect(li0.toString()).to.equal('ParagraphNode');
-            expect(li0.children.length).to.equal(1);
-            expect(li0.firstChild().toString()).to.equal('a');
-
-            const li1 = list.nthChild(1) as ListNode;
-            expect(li1.toString()).to.equal('ListNode: unordered');
-            expect(li1.listType).to.equal(ListType.UNORDERED);
-            expect(li1.children.length).to.equal(5);
-
-            /* eslint-disable @typescript-eslint/camelcase */
-            const li1_0 = li1.nthChild(0);
-            expect(li1_0.toString()).to.equal('ParagraphNode');
-            expect(li1_0.children.length).to.equal(3);
-            expect(li1_0.nthChild(0).toString()).to.equal('a');
-            expect(li1_0.nthChild(1).toString()).to.equal('.');
-            expect((li1_0.nthChild(1) as CharNode).format.bold).to.be.true;
-            expect(li1_0.nthChild(2).toString()).to.equal('a');
-
-            const li1_1 = li1.nthChild(1);
-            expect(li1_1.toString()).to.equal('ParagraphNode');
-            expect(li1_1.children.length).to.equal(3);
-            expect(li1_1.nthChild(0).toString()).to.equal('a');
-            expect(li1_1.nthChild(1).toString()).to.equal('.');
-            expect(li1_1.nthChild(2).toString()).to.equal('b');
-
-            const li1_2 = li1.nthChild(2);
-            expect(li1_2.toString()).to.equal('HeadingNode: 1');
-            expect(li1_2.children.length).to.equal(3);
-            expect(li1_2.nthChild(0).toString()).to.equal('a');
-            expect(li1_2.nthChild(1).toString()).to.equal('.');
-            expect(li1_2.nthChild(2).toString()).to.equal('c');
-
-            const li1_3 = li1.nthChild(3);
-            expect(li1_3.toString()).to.equal('ParagraphNode');
-            expect(li1_3.children.length).to.equal(3);
-            expect(li1_3.nthChild(0).toString()).to.equal('a');
-            expect(li1_3.nthChild(1).toString()).to.equal('.');
-            expect(li1_3.nthChild(2).toString()).to.equal('d');
-
-            const li1_4 = li1.nthChild(4) as ListNode;
-            expect(li1_4.toString()).to.equal('ListNode: unordered');
-            expect(li1_4.listType).to.equal(ListType.UNORDERED);
-            expect(li1_4.children.length).to.equal(1);
-
-            const li1_4_0 = li1_4.firstChild();
-            expect(li1_4_0.toString()).to.equal('ParagraphNode');
-            expect(li1_4_0.children.length).to.equal(5);
-            expect(li1_4_0.nthChild(0).toString()).to.equal('a');
-            expect(li1_4_0.nthChild(1).toString()).to.equal('.');
-            expect(li1_4_0.nthChild(2).toString()).to.equal('d');
-            expect(li1_4_0.nthChild(3).toString()).to.equal('.');
-            expect(li1_4_0.nthChild(4).toString()).to.equal('a');
-
-            const li2 = list.nthChild(2);
-            expect(li2.toString()).to.equal('ParagraphNode');
-            expect(li2.children.length).to.equal(1);
-            expect(li2.firstChild().toString()).to.equal('b');
-
-            const li3 = list.nthChild(3) as ListNode;
-            expect(li3.toString()).to.equal('ListNode: ordered');
-            expect(li3.listType).to.equal(ListType.ORDERED);
-            expect(li3.children.length).to.equal(4);
-
-            const li3_0 = li3.nthChild(0);
-            expect(li3_0.toString()).to.equal('ParagraphNode');
-            expect(li3_0.children.length).to.equal(3);
-            expect(li3_0.nthChild(0).toString()).to.equal('b');
-            expect(li3_0.nthChild(1).toString()).to.equal('.');
-            expect(li3_0.nthChild(2).toString()).to.equal('1');
-
-            const li3_1 = li3.nthChild(1);
-            expect(li3_1.toString()).to.equal('ParagraphNode');
-            expect(li3_1.children.length).to.equal(3);
-            expect(li3_1.nthChild(0).toString()).to.equal('b');
-            expect(li3_1.nthChild(1).toString()).to.equal('.');
-            expect(li3_1.nthChild(2).toString()).to.equal('2');
-
-            const li3_2 = li3.nthChild(2);
-            expect(li3_2.toString()).to.equal('HeadingNode: 1');
-            expect(li3_2.children.length).to.equal(3);
-            expect(li3_2.nthChild(0).toString()).to.equal('b');
-            expect(li3_2.nthChild(1).toString()).to.equal('.');
-            expect(li3_2.nthChild(2).toString()).to.equal('3');
-
-            const li3_3 = li3.nthChild(3);
-            expect(li3_3.toString()).to.equal('ParagraphNode');
-            expect(li3_3.children.length).to.equal(3);
-            expect(li3_3.nthChild(0).toString()).to.equal('b');
-            expect(li3_3.nthChild(1).toString()).to.equal('.');
-            expect(li3_3.nthChild(2).toString()).to.equal('4');
-            /* eslint-enable @typescript-eslint/camelcase */
+            const vDocument = parseTestingDOM(html, [...LineBreak.parsingFunctions, ...List.parsingFunctions]);
+            expect(reprForTests(vDocument.root)).to.equal(
+                [
+                    'FragmentNode',
+                    '    ListNode: unordered',
+                    '        VElement: P',
+                    '            CharNodeTest: a',
+                    '        ListNode: unordered',
+                    '            VElement: P',
+                    '                CharNodeTest: a {bold}',
+                    '                CharNodeTest: . {bold}',
+                    '                CharNodeTest: a',
+                    '            VElement: P',
+                    '                CharNodeTest: a',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: b',
+                    '            VElement: H1',
+                    '                CharNodeTest: a',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: c',
+                    '            VElement: P',
+                    '                CharNodeTest: a',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: d',
+                    '            ListNode: unordered',
+                    '                VElement: P',
+                    '                    CharNodeTest: a',
+                    '                    CharNodeTest: .',
+                    '                    CharNodeTest: d',
+                    '                    CharNodeTest: .',
+                    '                    CharNodeTest: a',
+                    '        VElement: P',
+                    '            CharNodeTest: b',
+                    '        ListNode: ordered',
+                    '            VElement: P',
+                    '                CharNodeTest: b',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: 1',
+                    '            VElement: P',
+                    '                CharNodeTest: b',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: 2',
+                    '            VElement: H1',
+                    '                CharNodeTest: b',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: 3',
+                    '            VElement: P',
+                    '                CharNodeTest: b',
+                    '                CharNodeTest: .',
+                    '                CharNodeTest: 4',
+                ].join('\n') + '\n',
+            );
         });
     });
     describe('render', () => {
         it('should render a complex list', () => {
-            /**
-             * ListNode: UL                 motherList
-             *      VElement: P             p1
-             *          a
-             *      ListNode: UL            ul
-             *          VElement: P         p2
-             *              a.a             ('.' is bold)
-             *          VElement: P         p3
-             *              a.b
-             *          VElement: H1        h1
-             *              a.c
-             *          VElement: P         p4
-             *              a.d
-             *          ListNode: UL        ul2
-             *              VElement: P     p5
-             *                  a.d.a
-             *      VElement: P             p6
-             *          b
-             *      ListNode: OL            ol
-             *          VElement: P         p7
-             *              b.1
-             *          VElement: P         p8
-             *              b.2
-             *          VElement: H1        h12
-             *              b.3
-             *          VElement: P         p9
-             *              b.4
-             */
-            const element = document.createElement('div');
-            const editor = new JWEditor(element);
-            editor.start();
-            const root = editor.vDocument.root;
-            const motherList = new ListNode(ListType.UNORDERED);
-            root.append(motherList);
-
-            const p1 = new VElement('P');
-            p1.append(new CharNode('a'));
-            motherList.append(p1);
-
-            const ul = new ListNode(ListType.UNORDERED);
-            const p2 = new VElement('P');
-            p2.append(new CharNode('a'));
-            p2.append(new CharNode('.', { bold: true }));
-            p2.append(new CharNode('a'));
-            ul.append(p2);
-
-            const p3 = new VElement('P');
-            p3.append(new CharNode('a'));
-            p3.append(new CharNode('.'));
-            p3.append(new CharNode('b'));
-            ul.append(p3);
-
-            const h1 = new VElement('H1');
-            h1.append(new CharNode('a'));
-            h1.append(new CharNode('.'));
-            h1.append(new CharNode('c'));
-            ul.append(h1);
-
-            const p4 = new VElement('P');
-            p4.append(new CharNode('a'));
-            p4.append(new CharNode('.'));
-            p4.append(new CharNode('d'));
-            ul.append(p4);
-
-            const ul2 = new ListNode(ListType.UNORDERED);
-            const p5 = new VElement('P');
-            p5.append(new CharNode('a'));
-            p5.append(new CharNode('.'));
-            p5.append(new CharNode('d'));
-            p5.append(new CharNode('.'));
-            p5.append(new CharNode('a'));
-            ul2.append(p5);
-            ul.append(ul2);
-            motherList.append(ul);
-
-            const p6 = new VElement('P');
-            p6.append(new CharNode('b'));
-            motherList.append(p6);
-
-            const ol = new ListNode(ListType.ORDERED);
-            const p7 = new VElement('P');
-            p7.append(new CharNode('b'));
-            p7.append(new CharNode('.'));
-            p7.append(new CharNode('1'));
-            ol.append(p7);
-            const p8 = new VElement('P');
-            p8.append(new CharNode('b'));
-            p8.append(new CharNode('.'));
-            p8.append(new CharNode('2'));
-            ol.append(p8);
-            const h12 = new VElement('H1');
-            h12.append(new CharNode('b'));
-            h12.append(new CharNode('.'));
-            h12.append(new CharNode('3'));
-            ol.append(h12);
-            const p9 = new VElement('P');
-            p9.append(new CharNode('b'));
-            p9.append(new CharNode('.'));
-            p9.append(new CharNode('4'));
-            ol.append(p9);
-            motherList.append(ol);
-
-            const renderer = new Renderer();
-            renderer.render(editor.vDocument, editor.editable);
-            /* eslint-disable prettier/prettier */
-            expect(editor.editable.innerHTML).to.equal([
+            const html = [
                 '<ul>',
                     '<li>a',
                         '<ul>',
@@ -308,10 +144,68 @@ describe('plugin-list', () => {
                         '</ol>',
                     '</li>',
                 '</ul>',
-            ].join(''));
+            ].join('');
+
+            const element = document.createElement('test-node');
+            element.innerHTML = html;
+            const vDocument = parseTestingDOM(element, [List.parse, Char.parse]);
+            expect(reprForTests(vDocument.root)).to.equal(
+                [
+                    'FragmentNode',
+                    '    ListNode: unordered',
+                    '        VElement: P',
+                    '            CharNode: a',
+                    '        ListNode: unordered',
+                    '            VElement: P',
+                    '                CharNode: a',
+                    '                CharNode: . {bold}',
+                    '                CharNode: a',
+                    '            VElement: P',
+                    '                CharNode: a',
+                    '                CharNode: .',
+                    '                CharNode: b',
+                    '            VElement: H1',
+                    '                CharNode: a',
+                    '                CharNode: .',
+                    '                CharNode: c',
+                    '            VElement: P',
+                    '                CharNode: a',
+                    '                CharNode: .',
+                    '                CharNode: d',
+                    '            ListNode: unordered',
+                    '                VElement: P',
+                    '                    CharNode: a',
+                    '                    CharNode: .',
+                    '                    CharNode: d',
+                    '                    CharNode: .',
+                    '                    CharNode: a',
+                    '        VElement: P',
+                    '            CharNode: b',
+                    '        ListNode: ordered',
+                    '            VElement: P',
+                    '                CharNode: b',
+                    '                CharNode: .',
+                    '                CharNode: 1',
+                    '            VElement: P',
+                    '                CharNode: b',
+                    '                CharNode: .',
+                    '                CharNode: 2',
+                    '            VElement: H1',
+                    '                CharNode: b',
+                    '                CharNode: .',
+                    '                CharNode: 3',
+                    '            VElement: P',
+                    '                CharNode: b',
+                    '                CharNode: .',
+                    '                CharNode: 4',
+                ].join('\n') + '\n',
+            );
+
+            const renderer = new Renderer();
+            renderer.render(vDocument, element);
+            /* eslint-disable prettier/prettier */
+            expect(element.innerHTML).to.equal(html);
             /* eslint-enable prettier/prettier */
-            editor.stop();
-            element.remove();
         });
     });
     describe('toggleList', () => {

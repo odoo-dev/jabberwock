@@ -3,6 +3,9 @@ import { expect } from 'chai';
 import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { Parser, ParsingContext, ParsingMap, ParsingFunction } from '../../core/src/Parser';
+import { VDocument } from '../../core/src/VDocument';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -276,4 +279,90 @@ export async function keydown(el: Element, key: string): Promise<void> {
         }),
     );
     await nextTickFrame();
+}
+
+/**
+ * Return a convenient string representation of this node and its
+ * descendants.
+ */
+export function reprForTests(vNode: VNode, showMarker = false): string {
+    return (function _repr(vNode: VNode, __repr = '', __level = 0): string {
+        __repr += Array(__level * 4 + 1).join(' ') + vNode.name;
+        if ('format' in vNode) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const format = (vNode as any).format;
+            const list = [];
+            Object.keys(format).forEach(key => {
+                if (format[key]) list.push(key);
+            });
+            if (list.length) {
+                __repr += ' {' + list.sort().join() + '}';
+            }
+        }
+        __repr += '\n';
+        vNode[showMarker ? '_children' : 'children'].forEach(child => {
+            __repr = _repr(child, __repr, __level + 1);
+        });
+        return __repr;
+    })(vNode);
+}
+
+export class CharNodeTest extends VNode {
+    static readonly atomic = true;
+    readonly char: string;
+    readonly format: object;
+
+    constructor(char: string, format = {}) {
+        super();
+        this.char = char;
+        this.format = format;
+    }
+    get name(): string {
+        return this.constructor.name + ': ' + this.char;
+    }
+    /**
+     * Return a new VNode with the same type and attributes as this VNode.
+     *
+     * @override
+     */
+    shallowDuplicate(): CharNodeTest {
+        return new CharNodeTest(this.char);
+    }
+}
+
+/**
+ * Parser for the testing CharNode
+ */
+export function parseTextChars(context: ParsingContext): [ParsingContext, ParsingMap] {
+    if (context.currentNode.nodeType === Node.TEXT_NODE) {
+        const text = removeFormattingSpace(context.currentNode);
+        const format = context.format;
+        const parsingMap: ParsingMap = new Map(
+            text.split('').map(char => {
+                const charNode = new CharNodeTest(char, { ...format });
+                context.parentVNode.append(charNode);
+                return [charNode, [context.currentNode]];
+            }),
+        );
+        return [context, parsingMap];
+    }
+}
+
+/**
+ * Parser with custom nodes for tests.
+ */
+export function parseTestingDOM(
+    html: string | HTMLElement,
+    parsingFunctions: ParsingFunction[] = [],
+): VDocument {
+    let element: HTMLElement;
+    if (typeof html === 'string') {
+        element = document.createElement('test-node');
+        element.innerHTML = html;
+    } else {
+        element = html;
+    }
+    const parser = new Parser();
+    parser.addParsingFunction(...parsingFunctions, parseTextChars);
+    return parser.parse(element);
 }
