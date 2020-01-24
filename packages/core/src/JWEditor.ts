@@ -2,6 +2,7 @@ import { BoundCommand, Keymap } from './Keymap';
 import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
+import { Dom } from '../../plugin-dom/Dom';
 import { Renderer } from './Renderer';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
@@ -23,6 +24,7 @@ export interface JWEditorConfig {
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
     shortcuts?: Shortcut[];
+    defaultRendererId?: string;
 }
 
 export class JWEditor {
@@ -32,7 +34,7 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     plugins: JWPlugin[];
-    renderer: Renderer;
+    renderers: Record<string, Renderer> = {};
     vDocument: VDocument;
     autoFocus = false;
     parser = new Parser();
@@ -41,6 +43,7 @@ export class JWEditor {
         user: new Keymap(),
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
+    defaultRendererId = 'dom';
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -49,9 +52,6 @@ export class JWEditor {
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
         this.plugins = [];
-
-        // Render the contents of `vDocument`
-        this.renderer = new Renderer();
 
         if (!editable) {
             editable = document.createElement('jw-editable');
@@ -111,7 +111,12 @@ export class JWEditor {
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this);
 
-        this.renderer.render(this.vDocument, this.editable);
+        // Render with the default renderer. If no renderer is provided, install
+        // and use DomRenderer.
+        if (!Object.keys(this.renderers).length) {
+            this.addPlugin(Dom);
+        }
+        this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
     }
 
     //--------------------------------------------------------------------------
@@ -165,6 +170,14 @@ export class JWEditor {
             if (pluginClass.parsingFunctions.length) {
                 this.parser.addParsingFunction(...pluginClass.parsingFunctions);
             }
+            // Register the renderers of this plugin if it has any.
+            // If two renderers exist with the same id, the last one to be added
+            // will replace the previous one.
+            if (pluginClass.renderers) {
+                pluginClass.renderers.forEach(Renderer => {
+                    this.renderers[Renderer.id] = new Renderer();
+                });
+            }
         }
     }
     /**
@@ -184,6 +197,9 @@ export class JWEditor {
                 this._loadShortcut(shortcut, this.keymaps.user);
             }
         }
+        if (config.defaultRendererId) {
+            this.defaultRendererId = config.defaultRendererId;
+        }
     }
 
     /**
@@ -194,7 +210,7 @@ export class JWEditor {
      */
     execCommand(id: CommandIdentifier, args?: CommandArgs): void {
         this.dispatcher.dispatch(id, args);
-        this.renderer.render(this.vDocument, this.editable);
+        this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
     }
 
     /**
