@@ -9,6 +9,7 @@ import { RangeParams } from '../core/src/CorePlugin';
 import { RenderingFunction } from '../core/src/Renderer';
 import { DomRenderingMap, DomRenderingContext } from '../plugin-dom/DomRenderer';
 import { VElement } from '../core/src/VNodes/VElement';
+import { VDocumentMap } from '../core/src/VDocumentMap';
 
 export interface ListParams extends RangeParams {
     type: ListType;
@@ -119,43 +120,64 @@ export class List extends JWPlugin {
     static renderToDom(
         currentContext: DomRenderingContext,
     ): [DomRenderingContext, DomRenderingMap] {
-        if (currentContext.currentNode.is(ListNode)) {
-            const currentVNode = currentContext.currentNode;
-            const tag = currentVNode.listType === ListType.ORDERED ? 'OL' : 'UL';
-            const domListNode = document.createElement(tag);
-            currentContext.parentNode.appendChild(domListNode);
-            const renderingMap: DomRenderingMap = new Map([[domListNode, [currentVNode]]]);
-            // The ListNode has to handle the rendering of its direct children by
-            // itself since some of them are rendered inside "LI" nodes while others
-            // are rendered *as* "LI" nodes.
-            Array.from(currentVNode.children).forEach((listItem: VNode) => {
-                // Check if previous "LI" can be reused or create a new one.
-                let liNode: Element;
-                if (listItem.is(ListNode) && domListNode.children.length) {
-                    // Render an indented list in the list item that precedes it.
-                    // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
-                    liNode = domListNode.children[domListNode.children.length - 1];
-                } else {
-                    liNode = document.createElement('li');
-                    domListNode.appendChild(liNode);
-                }
-
-                // Direct ListNode's VElement children "P" are rendered as "LI"
-                // while other nodes will be rendered inside the "LI".
-                if (listItem.is(VElement) && listItem.htmlTag === 'P') {
-                    // Mark the "P" as rendered by the "LI".
-                    renderingMap.set(liNode, [listItem]);
-                    // TODO: this should be generic.
-                    if (!listItem.hasChildren()) {
-                        liNode.appendChild(document.createElement('BR'));
-                    }
-                }
-                // Call the generic rendering for grandchildren.
-                // this.render(listItem, liNode); // TODO: dammit.
-            });
-            // Mark the ListNode as completely rendered up to its last leaf.
-            return [{ ...currentContext, currentNode: currentVNode.lastLeaf() }, renderingMap];
+        let context = { ...currentContext };
+        const node = context.currentNode;
+        const isUnrenderedListItem =
+            node.parent && node.parent.is(ListNode) && !VDocumentMap.toDom(node);
+        let result;
+        if (isUnrenderedListItem) {
+            result = List.renderListItemToDom({ ...context });
+            context = result[0];
         }
+        if (node.is(ListNode)) {
+            result = List.renderListToDom({ ...context });
+        }
+        return result;
+    }
+    static renderListToDom(
+        currentContext: DomRenderingContext,
+    ): [DomRenderingContext, DomRenderingMap] {
+        const list = currentContext.currentNode as ListNode;
+        const tag = list.listType === ListType.ORDERED ? 'OL' : 'UL';
+        const domListNode = document.createElement(tag);
+        currentContext.parentNode.appendChild(domListNode);
+        const renderingMap: DomRenderingMap = new Map([[domListNode, [list]]]);
+        return [{ ...currentContext }, renderingMap];
+    }
+    static renderListItemToDom(
+        currentContext: DomRenderingContext,
+    ): [DomRenderingContext, DomRenderingMap] {
+        // The ListNode has to handle the rendering of its direct children by
+        // itself since some of them are rendered inside "LI" nodes while others
+        // are rendered *as* "LI" nodes.
+        const listItem = currentContext.currentNode;
+        const domListNode = currentContext.parentNode;
+        // Check if previous "LI" can be reused or create a new one.
+        let liNode: Element;
+        if (listItem.is(ListNode) && domListNode.childNodes.length) {
+            // Render an indented list in the list item that precedes it.
+            // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
+            liNode = domListNode.childNodes[domListNode.childNodes.length - 1] as Element;
+        } else {
+            liNode = document.createElement('li');
+        }
+        domListNode.appendChild(liNode);
+
+        const renderingMap: DomRenderingMap = new Map();
+        currentContext.parentNode = liNode;
+        // Direct ListNode's VElement children "P" are rendered as "LI"
+        // while other nodes will be rendered inside the "LI".
+        if (listItem.is(VElement) && listItem.htmlTag === 'P') {
+            // Mark the "P" as rendered by the "LI".
+            renderingMap.set(liNode, [listItem]);
+            // TODO: this should be generic.
+            if (!listItem.hasChildren()) {
+                liNode.appendChild(document.createElement('BR'));
+            }
+        } else {
+            return [{ ...currentContext }, undefined];
+        }
+        return [{ ...currentContext }, renderingMap];
     }
 
     //--------------------------------------------------------------------------

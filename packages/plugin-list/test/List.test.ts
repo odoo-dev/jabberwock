@@ -177,7 +177,7 @@ describePlugin(List, testEditor => {
             /* eslint-enable @typescript-eslint/camelcase */
         });
     });
-    describe.skip('render', () => {
+    describe('render', () => {
         it('should render a complex list', async () => {
             /**
              * ListNode: UL                 motherList
@@ -208,7 +208,7 @@ describePlugin(List, testEditor => {
              *              b.4
              */
             const element = document.createElement('div');
-            const editor = new JWEditor(element);
+            const editor = new BasicEditor(element);
             await editor.start();
             const root = editor.vDocument.root;
             const motherList = new ListNode(ListType.UNORDERED);
@@ -312,7 +312,7 @@ describePlugin(List, testEditor => {
             element.remove();
         });
     });
-    describe.skip('toggleList', () => {
+    describe('toggleList', () => {
         describe('Range collapsed', () => {
             describe('Unordered', () => {
                 describe('Insert', () => {
@@ -788,7 +788,7 @@ describePlugin(List, testEditor => {
             });
         });
     });
-    describe.skip('VDocument', () => {
+    describe('VDocument', () => {
         describe('deleteForward', () => {
             describe('Selection collapsed', () => {
                 describe('Basic', () => {
