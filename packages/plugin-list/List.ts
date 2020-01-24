@@ -28,6 +28,18 @@ export class List extends JWPlugin {
             handler: this.toggleList.bind(this),
         },
     };
+    shortcuts = [
+        {
+            pattern: 'CTRL+SHIFT+<Digit7>',
+            commandId: 'toggleList',
+            commandArgs: { type: 'ordered' } as ListParams,
+        },
+        {
+            pattern: 'CTRL+SHIFT+<Digit8>',
+            commandId: 'toggleList',
+            commandArgs: { type: 'unordered' } as ListParams,
+        },
+    ];
     static readonly parsingFunctions: Array<ParsingFunction> = [List.parse];
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (listTags.includes(context.currentNode.nodeName)) {

@@ -9,7 +9,7 @@ import { DevTools } from '../../plugin-devtools/src/DevTools';
 export interface TestEditorSpec {
     contentBefore: string;
     contentAfter?: string;
-    stepFunction?: (editor: JWEditor) => void;
+    stepFunction?: (editor: JWEditor) => void | Promise<void>;
     debug?: boolean;
 }
 
@@ -123,7 +123,7 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     // Start the editor and execute the step code.
     await editor.start();
     if (spec.stepFunction) {
-        spec.stepFunction(editor);
+        await spec.stepFunction(editor);
     }
 
     // Render the selection in the test container and test the result.
@@ -362,12 +362,13 @@ export async function click(el: Element, options?: MouseEventInit): Promise<void
  * @param el
  * @param options
  */
-export async function keydown(el: Element, key: string): Promise<void> {
+export async function keydown(el: Element, key: string, options = {}): Promise<void> {
     el.dispatchEvent(
         new KeyboardEvent('keydown', {
             key: key,
             code: key,
             bubbles: true,
+            ...options,
         }),
     );
     await nextTickFrame();

@@ -1,3 +1,4 @@
+import { BoundCommand, Keymap } from './Keymap';
 import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
@@ -6,11 +7,22 @@ import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 
+export enum Platform {
+    MAC = 'mac',
+    PC = 'pc',
+}
+
+export interface Shortcut extends BoundCommand {
+    platform?: Platform;
+    pattern: string;
+}
+
 export interface JWEditorConfig {
     autoFocus?: boolean;
     debug?: boolean;
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
+    shortcuts?: Shortcut[];
 }
 
 export class JWEditor {
@@ -24,6 +36,11 @@ export class JWEditor {
     vDocument: VDocument;
     autoFocus = false;
     parser = new Parser();
+    keymaps = {
+        default: new Keymap(),
+        user: new Keymap(),
+    };
+    _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -80,6 +97,9 @@ export class JWEditor {
         this.el.appendChild(this.editable);
         document.body.appendChild(this.el);
 
+        // Attach the keymaps to the editable.
+        this.editable.addEventListener('keydown', this._onKeydown.bind(this));
+
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
         this.addPlugin(CorePlugin);
@@ -135,6 +155,12 @@ export class JWEditor {
             Object.keys(plugin.commandHooks).forEach(key => {
                 this.dispatcher.registerHook(key, plugin.commandHooks[key]);
             });
+            // register the shortcuts for this plugin.
+            if (plugin.shortcuts) {
+                for (const shortcut of plugin.shortcuts) {
+                    this._loadShortcut(shortcut, this.keymaps.default);
+                }
+            }
             // Register the parsing functions of this plugin.
             if (pluginClass.parsingFunctions.length) {
                 this.parser.addParsingFunction(...pluginClass.parsingFunctions);
@@ -152,6 +178,11 @@ export class JWEditor {
         }
         if (config.plugins) {
             config.plugins.forEach(pluginClass => this.addPlugin(pluginClass));
+        }
+        if (config.shortcuts) {
+            for (const shortcut of config.shortcuts) {
+                this._loadShortcut(shortcut, this.keymaps.user);
+            }
         }
     }
 
@@ -176,6 +207,51 @@ export class JWEditor {
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Load a shortcut in the keymap depending on the platform.
+     *
+     * - If the shortuct has no platform property; load the shortuct in both
+     *   platform ('mac' and 'pc').
+     * - If the shortuct has no platform property and the current platform is
+     *   mac, modify the ctrl key to meta key.
+     * - If the shortuct has a platform property, only load the shortcut for
+     *   that platform.
+     * - If no `mapping.commandId` is declared, it means removing the shortcut.
+     *
+     * @param shortcut The shortuct definition.
+     * @param priority  The highest priority is the one that prevail.
+     */
+    _loadShortcut(shortcut: Shortcut, keymap: Keymap): void {
+        if (!shortcut.platform || shortcut.platform === this._platform) {
+            if (!shortcut.platform && this._platform === Platform.MAC) {
+                shortcut.pattern = shortcut.pattern.replace(/ctrl/gi, 'CMD');
+            }
+            keymap.bindShortcut(shortcut.pattern, shortcut.commandId, shortcut.commandArgs);
+        }
+    }
+
+    /**
+     * Listener added to the DOM that `execCommand` if a shortcut has been found
+     * in one of the keymaps.
+     *
+     * @param event
+     */
+    _onKeydown(event: KeyboardEvent): void {
+        const commandUser = this.keymaps.user.match(event);
+        const commandDefault = !commandUser && this.keymaps.default.match(event);
+        const command = commandUser || commandDefault;
+        if (command && command.commandId) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            this.execCommand(command.commandId, command.commandArgs);
+        }
     }
 }
 

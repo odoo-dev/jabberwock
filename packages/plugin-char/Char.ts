@@ -22,6 +22,23 @@ export class Char extends JWPlugin {
             handler: this.applyFormat.bind(this),
         },
     };
+    shortcuts = [
+        {
+            pattern: 'CTRL+B',
+            commandId: 'applyFormat',
+            commandArgs: { format: 'bold' } as FormatParams,
+        },
+        {
+            pattern: 'CTRL+I',
+            commandId: 'applyFormat',
+            commandArgs: { format: 'italic' } as FormatParams,
+        },
+        {
+            pattern: 'CTRL+U',
+            commandId: 'applyFormat',
+            commandArgs: { format: 'underline' } as FormatParams,
+        },
+    ];
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (context.currentNode.nodeType === Node.TEXT_NODE) {
             const vNodes: CharNode[] = [];
