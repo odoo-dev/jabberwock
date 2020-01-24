@@ -7,6 +7,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { describePlugin } from '../../utils/src/testUtils';
+import { DomRenderer } from '../../plugin-dom/DomRenderer';
 
 const insertText = function(editor, text: string): void {
     const params: InsertTextParams = {
@@ -43,6 +44,46 @@ describePlugin(Char, testEditor => {
                 vDocument: new VDocument(new FragmentNode()),
             };
             expect(Char.parse(context)).to.be.undefined;
+        });
+    });
+    describe('renderToDom', () => {
+        it('should insert 1 space and 1 nbsp instead of 2 spaces', () => {
+            const element = document.createElement('p');
+            element.innerHTML = 'a';
+            document.body.appendChild(element);
+
+            const editor = new BasicEditor(element);
+            editor.start();
+            editor.vDocument.root.append(new CharNode(' '));
+            editor.vDocument.root.append(new CharNode(' '));
+            editor.vDocument.root.append(new CharNode('b'));
+
+            const renderer = new DomRenderer();
+            renderer.addRenderingFunction(Char.renderToDom);
+            renderer.render(editor.vDocument, editor.editable);
+            expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
+            editor.stop();
+            element.remove();
+        });
+        it('should insert 2 spaces and 2 nbsp instead of 4 spaces', () => {
+            const element = document.createElement('p');
+            element.innerHTML = 'a';
+            document.body.appendChild(element);
+
+            const editor = new BasicEditor(element);
+            editor.start();
+            editor.vDocument.root.append(new CharNode(' '));
+            editor.vDocument.root.append(new CharNode(' '));
+            editor.vDocument.root.append(new CharNode(' '));
+            editor.vDocument.root.append(new CharNode(' '));
+            editor.vDocument.root.append(new CharNode('b'));
+
+            const renderer = new DomRenderer();
+            renderer.addRenderingFunction(Char.renderToDom);
+            renderer.render(editor.vDocument, editor.editable);
+            expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
+            editor.stop();
+            element.remove();
         });
     });
     describe('CharNode', () => {

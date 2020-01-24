@@ -6,6 +6,9 @@ import { utils } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { withMarkers } from '../utils/src/markers';
 import { RangeParams } from '../core/src/CorePlugin';
+import { RenderingFunction } from '../core/src/Renderer';
+import { DomRenderingMap, DomRenderingContext } from '../plugin-dom/DomRenderer';
+import { VElement } from '../core/src/VNodes/VElement';
 
 export interface ListParams extends RangeParams {
     type: ListType;
@@ -41,6 +44,10 @@ export class List extends JWPlugin {
         },
     ];
     static readonly parsingFunctions: Array<ParsingFunction> = [List.parse];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
+        dom: List.renderToDom,
+    };
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (listTags.includes(context.currentNode.nodeName)) {
             return List.parseList({ ...context });
@@ -103,6 +110,52 @@ export class List extends JWPlugin {
         // the paragraph created above, or to the list itself in the case of
         // blocks.
         return [context, parsingMap];
+    }
+    /**
+     * Render the ListNode in currentContext.
+     *
+     * @param currentContext
+     */
+    static renderToDom(
+        currentContext: DomRenderingContext,
+    ): [DomRenderingContext, DomRenderingMap] {
+        if (currentContext.currentVNode.is(ListNode)) {
+            const currentVNode = currentContext.currentVNode;
+            const tag = currentVNode.listType === ListType.ORDERED ? 'OL' : 'UL';
+            const domListNode = document.createElement(tag);
+            currentContext.parentNode.appendChild(domListNode);
+            const renderingMap: DomRenderingMap = new Map([[domListNode, [currentVNode]]]);
+            // The ListNode has to handle the rendering of its direct children by
+            // itself since some of them are rendered inside "LI" nodes while others
+            // are rendered *as* "LI" nodes.
+            Array.from(currentVNode.children).forEach((listItem: VNode) => {
+                // Check if previous "LI" can be reused or create a new one.
+                let liNode: Element;
+                if (listItem.is(ListNode) && domListNode.children.length) {
+                    // Render an indented list in the list item that precedes it.
+                    // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
+                    liNode = domListNode.children[domListNode.children.length - 1];
+                } else {
+                    liNode = document.createElement('li');
+                    domListNode.appendChild(liNode);
+                }
+
+                // Direct ListNode's VElement children "P" are rendered as "LI"
+                // while other nodes will be rendered inside the "LI".
+                if (listItem.is(VElement) && listItem.htmlTag === 'P') {
+                    // Mark the "P" as rendered by the "LI".
+                    renderingMap.set(liNode, [listItem]);
+                    // TODO: this should be generic.
+                    if (!listItem.hasChildren()) {
+                        liNode.appendChild(document.createElement('BR'));
+                    }
+                }
+                // Call the generic rendering for grandchildren.
+                // this.render(listItem, liNode); // TODO: dammit.
+            });
+            // Mark the ListNode as completely rendered up to its last leaf.
+            return [{ ...currentContext, currentVNode: currentVNode.lastLeaf() }, renderingMap];
+        }
     }
 
     //--------------------------------------------------------------------------

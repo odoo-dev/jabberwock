@@ -1,47 +1,8 @@
-import { expect } from 'chai';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { CharNode } from '../../plugin-char/CharNode';
 
 describe('utils', () => {
     describe('Renderer', () => {
-        describe('_renderTextNode', () => {
-            it('should insert 1 space and 1 nbsp instead of 2 spaces', async () => {
-                const element = document.createElement('p');
-                element.innerHTML = 'a';
-                document.body.appendChild(element);
-
-                const editor = new BasicEditor(element);
-                await editor.start();
-                editor.vDocument.root.append(new CharNode(' '));
-                editor.vDocument.root.append(new CharNode(' '));
-                editor.vDocument.root.append(new CharNode('b'));
-
-                editor.renderers.dom.render(editor.vDocument, editor.editable);
-                expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
-                editor.stop();
-                element.remove();
-            });
-
-            it('should insert 2 spaces and 2 nbsp instead of 4 spaces', async () => {
-                const element = document.createElement('p');
-                element.innerHTML = 'a';
-                document.body.appendChild(element);
-
-                const editor = new BasicEditor(element);
-                await editor.start();
-                editor.vDocument.root.append(new CharNode(' '));
-                editor.vDocument.root.append(new CharNode(' '));
-                editor.vDocument.root.append(new CharNode(' '));
-                editor.vDocument.root.append(new CharNode(' '));
-                editor.vDocument.root.append(new CharNode('b'));
-
-                editor.renderers.dom.render(editor.vDocument, editor.editable);
-                expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
-                editor.stop();
-                element.remove();
-            });
-        });
         describe('selection', () => {
             it('should render textual selection at the beginning', async () => {
                 const content = `<p>[a]bc</p>`;
