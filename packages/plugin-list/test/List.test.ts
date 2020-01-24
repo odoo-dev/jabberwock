@@ -9,7 +9,6 @@ import { Paragraph } from '../../plugin-paragraph/Paragraph';
 import { Parser } from '../../core/src/Parser';
 import { CharNode } from '../../plugin-char/CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { Renderer } from '../../core/src/Renderer';
 import { describePlugin } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
@@ -179,7 +178,7 @@ describePlugin(List, testEditor => {
         });
     });
     describe('render', () => {
-        it('should render a complex list', () => {
+        it('should render a complex list', async () => {
             /**
              * ListNode: UL                 motherList
              *      VElement: P             p1
@@ -210,7 +209,7 @@ describePlugin(List, testEditor => {
              */
             const element = document.createElement('div');
             const editor = new JWEditor(element);
-            editor.start();
+            await editor.start();
             const root = editor.vDocument.root;
             const motherList = new ListNode(ListType.UNORDERED);
             root.append(motherList);
@@ -282,8 +281,7 @@ describePlugin(List, testEditor => {
             ol.append(p9);
             motherList.append(ol);
 
-            const renderer = new Renderer();
-            renderer.render(editor.vDocument, editor.editable);
+            editor.renderers.dom.render(editor.vDocument, editor.editable);
             /* eslint-disable prettier/prettier */
             expect(editor.editable.innerHTML).to.equal([
                 '<ul>',
