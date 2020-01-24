@@ -42,66 +42,6 @@ export class EventManager {
                 };
                 return this.editor.execCommand(customEvent.type, vSelectionParams);
             }
-            case 'keydown': {
-                // TODO: keydown should be matched with existing shortcuts. If
-                // it matches an command shortcut, trigger the corresponding
-                // command, otherwise do not trigger any command.
-                if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'b'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'bold' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'i'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'italic' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === 'u'
-                ) {
-                    return this.editor.execCommand('applyFormat', { format: 'underline' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === '7'
-                ) {
-                    return this.editor.execCommand('toggleList', { type: 'ordered' });
-                } else if (
-                    payload.ctrlKey &&
-                    !payload.altKey &&
-                    payload.shiftKey &&
-                    !payload.metaKey &&
-                    payload.key === '8'
-                ) {
-                    return this.editor.execCommand('toggleList', { type: 'unordered' });
-                }
-                // TODO: keydown should be matched with existing shortcuts.
-                return;
-            }
-            case 'tab':
-                if (!payload.shiftKey && !payload.ctrlKey && !payload.altKey && !payload.metaKey) {
-                    return this.editor.execCommand('indent');
-                } else if (
-                    payload.shiftKey &&
-                    !payload.ctrlKey &&
-                    !payload.altKey &&
-                    !payload.metaKey
-                ) {
-                    return this.editor.execCommand('outdent');
-                }
-                break;
             default:
                 this.editor.execCommand(customEvent.type, payload);
         }

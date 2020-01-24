@@ -1,6 +1,7 @@
 import JWEditor from './JWEditor';
 import { ParsingFunction } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
+import { Shortcut } from './JWEditor';
 
 export interface JWPluginConfig {
     name?: string;
@@ -13,6 +14,7 @@ export class JWPlugin {
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
     commandHooks: Record<CommandIdentifier, CommandHandler> = {};
+    shortcuts: Shortcut[];
 
     constructor(editor: JWEditor, options: JWPluginConfig = {}) {
         this.editor = editor;
