@@ -43,8 +43,8 @@ export class LineBreak extends JWPlugin {
      * html)
      */
     static renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
-        if (context.currentVNode.is(LineBreakNode)) {
-            const lineBreak = context.currentVNode;
+        if (context.currentNode.is(LineBreakNode)) {
+            const lineBreak = context.currentNode;
             const br = document.createElement('br');
             context.parentNode.appendChild(br);
             const toAddToMap = [];

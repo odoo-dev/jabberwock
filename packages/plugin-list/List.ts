@@ -119,8 +119,8 @@ export class List extends JWPlugin {
     static renderToDom(
         currentContext: DomRenderingContext,
     ): [DomRenderingContext, DomRenderingMap] {
-        if (currentContext.currentVNode.is(ListNode)) {
-            const currentVNode = currentContext.currentVNode;
+        if (currentContext.currentNode.is(ListNode)) {
+            const currentVNode = currentContext.currentNode;
             const tag = currentVNode.listType === ListType.ORDERED ? 'OL' : 'UL';
             const domListNode = document.createElement(tag);
             currentContext.parentNode.appendChild(domListNode);
@@ -154,7 +154,7 @@ export class List extends JWPlugin {
                 // this.render(listItem, liNode); // TODO: dammit.
             });
             // Mark the ListNode as completely rendered up to its last leaf.
-            return [{ ...currentContext, currentVNode: currentVNode.lastLeaf() }, renderingMap];
+            return [{ ...currentContext, currentNode: currentVNode.lastLeaf() }, renderingMap];
         }
     }
 
