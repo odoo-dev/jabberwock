@@ -17,6 +17,7 @@ import { Divider } from '../packages/plugin-divider/Divider';
 import { Image } from '../packages/plugin-image/Image';
 import { Subscript } from '../packages/plugin-subscript/Subscript';
 import { Superscript } from '../packages/plugin-superscript/Superscript';
+import { Blockquote } from '../packages/plugin-blockquote/Blockquote';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -42,6 +43,7 @@ export class BasicEditor extends JWEditor {
                 [Image],
                 [Subscript],
                 [Superscript],
+                [Blockquote],
             ],
         });
     }
