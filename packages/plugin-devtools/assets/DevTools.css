@@ -40,6 +40,11 @@ jw-devtools .link {
     color: blue;
 }
 
+jw-devtools .subscript {
+    vertical-align: sub;
+    font-size: 0.7em;
+}
+
 jw-devtools .marker-node {
     color: red;
 }
