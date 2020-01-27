@@ -119,36 +119,12 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         this.state.folded = !this.state.folded;
     }
     /**
-     * Return true if the given node is bold.
+     * Return true if the given node has the given format.
      *
      * @param node
      */
-    isBold(node: VNode): boolean {
-        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'b');
-    }
-    /**
-     * Return true if the given node is italic.
-     *
-     * @param node
-     */
-    isItalic(node: VNode): boolean {
-        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'i');
-    }
-    /**
-     * Return true if the given node is underline.
-     *
-     * @param node
-     */
-    isUnderline(node: VNode): boolean {
-        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'u');
-    }
-    /**
-     * Return true if the given node is underline.
-     *
-     * @param node
-     */
-    isLink(node: VNode): boolean {
-        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'link');
+    isFormat(node: VNode, formatName: string): boolean {
+        return node.is(InlineNode) && !!node.formats.find(format => format.name === formatName);
     }
 
     //--------------------------------------------------------------------------

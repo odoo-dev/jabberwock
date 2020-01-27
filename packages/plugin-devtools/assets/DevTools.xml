@@ -54,10 +54,11 @@
             <span t-elif="props.vNode.char" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
-                    bold: isBold(props.vNode),
-                    italic: isItalic(props.vNode),
-                    underline: isUnderline(props.vNode),
-                    link: isLink(props.vNode),
+                    bold: isFormat(props.vNode, 'b'),
+                    italic: isFormat(props.vNode, 'i'),
+                    underline: isFormat(props.vNode, 'u'),
+                    link: isFormat(props.vNode, 'link'),
+                    subscript: isFormat(props.vNode, 'subscript'),
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr()"/>
@@ -66,10 +67,11 @@
                 <span class="element-name selectable-line" t-on-click="onClickNode"
                     t-on-dblclick="onDblClickNode"
                     t-att-class="{
-                        bold: isBold(props.vNode),
-                        italic: isItalic(props.vNode),
-                        underline: isUnderline(props.vNode),
-                        link: isLink(props.vNode),
+                        bold: isFormat(props.vNode, 'b'),
+                        italic: isFormat(props.vNode, 'i'),
+                        underline: isFormat(props.vNode, 'u'),
+                        link: isFormat(props.vNode, 'link'),
+                        subscript: isFormat(props.vNode, 'subscript'),
                         selected: props.selectedID == props.vNode.id,
                         'line-break': props.vNode.htmlTag === 'BR',
                     }">
