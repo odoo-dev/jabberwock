@@ -59,6 +59,7 @@
                     underline: isFormat(props.vNode, 'u'),
                     link: isFormat(props.vNode, 'link'),
                     subscript: isFormat(props.vNode, 'subscript'),
+                    superscript: isFormat(props.vNode, 'superscript'),
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr()"/>
@@ -72,6 +73,7 @@
                         underline: isFormat(props.vNode, 'u'),
                         link: isFormat(props.vNode, 'link'),
                         subscript: isFormat(props.vNode, 'subscript'),
+                        superscript: isFormat(props.vNode, 'superscript'),
                         selected: props.selectedID == props.vNode.id,
                         'line-break': props.vNode.htmlTag === 'BR',
                     }">
