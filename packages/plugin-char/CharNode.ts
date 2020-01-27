@@ -1,20 +1,10 @@
 import { VNode } from '../core/src/VNodes/VNode';
-
-export interface FormatType {
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-}
-export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
+import { FormatName, Format } from '../core/src/Format';
 
 export class CharNode extends VNode {
     static readonly atomic = true;
     readonly char: string;
-    // Format
-    bold = false;
-    italic = false;
-    underline = false;
-    constructor(char: string, format: FormatType = {}) {
+    constructor(char: string, format?: Record<FormatName, Format>) {
         super();
         if (char.length !== 1) {
             throw new Error(
@@ -22,9 +12,9 @@ export class CharNode extends VNode {
             );
         }
         this.char = char;
-        this.bold = !!format.bold;
-        this.italic = !!format.italic;
-        this.underline = !!format.underline;
+        if (format) {
+            this.format = format;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -40,25 +30,15 @@ export class CharNode extends VNode {
      * @override
      */
     shallowDuplicate(): CharNode {
-        return new CharNode(this.char, this.format);
+        const charNode = new CharNode(this.char);
+        charNode.format = this.format;
+        return charNode;
     }
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    get format(): FormatType {
-        return {
-            bold: this.bold,
-            italic: this.italic,
-            underline: this.underline,
-        };
-    }
-    set format(format: FormatType) {
-        this.bold = !!format.bold;
-        this.italic = !!format.italic;
-        this.underline = !!format.underline;
-    }
     /**
      * Return the length of this VNode.
      */

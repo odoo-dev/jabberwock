@@ -1,6 +1,6 @@
 import { VNode } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { FormatType } from '../../plugin-char/CharNode';
+import { FormatName, Format } from './Format';
 import { withMarkers } from '../../utils/src/markers';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { VSelection } from './VSelection';
@@ -13,7 +13,7 @@ export class VDocument {
      * property.
      * This value is reset each time the range change in a document.
      */
-    formatCache: FormatType = null;
+    formatCache: Record<FormatName, Format> = null;
 
     constructor(root: FragmentNode) {
         this.root = root;

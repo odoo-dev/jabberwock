@@ -1,5 +1,5 @@
 import { VDocument } from './VDocument';
-import { Format } from '../../utils/src/Format';
+import { FormatName, Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
 import { Direction, VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
@@ -7,14 +7,13 @@ import { DomSelectionDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { FormatType } from '../../plugin-char/CharNode';
 
 export type ParsingMap = Map<VNode, Node[]>;
 export interface ParsingContext {
     readonly rootNode?: Node;
     currentNode?: Node;
     parentVNode?: VNode;
-    format?: FormatType;
+    format?: Record<FormatName, Format>;
     vDocument: VDocument;
 }
 
@@ -50,37 +49,22 @@ export class Parser {
      */
     parseNode(currentContext: ParsingContext): ParsingContext {
         let parseResult: [ParsingContext, ParsingMap];
-        if (Format.tags.includes(currentContext.currentNode.nodeName)) {
-            // Format nodes (e.g. B, I, U) are parsed differently than regular
-            // elements since they are not represented by a proper VNode in our
-            // internal representation but by the format of its children.
-            // For the parsing, encountering a format node generates a new format
-            // context which inherits from the previous one.
-            currentContext.format = { ...currentContext.format } || {};
-            currentContext.format.bold =
-                !!currentContext.format.bold || currentContext.currentNode.nodeName === 'B';
-            currentContext.format.italic =
-                !!currentContext.format.italic || currentContext.currentNode.nodeName === 'I';
-            currentContext.format.underline =
-                !!currentContext.format.underline || currentContext.currentNode.nodeName === 'U';
-            parseResult = [currentContext, new Map()];
-        } else {
-            for (const parse of this.parsingFunctions) {
-                parseResult = parse({ ...currentContext });
-                if (parseResult) {
-                    break;
-                }
+
+        for (const parse of this.parsingFunctions) {
+            parseResult = parse({ ...currentContext });
+            if (parseResult) {
+                break;
             }
-            if (!parseResult) {
-                // If the node could not be parsed, create a generic element node with
-                // the HTML tag of the DOM Node. This way we may not support the node
-                // but we don't break it either.
-                const parsedNode = new VElement(currentContext.currentNode.nodeName);
-                parsedNode.attributes = Parser.parseAttributes(currentContext.currentNode);
-                const parsingMap = new Map([[parsedNode, [currentContext.currentNode]]]);
-                currentContext.parentVNode.append(parsedNode);
-                parseResult = [currentContext, parsingMap];
-            }
+        }
+        if (!parseResult) {
+            // If the node could not be parsed, create a generic element node with
+            // the HTML tag of the DOM Node. This way we may not support the node
+            // but we don't break it either.
+            const parsedNode = new VElement(currentContext.currentNode.nodeName);
+            parsedNode.attributes = Parser.parseAttributes(currentContext.currentNode);
+            const parsingMap = new Map([[parsedNode, [currentContext.currentNode]]]);
+            currentContext.parentVNode.append(parsedNode);
+            parseResult = [currentContext, parsingMap];
         }
 
         const context: ParsingContext = parseResult[0];
@@ -196,7 +180,7 @@ export class Parser {
             // Text node cannot have children, therefore `node` is an Element, not
             // a text node. Only text nodes can be represented by multiple VNodes,
             // so the first matching VNode can safely be selected from the map.
-            // If `node` as no VNode representation  in the map (e.g. format nodes),
+            // If `node` has no VNode representation  in the map (e.g. format nodes),
             // its children are added into the current `parentVNode`.
             const parsedParent = VDocumentMap.fromDom(node);
             if (parsedParent) {

@@ -1,8 +1,8 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { ParsingContext, ParsingMap } from '../core/src/Parser';
-import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
+import { CharNode } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
-import { Format } from '../utils/src/Format';
+import { Format, FormatName } from '../core/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
@@ -11,7 +11,7 @@ export interface InsertTextParams extends RangeParams {
     text: string;
 }
 export interface FormatParams extends RangeParams {
-    format: 'bold' | 'italic' | 'underline';
+    format: Format;
 }
 
 export class Char extends JWPlugin {
@@ -36,16 +36,17 @@ export class Char extends JWPlugin {
         if (context.currentNode.nodeType === Node.TEXT_NODE) {
             const vNodes: CharNode[] = [];
             const text = removeFormattingSpace(context.currentNode);
-            const format = context.format;
+            const format = context.format || {};
             for (let i = 0; i < text.length; i++) {
                 const parsedVNode = new CharNode(text.charAt(i), { ...format });
                 vNodes.push(parsedVNode);
             }
+            const formatTags = Object.values(format).map(value => value.htmlTag);
             const parsingMap = new Map(
                 vNodes.map(vNode => {
                     const domNodes = [context.currentNode];
                     let parent = context.currentNode.parentNode;
-                    while (parent && Format.tags.includes(parent.nodeName)) {
+                    while (parent && formatTags.includes(parent.nodeName)) {
                         domNodes.unshift(parent);
                         parent = parent.parentNode;
                     }
@@ -62,14 +63,12 @@ export class Char extends JWPlugin {
             const fragment = document.createDocumentFragment();
             let parent: Node = fragment;
             const renderedFormats = [];
-            Object.keys(node.format).forEach(type => {
-                if (node.format[type]) {
-                    const formatNode = document.createElement(Format.toTag(type));
-                    renderedFormats.push(formatNode);
-                    parent.appendChild(formatNode);
-                    // Update the parent so the text is inside the format node.
-                    parent = formatNode;
-                }
+            Object.values(node.format || {}).forEach(value => {
+                const formatNode = value.render();
+                renderedFormats.push(formatNode);
+                parent.appendChild(formatNode);
+                // Update the parent so the text is inside the format node.
+                parent = formatNode;
             });
 
             // Consecutive compatible char nodes are rendered as a single text node.
@@ -137,28 +136,30 @@ export class Char extends JWPlugin {
      */
     applyFormat(params: FormatParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const formatName = params.format;
+        const format = params.format;
         if (range.isCollapsed()) {
             if (!this.editor.vDocument.formatCache) {
                 this.editor.vDocument.formatCache = this._getCurrentFormat();
             }
-            this.editor.vDocument.formatCache[formatName] = !this.editor.vDocument.formatCache[
-                formatName
-            ];
+            if (this.editor.vDocument.formatCache[format.name]) {
+                delete this.editor.vDocument.formatCache[format.name];
+            } else {
+                this.editor.vDocument.formatCache[format.name] = format;
+            }
         } else {
             const selectedChars = range.selectedNodes(CharNode);
 
-            // If there is no char with the format `formatName` in the
-            // selection, set the format to true for all nodes.
-            if (!selectedChars.every(char => char.format[formatName])) {
+            // If every char in the range has the format `formatName`, remove
+            // the format for all of them.
+            if (selectedChars.every(char => char.format[format.name])) {
                 selectedChars.forEach(char => {
-                    char[formatName] = true;
+                    delete char.format[format.name];
                 });
-                // If there is at least one char in with the format `fomatName`
-                // in the selection, set the format to false for all nodes.
+                // If there is at least one char in the range without the format
+                // `formatName`, set the format for all nodes.
             } else {
                 selectedChars.forEach(char => {
-                    char[formatName] = false;
+                    char.format[format.name] = format;
                 });
             }
         }
@@ -171,8 +172,8 @@ export class Char extends JWPlugin {
     /**
      * Get the format for the next insertion.
      */
-    _getCurrentFormat(range = this.editor.vDocument.selection.range): FormatType {
-        let format: FormatType = {};
+    _getCurrentFormat(range = this.editor.vDocument.selection.range): Record<FormatName, Format> {
+        let format: Record<FormatName, Format> = {};
         if (this.editor.vDocument.formatCache) {
             return this.editor.vDocument.formatCache;
         } else if (range.isCollapsed()) {
@@ -183,8 +184,10 @@ export class Char extends JWPlugin {
             format = { ...charToCopyFormat.format };
         } else {
             const selectedChars = range.selectedNodes(CharNode);
-            FORMAT_TYPES.forEach(formatName => {
-                format[formatName] = selectedChars.some(char => char.format[formatName]);
+            selectedChars.forEach(char => {
+                Object.values(char.format).forEach(value => {
+                    format[value.name] = value;
+                });
             });
         }
         return format;
@@ -199,7 +202,7 @@ export class Char extends JWPlugin {
         if (a.is(CharNode) && b.is(CharNode)) {
             // Char VNodes are the same text node if they have the same format.
             const formats = Object.keys({ ...a.format, ...b.format });
-            return formats.every(k => !!a.format[k] === !!b.format[k]);
+            return formats.every(k => !!(a.format || {})[k] === !!(b.format || {})[k]);
         } else if (a.is(MarkerNode) || b.is(MarkerNode)) {
             // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
