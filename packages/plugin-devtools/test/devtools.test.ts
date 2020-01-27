@@ -716,6 +716,7 @@ describe('Plugin: DevTools', () => {
                 'toggleList',
                 'indent',
                 'outdent',
+                'link',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {

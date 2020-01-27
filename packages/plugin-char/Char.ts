@@ -7,10 +7,13 @@ import { CharDomRenderer } from './CharDomRenderer';
 import { CharDomParser } from './CharDomParser';
 import { InlineNode } from '../plugin-inline/InlineNode';
 import { VNode } from '../core/src/VNodes/VNode';
+import { Format } from '../plugin-inline/Format';
 import { Formats } from '../plugin-inline/Formats';
+import { Constructor } from '../utils/src/utils';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
+    formats?: Formats | Array<Format | Constructor<Format>>;
 }
 
 export class Char extends JWPlugin {
@@ -52,6 +55,10 @@ export class Char extends JWPlugin {
         const range = params.context.range;
         const text = params.text;
         const formats = this.getCurrentFormats();
+        for (const format of params.formats || []) {
+            const formatClass = format instanceof Format ? format.constructor : format;
+            formats.replace(formatClass, format);
+        }
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
