@@ -15,6 +15,7 @@ import { Inline } from '../packages/plugin-inline/Inline';
 import { Link } from '../packages/plugin-link/Link';
 import { Divider } from '../packages/plugin-divider/Divider';
 import { Image } from '../packages/plugin-image/Image';
+import { Subscript } from '../packages/plugin-subscript/Subscript';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -37,6 +38,7 @@ export class BasicEditor extends JWEditor {
                 Link,
                 Divider,
                 Image,
+                Subscript,
             ],
         });
     }
