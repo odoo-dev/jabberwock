@@ -35,6 +35,11 @@ jw-devtools .underline {
     text-decoration: underline;
 }
 
+jw-devtools .link {
+    text-decoration: underline;
+    color: blue;
+}
+
 jw-devtools .marker-node {
     color: red;
 }

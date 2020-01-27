@@ -11,6 +11,7 @@ import { Formats } from '../plugin-inline/Formats';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
+    formats?: Formats;
 }
 
 export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
@@ -51,7 +52,10 @@ export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
     insertText(params: InsertTextParams): void {
         const range = params.context.range;
         const text = params.text;
-        const formats = this.getCurrentFormats();
+        const formats = this.getCurrentFormats().clone();
+        for (const format of params.formats || []) {
+            formats.replace(format.constructor, format);
+        }
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();

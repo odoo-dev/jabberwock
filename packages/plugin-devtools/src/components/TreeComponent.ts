@@ -142,6 +142,14 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
     isUnderline(node: VNode): boolean {
         return node.is(InlineNode) && !!node.formats.find(format => format.name === 'u');
     }
+    /**
+     * Return true if the given node is underline.
+     *
+     * @param node
+     */
+    isLink(node: VNode): boolean {
+        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'link');
+    }
 
     //--------------------------------------------------------------------------
     // Private
