@@ -145,7 +145,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             return FOCUS_CHAR;
         }
         if (node.name) {
-            return toUnicode(node.name);
+            return toUnicode(node.name).replace(/Node/, '');
         }
         return '?';
     }
