@@ -13,6 +13,7 @@ import { Italic } from '../packages/plugin-italic/Italic';
 import { Underline } from '../packages/plugin-underline/Underline';
 import { Inline } from '../packages/plugin-inline/Inline';
 import { Link } from '../packages/plugin-link/Link';
+import { Divider } from '../packages/plugin-divider/Divider';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -34,6 +35,7 @@ export class BasicEditor extends JWEditor {
                 [Italic],
                 [Underline],
                 [Link],
+                [Divider],
             ],
         });
     }
