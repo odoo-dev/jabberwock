@@ -24,6 +24,7 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
+    attributes: Map<string, string>;
     _children: VNode[] = [];
 
     constructor() {

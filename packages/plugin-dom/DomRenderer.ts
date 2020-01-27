@@ -103,6 +103,11 @@ export class DomRenderer extends Renderer<Node> {
         const fragment = document.createDocumentFragment();
         const renderedDomNodes: Node[] = [];
         const renderedElement = document.createElement(tagName);
+        if (node.attributes) {
+            node.attributes.forEach((value: string, name: string) => {
+                renderedElement.setAttribute(name, value);
+            });
+        }
         renderedDomNodes.push(renderedElement);
         fragment.appendChild(renderedElement);
 

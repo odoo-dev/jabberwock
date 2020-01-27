@@ -1,5 +1,5 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingContext, ParsingMap } from '../core/src/Parser';
+import { ParsingContext, ParsingMap, Parser } from '../core/src/Parser';
 import { LineBreakNode } from './LineBreakNode';
 import { VNode } from '../core/src/VNodes/VNode';
 
@@ -22,10 +22,17 @@ export class LineBreak extends JWPlugin {
         if (context.currentNode.nodeName === 'BR') {
             const node = context.currentNode;
             const domNodes = [node];
+            const attributes = Parser.parseAttributes(context.currentNode);
             if (!node.nextSibling) {
                 // A <br/> with no siblings is there only to make its parent visible.
                 // Consume it since it was just parsed as its parent element node.
                 // TODO: do this less naively to account for formatting space.
+                attributes.forEach((value: string, name: string) => {
+                    if (!context.parentVNode.attributes) {
+                        context.parentVNode.attributes = new Map<string, string>();
+                    }
+                    context.parentVNode.attributes.set(name, value);
+                });
                 return [context, new Map([[context.parentVNode, domNodes]])];
             } else if (node.nextSibling.nodeName === 'BR' && !node.nextSibling.nextSibling) {
                 // A trailing <br/> after another <br/> is there only to make its previous
@@ -34,8 +41,13 @@ export class LineBreak extends JWPlugin {
                 // TODO: do this less naively to account for formatting space.
                 context.currentNode = node.nextSibling;
                 domNodes.push(node.nextSibling);
+                const siblingAttributes = Parser.parseAttributes(node.nextSibling);
+                siblingAttributes.forEach((value: string, name: string) => {
+                    attributes.set(name, value);
+                });
             }
             const parsedNode = new LineBreakNode();
+            parsedNode.attributes = attributes;
             const parsingMap = new Map([[parsedNode, domNodes]]);
             context.parentVNode.append(parsedNode);
             return [context, parsingMap];
@@ -47,6 +59,11 @@ export class LineBreak extends JWPlugin {
     renderToDom(node: VNode, domParent: Node): Map<VNode, Node[]> {
         if (node.is(LineBreakNode)) {
             const br = document.createElement('br');
+            if (node.attributes) {
+                node.attributes.forEach((value: string, name: string) => {
+                    br.setAttribute(name, value);
+                });
+            }
             domParent.appendChild(br);
             const domNodes: Node[] = [];
             domNodes.push(br);

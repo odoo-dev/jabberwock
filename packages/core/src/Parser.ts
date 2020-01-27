@@ -23,6 +23,11 @@ export type ParsingFunction = (context: ParsingContext) => [ParsingContext, Pars
 export class Parser {
     parsingFunctions: Set<ParsingFunction> = new Set();
     _contextStack: Array<ParsingContext> = [];
+    static parseAttributes(node: Node): Map<string, string> {
+        if (node.nodeType === Node.ELEMENT_NODE && node instanceof Element) {
+            return new Map(Array.from(node.attributes).map(attr => [attr.name, attr.value]));
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Public
@@ -71,6 +76,7 @@ export class Parser {
                 // the HTML tag of the DOM Node. This way we may not support the node
                 // but we don't break it either.
                 const parsedNode = new VElement(currentContext.currentNode.nodeName);
+                parsedNode.attributes = Parser.parseAttributes(currentContext.currentNode);
                 const parsingMap = new Map([[parsedNode, [currentContext.currentNode]]]);
                 currentContext.parentVNode.append(parsedNode);
                 parseResult = [currentContext, parsingMap];
