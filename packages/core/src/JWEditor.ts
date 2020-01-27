@@ -48,6 +48,10 @@ export class JWEditor {
         // The editable property of the editor is the original editable element
         // before start is called, and becomes the clone after start is called.
         this.editable = editable;
+
+        // CorePlugin is a special mandatory plugin that handles the matching
+        // between the core commands and the VDocument.
+        this.addPlugin(CorePlugin);
     }
 
     /**
@@ -73,10 +77,6 @@ export class JWEditor {
         this.editable.setAttribute('contenteditable', 'true');
         this.el.appendChild(this.editable);
         document.body.appendChild(this.el);
-
-        // CorePlugin is a special mandatory plugin that handles the matching
-        // between the core commands and the VDocument.
-        this.addPlugin(CorePlugin);
 
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this);

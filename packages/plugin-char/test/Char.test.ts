@@ -2,15 +2,15 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { InsertTextParams, FormatParams, Char } from '../Char';
+import { InsertTextParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
-import { Format } from '../../core/src/Format';
 import { BoldFormat } from '../../plugin-bold/BoldFormat';
 import { ItalicFormat } from '../../plugin-italic/ItalicFormat';
-import { UnderlineFormat } from '../../plugin-underline/UnderlineFormat';
 import { Parser } from '../../core/src/Parser';
 import { Dom } from '../../plugin-dom/Dom';
 import { Renderer } from '../../core/src/Renderer';
+import { FormatName } from '../../core/src/Format';
+import { FormatParams } from '../../core/src/CorePlugin';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
@@ -18,9 +18,9 @@ const insertText = async function(editor, text: string): Promise<void> {
     };
     await editor.execCommand('insertText', params);
 };
-const applyFormat = async (editor: JWEditor, format: Format): Promise<void> => {
+const applyFormat = async (editor: JWEditor, format: FormatName): Promise<void> => {
     const formatParams: FormatParams = {
-        format: format,
+        formatName: format,
     };
     await editor.execCommand('applyFormat', formatParams);
 };
@@ -268,7 +268,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b>b[]</b>a',
@@ -278,8 +278,8 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'bold');
                             await insertText(editor, 'b');
                         },
                         contentAfter: 'b[]a',
@@ -289,7 +289,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
                             await insertText(editor, 'b');
                         },
                         contentAfter: 'a<b>b[]</b>',
@@ -299,8 +299,8 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'bold');
                             await insertText(editor, 'b');
                         },
                         contentAfter: 'ab[]',
@@ -311,7 +311,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b>a</b>b[]',
@@ -321,8 +321,8 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'bold');
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b>ab[]</b>',
@@ -332,8 +332,8 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
-                            await applyFormat(editor, new UnderlineFormat());
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'underline');
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
@@ -346,7 +346,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[b]c',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[<b>b]</b>c',
                     });
@@ -356,7 +356,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b]</b>c',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[b]c',
                     });
@@ -366,7 +366,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b</b>c]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, new BoldFormat());
+                            await applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[<b>bc]</b>',
                     });

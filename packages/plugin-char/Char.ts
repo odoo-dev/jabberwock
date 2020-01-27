@@ -2,16 +2,12 @@ import { JWPlugin } from '../core/src/JWPlugin';
 import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { CharNode } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
-import { Format, FormatName } from '../core/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
 
 export interface InsertTextParams extends RangeParams {
     text: string;
-}
-export interface FormatParams extends RangeParams {
-    format: Format;
 }
 
 export class Char extends JWPlugin {
@@ -22,9 +18,6 @@ export class Char extends JWPlugin {
     commands = {
         insertText: {
             handler: this.insertText.bind(this),
-        },
-        applyFormat: {
-            handler: this.applyFormat.bind(this),
         },
     };
 
@@ -115,7 +108,7 @@ export class Char extends JWPlugin {
     insertText(params: InsertTextParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         const text = params.text;
-        const format = this._getCurrentFormat();
+        const format = this.editor.vDocument.getCurrentFormat();
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             this.editor.vDocument.deleteSelection(range);
@@ -128,70 +121,11 @@ export class Char extends JWPlugin {
         });
         this.editor.vDocument.formatCache = null;
     }
-    /**
-     * Apply the `format` to the selection.
-     *
-     * If the selection is collapsed, set the format on the selection so we know
-     * in the next insert which format should be used.
-     */
-    applyFormat(params: FormatParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
-        const format = params.format;
-        if (range.isCollapsed()) {
-            if (!this.editor.vDocument.formatCache) {
-                this.editor.vDocument.formatCache = this._getCurrentFormat();
-            }
-            if (this.editor.vDocument.formatCache[format.name]) {
-                delete this.editor.vDocument.formatCache[format.name];
-            } else {
-                this.editor.vDocument.formatCache[format.name] = format;
-            }
-        } else {
-            const selectedChars = range.selectedNodes(CharNode);
-
-            // If every char in the range has the format `formatName`, remove
-            // the format for all of them.
-            if (selectedChars.every(char => char.format[format.name])) {
-                selectedChars.forEach(char => {
-                    delete char.format[format.name];
-                });
-                // If there is at least one char in the range without the format
-                // `formatName`, set the format for all nodes.
-            } else {
-                selectedChars.forEach(char => {
-                    char.format[format.name] = format;
-                });
-            }
-        }
-    }
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
-    /**
-     * Get the format for the next insertion.
-     */
-    _getCurrentFormat(range = this.editor.vDocument.selection.range): Record<FormatName, Format> {
-        let format: Record<FormatName, Format> = {};
-        if (this.editor.vDocument.formatCache) {
-            return this.editor.vDocument.formatCache;
-        } else if (range.isCollapsed()) {
-            const charToCopyFormat = range.start.previousSibling(CharNode) ||
-                range.start.nextSibling(CharNode) || {
-                    format: {},
-                };
-            format = { ...charToCopyFormat.format };
-        } else {
-            const selectedChars = range.selectedNodes(CharNode);
-            selectedChars.forEach(char => {
-                Object.values(char.format).forEach(value => {
-                    format[value.name] = value;
-                });
-            });
-        }
-        return format;
-    }
     /**
      * Return true if `a` has the same format properties as `b`.
      *

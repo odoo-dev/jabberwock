@@ -53,7 +53,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'b'
                 ) {
-                    return this.editor.execCommand('applyFormat', { format: 'bold' });
+                    return this.editor.execCommand('applyFormat', { formatName: 'bold' });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
@@ -61,7 +61,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'i'
                 ) {
-                    return this.editor.execCommand('applyFormat', { format: 'italic' });
+                    return this.editor.execCommand('applyFormat', { formatName: 'italic' });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
@@ -69,7 +69,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'u'
                 ) {
-                    return this.editor.execCommand('applyFormat', { format: 'underline' });
+                    return this.editor.execCommand('applyFormat', { formatName: 'underline' });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
