@@ -45,6 +45,11 @@ jw-devtools .subscript {
     font-size: 0.7em;
 }
 
+jw-devtools .superscript {
+    vertical-align: super;
+    font-size: 0.7em;
+}
+
 jw-devtools .marker-node {
     color: red;
 }
