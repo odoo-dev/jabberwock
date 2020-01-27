@@ -5,7 +5,7 @@ module.exports = {
     mode: 'development',
     entry: {
         'index': './examples/index/index.ts',
-        'koi-example': './examples/koi/koi.ts',
+        'jabberwockipedia': './examples/jabberwockipedia/jabberwockipedia.ts',
     },
     devtool: 'inline-source-map',
     output: {
