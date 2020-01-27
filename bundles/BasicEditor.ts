@@ -18,6 +18,7 @@ import { Image } from '../packages/plugin-image/Image';
 import { Subscript } from '../packages/plugin-subscript/Subscript';
 import { Superscript } from '../packages/plugin-superscript/Superscript';
 import { Blockquote } from '../packages/plugin-blockquote/Blockquote';
+import { Youtube } from '../packages/plugin-youtube/Youtube';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -43,6 +44,7 @@ export class BasicEditor extends JWEditor {
                 Subscript,
                 Superscript,
                 Blockquote,
+                Youtube,
             ],
         });
     }
