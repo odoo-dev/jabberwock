@@ -51,8 +51,7 @@ describe('utils', () => {
                 expect(p.lastChild() instanceof LineBreakNode).to.be.true;
                 expect((p.lastChild().previousSibling() as CharNode).char).to.equal('a');
             });
-            // TODO: make it pass!
-            it.skip('handles nested formatted nodes', () => {
+            it('handles nested formatted nodes', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
                 const vDocument = parser.parse(element);
@@ -65,32 +64,16 @@ describe('utils', () => {
                 const a = p.children[0] as CharNode;
                 expect(a instanceof CharNode).to.be.true;
                 expect(a.char).to.equal('a');
-                expect(a.format).to.deep.equal({
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                });
+                expect(Object.keys(a.format)).to.deep.equal([]);
                 const b = p.children[1] as CharNode;
                 expect(b.char).to.equal('b');
-                expect(b.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                });
+                expect(Object.keys(b.format)).to.deep.equal(['italic']);
                 const c = p.children[2] as CharNode;
                 expect(c.char).to.equal('c');
-                expect(c.format).to.deep.equal({
-                    bold: true,
-                    italic: true,
-                    underline: false,
-                });
+                expect(Object.keys(c.format)).to.have.members(['italic', 'bold']);
                 const d = p.children[3] as CharNode;
                 expect(d.char).to.equal('d');
-                expect(d.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                });
+                expect(Object.keys(d.format)).to.deep.equal(['italic']);
             });
         });
     });

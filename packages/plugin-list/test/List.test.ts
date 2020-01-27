@@ -47,8 +47,7 @@ describe('plugin-list', () => {
             parser = editor.parser;
         });
         afterEach(() => editor.stop());
-        // TODO: make it pass!
-        it.skip('should parse a complex list', async () => {
+        it('should parse a complex list', async () => {
             const element = document.createElement('div');
             element.innerHTML = [
                 '<ul>',
@@ -101,7 +100,7 @@ describe('plugin-list', () => {
             expect(li1_0.children.length).to.equal(3);
             expect(li1_0.nthChild(0).toString()).to.equal('a');
             expect(li1_0.nthChild(1).toString()).to.equal('.');
-            expect((li1_0.nthChild(1) as CharNode).format.bold).to.be.true;
+            expect(!!(li1_0.nthChild(1) as CharNode).format.bold).to.be.true;
             expect(li1_0.nthChild(2).toString()).to.equal('a');
 
             const li1_1 = li1.nthChild(1);
@@ -188,8 +187,7 @@ describe('plugin-list', () => {
             renderer = editor.renderers.dom;
         });
         afterEach(() => editor.stop());
-        // TODO: make it pass!
-        it.skip('should render a complex list', async () => {
+        it('should render a complex list', async () => {
             /**
              * ListNode: UL                 motherList
              *      VElement: P             p1
@@ -929,8 +927,7 @@ describe('plugin-list', () => {
                                 '<ul><li><h1>abc</h1></li><li><h2>def[]ghi</h2></li><li><h4>klm</h4></li></ul>',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should merge a bold list item into a non-formatted list item', async () => {
+                    it('should merge a bold list item into a non-formatted list item', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore:
                                 '<ul><li>abc</li><li><b>de</b>fg[]</li><li><b>hij</b>klm</li><li>nop</li></ul>',
@@ -948,16 +945,14 @@ describe('plugin-list', () => {
                                 '<ul><li>abc</li><li><b>de</b>fg[]<b>hij</b>klm</li><li>nop</li></ul>',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
+                    it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<ul><li><i>abc</i>def[]</li></ul><p><b>ghi</b>jkl</p>',
                             stepFunction: deleteForward,
                             contentAfter: '<ul><li><i>abc</i>def[]<b>ghi</b>jkl</li></ul>',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should merge a paragraph starting with bold text into a list item with ending with italic text', async () => {
+                    it('should merge a paragraph starting with bold text into a list item with ending with italic text', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore:
                                 '<ul><li><b>abc</b><i>def[]</i></li></ul><p><b>ghi</b>jkl</p>',
@@ -1416,8 +1411,7 @@ describe('plugin-list', () => {
                                     '<ol><li><h1>abc</h1></li><li><h2>def[]ghi</h2></li><li><h4>klm</h4></li></ol>',
                             });
                         });
-                        // TODO: make it pass!
-                        it.skip('should merge a bold list item into a non-formatted list item', async () => {
+                        it('should merge a bold list item into a non-formatted list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li>abc</li><li><b>de</b>fg</li><li><b>[]hij</b>klm</li><li>nop</li></ol>',
@@ -1435,8 +1429,7 @@ describe('plugin-list', () => {
                                     '<ol><li>abc</li><li><b>de</b>fg[]<b>hij</b>klm</li><li>nop</li></ol>',
                             });
                         });
-                        // TODO: make it pass!
-                        it.skip('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
+                        it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li><i>abc</i>def</li></ol><p><b>[]ghi</b>jkl</p>',
@@ -1444,8 +1437,7 @@ describe('plugin-list', () => {
                                 contentAfter: '<ol><li><i>abc</i>def[]<b>ghi</b>jkl</li></ol>',
                             });
                         });
-                        // TODO: make it pass!
-                        it.skip('should merge a paragraph starting with bold text into a list item with ending with italic text', async () => {
+                        it('should merge a paragraph starting with bold text into a list item with ending with italic text', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li><b>abc</b><i>def</i></li></ol><p><b>[]ghi</b>jkl</p>',
@@ -1650,8 +1642,7 @@ describe('plugin-list', () => {
                                     '<ul><li><h1>abc</h1></li><li><h2>def[]ghi</h2></li><li><h4>klm</h4></li></ul>',
                             });
                         });
-                        // TODO: make it pass!
-                        it.skip('should merge a bold list item into a non-formatted list item', async () => {
+                        it('should merge a bold list item into a non-formatted list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li>abc</li><li><b>de</b>fg</li><li><b>[]hij</b>klm</li><li>nop</li></ul>',
@@ -1669,8 +1660,7 @@ describe('plugin-list', () => {
                                     '<ul><li>abc</li><li><b>de</b>fg[]<b>hij</b>klm</li><li>nop</li></ul>',
                             });
                         });
-                        // TODO: make it pass!
-                        it.skip('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
+                        it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li><i>abc</i>def</li></ul><p><b>[]ghi</b>jkl</p>',
@@ -1678,8 +1668,7 @@ describe('plugin-list', () => {
                                 contentAfter: '<ul><li><i>abc</i>def[]<b>ghi</b>jkl</li></ul>',
                             });
                         });
-                        // TODO: make it pass!
-                        it.skip('should merge a paragraph starting with bold text into a list item with ending with italic text', async () => {
+                        it('should merge a paragraph starting with bold text into a list item with ending with italic text', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li><b>abc</b><i>def</i></li></ul><p><b>[]ghi</b>jkl</p>',

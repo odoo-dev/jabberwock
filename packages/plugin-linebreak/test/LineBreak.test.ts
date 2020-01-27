@@ -271,8 +271,7 @@ describe('plugin-linebreak', () => {
                         });
                     });
                 });
-                // TODO: make it pass!
-                describe.skip('Format', () => {
+                describe('Format', () => {
                     it('should insert a <br> before a format node', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>abc[]<b>def</b></p>',

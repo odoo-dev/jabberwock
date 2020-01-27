@@ -198,8 +198,7 @@ describe('plugin-char', () => {
                             contentAfter: 'b[]a',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should insert char bold when previous char is bold and the next is not bold', async () => {
+                    it('should insert char bold when previous char is bold and the next is not bold', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<b>a[]</b>b',
                             stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
@@ -213,16 +212,14 @@ describe('plugin-char', () => {
                             contentAfter: 'ac[]b',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should insert char bold when previous char is bold and the next is not bold', async () => {
+                    it('should insert char bold when previous char is bold and the next is not bold', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<b>a</b>[]b',
                             stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
                             contentAfter: '<b>ac[]</b>b',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should insert char not bold because char on a different parent should not be considered', async () => {
+                    it('should insert char not bold because char on a different parent should not be considered', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>a</b></p><p>[]b</p>',
                             stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
@@ -251,8 +248,7 @@ describe('plugin-char', () => {
                             contentAfter: '<b>a</b>d[]<b>c</b>',
                         });
                     });
-                    // TODO: make it pass!
-                    it.skip('should replace with bold when anything inside the selection is bold', async () => {
+                    it('should replace with bold when anything inside the selection is bold', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<b>[a</b>b]<b>c</b>',
                             stepFunction: (editor: JWEditor) => insertText(editor, 'd'),
@@ -306,8 +302,7 @@ describe('plugin-char', () => {
                         contentAfter: 'ab[]',
                     });
                 });
-                // TODO: make it pass!
-                it.skip('should not make bold the next insertion when applyFormat 1 time after the first char that is bold', async () => {
+                it('should not make bold the next insertion when applyFormat 1 time after the first char that is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
                         stepFunction: async (editor: JWEditor) => {
@@ -351,8 +346,7 @@ describe('plugin-char', () => {
                         contentAfter: 'a[<b>b]</b>c',
                     });
                 });
-                // TODO: make it pass!
-                it.skip('should not be bold when selected is bold', async () => {
+                it('should not be bold when selected is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b]</b>c',
                         stepFunction: async (editor: JWEditor) => {
@@ -361,8 +355,7 @@ describe('plugin-char', () => {
                         contentAfter: 'a[b]c',
                     });
                 });
-                // TODO: make it pass!
-                it.skip('should be bold when one of the selected is bold', async () => {
+                it('should be bold when one of the selected is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b</b>c]',
                         stepFunction: async (editor: JWEditor) => {
