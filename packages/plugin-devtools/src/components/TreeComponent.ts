@@ -136,9 +136,6 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         if (node === this.env.editor.vDocument.selection.focus) {
             return FOCUS_CHAR;
         }
-        if (node instanceof LineBreakNode) {
-            return '↲';
-        }
         if (node.name) {
             return utils.toUnicode(node.name);
         }
