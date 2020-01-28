@@ -39,11 +39,12 @@ export class Parser {
         });
     }
     /**
-     * Parse the current node and return the result.
+     * Parse a node depending on its DOM type.
      *
      * @param currentContext
      */
-    parseNode(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
+    parseNode(currentContext: ParsingContext): ParsingContext {
+        let parseResult: [ParsingContext, ParsingMap];
         if (Format.tags.includes(currentContext.currentNode.nodeName)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
             // elements since they are not represented by a proper VNode in our
@@ -57,21 +58,41 @@ export class Parser {
                 !!currentContext.format.italic || currentContext.currentNode.nodeName === 'I';
             currentContext.format.underline =
                 !!currentContext.format.underline || currentContext.currentNode.nodeName === 'U';
-            return [currentContext, new Map()];
-        }
-        for (const parse of this.parsingFunctions) {
-            const parseResult = parse({ ...currentContext });
-            if (parseResult) {
-                return parseResult;
+            parseResult = [currentContext, new Map()];
+        } else {
+            for (const parse of this.parsingFunctions) {
+                parseResult = parse({ ...currentContext });
+                if (parseResult) {
+                    break;
+                }
+            }
+            if (!parseResult) {
+                // If the node could not be parsed, create a generic element node with
+                // the HTML tag of the DOM Node. This way we may not support the node
+                // but we don't break it either.
+                const parsedNode = new VElement(currentContext.currentNode.nodeName);
+                const parsingMap = new Map([[parsedNode, [currentContext.currentNode]]]);
+                currentContext.parentVNode.append(parsedNode);
+                parseResult = [currentContext, parsingMap];
             }
         }
-        // If the node could not be parsed, create a generic element node with
-        // the HTML tag of the DOM Node. This way we may not support the node
-        // but we don't break it either.
-        const parsedNode = new VElement(currentContext.currentNode.nodeName);
-        const parsingMap = new Map([[parsedNode, [currentContext.currentNode]]]);
-        currentContext.parentVNode.append(parsedNode);
-        return [currentContext, parsingMap];
+
+        const context: ParsingContext = parseResult[0];
+        const parsingMap: ParsingMap = parseResult[1];
+
+        // Map the parsed nodes to the DOM nodes they represent.
+        Array.from(parsingMap.keys()).forEach(parsedVNode => {
+            const domNodes = parsingMap.get(parsedVNode);
+            if (domNodes.length === 1) {
+                VDocumentMap.set(parsedVNode, domNodes[0]);
+            } else {
+                domNodes.forEach((domNode: Node, index: number) => {
+                    VDocumentMap.set(parsedVNode, domNode, index);
+                });
+            }
+        });
+
+        return this._nextParsingContext(context);
     }
     /**
      * Parse an HTML element into the editor's virtual representation.
@@ -99,7 +120,7 @@ export class Parser {
             };
             this._contextStack.push(currentContext);
             do {
-                currentContext = this._parseOne(currentContext);
+                currentContext = this.parseNode({ ...currentContext });
             } while (currentContext);
         }
 
@@ -162,28 +183,6 @@ export class Parser {
     // Private
     //--------------------------------------------------------------------------
 
-    /**
-     * Parse a node depending on its DOM type.
-     */
-    _parseOne(currentContext: ParsingContext): ParsingContext {
-        const parseResult = this.parseNode({ ...currentContext });
-        const context: ParsingContext = parseResult[0];
-        const parsingMap: ParsingMap = parseResult[1];
-
-        // Map the parsed nodes to the DOM nodes they represent.
-        Array.from(parsingMap.keys()).forEach(parsedVNode => {
-            const domNodes = parsingMap.get(parsedVNode);
-            if (domNodes.length === 1) {
-                VDocumentMap.set(parsedVNode, domNodes[0]);
-            } else {
-                domNodes.forEach((domNode: Node, index: number) => {
-                    VDocumentMap.set(parsedVNode, domNode, index);
-                });
-            }
-        });
-
-        return this._nextParsingContext(context);
-    }
     _nextParsingContext(currentContext: ParsingContext): ParsingContext {
         const node = currentContext.currentNode;
         if (node.childNodes.length) {
