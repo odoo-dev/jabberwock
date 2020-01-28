@@ -684,14 +684,36 @@ export class VNode {
      * duplicated VNode.
      *
      * @param child
+     * @param after true to split after the child instead of before (default false)
      */
-    splitAt(child: VNode): VNode {
-        const nodesToMove = [child];
+    splitAt(child: VNode, after = false): VNode {
+        const nodesToMove = after ? [] : [child];
         nodesToMove.push(...withMarkers(() => child.nextSiblings()));
         const duplicate = this.shallowDuplicate();
         this.after(duplicate);
         nodesToMove.forEach(sibling => duplicate.append(sibling));
         return duplicate;
+    }
+    /**
+     * Split this node at the given child and its ancestors up until the given
+     * ancestor.
+     *
+     * @param child
+     * @param ancestor
+     * @param after true to split after the child instead of before (default false)
+     * @returns a list of the duplicated nodes generated during the splits.
+     */
+    splitAtUntil(child: VNode, ancestor: VNode, after = false): VNode[] {
+        const duplicatedNodes = [];
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        let node: VNode = this;
+        while (node.parent && node !== ancestor) {
+            const copy = node.splitAt(child, after);
+            duplicatedNodes.push(copy);
+            child = child.parent;
+            node = node.parent;
+        }
+        return duplicatedNodes;
     }
 
     /**

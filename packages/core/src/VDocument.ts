@@ -51,8 +51,14 @@ export class VDocument {
      */
     deleteSelection(range: VRange): void {
         withMarkers(() => {
+            if (range.end.parent.parent && range.end.parent.parent.children.length > 1) {
+                range.end.parent.parent.splitAtUntil(
+                    range.end.parent,
+                    range.end.commonAncestor(range.start),
+                    true,
+                );
+            }
             const selectedNodes = range.selectedNodes();
-            if (!selectedNodes.length) return;
             // If the node has children, merge it with the container of the
             // range. Children of the merged node that should be truncated
             // as well will be deleted in the following iterations since
@@ -60,11 +66,10 @@ export class VDocument {
             // order to modify it while iterating.
             const newContainer = range.start.parent;
             selectedNodes.forEach(vNode => {
-                if (vNode.hasChildren()) {
+                while (vNode.hasChildren()) {
                     vNode.mergeWith(newContainer);
-                } else {
-                    vNode.remove();
                 }
+                vNode.remove();
             });
         });
     }
