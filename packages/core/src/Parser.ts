@@ -81,8 +81,7 @@ export class Parser {
         const parsingMap: ParsingMap = parseResult[1];
 
         // Map the parsed nodes to the DOM nodes they represent.
-        Array.from(parsingMap.keys()).forEach(parsedVNode => {
-            const domNodes = parsingMap.get(parsedVNode);
+        for (const [parsedVNode, domNodes] of parsingMap) {
             if (domNodes.length === 1) {
                 VDocumentMap.set(parsedVNode, domNodes[0]);
             } else {
@@ -90,7 +89,7 @@ export class Parser {
                     VDocumentMap.set(parsedVNode, domNode, index);
                 });
             }
-        });
+        }
 
         return this._nextParsingContext(context);
     }
