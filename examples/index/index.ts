@@ -3,10 +3,11 @@ import { jabberwocky } from '../utils/jabberwocky';
 import './index.css';
 
 const editor = new BasicEditor();
-jabberwocky.init(editor.editable);
 
 editor.loadConfig({
     debug: true,
 });
 
-editor.start();
+
+document.body.appendChild(editor.el);
+editor.start(jabberwocky.init());

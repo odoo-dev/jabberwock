@@ -99,8 +99,25 @@ export class Parser {
      * @param node the HTML element to parse
      * @returns the element parsed into the editor's virtual representation
      */
-    parse(node: Node): VDocument {
+    parse(value: Node | string): VDocument {
         const vDocumentMap = new VDocumentMap();
+        let node: Node;
+        if (typeof value === 'string') {
+            const parser = new DOMParser();
+            const cleanedValue = value.replace(/<(input|br)>/gi, '<$1/>');
+            const DOM = parser.parseFromString(
+                '<jw-editable>' + cleanedValue + '</jw-editable>',
+                'text/xml',
+            ).firstElementChild;
+            const error = DOM.querySelector('parsererror');
+            if (error) {
+                throw new Error(error.firstChild.firstChild.textContent);
+            }
+            node = document.createDocumentFragment();
+            [...DOM.childNodes].forEach(dom => node.appendChild(dom));
+        } else {
+            node = value;
+        }
         const root = new FragmentNode();
         vDocumentMap.set(root, node);
         const vDocument = new VDocument(root);

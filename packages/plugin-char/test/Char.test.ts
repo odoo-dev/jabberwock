@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
@@ -8,6 +9,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { DomRenderer } from '../../plugin-dom/DomRenderer';
+import { VDocumentMap } from '../../core/src/VDocumentMap';
 
 const insertText = function(editor, text: string): void {
     const params: InsertTextParams = {
@@ -52,16 +54,16 @@ describe('plugin-char', () => {
             element.innerHTML = 'a';
             document.body.appendChild(element);
 
-            const editor = new BasicEditor(element);
-            editor.start();
+            const editor = new BasicEditor();
+            editor.start(element);
             editor.vDocument.root.append(new CharNode(' '));
             editor.vDocument.root.append(new CharNode(' '));
             editor.vDocument.root.append(new CharNode('b'));
 
-            const renderer = new DomRenderer();
-            renderer.addRenderingFunction(Char.renderToDom);
-            renderer.render(editor.vDocument, editor.editable);
-            expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
+            const renderer = new DomRenderer(editor);
+            const container = document.createElement('container');
+            renderer.render(new VDocumentMap(), editor.vDocument, container);
+            expect(container.innerHTML).to.equal('a &nbsp;b');
             editor.stop();
             element.remove();
         });
@@ -70,18 +72,18 @@ describe('plugin-char', () => {
             element.innerHTML = 'a';
             document.body.appendChild(element);
 
-            const editor = new BasicEditor(element);
-            editor.start();
+            const editor = new BasicEditor();
+            editor.start(element);
             editor.vDocument.root.append(new CharNode(' '));
             editor.vDocument.root.append(new CharNode(' '));
             editor.vDocument.root.append(new CharNode(' '));
             editor.vDocument.root.append(new CharNode(' '));
             editor.vDocument.root.append(new CharNode('b'));
 
-            const renderer = new DomRenderer();
-            renderer.addRenderingFunction(Char.renderToDom);
-            renderer.render(editor.vDocument, editor.editable);
-            expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
+            const renderer = new DomRenderer(editor);
+            const container = document.createElement('container');
+            renderer.render(new VDocumentMap(), editor.vDocument, container);
+            expect(container.innerHTML).to.equal('a &nbsp; &nbsp;b');
             editor.stop();
             element.remove();
         });

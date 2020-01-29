@@ -1,4 +1,4 @@
 import JWEditor from '../../packages/core/src/JWEditor';
 
-const editor = new JWEditor(document.getElementById('example'));
-editor.start();
+const editor = new JWEditor();
+editor.start(document.getElementById('example'));

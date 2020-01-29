@@ -15,40 +15,26 @@ export interface JWEditorConfig {
 
 export class JWEditor {
     el: HTMLElement;
-    _originalEditable: HTMLElement;
     dispatcher: Dispatcher;
-    pluginsRegistry: JWPlugin[];
+    pluginsRegistry: JWPlugin[] = [];
     vDocument: VDocument;
     debugger: OwlUI;
     parser = new Parser();
     renderManager = new RenderManager();
 
-    constructor(editable?: HTMLElement) {
+    constructor() {
         this.el = document.createElement('jw-editor');
         // Semantic elements are inline by default.
         // We need to guarantee it's a block so it can contain other blocks.
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
-        this.pluginsRegistry = [];
-
-        if (!editable) {
-            editable = document.createElement('jw-editable');
-            // Semantic elements are inline by default.
-            // We need to guarantee it's a block so it can contain other blocks.
-            editable.style.display = 'block';
-        }
-        this._originalEditable = editable;
     }
 
     /**
      * Start the editor on the editable DOM node set on this editor instance.
      */
-    async start(): Promise<void> {
-        // Parse the editable in the internal format of the editor.
-        this.vDocument = this.parser.parse(this._originalEditable);
-
-        // The original editable node is hidden until the editor stops.
-        this._originalEditable.style.display = 'none';
+    async start(value: Node | string = ''): Promise<void> {
+        this.vDocument = this.parser.parse(value);
 
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
@@ -125,8 +111,6 @@ export class JWEditor {
      * Stop this editor instance.
      */
     stop(): void {
-        this._originalEditable.id = this.editable.id;
-        this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
     }
 }

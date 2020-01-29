@@ -211,8 +211,8 @@ describe('plugin-list', () => {
              *              b.4
              */
             const element = document.createElement('div');
-            const editor = new BasicEditor(element);
-            editor.start();
+            const editor = new BasicEditor();
+            editor.start(element);
             const root = editor.vDocument.root;
             const motherList = new ListNode(ListType.UNORDERED);
             root.append(motherList);

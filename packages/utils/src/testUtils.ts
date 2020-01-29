@@ -26,9 +26,12 @@ export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec):
         _setSelection(selection);
     }
 
-    const editor = new Editor(wrapper);
+    const editor = new Editor();
     editor.loadConfig({ debug: spec.debug });
-    await editor.start();
+    document.body.appendChild(editor.el);
+    await editor.start(wrapper);
+    wrapper.remove();
+
     if (spec.stepFunction) {
         spec.stepFunction(editor);
     }
@@ -43,7 +46,6 @@ export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec):
     }
 
     editor.stop();
-    wrapper.remove();
 }
 
 /**

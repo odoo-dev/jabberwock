@@ -30,12 +30,14 @@ describe('plugin-devtools', () => {
             }
         });
 
-        editor = new BasicEditor(root);
+        editor = new BasicEditor();
         editor.loadConfig({
             debug: true,
         });
+        wrapper.appendChild(editor.el);
 
-        await editor.start();
+        await editor.start(root);
+        root.remove();
 
         devtools = editor.el.querySelector('jw-devtools');
     });
