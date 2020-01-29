@@ -1034,6 +1034,22 @@ describePlugin(List, testEditor => {
                             contentAfter: '<p>abc[]</p>',
                         });
                     });
+                    it('should merge the contents of a list item within a divider into a heading, and leave the rest of its list as it is', async () => {
+                        // Forward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a[b</h1><p>de</p><div><ol><li>fg</li><li>h]i</li><li>jk</li></ol></div>',
+                            stepFunction: deleteForward,
+                            contentAfter: '<h1>a[]i</h1><div><ol><li>jk</li></ol></div>',
+                        });
+                        // Backward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a]b</h1><p>de</p><div><ol><li>fg</li><li>h[i</li><li>jk</li></ol></div>',
+                            stepFunction: deleteForward,
+                            contentAfter: '<h1>a[]i</h1><div><ol><li>jk</li></ol></div>',
+                        });
+                    });
                 });
                 describe('Unordered', () => {
                     it('should delete text within a list item', async () => {
@@ -1106,6 +1122,22 @@ describePlugin(List, testEditor => {
                             contentBefore: '<p>abc]</p><ul><li><p>def[</p></li></ul>',
                             stepFunction: deleteForward,
                             contentAfter: '<p>abc[]</p>',
+                        });
+                    });
+                    it('should merge the contents of a list item within a divider into a heading, and leave the rest of its list as it is', async () => {
+                        // Forward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a[b</h1><p>de</p><div><ul><li>fg</li><li>h]i</li><li>jk</li></ul></div>',
+                            stepFunction: deleteForward,
+                            contentAfter: '<h1>a[]i</h1><div><ul><li>jk</li></ul></div>',
+                        });
+                        // Backward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a]b</h1><p>de</p><div><ul><li>fg</li><li>h[i</li><li>jk</li></ul></div>',
+                            stepFunction: deleteForward,
+                            contentAfter: '<h1>a[]i</h1><div><ul><li>jk</li></ul></div>',
                         });
                     });
                 });
@@ -1950,6 +1982,22 @@ describePlugin(List, testEditor => {
                             contentAfter: '<p>abc[]</p>',
                         });
                     });
+                    it('should merge the contents of a list item within a divider into a heading, and leave the rest of its list as it is', async () => {
+                        // Forward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a[b</h1><p>de</p><div><ol><li>fg</li><li>h]i</li><li>jk</li></ol></div>',
+                            stepFunction: deleteBackward,
+                            contentAfter: '<h1>a[]i</h1><div><ol><li>jk</li></ol></div>',
+                        });
+                        // Backward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a]b</h1><p>de</p><div><ol><li>fg</li><li>h[i</li><li>jk</li></ol></div>',
+                            stepFunction: deleteBackward,
+                            contentAfter: '<h1>a[]i</h1><div><ol><li>jk</li></ol></div>',
+                        });
+                    });
                 });
                 describe('Unordered', () => {
                     it('should delete text within a list item', async () => {
@@ -2022,6 +2070,22 @@ describePlugin(List, testEditor => {
                             contentBefore: '<p>abc]</p><ul><li><p>def[</p></li></ul>',
                             stepFunction: deleteBackward,
                             contentAfter: '<p>abc[]</p>',
+                        });
+                    });
+                    it('should merge the contents of a list item within a divider into a heading, and leave the rest of its list as it is', async () => {
+                        // Forward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a[b</h1><p>de</p><div><ul><li>fg</li><li>h]i</li><li>jk</li></ul></div>',
+                            stepFunction: deleteBackward,
+                            contentAfter: '<h1>a[]i</h1><div><ul><li>jk</li></ul></div>',
+                        });
+                        // Backward selection
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<h1>a]b</h1><p>de</p><div><ul><li>fg</li><li>h[i</li><li>jk</li></ul></div>',
+                            stepFunction: deleteBackward,
+                            contentAfter: '<h1>a[]i</h1><div><ul><li>jk</li></ul></div>',
                         });
                     });
                 });
