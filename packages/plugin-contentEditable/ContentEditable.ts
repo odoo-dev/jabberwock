@@ -10,6 +10,7 @@ export class ContentEditable extends JWPlugin {
     editable: HTMLElement;
     renderer: DomRenderer;
     eventManager: EventManager;
+    vDocumentMap = new VDocumentMap();
 
     commandHooks = {
         commit: this.render.bind(this),
@@ -39,7 +40,7 @@ export class ContentEditable extends JWPlugin {
      *
      */
     render(): void {
-        this.renderer.render(VDocumentMap, this.editor.vDocument, this.editable);
+        this.renderer.render(this.vDocumentMap, this.editor.vDocument, this.editable);
         this._renderSelection();
     }
     /**
@@ -89,7 +90,7 @@ export class ContentEditable extends JWPlugin {
             position = RelativePosition.INSIDE;
         }
         // The location is a tuple [reference, offset] implemented by an array.
-        const location = VDocumentMap.toDomLocation(reference);
+        const location = this.vDocumentMap.toDomLocation(reference);
         if (position === RelativePosition.AFTER) {
             // Increment the offset to be positioned after the reference node.
             location[1] += 1;

@@ -43,7 +43,7 @@ export class Parser {
      *
      * @param currentContext
      */
-    parseNode(currentContext: ParsingContext): ParsingContext {
+    parseNode(vDocumentMap: VDocumentMap, currentContext: ParsingContext): ParsingContext {
         let parseResult: [ParsingContext, ParsingMap];
         if (Format.tags.includes(currentContext.currentNode.nodeName)) {
             // Format nodes (e.g. B, I, U) are parsed differently than regular
@@ -83,10 +83,10 @@ export class Parser {
         // Map the parsed nodes to the DOM nodes they represent.
         for (const [parsedVNode, domNodes] of parsingMap) {
             if (domNodes.length === 1) {
-                VDocumentMap.set(parsedVNode, domNodes[0]);
+                vDocumentMap.set(parsedVNode, domNodes[0]);
             } else {
                 domNodes.forEach((domNode: Node, index: number) => {
-                    VDocumentMap.set(parsedVNode, domNode, index);
+                    vDocumentMap.set(parsedVNode, domNode, index);
                 });
             }
         }
@@ -100,8 +100,9 @@ export class Parser {
      * @returns the element parsed into the editor's virtual representation
      */
     parse(node: Node): VDocument {
+        const vDocumentMap = new VDocumentMap();
         const root = new FragmentNode();
-        VDocumentMap.set(root, node);
+        vDocumentMap.set(root, node);
         const vDocument = new VDocument(root);
         const rootContext: ParsingContext = {
             rootNode: node,
@@ -119,8 +120,8 @@ export class Parser {
             };
             this._contextStack.push(currentContext);
             do {
-                currentContext = this.parseNode({ ...currentContext });
-            } while ((currentContext = this._nextParsingContext(currentContext)));
+                currentContext = this.parseNode(vDocumentMap, { ...currentContext });
+            } while ((currentContext = this._nextParsingContext(vDocumentMap, currentContext)));
         }
 
         // Parse the DOM selection.
@@ -130,7 +131,7 @@ export class Parser {
             node.contains(selection.anchorNode) &&
             node.contains(selection.focusNode)
         ) {
-            vDocument.selection.set(this.parseSelection(selection));
+            vDocument.selection.set(this.parseSelection(vDocumentMap, selection));
         }
 
         // Set a default selection in VDocument if none was set yet.
@@ -146,9 +147,12 @@ export class Parser {
      * @param selection
      * @param [direction]
      */
-    parseSelection(selection: Selection | DomSelectionDescription): VSelectionDescription {
-        const start = this._locate(selection.anchorNode, selection.anchorOffset);
-        const end = this._locate(selection.focusNode, selection.focusOffset);
+    parseSelection(
+        vDocumentMap: VDocumentMap,
+        selection: Selection | DomSelectionDescription,
+    ): VSelectionDescription {
+        const start = this._locate(vDocumentMap, selection.anchorNode, selection.anchorOffset);
+        const end = this._locate(vDocumentMap, selection.focusNode, selection.focusOffset);
         if (start && end) {
             const [startVNode, startPosition] = start;
             const [endVNode, endPosition] = end;
@@ -182,7 +186,10 @@ export class Parser {
     // Private
     //--------------------------------------------------------------------------
 
-    _nextParsingContext(currentContext: ParsingContext): ParsingContext {
+    _nextParsingContext(
+        vDocumentMap: VDocumentMap,
+        currentContext: ParsingContext,
+    ): ParsingContext {
         const node = currentContext.currentNode;
         if (node.childNodes.length) {
             // Parse the first child with the current node as parent, if any.
@@ -192,7 +199,7 @@ export class Parser {
             // so the first matching VNode can safely be selected from the map.
             // If `node` as no VNode representation  in the map (e.g. format nodes),
             // its children are added into the current `parentVNode`.
-            const parsedParent = VDocumentMap.fromDom(node);
+            const parsedParent = vDocumentMap.fromDom(node);
             if (parsedParent) {
                 currentContext.parentVNode = parsedParent[0];
             }
@@ -232,7 +239,11 @@ export class Parser {
      * @param container
      * @param offset
      */
-    _locate(container: Node, offset: number): [VNode, RelativePosition] {
+    _locate(
+        vDocumentMap: VDocumentMap,
+        container: Node,
+        offset: number,
+    ): [VNode, RelativePosition] {
         // When targetting the end of a node, the DOM gives an offset that is
         // equal to the length of the container. In order to retrieve the last
         // descendent, we need to make sure we target an existing node, ie. an
@@ -247,7 +258,7 @@ export class Parser {
             offset = isAfterEnd ? utils.nodeLength(container) : index;
         }
         // Get the VNodes matching the container.
-        const vNodes = VDocumentMap.fromDom(container);
+        const vNodes = vDocumentMap.fromDom(container);
         if (vNodes && vNodes.length) {
             let reference: VNode;
             if (container.nodeType === Node.TEXT_NODE) {
