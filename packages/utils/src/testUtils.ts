@@ -12,7 +12,9 @@ export interface TestEditorSpec {
     debug?: boolean;
 }
 
-export type EditorTestSuite = (tesEditor: (spec: TestEditorSpec) => Promise<void>) => void;
+export type EditorTestSuite = (
+    tesEditor: (editor: typeof JWEditor | TestEditorSpec, spec?: TestEditorSpec) => Promise<void>,
+) => void;
 
 /**
  * Describe the given plugin by the given test suite callback. The test suite
@@ -45,7 +47,16 @@ export function describePlugin(Plugin: typeof JWPlugin, callback: EditorTestSuit
  *
  * @param spec
  */
-export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec): Promise<void> {
+export async function testEditor(spec: TestEditorSpec): Promise<void>;
+export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec): Promise<void>;
+export async function testEditor(
+    Editor: typeof JWEditor | TestEditorSpec,
+    spec?: TestEditorSpec,
+): Promise<void> {
+    if ('contentBefore' in Editor) {
+        spec = Editor;
+        Editor = JWEditor;
+    }
     const container = document.createElement('p');
     const editor = initSpec(Editor, spec, container);
     await testSpec(editor, spec);
@@ -58,11 +69,21 @@ export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec):
  * @param Plugin
  * @param spec
  */
+async function testPlugin(Plugin: typeof JWPlugin, spec: TestEditorSpec): Promise<void>;
 async function testPlugin(
     Plugin: typeof JWPlugin,
     Editor: typeof JWEditor,
     spec: TestEditorSpec,
+): Promise<void>;
+async function testPlugin(
+    Plugin: typeof JWPlugin,
+    Editor: typeof JWEditor | TestEditorSpec,
+    spec?: TestEditorSpec,
 ): Promise<void> {
+    if ('contentBefore' in Editor) {
+        spec = Editor;
+        Editor = JWEditor;
+    }
     const container = document.createElement('p');
     const editor = initSpec(Editor, spec, container);
     editor.addPlugin(Plugin);
