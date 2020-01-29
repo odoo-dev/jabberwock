@@ -6,10 +6,22 @@ import { VDocumentMap } from '../core/src/VDocumentMap';
 import { Direction } from '../core/src/VSelection';
 import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 
+type VNodeID = number;
+export interface TextNodeJSON {
+    textContent: string;
+}
+export interface ElementJSON {
+    nodeName: string;
+    attributes: Record<string, string | Set<string>>;
+    childNodes: Array<NodeJSON | VNodeID>;
+}
+export type NodeJSON = ElementJSON | TextNodeJSON;
+
 export class ContentEditable extends JWPlugin {
     editable: HTMLElement;
     renderer: DomRenderer;
     eventManager: EventManager;
+    vNodejSONMap: Map<VNode, NodeJSON> = new Map();
     vDocumentMap = new VDocumentMap();
 
     commandHooks = {
@@ -40,7 +52,9 @@ export class ContentEditable extends JWPlugin {
      *
      */
     render(): void {
-        this.renderer.render(this.vDocumentMap, this.editor.vDocument, this.editable);
+        const root = this.editor.vDocument;
+        this.renderer.render(this.vDocumentMap, root, this.editable);
+
         this._renderSelection();
     }
     /**
