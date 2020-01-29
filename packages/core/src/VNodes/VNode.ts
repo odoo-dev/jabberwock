@@ -822,12 +822,12 @@ export class VNode {
      * descendants.
      *
      * @param __repr
-     * @param level
+     * @param __level
      */
-    _repr(__repr = '', level = 0): string {
-        __repr += Array(level * 4 + 1).join(' ') + this.name + ' (' + this.id + ')\n';
+    _repr(__repr = '', __level = 0): string {
+        __repr += Array(__level * 4 + 1).join(' ') + this.name + ' (' + this.id + ')\n';
         this.children.forEach(child => {
-            __repr = child._repr(__repr, level + 1);
+            __repr = child._repr(__repr, __level + 1);
         });
         return __repr;
     }

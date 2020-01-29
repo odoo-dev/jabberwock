@@ -1,10 +1,10 @@
-import { VElement } from '../core/src/VNodes/VElement';
 import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
+import { AtomicNode } from '../core/src/VNodes/AtomicNode';
 
-export class LineBreakNode extends VElement {
-    static readonly atomic = true;
+export class LineBreakNode extends AtomicNode {
+    htmlTag = 'BR';
     constructor() {
-        super('BR');
+        super();
     }
     get name(): string {
         return '↲';

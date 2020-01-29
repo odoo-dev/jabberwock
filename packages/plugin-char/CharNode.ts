@@ -1,4 +1,4 @@
-import { VNode } from '../core/src/VNodes/VNode';
+import { AtomicNode } from '../core/src/VNodes/AtomicNode';
 
 export interface FormatType {
     bold?: boolean;
@@ -7,8 +7,7 @@ export interface FormatType {
 }
 export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
 
-export class CharNode extends VNode {
-    static readonly atomic = true;
+export class CharNode extends AtomicNode {
     readonly char: string;
     // Format
     bold = false;
@@ -74,27 +73,5 @@ export class CharNode extends VNode {
     text(__current = ''): string {
         __current += this.char;
         return __current;
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Return a convenient string representation of this node and its
-     * descendants.
-     *
-     * @param __repr
-     * @param level
-     */
-    _repr(__repr = '', level = 0): string {
-        if (!this.previousSibling()) {
-            __repr += Array(level * 4 + 1).join(' ');
-        }
-        __repr += this.name;
-        if (!this.nextSibling()) {
-            __repr += '\n';
-        }
-        return __repr;
     }
 }
