@@ -1,16 +1,16 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
 import { ListNode, ListType } from './ListNode';
-import { ParagraphNode } from '../plugin-paragraph/ParagraphNode';
 import { utils } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { withMarkers } from '../utils/src/markers';
 import { RangeParams } from '../core/src/CorePlugin';
 import {
+    DomRenderingMap,
+    DomRenderingContext,
     RenderingDOMFunction,
 } from '../plugin-dom/DomRenderer';
 import { VElement } from '../core/src/VNodes/VElement';
-import { VDocumentMap } from '../core/src/VDocumentMap';
 
 export interface ListParams extends RangeParams {
     type: ListType;
@@ -91,8 +91,11 @@ export class List extends JWPlugin {
         }
         // Inline elements in a list item should be wrapped in a paragraph.
         if (!utils.isBlock(children[0]) || children[0].nodeName === 'BR') {
-            const paragraph = new ParagraphNode(); // todo: remove reference to plugin
-            context.parentVNode.append(paragraph);
+            context.parseNode({
+                ...context,
+                currentNode: document.createElement('P'),
+            });
+            const paragraph = context.parentVNode.lastChild();
             context.parentVNode = paragraph;
             parsingMap.set(paragraph, [context.currentNode]);
         }

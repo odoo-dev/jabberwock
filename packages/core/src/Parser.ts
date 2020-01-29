@@ -12,6 +12,7 @@ import { FormatType } from '../../plugin-char/CharNode';
 export type ParsingMap = Map<VNode, Node[]>;
 export interface ParsingContext {
     readonly rootNode?: Node;
+    readonly parseNode?: ParsingFunction;
     currentNode?: Node;
     parentVNode?: VNode;
     format?: FormatType;
@@ -132,6 +133,7 @@ export class Parser {
         // Start with the first child and the whole tree will be parsed.
         if (node.childNodes.length) {
             let currentContext: ParsingContext = {
+                parseNode: this.parseNode.bind(this, vDocumentMap),
                 ...rootContext,
                 currentNode: node.firstChild,
             };
