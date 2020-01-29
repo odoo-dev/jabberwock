@@ -40,7 +40,7 @@ export class CharNode extends VNode {
      * @override
      */
     shallowDuplicate(): CharNode {
-        return new CharNode(this.char, this.format);
+        return new (this.constructor as typeof CharNode)(this.char, this.format);
     }
 
     //--------------------------------------------------------------------------

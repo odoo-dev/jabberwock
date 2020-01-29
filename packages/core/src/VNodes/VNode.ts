@@ -96,7 +96,7 @@ export class VNode {
      * Return a new VNode with the same type and attributes as this VNode.
      */
     shallowDuplicate(): VNode {
-        return new VNode();
+        return new (this.constructor as typeof VNode)();
     }
 
     //--------------------------------------------------------------------------
