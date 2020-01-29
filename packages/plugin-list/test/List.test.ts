@@ -2,17 +2,14 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { InsertParams } from '../../core/src/CorePlugin';
 import { ListType, ListNode } from '../ListNode';
-import { Char } from '../../plugin-char/Char';
-import { LineBreak } from '../../plugin-linebreak/LineBreak';
-import { Heading } from '../../plugin-heading/Heading';
-import { Paragraph } from '../../plugin-paragraph/Paragraph';
-import { Parser } from '../../core/src/Parser';
 import { CharNode } from '../../plugin-char/CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { describePlugin } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
-import { List, ListParams } from '../List';
+import { ListParams, List } from '../List';
+import { Parser } from '../../core/src/Parser';
+import { Renderer } from '../../core/src/Renderer';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
@@ -38,15 +35,15 @@ const toggleUnorderedList = (editor: JWEditor): void => {
 
 describePlugin(List, testEditor => {
     describe('parse', () => {
-        const parser = new Parser();
-        parser.addParsingFunction(
-            ...Char.parsingFunctions
-                .concat(LineBreak.parsingFunctions)
-                .concat(Heading.parsingFunctions)
-                .concat(Paragraph.parsingFunctions)
-                .concat(List.parsingFunctions),
-        );
-        it('should parse a complex list', () => {
+        let editor: JWEditor;
+        let parser: Parser;
+        beforeEach(async () => {
+            editor = new BasicEditor();
+            await editor.start();
+            parser = editor.parser;
+        });
+        afterEach(() => editor.stop());
+        it('should parse a complex list', async () => {
             const element = document.createElement('div');
             element.innerHTML = [
                 '<ul>',
@@ -178,7 +175,15 @@ describePlugin(List, testEditor => {
         });
     });
     describe('render', () => {
-        it('should render a complex list', async () => {
+        let editor: JWEditor;
+        let renderer: Renderer;
+        beforeEach(async () => {
+            editor = new BasicEditor();
+            await editor.start();
+            renderer = editor.renderers.dom;
+        });
+        afterEach(() => editor.stop());
+        it('should render a complex list', () => {
             /**
              * ListNode: UL                 motherList
              *      VElement: P             p1
@@ -208,8 +213,6 @@ describePlugin(List, testEditor => {
              *              b.4
              */
             const element = document.createElement('div');
-            const editor = new BasicEditor(element);
-            await editor.start();
             const root = editor.vDocument.root;
             const motherList = new ListNode(ListType.UNORDERED);
             root.append(motherList);
@@ -281,7 +284,7 @@ describePlugin(List, testEditor => {
             ol.append(p9);
             motherList.append(ol);
 
-            editor.renderers.dom.render(editor.vDocument, editor.editable);
+            renderer.render(editor.vDocument, editor.editable);
             /* eslint-disable prettier/prettier */
             expect(editor.editable.innerHTML).to.equal([
                 '<ul>',
@@ -308,7 +311,6 @@ describePlugin(List, testEditor => {
                 '</ul>',
             ].join(''));
             /* eslint-enable prettier/prettier */
-            editor.stop();
             element.remove();
         });
     });

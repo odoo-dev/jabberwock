@@ -4,29 +4,38 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../LineBreakNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/CharNode';
-import { VDocument } from '../../core/src/VDocument';
-import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { LineBreak } from '../LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
-import { DomRenderer } from '../../plugin-dom/DomRenderer';
+import { Renderer } from '../../core/src/Renderer';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { Parser } from '../../core/src/Parser';
+import { Dom } from '../../plugin-dom/Dom';
 
 const insertLineBreak = (editor: JWEditor): void => editor.execCommand('insertLineBreak');
 
 describePlugin(LineBreak, testEditor => {
     describe('parse', () => {
+        let editor: JWEditor;
+        let parser: Parser;
+        let domRoot: Element;
+        beforeEach(async () => {
+            editor = new JWEditor();
+            editor.addPlugin(LineBreak);
+            await editor.start();
+            parser = editor.parser;
+            domRoot = document.createElement('div');
+        });
+        afterEach(() => {
+            editor.stop();
+        });
         it('should not parse a placeholder BR node', async () => {
+            const p = document.createElement('p');
             const br = document.createElement('br');
-            const fakeParent = new VElement('PARENT-NODE');
-            const context = {
-                currentNode: br,
-                parentVNode: fakeParent,
-                vDocument: new VDocument(new FragmentNode()),
-            };
-            const parsingMap = LineBreak.parse(context)[1];
-            expect(parsingMap.size).to.equal(1);
-            const node = parsingMap.keys().next().value;
-            expect(node).to.equal(fakeParent);
-            expect(parsingMap.get(node)).to.deep.equal([br]);
+            p.appendChild(br);
+            domRoot.appendChild(p);
+            const vDocument = parser.parse(domRoot);
+            expect(vDocument.root.firstChild()).not.to.be.undefined;
+            expect(vDocument.root.firstChild().children.length).to.equal(0);
         });
         it('should parse two BR node as one line break', async () => {
             const p = document.createElement('p');
@@ -34,25 +43,18 @@ describePlugin(LineBreak, testEditor => {
             const br2 = document.createElement('br');
             p.appendChild(br1);
             p.appendChild(br2);
-            const context = {
-                currentNode: br1,
-                parentVNode: new VElement('PARENT-NODE'),
-                vDocument: new VDocument(new FragmentNode()),
-            };
-            const parsingMap = LineBreak.parse(context)[1];
-            expect(parsingMap.size).to.equal(1);
-            const lineBreak = parsingMap.keys().next().value;
-            expect(lineBreak.atomic).to.equal(true);
-            const node = parsingMap.keys().next().value;
-            expect(node).to.equal(lineBreak);
-            expect(parsingMap.get(node)).to.deep.equal([br1, br2]);
+            domRoot.appendChild(p);
+            const vDocument = parser.parse(domRoot);
+            expect(vDocument.root.firstChild()).not.to.be.undefined;
+            expect(vDocument.root.firstChild().children.length).to.equal(1);
+            expect(vDocument.root.firstChild().firstChild() instanceof LineBreakNode).to.be.true;
         });
         it('should not parse a SPAN node', async () => {
-            const context = {
-                currentNode: document.createElement('span'),
-                vDocument: new VDocument(new FragmentNode()),
-            };
-            expect(LineBreak.parse(context)).to.be.undefined;
+            const span = document.createElement('span');
+            domRoot.appendChild(span);
+            const vDocument = parser.parse(domRoot);
+            expect(vDocument.root.firstChild()).not.to.be.undefined;
+            expect(vDocument.root.firstChild() instanceof LineBreakNode).to.be.false;
         });
     });
     describe('LineBreakNode', () => {
@@ -63,18 +65,28 @@ describePlugin(LineBreak, testEditor => {
             });
         });
         describe('render', () => {
-            let renderer: DomRenderer;
+            let editor: JWEditor;
+            let renderer: Renderer;
             let element: Element;
-            beforeEach(() => {
-                renderer = new DomRenderer();
-                renderer.addRenderingFunction(LineBreak.renderToDom);
+            let root: VNode;
+            beforeEach(async () => {
                 element = document.createElement('div');
+                editor = new JWEditor();
+                editor.addPlugin(Dom);
+                editor.addPlugin(LineBreak);
+                await editor.start();
+                renderer = editor.renderers.dom;
+                root = editor.vDocument.root;
+            });
+            afterEach(() => {
+                editor.stop();
             });
             it('should render an ending lineBreak', async () => {
                 const p = new VElement('fake-p');
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                renderer.render(p, element);
+                root.append(p);
+                renderer.render(editor.vDocument, element);
                 expect(element.childNodes.length).to.equal(1);
                 const domP = element.firstChild;
                 expect(domP.childNodes.length).to.equal(2);
@@ -87,7 +99,8 @@ describePlugin(LineBreak, testEditor => {
                 p.append(lineBreak);
                 const c = new VElement('FAKE-CHAR');
                 p.append(c);
-                renderer.render(p, element);
+                root.append(p);
+                renderer.render(editor.vDocument, element);
                 expect(element.childNodes.length).to.equal(1);
                 const domP = element.firstChild;
                 expect(domP.nodeName).to.equal('FAKE-P');

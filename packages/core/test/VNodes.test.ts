@@ -130,12 +130,10 @@ describe('core', () => {
                 });
                 describe('Render', () => {
                     it('should render a VNode', async () => {
-                        const root = new FragmentNode();
                         const node = new VNode();
-                        root.append(node);
                         const element = document.createElement('div');
-                        new DomRenderer().render(root, element);
-                        expect(element.firstChild.nodeName).to.equal('UNKNOWN-NODE');
+                        new DomRenderer().render(node, element);
+                        expect(element.firstChild.nodeName).to.equal('VNODE-' + node.id);
                     });
                 });
                 describe('locate', () => {
@@ -1138,8 +1136,8 @@ describe('core', () => {
                         customKey = 'yes';
                     }
                     class MyCustomPlugin extends JWPlugin {
-                        static readonly parsingFunctions = [MyCustomPlugin.parse];
-                        static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
+                        readonly parsingFunctions = [this.parse.bind(this)];
+                        parse(context: ParsingContext): [ParsingContext, ParsingMap] {
                             if (context.currentNode.nodeName === 'CUSTOM-NODE') {
                                 const parsedNode = new MyCustomNode();
                                 const parsingMap = new Map([[parsedNode, [context.currentNode]]]);

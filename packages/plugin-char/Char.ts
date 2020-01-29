@@ -1,10 +1,9 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
+import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
-import { RenderingFunction } from '../core/src/Renderer';
 import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
@@ -17,10 +16,9 @@ export interface FormatParams extends RangeParams {
 }
 
 export class Char extends JWPlugin {
-    static readonly parsingFunctions: Array<ParsingFunction> = [Char.parse];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
-        dom: Char.renderToDom,
+    readonly parsingFunctions = [this.parse.bind(this)];
+    readonly renderingFunctions = {
+        dom: this.renderToDom.bind(this),
     };
     commands = {
         insertText: {
@@ -47,7 +45,12 @@ export class Char extends JWPlugin {
             commandArgs: { format: 'underline' } as FormatParams,
         },
     ];
-    static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (context.currentNode.nodeType === Node.TEXT_NODE) {
             const vNodes: CharNode[] = [];
             const text = removeFormattingSpace(context.currentNode);
@@ -71,7 +74,7 @@ export class Char extends JWPlugin {
             return [context, parsingMap];
         }
     }
-    static renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
+    renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
         const node = context.currentNode;
         if (node.is(CharNode)) {
             // If the node has a format, render the format nodes first.
@@ -119,11 +122,6 @@ export class Char extends JWPlugin {
             return [context, renderingMap];
         }
     }
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
     /**
      * Insert text at the current position of the selection.
      *
