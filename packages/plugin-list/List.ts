@@ -6,8 +6,9 @@ import { utils } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { withMarkers } from '../utils/src/markers';
 import { RangeParams } from '../core/src/CorePlugin';
-import { RenderingFunction } from '../core/src/Renderer';
-import { DomRenderingMap, DomRenderingContext } from '../plugin-dom/DomRenderer';
+import {
+    RenderingDOMFunction,
+} from '../plugin-dom/DomRenderer';
 import { VElement } from '../core/src/VNodes/VElement';
 import { VDocumentMap } from '../core/src/VDocumentMap';
 
@@ -34,7 +35,7 @@ export class List extends JWPlugin {
     };
     static readonly parsingFunctions: Array<ParsingFunction> = [List.parse];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
+    static readonly renderingFunctions: Record<string, RenderingDOMFunction> = {
         dom: List.renderToDom,
     };
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
@@ -111,7 +112,7 @@ export class List extends JWPlugin {
         let context = { ...currentContext };
         const node = context.currentNode;
         const isUnrenderedListItem =
-            node.parent && node.parent.is(ListNode) && !VDocumentMap.toDom(node);
+            node.parent && node.parent.is(ListNode) && !currentContext.vDocumentMap.toDom(node);
         let result;
         if (isUnrenderedListItem) {
             result = List.renderListItemToDom({ ...context });

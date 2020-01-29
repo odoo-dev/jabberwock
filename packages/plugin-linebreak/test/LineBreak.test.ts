@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
@@ -9,6 +10,7 @@ import { VDocument } from '../../core/src/VDocument';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { LineBreak } from '../LineBreak';
 import { DomRenderer } from '../../plugin-dom/DomRenderer';
+import { VDocumentMap } from '../../core/src/VDocumentMap';
 
 const insertLineBreak = (editor: JWEditor): void => editor.execCommand('insertLineBreak');
 
@@ -66,15 +68,16 @@ describe('plugin-linebreak', () => {
             let renderer: DomRenderer;
             let element: Element;
             beforeEach(() => {
-                renderer = new DomRenderer();
-                renderer.addRenderingFunction(LineBreak.renderToDom);
+                const editor = new JWEditor();
+                editor.renderManager.addRenderingFunction('dom', LineBreak.renderToDom);
+                renderer = new DomRenderer(editor);
                 element = document.createElement('div');
             });
             it('should render an ending lineBreak', async () => {
                 const p = new VElement('fake-p');
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                renderer.render(p, element);
+                renderer.render(new VDocumentMap(), p, element);
                 expect(element.childNodes.length).to.equal(1);
                 const domP = element.firstChild;
                 expect(domP.childNodes.length).to.equal(2);
@@ -87,7 +90,7 @@ describe('plugin-linebreak', () => {
                 p.append(lineBreak);
                 const c = new VElement('FAKE-CHAR');
                 p.append(c);
-                renderer.render(p, element);
+                renderer.render(new VDocumentMap(), p, element);
                 expect(element.childNodes.length).to.equal(1);
                 const domP = element.firstChild;
                 expect(domP.nodeName).to.equal('FAKE-P');

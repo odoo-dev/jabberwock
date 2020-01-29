@@ -1,7 +1,6 @@
 import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
-import { EventManager } from '../../plugin-contentEditable/EventManager';
 import { JWPlugin } from './JWPlugin';
-import { Renderer } from './Renderer';
+import { RenderManager } from './RenderManager';
 import { VDocument } from './VDocument';
 import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
@@ -12,22 +11,17 @@ export interface JWEditorConfig {
     debug?: boolean;
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
-    defaultRendererId?: string;
 }
 
 export class JWEditor {
     el: HTMLElement;
     _originalEditable: HTMLElement;
-    editable: HTMLElement;
     dispatcher: Dispatcher;
-    eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    renderers: Record<string, Renderer<any, any>> = {};
     vDocument: VDocument;
     debugger: OwlUI;
     parser = new Parser();
-    defaultRendererId = 'dom';
+    renderManager = new RenderManager();
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -44,10 +38,6 @@ export class JWEditor {
             editable.style.display = 'block';
         }
         this._originalEditable = editable;
-
-        // The editable property of the editor is the original editable element
-        // before start is called, and becomes the clone after start is called.
-        this.editable = editable;
     }
 
     /**
@@ -57,40 +47,18 @@ export class JWEditor {
         // Parse the editable in the internal format of the editor.
         this.vDocument = this.parser.parse(this._originalEditable);
 
-        // Deep clone the given editable node in order to break free of any
-        // handler that might have been previously registered.
-        this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
-
         // The original editable node is hidden until the editor stops.
         this._originalEditable.style.display = 'none';
-        // Cloning the editable node might lead to duplicated id.
-        this.editable.id = this._originalEditable.id;
-        this._originalEditable.removeAttribute('id');
-
-        // The cloned editable element is then added to the main editor element
-        // which is itself added to the DOM.
-        this.editable.classList.add('jw-editable');
-        this.editable.setAttribute('contenteditable', 'true');
-        this.el.appendChild(this.editable);
-        document.body.appendChild(this.el);
 
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
         this.addPlugin(CorePlugin);
 
-        // Init the event manager now that the cloned editable is in the DOM.
-        this.eventManager = new EventManager(this);
-
-        // Render with the default renderer. If no renderer is provided, install
-        // and use DomRenderer.
-        if (!Object.keys(this.renderers).length) {
-            this.addPlugin(Dom);
-        }
-        this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
-
         if (this.debugger) {
             await this.debugger.start();
         }
+
+        this.dispatcher.commit();
     }
 
     //--------------------------------------------------------------------------
@@ -117,21 +85,12 @@ export class JWEditor {
         if (pluginClass.parsingFunctions.length) {
             this.parser.addParsingFunction(...pluginClass.parsingFunctions);
         }
-        // Register the renderers of this plugin if it has any.
-        // If two renderers exist with the same id, the last one to be added
-        // will replace the previous one.
-        if (pluginClass.renderers) {
-            pluginClass.renderers.forEach(renderer => {
-                this.renderers[renderer.id] = renderer;
-            });
-        }
         // Register the parsing predicate of this plugin if it has any.
         Object.keys(pluginClass.renderingFunctions).forEach(rendererId => {
-            if (Object.keys(this.renderers).includes(rendererId)) {
-                this.renderers[rendererId].addRenderingFunction(
-                    pluginClass.renderingFunctions[rendererId],
-                );
-            }
+            this.renderManager.addRenderingFunction(
+                rendererId,
+                pluginClass.renderingFunctions[rendererId],
+            );
         });
     }
     /**
@@ -147,9 +106,6 @@ export class JWEditor {
         if (config.plugins) {
             config.plugins.forEach(pluginClass => this.addPlugin(pluginClass));
         }
-        if (config.defaultRendererId) {
-            this.defaultRendererId = config.defaultRendererId;
-        }
     }
 
     /**
@@ -159,8 +115,10 @@ export class JWEditor {
      * @param args arguments object of the command to execute
      */
     execCommand(id: CommandIdentifier, args?: CommandArgs): void {
+        if (id === 'commit') {
+            throw new Error(`Command "commit" can't be triggered by the plugins.`);
+        }
         this.dispatcher.dispatch(id, args);
-        this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
     }
 
     /**

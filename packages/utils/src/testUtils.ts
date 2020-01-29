@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
+import { ContentEditable } from '../../plugin-contentEditable/ContentEditable';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -35,7 +36,10 @@ export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec):
         _renderTextualSelection();
     }
     if (spec.contentAfter) {
-        expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
+        const renderer = editor.pluginsRegistry.find(
+            plugin => 'editable' in plugin,
+        ) as ContentEditable;
+        expect(renderer.editable.innerHTML).to.deep.equal(spec.contentAfter);
     }
 
     editor.stop();

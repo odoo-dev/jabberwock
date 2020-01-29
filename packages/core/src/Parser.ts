@@ -124,7 +124,7 @@ export class Parser {
         }
 
         // Parse the DOM selection.
-        const selection = node.ownerDocument.getSelection();
+        const selection = node.ownerDocument && node.ownerDocument.getSelection();
         if (
             selection &&
             node.contains(selection.anchorNode) &&
@@ -252,7 +252,7 @@ export class Parser {
             let reference: VNode;
             if (container.nodeType === Node.TEXT_NODE) {
                 // The reference is the index-th match (eg.: text split into chars).
-                reference = vNodes[index];
+                reference = vNodes[index] || vNodes[vNodes.length - 1];
             } else {
                 reference = vNodes[0];
             }

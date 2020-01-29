@@ -524,7 +524,7 @@ describe('plugin-devtools', () => {
             expect(selection.rangeCount).to.equal(1, 'range exist');
             const range = selection.getRangeAt(0);
 
-            const b = editor.el.querySelector('test-container b');
+            const b = editor.el.querySelector('jw-editable b');
             expect(range.startContainer).to.equal(b.previousSibling);
             expect(range.startOffset).to.equal(1);
             expect(range.endContainer).to.equal(b.firstChild);
@@ -548,7 +548,7 @@ describe('plugin-devtools', () => {
             );
             await nextTickFrame();
 
-            const container = editor.el.querySelector('test-container');
+            const container = editor.el.querySelector('jw-editable');
             container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
             container.querySelector('b').firstChild.textContent = 'z';
             container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
@@ -707,6 +707,7 @@ describe('plugin-devtools', () => {
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
             expect(subpanel.firstElementChild.nodeName).to.equal('DIV');
             expect(Array.from(subpanel.childNodes).map((n: Node) => n.textContent)).to.deep.equal([
+                'commit',
                 'insertText',
                 'applyFormat',
                 'insertLineBreak',
@@ -736,7 +737,7 @@ describe('plugin-devtools', () => {
             );
             await nextTickFrame();
 
-            const container = editor.el.querySelector('test-container');
+            const container = editor.el.querySelector('jw-editable');
             container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
             container.querySelector('b').firstChild.textContent = 'z';
             container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
@@ -747,7 +748,9 @@ describe('plugin-devtools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.textContent).to.equal('insertTextsetSelection');
+            expect(
+                [...subpanel.querySelectorAll('td')].map((el: HTMLElement) => el.textContent),
+            ).to.deep.equal(['commit', 'insertText', 'commit', 'setSelection', 'commit']);
         });
         it('should select "insertLineBreak"', async () => {
             await openDevTools(devtools);
@@ -758,7 +761,9 @@ describe('plugin-devtools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            const line = subpanel.querySelector('.selectable-line:nth-child(3)');
+            const line = [...subpanel.querySelectorAll('.selectable-line')].find(
+                (el: HTMLElement) => el.textContent === 'insertLineBreak',
+            );
             await click(line);
 
             expect(line.classList.contains('selected')).to.equal(true);
@@ -777,7 +782,9 @@ describe('plugin-devtools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            const line = subpanel.querySelector('.selectable-line:nth-child(3)');
+            const line = [...subpanel.querySelectorAll('.selectable-line')].find(
+                (el: HTMLElement) => el.textContent === 'applyFormat',
+            ).nextElementSibling;
             await click(line);
 
             await keydown(line.nextElementSibling, 'ArrowUp');
@@ -798,7 +805,9 @@ describe('plugin-devtools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            const line = subpanel.querySelector('.selectable-line:nth-child(2)');
+            const line = [...subpanel.querySelectorAll('.selectable-line')].find(
+                (el: HTMLElement) => el.textContent === 'insertLineBreak',
+            ).previousElementSibling;
             await click(line);
 
             await keydown(line.nextElementSibling, 'ArrowDown');
@@ -819,7 +828,9 @@ describe('plugin-devtools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            const line = subpanel.querySelector('.selectable-line:nth-child(3)');
+            const line = [...subpanel.querySelectorAll('.selectable-line')].find(
+                (el: HTMLElement) => el.textContent === 'insertText',
+            );
             await click(line);
 
             const selected = devtools.querySelector(
@@ -876,7 +887,7 @@ describe('plugin-devtools', () => {
 
                 charBeforeChange = editor.vDocument.root.children[1].children[1];
 
-                const container = editor.el.querySelector('test-container');
+                const container = editor.el.querySelector('jw-editable');
                 container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
                 container.querySelector('b').firstChild.textContent = 'z';
                 container.dispatchEvent(new KeyboardEvent('input', { bubbles: true }));
@@ -886,20 +897,22 @@ describe('plugin-devtools', () => {
                 const button = devtools.querySelector('devtools-navbar button:not(.selected)');
                 await click(button);
             });
-            it('should select "insertText"', async () => {
+            it('should select "commit"', async () => {
                 const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line');
                 await click(line);
                 expect(line.classList.contains('selected')).to.equal(true);
 
                 const about = devtools.querySelector('devtools-info .about');
-                const aResult =
-                    '<div class="about"><span class="type">Command</span> insertText</div>';
+                const aResult = '<div class="about"><span class="type">Command</span> commit</div>';
                 expect(about.outerHTML).to.equal(aResult);
             });
             it('should select "setSelection"', async () => {
                 const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line:nth-child(2)');
+                const line: HTMLTableRowElement = [].find.call(
+                    subpanel.querySelectorAll('.selectable-line'),
+                    (td: HTMLTableRowElement) => td.textContent === 'setSelection',
+                );
                 await click(line);
                 expect(line.classList.contains('selected')).to.equal(true);
 
@@ -927,7 +940,9 @@ describe('plugin-devtools', () => {
             });
             it('should select "insertText" with arrow', async () => {
                 const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line:nth-child(2)');
+                const line = [...subpanel.querySelectorAll('.selectable-line')].find(
+                    (el: HTMLElement) => el.textContent === 'insertText',
+                ).nextElementSibling;
                 await click(line);
                 await keydown(line, 'ArrowUp');
 
@@ -951,7 +966,9 @@ describe('plugin-devtools', () => {
             });
             it('should select "setSelection" with arrow', async () => {
                 const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line');
+                const line = [...subpanel.querySelectorAll('.selectable-line')].find(
+                    (el: HTMLElement) => el.textContent === 'setSelection',
+                ).previousElementSibling;
                 await click(line);
 
                 await keydown(line, 'ArrowDown');

@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/CharNode';
@@ -13,6 +14,7 @@ import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { ParsingContext, ParsingMap } from '../src/Parser';
 import { DomRenderer } from '../../plugin-dom/DomRenderer';
+import { VDocumentMap } from '../src/VDocumentMap';
 
 describe('core', () => {
     describe('src', () => {
@@ -130,11 +132,12 @@ describe('core', () => {
                 });
                 describe('Render', () => {
                     it('should render a VNode', async () => {
+                        const editor = new JWEditor();
                         const root = new FragmentNode();
                         const node = new VNode();
                         root.append(node);
                         const element = document.createElement('div');
-                        new DomRenderer().render(root, element);
+                        new DomRenderer(editor).render(new VDocumentMap(), root, element);
                         expect(element.firstChild.nodeName).to.equal('UNKNOWN-NODE');
                     });
                 });

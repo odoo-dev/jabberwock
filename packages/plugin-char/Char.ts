@@ -4,7 +4,7 @@ import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
-import { RenderingFunction } from '../core/src/Renderer';
+import { RenderingFunction } from '../core/src/RenderManager';
 import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
@@ -19,7 +19,7 @@ export interface FormatParams extends RangeParams {
 export class Char extends JWPlugin {
     static readonly parsingFunctions: Array<ParsingFunction> = [Char.parse];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
+    static readonly renderingFunctions: Record<string, RenderingFunction> = {
         dom: Char.renderToDom,
     };
     commands = {
@@ -91,7 +91,7 @@ export class Char extends JWPlugin {
             // Browsers don't render leading/trailing space chars otherwise.
             text = text.replace(/^ | $/g, '\u00A0');
 
-            // Create and append the text node, update the VDocumentMap.
+            // Create and append the text node, update the vDocumentMap.
             const renderedNode = document.createTextNode(text);
             parent.appendChild(renderedNode);
             context.parentNode.appendChild(fragment);

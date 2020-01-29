@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { InsertParams } from '../../core/src/CorePlugin';
@@ -13,6 +14,8 @@ import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { List, ListParams } from '../List';
+import { VDocumentMap } from '../../core/src/VDocumentMap';
+import { DomRenderer } from '../../plugin-dom/DomRenderer';
 
 const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
 const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
@@ -281,9 +284,11 @@ describe('plugin-list', () => {
             ol.append(p9);
             motherList.append(ol);
 
-            editor.renderers.dom.render(editor.vDocument, editor.editable);
+            const renderer = new DomRenderer(editor);
+            const container = document.createElement('container');
+            renderer.render(new VDocumentMap(), editor.vDocument, container);
             /* eslint-disable prettier/prettier */
-            expect(editor.editable.innerHTML).to.equal([
+            expect(container.innerHTML).to.equal([
                 '<ul>',
                     '<li>a',
                         '<ul>',

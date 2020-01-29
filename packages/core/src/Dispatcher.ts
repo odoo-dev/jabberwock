@@ -14,11 +14,15 @@ export interface CommandArgs {
 export type DispatchHook = (command: string, args: CommandArgs) => void;
 
 export class Dispatcher {
-    __nextHandlerTokenID = 0;
+    __dispatching = false;
     editor: JWEditor;
     el: Element;
-    commands: Record<CommandIdentifier, CommandDefinition> = {};
-    handlers: Record<CommandIdentifier, CommandHandler[]> = {};
+    commands: Record<CommandIdentifier, CommandDefinition> = {
+        commit: { handler: (): void => {} },
+    };
+    handlers: Record<CommandIdentifier, CommandHandler[]> = {
+        commit: [],
+    };
     dispatchHooks: DispatchHook[] = [];
 
     constructor(editor: JWEditor) {
@@ -31,12 +35,25 @@ export class Dispatcher {
     //--------------------------------------------------------------------------
 
     /**
+     * Dispatch the commit signal for all plugins
+     *
+     */
+    commit(): void {
+        this.__dispatching = true;
+        this.dispatch('commit');
+        this.__dispatching = false;
+    }
+
+    /**
      * Call all hooks registred for the command `id`.
      *
      * @param commandId The name of the command.
      * @param args The arguments of the command.
      */
     dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): void {
+        const dispatching = this.__dispatching;
+        this.__dispatching = true;
+
         const handlers = this.handlers[commandId];
         if (handlers) {
             handlers.forEach((handlerCallback: CommandHandler) => {
@@ -46,6 +63,13 @@ export class Dispatcher {
         this.dispatchHooks.forEach((hookCallback: DispatchHook) => {
             hookCallback(commandId, args);
         });
+
+        if (!dispatching) {
+            // Commit is triggered after the process pipe
+
+            // TODO: freeze memory => don't update the vDocument in render
+            this.commit();
+        }
     }
 
     /**
