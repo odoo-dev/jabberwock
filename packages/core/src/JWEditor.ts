@@ -3,7 +3,7 @@ import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { Dom } from '../../plugin-dom/Dom';
-import { Renderer } from './Renderer';
+import { Renderer, RendererIdentifier } from './Renderer';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
@@ -34,8 +34,7 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     plugins: JWPlugin[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    renderers: Record<string, Renderer<any, any>> = {};
+    renderers: Record<RendererIdentifier, Renderer> = {};
     vDocument: VDocument;
     autoFocus = false;
     parser = new Parser();
@@ -168,23 +167,29 @@ export class JWEditor {
                 }
             }
             // Register the parsing functions of this plugin.
-            if (pluginClass.parsingFunctions.length) {
-                this.parser.addParsingFunction(...pluginClass.parsingFunctions);
+            if (plugin.parsingFunctions.length) {
+                this.parser.addParsingFunction(...plugin.parsingFunctions);
             }
             // Register the renderers of this plugin if it has any.
             // If two renderers exist with the same id, the last one to be added
             // will replace the previous one.
-            if (pluginClass.renderers) {
-                pluginClass.renderers.forEach(renderer => {
+            if (plugin.renderers) {
+                plugin.renderers.forEach(renderer => {
                     this.renderers[renderer.id] = renderer;
                 });
             }
-            // Register the parsing predicate of this plugin if it has any.
-            Object.keys(pluginClass.renderingFunctions).forEach(rendererId => {
+            // Register the parsing functions of this plugin if it has any.
+            Object.keys(plugin.renderingFunctions).forEach(rendererId => {
                 if (Object.keys(this.renderers).includes(rendererId)) {
-                    this.renderers[rendererId].addRenderingFunction(
-                        pluginClass.renderingFunctions[rendererId],
-                    );
+                    const renderer = this.renderers[rendererId];
+                    const renderingFunctions = plugin.renderingFunctions[rendererId];
+                    if (Array.isArray(renderingFunctions)) {
+                        renderingFunctions.forEach(renderingFunction => {
+                            renderer.renderingFunctions.add(renderingFunction);
+                        });
+                    } else {
+                        renderer.renderingFunctions.add(renderingFunctions);
+                    }
                 }
             });
         }

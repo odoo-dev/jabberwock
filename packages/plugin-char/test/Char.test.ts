@@ -3,11 +3,10 @@ import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
-import { VElement } from '../../core/src/VNodes/VElement';
-import { VDocument } from '../../core/src/VDocument';
-import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { describePlugin } from '../../utils/src/testUtils';
-import { DomRenderer } from '../../plugin-dom/DomRenderer';
+import { Parser } from '../../core/src/Parser';
+import { Renderer } from '../../core/src/Renderer';
+import { Dom } from '../../plugin-dom/Dom';
 
 const insertText = function(editor, text: string): void {
     const params: InsertTextParams = {
@@ -24,65 +23,77 @@ const applyFormat = (editor: JWEditor, format: 'bold' | 'italic' | 'underline'):
 
 describePlugin(Char, testEditor => {
     describe('parse', () => {
+        let editor: JWEditor;
+        let parser: Parser;
+        let domRoot: Element;
+        beforeEach(async () => {
+            editor = new JWEditor();
+            editor.addPlugin(Char);
+            await editor.start();
+            domRoot = document.createElement('div');
+            parser = editor.parser;
+        });
+        afterEach(() => {
+            editor.stop();
+        });
         it('should parse a textNode', async () => {
             const text = document.createTextNode('abc');
-            const context = {
-                currentNode: text,
-                parentVNode: new VElement('PARENT-NODE'),
-                vDocument: new VDocument(new FragmentNode()),
-            };
-            const parsingMap = Char.parse(context)[1];
-            const vNodes = Array.from(parsingMap.keys());
-            expect(vNodes.length).to.equal(3);
-            expect((vNodes[0] as CharNode).char).to.equal('a');
-            expect((vNodes[1] as CharNode).char).to.equal('b');
-            expect((vNodes[2] as CharNode).char).to.equal('c');
+            domRoot.appendChild(text);
+            const vDocument = parser.parse(domRoot);
+            expect(vDocument.root.children.length).to.equal(3);
+            expect((vDocument.root.children[0] as CharNode).char).to.equal('a');
+            expect((vDocument.root.children[1] as CharNode).char).to.equal('b');
+            expect((vDocument.root.children[2] as CharNode).char).to.equal('c');
         });
         it('should not parse a SPAN node', async () => {
-            const context = {
-                currentNode: document.createElement('span'),
-                vDocument: new VDocument(new FragmentNode()),
-            };
-            expect(Char.parse(context)).to.be.undefined;
+            const span = document.createElement('span');
+            domRoot.appendChild(span);
+            const vDocument = parser.parse(domRoot);
+            expect(vDocument.root.firstChild()).not.to.be.undefined;
+            expect(vDocument.root.firstChild() instanceof CharNode).to.be.false;
         });
     });
     describe('renderToDom', () => {
+        let editor: JWEditor;
+        let renderer: Renderer;
+        beforeEach(async () => {
+            editor = new JWEditor();
+            editor.addPlugin(Dom);
+            editor.addPlugin(Char);
+            await editor.start();
+            renderer = editor.renderers.dom;
+        });
+        afterEach(() => {
+            editor.stop();
+        });
         it('should insert 1 space and 1 nbsp instead of 2 spaces', () => {
             const element = document.createElement('p');
             element.innerHTML = 'a';
             document.body.appendChild(element);
+            const vDocument = editor.parser.parse(element);
 
-            const editor = new BasicEditor(element);
-            editor.start();
-            editor.vDocument.root.append(new CharNode(' '));
-            editor.vDocument.root.append(new CharNode(' '));
-            editor.vDocument.root.append(new CharNode('b'));
+            vDocument.root.append(new CharNode(' '));
+            vDocument.root.append(new CharNode(' '));
+            vDocument.root.append(new CharNode('b'));
 
-            const renderer = new DomRenderer();
-            renderer.addRenderingFunction(Char.renderToDom);
-            renderer.render(editor.vDocument, editor.editable);
+            renderer.render(vDocument, editor.editable);
             expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
-            editor.stop();
             element.remove();
         });
         it('should insert 2 spaces and 2 nbsp instead of 4 spaces', () => {
             const element = document.createElement('p');
             element.innerHTML = 'a';
             document.body.appendChild(element);
+            const vDocument = editor.parser.parse(element);
 
-            const editor = new BasicEditor(element);
-            editor.start();
-            editor.vDocument.root.append(new CharNode(' '));
-            editor.vDocument.root.append(new CharNode(' '));
-            editor.vDocument.root.append(new CharNode(' '));
-            editor.vDocument.root.append(new CharNode(' '));
-            editor.vDocument.root.append(new CharNode('b'));
+            vDocument.root.append(new CharNode(' '));
+            vDocument.root.append(new CharNode(' '));
+            vDocument.root.append(new CharNode(' '));
+            vDocument.root.append(new CharNode(' '));
+            vDocument.root.append(new CharNode('b'));
 
-            const renderer = new DomRenderer();
-            renderer.addRenderingFunction(Char.renderToDom);
-            renderer.render(editor.vDocument, editor.editable);
+            renderer.render(vDocument, editor.editable);
             expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
-            editor.stop();
             element.remove();
         });
     });
