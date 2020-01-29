@@ -16,12 +16,24 @@ export class Indent extends JWPlugin {
     editor: JWEditor;
     commands = {
         indent: {
+            title: 'Indent chars',
             handler: this.indent.bind(this),
         },
         outdent: {
+            title: 'Outdent chars',
             handler: this.outdent.bind(this),
         },
     };
+    shortcuts = [
+        {
+            pattern: 'TAB',
+            commandId: 'indent',
+        },
+        {
+            pattern: 'SHIFT+TAB',
+            commandId: 'outdent',
+        },
+    ];
     tab = '    ';
 
     //--------------------------------------------------------------------------

@@ -6,6 +6,7 @@ module.exports = {
     entry: {
         'index': './examples/index/index.ts',
         'jabberwockipedia': './examples/jabberwockipedia/jabberwockipedia.ts',
+        'list': './examples/list/index.ts',
     },
     devtool: 'inline-source-map',
     output: {

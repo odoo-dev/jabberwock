@@ -8,6 +8,488 @@ const indent = async (editor: JWEditor): Promise<void> => await editor.execComma
 const outdent = async (editor: JWEditor): Promise<void> => await editor.execCommand('outdent');
 
 describePlugin(Indent, testEditor => {
+    describe('List', () => {
+        describe('indent', () => {
+            describe('with selection collapsed', () => {
+                it('should indent the last element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>a</li>
+                        <li>[]b</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>
+                            a
+                            <ul>
+                                <li>[]b</li>
+                            </ul>
+                        </li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should indent the last element of a list with proper with unordered list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ol>
+                        <li>a</li>
+                        <li>[]b</li>
+                    </ol>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ol>
+                        <li>
+                            a
+                            <ol>
+                                <li>[]b</li>
+                            </ol>
+                        </li>
+                    </ol>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should indent the middle element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>a</li>
+                        <li>[]b</li>
+                        <li>c</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>
+                            a
+                            <ul>
+                                <li>[]b</li>
+                            </ul>
+                        </li>
+                        <li>
+                            c
+                        </li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should not indent if the first element of a list is selected', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>[]a</li>
+                        <li>b</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>[]a</li>
+                        <li>b</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should indent the last element of a list with sublist', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>a</li>
+                        <li>
+                            []b
+                            <ul>
+                                <li>c</li>
+                            </ul>
+                        </li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>
+                            a
+                            <ul>
+                                <li>
+                                    []b
+                                    <ul>
+                                        <li>c</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+            });
+            describe('with selection', () => {
+                it('should indent the middle element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>a</li>
+                        <li>[b]</li>
+                        <li>c</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>
+                            a
+                            <ul>
+                                <li>[b]</li>
+                            </ul>
+                        </li>
+                        <li>
+                            c
+                        </li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should indent multiples list item in the middle element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>a</li>
+                        <li>[b</li>
+                        <li>c]</li>
+                        <li>d</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>
+                            a
+                            <ul>
+                                <li>[b</li>
+                                <li>c]</li>
+                            </ul>
+                        </li>
+                        <li>
+                            d
+                        </li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should indent multiples list item in the middle element of a list with sublist', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                    <ul>
+                        <li>a</li>
+                        <li>
+                            [b
+                            <ul>
+                                <li>c</li>
+                            </ul>
+                        </li>
+                        <li>d]</li>
+                        <li>e</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                    <ul>
+                        <li>
+                            a
+                            <ul>
+                                <li>
+                                    [b
+                                    <ul>
+                                        <li>c</li>
+                                    </ul>
+                                </li>
+                                <li>d]</li>
+                            </ul>
+                        </li>
+                        <li>e</li>
+                    </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should indent nested list and list with elements in a upper level than the rangestart', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>a</li>
+                                <li>
+                                    b
+                                    <ul>
+                                        <li>c</li>
+                                        <li>[d</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    e
+                                    <ul>
+                                        <li>f</li>
+                                        <li>g</li>
+                                    </ul>
+                                </li>
+                                <li>h]</li>
+                                <li>i</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: indent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>
+                                    b
+                                    <ul>
+                                        <li>
+                                            c
+                                            <ul>
+                                                <li>[d</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                        e
+                                        <ul>
+                                            <li>f</li>
+                                            <li>g</li>
+                                        </ul>
+                                    </li>
+                                    <li>h]</li>
+                                    </ul>
+                                </li>
+                                <li>i</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+            });
+        });
+        describe('outdent', () => {
+            describe('with selection collapsed', () => {
+                it('should outdent the last element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>
+                                    a
+                                    <ul>
+                                        <li>[]b</li>
+                                    </ul>
+                                </li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>[]b</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should outdent the last element of a list with proper with unordered list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ol>
+                                <li>
+                                    a
+                                    <ol>
+                                        <li>[]b</li>
+                                    </ol>
+                                </li>
+                            </ol>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ol>
+                                <li>a</li>
+                                <li>[]b</li>
+                            </ol>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should outdent the middle element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>
+                                    a
+                                    <ul>
+                                        <li>[]b</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    c
+                                </li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>[]b</li>
+                                <li>c</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should outdent if the first element of a list is selected', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>[]a</li>
+                                <li>b</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <p>[]a</p>
+                            <ul>
+                                <li>b</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should outdent the last element of a list with sublist', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>
+                                    a
+                                    <ul>
+                                        <li>
+                                            []b
+                                            <ul>
+                                                <li>c</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>
+                                    []b
+                                    <ul>
+                                        <li>c</li>
+                                    </ul>
+                                </li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+            });
+            describe('with selection', () => {
+                it('should outdent the middle element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>
+                                    a
+                                    <ul>
+                                        <li>[b]</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    c
+                                </li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>[b]</li>
+                                <li>c</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should inoutdentdent multiples list item in the middle element of a list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>
+                                    a
+                                    <ul>
+                                        <li>[b</li>
+                                        <li>c]</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    d
+                                </li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>[b</li>
+                                <li>c]</li>
+                                <li>d</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should outdent multiples list item in the middle element of a list with sublist', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>
+                                    a
+                                    <ul>
+                                        <li>
+                                            [b
+                                            <ul>
+                                                <li>c</li>
+                                            </ul>
+                                        </li>
+                                        <li>d]</li>
+                                    </ul>
+                                </li>
+                                <li>e</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>
+                                    [b
+                                    <ul>
+                                        <li>c</li>
+                                    </ul>
+                                </li>
+                                <li>d]</li>
+                                <li>e</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+                it('should outdent nested list and list with elements in a upper level than the rangestart', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: `
+                            <ul>
+                                <li>a</li>
+                                <li>
+                                    b
+                                    <ul>
+                                        <li>
+                                            c
+                                            <ul>
+                                                <li>[d</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                        e
+                                        <ul>
+                                            <li>f</li>
+                                            <li>g</li>
+                                        </ul>
+                                    </li>
+                                    <li>h]</li>
+                                    </ul>
+                                </li>
+                                <li>i</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                        stepFunction: outdent,
+                        contentAfter: `
+                            <ul>
+                                <li>a</li>
+                                <li>b
+                                    <ul>
+                                        <li>c</li>
+                                        <li>[d</li>
+                                    </ul>
+                                </li>
+                                <li>e
+                                    <ul>
+                                        <li>f</li>
+                                        <li>g</li>
+                                    </ul>
+                                </li>
+                                <li>h]</li>
+                                <li>i</li>
+                            </ul>`.replace(/[\s\n]+/g, ''),
+                    });
+                });
+            });
+        });
+    });
     describe('indent', () => {
         it('should indent 4 spaces tab when range is collapsed', async () => {
             await testEditor(BasicEditor, {

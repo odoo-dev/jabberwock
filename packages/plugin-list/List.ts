@@ -7,6 +7,8 @@ import { VNode } from '../core/src/VNodes/VNode';
 import { RangeParams } from '../core/src/CorePlugin';
 import { ListDomRenderer } from './ListDomRenderer';
 import { ListItemDomRenderer } from './ListItemDomRenderer';
+import { VRange } from '../core/src/VRange';
+import { IndentParams, OutdentParams } from '../plugin-indent/src/Indent';
 
 export interface ListParams extends RangeParams {
     type: ListType;
@@ -29,7 +31,18 @@ export class List extends JWPlugin {
     }
     commands = {
         toggleList: {
+            title: 'Toggle list',
             handler: this.toggleList.bind(this),
+        },
+        indent: {
+            title: 'Indent list',
+            predicates: [ListNode],
+            handler: this.indent.bind(this),
+        },
+        outdent: {
+            title: 'Outdent list',
+            predicates: [ListNode],
+            handler: this.outdent.bind(this),
         },
     };
     shortcuts = [
@@ -142,6 +155,86 @@ export class List extends JWPlugin {
             this._unlist(selectedNodes);
         } else {
             this._convertToList(selectedNodes, type);
+        }
+    }
+
+    /**
+     * Indent one or more list items.
+     *
+     * @param params
+     */
+    indent(params: IndentParams): void {
+        const range = params.range || this.editor.vDocument.selection.range;
+        const firstListNode = this._getFirstListNode(range.start);
+        const parents = range.start.ancestors();
+        const directChildOfListNode = parents[parents.indexOf(firstListNode) - 1];
+
+        if (directChildOfListNode.parent.firstChild() === directChildOfListNode) {
+            return;
+        }
+
+        const parentListNode = this._getSelectedListItemsNodes(range);
+
+        for (const selectedListItems of parentListNode) {
+            // const selectedListItems = selectedNodes.filter(node => node.parent === parent);
+            const parent = selectedListItems[0].parent as ListNode;
+
+            if (selectedListItems.length > 0) {
+                let toAddNode: ListNode;
+                const previousSibling = selectedListItems[0].previousSibling();
+                if (previousSibling instanceof ListNode) {
+                    toAddNode = previousSibling;
+                } else {
+                    toAddNode = new ListNode(parent.listType);
+                    selectedListItems[0].before(toAddNode);
+                }
+                const nextSibling = selectedListItems[selectedListItems.length - 1].nextSibling();
+                if (nextSibling instanceof ListNode) {
+                    selectedListItems.push(nextSibling);
+                }
+                selectedListItems.forEach(toAddNode.append.bind(toAddNode));
+            }
+        }
+    }
+
+    /**
+     * Outdent one or more list items.
+     *
+     * @param params
+     */
+    outdent(params: OutdentParams): void {
+        const range = params.range || this.editor.vDocument.selection.range;
+        const firstListNode = this._getFirstListNode(range.start);
+        const parentListNode = this._getSelectedListItemsNodes(range);
+
+        for (const selectedListItems of parentListNode) {
+            const parent = selectedListItems[0].parent as ListNode;
+            const lastNode = selectedListItems[selectedListItems.length - 1];
+
+            if (selectedListItems.length > 0) {
+                const otherNodes = parent.children.slice(parent.children.indexOf(lastNode) + 1);
+
+                // if the nextSibling of a lastNode is a ListNode, we need to move it
+                const nextSibling = lastNode.nextSibling();
+                if (nextSibling instanceof ListNode) {
+                    otherNodes.shift();
+                    otherNodes.unshift(...nextSibling.children);
+                    nextSibling.remove();
+                }
+                if (otherNodes.length > 0) {
+                    const newListNode = new ListNode(firstListNode.listType);
+                    otherNodes.forEach(newListNode.append.bind(newListNode));
+                    parent.after(newListNode);
+                }
+
+                selectedListItems
+                    .slice()
+                    .reverse()
+                    .forEach(parent.after.bind(parent));
+                if (parent.children.length === 0) {
+                    parent.remove();
+                }
+            }
         }
     }
 
@@ -284,5 +377,70 @@ export class List extends JWPlugin {
                 list.remove();
             }
         });
+    }
+
+    /**
+     * Get the first list node in ancestors.
+     *
+     * @param node
+     */
+    _getFirstListNode(node: VNode): ListNode | undefined {
+        return node.ancestors().find(node => node instanceof ListNode) as ListNode;
+    }
+
+    /**
+     * Get a list of selected items.
+     *
+     * Example of vDocument written in pseudo code:
+     * ```
+     * UL
+     *   P "a"
+     *   UL
+     *     P "b[c"
+     *     P "d"
+     * UL
+     *   P "e"
+     *   P "f"
+     * UL
+     *   P "g]h"
+     * ```
+     * Note: The range start is symbolized with "[" and the range end is symbolized with "]".
+     *
+     * This selection will return
+     * [
+     *   [P that contain "bc", P that contain "d"]
+     *   [P that contain "e", P that contain "f"],
+     *   [P that contain "gh"],
+     * ]
+     *
+     * @param range
+     */
+    _getSelectedListItemsNodes(range: VRange): VNode[][] {
+        const firstListNode = this._getFirstListNode(range.start);
+
+        const parents = range.start.ancestors();
+        const directChildOfListNode = parents[parents.indexOf(firstListNode) - 1];
+
+        const selectedNodes = range.selectedNodes();
+        selectedNodes.unshift(directChildOfListNode);
+
+        const commonAncestor = range.end.commonAncestor(range.start);
+        const indexAncestor = range.end.ancestors().indexOf(commonAncestor);
+        const ancestorParents = range.end.ancestors().slice(0, indexAncestor);
+        ancestorParents.forEach(selectedNodes.push.bind(selectedNodes));
+
+        const parentListNode = new Set<ListNode>();
+        const selectedChildOfList = selectedNodes.filter(node => node.parent instanceof ListNode);
+        // the first element is not included in the selection.
+        selectedChildOfList.unshift(directChildOfListNode);
+        for (const child of selectedChildOfList) {
+            if (!child.ancestors().find(parent => parentListNode.has(parent as ListNode))) {
+                parentListNode.add(child.parent as ListNode);
+            }
+        }
+
+        return [...parentListNode].map(parent =>
+            selectedNodes.filter(node => node.parent === parent),
+        );
     }
 }
