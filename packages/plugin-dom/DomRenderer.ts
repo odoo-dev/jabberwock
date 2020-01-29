@@ -1,7 +1,7 @@
 import { Renderer } from '../core/src/Renderer';
 import { VDocumentMap } from '../core/src/VDocumentMap';
 import { VDocument } from '../core/src/VDocument';
-import { VNode, RelativePosition, Predicate } from '../core/src/VNodes/VNode';
+import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, Direction } from '../core/src/VSelection';
 import { VElement } from '../core/src/VNodes/VElement';
 
@@ -50,12 +50,10 @@ export class DomRenderer extends Renderer<
         };
         this._contextStack.push(rootContext);
 
-        if (root.hasChildren()) {
-            let currentContext: DomRenderingContext = { ...rootContext };
-            do {
-                currentContext = this._renderOne(currentContext);
-            } while ((currentContext = this._nextRenderingContext(currentContext)));
-        }
+        let currentContext: DomRenderingContext = { ...rootContext };
+        do {
+            currentContext = this.renderNode(currentContext);
+        } while ((currentContext = this._nextRenderingContext(currentContext)));
 
         if (content instanceof VDocument) {
             // Append the fragment corresponding to the VDocument to `target`.
@@ -67,22 +65,49 @@ export class DomRenderer extends Renderer<
     /**
      * Render the element matching the current vNode and append it.
      *
-     * @param context
+     * @param currentContext
      */
-    renderNode(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
-        const node = context.currentNode;
-
+    renderNode(currentContext: DomRenderingContext): DomRenderingContext {
+        let renderingResult: [DomRenderingContext, DomRenderingMap];
         for (const renderingFunction of this.renderingFunctions) {
-            const renderingResult = renderingFunction({ ...context });
+            renderingResult = renderingFunction({ ...currentContext });
             if (renderingResult) {
-                context = renderingResult[0];
+                currentContext = renderingResult[0];
                 if (renderingResult[1]) {
-                    return renderingResult;
+                    break;
                 }
             }
         }
 
-        const tagName = node.is(VElement) ? node.htmlTag : 'UNKNOWN-NODE';
+        let [newContext, renderingMap] = renderingResult || [];
+        if (!newContext) {
+            newContext = { ...currentContext };
+        }
+        if (!renderingMap) {
+            renderingMap = this._renderDefault(currentContext);
+        }
+
+        // Map the parsed nodes to the DOM nodes they represent.
+        renderingMap.forEach((nodes: VNode[], domNode: Node) => {
+            nodes.forEach((node: VNode, index: number) => {
+                VDocumentMap.set(node, domNode, index);
+            });
+        });
+        return newContext;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _renderDefault(currentContext: DomRenderingContext): DomRenderingMap {
+        const node = currentContext.currentNode;
+        let tagName: string;
+        if (node.is(VElement)) {
+            tagName = node.htmlTag;
+        } else {
+            tagName = node.constructor.name.toUpperCase() + '-' + node.id;
+        }
         const fragment = document.createDocumentFragment();
         const renderedDomNodes: Node[] = [];
         const renderedElement = document.createElement(tagName);
@@ -97,37 +122,13 @@ export class DomRenderer extends Renderer<
             renderedDomNodes.push(placeholderBr);
         }
 
-        context.parentNode.appendChild(fragment);
+        currentContext.parentNode.appendChild(fragment);
 
-        const renderingMap: DomRenderingMap = new Map(
+        return new Map(
             renderedDomNodes.map(domNode => {
                 return [domNode, [node]];
             }),
         );
-        return [context, renderingMap];
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Render a VNode and trigger the rendering of the next one, recursively.
-     *
-     * @param context
-     */
-    _renderOne(context: DomRenderingContext): DomRenderingContext {
-        let renderingMap: DomRenderingMap;
-        [context, renderingMap] = this.renderNode({ ...context });
-
-        // Map the parsed nodes to the DOM nodes they represent.
-        renderingMap.forEach((nodes: VNode[], domNode: Node) => {
-            nodes.forEach((node: VNode, index: number) => {
-                VDocumentMap.set(node, domNode, index);
-            });
-        });
-
-        return context;
     }
     /**
      * Return the next rendering context, based on the given context. This
@@ -222,18 +223,5 @@ export class DomRenderer extends Renderer<
             location[1] += 1;
         }
         return location;
-    }
-    /**
-     * Return whether the current VNode of the given rendering context matches
-     * the given predicate.
-     *
-     * @param context
-     * @param predicate
-     */
-    _match<T extends VNode>(
-        context: DomRenderingContext,
-        predicate: Predicate<T>,
-    ): context is DomRenderingContext {
-        return context.currentNode.test(predicate);
     }
 }

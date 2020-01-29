@@ -1,12 +1,11 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
+import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { ListNode, ListType } from './ListNode';
 import { ParagraphNode } from '../plugin-paragraph/ParagraphNode';
 import { utils } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { withMarkers } from '../utils/src/markers';
 import { RangeParams } from '../core/src/CorePlugin';
-import { RenderingFunction } from '../core/src/Renderer';
 import { DomRenderingMap, DomRenderingContext } from '../plugin-dom/DomRenderer';
 import { VElement } from '../core/src/VNodes/VElement';
 import { VDocumentMap } from '../core/src/VDocumentMap';
@@ -32,9 +31,9 @@ export class List extends JWPlugin {
             handler: this.toggleList.bind(this),
         },
     };
-    static readonly parsingFunctions: Array<ParsingFunction> = [List.parse];
+    static readonly parsingFunctions = [List.parse];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
+    static readonly renderingFunctions = {
         dom: List.renderToDom,
     };
     static parse(context: ParsingContext): [ParsingContext, ParsingMap] {

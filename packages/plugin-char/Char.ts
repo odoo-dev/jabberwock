@@ -1,10 +1,9 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
+import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
-import { RenderingFunction } from '../core/src/Renderer';
 import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
@@ -17,9 +16,9 @@ export interface FormatParams extends RangeParams {
 }
 
 export class Char extends JWPlugin {
-    static readonly parsingFunctions: Array<ParsingFunction> = [Char.parse];
+    static readonly parsingFunctions = [Char.parse];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions: Record<string, RenderingFunction<any, any>> = {
+    static readonly renderingFunctions = {
         dom: Char.renderToDom,
     };
     commands = {

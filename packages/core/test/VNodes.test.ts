@@ -130,12 +130,10 @@ describe('core', () => {
                 });
                 describe('Render', () => {
                     it('should render a VNode', async () => {
-                        const root = new FragmentNode();
                         const node = new VNode();
-                        root.append(node);
                         const element = document.createElement('div');
-                        new DomRenderer().render(root, element);
-                        expect(element.firstChild.nodeName).to.equal('UNKNOWN-NODE');
+                        new DomRenderer().render(node, element);
+                        expect(element.firstChild.nodeName).to.equal('VNODE-' + node.id);
                     });
                 });
                 describe('locate', () => {

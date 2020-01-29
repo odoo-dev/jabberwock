@@ -2,7 +2,7 @@ import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { Dom } from '../../plugin-dom/Dom';
-import { Renderer } from './Renderer';
+import { Renderer, RendererIdentifier } from './Renderer';
 import { VDocument } from './VDocument';
 import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { CorePlugin } from './CorePlugin';
@@ -23,8 +23,7 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     pluginsRegistry: JWPlugin[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    renderers: Record<string, Renderer<any, any>> = {};
+    renderers: Record<RendererIdentifier, Renderer> = {};
     vDocument: VDocument;
     debugger: OwlUI;
     parser = new Parser();

@@ -1,10 +1,10 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingFunction, ParsingContext, ParsingMap } from '../core/src/Parser';
+import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { LineBreakNode } from './LineBreakNode';
 import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
 
 export class LineBreak extends JWPlugin {
-    static readonly parsingFunctions: Array<ParsingFunction> = [LineBreak.parse];
+    static readonly parsingFunctions = [LineBreak.parse];
     static readonly renderingFunctions = {
         dom: LineBreak.renderToDom,
     };
@@ -50,8 +50,8 @@ export class LineBreak extends JWPlugin {
             const toAddToMap = [];
             toAddToMap.push([br, [lineBreak]]);
             if (!lineBreak.nextSibling()) {
-                // If a LINE_BREAK has no next sibling, it must be rendered as two
-                // BRs in order for it to be visible.
+                // If a LineBreakNode has no next sibling, it must be rendered
+                // as two BRs in order for it to be visible.
                 const br2 = document.createElement('br');
                 context.parentNode.appendChild(br2);
                 toAddToMap.push([br2, [lineBreak]]);
