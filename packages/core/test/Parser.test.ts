@@ -1,23 +1,24 @@
 import { expect } from 'chai';
-import { Char } from '../../plugin-char/Char';
 import { CharNode } from '../../plugin-char/CharNode';
-import { Parser } from '../src/Parser';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { LineBreak } from '../../plugin-linebreak/LineBreak';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
-import { Heading } from '../../plugin-heading/Heading';
-import { Paragraph } from '../../plugin-paragraph/Paragraph';
 import { VElement } from '../src/VNodes/VElement';
+import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Parser } from '../src/Parser';
+import JWEditor from '../src/JWEditor';
 
 describe('utils', () => {
-    describe('Parser', () => {
-        const parser = new Parser();
-        parser.addParsingFunction(
-            ...Char.parsingFunctions,
-            ...LineBreak.parsingFunctions,
-            ...Heading.parsingFunctions,
-            ...Paragraph.parsingFunctions,
-        );
+    describe.skip('Parser', () => {
+        let editor: JWEditor;
+        let parser: Parser;
+        beforeEach(async () => {
+            editor = new BasicEditor();
+            await editor.start();
+            parser = editor.parser;
+        });
+        afterEach(() => {
+            editor.stop();
+        });
         describe('parse()', () => {
             it('should parse a "p" tag with some content', () => {
                 const element = document.createElement('div');
