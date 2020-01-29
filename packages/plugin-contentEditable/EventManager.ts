@@ -1,6 +1,7 @@
-import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
-import JWEditor from './JWEditor';
-import { VSelectionParams } from './CorePlugin';
+import { EventNormalizer, DomSelectionDescription } from '../core/src/EventNormalizer';
+import { VSelectionParams } from '../core/src/CorePlugin';
+import { ContentEditable } from './ContentEditable';
+import JWEditor from '../core/src/JWEditor';
 
 interface SetSelectionParams {
     domSelection: DomSelectionDescription;
@@ -8,12 +9,14 @@ interface SetSelectionParams {
 
 export class EventManager {
     editor: JWEditor;
+    renderer: ContentEditable;
     eventNormalizer: EventNormalizer;
 
-    constructor(editor: JWEditor) {
-        this.editor = editor;
+    constructor(renderer: ContentEditable) {
+        this.renderer = renderer;
+        this.editor = renderer.editor;
         this.eventNormalizer = new EventNormalizer(
-            editor.editable,
+            renderer.editable,
             this._onNormalizedEvent.bind(this),
         );
     }
@@ -38,7 +41,10 @@ export class EventManager {
             case 'setSelection': {
                 const selectionParams = payload as SetSelectionParams;
                 const vSelectionParams: VSelectionParams = {
-                    vSelection: this.editor.parser.parseSelection(selectionParams.domSelection),
+                    vSelection: this.editor.parser.parseSelection(
+                        this.renderer.vDocumentMap,
+                        selectionParams.domSelection,
+                    ),
                 };
                 return this.editor.execCommand(customEvent.type, vSelectionParams);
             }

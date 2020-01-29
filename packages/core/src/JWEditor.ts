@@ -1,5 +1,5 @@
 import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
-import { EventManager } from './EventManager';
+import { EventManager } from '../../plugin-contentEditable/EventManager';
 import { JWPlugin } from './JWPlugin';
 import { Dom } from '../../plugin-dom/Dom';
 import { Renderer } from './Renderer';
