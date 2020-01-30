@@ -4,7 +4,6 @@ import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
-import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
 
@@ -57,8 +56,7 @@ export class Char extends JWPlugin {
             return [context, parsingMap];
         }
     }
-    renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
-        const node = context.currentNode;
+    renderToDom(node: VNode, domParent: Node): Map<VNode, Node[]> {
         if (node.is(CharNode)) {
             // If the node has a format, render the format nodes first.
             const fragment = document.createDocumentFragment();
@@ -79,7 +77,6 @@ export class Char extends JWPlugin {
             let next = node.nextSibling();
             const charNodes = [node];
             while (next && Char._isSameTextNode(node, next)) {
-                context.currentNode = next;
                 if (next instanceof CharNode) {
                     charNodes.push(next);
                     if (next.char === ' ' && text[text.length - 1] === ' ') {
@@ -97,12 +94,12 @@ export class Char extends JWPlugin {
             // Create and append the text node, update the VDocumentMap.
             const renderedNode = document.createTextNode(text);
             parent.appendChild(renderedNode);
-            context.parentNode.appendChild(fragment);
-            const renderingMap: DomRenderingMap = new Map([
-                [renderedNode, [...charNodes, ...renderedFormats]],
-            ]);
-
-            return [context, renderingMap];
+            domParent.appendChild(fragment);
+            return new Map(
+                [...charNodes, ...renderedFormats].map(node => {
+                    return [node, [renderedNode]];
+                }),
+            );
         }
     }
     /**
