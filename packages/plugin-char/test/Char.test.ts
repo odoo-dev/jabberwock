@@ -8,17 +8,20 @@ import { Parser } from '../../core/src/Parser';
 import { Renderer } from '../../core/src/Renderer';
 import { Dom } from '../../plugin-dom/Dom';
 
-const insertText = function(editor, text: string): void {
+const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
         text: text,
     };
-    editor.execCommand('insertText', params);
+    await editor.execCommand('insertText', params);
 };
-const applyFormat = (editor: JWEditor, format: 'bold' | 'italic' | 'underline'): void => {
+const applyFormat = async (
+    editor: JWEditor,
+    format: 'bold' | 'italic' | 'underline',
+): Promise<void> => {
     const formatParams: FormatParams = {
         format: format,
     };
-    editor.execCommand('applyFormat', formatParams);
+    await editor.execCommand('applyFormat', formatParams);
 };
 
 describePlugin(Char, testEditor => {
@@ -66,7 +69,7 @@ describePlugin(Char, testEditor => {
         afterEach(() => {
             editor.stop();
         });
-        it('should insert 1 space and 1 nbsp instead of 2 spaces', () => {
+        it('should insert 1 space and 1 nbsp instead of 2 spaces', async () => {
             const element = document.createElement('p');
             element.innerHTML = 'a';
             document.body.appendChild(element);
@@ -76,11 +79,11 @@ describePlugin(Char, testEditor => {
             vDocument.root.append(new CharNode(' '));
             vDocument.root.append(new CharNode('b'));
 
-            renderer.render(vDocument, editor.editable);
+            await renderer.render(vDocument, editor.editable);
             expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
             element.remove();
         });
-        it('should insert 2 spaces and 2 nbsp instead of 4 spaces', () => {
+        it('should insert 2 spaces and 2 nbsp instead of 4 spaces', async () => {
             const element = document.createElement('p');
             element.innerHTML = 'a';
             document.body.appendChild(element);
@@ -92,7 +95,7 @@ describePlugin(Char, testEditor => {
             vDocument.root.append(new CharNode(' '));
             vDocument.root.append(new CharNode('b'));
 
-            renderer.render(vDocument, editor.editable);
+            await renderer.render(vDocument, editor.editable);
             expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
             element.remove();
         });
@@ -267,9 +270,9 @@ describePlugin(Char, testEditor => {
                 it('should make bold the next insertion', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: '<b>b[]</b>a',
                     });
@@ -277,10 +280,10 @@ describePlugin(Char, testEditor => {
                 it('should not make bold the next insertion when applyFormat 2 times', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            applyFormat(editor, 'bold');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'bold');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: 'b[]a',
                     });
@@ -288,9 +291,9 @@ describePlugin(Char, testEditor => {
                 it('should make bold the next insertion when applyFormat 1 time, after the first char', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[]',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: 'a<b>b[]</b>',
                     });
@@ -298,10 +301,10 @@ describePlugin(Char, testEditor => {
                 it('should not make bold the next insertion when applyFormat 2 times, after the first char', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[]',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            applyFormat(editor, 'bold');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'bold');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: 'ab[]',
                     });
@@ -309,9 +312,9 @@ describePlugin(Char, testEditor => {
                 it('should not make bold the next insertion when applyFormat 1 time after the first char that is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: '<b>a</b>b[]',
                     });
@@ -319,10 +322,10 @@ describePlugin(Char, testEditor => {
                 it('should make bold the next insertion when applyFormat 2 times after the first char that is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            applyFormat(editor, 'bold');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'bold');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: '<b>ab[]</b>',
                     });
@@ -330,10 +333,10 @@ describePlugin(Char, testEditor => {
                 it('should apply multiples format', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
-                            applyFormat(editor, 'underline');
-                            insertText(editor, 'b');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                            await applyFormat(editor, 'underline');
+                            await insertText(editor, 'b');
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
                     });
@@ -344,8 +347,8 @@ describePlugin(Char, testEditor => {
                 it('should be bold when selected is not bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[b]c',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[<b>b]</b>c',
                     });
@@ -353,8 +356,8 @@ describePlugin(Char, testEditor => {
                 it('should not be bold when selected is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b]</b>c',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[b]c',
                     });
@@ -362,8 +365,8 @@ describePlugin(Char, testEditor => {
                 it('should be bold when one of the selected is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b</b>c]',
-                        stepFunction: (editor: JWEditor) => {
-                            applyFormat(editor, 'bold');
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
                         },
                         contentAfter: 'a[<b>bc]</b>',
                     });

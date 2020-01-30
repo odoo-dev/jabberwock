@@ -132,7 +132,7 @@ describe('core', () => {
                     it('should render a VNode', async () => {
                         const node = new VNode();
                         const element = document.createElement('div');
-                        new DomRenderer().render(node, element);
+                        await new DomRenderer().render(node, element);
                         expect(element.firstChild.nodeName).to.equal('VNODE-' + node.id);
                     });
                 });
