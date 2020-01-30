@@ -1,7 +1,7 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { LineBreakNode } from './LineBreakNode';
-import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
+import { VNode } from '../core/src/VNodes/VNode';
 
 export class LineBreak extends JWPlugin {
     readonly parsingFunctions = [this.parse.bind(this)];
@@ -43,26 +43,21 @@ export class LineBreak extends JWPlugin {
     }
     /**
      * Render the VNode to the given format.
-     *
-     * @param [to] the name of the format to which we want to render (default:
-     * html)
      */
-    renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
-        if (context.currentNode.is(LineBreakNode)) {
-            const lineBreak = context.currentNode;
+    renderToDom(node: VNode, domParent: Node): Map<VNode, Node[]> {
+        if (node.is(LineBreakNode)) {
             const br = document.createElement('br');
-            context.parentNode.appendChild(br);
-            const toAddToMap = [];
-            toAddToMap.push([br, [lineBreak]]);
-            if (!lineBreak.nextSibling()) {
+            domParent.appendChild(br);
+            const domNodes: Node[] = [];
+            domNodes.push(br);
+            if (!node.nextSibling()) {
                 // If a LineBreakNode has no next sibling, it must be rendered
                 // as two BRs in order for it to be visible.
                 const br2 = document.createElement('br');
-                context.parentNode.appendChild(br2);
-                toAddToMap.push([br2, [lineBreak]]);
+                domParent.appendChild(br2);
+                domNodes.push(br2);
             }
-            const renderingMap: DomRenderingMap = new Map(toAddToMap);
-            return [context, renderingMap];
+            return new Map([[node, domNodes]]);
         }
     }
     /**

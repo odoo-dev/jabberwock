@@ -5,9 +5,12 @@ import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 
-const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
-const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
-const insertParagraphBreak = (editor: JWEditor): void => editor.execCommand('insertParagraphBreak');
+const deleteForward = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('deleteForward');
+const deleteBackward = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('deleteBackward');
+const insertParagraphBreak = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('insertParagraphBreak');
 
 describe('VDocument', () => {
     // Note: implementing a test for deleteForward, make sure to implement
@@ -123,9 +126,9 @@ describe('VDocument', () => {
                     it('should delete a character and a line break, emptying a paragraph', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>[]a<br><br></p><p>bcd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>[]<br></p><p>bcd</p>',
                         });
@@ -166,9 +169,9 @@ describe('VDocument', () => {
                         // 3-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br>[]<br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab</p><p><br><br>[]cd</p>',
                         });
@@ -185,9 +188,9 @@ describe('VDocument', () => {
                         // 4-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br>[]<br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab</p><p><br>[]<br></p><p>cd</p>',
                         });
@@ -196,10 +199,10 @@ describe('VDocument', () => {
                         // 4-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br>[]<br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab</p><p><br>[]cd</p>',
                         });
@@ -216,9 +219,9 @@ describe('VDocument', () => {
                         // 5-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p>[]<br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab</p><p>[]<br><br></p><p>cd</p>',
                         });
@@ -227,10 +230,10 @@ describe('VDocument', () => {
                         // 5-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p>[]<br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab</p><p>[]<br></p><p>cd</p>',
                         });
@@ -239,11 +242,11 @@ describe('VDocument', () => {
                         // 5-4
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p>[]<br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab</p><p>[]cd</p>',
                         });
@@ -260,9 +263,9 @@ describe('VDocument', () => {
                         // 6-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab[]</p><p><br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab[]<br><br><br></p><p>cd</p>',
                         });
@@ -271,10 +274,10 @@ describe('VDocument', () => {
                         // 6-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab[]</p><p><br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab[]<br><br></p><p>cd</p>',
                         });
@@ -283,11 +286,11 @@ describe('VDocument', () => {
                         // 6-4
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab[]</p><p><br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab[]</p><p>cd</p>',
                         });
@@ -296,12 +299,12 @@ describe('VDocument', () => {
                         // 6-5
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab[]</p><p><br><br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab[]cd</p>',
                         });
@@ -582,9 +585,9 @@ describe('VDocument', () => {
                     it('should delete a character and a line break, emptying a paragraph', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>aaa</p><p><br>a[]</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>aaa</p><p>[]<br></p>',
                         });
@@ -620,9 +623,9 @@ describe('VDocument', () => {
                         // 2-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br>[]<br><br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab[]<br><br><br></p><p>cd</p>',
                         });
@@ -639,9 +642,9 @@ describe('VDocument', () => {
                         // 3-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br>[]<br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab</p><p>[]<br><br></p><p>cd</p>',
                         });
@@ -650,10 +653,10 @@ describe('VDocument', () => {
                         // 3-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br>[]<br><br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab[]<br><br></p><p>cd</p>',
                         });
@@ -678,9 +681,9 @@ describe('VDocument', () => {
                         // 4-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br>[]<br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             // A trailing line break is rendered as two <br>.
                             contentAfter: '<p>ab</p><p><br>[]<br></p><p>cd</p>',
@@ -688,9 +691,9 @@ describe('VDocument', () => {
                         // 5-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br>[]</p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             // This should be identical to 4-2
                             contentAfter: '<p>ab</p><p><br>[]<br></p><p>cd</p>',
@@ -700,20 +703,20 @@ describe('VDocument', () => {
                         // 4-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br>[]<br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab</p><p>[]<br></p><p>cd</p>',
                         });
                         // 5-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br>[]</p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             // This should be identical to 4-3
                             contentAfter: '<p>ab</p><p>[]<br></p><p>cd</p>',
@@ -723,11 +726,11 @@ describe('VDocument', () => {
                         // 4-4
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br>[]<br></p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             // This should be identical to 4-4
                             contentAfter: '<p>ab[]</p><p>cd</p>',
@@ -735,11 +738,11 @@ describe('VDocument', () => {
                         // 5-4
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br>[]</p><p>cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab[]</p><p>cd</p>',
                         });
@@ -756,9 +759,9 @@ describe('VDocument', () => {
                         // 6-2
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br></p><p>[]cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab</p><p><br><br>[]cd</p>',
                         });
@@ -767,10 +770,10 @@ describe('VDocument', () => {
                         // 6-3
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br></p><p>[]cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab</p><p><br>[]cd</p>',
                         });
@@ -779,11 +782,11 @@ describe('VDocument', () => {
                         // 6-4
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br></p><p>[]cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab</p><p>[]cd</p>',
                         });
@@ -792,12 +795,12 @@ describe('VDocument', () => {
                         // 6-5
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab</p><p><br><br><br><br></p><p>[]cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
-                                deleteBackward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
+                                await deleteBackward(editor);
                             },
                             contentAfter: '<p>ab[]cd</p>',
                         });
@@ -1067,25 +1070,25 @@ describe('VDocument', () => {
                 it('should duplicate an empty paragraph twice', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>[]<br></p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p><br></p><p><br></p><p>[]<br></p>',
                     });
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>[<br>]</p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p><br></p><p><br></p><p>[]<br></p>',
                     });
                     await testEditor(BasicEditor, {
                         contentBefore: '<p><br>[]</p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p><br></p><p><br></p><p>[]<br></p>',
                     });
@@ -1093,9 +1096,9 @@ describe('VDocument', () => {
                 it('should insert two empty paragraphs before a paragraph', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>[]abc</p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p><br></p><p><br></p><p>[]abc</p>',
                     });
@@ -1103,9 +1106,9 @@ describe('VDocument', () => {
                 it('should split a paragraph in three', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>ab[]cd</p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p>ab</p><p><br></p><p>[]cd</p>',
                     });
@@ -1113,10 +1116,10 @@ describe('VDocument', () => {
                 it('should split a paragraph in four', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>ab[]cd</p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p>ab</p><p><br></p><p><br></p><p>[]cd</p>',
                     });
@@ -1124,9 +1127,9 @@ describe('VDocument', () => {
                 it('should insert two empty paragraphs after a paragraph', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>abc[]</p>',
-                        stepFunction: (editor: JWEditor) => {
-                            insertParagraphBreak(editor);
-                            insertParagraphBreak(editor);
+                        stepFunction: async (editor: JWEditor) => {
+                            await insertParagraphBreak(editor);
+                            await insertParagraphBreak(editor);
                         },
                         contentAfter: '<p>abc</p><p><br></p><p>[]<br></p>',
                     });
@@ -1314,14 +1317,14 @@ describe('VDocument', () => {
         it('should work with VRange.at', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
-                    withRange(VRange.at(aNode), range => {
+                    await withRange(VRange.at(aNode), async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'cab[]',
@@ -1330,14 +1333,14 @@ describe('VDocument', () => {
         it('should work with VRange.selecting and default RangePosition.BEFORE and RangePosition.AFTER', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
-                    withRange(VRange.selecting(aNode, aNode), range => {
+                    await withRange(VRange.selecting(aNode, aNode), async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1346,18 +1349,18 @@ describe('VDocument', () => {
         it('should work with VRange.selecting and RangePosition.BEFORE and RangePosition.BEFORE', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.BEFORE],
                         [aNode, RelativePosition.BEFORE],
                     ];
-                    withRange(rangeParams, range => {
+                    await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'cab[]',
@@ -1366,18 +1369,18 @@ describe('VDocument', () => {
         it('should work with RangePosition.BEFORE and RangePosition.AFTER', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.BEFORE],
                         [aNode, RelativePosition.AFTER],
                     ];
-                    withRange(rangeParams, range => {
+                    await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1386,18 +1389,18 @@ describe('VDocument', () => {
         it('should work with same node and RangePosition.AFTER and RangePosition.AFTER', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.AFTER],
                         [aNode, RelativePosition.AFTER],
                     ];
-                    withRange(rangeParams, range => {
+                    await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'acb[]',
@@ -1406,19 +1409,19 @@ describe('VDocument', () => {
         it('should work with different nodes and RangePosition.AFTER and RangePosition.BEFORE', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     const bNode = editor.vDocument.root.next(node => node.name === 'b');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.AFTER],
                         [bNode, RelativePosition.BEFORE],
                     ];
-                    withRange(rangeParams, range => {
+                    await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'acb[]',
@@ -1427,19 +1430,19 @@ describe('VDocument', () => {
         it('should work with different nodes and RangePosition.AFTER and RangePosition.AFTER', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     const bNode = editor.vDocument.root.next(node => node.name === 'b');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.AFTER],
                         [bNode, RelativePosition.AFTER],
                     ];
-                    withRange(rangeParams, range => {
+                    await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
                             range: range,
                             text: 'c',
                         };
-                        editor.execCommand('insertText', insertParams);
+                        await editor.execCommand('insertText', insertParams);
                     });
                 },
                 contentAfter: 'ac[]',

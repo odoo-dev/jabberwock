@@ -34,7 +34,7 @@ export class Indent extends JWPlugin {
      * - If there is more than one line selected in range, indent each lines.
      * - Otherwise, insert 4 spaces.
      */
-    indent(params: IndentParams): void {
+    async indent(params: IndentParams): Promise<void> {
         const range = params.range || this.editor.vDocument.selection.range;
         const selectedSegmentBreaks = range.selectedNodes(this._isSegmentBreak);
         // Only indent when there is at leat two lines selected, that is when
@@ -45,23 +45,23 @@ export class Indent extends JWPlugin {
             // their segment break would not be found in `range.selectedNodes`.
             segmentBreaks.add(range.start.ancestor(this._isSegmentBreak));
             segmentBreaks.add(range.end.ancestor(this._isSegmentBreak));
-            segmentBreaks.forEach(segmentBreak => {
+            for (const segmentBreak of segmentBreaks) {
                 // Insert 4 spaces before each character following a line break.
                 const firstChar = segmentBreak.next(CharNode);
-                withRange(VRange.at(firstChar), startOfLineRange => {
+                await withRange(VRange.at(firstChar), async startOfLineRange => {
                     const params: InsertTextParams = {
                         text: this.tab,
                         range: startOfLineRange,
                     };
-                    this.editor.execCommand('insertText', params);
+                    await this.editor.execCommand('insertText', params);
                 });
-            });
+            }
         } else {
             const params: InsertTextParams = {
                 text: this.tab,
                 range: range,
             };
-            this.editor.execCommand('insertText', params);
+            await this.editor.execCommand('insertText', params);
         }
     }
 

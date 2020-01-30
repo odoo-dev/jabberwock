@@ -243,9 +243,12 @@ export class VRange {
  * @param bounds The points corresponding to the range boundaries.
  * @param callback The callback to call with the newly created range.
  */
-export function withRange<T>(bounds: [Point, Point], callback: (range: VRange) => T): T {
+export async function withRange<T>(
+    bounds: [Point, Point],
+    callback: (range: VRange) => T,
+): Promise<T> {
     const range = new VRange(bounds);
-    const result = callback(range);
+    const result = await callback(range);
     range.remove();
     return result;
 }

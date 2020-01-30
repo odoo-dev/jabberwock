@@ -30,7 +30,7 @@ describe('utils', () => {
                 expect(callback.callCount).to.eql(1);
                 expect(callback.args[0][0]).to.eql({});
             });
-            it('dispatch an event that has one hook', () => {
+            it('dispatch an event that has one hook', async () => {
                 const callbackCommand = sinon.fake();
                 const callbackHook = sinon.fake();
                 const editor = new JWEditor();
@@ -40,11 +40,11 @@ describe('utils', () => {
                 };
                 dispatcher.registerCommand('myCommand', command);
                 dispatcher.registerHook('myCommand', callbackHook);
-                dispatcher.dispatch('myCommand');
+                await dispatcher.dispatch('myCommand');
                 expect(callbackCommand.callCount).to.eql(1);
                 expect(callbackHook.callCount).to.eql(1);
             });
-            it('dispatch an event that has multiples hook', () => {
+            it('dispatch an event that has multiples hook', async () => {
                 const callbackCommand = sinon.fake();
                 const callbackHook1 = sinon.fake();
                 const callbackHook2 = sinon.fake();
@@ -56,7 +56,7 @@ describe('utils', () => {
                 dispatcher.registerCommand('myCommand', command);
                 dispatcher.registerHook('myCommand', callbackHook1);
                 dispatcher.registerHook('myCommand', callbackHook2);
-                dispatcher.dispatch('myCommand');
+                await dispatcher.dispatch('myCommand');
                 expect(callbackCommand.callCount).to.eql(1);
                 expect(callbackHook1.callCount).to.eql(1);
                 expect(callbackHook2.callCount).to.eql(1);

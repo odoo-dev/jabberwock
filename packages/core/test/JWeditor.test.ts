@@ -179,7 +179,7 @@ describe('core', () => {
                                         ];
                                     },
                                 );
-                                editor.execCommand = (): void => {};
+                                editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
@@ -214,7 +214,7 @@ describe('core', () => {
                                         },
                                     ],
                                 });
-                                editor.execCommand = (): void => {};
+                                editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
@@ -249,7 +249,7 @@ describe('core', () => {
                                         },
                                     ],
                                 });
-                                editor.execCommand = (): void => {};
+                                editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });

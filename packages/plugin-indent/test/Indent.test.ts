@@ -4,12 +4,12 @@ import { Indent, IndentParams } from '../src/Indent';
 import { withRange, VRange } from '../../core/src/VRange';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 
-const indent = (editor: JWEditor): void => editor.execCommand('indent');
-const outdent = (editor: JWEditor): void => editor.execCommand('outdent');
+const indent = async (editor: JWEditor): Promise<void> => await editor.execCommand('indent');
+const outdent = async (editor: JWEditor): Promise<void> => await editor.execCommand('outdent');
 
 describePlugin(Indent, testEditor => {
     describe('indent', () => {
-        it('should indent 4 spaces tab when range is collapsed', async function() {
+        it('should indent 4 spaces tab when range is collapsed', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>[]a</p>',
                 stepFunction: indent,
@@ -54,14 +54,14 @@ describePlugin(Indent, testEditor => {
         it('should indent with a fake range', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab<br>cd[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const bNode = editor.vDocument.root.next(node => node.name === 'b');
                     const dNode = editor.vDocument.root.next(node => node.name === 'd');
-                    withRange(VRange.selecting(bNode, dNode), range => {
+                    await withRange(VRange.selecting(bNode, dNode), async range => {
                         const indentParams: IndentParams = {
                             range: range,
                         };
-                        editor.execCommand('indent', indentParams);
+                        await editor.execCommand('indent', indentParams);
                     });
                 },
                 contentAfter: '&nbsp;&nbsp; &nbsp;ab<br>&nbsp;&nbsp; &nbsp;cd[]',
@@ -93,14 +93,14 @@ describePlugin(Indent, testEditor => {
         it('should outdent with a fake range', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: '&nbsp;&nbsp;&nbsp;&nbsp;ab<br>&nbsp;&nbsp;&nbsp;&nbsp;cd[]',
-                stepFunction: (editor: JWEditor) => {
+                stepFunction: async (editor: JWEditor) => {
                     const bNode = editor.vDocument.root.next(node => node.name === 'b');
                     const dNode = editor.vDocument.root.next(node => node.name === 'd');
-                    withRange(VRange.selecting(bNode, dNode), range => {
+                    await withRange(VRange.selecting(bNode, dNode), async range => {
                         const indentParams: IndentParams = {
                             range: range,
                         };
-                        editor.execCommand('outdent', indentParams);
+                        await editor.execCommand('outdent', indentParams);
                     });
                 },
                 contentAfter: 'ab<br>cd[]',

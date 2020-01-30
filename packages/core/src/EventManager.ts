@@ -25,7 +25,7 @@ export class EventManager {
     /**
      * Callback given to the normalizer.
      */
-    _onNormalizedEvent(customEvent: CustomEvent): void {
+    async _onNormalizedEvent(customEvent: CustomEvent): Promise<void> {
         const payload = customEvent.detail;
         switch (customEvent.type) {
             case 'enter':
@@ -43,7 +43,7 @@ export class EventManager {
                 return this.editor.execCommand(customEvent.type, vSelectionParams);
             }
             default:
-                this.editor.execCommand(customEvent.type, payload);
+                return this.editor.execCommand(customEvent.type, payload);
         }
     }
 }
