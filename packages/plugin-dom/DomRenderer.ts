@@ -5,19 +5,8 @@ import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, Direction } from '../core/src/VSelection';
 import { VElement } from '../core/src/VNodes/VElement';
 
-export interface DomRenderingContext {
-    root: VNode; // Root VNode of the current rendering.
-    currentNode?: VNode; // Current VNode rendered at this step.
-    parentNode?: Node | DocumentFragment; // Node to render the VNode into.
-}
-export type DomRenderingMap = Map<Node, VNode[]>;
-
-export class DomRenderer extends Renderer<
-    DomRenderingContext,
-    [DomRenderingContext, DomRenderingMap]
-> {
+export class DomRenderer extends Renderer<Node> {
     readonly id = 'dom';
-    _contextStack: Array<DomRenderingContext> = [];
 
     //--------------------------------------------------------------------------
     // Public
@@ -29,7 +18,7 @@ export class DomRenderer extends Renderer<
      * @param root
      * @param target
      */
-    render(content: VDocument | VNode, target: Element): void {
+    async render(content: VDocument | VNode, target: Element): Promise<void> {
         const root = content instanceof VDocument ? content.root : content;
         if (content instanceof VDocument) {
             // TODO: the map should be on the VDocument.
@@ -40,68 +29,71 @@ export class DomRenderer extends Renderer<
         }
 
         // Don't render `root` itself if already rendered, render its children.
-        const renderedRoot = VDocumentMap.toDom(root);
-        const parentNode = renderedRoot ? renderedRoot : target;
-        const firstVNode = renderedRoot ? root.firstChild() : root;
+        const domRoot = VDocumentMap.toDom(root);
+        const domParent = domRoot ? domRoot : target;
+        const firstNode = domRoot ? root.firstChild() : root;
 
-        if (!firstVNode) return;
+        if (!firstNode) return;
 
-        const rootContext: DomRenderingContext = {
-            root: root,
-            currentNode: firstVNode,
-            parentNode: parentNode,
-        };
-        this._contextStack.push(rootContext);
-
-        let currentContext: DomRenderingContext = { ...rootContext };
-        do {
-            currentContext = this.renderNode(currentContext);
-        } while ((currentContext = this._nextRenderingContext(currentContext)));
+        let node = firstNode;
+        let rendered = [];
+        while (node) {
+            if (!rendered.includes(node)) {
+                const mapping = await this.renderNode(node, domParent);
+                rendered = [...rendered, ...mapping.keys()];
+            }
+            node = node.nextSibling();
+        }
 
         if (content instanceof VDocument) {
             // Append the fragment corresponding to the VDocument to `target`.
-            target.appendChild(renderedRoot);
+            target.appendChild(domRoot);
             VDocumentMap.set(root, target);
             this._renderSelection(content.selection, target);
         }
     }
     /**
      * Render the element matching the current vNode and append it.
-     *
-     * @param currentContext
      */
-    renderNode(currentContext: DomRenderingContext): DomRenderingContext {
-        let renderingResult: [DomRenderingContext, DomRenderingMap];
+    async renderNode(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
+        let renderingMap: Map<VNode, Node[]>;
         for (const renderingFunction of this.renderingFunctions) {
-            renderingResult = renderingFunction({ ...currentContext });
-            if (renderingResult) {
+            renderingMap = await renderingFunction(node, domParent);
+            if (renderingMap) {
                 break;
             }
         }
 
-        let [newContext, renderingMap] = renderingResult || [];
-        if (!newContext) {
-            newContext = { ...currentContext };
-        }
         if (!renderingMap) {
-            renderingMap = this._renderDefault(currentContext);
+            renderingMap = await this._renderDefault(node, domParent);
         }
 
         // Map the parsed nodes to the DOM nodes they represent.
-        renderingMap.forEach((nodes: VNode[], domNode: Node) => {
-            nodes.forEach((node: VNode, index: number) => {
+        let index = 0;
+        renderingMap.forEach((domNodes: Node[], node: VNode) => {
+            domNodes.forEach((domNode: Node) => {
                 VDocumentMap.set(node, domNode, index);
             });
+            index++;
         });
-        return newContext;
+
+        return renderingMap;
+    }
+    async renderChildren(node: VNode, domParent: Node): Promise<void> {
+        let rendered = [];
+        for (const child of node.children) {
+            if (!rendered.includes(child)) {
+                const mapping = await this.renderNode(child, domParent);
+                rendered = [...rendered, ...mapping.keys()];
+            }
+        }
     }
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
-    _renderDefault(currentContext: DomRenderingContext): DomRenderingMap {
-        const node = currentContext.currentNode;
+    async _renderDefault(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
         let tagName: string;
         if (node.is(VElement)) {
             tagName = node.htmlTag;
@@ -122,54 +114,10 @@ export class DomRenderer extends Renderer<
             renderedDomNodes.push(placeholderBr);
         }
 
-        currentContext.parentNode.appendChild(fragment);
+        await this.renderChildren(node, renderedElement);
 
-        return new Map(
-            renderedDomNodes.map(domNode => {
-                return [domNode, [node]];
-            }),
-        );
-    }
-    /**
-     * Return the next rendering context, based on the given context. This
-     * includes the next VNode to render and the next parent element to render
-     * it into.
-     *
-     * @param currentContext
-     */
-    _nextRenderingContext(currentContext: DomRenderingContext): DomRenderingContext {
-        const node = currentContext.currentNode;
-        if (node.hasChildren()) {
-            currentContext.currentNode = node.firstChild();
-            // Render the first child with the current node as parent.
-            const renderedParent = VDocumentMap.toDom(node);
-            if (renderedParent) {
-                currentContext.parentNode = renderedParent;
-            }
-            this._contextStack.push({ ...currentContext });
-        } else if (node.nextSibling()) {
-            // Render the siblings of the current node with the same parent.
-            this._contextStack[this._contextStack.length - 1].currentNode = node.nextSibling();
-        } else {
-            // Render the next ancestor sibling in the ancestor tree.
-            let ancestor = node;
-            // Climb up the ancestor tree to the first parent having a sibling.
-            while (ancestor && !ancestor.nextSibling() && ancestor != currentContext.root) {
-                ancestor = ancestor.parent;
-                this._contextStack.pop();
-            }
-            if (ancestor && ancestor != currentContext.root) {
-                // At this point, the found ancestor has a sibling.
-                this._contextStack[
-                    this._contextStack.length - 1
-                ].currentNode = ancestor.nextSibling();
-            } else {
-                // If no next ancestor having a sibling could be found then the
-                // tree has been fully rendered.
-                return;
-            }
-        }
-        return this._contextStack[this._contextStack.length - 1];
+        domParent.appendChild(fragment);
+        return new Map([[node, renderedDomNodes]]);
     }
     /**
      * Render the given VSelection as a DOM selection in the given target.

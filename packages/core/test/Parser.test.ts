@@ -8,7 +8,7 @@ import { Parser } from '../src/Parser';
 import JWEditor from '../src/JWEditor';
 
 describe('utils', () => {
-    describe.skip('Parser', () => {
+    describe('Parser', () => {
         let editor: JWEditor;
         let parser: Parser;
         beforeEach(async () => {

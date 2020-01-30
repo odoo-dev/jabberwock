@@ -36,16 +36,16 @@ export class Dispatcher {
      * @param commandId The name of the command.
      * @param args The arguments of the command.
      */
-    dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): void {
+    async dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): Promise<void> {
         const handlers = this.handlers[commandId];
         if (handlers) {
-            handlers.forEach((handlerCallback: CommandHandler) => {
-                handlerCallback(args);
-            });
+            for (const handlerCallback of handlers) {
+                await handlerCallback(args);
+            }
         }
-        this.dispatchHooks.forEach((hookCallback: DispatchHook) => {
-            hookCallback(commandId, args);
-        });
+        for (const hookCallback of this.dispatchHooks) {
+            await hookCallback(commandId, args);
+        }
     }
 
     /**
