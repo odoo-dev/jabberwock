@@ -8,9 +8,12 @@ export interface JWPluginConfig {
 }
 
 export class JWPlugin {
-    static readonly renderers: Array<Renderer>;
-    static readonly parsingFunctions: Array<ParsingFunction> = [];
-    static readonly renderingFunctions: Record<RendererIdentifier, RenderingFunction> = {};
+    readonly renderers: Array<Renderer>;
+    readonly parsingFunctions: Array<ParsingFunction> = [];
+    readonly renderingFunctions: Record<
+        RendererIdentifier,
+        RenderingFunction | RenderingFunction[]
+    > = {};
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};

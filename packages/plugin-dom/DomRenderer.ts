@@ -43,6 +43,9 @@ export class DomRenderer extends Renderer<
         const renderedRoot = VDocumentMap.toDom(root);
         const parentNode = renderedRoot ? renderedRoot : target;
         const firstVNode = renderedRoot ? root.firstChild() : root;
+
+        if (!firstVNode) return;
+
         const rootContext: DomRenderingContext = {
             root: root,
             currentNode: firstVNode,

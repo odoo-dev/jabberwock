@@ -4,16 +4,21 @@ import { LineBreakNode } from './LineBreakNode';
 import { DomRenderingContext, DomRenderingMap } from '../plugin-dom/DomRenderer';
 
 export class LineBreak extends JWPlugin {
-    static readonly parsingFunctions = [LineBreak.parse];
-    static readonly renderingFunctions = {
-        dom: LineBreak.renderToDom,
+    readonly parsingFunctions = [this.parse.bind(this)];
+    readonly renderingFunctions = {
+        dom: this.renderToDom.bind(this),
     };
     commands = {
         insertLineBreak: {
             handler: this.insertLineBreak.bind(this),
         },
     };
-    static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (context.currentNode.nodeName === 'BR') {
             const node = context.currentNode;
             const domNodes = [node];
@@ -42,7 +47,7 @@ export class LineBreak extends JWPlugin {
      * @param [to] the name of the format to which we want to render (default:
      * html)
      */
-    static renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
+    renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
         if (context.currentNode.is(LineBreakNode)) {
             const lineBreak = context.currentNode;
             const br = document.createElement('br');
@@ -60,11 +65,6 @@ export class LineBreak extends JWPlugin {
             return [context, renderingMap];
         }
     }
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
     /**
      * Insert a line break node at range.
      */

@@ -16,10 +16,9 @@ export interface FormatParams extends RangeParams {
 }
 
 export class Char extends JWPlugin {
-    static readonly parsingFunctions = [Char.parse];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static readonly renderingFunctions = {
-        dom: Char.renderToDom,
+    readonly parsingFunctions = [this.parse.bind(this)];
+    readonly renderingFunctions = {
+        dom: this.renderToDom.bind(this),
     };
     commands = {
         insertText: {
@@ -29,7 +28,12 @@ export class Char extends JWPlugin {
             handler: this.applyFormat.bind(this),
         },
     };
-    static parse(context: ParsingContext): [ParsingContext, ParsingMap] {
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    parse(context: ParsingContext): [ParsingContext, ParsingMap] {
         if (context.currentNode.nodeType === Node.TEXT_NODE) {
             const vNodes: CharNode[] = [];
             const text = removeFormattingSpace(context.currentNode);
@@ -53,7 +57,7 @@ export class Char extends JWPlugin {
             return [context, parsingMap];
         }
     }
-    static renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
+    renderToDom(context: DomRenderingContext): [DomRenderingContext, DomRenderingMap] {
         const node = context.currentNode;
         if (node.is(CharNode)) {
             // If the node has a format, render the format nodes first.
@@ -101,11 +105,6 @@ export class Char extends JWPlugin {
             return [context, renderingMap];
         }
     }
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
     /**
      * Insert text at the current position of the selection.
      *
