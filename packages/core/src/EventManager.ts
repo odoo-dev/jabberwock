@@ -25,7 +25,7 @@ export class EventManager {
     /**
      * Callback given to the normalizer.
      */
-    _onNormalizedEvent(customEvent: CustomEvent): void {
+    async _onNormalizedEvent(customEvent: CustomEvent): Promise<void> {
         const payload = customEvent.detail;
         switch (customEvent.type) {
             case 'enter':

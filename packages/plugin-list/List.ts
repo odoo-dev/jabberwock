@@ -102,7 +102,7 @@ export class List extends JWPlugin {
     /**
      * Render the ListNode in currentContext.
      */
-    renderToDom(node: VNode, domParent: Node): Map<VNode, Node[]> {
+    async renderToDom(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
         if (node.is(ListNode)) {
             const tag = node.listType === ListType.ORDERED ? 'OL' : 'UL';
             const domListNode = document.createElement(tag);
@@ -111,57 +111,47 @@ export class List extends JWPlugin {
             let mapping: [VNode, Node[]][] = [[node, [domListNode]]];
 
             // Render the node's children
-            node.children.forEach(child => {
-                mapping = [...mapping, ...this.renderListItemToDom(child, domListNode)];
-            });
+            for (const child of node.children) {
+                const childrenMapping = await this.renderListItemToDom(child, domListNode);
+                mapping = [...mapping, ...childrenMapping];
+            }
 
             return new Map(mapping);
         }
     }
-    renderListItemToDom(node: VNode, domParent: Node): Map<VNode, Node[]> {
-        if (node.parent && node.parent.is(ListNode) && !this._isRenderingLi) {
-            // The ListNode has to handle the rendering of its direct children by
-            // itself since some of them are rendered inside "LI" nodes while others
-            // are rendered *as* "LI" nodes.
-            // Check if previous "LI" can be reused or create a new one.
-            let domListItem: Element;
-            if (node.is(ListNode) && domParent.childNodes.length) {
-                // Render an indented list in the list item that precedes it.
-                // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
-                domListItem = domParent.childNodes[domParent.childNodes.length - 1] as Element;
-            } else {
-                domListItem = document.createElement('li');
-            }
-            domParent.appendChild(domListItem);
-
-            // Direct ListNode's VElement children "P" are rendered as "LI"
-            // while other nodes will be rendered inside the "LI".
-            if (node.is(VElement) && node.htmlTag === 'P') {
-                // Render the node's children
-                let rendered = [];
-                node.children.forEach(child => {
-                    if (!rendered.includes(child)) {
-                        rendered = [
-                            ...rendered,
-                            ...this.editor.renderers.dom.renderNode(child, domListItem).keys(),
-                        ];
-                    }
-                });
-            } else {
-                // The node was wrapped in a "LI" but needs to be rendered as well.
-                this.editor.renderers.dom.renderNode(node, domListItem) as Map<VNode, Node[]>;
-            }
-
-            const domNodes = [domListItem];
-            // TODO: this should be generic.
-            if (!node.hasChildren()) {
-                const br = document.createElement('BR');
-                domListItem.appendChild(br);
-                domNodes.push(br);
-            }
-
-            return new Map<VNode, Node[]>([[node, domNodes]]);
+    async renderListItemToDom(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
+        // The ListNode has to handle the rendering of its direct children by
+        // itself since some of them are rendered inside "LI" nodes while others
+        // are rendered *as* "LI" nodes.
+        // Check if previous "LI" can be reused or create a new one.
+        let domListItem: Element;
+        if (node.is(ListNode) && domParent.childNodes.length) {
+            // Render an indented list in the list item that precedes it.
+            // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
+            domListItem = domParent.childNodes[domParent.childNodes.length - 1] as Element;
+        } else {
+            domListItem = document.createElement('li');
         }
+        domParent.appendChild(domListItem);
+
+        // Direct ListNode's VElement children "P" are rendered as "LI"
+        // while other nodes will be rendered inside the "LI".
+        if (node.is(VElement) && node.htmlTag === 'P') {
+            await this.editor.renderers.dom.renderChildren(node, domListItem);
+        } else {
+            // The node was wrapped in a "LI" but needs to be rendered as well.
+            await this.editor.renderers.dom.renderNode(node, domListItem);
+        }
+
+        const domNodes = [domListItem];
+        // TODO: this should be generic.
+        if (!node.hasChildren()) {
+            const br = document.createElement('BR');
+            domListItem.appendChild(br);
+            domNodes.push(br);
+        }
+
+        return new Map<VNode, Node[]>([[node, domNodes]]);
     }
     /**
      * Insert/remove a list at range.

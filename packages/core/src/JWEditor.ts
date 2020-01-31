@@ -86,7 +86,7 @@ export class JWEditor {
         if (!Object.keys(this.renderers).length) {
             this.addPlugin(Dom);
         }
-        this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
+        await this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
 
         if (this.debugger) {
             await this.debugger.start();
@@ -164,9 +164,9 @@ export class JWEditor {
      * @param id name identifier of the command to execute
      * @param args arguments object of the command to execute
      */
-    execCommand(id: CommandIdentifier, args?: CommandArgs): void {
+    async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
         this.dispatcher.dispatch(id, args);
-        this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
+        await this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
     }
 
     /**

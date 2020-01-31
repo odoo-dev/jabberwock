@@ -11,7 +11,8 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../core/src/Parser';
 import { Dom } from '../../plugin-dom/Dom';
 
-const insertLineBreak = (editor: JWEditor): void => editor.execCommand('insertLineBreak');
+const insertLineBreak = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('insertLineBreak');
 
 describe('plugin-linebreak', () => {
     describe('parse', () => {
@@ -86,7 +87,7 @@ describe('plugin-linebreak', () => {
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
                 root.append(p);
-                renderer.render(editor.vDocument, element);
+                await renderer.render(editor.vDocument, element);
                 expect(element.childNodes.length).to.equal(1);
                 const domP = element.firstChild;
                 expect(domP.childNodes.length).to.equal(2);
@@ -100,7 +101,7 @@ describe('plugin-linebreak', () => {
                 const c = new VElement('FAKE-CHAR');
                 p.append(c);
                 root.append(p);
-                renderer.render(editor.vDocument, element);
+                await renderer.render(editor.vDocument, element);
                 expect(element.childNodes.length).to.equal(1);
                 const domP = element.firstChild;
                 expect(domP.nodeName).to.equal('FAKE-P');
@@ -214,25 +215,25 @@ describe('plugin-linebreak', () => {
                     it('should insert two <br> at the beggining of an empty paragraph', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>[]<br></p>',
-                            stepFunction: (editor: JWEditor) => {
-                                insertLineBreak(editor);
-                                insertLineBreak(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await insertLineBreak(editor);
+                                await insertLineBreak(editor);
                             },
                             contentAfter: '<p><br><br>[]<br></p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>[<br>]</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                insertLineBreak(editor);
-                                insertLineBreak(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await insertLineBreak(editor);
+                                await insertLineBreak(editor);
                             },
                             contentAfter: '<p><br><br>[]<br></p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><br>[]</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                insertLineBreak(editor);
-                                insertLineBreak(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await insertLineBreak(editor);
+                                await insertLineBreak(editor);
                             },
                             contentAfter: '<p><br><br>[]<br></p>',
                         });
@@ -240,9 +241,9 @@ describe('plugin-linebreak', () => {
                     it('should insert two <br> at the beggining of a paragraph', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>[]abc</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                insertLineBreak(editor);
-                                insertLineBreak(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await insertLineBreak(editor);
+                                await insertLineBreak(editor);
                             },
                             contentAfter: '<p><br><br>[]abc</p>',
                         });
@@ -250,9 +251,9 @@ describe('plugin-linebreak', () => {
                     it('should insert two <br> within text', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab[]cd</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                insertLineBreak(editor);
-                                insertLineBreak(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await insertLineBreak(editor);
+                                await insertLineBreak(editor);
                             },
                             contentAfter: '<p>ab<br><br>[]cd</p>',
                         });
@@ -260,9 +261,9 @@ describe('plugin-linebreak', () => {
                     it('should insert two line breaks (3 <br>) at the end of a paragraph', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>abc[]</p>',
-                            stepFunction: (editor: JWEditor) => {
-                                insertLineBreak(editor);
-                                insertLineBreak(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await insertLineBreak(editor);
+                                await insertLineBreak(editor);
                             },
                             // the last <br> is needed to make the first one
                             // visible.

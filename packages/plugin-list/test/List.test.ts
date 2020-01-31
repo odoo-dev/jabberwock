@@ -11,26 +11,29 @@ import { ListParams } from '../List';
 import { Parser } from '../../core/src/Parser';
 import { Renderer } from '../../core/src/Renderer';
 
-const deleteForward = (editor: JWEditor): void => editor.execCommand('deleteForward');
-const deleteBackward = (editor: JWEditor): void => editor.execCommand('deleteBackward');
-const insertParagraphBreak = (editor: JWEditor): void => editor.execCommand('insertParagraphBreak');
-const insertLineBreak = (editor: JWEditor): void => {
+const deleteForward = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('deleteForward');
+const deleteBackward = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('deleteBackward');
+const insertParagraphBreak = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand('insertParagraphBreak');
+const insertLineBreak = async (editor: JWEditor): Promise<void> => {
     const params: InsertParams = {
         node: new LineBreakNode(),
     };
-    editor.execCommand('insert', params);
+    await editor.execCommand('insert', params);
 };
-const toggleOrderedList = (editor: JWEditor): void => {
+const toggleOrderedList = async (editor: JWEditor): Promise<void> => {
     const params: ListParams = {
         type: ListType.ORDERED,
     };
-    editor.execCommand('toggleList', params);
+    await editor.execCommand('toggleList', params);
 };
-const toggleUnorderedList = (editor: JWEditor): void => {
+const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
     const params: ListParams = {
         type: ListType.UNORDERED,
     };
-    editor.execCommand('toggleList', params);
+    await editor.execCommand('toggleList', params);
 };
 
 describe('plugin-list', () => {
@@ -284,7 +287,7 @@ describe('plugin-list', () => {
             ol.append(p9);
             motherList.append(ol);
 
-            renderer.render(editor.vDocument, editor.editable);
+            await renderer.render(editor.vDocument, editor.editable);
             /* eslint-disable prettier/prettier */
             expect(editor.editable.innerHTML).to.equal([
                 '<ul>',
@@ -889,11 +892,11 @@ describe('plugin-list', () => {
                     it('should merge a list item into a paragraph', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>ab[]cd</p><ul><li>ef</li><li>gh</li></ul>',
-                            stepFunction: (editor: JWEditor) => {
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
-                                deleteForward(editor);
+                            stepFunction: async (editor: JWEditor) => {
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
+                                await deleteForward(editor);
                             },
                             contentAfter: '<p>ab[]f</p><ul><li>gh</li></ul>',
                         });
@@ -1373,11 +1376,11 @@ describe('plugin-list', () => {
                         it('should merge a list item into a paragraph', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<p>abcd</p><ol><li>ef[]gh</li><li>ij</li></ol>',
-                                stepFunction: (editor: JWEditor) => {
-                                    deleteBackward(editor);
-                                    deleteBackward(editor);
-                                    deleteBackward(editor);
-                                    deleteBackward(editor);
+                                stepFunction: async (editor: JWEditor) => {
+                                    await deleteBackward(editor);
+                                    await deleteBackward(editor);
+                                    await deleteBackward(editor);
+                                    await deleteBackward(editor);
                                 },
                                 contentAfter: '<p>abc[]gh</p><ol><li>ij</li></ol>',
                             });
@@ -1604,11 +1607,11 @@ describe('plugin-list', () => {
                         it('should merge a list item into a paragraph', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<p>abcd</p><ul><li>ef[]gh</li><li>ij</li></ul>',
-                                stepFunction: (editor: JWEditor) => {
-                                    deleteBackward(editor);
-                                    deleteBackward(editor);
-                                    deleteBackward(editor);
-                                    deleteBackward(editor);
+                                stepFunction: async (editor: JWEditor) => {
+                                    await deleteBackward(editor);
+                                    await deleteBackward(editor);
+                                    await deleteBackward(editor);
+                                    await deleteBackward(editor);
                                 },
                                 contentAfter: '<p>abc[]gh</p><ul><li>ij</li></ul>',
                             });

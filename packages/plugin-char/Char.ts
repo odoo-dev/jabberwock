@@ -56,7 +56,7 @@ export class Char extends JWPlugin {
             return [context, parsingMap];
         }
     }
-    renderToDom(node: VNode, domParent: Node): Map<VNode, Node[]> {
+    async renderToDom(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
         if (node.is(CharNode)) {
             // If the node has a format, render the format nodes first.
             const fragment = document.createDocumentFragment();

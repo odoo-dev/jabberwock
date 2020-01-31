@@ -3,7 +3,6 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
-import { LineBreakNode } from '../../../plugin-linebreak/LineBreakNode';
 
 interface NodeProps {
     isRoot: boolean;

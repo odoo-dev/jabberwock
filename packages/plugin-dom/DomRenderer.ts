@@ -18,7 +18,7 @@ export class DomRenderer extends Renderer<Node> {
      * @param root
      * @param target
      */
-    render(content: VDocument | VNode, target: Element): void {
+    async render(content: VDocument | VNode, target: Element): Promise<void> {
         const root = content instanceof VDocument ? content.root : content;
         if (content instanceof VDocument) {
             // TODO: the map should be on the VDocument.
@@ -39,7 +39,8 @@ export class DomRenderer extends Renderer<Node> {
         let rendered = [];
         while (node) {
             if (!rendered.includes(node)) {
-                rendered = [...rendered, ...this.renderNode(node, domParent).keys()];
+                const mapping = await this.renderNode(node, domParent);
+                rendered = [...rendered, ...mapping.keys()];
             }
             node = node.nextSibling();
         }
@@ -54,17 +55,17 @@ export class DomRenderer extends Renderer<Node> {
     /**
      * Render the element matching the current vNode and append it.
      */
-    renderNode(node: VNode, domParent: Node): Map<VNode, Node[]> {
+    async renderNode(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
         let renderingMap: Map<VNode, Node[]>;
         for (const renderingFunction of this.renderingFunctions) {
-            renderingMap = renderingFunction(node, domParent);
+            renderingMap = await renderingFunction(node, domParent);
             if (renderingMap) {
                 break;
             }
         }
 
         if (!renderingMap) {
-            renderingMap = this._renderDefault(node, domParent);
+            renderingMap = await this._renderDefault(node, domParent);
         }
 
         // Map the parsed nodes to the DOM nodes they represent.
@@ -78,12 +79,21 @@ export class DomRenderer extends Renderer<Node> {
 
         return renderingMap;
     }
+    async renderChildren(node: VNode, domParent: Node): Promise<void> {
+        let rendered = [];
+        for (const child of node.children) {
+            if (!rendered.includes(child)) {
+                const mapping = await this.renderNode(child, domParent);
+                rendered = [...rendered, ...mapping.keys()];
+            }
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
-    _renderDefault(node: VNode, domParent: Node): Map<VNode, Node[]> {
+    async _renderDefault(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
         let tagName: string;
         if (node.is(VElement)) {
             tagName = node.htmlTag;
@@ -104,13 +114,7 @@ export class DomRenderer extends Renderer<Node> {
             renderedDomNodes.push(placeholderBr);
         }
 
-        // Render the node's children
-        let rendered = [];
-        node.children.forEach(child => {
-            if (!rendered.includes(child)) {
-                rendered = [...rendered, ...this.renderNode(child, renderedElement).keys()];
-            }
-        });
+        await this.renderChildren(node, renderedElement);
 
         domParent.appendChild(fragment);
         return new Map([[node, renderedDomNodes]]);

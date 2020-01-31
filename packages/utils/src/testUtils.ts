@@ -29,7 +29,7 @@ export async function testEditor(Editor: typeof JWEditor, spec: TestEditorSpec):
     editor.loadConfig({ debug: spec.debug });
     await editor.start();
     if (spec.stepFunction) {
-        spec.stepFunction(editor);
+        await spec.stepFunction(editor);
     }
     if (selection) {
         _renderTextualSelection();
