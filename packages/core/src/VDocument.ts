@@ -51,21 +51,22 @@ export class VDocument {
      */
     deleteSelection(range: VRange): void {
         withMarkers(() => {
-            const selectedNodes = range.selectedNodes();
-            if (!selectedNodes.length) return;
-            // If the node has children, merge it with the container of the
-            // range. Children of the merged node that should be truncated
-            // as well will be deleted in the following iterations since
-            // they appear in `nodes`. The children array must be cloned in
-            // order to modify it while iterating.
-            const newContainer = range.start.parent;
-            selectedNodes.forEach(vNode => {
-                if (vNode.hasChildren()) {
-                    vNode.mergeWith(newContainer);
-                } else {
-                    vNode.remove();
+            for (const node of range.selectedNodes()) {
+                node.remove();
+            }
+
+            if (range.startContainer !== range.endContainer) {
+                const commonAncestor = range.start.commonAncestor(range.end);
+                let ancestor = range.endContainer.parent;
+                while (ancestor !== commonAncestor) {
+                    if (ancestor.children.length > 1) {
+                        ancestor.splitAt(range.endContainer);
+                    }
+                    range.endContainer.mergeWith(ancestor);
+                    ancestor = range.endContainer.parent;
                 }
-            });
+                range.endContainer.mergeWith(range.startContainer);
+            }
         });
     }
 }
