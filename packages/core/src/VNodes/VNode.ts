@@ -702,6 +702,7 @@ export class VNode {
      * @param newContainer the new container for this node's children
      */
     mergeWith(newContainer: VNode): void {
+        if (newContainer === this) return;
         withMarkers(() => {
             if (this.hasChildren()) {
                 let reference = newContainer.lastChild();
