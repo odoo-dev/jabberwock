@@ -108,15 +108,15 @@ export class List extends JWPlugin {
             const domListNode = document.createElement(tag);
             domParent.appendChild(domListNode);
 
-            let mapping: [VNode, Node[]][] = [[node, [domListNode]]];
-
             // Render the node's children
+            const mappings = [];
             for (const child of node.children) {
-                const childrenMapping = await this.renderListItemToDom(child, domListNode);
-                mapping = [...mapping, ...childrenMapping];
+                const childMapping = await this.renderListItemToDom(child, domListNode);
+                mappings.push(...childMapping);
             }
 
-            return new Map(mapping);
+            mappings.push([node, [domListNode]]);
+            return new Map<VNode, Node[]>(mappings);
         }
     }
     async renderListItemToDom(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
@@ -132,23 +132,22 @@ export class List extends JWPlugin {
         } else {
             domListItem = document.createElement('li');
         }
+
         domParent.appendChild(domListItem);
+        const domNodes = [domListItem];
 
         // Direct ListNode's VElement children "P" are rendered as "LI"
         // while other nodes will be rendered inside the "LI".
         if (node.is(VElement) && node.htmlTag === 'P') {
+            if (!node.hasChildren()) {
+                const br = document.createElement('BR');
+                domListItem.appendChild(br);
+                domNodes.push(br);
+            }
             await this.editor.renderers.dom.renderChildren(node, domListItem);
         } else {
             // The node was wrapped in a "LI" but needs to be rendered as well.
             await this.editor.renderers.dom.renderNode(node, domListItem);
-        }
-
-        const domNodes = [domListItem];
-        // TODO: this should be generic.
-        if (!node.hasChildren()) {
-            const br = document.createElement('BR');
-            domListItem.appendChild(br);
-            domNodes.push(br);
         }
 
         return new Map<VNode, Node[]>([[node, domNodes]]);

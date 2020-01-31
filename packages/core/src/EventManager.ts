@@ -91,7 +91,7 @@ export class EventManager {
                 return;
             }
             default:
-                this.editor.execCommand(customEvent.type, payload);
+                return this.editor.execCommand(customEvent.type, payload);
         }
     }
 }
