@@ -95,9 +95,10 @@ export class VRange {
     selectedNodes<T>(predicate?: Predicate<T>): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
+        const endContainers = this.end.ancestors();
         withMarkers(() => {
             while ((node = node.next()) && node !== this.end) {
-                if (node.test(predicate)) {
+                if (!endContainers.includes(node) && node.test(predicate)) {
                     selectedNodes.push(node);
                 }
             }

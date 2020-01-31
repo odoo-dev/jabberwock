@@ -36,13 +36,15 @@ export class Indent extends JWPlugin {
      */
     indent(params: IndentParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const segmentBreaks = range.selectedNodes(this._isSegmentBreak);
+        const selectedSegmentBreaks = range.selectedNodes(this._isSegmentBreak);
         // Only indent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
-        if (segmentBreaks.length) {
-            // The first line is usually only partially selected, which means
-            // the segment break preceding it was not in `range.selectedNodes`.
-            segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
+        if (selectedSegmentBreaks.length) {
+            const segmentBreaks = new Set(selectedSegmentBreaks);
+            // The first and last lines are only partially selected, which means
+            // their segment break would not be found in `range.selectedNodes`.
+            segmentBreaks.add(range.start.ancestor(this._isSegmentBreak));
+            segmentBreaks.add(range.end.ancestor(this._isSegmentBreak));
             segmentBreaks.forEach(segmentBreak => {
                 // Insert 4 spaces before each character following a line break.
                 const firstChar = segmentBreak.next(CharNode);
@@ -71,13 +73,15 @@ export class Indent extends JWPlugin {
      */
     outdent(params: OutdentParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const segmentBreaks = range.selectedNodes(this._isSegmentBreak);
+        const selectedSegmentBreaks = range.selectedNodes(this._isSegmentBreak);
         // Only outdent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
-        if (segmentBreaks.length) {
-            // The first line is usually only partially selected, which means
-            // the segment break preceding it was not in `range.selectedNodes`.
-            segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
+        if (selectedSegmentBreaks.length) {
+            const segmentBreaks = new Set(selectedSegmentBreaks);
+            // The first and last lines are only partially selected, which means
+            // their segment break would not be found in `range.selectedNodes`.
+            segmentBreaks.add(range.start.ancestor(this._isSegmentBreak));
+            segmentBreaks.add(range.end.ancestor(this._isSegmentBreak));
             const isSpace = (node: VNode): boolean => {
                 return node.is(CharNode) && /^\s$/g.test(node.char);
             };
