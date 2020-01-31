@@ -68,7 +68,7 @@ export class Char extends JWPlugin {
         const format = this._getCurrentFormat();
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
-            this.editor.vDocument.deleteSelection(range);
+            range.empty();
         }
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');

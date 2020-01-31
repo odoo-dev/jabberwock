@@ -204,6 +204,29 @@ export class VRange {
         return this;
     }
     /**
+     * Empty the range by removing selected nodes and collapsing it by merging
+     * nodes between start and end.
+     */
+    empty(): void {
+        // Remove selected nodes.
+        for (const node of this.selectedNodes()) {
+            node.remove();
+        }
+        // Collapse the range by merging nodes between start and end.
+        if (this.startContainer !== this.endContainer) {
+            const commonAncestor = this.start.commonAncestor(this.end);
+            let ancestor = this.endContainer.parent;
+            while (ancestor !== commonAncestor) {
+                if (ancestor.children.length > 1) {
+                    ancestor.splitAt(this.endContainer);
+                }
+                this.endContainer.mergeWith(ancestor);
+                ancestor = this.endContainer.parent;
+            }
+            this.endContainer.mergeWith(this.startContainer);
+        }
+    }
+    /**
      * Remove this range from its VDocument.
      */
     remove(): void {
