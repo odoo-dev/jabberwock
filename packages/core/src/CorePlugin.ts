@@ -82,11 +82,11 @@ export class CorePlugin extends JWPlugin {
                 });
                 if (previousLeaf) {
                     range.setStart(previousLeaf, RelativePosition.AFTER);
-                    this.editor.vDocument.deleteSelection(range);
+                    range.empty();
                 }
             }
         } else {
-            this.editor.vDocument.deleteSelection(range);
+            range.empty();
         }
     }
     /**
@@ -104,11 +104,11 @@ export class CorePlugin extends JWPlugin {
                 const nextLeaf = range.end.nextLeaf();
                 if (nextLeaf) {
                     range.setEnd(nextLeaf, RelativePosition.BEFORE);
-                    this.editor.vDocument.deleteSelection(range);
+                    range.empty();
                 }
             }
         } else {
-            this.editor.vDocument.deleteSelection(range);
+            range.empty();
         }
     }
     /**
