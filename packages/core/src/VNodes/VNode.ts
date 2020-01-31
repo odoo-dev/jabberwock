@@ -568,7 +568,9 @@ export class VNode {
     commonAncestor<T extends VNode>(node: VNode, predicate?: Constructor<T>): T;
     commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
     commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
-        if (this.parent === node.parent && this.parent.test(predicate)) {
+        if (!this.parent) {
+            return;
+        } else if (this.parent === node.parent && this.parent.test(predicate)) {
             return this.parent;
         }
         const thisPath = [this, ...this.ancestors(predicate)];
