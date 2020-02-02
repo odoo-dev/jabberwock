@@ -6,6 +6,7 @@ import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
 import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
+import { CharDomRenderer } from './CharDomRenderer';
 
 export interface InsertTextParams extends RangeParams {
     text: string;
@@ -16,8 +17,8 @@ export interface FormatParams extends RangeParams {
 
 export class Char extends JWPlugin {
     readonly parsingFunctions = [this.parse.bind(this)];
-    readonly renderingFunctions = {
-        dom: this.renderToDom.bind(this),
+    readonly renderers = {
+        dom: [CharDomRenderer],
     };
     commands = {
         insertText: {
@@ -71,52 +72,6 @@ export class Char extends JWPlugin {
             );
             vNodes.forEach(node => context.parentVNode.append(node));
             return [context, parsingMap];
-        }
-    }
-    async renderToDom(node: VNode, domParent: Node): Promise<Map<VNode, Node[]>> {
-        if (node.is(CharNode)) {
-            // If the node has a format, render the format nodes first.
-            const fragment = document.createDocumentFragment();
-            let parent: Node = fragment;
-            const renderedFormats = [];
-            Object.keys(node.format).forEach(type => {
-                if (node.format[type]) {
-                    const formatNode = document.createElement(Format.toTag(type));
-                    renderedFormats.push(formatNode);
-                    parent.appendChild(formatNode);
-                    // Update the parent so the text is inside the format node.
-                    parent = formatNode;
-                }
-            });
-
-            // Consecutive compatible char nodes are rendered as a single text node.
-            let text = '' + node.char;
-            let next = node.nextSibling();
-            const charNodes = [node];
-            while (next && Char._isSameTextNode(node, next)) {
-                if (next instanceof CharNode) {
-                    charNodes.push(next);
-                    if (next.char === ' ' && text[text.length - 1] === ' ') {
-                        // Browsers don't render consecutive space chars otherwise.
-                        text += '\u00A0';
-                    } else {
-                        text += next.char;
-                    }
-                }
-                next = next.nextSibling();
-            }
-            // Browsers don't render leading/trailing space chars otherwise.
-            text = text.replace(/^ | $/g, '\u00A0');
-
-            // Create and append the text node, update the VDocumentMap.
-            const renderedNode = document.createTextNode(text);
-            parent.appendChild(renderedNode);
-            domParent.appendChild(fragment);
-            return new Map(
-                [...charNodes, ...renderedFormats].map(node => {
-                    return [node, [renderedNode]];
-                }),
-            );
         }
     }
     /**
