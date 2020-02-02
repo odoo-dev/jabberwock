@@ -12,7 +12,6 @@ import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { ParsingContext, ParsingMap } from '../src/Parser';
-import { DomRenderer } from '../../plugin-dom/DomRenderer';
 
 describe('core', () => {
     describe('src', () => {
@@ -126,14 +125,6 @@ describe('core', () => {
                             expect(root.children).to.deep.equal([a, h1, c, p]);
                             expect(h1.children).to.deep.equal([marker1, b]);
                         });
-                    });
-                });
-                describe('Render', () => {
-                    it('should render a VNode', async () => {
-                        const node = new VNode();
-                        const element = document.createElement('div');
-                        await new DomRenderer().render(node, element);
-                        expect(element.firstChild.nodeName).to.equal('VNODE-' + node.id);
                     });
                 });
                 describe('locate', () => {

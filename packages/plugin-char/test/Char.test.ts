@@ -5,7 +5,6 @@ import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { describePlugin } from '../../utils/src/testUtils';
 import { Parser } from '../../core/src/Parser';
-import { Renderer } from '../../core/src/Renderer';
 import { Dom } from '../../plugin-dom/Dom';
 
 const insertText = async function(editor, text: string): Promise<void> {
@@ -31,6 +30,7 @@ describePlugin(Char, testEditor => {
         let domRoot: Element;
         beforeEach(async () => {
             editor = new JWEditor();
+            editor.addPlugin(Dom);
             editor.addPlugin(Char);
             await editor.start();
             domRoot = document.createElement('div');
@@ -54,50 +54,6 @@ describePlugin(Char, testEditor => {
             const vDocument = parser.parse(domRoot);
             expect(vDocument.root.firstChild()).not.to.be.undefined;
             expect(vDocument.root.firstChild() instanceof CharNode).to.be.false;
-        });
-    });
-    describe('renderToDom', () => {
-        let editor: JWEditor;
-        let renderer: Renderer;
-        beforeEach(async () => {
-            editor = new JWEditor();
-            editor.addPlugin(Dom);
-            editor.addPlugin(Char);
-            await editor.start();
-            renderer = editor.renderers.dom;
-        });
-        afterEach(() => {
-            editor.stop();
-        });
-        it('should insert 1 space and 1 nbsp instead of 2 spaces', async () => {
-            const element = document.createElement('p');
-            element.innerHTML = 'a';
-            document.body.appendChild(element);
-            const vDocument = editor.parser.parse(element);
-
-            vDocument.root.append(new CharNode(' '));
-            vDocument.root.append(new CharNode(' '));
-            vDocument.root.append(new CharNode('b'));
-
-            await renderer.render(vDocument, editor.editable);
-            expect(editor.editable.innerHTML).to.equal('a &nbsp;b');
-            element.remove();
-        });
-        it('should insert 2 spaces and 2 nbsp instead of 4 spaces', async () => {
-            const element = document.createElement('p');
-            element.innerHTML = 'a';
-            document.body.appendChild(element);
-            const vDocument = editor.parser.parse(element);
-
-            vDocument.root.append(new CharNode(' '));
-            vDocument.root.append(new CharNode(' '));
-            vDocument.root.append(new CharNode(' '));
-            vDocument.root.append(new CharNode(' '));
-            vDocument.root.append(new CharNode('b'));
-
-            await renderer.render(vDocument, editor.editable);
-            expect(editor.editable.innerHTML).to.equal('a &nbsp; &nbsp;b');
-            element.remove();
         });
     });
     describe('CharNode', () => {

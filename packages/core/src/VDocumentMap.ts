@@ -53,7 +53,7 @@ export const VDocumentMap = {
      * @param vNode
      * @param [offset]
      */
-    set(vNode: VNode, domNode: Node, offset?: number): void {
+    set(vNode: VNode, domNode: Node, offset = 0): void {
         if (fromDom.has(domNode)) {
             const matches = fromDom.get(domNode);
             if (!matches.some((match: VNode) => match.id === vNode.id)) {
