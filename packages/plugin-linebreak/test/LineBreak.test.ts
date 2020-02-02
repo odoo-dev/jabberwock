@@ -6,8 +6,6 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreak } from '../LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
-import { Renderer } from '../../core/src/Renderer';
-import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../core/src/Parser';
 import { Dom } from '../../plugin-dom/Dom';
 
@@ -21,6 +19,7 @@ describePlugin(LineBreak, testEditor => {
         let domRoot: Element;
         beforeEach(async () => {
             editor = new JWEditor();
+            editor.addPlugin(Dom);
             editor.addPlugin(LineBreak);
             await editor.start();
             parser = editor.parser;
@@ -63,51 +62,6 @@ describePlugin(LineBreak, testEditor => {
             it('should create a LineBreakNode', async () => {
                 const lineBreak = new LineBreakNode();
                 expect(lineBreak.atomic).to.equal(true);
-            });
-        });
-        describe('render', () => {
-            let editor: JWEditor;
-            let renderer: Renderer;
-            let element: Element;
-            let root: VNode;
-            beforeEach(async () => {
-                element = document.createElement('div');
-                editor = new JWEditor();
-                editor.addPlugin(Dom);
-                editor.addPlugin(LineBreak);
-                await editor.start();
-                renderer = editor.renderers.dom;
-                root = editor.vDocument.root;
-            });
-            afterEach(() => {
-                editor.stop();
-            });
-            it('should render an ending lineBreak', async () => {
-                const p = new VElement('fake-p');
-                const lineBreak = new LineBreakNode();
-                p.append(lineBreak);
-                root.append(p);
-                await renderer.render(editor.vDocument, element);
-                expect(element.childNodes.length).to.equal(1);
-                const domP = element.firstChild;
-                expect(domP.childNodes.length).to.equal(2);
-                expect(domP.firstChild.nodeName).to.equal('BR');
-                expect(domP.lastChild.nodeName).to.equal('BR');
-            });
-            it('should render a lineBreak with node after', async () => {
-                const p = new VElement('FAKE-P');
-                const lineBreak = new LineBreakNode();
-                p.append(lineBreak);
-                const c = new VElement('FAKE-CHAR');
-                p.append(c);
-                root.append(p);
-                await renderer.render(editor.vDocument, element);
-                expect(element.childNodes.length).to.equal(1);
-                const domP = element.firstChild;
-                expect(domP.nodeName).to.equal('FAKE-P');
-                expect(domP.childNodes.length).to.equal(2);
-                expect(domP.firstChild.nodeName).to.equal('BR');
-                expect(domP.childNodes[1].nodeName).to.equal('FAKE-CHAR');
             });
         });
         describe('clone', () => {

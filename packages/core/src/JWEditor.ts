@@ -3,10 +3,12 @@ import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { Dom } from '../../plugin-dom/Dom';
-import { Renderer, RendererIdentifier } from './Renderer';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
+import { VNode } from './VNodes/VNode';
+import { RenderingEngine } from './RenderingEngine';
+import { VDocumentMap } from './VDocumentMap';
 
 export enum Platform {
     MAC = 'mac',
@@ -24,7 +26,6 @@ export interface JWEditorConfig {
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
     shortcuts?: Shortcut[];
-    defaultRendererId?: string;
 }
 
 export class JWEditor {
@@ -34,7 +35,6 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     plugins: JWPlugin[];
-    renderers: Record<RendererIdentifier, Renderer> = {};
     vDocument: VDocument;
     autoFocus = false;
     parser = new Parser();
@@ -43,7 +43,9 @@ export class JWEditor {
         user: new Keymap(),
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
-    defaultRendererId = 'dom';
+    renderers: Record<string, RenderingEngine> = {
+        dom: new RenderingEngine<Node[]>(),
+    };
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -116,7 +118,28 @@ export class JWEditor {
         if (!Object.keys(this.renderers).length) {
             this.addPlugin(Dom);
         }
-        await this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
+        await this.renderInEditable();
+    }
+
+    async render<T = void>(output: string, node: VNode): Promise<T> {
+        const engine = this.renderers[output];
+        if (!engine) {
+            throw `No renderer installed for output type ${output}.`;
+        }
+        engine.renderings.clear();
+        return engine.render(node) as Promise<T>;
+    }
+
+    async renderInEditable(): Promise<void> {
+        this.editable.innerHTML = '';
+        VDocumentMap.clear();
+        VDocumentMap.set(this.vDocument.root, this.editable);
+        const renderedDocument = await this.render<Node[]>('dom', this.vDocument.root);
+        for (const renderedChild of renderedDocument) {
+            this.editable.appendChild(renderedChild);
+        }
+        const dom: Dom = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
+        dom.renderSelection(this.vDocument.selection, this.editable);
     }
 
     //--------------------------------------------------------------------------
@@ -174,24 +197,12 @@ export class JWEditor {
             // If two renderers exist with the same id, the last one to be added
             // will replace the previous one.
             if (plugin.renderers) {
-                plugin.renderers.forEach(renderer => {
-                    this.renderers[renderer.id] = renderer;
-                });
-            }
-            // Register the parsing functions of this plugin if it has any.
-            Object.keys(plugin.renderingFunctions).forEach(rendererId => {
-                if (Object.keys(this.renderers).includes(rendererId)) {
-                    const renderer = this.renderers[rendererId];
-                    const renderingFunctions = plugin.renderingFunctions[rendererId];
-                    if (Array.isArray(renderingFunctions)) {
-                        renderingFunctions.forEach(renderingFunction => {
-                            renderer.renderingFunctions.add(renderingFunction);
-                        });
-                    } else {
-                        renderer.renderingFunctions.add(renderingFunctions);
+                for (const outputType of Object.keys(plugin.renderers)) {
+                    for (const RendererClass of plugin.renderers[outputType]) {
+                        this.renderers[outputType].register(RendererClass);
                     }
                 }
-            });
+            }
         }
     }
     /**
@@ -211,9 +222,6 @@ export class JWEditor {
                 this._loadShortcut(shortcut, this.keymaps.user);
             }
         }
-        if (config.defaultRendererId) {
-            this.defaultRendererId = config.defaultRendererId;
-        }
     }
 
     /**
@@ -224,7 +232,7 @@ export class JWEditor {
      */
     async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
         await this.dispatcher.dispatch(id, args);
-        await this.renderers[this.defaultRendererId].render(this.vDocument, this.editable);
+        await this.renderInEditable();
     }
 
     /**
