@@ -31,7 +31,9 @@ export class CharNode extends VNode {
      */
     shallowDuplicate(): CharNode {
         const charNode = new CharNode(this.char);
-        charNode.format = this.format;
+        if (this.format) {
+            charNode.format = { ...this.format };
+        }
         return charNode;
     }
 
