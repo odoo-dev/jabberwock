@@ -5,7 +5,6 @@ import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { describePlugin } from '../../utils/src/testUtils';
 import { Parser } from '../../core/src/Parser';
-import { Dom } from '../../plugin-dom/Dom';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
@@ -30,7 +29,6 @@ describePlugin(Char, testEditor => {
         let domRoot: Element;
         beforeEach(async () => {
             editor = new JWEditor();
-            editor.addPlugin(Dom);
             editor.addPlugin(Char);
             await editor.start();
             domRoot = document.createElement('div');

@@ -4,6 +4,7 @@ import { LineBreak } from '../LineBreak';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { LineBreakNode } from '../LineBreakNode';
+import { Dom } from '../../plugin-dom/Dom';
 
 describe('LineBreakDomRenderer', () => {
     describe('render', () => {
@@ -11,6 +12,7 @@ describe('LineBreakDomRenderer', () => {
         let root: FragmentNode;
         beforeEach(async () => {
             editor = new JWEditor(document.createElement('div'));
+            editor.addPlugin(Dom);
             editor.addPlugin(LineBreak);
             await editor.start();
             root = editor.vDocument.root;

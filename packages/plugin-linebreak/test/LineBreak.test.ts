@@ -7,7 +7,6 @@ import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreak } from '../LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
 import { Parser } from '../../core/src/Parser';
-import { Dom } from '../../plugin-dom/Dom';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('insertLineBreak');
@@ -19,7 +18,6 @@ describePlugin(LineBreak, testEditor => {
         let domRoot: Element;
         beforeEach(async () => {
             editor = new JWEditor();
-            editor.addPlugin(Dom);
             editor.addPlugin(LineBreak);
             await editor.start();
             parser = editor.parser;

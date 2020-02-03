@@ -2,7 +2,6 @@ import { BoundCommand, Keymap } from './Keymap';
 import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
-import { Dom } from '../../plugin-dom/Dom';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
@@ -114,13 +113,6 @@ export class JWEditor {
 
         // Init the event manager now that the cloned editable is in the DOM.
         this.eventManager = new EventManager(this);
-
-        // Render with the default renderer. If no renderer is provided, install
-        // and use DomRenderer.
-        if (!Object.keys(this.renderers).length) {
-            this.addPlugin(Dom);
-        }
-        await this._renderInEditable();
     }
 
     async render<T = void>(output: string, node: VNode): Promise<T> {
@@ -291,47 +283,6 @@ export class JWEditor {
             event.stopPropagation();
             event.stopImmediatePropagation();
             this.execCommand(command.commandId, command.commandArgs);
-        }
-    }
-
-    async _renderInEditable(): Promise<void> {
-        this.editable.innerHTML = '';
-        VDocumentMap.clear();
-        VDocumentMap.set(this.vDocument.root, this.editable);
-        const renderedDocument = await this.render<Node[]>('dom', this.vDocument.root);
-        await this._generateDomMap();
-        for (const renderedChild of renderedDocument) {
-            this.editable.appendChild(renderedChild);
-        }
-        const dom: Dom = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
-        dom.renderSelection(this.vDocument.selection, this.editable);
-    }
-
-    async _generateDomMap(): Promise<void> {
-        let node = this.vDocument.root.lastLeaf();
-        while (node) {
-            let offset = 0;
-            if (node.is(CharNode)) {
-                let previousSibling = node.previousSibling();
-                while (previousSibling && Char.isSameTextNode(previousSibling, node)) {
-                    offset++;
-                    previousSibling = previousSibling.previousSibling();
-                }
-            }
-
-            const renderedNode = (await this.renderers.dom.render(node)) as Node[];
-            for (const domNode of renderedNode) {
-                VDocumentMap.set(node, domNode, offset);
-                this._setChildNodes(node, domNode, offset);
-            }
-            node = node.previous();
-        }
-    }
-
-    async _setChildNodes(node: VNode, renderedNode: Node, offset = 0): Promise<void> {
-        for (const renderedChild of renderedNode.childNodes) {
-            VDocumentMap.set(node, renderedChild, offset);
-            this._setChildNodes(node, renderedChild, offset);
         }
     }
 }
