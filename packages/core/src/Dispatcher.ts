@@ -11,7 +11,6 @@ export interface CommandArgs {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
-export type DispatchHook = (command: string, args: CommandArgs) => void;
 
 export class Dispatcher {
     __nextHandlerTokenID = 0;
@@ -19,7 +18,6 @@ export class Dispatcher {
     el: Element;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
     handlers: Record<CommandIdentifier, CommandHandler[]> = {};
-    dispatchHooks: DispatchHook[] = [];
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -42,9 +40,6 @@ export class Dispatcher {
             for (const handlerCallback of handlers) {
                 await handlerCallback(args);
             }
-        }
-        for (const hookCallback of this.dispatchHooks) {
-            await hookCallback(commandId, args);
         }
     }
 
@@ -74,14 +69,5 @@ export class Dispatcher {
         } else {
             this.handlers[id].push(handler);
         }
-    }
-
-    /**
-     * Register a callback that will be executed each time `dispatch` is called.
-     *
-     * @param hook The function that will be executed.
-     */
-    registerDispatchHook(hook: DispatchHook): void {
-        this.dispatchHooks.push(hook);
     }
 }

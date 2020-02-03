@@ -26,7 +26,7 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
     _heightOnLastMousedown: number;
 
     async willStart(): Promise<void> {
-        this.env.editor.dispatcher.registerDispatchHook(this.refresh.bind(this));
+        this.env.editor.registerExecCommandHook(this.refresh.bind(this));
         return super.willStart();
     }
 
