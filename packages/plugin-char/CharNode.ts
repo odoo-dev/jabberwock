@@ -1,10 +1,10 @@
-import { VNode } from '../core/src/VNodes/VNode';
-import { FormatName, Format } from '../core/src/Format';
+import { Format } from '../plugin-inline/Format';
+import { InlineNode } from '../plugin-inline/InlineNode';
 
-export class CharNode extends VNode {
+export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    constructor(char: string, format?: Record<FormatName, Format>) {
+    constructor(char: string, format?: Format[]) {
         super();
         if (char.length !== 1) {
             throw new Error(
@@ -13,7 +13,7 @@ export class CharNode extends VNode {
         }
         this.char = char;
         if (format) {
-            this.format = format;
+            this.formats = format;
         }
     }
 
@@ -31,9 +31,7 @@ export class CharNode extends VNode {
      */
     shallowDuplicate(): CharNode {
         const charNode = new CharNode(this.char);
-        if (this.format) {
-            charNode.format = { ...this.format };
-        }
+        charNode.formats = [...this.formats];
         return charNode;
     }
 

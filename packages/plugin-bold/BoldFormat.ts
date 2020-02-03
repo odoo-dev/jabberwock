@@ -1,10 +1,5 @@
-import { Format } from '../core/src/Format';
+import { Format } from '../plugin-inline/Format';
 
 export class BoldFormat extends Format {
-    name = 'bold';
-    htmlTag: 'B' | 'STRONG';
-    constructor(htmlTag: 'B' | 'STRONG' = 'B') {
-        super();
-        this.htmlTag = htmlTag;
-    }
+    htmlTag: 'B' | 'STRONG' = 'B';
 }

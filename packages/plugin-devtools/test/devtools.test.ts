@@ -153,7 +153,7 @@ describe('plugin-devtools', () => {
                 '</tbody>' +
                 '</table>' +
                 '<div class="divider">📖 My Properties</div>' +
-                '<table><tbody></tbody></table>' +
+                '<table><tbody><tr><td>attributes</td><td>{}</td></tr></tbody></table>' +
                 '<div class="divider">👪 My Family</div>' +
                 '<table>' +
                 '<tbody>' +
@@ -713,7 +713,7 @@ describe('plugin-devtools', () => {
                 'deleteBackward',
                 'deleteForward',
                 'selectAll',
-                'applyFormat',
+                'toggleFormat',
                 'insertText',
                 'insertLineBreak',
                 'toggleList',

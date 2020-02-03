@@ -1,5 +1,4 @@
 import { VDocument } from './VDocument';
-import { FormatName, Format } from './Format';
 import { VDocumentMap } from './VDocumentMap';
 import { Direction, VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
@@ -7,14 +6,15 @@ import { DomSelectionDescription } from './EventNormalizer';
 import { utils } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { Format } from '../../plugin-inline/Format'; // todo: remove dependency
 
 export type ParsingMap = Map<VNode, Node[]>;
 export interface ParsingContext {
     readonly rootNode?: Node;
     currentNode?: Node;
     parentVNode?: VNode;
-    format?: Record<FormatName, Format>;
     vDocument: VDocument;
+    formats: Format[]; // todo: remove
 }
 
 export type ParsingFunction = (context: ParsingContext) => [ParsingContext, ParsingMap];
@@ -98,6 +98,7 @@ export class Parser {
             currentNode: node,
             parentVNode: root,
             vDocument: vDocument,
+            formats: [],
         };
         this._contextStack.push(rootContext);
         // The tree is parsed in depth-first order traversal.

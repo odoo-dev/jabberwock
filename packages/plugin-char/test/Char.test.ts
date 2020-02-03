@@ -9,8 +9,9 @@ import { ItalicFormat } from '../../plugin-italic/ItalicFormat';
 import { Parser } from '../../core/src/Parser';
 import { Dom } from '../../plugin-dom/Dom';
 import { Renderer } from '../../core/src/Renderer';
-import { FormatName } from '../../core/src/Format';
-import { FormatParams } from '../../core/src/CorePlugin';
+import { FormatParams } from '../../plugin-inline/Inline';
+import { Format } from '../../plugin-inline/Format';
+import { UnderlineFormat } from '../../plugin-underline/UnderlineFormat';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
@@ -18,11 +19,11 @@ const insertText = async function(editor, text: string): Promise<void> {
     };
     await editor.execCommand('insertText', params);
 };
-const applyFormat = async (editor: JWEditor, format: FormatName): Promise<void> => {
+const toggleFormat = async (editor: JWEditor, format: Format): Promise<void> => {
     const formatParams: FormatParams = {
-        formatName: format,
+        format: format,
     };
-    await editor.execCommand('applyFormat', formatParams);
+    await editor.execCommand('toggleFormat', formatParams);
 };
 
 describe('plugin-char', () => {
@@ -55,6 +56,14 @@ describe('plugin-char', () => {
             const vDocument = parser.parse(domRoot);
             expect(vDocument.root.firstChild()).not.to.be.undefined;
             expect(vDocument.root.firstChild() instanceof CharNode).to.be.false;
+        });
+        it('should parse text with nested similar formats', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore:
+                    '<p>a<span class="outer">bc<span class="inner">de</span>fg</span>h</p>',
+                contentAfter:
+                    '<p>a<span class="outer">bc</span><span class="outer"><span class="inner">de</span></span><span class="outer">fg</span>h</p>',
+            });
         });
     });
     describe('renderToDom', () => {
@@ -107,15 +116,15 @@ describe('plugin-char', () => {
                 const c = new CharNode(' ');
                 expect(c.char).to.equal(' ');
                 expect(c.atomic).to.equal(true);
-                expect(c.format).to.be.undefined;
+                expect(c.formats.length).to.equal(0);
                 expect(c.length).to.equal(1);
             });
             it('should create a CharNode with format', async () => {
-                const c = new CharNode(' ', { bold: new BoldFormat() });
+                const c = new CharNode(' ', [new BoldFormat()]);
                 expect(c.char).to.equal(' ');
                 expect(c.atomic).to.equal(true);
-                expect(!!c.format.bold).to.equal(true);
-                expect(Object.keys(c.format)).to.deep.equal(['bold']);
+                expect(c.formats.length).to.equal(1);
+                expect(c.formats[0].htmlTag).to.equal('B');
             });
             it('should throw an exception if create a CharNode with wrong value', async () => {
                 expect(() => {
@@ -135,30 +144,32 @@ describe('plugin-char', () => {
                 expect(copy).to.not.equal(c);
                 expect(copy instanceof CharNode).to.equal(true);
                 expect(copy.char).to.equal(c.char);
-                expect(copy.format).to.deep.equal(c.format);
+                expect(copy.formats).to.deep.equal(c.formats);
             });
             it('should duplicate a char with format', async () => {
                 const c = new CharNode('a');
-                c.format = { bold: new BoldFormat() };
+                c.formats = [new BoldFormat()];
                 const copy = c.shallowDuplicate();
                 expect(copy).to.not.equal(c);
-                expect(!!copy.format.bold).to.equal(true, 'copy is bold');
                 expect(copy.char).to.equal(c.char);
-                expect(Object.keys(copy.format)).to.deep.equal(['bold']);
+                expect(copy.formats.length).to.equal(1, 'copy now has one format');
+                expect(copy.formats[0].htmlTag).to.equal('B', 'copy is now bold');
             });
             it('should mark as italic a duplicate a char', async () => {
                 const c = new CharNode('a');
                 const copy = c.shallowDuplicate();
-                copy.format = { italic: new ItalicFormat() };
-                expect(!!copy.format.italic).to.equal(true, 'copy is now italic');
-                expect(c.format).to.equal(undefined, 'original char is not italic');
+                copy.formats = [new ItalicFormat()];
+                expect(copy.formats.length).to.equal(1, 'copy now has one format');
+                expect(copy.formats[0].htmlTag).to.equal('I', 'copy is now italic');
+                expect(c.formats.length).to.equal(0, 'original char is not italic');
             });
             it('should update the format for a duplicate a char', async () => {
                 const c = new CharNode('a');
                 const copy = c.shallowDuplicate();
-                copy.format = { italic: new ItalicFormat() };
-                expect(!!copy.format.italic).to.equal(true, 'copy is now italic');
-                expect(c.format).to.equal(undefined, 'original char is not italic');
+                copy.formats = [new ItalicFormat()];
+                expect(copy.formats.length).to.equal(1, 'copy now has one format');
+                expect(copy.formats[0].htmlTag).to.equal('I', 'copy is now italic');
+                expect(c.formats.length).to.equal(0, 'original char is not italic');
             });
         });
         describe('text', () => {
@@ -258,66 +269,66 @@ describe('plugin-char', () => {
                 });
             });
         });
-        describe('applyFormat', () => {
+        describe('toggleFormat', () => {
             describe('Selection collapsed', () => {
                 it('should make bold the next insertion', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b>b[]</b>a',
                     });
                 });
-                it('should not make bold the next insertion when applyFormat 2 times', async () => {
+                it('should not make bold the next insertion when toggleFormat 2 times', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
+                            await toggleFormat(editor, new BoldFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: 'b[]a',
                     });
                 });
-                it('should make bold the next insertion when applyFormat 1 time, after the first char', async () => {
+                it('should make bold the next insertion when toggleFormat 1 time, after the first char', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: 'a<b>b[]</b>',
                     });
                 });
-                it('should not make bold the next insertion when applyFormat 2 times, after the first char', async () => {
+                it('should not make bold the next insertion when toggleFormat 2 times, after the first char', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
+                            await toggleFormat(editor, new BoldFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: 'ab[]',
                     });
                 });
-                it('should not make bold the next insertion when applyFormat 1 time after the first char that is bold', async () => {
+                it('should not make bold the next insertion when toggleFormat 1 time after the first char that is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b>a</b>b[]',
                     });
                 });
-                it('should make bold the next insertion when applyFormat 2 times after the first char that is bold', async () => {
+                it('should make bold the next insertion when toggleFormat 2 times after the first char that is bold', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<b>a</b>[]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
+                            await toggleFormat(editor, new BoldFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b>ab[]</b>',
@@ -327,8 +338,8 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
-                            await applyFormat(editor, 'underline');
+                            await toggleFormat(editor, new BoldFormat());
+                            await toggleFormat(editor, new UnderlineFormat());
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
@@ -341,7 +352,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a[b]c',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                         },
                         contentAfter: 'a[<b>b]</b>c',
                     });
@@ -350,7 +361,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b]</b>c',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                         },
                         contentAfter: 'a[b]c',
                     });
@@ -359,7 +370,7 @@ describe('plugin-char', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: 'a<b>[b</b>c]',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                         },
                         contentAfter: 'a[<b>bc]</b>',
                     });
@@ -369,7 +380,7 @@ describe('plugin-char', () => {
                         contentBefore:
                             'a<b style="color: red">b[cd</b><b style="color: green">ef]g</b>',
                         stepFunction: async (editor: JWEditor) => {
-                            await applyFormat(editor, 'bold');
+                            await toggleFormat(editor, new BoldFormat());
                         },
                         contentAfter:
                             'a<b style="color: red">b[</b><span style="color: red">cd</span><span style="color: green">ef]</span><b style="color: green">g</b>',

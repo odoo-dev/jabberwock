@@ -1,6 +1,5 @@
 import { withMarkers, ignoreMarkers } from '../../../utils/src/markers';
 import { utils } from '../../../utils/src/utils';
-import { FormatName, Format } from '../Format';
 
 export enum RelativePosition {
     BEFORE = 'BEFORE',
@@ -25,8 +24,7 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
-    attributes: Map<string, string>;
-    format: Record<FormatName, Format>;
+    attributes = new Map<string, string>();
     _children: VNode[] = [];
 
     constructor() {

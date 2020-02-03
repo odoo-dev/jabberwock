@@ -14,6 +14,16 @@ export const utils = {
         document.body.removeChild(temporaryElement);
         return display.includes('block') || display.includes('list');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    deepEqualMaps(a: Map<any, any>, b: Map<any, any>): boolean {
+        if (a.size !== b.size) return false;
+        for (const key of a.keys()) {
+            if (a.get(key) !== b.get(key)) {
+                return false;
+            }
+        }
+        return true;
+    },
     /**
      * Convert certain special characters to unicode.
      */

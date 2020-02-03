@@ -100,7 +100,8 @@ describe('plugin-list', () => {
             expect(li1_0.children.length).to.equal(3);
             expect(li1_0.nthChild(0).toString()).to.equal('a');
             expect(li1_0.nthChild(1).toString()).to.equal('.');
-            expect(!!(li1_0.nthChild(1) as CharNode).format.bold).to.be.true;
+            expect((li1_0.nthChild(1) as CharNode).formats.length).to.equal(1);
+            expect((li1_0.nthChild(1) as CharNode).formats[0].htmlTag).to.equal('B');
             expect(li1_0.nthChild(2).toString()).to.equal('a');
 
             const li1_1 = li1.nthChild(1);
@@ -228,7 +229,7 @@ describe('plugin-list', () => {
             const ul = new ListNode(ListType.UNORDERED);
             const p2 = new VElement('P');
             p2.append(new CharNode('a'));
-            p2.append(new CharNode('.', { bold: new BoldFormat() }));
+            p2.append(new CharNode('.', [new BoldFormat()]));
             p2.append(new CharNode('a'));
             ul.append(p2);
 

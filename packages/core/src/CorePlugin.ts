@@ -3,7 +3,6 @@ import JWEditor from './JWEditor';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { VRange } from './VRange';
-import { FormatName } from './Format';
 
 export interface RangeParams {
     range?: VRange;
@@ -15,9 +14,6 @@ export type DeleteForwardParams = RangeParams;
 
 export interface InsertParams extends RangeParams {
     node: VNode;
-}
-export interface FormatParams extends RangeParams {
-    formatName: FormatName;
 }
 
 export interface VSelectionParams {
@@ -44,9 +40,6 @@ export class CorePlugin extends JWPlugin {
         },
         selectAll: {
             handler: this.selectAll.bind(this),
-        },
-        applyFormat: {
-            handler: this.applyFormat.bind(this),
         },
     };
     constructor(editor) {
@@ -125,8 +118,6 @@ export class CorePlugin extends JWPlugin {
      */
     setSelection(params: VSelectionParams): void {
         this.editor.vDocument.selection.set(params.vSelection);
-        // Each time the selection changes, we reset its format.
-        this.editor.vDocument.formatCache = null;
     }
     /**
      * Update the selection in such a way that it selects the entire document.
@@ -141,8 +132,5 @@ export class CorePlugin extends JWPlugin {
             focusPosition: RelativePosition.AFTER,
             direction: params.vSelection.direction,
         });
-    }
-    applyFormat(): void {
-        return;
     }
 }

@@ -9,6 +9,7 @@ import { Span } from '../packages/plugin-span/Span';
 import { Bold } from '../packages/plugin-bold/Bold';
 import { Italic } from '../packages/plugin-italic/Italic';
 import { Underline } from '../packages/plugin-underline/Underline';
+import { Inline } from '../packages/plugin-inline/Inline';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -16,6 +17,7 @@ export class BasicEditor extends JWEditor {
         this.loadConfig({
             plugins: [
                 Dom,
+                Inline,
                 Char,
                 LineBreak,
                 Heading,

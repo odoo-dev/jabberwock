@@ -1,6 +1,9 @@
 import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
 import JWEditor from './JWEditor';
 import { VSelectionParams } from './CorePlugin';
+import { BoldFormat } from '../../plugin-bold/BoldFormat';
+import { ItalicFormat } from '../../plugin-italic/ItalicFormat';
+import { UnderlineFormat } from '../../plugin-underline/UnderlineFormat';
 
 interface SetSelectionParams {
     domSelection: DomSelectionDescription;
@@ -53,7 +56,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'b'
                 ) {
-                    return this.editor.execCommand('applyFormat', { formatName: 'bold' });
+                    return this.editor.execCommand('toggleFormat', { format: new BoldFormat() });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
@@ -61,7 +64,7 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'i'
                 ) {
-                    return this.editor.execCommand('applyFormat', { formatName: 'italic' });
+                    return this.editor.execCommand('toggleFormat', { format: new ItalicFormat() });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
@@ -69,7 +72,9 @@ export class EventManager {
                     !payload.metaKey &&
                     payload.key === 'u'
                 ) {
-                    return this.editor.execCommand('applyFormat', { formatName: 'underline' });
+                    return this.editor.execCommand('toggleFormat', {
+                        format: new UnderlineFormat(),
+                    });
                 } else if (
                     payload.ctrlKey &&
                     !payload.altKey &&
