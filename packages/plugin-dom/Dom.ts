@@ -3,11 +3,23 @@ import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, Direction } from '../core/src/VSelection';
 import { VDocumentMap } from '../core/src/VDocumentMap';
 import { DefaultDomRenderer } from './DefaultDomRenderer';
+import { CharNode } from '../plugin-char/CharNode';
+import { Char } from '../plugin-char/Char';
+import JWEditor from '../core/src/JWEditor';
 
 export class Dom extends JWPlugin {
     readonly renderers = {
         dom: [DefaultDomRenderer],
     };
+
+    constructor(editor: JWEditor) {
+        super(editor);
+        this.editor.registerExecCommandHook(this._renderInEditable.bind(this));
+    }
+
+    async start(): Promise<void> {
+        return this._renderInEditable();
+    }
 
     /**
      * Render the given VSelection as a DOM selection in the given target.
@@ -63,5 +75,45 @@ export class Dom extends JWPlugin {
             location[1] += 1;
         }
         return location;
+    }
+
+    async _renderInEditable(): Promise<void> {
+        this.editor.editable.innerHTML = '';
+        VDocumentMap.clear();
+        VDocumentMap.set(this.editor.vDocument.root, this.editor.editable);
+        const rendering = await this.editor.render<Node[]>('dom', this.editor.vDocument.root);
+        await this._generateDomMap();
+        for (const renderedChild of rendering) {
+            this.editor.editable.appendChild(renderedChild);
+        }
+        this.renderSelection(this.editor.vDocument.selection, this.editor.editable);
+    }
+
+    async _generateDomMap(): Promise<void> {
+        let node = this.editor.vDocument.root.lastLeaf();
+        while (node) {
+            let offset = 0;
+            if (node.is(CharNode)) {
+                let previousSibling = node.previousSibling();
+                while (previousSibling && Char.isSameTextNode(previousSibling, node)) {
+                    offset++;
+                    previousSibling = previousSibling.previousSibling();
+                }
+            }
+
+            const renderedNode = (await this.editor.renderers.dom.render(node)) as Node[];
+            for (const domNode of renderedNode) {
+                VDocumentMap.set(node, domNode, offset);
+                this._setChildNodes(node, domNode, offset);
+            }
+            node = node.previous();
+        }
+    }
+
+    async _setChildNodes(node: VNode, renderedNode: Node, offset = 0): Promise<void> {
+        for (const renderedChild of renderedNode.childNodes) {
+            VDocumentMap.set(node, renderedChild, offset);
+            this._setChildNodes(node, renderedChild, offset);
+        }
     }
 }
