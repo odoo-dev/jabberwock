@@ -1,5 +1,4 @@
 import { VNode, Predicate } from './VNodes/VNode';
-import { VDocumentMap } from './VDocumentMap';
 
 export type RenderingOutput = string;
 
@@ -13,7 +12,7 @@ export type RendererConstructor<T = {}> = new (
     superRenderer: Renderer<T>,
 ) => Renderer<T>;
 
-export class RenderingEngine<T = {}, P = number> {
+export class RenderingEngine<T = {}> {
     renderers: Renderer<T>[] = [];
     renderings = new Map<VNode, [Renderer<T>, Promise<T>][]>();
 
@@ -29,10 +28,7 @@ export class RenderingEngine<T = {}, P = number> {
         const superRenderer: Renderer<T> = {
             render: this._render.bind(this),
         };
-        const renderer = new RendererClass(
-            (this as unknown) as RenderingEngine<T, number>,
-            superRenderer,
-        );
+        const renderer = new RendererClass(this, superRenderer);
         this.renderers.unshift(renderer);
     }
 
@@ -49,14 +45,6 @@ export class RenderingEngine<T = {}, P = number> {
         } else {
             return this._render(node);
         }
-    }
-
-    async mark(node: VNode, rendered: T, position: P): Promise<T> {
-        for (const domNode of (rendered as unknown) as Node[]) {
-            VDocumentMap.set(node, (domNode as unknown) as Node, (position as unknown) as number);
-            this.setChildNodes(node, domNode, position);
-        }
-        return rendered;
     }
 
     /**
@@ -87,21 +75,6 @@ export class RenderingEngine<T = {}, P = number> {
         });
         renderings.push([nextRenderer, rendererProm]);
         this.renderings.set(node, renderings);
-        const renderedNode = await rendererProm;
-        if (renderedNode && !VDocumentMap.toDom(node)) {
-            for (const domNode of (renderedNode as unknown) as Node[]) {
-                VDocumentMap.set(node, (domNode as unknown) as Node);
-                this.setChildNodes(node, domNode);
-            }
-        }
         return rendererProm;
-    }
-
-    setChildNodes(node: VNode, renderedNode: Node, position?: P): void {
-        if (!position) position = (0 as unknown) as P;
-        for (const renderedChild of renderedNode.childNodes) {
-            VDocumentMap.set(node, renderedChild, (position as unknown) as number);
-            this.setChildNodes(node, renderedChild, position);
-        }
     }
 }
