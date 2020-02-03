@@ -364,6 +364,17 @@ describe('plugin-char', () => {
                         contentAfter: 'a[<b>bc]</b>',
                     });
                 });
+                it('should not be bold but keep attributes when selected is bold with various attributes', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            'a<b style="color: red">b[cd</b><b style="color: green">ef]g</b>',
+                        stepFunction: async (editor: JWEditor) => {
+                            await applyFormat(editor, 'bold');
+                        },
+                        contentAfter:
+                            'a<b style="color: red">b[</b><span style="color: red">cd</span><span style="color: green">ef]</span><b style="color: green">g</b>',
+                    });
+                });
             });
         });
     });

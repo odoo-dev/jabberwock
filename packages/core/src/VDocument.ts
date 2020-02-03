@@ -91,6 +91,15 @@ export class VDocument {
             // the format for all of them.
             if (selectedChars.every(char => char.format[format.name])) {
                 selectedChars.forEach(char => {
+                    const formatAttributes = char.format[format.name].attributes;
+                    if (formatAttributes && formatAttributes.size) {
+                        formatAttributes.forEach((value: string, key: string) => {
+                            if (!char.attributes) {
+                                char.attributes = new Map<string, string>();
+                            }
+                            char.attributes.set(key, value);
+                        });
+                    }
                     delete char.format[format.name];
                 });
                 // If there is at least one char in the range without the format

@@ -63,7 +63,17 @@ export class Char extends JWPlugin {
                 // Update the parent so the text is inside the format node.
                 parent = formatNode;
             });
-
+            // If the node has attributes, wrap it inside a span with those attributes.
+            if (node.attributes && node.attributes.size) {
+                const span = document.createElement('span');
+                node.attributes.forEach((value: string, name: string) => {
+                    span.setAttribute(name, value);
+                });
+                renderedFormats.push(span);
+                parent.appendChild(span);
+                // Update the parent so the text is inside the format node.
+                parent = span;
+            }
             // Consecutive compatible char nodes are rendered as a single text node.
             let text = '' + node.char;
             let next = node.nextSibling();
@@ -134,9 +144,39 @@ export class Char extends JWPlugin {
      */
     static _isSameTextNode(a: VNode, b: VNode): boolean {
         if (a.is(CharNode) && b.is(CharNode)) {
-            // Char VNodes are the same text node if they have the same format.
+            // Char VNodes are the same text node if they have the same format,
+            // attributes and format attributes.
             const formats = Object.keys({ ...a.format, ...b.format });
-            return formats.every(k => !!(a.format || {})[k] === !!(b.format || {})[k]);
+            const attributes = [
+                ...(a.attributes || new Map()).keys(),
+                ...(b.attributes || new Map()).keys(),
+            ];
+            return (
+                formats.every(k => {
+                    const aFormat = (a.format || {})[k];
+                    const bFormat = (b.format || {})[k];
+                    if (aFormat) {
+                        if (!bFormat) {
+                            return false;
+                        } else {
+                            const formatAttributes = [
+                                ...(aFormat.attributes || new Map()).keys(),
+                                ...(bFormat.attributes || new Map()).keys(),
+                            ];
+                            return formatAttributes.every(
+                                k =>
+                                    (aFormat.attributes || new Map()).get(k) ===
+                                    (bFormat.attributes || new Map()).get(k),
+                            );
+                        }
+                    } else {
+                        return !bFormat;
+                    }
+                }) &&
+                attributes.every(
+                    k => (a.attributes || new Map()).get(k) === (b.attributes || new Map()).get(k),
+                )
+            );
         } else if (a.is(MarkerNode) || b.is(MarkerNode)) {
             // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not
