@@ -1,7 +1,6 @@
 import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { CharNode } from './CharNode';
 import { Char } from './Char';
-import { VDocumentMap } from '../core/src/VDocumentMap';
 import { Format } from '../utils/src/Format';
 
 export class CharDomRenderer extends AbstractRenderer<Node[]> {
@@ -9,10 +8,8 @@ export class CharDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: CharNode): Promise<Node[]> {
         const previousSibling = node.previousSibling();
-        if (previousSibling && Char._isSameTextNode(previousSibling, node)) {
-            const textNode = await this.engine.render(previousSibling);
-            const prevLocation = VDocumentMap.toDomLocation(previousSibling);
-            return this.engine.mark(node, textNode, prevLocation[1] + 1);
+        if (previousSibling && Char.isSameTextNode(previousSibling, node)) {
+            return this.engine.render(previousSibling);
         }
         // If the node has a format, render the format nodes first.
         const fragment = document.createDocumentFragment();
@@ -35,7 +32,7 @@ export class CharDomRenderer extends AbstractRenderer<Node[]> {
         let text = '' + node.char;
         let next = node.nextSibling();
         const charNodes = [node];
-        while (next && Char._isSameTextNode(node, next)) {
+        while (next && Char.isSameTextNode(node, next)) {
             if (next instanceof CharNode) {
                 charNodes.push(next);
                 if (next.char === ' ' && text[text.length - 1] === ' ') {
@@ -50,7 +47,7 @@ export class CharDomRenderer extends AbstractRenderer<Node[]> {
         // Browsers don't render leading/trailing space chars otherwise.
         text = text.replace(/^ | $/g, '\u00A0');
 
-        // Create and append the text node, update the VDocumentMap.
+        // Create and append the text node.
         const renderedNode = document.createTextNode(text);
         parent.appendChild(renderedNode);
         return Array.from(fragment.childNodes);
