@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
 

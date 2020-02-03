@@ -1,26 +1,15 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { ListNode, ListType } from './ListNode';
-import { ParagraphNode } from '../plugin-paragraph/ParagraphNode';
-import { isBlock, distinct } from '../utils/src/utils';
+import { distinct } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { RangeParams } from '../core/src/CorePlugin';
 import { ListDomRenderer } from './ListDomRenderer';
 import { ListItemDomRenderer } from './ListItemDomRenderer';
+import { ListDomParser } from './ListDomParser';
+import { ListItemDomParser } from './ListItemDomParser';
 
 export interface ListParams extends RangeParams {
     type: ListType;
-}
-
-const listTags = ['UL', 'OL'];
-const listContextTags = listTags.concat('LI');
-/**
- * Return true if the node is a text node containing only whitespace or nothing.
- *
- * @param node
- */
-function _isEmptyTextNode(node: Node): boolean {
-    return node.nodeType === Node.TEXT_NODE && /^\s*$/.test(node.textContent);
 }
 
 export class List extends JWPlugin {
@@ -44,73 +33,13 @@ export class List extends JWPlugin {
             commandArgs: { type: 'unordered' } as ListParams,
         },
     ];
-    readonly parsingFunctions = [this.parseList.bind(this), this.parseListItem.bind(this)];
+    readonly parsers = [ListDomParser, ListItemDomParser];
     readonly renderers = [ListDomRenderer, ListItemDomRenderer];
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Parse a list (UL, OL).
-     *
-     * @param context
-     */
-    parseList(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
-        if (listTags.includes(currentContext.currentNode.nodeName)) {
-            const domNode = currentContext.currentNode;
-            const parentNode = domNode.parentNode;
-            const parentName = parentNode && parentNode.nodeName;
-            const parentVNode = currentContext.parentVNode;
-            if (listContextTags.includes(parentName) && !parentVNode.is(ListNode)) {
-                // We're about to parse an indented list. In our abstraction, an
-                // indented list is a direct child of its parent list, regardless
-                // of what was already in its <li> parent. So the following example:
-                // <ul><li>abc<ul><li>def</li></ul></li></ul>
-                // when parsed in our abstraction is equivalent to:
-                // <ul><li>abc</li><li><ul><li>def</li></ul></li></ul>
-                // Both will eventually be rendered as the former.
-                // Set the parent to be the list node rather than the list item.
-                currentContext.parentVNode = parentVNode.ancestor(ListNode);
-            }
-            const listType = domNode.nodeName === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
-            const listNode = new ListNode(listType);
-            const parsingMap = new Map([[listNode, [currentContext.currentNode]]]);
-            currentContext.parentVNode.append(listNode);
-            return [currentContext, parsingMap];
-        }
-    }
-    /**
-     * Parse a list element (LI).
-     *
-     * @param context
-     */
-    parseListItem(currentContext: ParsingContext): [ParsingContext, ParsingMap] {
-        if (currentContext.currentNode.nodeName === 'LI') {
-            const context = { ...currentContext };
-            const children = Array.from(context.currentNode.childNodes);
-            const parsingMap: ParsingMap = new Map();
-            // An empty text node as first child should be skipped.
-            while (children.length && _isEmptyTextNode(children[0])) {
-                children.shift();
-            }
-            // A list item with no children should be skipped.
-            if (!children.length) {
-                return [context, parsingMap];
-            }
-            // Inline elements in a list item should be wrapped in a paragraph.
-            if (!isBlock(children[0]) || children[0].nodeName === 'BR') {
-                const paragraph = new ParagraphNode(); // todo: remove reference to plugin
-                context.parentVNode.append(paragraph);
-                context.parentVNode = paragraph;
-                parsingMap.set(paragraph, [context.currentNode]);
-            }
-            // Now we can move on to the list item's contents, to be added to
-            // the paragraph created above, or to the list itself in the case of
-            // blocks.
-            return [context, parsingMap];
-        }
-    }
     /**
      * Insert/remove a list at range.
      *

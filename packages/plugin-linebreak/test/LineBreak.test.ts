@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../../bundles/BasicEditor';
@@ -6,7 +7,10 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreak } from '../LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
-import { Parser } from '../../core/src/Parser';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { LineBreakDomParser } from '../LineBreakDomParser';
+import { ParsingEngine } from '../../core/src/ParsingEngine';
+import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('insertLineBreak');
@@ -14,14 +18,10 @@ const insertLineBreak = async (editor: JWEditor): Promise<void> =>
 describePlugin(LineBreak, testEditor => {
     describe('parse', () => {
         let editor: JWEditor;
-        let parser: Parser;
-        let domRoot: Element;
         beforeEach(async () => {
             editor = new JWEditor();
             editor.addPlugin(LineBreak);
             await editor.start();
-            parser = editor.parser;
-            domRoot = document.createElement('div');
         });
         afterEach(() => {
             editor.stop();
@@ -30,10 +30,10 @@ describePlugin(LineBreak, testEditor => {
             const p = document.createElement('p');
             const br = document.createElement('br');
             p.appendChild(br);
-            domRoot.appendChild(p);
-            const vDocument = parser.parse(domRoot);
-            expect(vDocument.root.firstChild()).not.to.be.undefined;
-            expect(vDocument.root.firstChild().children().length).to.equal(0);
+            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const result = await new LineBreakDomParser(engine).parse(br);
+            expect(result instanceof Array).to.be.true;
+            expect(result.length).to.equal(0);
         });
         it('should parse two BR node as one line break', async () => {
             const p = document.createElement('p');
@@ -41,18 +41,15 @@ describePlugin(LineBreak, testEditor => {
             const br2 = document.createElement('br');
             p.appendChild(br1);
             p.appendChild(br2);
-            domRoot.appendChild(p);
-            const vDocument = parser.parse(domRoot);
-            expect(vDocument.root.firstChild()).not.to.be.undefined;
-            expect(vDocument.root.firstChild().children().length).to.equal(1);
-            expect(vDocument.root.firstChild().firstChild() instanceof LineBreakNode).to.be.true;
+            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const lineBreak = (await new LineBreakDomParser(engine).parse(br1))[0] as LineBreakNode;
+            expect(lineBreak instanceof VNode).to.be.true;
+            expect(lineBreak.atomic).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {
+            const engine = new ParsingEngine('dom', DefaultDomParser);
             const span = document.createElement('span');
-            domRoot.appendChild(span);
-            const vDocument = parser.parse(domRoot);
-            expect(vDocument.root.firstChild()).not.to.be.undefined;
-            expect(vDocument.root.firstChild() instanceof LineBreakNode).to.be.false;
+            expect(new LineBreakDomParser(engine).predicate(span)).to.be.false;
         });
     });
     describe('LineBreakNode', () => {

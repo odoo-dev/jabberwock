@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { InsertParams } from '../../core/src/CorePlugin';
@@ -7,7 +8,15 @@ import { describePlugin } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { ListParams, List } from '../List';
-import { Parser } from '../../core/src/Parser';
+import { ListDomParser } from '../ListDomParser';
+import { ListItemDomParser } from '../ListItemDomParser';
+import { CharDomParser } from '../../plugin-char/CharDomParser';
+import { FormatDomParser } from '../../plugin-format/src/FormatDomParser';
+import { HeadingDomParser } from '../../plugin-heading/HeadingDomParser';
+import { LineBreakDomParser } from '../../plugin-linebreak/LineBreakDomParser';
+import { ParagraphDomParser } from '../../plugin-paragraph/ParagraphDomParser';
+import { ParsingEngine } from '../../core/src/ParsingEngine';
+import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('deleteForward');
@@ -36,14 +45,14 @@ const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
 
 describePlugin(List, testEditor => {
     describe('parse', () => {
-        let editor: JWEditor;
-        let parser: Parser;
-        beforeEach(async () => {
-            editor = new BasicEditor();
-            await editor.start();
-            parser = editor.parser;
-        });
-        afterEach(() => editor.stop());
+        const engine = new ParsingEngine('dom', DefaultDomParser);
+        engine.register(FormatDomParser);
+        engine.register(CharDomParser);
+        engine.register(HeadingDomParser);
+        engine.register(LineBreakDomParser);
+        engine.register(ParagraphDomParser);
+        engine.register(ListDomParser);
+        engine.register(ListItemDomParser);
         it('should parse a complex list', async () => {
             const element = document.createElement('div');
             element.innerHTML = [
@@ -73,13 +82,13 @@ describePlugin(List, testEditor => {
                 '    </ol>',
                 '</ul>',
             ].join('\n');
-            const vDocument = parser.parse(element);
+            const node = (await engine.parse(element))[0];
 
-            expect(vDocument.root.children().length).to.equal(1);
-            const list = vDocument.root.firstChild() as ListNode;
+            expect(node.children.length).to.equal(1);
+            const list = node.firstChild() as ListNode;
             expect(list.toString()).to.equal('ListNode: unordered');
             expect(list.listType).to.equal(ListType.UNORDERED);
-            expect(list.children().length).to.equal(4);
+            expect(list.children.length).to.equal(4); // li0, li1, li2, li3
 
             const li0 = list.children()[0];
             expect(li0.toString()).to.equal('ParagraphNode');

@@ -1,83 +1,85 @@
 import { Format } from '../../utils/src/Format';
 import { VNode } from './VNodes/VNode';
 
-const fromDom = new Map<Node, VNode[]>();
-const toDom = new Map<VNode, [Node, number]>();
+export class VDocumentMap {
+    _fromDom = new Map<Node, VNode[]>();
+    _toDom = new Map<VNode, [Node, number]>();
 
-export const VDocumentMap = {
     /**
      * Clear the map of all correspondances.
      */
-    clear: (): void => {
-        fromDom.clear();
-        toDom.clear();
-    },
+    clear(): void {
+        this._fromDom.clear();
+        this._toDom.clear();
+    }
     /**
      * Return the VNode(s) corresponding to the given DOM Node.
      *
      * @param Node
      */
-    fromDom: (domNode: Node): VNode[] => fromDom.get(domNode),
+    fromDom(domNode: Node): VNode[] {
+        return this._fromDom.get(domNode);
+    }
     /**
      * Return the DOM Node corresponding to the given VNode.
      *
-     * @param vNode
+     * @param node
      */
-    toDom: (vNode: VNode): Node => {
-        const nodes = toDom.get(vNode);
+    toDom(node: VNode): Node {
+        const nodes = this._toDom.get(node);
         return nodes && nodes[0];
-    },
+    }
     /**
      * Return the DOM location corresponding to the given VNode as a tuple
      * containing a reference DOM Node and the offset of the DOM Node
      * corresponding to the given VNode within the reference DOM Node.
      *
-     * @param vNode
+     * @param node
      */
-    toDomLocation: (vNode: VNode): [Node, number] => {
-        let [node, offset] = toDom.get(vNode);
-        if (node.nodeType === Node.TEXT_NODE && offset === -1) {
+    toDomLocation(node: VNode): [Node, number] {
+        let [domNode, offset] = this._toDom.get(node);
+        if (domNode.nodeType === Node.TEXT_NODE && offset === -1) {
             // This -1 is a hack to accomodate the VDocumentMap to the new
             // rendering process without altering it for the parser.
-            return [node, fromDom.get(node).indexOf(vNode)];
+            return [domNode, this._fromDom.get(domNode).indexOf(node)];
         } else {
             // Char nodes have their offset in the corresponding text nodes
             // registered in the map via `set` but other nodes don't. Their
             // location need to be computed with respect to their parents.
-            const container = node.parentNode;
-            offset = Array.prototype.indexOf.call(container.childNodes, node);
-            node = container;
+            const container = domNode.parentNode;
+            offset = Array.prototype.indexOf.call(container.childNodes, domNode);
+            domNode = container;
         }
-        return [node, offset];
-    },
+        return [domNode, offset];
+    }
     /**
      * Map the given VNode to its corresponding DOM Node and its offset in it.
      *
      * @param domNode
-     * @param vNode
+     * @param node
      * @param [offset]
      */
-    set(vNode: VNode, domNode: Node, offset = 0, method = 'push'): void {
-        if (fromDom.has(domNode)) {
-            const matches = fromDom.get(domNode);
-            if (!matches.some((match: VNode) => match.id === vNode.id)) {
-                matches[method](vNode);
+    set(node: VNode, domNode: Node, offset = 0, method = 'push'): void {
+        if (this._fromDom.has(domNode)) {
+            const matches = this._fromDom.get(domNode);
+            if (!matches.some((match: VNode) => match.id === node.id)) {
+                matches[method](node);
             }
         } else {
-            fromDom.set(domNode, [vNode]);
+            this._fromDom.set(domNode, [node]);
         }
         // Only if element is not a format and not already in the map to prevent
         // overriding a VNode if it is representing by multiple Nodes. Only the
         // first Node is mapped to the VNode.
-        if (!Format.tags.includes(domNode.nodeName) && !toDom.has(vNode)) {
-            toDom.set(vNode, [domNode, offset]);
+        if (!Format.tags.includes(domNode.nodeName) && !this._toDom.has(node)) {
+            this._toDom.set(node, [domNode, offset]);
         }
-    },
+    }
     /**
      * Log the content of the internal maps for debugging purposes.
      */
     _log(): void {
-        console.log(toDom);
-        console.log(fromDom);
-    },
-};
+        console.log(this._toDom);
+        console.log(this._fromDom);
+    }
+}

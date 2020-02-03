@@ -1,10 +1,13 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { describePlugin } from '../../utils/src/testUtils';
-import { Parser } from '../../core/src/Parser';
+import { CharDomParser } from '../CharDomParser';
+import { ParsingEngine } from '../../core/src/ParsingEngine';
+import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
@@ -25,33 +28,27 @@ const applyFormat = async (
 describePlugin(Char, testEditor => {
     describe('parse', () => {
         let editor: JWEditor;
-        let parser: Parser;
-        let domRoot: Element;
         beforeEach(async () => {
             editor = new JWEditor();
             editor.addPlugin(Char);
             await editor.start();
-            domRoot = document.createElement('div');
-            parser = editor.parser;
         });
         afterEach(() => {
             editor.stop();
         });
         it('should parse a textNode', async () => {
             const text = document.createTextNode('abc');
-            domRoot.appendChild(text);
-            const vDocument = parser.parse(domRoot);
-            expect(vDocument.root.children().length).to.equal(3);
-            expect((vDocument.root.children()[0] as CharNode).char).to.equal('a');
-            expect((vDocument.root.children()[1] as CharNode).char).to.equal('b');
-            expect((vDocument.root.children()[2] as CharNode).char).to.equal('c');
+            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const nodes = await new CharDomParser(engine).parse(text);
+            expect(nodes.length).to.equal(3);
+            expect((nodes[0] as CharNode).char).to.equal('a');
+            expect((nodes[1] as CharNode).char).to.equal('b');
+            expect((nodes[2] as CharNode).char).to.equal('c');
         });
         it('should not parse a SPAN node', async () => {
-            const span = document.createElement('span');
-            domRoot.appendChild(span);
-            const vDocument = parser.parse(domRoot);
-            expect(vDocument.root.firstChild()).not.to.be.undefined;
-            expect(vDocument.root.firstChild() instanceof CharNode).to.be.false;
+            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const nodes = await new CharDomParser(engine).parse(document.createElement('span'))[1];
+            expect(nodes).to.be.undefined;
         });
     });
     describe('CharNode', () => {
@@ -136,6 +133,36 @@ describePlugin(Char, testEditor => {
     });
     describe('VDocument', () => {
         describe('insertText', () => {
+            describe('text', () => {
+                it('should insert char in empty paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>[]</p>',
+                        stepFunction: (editor: JWEditor) => insertText(editor, 'c'),
+                        contentAfter: '<p>c[]</p>',
+                    });
+                });
+                it('should insert char after text in a paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>a[]</p>',
+                        stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
+                        contentAfter: '<p>ab[]</p>',
+                    });
+                });
+                it('should insert char before text in a paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>[]c</p>',
+                        stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
+                        contentAfter: '<p>b[]c</p>',
+                    });
+                });
+                it('should insert char in text in a paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>a[]c</p>',
+                        stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
+                        contentAfter: '<p>ab[]c</p>',
+                    });
+                });
+            });
             describe('bold', () => {
                 describe('Selection collapsed', () => {
                     it('should insert char not bold when selection in between two paragraphs', async () => {
@@ -173,7 +200,7 @@ describePlugin(Char, testEditor => {
                             contentAfter: 'ac[]b',
                         });
                     });
-                    it('should insert char bold when previous char is bold and the next is not bold', async () => {
+                    it('should insert char bold when previous char is bold and the next is not bold (selection after bold)', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<b>a</b>[]b',
                             stepFunction: (editor: JWEditor) => insertText(editor, 'c'),

@@ -1,10 +1,8 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
-import { removeFormattingSpace } from '../utils/src/formattingSpace';
-import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
 import { CharDomRenderer } from './CharDomRenderer';
+import { CharDomParser } from './CharDomParser';
 
 export interface InsertTextParams extends RangeParams {
     text: string;
@@ -14,7 +12,7 @@ export interface FormatParams extends RangeParams {
 }
 
 export class Char extends JWPlugin {
-    readonly parsingFunctions = [this.parse.bind(this)];
+    readonly parsers = [CharDomParser];
     readonly renderers = [CharDomRenderer];
     commands = {
         insertText: {
@@ -46,30 +44,6 @@ export class Char extends JWPlugin {
     // Public
     //--------------------------------------------------------------------------
 
-    parse(context: ParsingContext): [ParsingContext, ParsingMap] {
-        if (context.currentNode.nodeType === Node.TEXT_NODE) {
-            const vNodes: CharNode[] = [];
-            const text = removeFormattingSpace(context.currentNode);
-            const format = context.format;
-            for (let i = 0; i < text.length; i++) {
-                const parsedVNode = new CharNode(text.charAt(i), { ...format });
-                vNodes.push(parsedVNode);
-            }
-            const parsingMap = new Map(
-                vNodes.map(vNode => {
-                    const domNodes = [context.currentNode];
-                    let parent = context.currentNode.parentNode;
-                    while (parent && Format.tags.includes(parent.nodeName)) {
-                        domNodes.unshift(parent);
-                        parent = parent.parentNode;
-                    }
-                    return [vNode, domNodes];
-                }),
-            );
-            vNodes.forEach(node => context.parentVNode.append(node));
-            return [context, parsingMap];
-        }
-    }
     /**
      * Insert text at the current position of the selection.
      *
