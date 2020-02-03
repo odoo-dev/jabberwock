@@ -167,7 +167,7 @@ export class Char extends JWPlugin {
      * @param a
      * @param b
      */
-    static _isSameTextNode(a: VNode, b: VNode): boolean {
+    static isSameTextNode(a: VNode, b: VNode): boolean {
         if (a.is(CharNode) && b.is(CharNode)) {
             // Char VNodes are the same text node if they have the same format.
             const formats = Object.keys({ ...a.format, ...b.format });

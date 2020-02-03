@@ -9,6 +9,8 @@ import { Parser } from './Parser';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine } from './RenderingEngine';
 import { VDocumentMap } from './VDocumentMap';
+import { CharNode } from '../../plugin-char/CharNode';
+import { Char } from '../../plugin-char/Char';
 
 export enum Platform {
     MAC = 'mac',
@@ -118,7 +120,7 @@ export class JWEditor {
         if (!Object.keys(this.renderers).length) {
             this.addPlugin(Dom);
         }
-        await this.renderInEditable();
+        await this._renderInEditable();
     }
 
     async render<T = void>(output: string, node: VNode): Promise<T> {
@@ -128,18 +130,6 @@ export class JWEditor {
         }
         engine.renderings.clear();
         return engine.render(node) as Promise<T>;
-    }
-
-    async renderInEditable(): Promise<void> {
-        this.editable.innerHTML = '';
-        VDocumentMap.clear();
-        VDocumentMap.set(this.vDocument.root, this.editable);
-        const renderedDocument = await this.render<Node[]>('dom', this.vDocument.root);
-        for (const renderedChild of renderedDocument) {
-            this.editable.appendChild(renderedChild);
-        }
-        const dom: Dom = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
-        dom.renderSelection(this.vDocument.selection, this.editable);
     }
 
     //--------------------------------------------------------------------------
@@ -232,7 +222,7 @@ export class JWEditor {
      */
     async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
         await this.dispatcher.dispatch(id, args);
-        await this.renderInEditable();
+        await this._renderInEditable();
     }
 
     /**
@@ -289,6 +279,47 @@ export class JWEditor {
             event.stopPropagation();
             event.stopImmediatePropagation();
             this.execCommand(command.commandId, command.commandArgs);
+        }
+    }
+
+    async _renderInEditable(): Promise<void> {
+        this.editable.innerHTML = '';
+        VDocumentMap.clear();
+        VDocumentMap.set(this.vDocument.root, this.editable);
+        const renderedDocument = await this.render<Node[]>('dom', this.vDocument.root);
+        await this._generateDomMap();
+        for (const renderedChild of renderedDocument) {
+            this.editable.appendChild(renderedChild);
+        }
+        const dom: Dom = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
+        dom.renderSelection(this.vDocument.selection, this.editable);
+    }
+
+    async _generateDomMap(): Promise<void> {
+        let node = this.vDocument.root.lastLeaf();
+        while (node) {
+            let offset = 0;
+            if (node.is(CharNode)) {
+                let previousSibling = node.previousSibling();
+                while (previousSibling && Char.isSameTextNode(previousSibling, node)) {
+                    offset++;
+                    previousSibling = previousSibling.previousSibling();
+                }
+            }
+
+            const renderedNode = (await this.renderers.dom.render(node)) as Node[];
+            for (const domNode of renderedNode) {
+                VDocumentMap.set(node, domNode, offset);
+                this._setChildNodes(node, domNode, offset);
+            }
+            node = node.previous();
+        }
+    }
+
+    async _setChildNodes(node: VNode, renderedNode: Node, offset = 0): Promise<void> {
+        for (const renderedChild of renderedNode.childNodes) {
+            VDocumentMap.set(node, renderedChild, offset);
+            this._setChildNodes(node, renderedChild, offset);
         }
     }
 }
