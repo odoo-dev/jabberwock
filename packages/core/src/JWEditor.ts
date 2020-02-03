@@ -4,11 +4,13 @@ import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
-import { Parser } from './Parser';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
 
 export type ExecCommandHook = (command: string, args: CommandArgs) => void;
+import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
+import { Dom } from '../../plugin-dom/Dom';
+import { FragmentNode } from './VNodes/FragmentNode';
 
 export enum Platform {
     MAC = 'mac',
@@ -37,7 +39,6 @@ export class JWEditor {
     plugins: JWPlugin[];
     vDocument: VDocument;
     autoFocus = false;
-    parser = new Parser();
     keymaps = {
         default: new Keymap(),
         user: new Keymap(),
@@ -45,6 +46,7 @@ export class JWEditor {
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     execCommandHooks: ExecCommandHook[] = [];
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
+    parsers: Record<ParsingIdentifier, ParsingEngine> = {};
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -71,8 +73,21 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
-        // Parse the editable in the internal format of the editor.
-        this.vDocument = this.parser.parse(this._originalEditable);
+        const root = new FragmentNode();
+        if (this._originalEditable.innerHTML !== '') {
+            if (!this.parsers.dom) {
+                // TODO: remove this when the editor can be instantiated on
+                // something else than DOM.
+                throw new Error(`No DOM parser installed.`);
+            }
+            const parsedEditable = await this.parsers.dom.parse(this._originalEditable);
+            for (const parsedNode of parsedEditable) {
+                for (const child of parsedNode.children.slice()) {
+                    root.append(child);
+                }
+            }
+        }
+        this.vDocument = new VDocument(root);
 
         if (
             this.autoFocus &&
@@ -110,7 +125,8 @@ export class JWEditor {
         }
 
         // Init the event manager now that the cloned editable is in the DOM.
-        this.eventManager = new EventManager(this);
+        const domPlugin = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
+        this.eventManager = new EventManager(this, domPlugin);
     }
 
     async render<T>(renderingId: string, node: VNode): Promise<T | void> {
@@ -170,17 +186,16 @@ export class JWEditor {
                     this._loadShortcut(shortcut, this.keymaps.default);
                 }
             }
+
             // Register the parsing functions of this plugin.
-            if (plugin.parsingFunctions.length) {
-                this.parser.addParsingFunction(...plugin.parsingFunctions);
-            }
+            this._addPluginParser(plugin);
 
             // Load rendering engines.
             if (plugin.renderingEngines) {
                 for (const engine of plugin.renderingEngines) {
                     const id = engine.id;
                     if (this.renderers[id]) {
-                        throw `Rendering engine ${id} already registered.`;
+                        throw new Error(`Rendering engine ${id} already registered.`);
                     }
                     this.renderers[id] = engine;
                     // Register renderers from previously loaded plugins as that
@@ -208,6 +223,7 @@ export class JWEditor {
             }
         }
     }
+
     /**
      * Load the given config in this editor instance.
      *
@@ -265,6 +281,39 @@ export class JWEditor {
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
+
+    _addPluginParser(plugin: JWPlugin): void {
+        // Load parsing engines.
+        if (plugin.parsingEngines) {
+            for (const engine of plugin.parsingEngines) {
+                const id = engine.id;
+                if (this.parsers[id]) {
+                    throw new Error(`Rendering engine ${id} already registered.`);
+                }
+                this.parsers[id] = engine;
+                // Register parsing from previously loaded plugins as that
+                // could not be done earlier without the parsing engine.
+                for (const plugin of this.plugins) {
+                    if (plugin.parsers) {
+                        for (const ParserClass of plugin.parsers) {
+                            if (ParserClass.id === id) {
+                                engine.register(ParserClass);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Load parsers.
+        if (plugin.parsers) {
+            for (const ParserClass of plugin.parsers) {
+                const renderingEngine = this.parsers[ParserClass.id];
+                if (renderingEngine) {
+                    renderingEngine.register(ParserClass);
+                }
+            }
+        }
+    }
 
     /**
      * Load a shortcut in the keymap depending on the platform.

@@ -6,6 +6,7 @@ import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
+import { Dom } from '../../plugin-dom/Dom';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -73,7 +74,7 @@ export async function testEditor(
         spec = Editor;
         Editor = JWEditor;
     }
-    const container = document.createElement('p');
+    const container = document.createElement('jw-container-test');
     const editor = initSpec(Editor, spec, container);
     await testSpec(editor, spec);
     container.remove();
@@ -103,6 +104,7 @@ async function testPlugin(
     const container = document.createElement('p');
     const editor = initSpec(Editor, spec, container);
     editor.addPlugin(Plugin);
+    editor.addPlugin(Dom);
     await testSpec(editor, spec);
     container.remove();
 }
@@ -142,7 +144,7 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     }
 
     // Render the selection in the test container and test the result.
-    _renderTextualSelection();
+    renderTextualSelection();
     if (spec.contentAfter) {
         expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
     }
@@ -276,7 +278,7 @@ function _nextNode(node: Node): Node {
  *
  * This is used in the function `testEditor`.
  */
-function _renderTextualSelection(): void {
+export function renderTextualSelection(): void {
     const selection = document.getSelection();
     if (selection.rangeCount === 0) return;
 

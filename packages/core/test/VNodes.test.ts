@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/CharNode';
@@ -10,7 +11,8 @@ import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { ParsingContext, ParsingMap } from '../src/Parser';
+import { Dom } from '../../plugin-dom/Dom';
+import { AbstractParser } from '../src/AbstractParser';
 
 describe('core', () => {
     describe('src', () => {
@@ -1109,28 +1111,30 @@ describe('core', () => {
             });
             describe('Custom VNode', () => {
                 it('should create and parse a custom node', async () => {
-                    const editor = new JWEditor();
-                    class MyCustomNode extends VNode {
-                        customKey = 'yes';
-                    }
-                    class MyCustomPlugin extends JWPlugin {
-                        readonly parsingFunctions = [this.parse.bind(this)];
-                        parse(context: ParsingContext): [ParsingContext, ParsingMap] {
-                            if (context.currentNode.nodeName === 'CUSTOM-NODE') {
-                                const parsedNode = new MyCustomNode();
-                                const parsingMap = new Map([[parsedNode, [context.currentNode]]]);
-                                context.parentVNode.append(parsedNode);
-                                return [context, parsingMap];
-                            }
-                        }
-                    }
-                    editor.addPlugin(MyCustomPlugin);
-                    await editor.start();
                     const root = document.createElement('ROOT-NODE');
                     const element = document.createElement('CUSTOM-NODE');
                     root.appendChild(element);
-                    const vDocument = editor.parser.parse(root);
-                    const customVNode = vDocument.root.firstChild();
+                    const editor = new JWEditor(root);
+                    class MyCustomNode extends VNode {
+                        customKey = 'yes';
+                    }
+                    class MyCustomParser extends AbstractParser<Node> {
+                        static id = 'dom';
+                        predicate = (node: Node): boolean => {
+                            return node.nodeName === 'CUSTOM-NODE';
+                        };
+                        async parse(): Promise<MyCustomNode[]> {
+                            return [new MyCustomNode()];
+                        }
+                    }
+
+                    class MyCustomPlugin extends JWPlugin {
+                        readonly parsers = [MyCustomParser];
+                    }
+                    editor.addPlugin(Dom);
+                    editor.addPlugin(MyCustomPlugin);
+                    await editor.start();
+                    const customVNode = editor.vDocument.root.firstChild();
                     expect(customVNode.constructor.name).to.equal('MyCustomNode');
                     expect(customVNode instanceof MyCustomNode).to.be.true;
                     expect((customVNode as MyCustomNode).customKey).to.equal('yes');
