@@ -8,9 +8,8 @@ import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine } from './RenderingEngine';
-import { VDocumentMap } from './VDocumentMap';
-import { CharNode } from '../../plugin-char/CharNode';
-import { Char } from '../../plugin-char/Char';
+
+export type ExecCommandHook = (command: string, args: CommandArgs) => void;
 
 export enum Platform {
     MAC = 'mac',
@@ -45,6 +44,7 @@ export class JWEditor {
         user: new Keymap(),
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
+    execCommandHooks: ExecCommandHook[] = [];
     renderers: Record<string, RenderingEngine> = {
         dom: new RenderingEngine<Node[]>(),
     };
@@ -215,6 +215,15 @@ export class JWEditor {
     }
 
     /**
+     * Register a callback that will be executed for each `execCommand` call.
+     *
+     * @param hook The function that will be executed.
+     */
+    registerExecCommandHook(hook: ExecCommandHook): void {
+        this.execCommandHooks.push(hook);
+    }
+
+    /**
      * Execute the given command.
      *
      * @param id name identifier of the command to execute
@@ -222,7 +231,10 @@ export class JWEditor {
      */
     async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
         await this.dispatcher.dispatch(id, args);
-        await this._renderInEditable();
+
+        for (const hookCallback of this.execCommandHooks) {
+            await hookCallback(id, args);
+        }
     }
 
     /**
