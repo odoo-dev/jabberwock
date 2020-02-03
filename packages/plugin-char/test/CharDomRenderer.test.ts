@@ -3,6 +3,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
+import { Dom } from '../../plugin-dom/Dom';
 
 describe('CharDomRenderer', () => {
     describe('render', () => {
@@ -10,6 +11,7 @@ describe('CharDomRenderer', () => {
         let root: FragmentNode;
         beforeEach(async () => {
             editor = new JWEditor(document.createElement('p'));
+            editor.addPlugin(Dom);
             editor.addPlugin(Char);
             await editor.start();
             root = editor.vDocument.root;

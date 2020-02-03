@@ -29,7 +29,12 @@ export class RenderingEngine<T = {}> {
             render: this._render.bind(this),
         };
         const renderer = new RendererClass(this, superRenderer);
-        this.renderers.unshift(renderer);
+        if (renderer.predicate) {
+            this.renderers.unshift(renderer);
+        } else {
+            // Default renderer is last in line.
+            this.renderers.push(renderer);
+        }
     }
 
     /**
