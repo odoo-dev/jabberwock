@@ -10,6 +10,7 @@ import { VElement } from './VNodes/VElement';
 import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { ContextManager } from './ContextManager';
 
 export type CommandHook = (args: CommandArgs, commandId: string) => void;
 
@@ -38,6 +39,7 @@ export class JWEditor {
     editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
+    contextManager: ContextManager;
     plugins: JWPlugin[];
     vDocument: VDocument;
     autoFocus = false;
@@ -58,6 +60,8 @@ export class JWEditor {
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
         this.plugins = [];
+
+        this.contextManager = new ContextManager(this);
 
         if (!editable) {
             editable = document.createElement('jw-editable');
