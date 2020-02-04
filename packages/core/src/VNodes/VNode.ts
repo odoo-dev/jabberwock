@@ -1,5 +1,5 @@
 import { withMarkers, ignoreMarkers } from '../../../utils/src/markers';
-import { nodeLength } from '../../../utils/src/utils';
+import { Constructor, nodeLength } from '../../../utils/src/utils';
 
 export enum RelativePosition {
     BEFORE = 'BEFORE',
@@ -13,7 +13,6 @@ export enum VNodeType {
     FRAGMENT = 'fragmentNode',
 }
 
-export type Constructor<T> = new (...args) => T;
 export type Predicate<T = boolean> = T extends VNode ? Constructor<T> : (node: VNode) => boolean;
 
 export type Point = [VNode, RelativePosition];

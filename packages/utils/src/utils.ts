@@ -1,3 +1,5 @@
+export type Constructor<T> = new (...args) => T;
+
 /**
  * Return true if the given node is a block-level element, false otherwise.
  *
