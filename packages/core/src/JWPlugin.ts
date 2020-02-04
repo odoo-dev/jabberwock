@@ -17,7 +17,6 @@ export class JWPlugin {
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
-    commandHooks: Record<CommandIdentifier, CommandHandler> = {};
     shortcuts: Shortcut[];
 
     constructor(editor: JWEditor, options: JWPluginConfig = {}) {

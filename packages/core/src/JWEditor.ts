@@ -179,10 +179,6 @@ export class JWEditor {
             Object.keys(plugin.commands).forEach(key => {
                 this.dispatcher.registerCommand(key, plugin.commands[key]);
             });
-            // Register the hooks of this plugin.
-            Object.keys(plugin.commandHooks).forEach(key => {
-                this.dispatcher.registerHook(key, plugin.commandHooks[key]);
-            });
             // register the shortcuts for this plugin.
             if (plugin.shortcuts) {
                 for (const shortcut of plugin.shortcuts) {

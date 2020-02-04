@@ -1,18 +1,12 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import {
-    CommandIdentifier,
-    CommandHandler,
-    CommandArgs,
-    CommandDefinition,
-} from '../../../core/src/Dispatcher';
+import { CommandIdentifier, CommandArgs, CommandDefinition } from '../../../core/src/Dispatcher';
 
 interface CommandsState {
     currentTab: string;
-    registry: Record<CommandIdentifier, CommandDefinition>;
-    handlers: Record<CommandIdentifier, CommandHandler[]>;
+    registry: Record<CommandIdentifier, CommandDefinition[]>;
     selectedCommandIndex: number;
     selectedCommandIdentifier: string;
-    selectedHandlerIndex: number;
+    selectedCommandDefinitionIndex: number;
 }
 interface CommandsProps {
     // Stack of all commands executed since init.
@@ -23,10 +17,9 @@ export class CommandsComponent extends OwlUIComponent<CommandsProps> {
     state: CommandsState = {
         currentTab: 'queue',
         registry: this.env.editor.dispatcher.commands,
-        handlers: this.env.editor.dispatcher.handlers,
         selectedCommandIndex: null, // Index of the selected command in the stack
-        selectedCommandIdentifier: null, // Token of the selected handler
-        selectedHandlerIndex: null, // Index of the selected handler
+        selectedCommandIdentifier: null, // Identifier of the selected command
+        selectedCommandDefinitionIndex: null, // Index of the selected command definition
     };
     localStorage = ['currentTab'];
 
