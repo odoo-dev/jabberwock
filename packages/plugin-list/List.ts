@@ -2,7 +2,7 @@ import { JWPlugin } from '../core/src/JWPlugin';
 import { ParsingContext, ParsingMap } from '../core/src/Parser';
 import { ListNode, ListType } from './ListNode';
 import { ParagraphNode } from '../plugin-paragraph/ParagraphNode';
-import { utils } from '../utils/src/utils';
+import { isBlock, distinct } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { withMarkers } from '../utils/src/markers';
 import { RangeParams } from '../core/src/CorePlugin';
@@ -102,7 +102,7 @@ export class List extends JWPlugin {
                 return [context, parsingMap];
             }
             // Inline elements in a list item should be wrapped in a paragraph.
-            if (!utils.isBlock(children[0]) || children[0].nodeName === 'BR') {
+            if (!isBlock(children[0]) || children[0].nodeName === 'BR') {
                 const paragraph = new ParagraphNode(); // todo: remove reference to plugin
                 context.parentVNode.append(paragraph);
                 context.parentVNode = paragraph;
@@ -264,7 +264,7 @@ export class List extends JWPlugin {
      */
     _unlist(nodes: Array<VNode>): void {
         // Get the direct children of each list to unlist.
-        const listItems = utils.distinct(
+        const listItems = distinct(
             nodes.map(node => {
                 if (node.parent.is(ListNode)) {
                     return node;
