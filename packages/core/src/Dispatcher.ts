@@ -16,8 +16,7 @@ export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
     el: Element;
-    commands: Record<CommandIdentifier, CommandDefinition> = {};
-    handlers: Record<CommandIdentifier, CommandHandler[]> = {};
+    commands: Record<CommandIdentifier, CommandDefinition[]> = {};
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -35,10 +34,10 @@ export class Dispatcher {
      * @param args The arguments of the command.
      */
     async dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): Promise<void> {
-        const handlers = this.handlers[commandId];
-        if (handlers) {
-            for (const handlerCallback of handlers) {
-                await handlerCallback(args);
+        const commands = this.commands[commandId];
+        if (commands) {
+            for (const command of commands) {
+                await command.handler(args);
             }
         }
     }
@@ -49,25 +48,10 @@ export class Dispatcher {
      *
      */
     registerCommand(id: CommandIdentifier, def: CommandDefinition): void {
-        if (this.commands[id]) {
-            throw new Error(`Command ${id} already exists. Hook it instead.`);
-        }
-        this.commands[id] = def;
-        // Commands always have at least one handler for their identifier which
-        // is their own internal implementation. Additional handlers registered
-        // by calling `registerHook` will be pushed after it, thus constructing
-        // a queue of callbacks to call in order to execute a given command.
-        this.handlers[id] = [def.handler];
-    }
-
-    /**
-     * Register `CommandHook` for a `Command`.
-     */
-    registerHook(id: CommandIdentifier, handler: CommandHandler): void {
         if (!this.commands[id]) {
-            throw new Error(`Failed to hook command ${id}. Command not found.`);
+            this.commands[id] = [def];
         } else {
-            this.handlers[id].push(handler);
+            this.commands[id].push(def);
         }
     }
 }

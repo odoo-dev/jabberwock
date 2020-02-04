@@ -218,7 +218,7 @@
         t-att-class="{active: props.isOpen}" tabindex="1"
         t-on-keydown="onKeydown">
         <devtools-contents t-if="props.isOpen">
-            <t t-set="handlers" t-value="state.handlers[state.selectedCommandIdentifier]"/>
+            <t t-set="selectedCommandDefinitions" t-value="state.registry[state.selectedCommandIdentifier]"/>
             <devtools-mainpane style="overflow: hidden">
                 <devtools-navbar>
                     <button t-on-click="openTab('queue')" t-att-class="{
@@ -266,7 +266,7 @@
                                 <t t-set="payload" t-value="selectedCommand[1]"/>
                                 <t t-call="commandArgs"/>
                             </t>
-                            <t t-call="commandHandlers"/>
+                            <t t-call="selectedCommandTable"/>
                         </div>
                     </div>
                 </devtools-info>
@@ -276,7 +276,7 @@
                             <span class="type">Command</span> <t t-esc="state.selectedCommandIdentifier"/>
                         </div>
                         <div class="properties" t-if="state.selectedCommandIdentifier">
-                            <t t-call="commandHandlers"/>
+                            <t t-call="selectedCommandTable"/>
                         </div>
                     </t>
                 </devtools-info>
@@ -332,18 +332,18 @@
         </table>
     </t>
 
-    <t t-name="commandHandlers">
-        <div class="divider" t-if="handlers">Handlers</div>
-        <table t-if="handlers">
+    <t t-name="selectedCommandTable">
+        <div class="divider">Command definitions</div>
+        <table>
             <tbody>
-                <tr t-foreach="handlers"
-                    t-as="handler" t-key="handler_index"
+                <tr t-foreach="selectedCommandDefinitions"
+                    t-as="selectedCommandDefinition" t-key="selectedCommandDefinition_index"
                     class="selectable-line"
                     t-att-class="{
-                        selected: state.selectedHandlerIndex == handlerIndex,
+                        selected: state.selectedCommandDefinitionIndex == handlerIndex,
                     }">
-                    <td><t t-esc="handler.name"/></td>
-                    <td><t t-esc="handler"/></td>
+                    <td><t t-esc="selectedCommandDefinition.handler.name"/></td>
+                    <td><t t-esc="selectedCommandDefinition.handler"/></td>
                 </tr>
             </tbody>
         </table>
