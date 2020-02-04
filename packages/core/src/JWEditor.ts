@@ -6,7 +6,7 @@ import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { VNode } from './VNodes/VNode';
-import { RenderingEngine } from './RenderingEngine';
+import { RenderingEngine, RenderingEngineIdentifier } from './RenderingEngine';
 
 export type ExecCommandHook = (command: string, args: CommandArgs) => void;
 
@@ -44,9 +44,7 @@ export class JWEditor {
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     execCommandHooks: ExecCommandHook[] = [];
-    renderers: Record<string, RenderingEngine> = {
-        dom: new RenderingEngine<Node[]>(),
-    };
+    renderers: Record<RenderingEngineIdentifier, RenderingEngine> = {};
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -115,10 +113,10 @@ export class JWEditor {
         this.eventManager = new EventManager(this);
     }
 
-    async render<T = void>(output: string, node: VNode): Promise<T> {
-        const engine = this.renderers[output];
+    async render<T = void>(renderingEngineId: string, node: VNode): Promise<T> {
+        const engine = this.renderers[renderingEngineId];
         if (!engine) {
-            throw `No renderer installed for output type ${output}.`;
+            throw `Rendering engine ${renderingEngineId} not found.`;
         }
         engine.renderings.clear();
         return engine.render(node) as Promise<T>;
@@ -175,13 +173,36 @@ export class JWEditor {
             if (plugin.parsingFunctions.length) {
                 this.parser.addParsingFunction(...plugin.parsingFunctions);
             }
-            // Register the renderers of this plugin if it has any.
-            // If two renderers exist with the same id, the last one to be added
-            // will replace the previous one.
+
+            // Load rendering engines.
+            if (plugin.renderingEngines) {
+                for (const engine of plugin.renderingEngines) {
+                    const engineId = engine.id;
+                    if (this.renderers[engineId]) {
+                        throw `Rendering engine ${engineId} already registered.`;
+                    }
+                    this.renderers[engineId] = engine;
+                    // Register renderers from previously loaded plugins as that
+                    // could not be done earlier without the rendering engine.
+                    for (const plugin of this.plugins) {
+                        if (plugin.renderers && engineId in plugin.renderers) {
+                            const matchingRenderers = plugin.renderers[engineId];
+                            for (const RendererClass of matchingRenderers) {
+                                engine.register(RendererClass);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Load renderers.
             if (plugin.renderers) {
                 for (const outputType of Object.keys(plugin.renderers)) {
-                    for (const RendererClass of plugin.renderers[outputType]) {
-                        this.renderers[outputType].register(RendererClass);
+                    const renderingEngine = this.renderers[outputType];
+                    if (renderingEngine) {
+                        for (const RendererClass of plugin.renderers[outputType]) {
+                            this.renderers[outputType].register(RendererClass);
+                        }
                     }
                 }
             }
