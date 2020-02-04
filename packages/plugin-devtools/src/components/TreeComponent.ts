@@ -1,4 +1,4 @@
-import { utils } from '../../../../packages/utils/src/utils';
+import { toUnicode } from '../../../utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
@@ -136,7 +136,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             return FOCUS_CHAR;
         }
         if (node.name) {
-            return utils.toUnicode(node.name);
+            return toUnicode(node.name);
         }
         return '?';
     }

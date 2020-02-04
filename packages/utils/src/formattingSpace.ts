@@ -1,4 +1,4 @@
-import { utils } from './utils';
+import { isBlock } from './utils';
 
 /**
  * Return a string with the value of a text node stripped of its formatting
@@ -100,7 +100,7 @@ function _isSegment(node: Node): boolean {
     } else {
         // The W3 specification has many specific cases that defines what is
         // or is not a segment. For the moment, we only handle display: block.
-        return utils.isBlock(node);
+        return isBlock(node);
     }
 }
 /**

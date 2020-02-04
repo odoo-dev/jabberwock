@@ -1,5 +1,5 @@
 import { withMarkers, ignoreMarkers } from '../../../utils/src/markers';
-import { utils } from '../../../utils/src/utils';
+import { nodeLength } from '../../../utils/src/utils';
 
 export enum RelativePosition {
     BEFORE = 'BEFORE',
@@ -13,7 +13,7 @@ export enum VNodeType {
     FRAGMENT = 'fragmentNode',
 }
 
-export type Constructor<T extends VNode> = new (...args) => T;
+export type Constructor<T> = new (...args) => T;
 export type Predicate<T = boolean> = T extends VNode ? Constructor<T> : (node: VNode) => boolean;
 
 export type Point = [VNode, RelativePosition];
@@ -73,7 +73,7 @@ export class VNode {
         // Position `BEFORE` is preferred over `AFTER`, unless the offset
         // overflows the children list, in which case `AFTER` is needed.
         let position = RelativePosition.BEFORE;
-        const domNodeLength = utils.nodeLength(domNode);
+        const domNodeLength = nodeLength(domNode);
         if (domNodeLength && offset >= domNodeLength) {
             position = RelativePosition.AFTER;
         }

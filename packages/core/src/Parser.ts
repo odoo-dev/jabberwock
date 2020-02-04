@@ -4,7 +4,7 @@ import { VDocumentMap } from './VDocumentMap';
 import { Direction, VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { DomSelectionDescription } from './EventNormalizer';
-import { utils } from '../../utils/src/utils';
+import { nodeLength } from '../../utils/src/utils';
 import { VElement } from './VNodes/VElement';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { FormatType } from '../../plugin-char/CharNode';
@@ -232,14 +232,14 @@ export class Parser {
         // equal to the length of the container. In order to retrieve the last
         // descendent, we need to make sure we target an existing node, ie. an
         // existing index.
-        const isAfterEnd = offset >= utils.nodeLength(container);
-        let index = isAfterEnd ? utils.nodeLength(container) - 1 : offset;
+        const isAfterEnd = offset >= nodeLength(container);
+        let index = isAfterEnd ? nodeLength(container) - 1 : offset;
         // Move to deepest child of container.
         while (container.hasChildNodes()) {
             container = container.childNodes[index];
-            index = isAfterEnd ? utils.nodeLength(container) - 1 : 0;
+            index = isAfterEnd ? nodeLength(container) - 1 : 0;
             // Adapt the offset to be its equivalent within the new container.
-            offset = isAfterEnd ? utils.nodeLength(container) : index;
+            offset = isAfterEnd ? nodeLength(container) : index;
         }
         // Get the VNodes matching the container.
         const vNodes = VDocumentMap.fromDom(container);
