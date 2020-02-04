@@ -1,7 +1,8 @@
 import { VNode, RelativePosition, Point } from './VNodes/VNode';
-import { Predicate, Constructor } from './VNodes/VNode';
+import { Predicate } from './VNodes/VNode';
 import { withMarkers } from '../../utils/src/markers';
 import { MarkerNode } from './VNodes/MarkerNode';
+import { Constructor } from '../../utils/src/utils';
 
 export class VRange {
     readonly start = new MarkerNode();

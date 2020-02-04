@@ -1,14 +1,10 @@
 import { VNode, Predicate } from './VNodes/VNode';
+import { Constructor } from '../../utils/src/utils';
 
 export interface Renderer<T = {}> {
     predicate?: Predicate<boolean | VNode>;
     render: (node: VNode) => Promise<T>;
 }
-
-export type RendererConstructor<T = {}> = new (
-    engine: RenderingEngine<T>,
-    superRenderer: Renderer<T>,
-) => Renderer<T>;
 
 export type RenderingEngineIdentifier = string;
 
@@ -29,7 +25,7 @@ export class RenderingEngine<T = {}> {
      *
      * @param RendererClass
      */
-    register(RendererClass: RendererConstructor<T>): void {
+    register(RendererClass: Constructor<Renderer<T>>): void {
         const superRenderer: Renderer<T> = {
             render: this._render.bind(this),
         };
