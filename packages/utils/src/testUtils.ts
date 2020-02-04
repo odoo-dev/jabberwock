@@ -5,6 +5,7 @@ import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
+import { SuiteFunction, Suite } from 'mocha';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -38,10 +39,24 @@ export type EditorTestSuite = (
  * @param Plugin
  * @param callback
  */
-export function describePlugin(Plugin: typeof JWPlugin, callback: EditorTestSuite): void {
-    const testEditor = testPlugin.bind(this, Plugin);
-    describe('Plugin: ' + Plugin.name, callback.bind(this, testEditor));
-}
+export const describePlugin = ((): {
+    (Plugin: typeof JWPlugin, callback: EditorTestSuite): Suite;
+    only: (Plugin: typeof JWPlugin, callback: EditorTestSuite) => Suite;
+    skip: (Plugin: typeof JWPlugin, callback: EditorTestSuite) => Suite | void;
+} => {
+    function describePlugin(
+        suite: SuiteFunction,
+        Plugin: typeof JWPlugin,
+        callback: EditorTestSuite,
+    ): Suite {
+        const testEditor = testPlugin.bind(this, Plugin);
+        return suite('Plugin: ' + Plugin.name, callback.bind(this, testEditor));
+    }
+    return Object.assign(describePlugin.bind(this, describe), {
+        only: describePlugin.bind(this, describe.only),
+        skip: describePlugin.bind(this, describe.skip),
+    });
+})();
 
 /**
  * Automatically spawn a new editor to test the given spec.
