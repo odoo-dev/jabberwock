@@ -1,6 +1,11 @@
 import { OwlUIEnv } from './OwlUI';
 import { OwlUIComponent } from './OwlUIComponent';
 
+// This is a non-exported interface from Owl.
+export interface MountOptions {
+    position?: 'first-child' | 'last-child' | 'self';
+}
+
 export class JWOwlUIPlugin {
     env: OwlUIEnv;
     static templates: string;
@@ -16,7 +21,7 @@ export class JWOwlUIPlugin {
      * Return a promise that resolves to the mounted components.
      *
      */
-    async start(): Promise<void> {
+    async start(options?: MountOptions): Promise<void> {
         // Instantiate components.
         this.components = this.Components.map(ComponentClass => {
             ComponentClass.env = this.env;
@@ -26,7 +31,7 @@ export class JWOwlUIPlugin {
         // Mount components.
         const target: HTMLElement = this.env.editor.el;
         for (const component of this.components) {
-            await component.mount(target);
+            await component.mount(target, options);
         }
     }
 

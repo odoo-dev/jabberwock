@@ -7,6 +7,7 @@ import { ListDomRenderer } from './ListDomRenderer';
 import { ListItemDomRenderer } from './ListItemDomRenderer';
 import { ListDomParser } from './ListDomParser';
 import { ListItemDomParser } from './ListItemDomParser';
+import { VRange } from '../core/src/VRange';
 
 export interface ListParams extends RangeParams {
     type: ListType;
@@ -48,7 +49,33 @@ export class List extends JWPlugin {
     toggleList(params: ListParams): void {
         const type = params.type;
         const range = params.range || this.editor.vDocument.selection.range;
+        const selectedNodes = List.getNodesToToggle(range);
 
+        // Dispatch.
+        if (List.areInListType(selectedNodes, type)) {
+            // If all selected nodes are within a list of the same type,
+            // "unlist" them.
+            this._unlist(selectedNodes);
+        } else {
+            this._convertToList(selectedNodes, type);
+        }
+    }
+    /**
+     * Check if all given nodes are within a list of the given type.
+     */
+    static areInListType(nodes: VNode[], type: ListType): boolean {
+        return nodes.every(node => {
+            const listAncestor = node.ancestor(ListNode);
+            return listAncestor && listAncestor.listType === type;
+        });
+    }
+    /**
+     * Return a list of nodes to toggle a list on: the selected nodes of the
+     * given range or the range's parent element if said range is collapsed.
+     *
+     * @param range
+     */
+    static getNodesToToggle(range: VRange): VNode[] {
         // Retrieve the nodes in the selection.
         let selectedNodes: Array<VNode>;
         if (range.isCollapsed()) {
@@ -57,21 +84,7 @@ export class List extends JWPlugin {
         } else {
             selectedNodes = range.selectedNodes();
         }
-
-        // Check if all selected nodes are within a list of the same type.
-        const areAllInMatchingList = selectedNodes.every(node => {
-            const listAncestor = node.ancestor(ListNode);
-            return listAncestor && listAncestor.listType === type;
-        });
-
-        // Dispatch.
-        if (areAllInMatchingList) {
-            // If all selected nodes are within a list of the same type,
-            // "unlist" them.
-            this._unlist(selectedNodes);
-        } else {
-            this._convertToList(selectedNodes, type);
-        }
+        return selectedNodes;
     }
 
     //--------------------------------------------------------------------------

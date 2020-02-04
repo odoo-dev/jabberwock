@@ -1,5 +1,5 @@
 import { JWEditor } from '../../core/src/JWEditor';
-import { JWOwlUIPlugin } from './JWOwlUIPlugin';
+import { JWOwlUIPlugin, MountOptions } from './JWOwlUIPlugin';
 import { QWeb } from 'owl-framework';
 import { Env } from 'owl-framework/src/component/component';
 
@@ -8,7 +8,7 @@ export interface OwlUIEnv extends Env {
 }
 
 export class OwlUI {
-    pluginsRegistry: JWOwlUIPlugin[] = [];
+    plugins: JWOwlUIPlugin[] = [];
     env: OwlUIEnv;
     constructor(editor: JWEditor) {
         // Create the owl `env` variable shared by all plugins components.
@@ -31,16 +31,16 @@ export class OwlUI {
     addPlugin(PluginClass: typeof JWOwlUIPlugin): void {
         this.env.qweb.addTemplates(PluginClass.templates);
         const plugin = new PluginClass(this.env);
-        this.pluginsRegistry.push(plugin);
+        this.plugins.push(plugin);
     }
 
     /**
      * Start the Owl UI by starting all its registered plugins.
      *
      */
-    async start(): Promise<void> {
-        for (const plugin of this.pluginsRegistry) {
-            await plugin.start();
+    async start(options?: MountOptions): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.start(options);
         }
     }
 
@@ -49,7 +49,7 @@ export class OwlUI {
      *
      */
     async stop(): Promise<void> {
-        for (const plugin of this.pluginsRegistry) {
+        for (const plugin of this.plugins) {
             await plugin.stop();
         }
     }

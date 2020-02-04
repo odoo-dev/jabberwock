@@ -8,6 +8,8 @@ import { CharDomParser } from './CharDomParser';
 import { Format } from '../plugin-inline/Format';
 import { InlineNode } from '../plugin-inline/InlineNode';
 import { VNode } from '../core/src/VNodes/VNode';
+import JWEditor from '../core/src/JWEditor';
+import { Constructor } from '../utils/src/utils';
 
 export interface InsertTextParams extends RangeParams {
     text: string;
@@ -51,7 +53,7 @@ export class Char extends JWPlugin {
     insertText(params: InsertTextParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         const text = params.text;
-        const formats = this.getCurrentFormats();
+        const formats = Char.getCurrentFormats(this.editor);
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
@@ -77,7 +79,7 @@ export class Char extends JWPlugin {
         if (!range.isCollapsed()) return;
 
         if (!this.formatCache) {
-            this.formatCache = this.getCurrentFormats();
+            this.formatCache = Char.getCurrentFormats(this.editor);
         }
         const index = this.formatCache.findIndex(f => f instanceof FormatClass);
         if (index !== -1) {
@@ -86,12 +88,32 @@ export class Char extends JWPlugin {
             this.formatCache.push(new FormatClass());
         }
     }
+    static isAllFormat(editor: JWEditor, FormatClass: Constructor<Format>): boolean {
+        const range = editor.vDocument.selection.range;
+        const charPlugin = editor.plugins.find(plugin => plugin instanceof Char) as Char;
+        if (range.isCollapsed()) {
+            if (!charPlugin.formatCache) {
+                charPlugin.formatCache = Char.getCurrentFormats(editor);
+            }
+            return !!charPlugin.formatCache.find(format => format instanceof FormatClass);
+        } else {
+            const selectedChars = range.selectedNodes(CharNode);
+            return (
+                selectedChars.length &&
+                selectedChars.every(
+                    char => !!char.formats.find(format => format instanceof FormatClass),
+                )
+            );
+        }
+    }
     /**
      * Get the format for the next insertion.
      */
-    getCurrentFormats(range = this.editor.vDocument.selection.range): Format[] {
-        if (this.formatCache) {
-            return this.formatCache;
+    static getCurrentFormats(editor: JWEditor): Format[] {
+        const range = editor.vDocument.selection.range;
+        const charPlugin = editor.plugins.find(plugin => plugin instanceof Char) as Char;
+        if (charPlugin.formatCache) {
+            return charPlugin.formatCache;
         }
 
         let inlineToCopyFormat: VNode;

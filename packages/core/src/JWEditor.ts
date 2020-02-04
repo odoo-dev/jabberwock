@@ -22,6 +22,17 @@ export interface Shortcut extends BoundCommand {
     platform?: Platform;
     pattern: string;
 }
+export interface Button {
+    title: string;
+    class?: string;
+    commandId: CommandIdentifier;
+    commandArgs?: CommandArgs;
+    selected?: (editor: JWEditor) => Promise<boolean>;
+    enabled?: (editor: JWEditor) => Promise<boolean>;
+}
+export type ToolbarItem = Button | string | Array<Button | string>;
+export type ToolbarGroup = ToolbarItem[];
+export type ToolbarConfig = Array<ToolbarGroup | string>;
 
 export interface JWEditorConfig {
     autoFocus?: boolean;
@@ -29,6 +40,7 @@ export interface JWEditorConfig {
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
     shortcuts?: Shortcut[];
+    toolbar?: ToolbarConfig;
     createBaseContainer?: () => VNode;
 }
 
@@ -45,6 +57,7 @@ export class JWEditor {
         default: new Keymap(),
         user: new Keymap(),
     };
+    toolbarConfig: ToolbarConfig;
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     commandHooks: Record<CommandIdentifier, CommandHook[]> = {};
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
@@ -248,6 +261,9 @@ export class JWEditor {
         }
         if (config.createBaseContainer) {
             this.createBaseContainer = config.createBaseContainer;
+        }
+        if (config.toolbar) {
+            this.toolbarConfig = config.toolbar;
         }
     }
 
