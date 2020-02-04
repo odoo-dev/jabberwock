@@ -41,10 +41,10 @@ describePlugin(Char, testEditor => {
             const text = document.createTextNode('abc');
             domRoot.appendChild(text);
             const vDocument = parser.parse(domRoot);
-            expect(vDocument.root.children.length).to.equal(3);
-            expect((vDocument.root.children[0] as CharNode).char).to.equal('a');
-            expect((vDocument.root.children[1] as CharNode).char).to.equal('b');
-            expect((vDocument.root.children[2] as CharNode).char).to.equal('c');
+            expect(vDocument.root.children().length).to.equal(3);
+            expect((vDocument.root.children()[0] as CharNode).char).to.equal('a');
+            expect((vDocument.root.children()[1] as CharNode).char).to.equal('b');
+            expect((vDocument.root.children()[2] as CharNode).char).to.equal('c');
         });
         it('should not parse a SPAN node', async () => {
             const span = document.createElement('span');

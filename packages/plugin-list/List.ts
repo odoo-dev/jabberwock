@@ -4,7 +4,6 @@ import { ListNode, ListType } from './ListNode';
 import { ParagraphNode } from '../plugin-paragraph/ParagraphNode';
 import { isBlock, distinct } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
-import { withMarkers } from '../utils/src/markers';
 import { RangeParams } from '../core/src/CorePlugin';
 import { ListDomRenderer } from './ListDomRenderer';
 import { ListItemDomRenderer } from './ListItemDomRenderer';
@@ -194,24 +193,22 @@ export class List extends JWPlugin {
         }
 
         // Move the nodes to the list
-        withMarkers(() => {
-            // Remove the children of nested lists (they will be moved together
-            // with their parent) and convert nested lists to the new type.
-            const nestedLists = nodes.filter(this._isNestedList.bind(this));
-            const nonNestedNodes = nodes.filter(node => {
-                return !node.ancestor(ancestor => nestedLists.includes(ancestor));
-            });
-            nestedLists.forEach(nestedList => ((nestedList as ListNode).listType = type));
-            // Move the nodes.
-            nonNestedNodes.forEach(node => {
-                newList.append(node);
-            });
-            // Remove empty lists.
-            duplicatedNodes.concat(nodes).forEach(node => {
-                if (node.is(ListNode) && !node.hasChildren()) {
-                    node.remove();
-                }
-            });
+        // Remove the children of nested lists (they will be moved together
+        // with their parent) and convert nested lists to the new type.
+        const nestedLists = nodes.filter(this._isNestedList.bind(this));
+        const nonNestedNodes = nodes.filter(node => {
+            return !node.ancestor(ancestor => nestedLists.includes(ancestor));
+        });
+        nestedLists.forEach(nestedList => ((nestedList as ListNode).listType = type));
+        // Move the nodes.
+        nonNestedNodes.forEach(node => {
+            newList.append(node);
+        });
+        // Remove empty lists.
+        duplicatedNodes.concat(nodes).forEach(node => {
+            if (node.is(ListNode) && !node.hasChildren()) {
+                node.remove();
+            }
         });
 
         // If the new list is after or before a list of the same type, merge
@@ -219,14 +216,12 @@ export class List extends JWPlugin {
         // <ol><li>a</li><li>b</li></ol>).
         const previousSibling = newList.previousSibling();
         if (previousSibling && previousSibling.is(ListNode) && previousSibling.listType === type) {
-            newList.children.slice().forEach(child => previousSibling.append(child));
-            newList.remove();
-            newList = previousSibling as ListNode;
+            newList.mergeWith(previousSibling);
+            newList = previousSibling;
         }
         const nextSibling = newList.nextSibling();
         if (nextSibling && nextSibling.is(ListNode) && nextSibling.listType === type) {
-            nextSibling.children.slice().forEach(child => newList.append(child));
-            nextSibling.remove();
+            nextSibling.mergeWith(newList);
         }
     }
     /**

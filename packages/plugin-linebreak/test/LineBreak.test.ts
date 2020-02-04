@@ -33,7 +33,7 @@ describePlugin(LineBreak, testEditor => {
             domRoot.appendChild(p);
             const vDocument = parser.parse(domRoot);
             expect(vDocument.root.firstChild()).not.to.be.undefined;
-            expect(vDocument.root.firstChild().children.length).to.equal(0);
+            expect(vDocument.root.firstChild().children().length).to.equal(0);
         });
         it('should parse two BR node as one line break', async () => {
             const p = document.createElement('p');
@@ -44,7 +44,7 @@ describePlugin(LineBreak, testEditor => {
             domRoot.appendChild(p);
             const vDocument = parser.parse(domRoot);
             expect(vDocument.root.firstChild()).not.to.be.undefined;
-            expect(vDocument.root.firstChild().children.length).to.equal(1);
+            expect(vDocument.root.firstChild().children().length).to.equal(1);
             expect(vDocument.root.firstChild().firstChild() instanceof LineBreakNode).to.be.true;
         });
         it('should not parse a SPAN node', async () => {

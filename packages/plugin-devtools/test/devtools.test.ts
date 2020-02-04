@@ -159,13 +159,13 @@ describe('Plugin: DevTools', () => {
                 '<tr><td>index</td><td>0</td></tr>' +
                 '<tr><td>parent</td><td>undefined</td></tr>' +
                 '<tr><td>children</td><td><ol><li>' +
-                editor.vDocument.root.children[0].type +
+                editor.vDocument.root.children()[0].type +
                 '</li><li>' +
-                editor.vDocument.root.children[1].type +
+                editor.vDocument.root.children()[1].type +
                 '</li><li>' +
-                editor.vDocument.root.children[2].type +
+                editor.vDocument.root.children()[2].type +
                 '</li><li>' +
-                editor.vDocument.root.children[3].type +
+                editor.vDocument.root.children()[3].type +
                 '</li></ol></td></tr>' +
                 '<tr>' +
                 '<td>siblings</td>' +
@@ -203,12 +203,12 @@ describe('Plugin: DevTools', () => {
             const aResult =
                 '<div class="about">' +
                 '<span class="type">' +
-                editor.vDocument.root.children[1].constructor.name +
+                editor.vDocument.root.children()[1].constructor.name +
                 '</span> ' +
-                editor.vDocument.root.children[1].type +
+                editor.vDocument.root.children()[1].type +
                 '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
-                editor.vDocument.root.children[1].id +
+                editor.vDocument.root.children()[1].id +
                 '</span>' +
                 '</div>';
             expect(about.outerHTML).to.equal(aResult);
@@ -218,13 +218,13 @@ describe('Plugin: DevTools', () => {
                 '<table>' +
                 '<tbody>' +
                 '<tr><td>id</td><td>' +
-                editor.vDocument.root.children[1].id +
+                editor.vDocument.root.children()[1].id +
                 '</td></tr>' +
                 '<tr><td>name</td><td>"' +
-                editor.vDocument.root.children[1].name +
+                editor.vDocument.root.children()[1].name +
                 '"</td></tr>' +
                 '<tr><td>type</td><td>"' +
-                editor.vDocument.root.children[1].type +
+                editor.vDocument.root.children()[1].type +
                 '"</td></tr>' +
                 '<tr><td>length</td><td>3</td></tr>' +
                 '<tr><td>atomic</td><td>false</td></tr>' +
@@ -243,16 +243,16 @@ describe('Plugin: DevTools', () => {
                 editor.vDocument.root.name +
                 '</td></tr>' +
                 '<tr><td>children</td><td><ol><li>' +
-                editor.vDocument.root.children[0].type +
+                editor.vDocument.root.children()[0].type +
                 '</li><li>' +
-                editor.vDocument.root.children[1].type +
+                editor.vDocument.root.children()[1].type +
                 '</li><li>' +
-                editor.vDocument.root.children[2].type +
+                editor.vDocument.root.children()[2].type +
                 '</li></ol></td></tr>' +
                 '<tr><td>siblings</td><td><ol style="list-style-type: none"><li> previous: ' +
-                editor.vDocument.root.children[0].type +
+                editor.vDocument.root.children()[0].type +
                 '</li><li> next: ' +
-                editor.vDocument.root.children[2].type +
+                editor.vDocument.root.children()[2].type +
                 '</li></ol></td></tr>' +
                 '</tbody>' +
                 '</table>';
@@ -361,7 +361,7 @@ describe('Plugin: DevTools', () => {
             expect(node.classList.contains('folded')).to.equal(false, 'node is unfolded');
             expect(node.querySelector('.children').children.length).to.equal(
                 3,
-                'children are loaded',
+                'children() are loaded',
             );
         });
         it('should open/close the last paragraph with enter', async () => {
@@ -373,7 +373,7 @@ describe('Plugin: DevTools', () => {
             expect(node.classList.contains('folded')).to.equal(false, 'node is unfolded');
             expect(node.querySelector('.children').children.length).to.equal(
                 8,
-                'children are loaded',
+                'children() are loaded',
             );
 
             await keydown(node, 'Enter');
@@ -389,19 +389,19 @@ describe('Plugin: DevTools', () => {
                 'devtools-tree > devtools-node > .children > devtools-node:nth-child(2)',
             );
             const name = p.firstElementChild;
-            const pChildren = p.lastElementChild;
+            const pchildren = p.lastElementChild;
             const pos = name.getBoundingClientRect();
             name.dispatchEvent(
                 new MouseEvent('dblclick', { clientX: pos.left, clientY: pos.top, bubbles: true }),
             );
             await nextTickFrame();
 
-            expect(pChildren.childNodes.length).to.equal(5);
-            expect(pChildren.firstElementChild.classList.contains('self-closing')).to.equal(
+            expect(pchildren.childNodes.length).to.equal(5);
+            expect(pchildren.firstElementChild.classList.contains('self-closing')).to.equal(
                 true,
                 'previous is the selection anchor',
             );
-            expect(pChildren.lastElementChild.classList.contains('self-closing')).to.equal(
+            expect(pchildren.lastElementChild.classList.contains('self-closing')).to.equal(
                 true,
                 'next is the selection focus',
             );
@@ -427,7 +427,7 @@ describe('Plugin: DevTools', () => {
             expect(bold.classList.contains('folded')).to.equal(true, 'node is folded');
             expect(bold.querySelector('.children')).to.equal(null);
 
-            const vNodeChar = editor.vDocument.root.children[1].children[1];
+            const vNodeChar = editor.vDocument.root.children()[1].children()[1];
 
             const about = devtools.querySelector('devtools-info .about');
             const aResult =
@@ -629,7 +629,7 @@ describe('Plugin: DevTools', () => {
                 clientY: pos.top,
             });
 
-            const vNode = editor.vDocument.root.children[1];
+            const vNode = editor.vDocument.root.children()[1];
 
             let about = devtools.querySelector('devtools-info .about');
             let aResult =
@@ -656,13 +656,13 @@ describe('Plugin: DevTools', () => {
             aResult =
                 '<div class="about">' +
                 '<span class="type">' +
-                vNode.children[2].constructor.name +
+                vNode.children()[2].constructor.name +
                 '</span> ' +
-                vNode.children[2].type +
+                vNode.children()[2].type +
                 ': "c" ' +
                 '<button class="logger">&gt;_</button>' +
                 '<span class="id">' +
-                vNode.children[2].id +
+                vNode.children()[2].id +
                 '</span>' +
                 '</div>';
             expect(about.outerHTML).to.equal(aResult);
@@ -873,7 +873,7 @@ describe('Plugin: DevTools', () => {
                 );
                 await nextTickFrame();
 
-                charBeforeChange = editor.vDocument.root.children[1].children[1];
+                charBeforeChange = editor.vDocument.root.children()[1].children()[1];
 
                 const container = editor.el.querySelector('test-container');
                 container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z' }));
