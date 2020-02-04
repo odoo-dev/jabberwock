@@ -1,12 +1,15 @@
 import { AbstractRenderer } from '../core/src/AbstractRenderer';
-import { VNode } from '../core/src/VNodes/VNode';
+import { VNode, isMarker } from '../core/src/VNodes/VNode';
 import { FragmentNode } from '../core/src/VNodes/FragmentNode';
 import { VElement } from '../core/src/VNodes/VElement';
 
 export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: VNode): Promise<Node[]> {
         let domNode: Node;
-        if (node.test(FragmentNode)) {
+        if (isMarker(node)) {
+            // TODO
+            return [document.createDocumentFragment()];
+        } else if (node.test(FragmentNode)) {
             domNode = document.createDocumentFragment();
         } else {
             let nodeName: string;

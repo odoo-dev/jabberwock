@@ -1,6 +1,5 @@
 import { VNode, RelativePosition, Point } from './VNodes/VNode';
 import { Predicate } from './VNodes/VNode';
-import { withMarkers } from '../../utils/src/markers';
 import { MarkerNode } from './VNodes/MarkerNode';
 import { Constructor } from '../../utils/src/utils';
 
@@ -85,7 +84,7 @@ export class VRange {
      * Return true if the range is collapsed.
      */
     isCollapsed(): boolean {
-        return withMarkers(() => this.start.nextSibling() === this.end);
+        return this.startContainer.children[this.start.index + 1] === this.end;
     }
     /**
      * Return a list of all the nodes between the start and end of this range.
@@ -96,14 +95,13 @@ export class VRange {
     selectedNodes<T>(predicate?: Predicate<T>): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
+        const bound = this.end.next();
         const endContainers = this.end.ancestors();
-        withMarkers(() => {
-            while ((node = node.next()) && node !== this.end) {
-                if (!endContainers.includes(node) && node.test(predicate)) {
-                    selectedNodes.push(node);
-                }
+        while ((node = node.next()) && node !== bound) {
+            if (!endContainers.includes(node) && node.test(predicate)) {
+                selectedNodes.push(node);
             }
-        });
+        }
         return selectedNodes;
     }
 
@@ -218,7 +216,7 @@ export class VRange {
             const commonAncestor = this.start.commonAncestor(this.end);
             let ancestor = this.endContainer.parent;
             while (ancestor !== commonAncestor) {
-                if (ancestor.children.length > 1) {
+                if (ancestor.children().length > 1) {
                     ancestor.splitAt(this.endContainer);
                 }
                 this.endContainer.mergeWith(ancestor);

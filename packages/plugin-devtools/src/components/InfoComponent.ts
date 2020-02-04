@@ -73,7 +73,7 @@ export class InfoComponent extends OwlUIComponent<{}> {
      */
     totalLength(vNode: VNode, __current = 0): number {
         __current += vNode.length;
-        vNode.children.forEach((child: VNode): void => {
+        vNode.children().forEach((child: VNode): void => {
             if (child.hasChildren()) {
                 __current = this.totalLength(child, __current);
             }

@@ -433,7 +433,7 @@ describe('VDocument', () => {
                     stepFunction: deleteForward,
                     contentAfter: '<h1>ab []gh</h1>',
                 });
-                // Backward selection
+                // // Backward selection
                 await testEditor(BasicEditor, {
                     contentBefore: '<h1>ab ]cd</h1><p>ef[gh</p>',
                     stepFunction: deleteForward,

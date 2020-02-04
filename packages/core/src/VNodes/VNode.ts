@@ -1,5 +1,5 @@
-import { withMarkers, ignoreMarkers } from '../../../utils/src/markers';
 import { Constructor, nodeLength } from '../../../utils/src/utils';
+import { Children } from './Children';
 
 export enum RelativePosition {
     BEFORE = 'BEFORE',
@@ -30,7 +30,11 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
-    _children: VNode[] = [];
+    children: Array<VNode> & {
+        (predicate?: Predicate): VNode[];
+        <T extends VNode>(predicate?: Constructor<T>): T[];
+        <T>(predicate?: Predicate<T>): VNode[];
+    } = new Children([]);
 
     constructor() {
         this.type = VNodeType.NODE;
@@ -97,16 +101,10 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the VNode's children.
-     */
-    get children(): VNode[] {
-        return this._children.filter(child => !isIgnored(child));
-    }
-    /**
      * Return the length of this VNode.
      */
     get length(): number {
-        return this.children.length;
+        return this.children().length;
     }
     /**
      * Return the index of this VNode within its parent.
@@ -132,7 +130,7 @@ export class VNode {
      * @param __current
      */
     text(__current = ''): string {
-        this.children.forEach((child: VNode): void => {
+        this.children().forEach((child: VNode): void => {
             __current = child.text(__current);
         });
         return __current;
@@ -141,7 +139,7 @@ export class VNode {
      * Return true if this VNode has children.
      */
     hasChildren(): boolean {
-        return this.children.length > 0;
+        return this.children().length > 0;
     }
     /**
      * Return true if this VNode comes before the given VNode in the pre-order
@@ -162,7 +160,7 @@ export class VNode {
 
         if (thisAncestor && nodeAncestor) {
             // Compare the indices of both ancestors in their shared parent.
-            return withMarkers(() => thisAncestor.index < nodeAncestor.index);
+            return thisAncestor.index < nodeAncestor.index;
         } else {
             // One of the nodes was in the ancestors path of the other.
             return !thisAncestor && !!nodeAncestor;
@@ -223,7 +221,7 @@ export class VNode {
      * Return this VNode's siblings.
      */
     get siblings(): VNode[] {
-        return (this.parent && this.parent.children) || [];
+        return (this.parent && this.parent.children()) || [];
     }
     /**
      * Return the first ancestor of this VNode that satisfies the given
@@ -252,7 +250,7 @@ export class VNode {
     firstChild<T>(predicate?: Predicate<T>): VNode;
     firstChild<T>(predicate?: Predicate<T>): VNode {
         let firstChild = this.nthChild(0);
-        while (firstChild && !firstChild.test(predicate)) {
+        while (firstChild && (isMarker(firstChild) || !firstChild.test(predicate))) {
             firstChild = firstChild.nextSibling();
         }
         return firstChild;
@@ -268,7 +266,7 @@ export class VNode {
     lastChild<T>(predicate?: Predicate<T>): VNode;
     lastChild<T>(predicate?: Predicate<T>): VNode {
         let lastChild = this.nthChild(this.children.length - 1);
-        while (lastChild && !lastChild.test(predicate)) {
+        while (lastChild && (isMarker(lastChild) || !lastChild.test(predicate))) {
             lastChild = lastChild.previousSibling();
         }
         return lastChild;
@@ -357,9 +355,9 @@ export class VNode {
     previousSibling<T>(predicate?: Predicate<T>): VNode;
     previousSibling<T>(predicate?: Predicate<T>): VNode {
         if (!this.parent) return;
-        let sibling = withMarkers(() => this.parent.nthChild(this.index - 1));
+        let sibling = this.parent.nthChild(this.index - 1);
         // Skip ignored siblings and those failing the predicate test.
-        while (sibling && (isIgnored(sibling) || !sibling.test(predicate))) {
+        while (sibling && (isMarker(sibling) || !sibling.test(predicate))) {
             sibling = sibling.previousSibling();
         }
         return sibling;
@@ -375,9 +373,9 @@ export class VNode {
     nextSibling<T>(predicate?: Predicate<T>): VNode;
     nextSibling<T>(predicate?: Predicate<T>): VNode {
         if (!this.parent) return;
-        let sibling = withMarkers(() => this.parent.nthChild(this.index + 1));
+        let sibling = this.parent.nthChild(this.index + 1);
         // Skip ignored siblings and those failing the predicate test.
-        while (sibling && (isIgnored(sibling) || !sibling.test(predicate))) {
+        while (sibling && (isMarker(sibling) || !sibling.test(predicate))) {
             sibling = sibling.nextSibling();
         }
         return sibling;
@@ -542,7 +540,7 @@ export class VNode {
     descendants<T>(predicate?: Predicate<T>): VNode[];
     descendants<T>(predicate?: Predicate<T>): VNode[] {
         const descendants = [];
-        if (this.children) {
+        if (this.children.length) {
             let currentDescendant = this.firstChild();
             do {
                 if (currentDescendant.test(predicate)) {
@@ -606,7 +604,7 @@ export class VNode {
      * Append a child to this VNode. Return self.
      */
     append(child: VNode): VNode {
-        return this._insertAtIndex(child, this._children.length);
+        return this._insertAtIndex(child, this.children.length);
     }
     /**
      * Insert the given node before the given reference (which is a child of
@@ -616,13 +614,11 @@ export class VNode {
      * @param reference
      */
     insertBefore(node: VNode, reference: VNode): VNode {
-        return withMarkers(() => {
-            const index = this.indexOf(reference);
-            if (index < 0) {
-                throw new Error('The given VNode is not a child of this VNode');
-            }
-            return this._insertAtIndex(node, index);
-        });
+        const index = this.indexOf(reference);
+        if (index < 0) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
+        return this._insertAtIndex(node, index);
     }
     /**
      * Insert the given node after the given reference (which is a child of this
@@ -632,13 +628,11 @@ export class VNode {
      * @param reference
      */
     insertAfter(node: VNode, reference: VNode): VNode {
-        return withMarkers(() => {
-            const index = this.indexOf(reference);
-            if (index < 0) {
-                throw new Error('The given VNode is not a child of this VNode');
-            }
-            return this._insertAtIndex(node, index + 1);
-        });
+        const index = this.indexOf(reference);
+        if (index < 0) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
+        return this._insertAtIndex(node, index + 1);
     }
     /**
      * Remove all children of this VNode.
@@ -662,13 +656,11 @@ export class VNode {
      * @param child
      */
     removeChild(child: VNode): VNode {
-        return withMarkers(() => {
-            const index = this.indexOf(child);
-            if (index < 0) {
-                throw new Error('The given VNode is not a child of this VNode');
-            }
-            return this._removeAtIndex(index);
-        });
+        const index = this.indexOf(child);
+        if (index < 0) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
+        return this._removeAtIndex(index);
     }
     /**
      * Remove this node in forward direction. (e.g. `Delete` key)
@@ -690,11 +682,12 @@ export class VNode {
      * @param child
      */
     splitAt(child: VNode): VNode {
-        const nodesToMove = [child];
-        nodesToMove.push(...withMarkers(() => child.nextSiblings()));
         const duplicate = this.clone();
+        const index = child.index;
+        while (this.children.length > index) {
+            duplicate.append(this.children[index]);
+        }
         this.after(duplicate);
-        nodesToMove.forEach(sibling => duplicate.append(sibling));
         return duplicate;
     }
 
@@ -705,20 +698,18 @@ export class VNode {
      */
     mergeWith(newContainer: VNode): void {
         if (newContainer === this) return;
-        withMarkers(() => {
-            if (this.hasChildren()) {
-                let reference = newContainer.lastChild();
-                this.children.slice().forEach(child => {
-                    if (reference) {
-                        reference.after(child);
-                    } else {
-                        newContainer.append(child);
-                    }
-                    reference = child;
-                });
-            }
-            this.remove();
-        });
+        if (this.children.length) {
+            let reference = newContainer.children[newContainer.children.length - 1];
+            this.children.slice().forEach(child => {
+                if (reference) {
+                    reference.after(child);
+                } else {
+                    newContainer.append(child);
+                }
+                reference = child;
+            });
+        }
+        this.remove();
     }
 
     //--------------------------------------------------------------------------
@@ -780,13 +771,13 @@ export class VNode {
      */
     _insertAtIndex(child: VNode, index: number): VNode {
         if (child.parent) {
-            const currentIndex = withMarkers(() => child.parent.indexOf(child));
+            const currentIndex = child.parent.indexOf(child);
             if (index && child.parent === this && currentIndex < index) {
                 index--;
             }
             child.parent.removeChild(child);
         }
-        this._children.splice(index, 0, child);
+        this.children.splice(index, 0, child);
         child.parent = this;
         return this;
     }
@@ -796,7 +787,7 @@ export class VNode {
      * @param index The index of the child to remove including marker nodes.
      */
     _removeAtIndex(index: number): VNode {
-        const child = this._children.splice(index, 1)[0];
+        const child = this.children.splice(index, 1)[0];
         child.parent = undefined;
         return this;
     }
@@ -821,8 +812,8 @@ export class VNode {
  *
  * @param node node to check
  */
-export function isIgnored(node: VNode): boolean {
-    return ignoreMarkers && node.type === VNodeType.MARKER;
+export function isMarker(node: VNode): boolean {
+    return node.type === VNodeType.MARKER;
 }
 
 /**

@@ -6,7 +6,6 @@ import { HeadingNode } from '../../plugin-heading/HeadingNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { withMarkers } from '../../utils/src/markers';
 import { JWPlugin } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
@@ -117,14 +116,12 @@ describe('core', () => {
                 });
                 describe('children', () => {
                     it('should return the children nodes (without markers)', async () => {
-                        expect(root.children).to.deep.equal([a, h1, c, p]);
-                        expect(h1.children).to.deep.equal([b]);
+                        expect(root.children()).to.deep.equal([a, h1, c, p]);
+                        expect(h1.children()).to.deep.equal([b]);
                     });
                     it('should return the children nodes with the markers', async () => {
-                        withMarkers(() => {
-                            expect(root.children).to.deep.equal([a, h1, c, p]);
-                            expect(h1.children).to.deep.equal([marker1, b]);
-                        });
+                        expect(root.children.slice()).to.deep.equal([a, h1, c, p]);
+                        expect(h1.children.slice()).to.deep.equal([marker1, b]);
                     });
                 });
                 describe('locate', () => {
@@ -486,13 +483,6 @@ describe('core', () => {
                         expect(h1.siblings).to.deep.equal([a, h1, c, p]);
                         expect(b.siblings).to.deep.equal([b], 'siblings without the markers');
                         expect(root.siblings).to.deep.equal([]);
-                    });
-                    it('should return the node siblings with the markers', async () => {
-                        withMarkers(() => {
-                            expect(h1.siblings).to.deep.equal([a, h1, c, p]);
-                            expect(b.siblings).to.deep.equal([marker1, b]);
-                            expect(root.siblings).to.deep.equal([]);
-                        });
                     });
                 });
                 describe('firstChild', () => {
@@ -1097,8 +1087,8 @@ describe('core', () => {
                         const c = new CharNode('c');
                         p.append(c);
                         p.splitAt(b);
-                        expect(p.children).to.deep.equal([a]);
-                        expect(p.nextSibling().children).to.deep.equal([b, c]);
+                        expect(p.children()).to.deep.equal([a]);
+                        expect(p.nextSibling().children()).to.deep.equal([b, c]);
                     });
                     it('should split a paragraph with markers', async () => {
                         const root = new FragmentNode();
@@ -1115,8 +1105,8 @@ describe('core', () => {
                         const c = new CharNode('c');
                         p.append(c);
                         p.splitAt(b);
-                        expect(p.children).to.deep.equal([a, marker1]);
-                        expect(p.nextSibling().children).to.deep.equal([b, marker2, c]);
+                        expect(p.children.slice()).to.deep.equal([a, marker1]);
+                        expect(p.nextSibling().children.slice()).to.deep.equal([b, marker2, c]);
                     });
                 });
             });
