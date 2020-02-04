@@ -1,7 +1,5 @@
 import { VNode, Predicate } from './VNodes/VNode';
 
-export type RenderingOutput = string;
-
 export interface Renderer<T = {}> {
     predicate?: Predicate<boolean | VNode>;
     render: (node: VNode) => Promise<T>;
@@ -12,9 +10,16 @@ export type RendererConstructor<T = {}> = new (
     superRenderer: Renderer<T>,
 ) => Renderer<T>;
 
+export type RenderingEngineIdentifier = string;
+
 export class RenderingEngine<T = {}> {
+    id: RenderingEngineIdentifier;
     renderers: Renderer<T>[] = [];
-    renderings = new Map<VNode, [Renderer<T>, Promise<T>][]>();
+    renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
+
+    constructor(identifier: string) {
+        this.id = identifier;
+    }
 
     /**
      * Register the given renderer by instantiating it with this rendering
