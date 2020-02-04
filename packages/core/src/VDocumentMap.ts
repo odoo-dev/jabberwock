@@ -36,7 +36,11 @@ export const VDocumentMap = {
      */
     toDomLocation: (vNode: VNode): [Node, number] => {
         let [node, offset] = toDom.get(vNode);
-        if (node.nodeType !== Node.TEXT_NODE) {
+        if (node.nodeType === Node.TEXT_NODE && offset === -1) {
+            // This -1 is a hack to accomodate the VDocumentMap to the new
+            // rendering process without altering it for the parser.
+            return [node, fromDom.get(node).indexOf(vNode)];
+        } else {
             // Char nodes have their offset in the corresponding text nodes
             // registered in the map via `set` but other nodes don't. Their
             // location need to be computed with respect to their parents.
@@ -53,11 +57,11 @@ export const VDocumentMap = {
      * @param vNode
      * @param [offset]
      */
-    set(vNode: VNode, domNode: Node, offset = 0): void {
+    set(vNode: VNode, domNode: Node, offset = 0, method = 'push'): void {
         if (fromDom.has(domNode)) {
             const matches = fromDom.get(domNode);
             if (!matches.some((match: VNode) => match.id === vNode.id)) {
-                matches.push(vNode);
+                matches[method](vNode);
             }
         } else {
             fromDom.set(domNode, [vNode]);
