@@ -7,6 +7,7 @@ import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
+import { ContextManager } from './ContextManager';
 
 export type ExecCommandHook = (command: string, args: CommandArgs) => void;
 
@@ -34,6 +35,7 @@ export class JWEditor {
     editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
+    contextManager: ContextManager;
     plugins: JWPlugin[];
     vDocument: VDocument;
     autoFocus = false;
@@ -53,6 +55,8 @@ export class JWEditor {
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
         this.plugins = [];
+
+        this.contextManager = new ContextManager(this);
 
         if (!editable) {
             editable = document.createElement('jw-editable');

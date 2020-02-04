@@ -1,10 +1,13 @@
+import { CommandDefinition } from './Dispatcher';
 import JWEditor from './JWEditor';
+import { VNode, Predicate } from './VNodes/VNode';
 
 export type CommandIdentifier = string;
 export interface CommandDefinition {
     title?: string;
     description?: string;
     handler: CommandHandler;
+    predicates?: Predicate<VNode>[];
 }
 export type CommandHandler = (args: CommandArgs) => void;
 export interface CommandArgs {
@@ -35,10 +38,12 @@ export class Dispatcher {
      */
     async dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): Promise<void> {
         const commands = this.commands[commandId];
-        if (commands) {
-            for (const command of commands) {
-                await command.handler(args);
-            }
+        if (!commands) {
+            return;
+        }
+        const command = this.editor.contextManager.match(commands);
+        if (command) {
+            await command.handler(args);
         }
     }
 
