@@ -2,7 +2,7 @@ import JWEditor from './JWEditor';
 import { ParsingFunction } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
 import { Shortcut } from './JWEditor';
-import { RendererConstructor, RenderingOutput } from './RenderingEngine';
+import { RendererConstructor, RenderingEngine, RenderingEngineIdentifier } from './RenderingEngine';
 
 export interface JWPluginConfig {
     name?: string;
@@ -11,7 +11,8 @@ export interface JWPluginConfig {
 export class JWPlugin {
     static readonly dependencies: Array<typeof JWPlugin> = [];
     readonly parsingFunctions: Array<ParsingFunction> = [];
-    readonly renderers: Record<RenderingOutput, RendererConstructor[]>;
+    readonly renderingEngines: RenderingEngine[] = [];
+    readonly renderers: Record<RenderingEngineIdentifier, RendererConstructor[]>;
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};

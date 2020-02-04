@@ -6,8 +6,10 @@ import { DefaultDomRenderer } from './DefaultDomRenderer';
 import { CharNode } from '../plugin-char/CharNode';
 import { Char } from '../plugin-char/Char';
 import JWEditor from '../core/src/JWEditor';
+import { RenderingEngine } from '../core/src/RenderingEngine';
 
 export class Dom extends JWPlugin {
+    readonly renderingEngines = [new RenderingEngine<Node[]>('dom')];
     readonly renderers = {
         dom: [DefaultDomRenderer],
     };
