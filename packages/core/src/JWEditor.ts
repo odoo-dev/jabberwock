@@ -7,7 +7,7 @@ import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { Parser } from './Parser';
 import { VNode } from './VNodes/VNode';
-import { RenderingEngine, RenderingEngineIdentifier } from './RenderingEngine';
+import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
 
 export type ExecCommandHook = (command: string, args: CommandArgs) => void;
 
@@ -45,7 +45,7 @@ export class JWEditor {
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     execCommandHooks: ExecCommandHook[] = [];
-    renderers: Record<RenderingEngineIdentifier, RenderingEngine> = {};
+    renderers: Record<RenderingIdentifier, RenderingEngine> = {};
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -181,18 +181,19 @@ export class JWEditor {
             // Load rendering engines.
             if (plugin.renderingEngines) {
                 for (const engine of plugin.renderingEngines) {
-                    const engineId = engine.id;
-                    if (this.renderers[engineId]) {
-                        throw `Rendering engine ${engineId} already registered.`;
+                    const id = engine.id;
+                    if (this.renderers[id]) {
+                        throw `Rendering engine ${id} already registered.`;
                     }
-                    this.renderers[engineId] = engine;
+                    this.renderers[id] = engine;
                     // Register renderers from previously loaded plugins as that
                     // could not be done earlier without the rendering engine.
                     for (const plugin of this.plugins) {
-                        if (plugin.renderers && engineId in plugin.renderers) {
-                            const matchingRenderers = plugin.renderers[engineId];
-                            for (const RendererClass of matchingRenderers) {
-                                engine.register(RendererClass);
+                        if (plugin.renderers) {
+                            for (const RendererClass of plugin.renderers) {
+                                if (RendererClass.id === id) {
+                                    engine.register(RendererClass);
+                                }
                             }
                         }
                     }
@@ -201,12 +202,10 @@ export class JWEditor {
 
             // Load renderers.
             if (plugin.renderers) {
-                for (const outputType of Object.keys(plugin.renderers)) {
-                    const renderingEngine = this.renderers[outputType];
+                for (const RendererClass of plugin.renderers) {
+                    const renderingEngine = this.renderers[RendererClass.id];
                     if (renderingEngine) {
-                        for (const RendererClass of plugin.renderers[outputType]) {
-                            this.renderers[outputType].register(RendererClass);
-                        }
+                        renderingEngine.register(RendererClass);
                     }
                 }
             }

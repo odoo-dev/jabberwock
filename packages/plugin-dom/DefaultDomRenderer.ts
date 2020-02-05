@@ -4,6 +4,7 @@ import { FragmentNode } from '../core/src/VNodes/FragmentNode';
 import { VElement } from '../core/src/VNodes/VElement';
 
 export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
+    static id = 'dom';
     async render(node: VNode): Promise<Node[]> {
         let domNode: Node;
         if (node.test(FragmentNode)) {

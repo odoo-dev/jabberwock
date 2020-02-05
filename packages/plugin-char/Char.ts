@@ -15,9 +15,7 @@ export interface FormatParams extends RangeParams {
 
 export class Char extends JWPlugin {
     readonly parsingFunctions = [this.parse.bind(this)];
-    readonly renderers = {
-        dom: [CharDomRenderer],
-    };
+    readonly renderers = [CharDomRenderer];
     commands = {
         insertText: {
             handler: this.insertText.bind(this),

@@ -5,9 +5,7 @@ import { LineBreakDomRenderer } from './LineBreakDomRenderer';
 
 export class LineBreak extends JWPlugin {
     readonly parsingFunctions = [this.parse.bind(this)];
-    renderers = {
-        dom: [LineBreakDomRenderer],
-    };
+    renderers = [LineBreakDomRenderer];
     commands = {
         insertLineBreak: {
             handler: this.insertLineBreak.bind(this),
