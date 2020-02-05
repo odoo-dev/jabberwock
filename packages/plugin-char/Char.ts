@@ -4,8 +4,6 @@ import { CharNode, FormatType, FORMAT_TYPES } from './CharNode';
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { Format } from '../utils/src/Format';
 import { RangeParams } from '../core/src/CorePlugin';
-import { VNode } from '../core/src/VNodes/VNode';
-import { MarkerNode } from '../core/src/VNodes/MarkerNode';
 import { CharDomRenderer } from './CharDomRenderer';
 
 export interface InsertTextParams extends RangeParams {
@@ -160,26 +158,5 @@ export class Char extends JWPlugin {
             });
         }
         return format;
-    }
-    /**
-     * Return true if `a` has the same format properties as `b`.
-     *
-     * @param a
-     * @param b
-     */
-    static isSameTextNode(a: VNode, b: VNode): boolean {
-        if (a.is(CharNode) && b.is(CharNode)) {
-            // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...a.format, ...b.format });
-            return formats.every(k => !!a.format[k] === !!b.format[k]);
-        } else if (a.is(MarkerNode) || b.is(MarkerNode)) {
-            // A Marker node is always considered to be part of the same text
-            // node as another node in the sense that the text node must not
-            // be broken up just because it contains a marker.
-            return true;
-        } else {
-            // Nodes that are not valid in a text node must end the text node.
-            return false;
-        }
     }
 }
