@@ -25,12 +25,15 @@ describe('LineBreakDomRenderer', () => {
             const lineBreak = new LineBreakNode();
             p.append(lineBreak);
             root.append(p);
-            const [element] = await editor.render<Node[]>('dom', root);
-            expect(element.childNodes.length).to.equal(1);
-            const domP = element.firstChild;
-            expect(domP.childNodes.length).to.equal(2);
-            expect(domP.firstChild.nodeName).to.equal('BR');
-            expect(domP.lastChild.nodeName).to.equal('BR');
+            const element = await editor.render<Node[]>('dom', root);
+            if (expect(element).to.exist) {
+                const domElement = element[0];
+                expect(domElement.childNodes.length).to.equal(1);
+                const domP = domElement.firstChild;
+                expect(domP.childNodes.length).to.equal(2);
+                expect(domP.firstChild.nodeName).to.equal('BR');
+                expect(domP.lastChild.nodeName).to.equal('BR');
+            }
         });
         it('should render a lineBreak with node after', async () => {
             const p = new VElement('FAKE-P');
@@ -39,13 +42,16 @@ describe('LineBreakDomRenderer', () => {
             const c = new VElement('FAKE-CHAR');
             p.append(c);
             root.append(p);
-            const [element] = await editor.render<Node[]>('dom', root);
-            expect(element.childNodes.length).to.equal(1);
-            const domP = element.firstChild;
-            expect(domP.nodeName).to.equal('FAKE-P');
-            expect(domP.childNodes.length).to.equal(2);
-            expect(domP.firstChild.nodeName).to.equal('BR');
-            expect(domP.childNodes[1].nodeName).to.equal('FAKE-CHAR');
+            const element = await editor.render<Node[]>('dom', root);
+            if (expect(element).to.exist) {
+                const domElement = element[0];
+                expect(domElement.childNodes.length).to.equal(1);
+                const domP = domElement.firstChild;
+                expect(domP.nodeName).to.equal('FAKE-P');
+                expect(domP.childNodes.length).to.equal(2);
+                expect(domP.firstChild.nodeName).to.equal('BR');
+                expect(domP.childNodes[1].nodeName).to.equal('FAKE-CHAR');
+            }
         });
     });
 });

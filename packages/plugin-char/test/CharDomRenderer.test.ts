@@ -25,10 +25,12 @@ describe('CharDomRenderer', () => {
             root.append(new CharNode(' '));
             root.append(new CharNode('b'));
 
-            const [rendered] = await editor.render<Element[]>('dom', root);
-            const innerHTMLContainer = document.createElement('p');
-            innerHTMLContainer.append(rendered);
-            expect(innerHTMLContainer.innerHTML).to.equal('a &nbsp;b');
+            const rendered = await editor.render<Element[]>('dom', root);
+            if (expect(rendered).to.exist) {
+                const innerHTMLContainer = document.createElement('p');
+                innerHTMLContainer.append(rendered[0]);
+                expect(innerHTMLContainer.innerHTML).to.equal('a &nbsp;b');
+            }
         });
         it('should insert 2 spaces and 2 nbsp instead of 4 spaces', async () => {
             root.append(new CharNode('a'));
@@ -38,10 +40,12 @@ describe('CharDomRenderer', () => {
             root.append(new CharNode(' '));
             root.append(new CharNode('b'));
 
-            const [rendered] = await editor.render<Element[]>('dom', root);
-            const innerHTMLContainer = document.createElement('p');
-            innerHTMLContainer.append(rendered);
-            expect(innerHTMLContainer.innerHTML).to.equal('a &nbsp; &nbsp;b');
+            const rendered = await editor.render<Element[]>('dom', root);
+            if (expect(rendered).to.exist) {
+                const innerHTMLContainer = document.createElement('p');
+                innerHTMLContainer.append(rendered[0]);
+                expect(innerHTMLContainer.innerHTML).to.equal('a &nbsp; &nbsp;b');
+            }
         });
     });
 });

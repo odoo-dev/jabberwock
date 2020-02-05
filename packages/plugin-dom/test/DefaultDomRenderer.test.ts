@@ -11,8 +11,10 @@ describe('DefaultDomRenderer', () => {
             await editor.start();
             const node = new VNode();
             editor.vDocument.root.append(node);
-            const [element] = await editor.render<Node[]>('dom', editor.vDocument.root);
-            expect(element.firstChild.nodeName).to.equal('VNODE-' + node.id);
+            const element = await editor.render<Node[]>('dom', editor.vDocument.root);
+            if (expect(element).to.exist) {
+                expect(element[0].firstChild.nodeName).to.equal('VNODE-' + node.id);
+            }
         });
     });
 });

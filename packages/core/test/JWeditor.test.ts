@@ -4,6 +4,9 @@ import { expect } from 'chai';
 import { Platform } from '../src/JWEditor';
 import { keydown, testEditor } from '../../utils/src/testUtils';
 import { spy } from 'sinon';
+import { AbstractRenderer } from '../src/AbstractRenderer';
+import { VNode } from '../src/VNodes/VNode';
+import { RenderingEngine } from '../src/RenderingEngine';
 describe('core', () => {
     describe('JWEditor', () => {
         describe('addPlugin', () => {
@@ -258,6 +261,29 @@ describe('core', () => {
                         });
                     });
                 });
+            });
+        });
+        describe('render', () => {
+            it('should return a rendering or void', async () => {
+                class VNodeRenderer extends AbstractRenderer<VNode> {
+                    async render(node: VNode): Promise<VNode> {
+                        return node;
+                    }
+                }
+                class VNodePlugin extends JWPlugin {
+                    renderingEngines = [new RenderingEngine<VNode>('VNode', VNodeRenderer)];
+                }
+                const editor = new JWEditor(document.createElement('p'));
+                editor.addPlugin(VNodePlugin);
+                await editor.start();
+                const node = new VNode();
+                editor.vDocument.root.append(node);
+                const rendering = await editor.render<VNode>('VNode', editor.vDocument.root);
+                if (expect(rendering).to.exist) {
+                    expect(rendering).to.equal(editor.vDocument.root);
+                }
+                const voidRendering = await editor.render<VNode>('vNode', editor.vDocument.root);
+                expect(voidRendering).to.not.exist;
             });
         });
     });

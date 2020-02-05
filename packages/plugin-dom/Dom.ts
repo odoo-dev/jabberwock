@@ -78,11 +78,13 @@ export class Dom extends JWPlugin {
         this.editor.editable.innerHTML = '';
         VDocumentMap.set(this.editor.vDocument.root, this.editor.editable);
         const rendering = await this.editor.render<Node[]>('dom', this.editor.vDocument.root);
-        await this._generateDomMap();
-        for (const renderedChild of rendering) {
-            this.editor.editable.appendChild(renderedChild);
+        if (rendering) {
+            await this._generateDomMap();
+            for (const renderedChild of rendering) {
+                this.editor.editable.appendChild(renderedChild);
+            }
+            this.renderSelection(this.editor.vDocument.selection, this.editor.editable);
         }
-        this.renderSelection(this.editor.vDocument.selection, this.editor.editable);
     }
 
     async _generateDomMap(): Promise<void> {
