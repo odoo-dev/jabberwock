@@ -17,8 +17,14 @@ export class RenderingEngine<T = {}> {
     renderers: Renderer<T>[] = [];
     renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
 
-    constructor(identifier: string) {
+    constructor(identifier: string, DefaultRenderer: Constructor<Renderer<T>>) {
         this.id = identifier;
+        const defaultRenderer = new DefaultRenderer(this);
+        if (defaultRenderer.predicate) {
+            throw `Default renderer cannot have a predicate.`;
+        } else {
+            this.renderers.push(defaultRenderer);
+        }
     }
 
     /**
@@ -34,12 +40,7 @@ export class RenderingEngine<T = {}> {
             render: this._render.bind(this),
         };
         const renderer = new RendererClass(this, superRenderer);
-        if (renderer.predicate) {
-            this.renderers.unshift(renderer);
-        } else {
-            // Default renderer is last in line.
-            this.renderers.push(renderer);
-        }
+        this.renderers.unshift(renderer);
     }
 
     /**
