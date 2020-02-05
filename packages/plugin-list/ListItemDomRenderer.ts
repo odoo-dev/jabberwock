@@ -5,6 +5,7 @@ import { VElement } from '../core/src/VNodes/VElement';
 import { List } from './List';
 
 export class ListItemDomRenderer extends AbstractRenderer<Node[]> {
+    static id = 'dom';
     predicate = List.isListItem;
 
     async render(node: VNode): Promise<Node[]> {

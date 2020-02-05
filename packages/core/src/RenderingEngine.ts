@@ -1,15 +1,19 @@
 import { VNode, Predicate } from './VNodes/VNode';
 import { Constructor } from '../../utils/src/utils';
 
+export type RenderingIdentifier = string;
+
 export interface Renderer<T = {}> {
     predicate?: Predicate<boolean | VNode>;
     render: (node: VNode) => Promise<T>;
 }
 
-export type RenderingEngineIdentifier = string;
+export type RendererConstructor<T = {}> = Constructor<Renderer<T>> & {
+    id: RenderingIdentifier;
+};
 
 export class RenderingEngine<T = {}> {
-    id: RenderingEngineIdentifier;
+    id: RenderingIdentifier;
     renderers: Renderer<T>[] = [];
     renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
 
