@@ -2,6 +2,7 @@ import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { ListNode, ListType } from './ListNode';
 
 export class ListDomRenderer extends AbstractRenderer<Node[]> {
+    static id = 'dom';
     predicate = ListNode;
 
     /**

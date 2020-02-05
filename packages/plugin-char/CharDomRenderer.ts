@@ -3,6 +3,7 @@ import { CharNode } from './CharNode';
 import { Format } from '../utils/src/Format';
 
 export class CharDomRenderer extends AbstractRenderer<Node[]> {
+    static id = 'dom';
     predicate = CharNode;
 
     async render(node: CharNode): Promise<Node[]> {

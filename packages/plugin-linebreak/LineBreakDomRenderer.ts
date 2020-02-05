@@ -2,6 +2,7 @@ import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { LineBreakNode } from './LineBreakNode';
 
 export class LineBreakDomRenderer extends AbstractRenderer<Node[]> {
+    static id = 'dom';
     predicate = LineBreakNode;
 
     /**

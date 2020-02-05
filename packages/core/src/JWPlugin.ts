@@ -2,8 +2,7 @@ import JWEditor from './JWEditor';
 import { ParsingFunction } from './Parser';
 import { CommandIdentifier, CommandDefinition, CommandHandler } from './Dispatcher';
 import { Shortcut } from './JWEditor';
-import { RenderingEngine, RenderingEngineIdentifier, Renderer } from './RenderingEngine';
-import { Constructor } from '../../utils/src/utils';
+import { RenderingEngine, RendererConstructor } from './RenderingEngine';
 
 export interface JWPluginConfig {
     name?: string;
@@ -13,7 +12,7 @@ export class JWPlugin {
     static readonly dependencies: Array<typeof JWPlugin> = [];
     readonly parsingFunctions: Array<ParsingFunction> = [];
     readonly renderingEngines: RenderingEngine[] = [];
-    readonly renderers: Record<RenderingEngineIdentifier, Constructor<Renderer>[]>;
+    readonly renderers: RendererConstructor[];
     name: string;
     editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
