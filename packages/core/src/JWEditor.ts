@@ -67,6 +67,10 @@ export class JWEditor {
         // The editable property of the editor is the original editable element
         // before start is called, and becomes the clone after start is called.
         this.editable = editable;
+
+        // CorePlugin is a special mandatory plugin that handles the matching
+        // between the core commands and the VDocument.
+        this.addPlugin(CorePlugin);
     }
 
     /**
@@ -115,10 +119,6 @@ export class JWEditor {
 
         // Attach the keymaps to the editable.
         this.editable.addEventListener('keydown', this._onKeydown.bind(this));
-
-        // CorePlugin is a special mandatory plugin that handles the matching
-        // between the core commands and the VDocument.
-        this.addPlugin(CorePlugin);
 
         for (const plugin of this.plugins) {
             await plugin.start();
