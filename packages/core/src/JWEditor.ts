@@ -113,10 +113,11 @@ export class JWEditor {
         this.eventManager = new EventManager(this);
     }
 
-    async render<T = void>(renderingEngineId: string, node: VNode): Promise<T> {
-        const engine = this.renderers[renderingEngineId];
+    async render<T>(renderingId: string, node: VNode): Promise<T | void> {
+        const engine = this.renderers[renderingId];
         if (!engine) {
-            throw `Rendering engine ${renderingEngineId} not found.`;
+            // The caller might want to fallback on another rendering.
+            return;
         }
         engine.renderings.clear();
         return engine.render(node) as Promise<T>;

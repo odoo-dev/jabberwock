@@ -115,34 +115,36 @@ describe('ListDomRenderer', () => {
             ol.append(p9);
             motherList.append(ol);
 
-            const [rendered] = await editor.render<Node[]>('dom', root);
-            const innerHTMLContainer = document.createElement('p');
-            innerHTMLContainer.append(rendered);
-            /* eslint-disable prettier/prettier */
-            expect(innerHTMLContainer.innerHTML).to.equal([
-                '<ul>',
-                    '<li>a',
-                        '<ul>',
-                            '<li>a<b>.</b>a</li>',
-                            '<li>a.b</li>',
-                            '<li><h1>a.c</h1></li>',
-                            '<li>a.d',
-                                '<ul>',
-                                    '<li>a.d.a</li>',
-                                '</ul>',
-                            '</li>',
-                        '</ul>',
-                    '</li>',
-                    '<li>b',
-                        '<ol>',
-                            '<li>b.1</li>',
-                            '<li>b.2</li>',
-                            '<li><h1>b.3</h1></li>',
-                            '<li>b.4</li>',
-                        '</ol>',
-                    '</li>',
-                '</ul>',
-            ].join(''));
+            const rendered = await editor.render<Node[]>('dom', root);
+            if (expect(rendered).to.exist) {
+                const innerHTMLContainer = document.createElement('p');
+                innerHTMLContainer.append(rendered[0]);
+                /* eslint-disable prettier/prettier */
+                expect(innerHTMLContainer.innerHTML).to.equal([
+                    '<ul>',
+                        '<li>a',
+                            '<ul>',
+                                '<li>a<b>.</b>a</li>',
+                                '<li>a.b</li>',
+                                '<li><h1>a.c</h1></li>',
+                                '<li>a.d',
+                                    '<ul>',
+                                        '<li>a.d.a</li>',
+                                    '</ul>',
+                                '</li>',
+                            '</ul>',
+                        '</li>',
+                        '<li>b',
+                            '<ol>',
+                                '<li>b.1</li>',
+                                '<li>b.2</li>',
+                                '<li><h1>b.3</h1></li>',
+                                '<li>b.4</li>',
+                            '</ol>',
+                        '</li>',
+                    '</ul>',
+                ].join(''));
+            }
             /* eslint-enable prettier/prettier */
         });
     });
