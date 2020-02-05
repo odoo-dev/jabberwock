@@ -7,10 +7,7 @@ import JWEditor from '../core/src/JWEditor';
 import { RenderingEngine } from '../core/src/RenderingEngine';
 
 export class Dom extends JWPlugin {
-    readonly renderingEngines = [new RenderingEngine<Node[]>('dom')];
-    readonly renderers = {
-        dom: [DefaultDomRenderer],
-    };
+    readonly renderingEngines = [new RenderingEngine<Node[]>('dom', DefaultDomRenderer)];
 
     constructor(editor: JWEditor) {
         super(editor);
