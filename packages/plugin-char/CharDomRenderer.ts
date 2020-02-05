@@ -1,6 +1,5 @@
 import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { CharNode } from './CharNode';
-import { Char } from './Char';
 import { Format } from '../utils/src/Format';
 
 export class CharDomRenderer extends AbstractRenderer<Node[]> {
@@ -8,7 +7,7 @@ export class CharDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: CharNode): Promise<Node[]> {
         const previousSibling = node.previousSibling();
-        if (previousSibling && Char.isSameTextNode(previousSibling, node)) {
+        if (previousSibling && node.isSameTextNode(previousSibling)) {
             return this.engine.render(previousSibling);
         }
         // If the node has a format, render the format nodes first.
@@ -32,7 +31,7 @@ export class CharDomRenderer extends AbstractRenderer<Node[]> {
         let text = '' + node.char;
         let next = node.nextSibling();
         const charNodes = [node];
-        while (next && Char.isSameTextNode(node, next)) {
+        while (next && node.isSameTextNode(next)) {
             if (next instanceof CharNode) {
                 charNodes.push(next);
                 if (next.char === ' ' && text[text.length - 1] === ' ') {
