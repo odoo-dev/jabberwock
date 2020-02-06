@@ -247,6 +247,7 @@ export class VNode {
      */
     ancestor(predicate?: Predicate): VNode;
     ancestor<T extends VNode>(predicate?: Constructor<T>): T;
+    ancestor<T extends VNode>(predicate?: Predicate<T>): VNode;
     ancestor<T extends VNode>(predicate?: Predicate<T>): VNode {
         let ancestor = this.parent;
         while (ancestor && !ancestor.test(predicate)) {
