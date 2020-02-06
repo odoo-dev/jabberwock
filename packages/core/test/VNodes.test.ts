@@ -26,10 +26,10 @@ describe('core', () => {
                         }
                     });
                 });
-                describe('shallowDuplicate', () => {
+                describe('clone', () => {
                     it('should duplicate a SimpleElementNode', async () => {
                         const vNode = new VElement('P');
-                        const copy = vNode.shallowDuplicate();
+                        const copy = vNode.clone();
                         expect(copy).to.not.equal(vNode);
                         expect(copy.htmlTag).to.equal('P');
                     });
@@ -165,10 +165,10 @@ describe('core', () => {
                         expect(vNode.locate(doc.childNodes[1], 1)).to.deep.equal([vNode, 'AFTER']);
                     });
                 });
-                describe('shallowDuplicate', () => {
+                describe('clone', () => {
                     it('should duplicate a VNode', async () => {
                         const vNode = new VNode();
-                        const copy = vNode.shallowDuplicate();
+                        const copy = vNode.clone();
                         expect(copy).to.not.equal(vNode);
                         expect(vNode.type).to.equal(VNodeType.NODE);
                     });

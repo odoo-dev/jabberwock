@@ -24,7 +24,7 @@ export class ListNode extends VNode {
      *
      *  @override
      */
-    shallowDuplicate(): ListNode {
-        return new ListNode(this.listType);
+    clone(): this {
+        return new this.constructor<typeof ListNode>(this.listType);
     }
 }

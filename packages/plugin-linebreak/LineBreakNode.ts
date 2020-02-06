@@ -30,14 +30,6 @@ export class LineBreakNode extends VElement {
         return t;
     }
     /**
-     * Return a new VNode with the same type and attributes as this VNode.
-     *
-     *  @override
-     */
-    shallowDuplicate(): LineBreakNode {
-        return new LineBreakNode();
-    }
-    /**
      * Transform the given DOM location into its VDocument counterpart.
      *
      * @override

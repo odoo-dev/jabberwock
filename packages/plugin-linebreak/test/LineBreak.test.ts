@@ -87,10 +87,10 @@ describePlugin(LineBreak, testEditor => {
                 expect(fragment.firstChild.nodeName).to.equal('BR');
             });
         });
-        describe('shallowDuplicate', () => {
+        describe('clone', () => {
             it('should duplicate a LineBreakNode', async () => {
                 const lineBreak = new LineBreakNode();
-                const copy = lineBreak.shallowDuplicate();
+                const copy = lineBreak.clone();
                 expect(copy).to.not.equal(lineBreak);
                 expect(copy instanceof LineBreakNode).to.equal(true);
             });
