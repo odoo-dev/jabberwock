@@ -20,6 +20,13 @@ export type Predicate<T = boolean> = T extends VNode ? Constructor<T> : (node: V
 export type Point = [VNode, RelativePosition];
 
 let id = 0;
+interface VNodeConstructor {
+    new <T extends Constructor<VNode>>(...args: ConstructorParameters<T>): this;
+    atomic: boolean;
+}
+export interface VNode {
+    constructor: VNodeConstructor & this;
+}
 export class VNode {
     static readonly atomic: boolean = false;
     readonly type: VNodeType;
@@ -60,7 +67,7 @@ export class VNode {
      * while declaring the `atomic` property in a static way.
      */
     get atomic(): boolean {
-        return (this.constructor as typeof VNode).atomic;
+        return this.constructor.atomic;
     }
 
     //--------------------------------------------------------------------------
@@ -95,8 +102,8 @@ export class VNode {
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      */
-    shallowDuplicate(): VNode {
-        return new VNode();
+    clone(): this {
+        return new this.constructor();
     }
 
     //--------------------------------------------------------------------------
@@ -698,7 +705,7 @@ export class VNode {
     splitAt(child: VNode): VNode {
         const nodesToMove = [child];
         nodesToMove.push(...withMarkers(() => child.nextSiblings()));
-        const duplicate = this.shallowDuplicate();
+        const duplicate = this.clone();
         this.after(duplicate);
         nodesToMove.forEach(sibling => duplicate.append(sibling));
         return duplicate;

@@ -80,10 +80,10 @@ describePlugin(Char, testEditor => {
                 }).to.throw('Char', 'empty text');
             });
         });
-        describe('shallowDuplicate', () => {
+        describe('clone', () => {
             it('should duplicate a simple char', async () => {
                 const c = new CharNode('a');
-                const copy = c.shallowDuplicate();
+                const copy = c.clone();
                 expect(copy).to.not.equal(c);
                 expect(copy instanceof CharNode).to.equal(true);
                 expect(copy.char).to.equal(c.char);
@@ -92,7 +92,7 @@ describePlugin(Char, testEditor => {
             it('should duplicate a char with format', async () => {
                 const c = new CharNode('a');
                 c.bold = true;
-                const copy = c.shallowDuplicate();
+                const copy = c.clone();
                 expect(copy).to.not.equal(c);
                 expect(copy.format.bold).to.equal(true, 'copy is bold');
                 expect(copy.char).to.equal(c.char);
@@ -100,14 +100,14 @@ describePlugin(Char, testEditor => {
             });
             it('should mark as italic a duplicate a char', async () => {
                 const c = new CharNode('a');
-                const copy = c.shallowDuplicate();
+                const copy = c.clone();
                 copy.italic = true;
                 expect(copy.format.italic).to.equal(true, 'copy is now italic');
                 expect(c.format.italic).to.equal(false, 'original char is not italic');
             });
             it('should update the format for a duplicate a char', async () => {
                 const c = new CharNode('a');
-                const copy = c.shallowDuplicate();
+                const copy = c.clone();
                 copy.format = { italic: true };
                 expect(copy.format.italic).to.equal(true, 'copy is now italic');
                 expect(c.format.italic).to.equal(false, 'original char is not italic');

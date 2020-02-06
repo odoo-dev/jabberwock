@@ -14,7 +14,7 @@ export class VElement extends VNode {
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      */
-    shallowDuplicate(): VElement {
-        return new VElement(this.htmlTag);
+    clone(): this {
+        return new this.constructor<typeof VElement>(this.htmlTag);
     }
 }
