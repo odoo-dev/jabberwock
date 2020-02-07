@@ -578,6 +578,9 @@ export class VNode {
      * @param node
      */
     before(node: VNode): VNode {
+        if (!this.parent) {
+            throw 'Cannot insert a VNode before a VNode with no parent.';
+        }
         return this.parent.insertBefore(node, this);
     }
     /**
@@ -586,6 +589,9 @@ export class VNode {
      * @param node
      */
     after(node: VNode): VNode {
+        if (!this.parent) {
+            throw 'Cannot insert a VNode after a VNode with no parent.';
+        }
         return this.parent.insertAfter(node, this);
     }
     /**
@@ -676,6 +682,9 @@ export class VNode {
      * @param child
      */
     splitAt(child: VNode): VNode {
+        if (child.parent !== this) {
+            throw new Error('The given VNode is not a child of this VNode');
+        }
         const duplicate = this.clone();
         const index = child.parent.children.indexOf(child);
         while (this.children.length > index) {
