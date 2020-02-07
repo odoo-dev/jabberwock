@@ -84,7 +84,8 @@ export class VRange {
      * Return true if the range is collapsed.
      */
     isCollapsed(): boolean {
-        return this.startContainer.children[this.start.index + 1] === this.end;
+        const startIndex = this.start.parent.children.indexOf(this.start);
+        return this.startContainer.children[startIndex + 1] === this.end;
     }
     /**
      * Return a list of all the nodes between the start and end of this range.

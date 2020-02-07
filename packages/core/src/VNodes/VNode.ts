@@ -107,23 +107,6 @@ export class VNode {
         return this.children().length;
     }
     /**
-     * Return the index of this VNode within its parent.
-     *
-     * @see indexOf
-     */
-    get index(): number {
-        return (this.parent && this.parent.indexOf(this)) || 0;
-    }
-    /**
-     * Return the index of the child within this VNode.
-     * Return -1 if the child was not found.
-     *
-     * @param child
-     */
-    indexOf(child: VNode): number {
-        return this.children.indexOf(child);
-    }
-    /**
      * Return this VNode's inner text (concatenation of all descendent
      * char nodes values).
      *
@@ -159,8 +142,18 @@ export class VNode {
         } while (thisAncestor && nodeAncestor && thisAncestor === nodeAncestor);
 
         if (thisAncestor && nodeAncestor) {
-            // Compare the indices of both ancestors in their shared parent.
-            return thisAncestor.index < nodeAncestor.index;
+            const thisParent = thisAncestor.parent;
+            const nodeParent = nodeAncestor.parent;
+            if (thisParent && thisParent === nodeParent) {
+                // Compare the indices of both ancestors in their shared parent.
+                const thisIndex = thisParent.children.indexOf(thisAncestor);
+                const nodeIndex = nodeParent.children.indexOf(nodeAncestor);
+                return thisIndex < nodeIndex;
+            } else {
+                // The very first ancestor of both nodes are different so
+                // they actually come from two different trees altogether.
+                return false;
+            }
         } else {
             // One of the nodes was in the ancestors path of the other.
             return !thisAncestor && !!nodeAncestor;
@@ -614,7 +607,7 @@ export class VNode {
      * @param reference
      */
     insertBefore(node: VNode, reference: VNode): VNode {
-        const index = this.indexOf(reference);
+        const index = this.children.indexOf(reference);
         if (index < 0) {
             throw new Error('The given VNode is not a child of this VNode');
         }
@@ -628,7 +621,7 @@ export class VNode {
      * @param reference
      */
     insertAfter(node: VNode, reference: VNode): VNode {
-        const index = this.indexOf(reference);
+        const index = this.children.indexOf(reference);
         if (index < 0) {
             throw new Error('The given VNode is not a child of this VNode');
         }
@@ -656,7 +649,7 @@ export class VNode {
      * @param child
      */
     removeChild(child: VNode): VNode {
-        const index = this.indexOf(child);
+        const index = this.children.indexOf(child);
         if (index < 0) {
             throw new Error('The given VNode is not a child of this VNode');
         }
@@ -683,7 +676,7 @@ export class VNode {
      */
     splitAt(child: VNode): VNode {
         const duplicate = this.clone();
-        const index = child.index;
+        const index = child.parent.children.indexOf(child);
         while (this.children.length > index) {
             duplicate.append(this.children[index]);
         }
@@ -771,7 +764,7 @@ export class VNode {
      */
     _insertAtIndex(child: VNode, index: number): VNode {
         if (child.parent) {
-            const currentIndex = child.parent.indexOf(child);
+            const currentIndex = child.parent.children.indexOf(child);
             if (index && child.parent === this && currentIndex < index) {
                 index--;
             }
