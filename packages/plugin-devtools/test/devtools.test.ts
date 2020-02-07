@@ -156,7 +156,6 @@ describe('Plugin: DevTools', () => {
                 '<div class="divider">👪 My Family</div>' +
                 '<table>' +
                 '<tbody>' +
-                '<tr><td>index</td><td>0</td></tr>' +
                 '<tr><td>parent</td><td>undefined</td></tr>' +
                 '<tr><td>children</td><td><ol><li>' +
                 editor.vDocument.root.children()[0].type +
@@ -238,7 +237,6 @@ describe('Plugin: DevTools', () => {
             const familyResult =
                 '<table>' +
                 '<tbody>' +
-                '<tr><td>index</td><td>1</td></tr>' +
                 '<tr><td>parent</td><td>' +
                 editor.vDocument.root.name +
                 '</td></tr>' +
@@ -469,7 +467,6 @@ describe('Plugin: DevTools', () => {
             const familyResult =
                 '<table>' +
                 '<tbody>' +
-                '<tr><td>index</td><td>1</td></tr>' +
                 '<tr><td>parent</td><td>' +
                 vNodeChar.parent.name +
                 '</td></tr>' +

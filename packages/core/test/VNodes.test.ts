@@ -163,31 +163,6 @@ describe('core', () => {
                         expect(vNode.type).to.equal(VNodeType.NODE);
                     });
                 });
-                describe('index', () => {
-                    it('should found the index of this VNode within its parent', async () => {
-                        const root = new VNode();
-                        const p = new VElement('P');
-                        root.append(p);
-                        const h1 = new VElement('H1');
-                        root.append(h1);
-                        const a = new CharNode('a');
-                        root.append(a);
-                        const br = new LineBreakNode();
-                        root.append(br);
-                        const h2 = new VElement('H2');
-                        root.append(h2);
-                        const b = new CharNode('b');
-                        root.append(b);
-
-                        expect(root.length).to.equal(6);
-                        expect(p.index).to.equal(0);
-                        expect(h1.index).to.equal(1);
-                        expect(a.index).to.equal(2);
-                        expect(br.index).to.equal(3);
-                        expect(h2.index).to.equal(4);
-                        expect(b.index).to.equal(5);
-                    });
-                });
                 describe('text', () => {
                     it('should concat all children CharNodes value', async () => {
                         const root = new VNode();
