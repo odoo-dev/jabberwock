@@ -202,7 +202,15 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the nth child of given node. TODO: more comment
+     * Return the nth child of this node. The given `n` argument is the 1-based
+     * index of the position of the child inside this node, excluding markers.
+     *
+     * Examples:
+     * nthChild(1) returns the first (1st) child.
+     * nthChild(2) returns the second (2nd) child.
+     * nthChild(3) returns the second (3rd) child.
+     * nthChild(4) returns the second (4th) child.
+     * ...
      *
      * @param n
      */
