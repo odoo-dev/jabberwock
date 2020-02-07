@@ -202,13 +202,12 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the child at given index.
+     * Return the nth child of given node. TODO: more comment
      *
-     * @see _nthChild
-     * @param index
+     * @param n
      */
-    nthChild(index: number): VNode {
-        return this.children[index];
+    nthChild(n: number): VNode {
+        return this.children()[n - 1];
     }
     /**
      * Return this VNode's siblings.
@@ -242,7 +241,7 @@ export class VNode {
     firstChild<T extends VNode>(predicate?: Constructor<T>): T;
     firstChild<T>(predicate?: Predicate<T>): VNode;
     firstChild<T>(predicate?: Predicate<T>): VNode {
-        let firstChild = this.nthChild(0);
+        let firstChild = this.children[0];
         while (firstChild && (isMarker(firstChild) || !firstChild.test(predicate))) {
             firstChild = firstChild.nextSibling();
         }
@@ -258,7 +257,7 @@ export class VNode {
     lastChild<T extends VNode>(predicate?: Constructor<T>): T;
     lastChild<T>(predicate?: Predicate<T>): VNode;
     lastChild<T>(predicate?: Predicate<T>): VNode {
-        let lastChild = this.nthChild(this.children.length - 1);
+        let lastChild = this.children[this.children.length - 1];
         while (lastChild && (isMarker(lastChild) || !lastChild.test(predicate))) {
             lastChild = lastChild.previousSibling();
         }
@@ -348,7 +347,8 @@ export class VNode {
     previousSibling<T>(predicate?: Predicate<T>): VNode;
     previousSibling<T>(predicate?: Predicate<T>): VNode {
         if (!this.parent) return;
-        let sibling = this.parent.nthChild(this.index - 1);
+        const index = this.parent.children.indexOf(this);
+        let sibling = this.parent.children[index - 1];
         // Skip ignored siblings and those failing the predicate test.
         while (sibling && (isMarker(sibling) || !sibling.test(predicate))) {
             sibling = sibling.previousSibling();
@@ -366,7 +366,8 @@ export class VNode {
     nextSibling<T>(predicate?: Predicate<T>): VNode;
     nextSibling<T>(predicate?: Predicate<T>): VNode {
         if (!this.parent) return;
-        let sibling = this.parent.nthChild(this.index + 1);
+        const index = this.parent.children.indexOf(this);
+        let sibling = this.parent.children[index + 1];
         // Skip ignored siblings and those failing the predicate test.
         while (sibling && (isMarker(sibling) || !sibling.test(predicate))) {
             sibling = sibling.nextSibling();

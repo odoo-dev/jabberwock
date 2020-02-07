@@ -447,10 +447,10 @@ describe('core', () => {
                 });
                 describe('nthChild', () => {
                     it('should return the child at given index', async () => {
-                        expect(root.nthChild(0)).to.equal(a);
-                        expect(root.nthChild(1)).to.equal(h1);
-                        expect(root.nthChild(2)).to.equal(c);
-                        expect(root.nthChild(3)).to.equal(p);
+                        expect(root.nthChild(1)).to.equal(a);
+                        expect(root.nthChild(2)).to.equal(h1);
+                        expect(root.nthChild(3)).to.equal(c);
+                        expect(root.nthChild(4)).to.equal(p);
                     });
                 });
                 describe('siblings', () => {
