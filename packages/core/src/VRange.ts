@@ -84,6 +84,7 @@ export class VRange {
      * Return true if the range is collapsed.
      */
     isCollapsed(): boolean {
+        if (!this.startContainer || !this.endContainer) return;
         const startIndex = this.start.parent.children.indexOf(this.start);
         return this.startContainer.children[startIndex + 1] === this.end;
     }

@@ -959,6 +959,13 @@ describe('core', () => {
                         a.before(c);
                         expect(a.siblings).to.deep.equal([b, c, a]);
                     });
+                    it('should throw if no parent', async () => {
+                        const root = new VNode();
+                        const a = new CharNode('a');
+                        expect(() => {
+                            root.before(a);
+                        }).to.throw();
+                    });
                 });
                 describe('after', () => {
                     it('should insert after node', async () => {
@@ -981,6 +988,13 @@ describe('core', () => {
                         root.append(c);
                         b.after(a);
                         expect(a.siblings).to.deep.equal([b, a, c]);
+                    });
+                    it('should throw if no parent', async () => {
+                        const root = new VNode();
+                        const a = new CharNode('a');
+                        expect(() => {
+                            root.after(a);
+                        }).to.throw();
                     });
                 });
                 describe('insertBefore', () => {
@@ -1082,6 +1096,14 @@ describe('core', () => {
                         p.splitAt(b);
                         expect(p.children.slice()).to.deep.equal([a, marker1]);
                         expect(p.nextSibling().children.slice()).to.deep.equal([b, marker2, c]);
+                    });
+                    it('should throw if no parent', async () => {
+                        const root = new FragmentNode();
+                        const p = new VElement('P');
+                        root.append(p);
+                        expect(() => {
+                            root.splitAt(p);
+                        }).to.throw();
                     });
                 });
             });

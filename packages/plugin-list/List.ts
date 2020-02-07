@@ -259,11 +259,11 @@ export class List extends JWPlugin {
         // Get the direct children of each list to unlist.
         const listItems = distinct(
             nodes.map(node => {
-                if (node.parent.is(ListNode)) {
+                if (node.parent && node.parent.is(ListNode)) {
                     return node;
                 } else {
                     return node.ancestor(ancestor => {
-                        return ancestor.parent.is(ListNode);
+                        return ancestor.parent && ancestor.parent.is(ListNode);
                     });
                 }
             }),
