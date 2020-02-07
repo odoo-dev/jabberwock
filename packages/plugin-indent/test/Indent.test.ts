@@ -50,6 +50,14 @@ describePlugin(Indent, testEditor => {
                     '<p>&nbsp;&nbsp; &nbsp;cd</p>' +
                     '<p>&nbsp;&nbsp; &nbsp;e]f</p>',
             });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>a[b</p><p><br/></p><p>e]f</p>',
+                stepFunction: indent,
+                contentAfter:
+                    '<p>&nbsp;&nbsp; &nbsp;a[b</p>' +
+                    '<p>&nbsp;&nbsp; &nbsp;</p>' +
+                    '<p>&nbsp;&nbsp; &nbsp;e]f</p>',
+            });
         });
         it('should indent with a fake range', async function() {
             await testEditor(BasicEditor, {
@@ -69,16 +77,48 @@ describePlugin(Indent, testEditor => {
         });
     });
     describe('outdent', async function() {
-        it('should do nothing when only one parent selected', async function() {
+        it('should do nothing if no space at the beginning of line', async function() {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>a[]b<br>&nbsp;&nbsp; &nbsp;cd</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[]b<br>&nbsp;&nbsp; &nbsp;cd</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>a[]b</p><p>&nbsp;&nbsp; &nbsp;cd</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[]b</p><p>&nbsp;&nbsp; &nbsp;cd</p>',
+            });
+        });
+        it('should outdent when only one parent selected', async function() {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[]b</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[]b</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>&nbsp;&nbsp; a[]b</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[]b</p>',
+            });
             await testEditor(BasicEditor, {
                 contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b]</p>',
                 stepFunction: outdent,
-                contentAfter: '<p>&nbsp;&nbsp; &nbsp;a[b]</p>',
+                contentAfter: '<p>a[b]</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>&nbsp;&nbsp; a[b]</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[b]</p>',
             });
         });
         it('should outdent(up to 4 spaces) when selection in multiples lines', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b<br/>&nbsp;&nbsp; &nbsp;c]d</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[b<br>c]d</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b<br/>&nbsp;&nbsp; c]d</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b<br>c]d</p>',
             });
@@ -88,6 +128,19 @@ describePlugin(Indent, testEditor => {
                 contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b<br/>&nbsp;&nbsp; &nbsp;c]d</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b<br>c]d</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>&nbsp;&nbsp; a[b<br/>&nbsp;&nbsp; &nbsp;c]d</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[b<br>c]d</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore:
+                    '<p>&nbsp;&nbsp; &nbsp;a[b</p>' +
+                    '<p>&nbsp;&nbsp; &nbsp;</p>' +
+                    '<p>&nbsp;&nbsp; &nbsp;e]f</p>',
+                stepFunction: outdent,
+                contentAfter: '<p>a[b</p><p><br></p><p>e]f</p>',
             });
         });
         it('should outdent with a fake range', async function() {

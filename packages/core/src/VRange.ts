@@ -89,7 +89,24 @@ export class VRange {
         return this.startContainer.children[startIndex + 1] === this.end;
     }
     /**
-     * Return a list of all the nodes between the start and end of this range.
+     * Return a list of all the nodes traversed from start to end of this range.
+     */
+    retractedNodes(predicate?: Predicate): VNode[];
+    retractedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
+    retractedNodes<T>(predicate?: Predicate<T>): VNode[];
+    retractedNodes<T>(predicate?: Predicate<T>): VNode[] {
+        const selectedNodes: VNode[] = [];
+        let node = this.start;
+        const bound = this.end.next();
+        while ((node = node.next()) && node !== bound) {
+            if (node.test(predicate)) {
+                selectedNodes.push(node);
+            }
+        }
+        return selectedNodes;
+    }
+    /**
+     * Return a list of all nodes that are fully selected by this range.
      */
     selectedNodes(predicate?: Predicate): VNode[];
     selectedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
@@ -141,6 +158,8 @@ export class VRange {
             // We check that `reference` isn't `this.end` to avoid a backward
             // collapsed range.
             reference.after(this.start);
+        } else if (position === RelativePosition.INSIDE) {
+            reference.append(this.start);
         } else {
             reference.before(this.start);
         }
@@ -163,6 +182,8 @@ export class VRange {
             // We check that `reference` isn't `this.start` to avoid a backward
             // collapsed range.
             reference.before(this.end);
+        } else if (position === RelativePosition.INSIDE) {
+            reference.append(this.end);
         } else {
             reference.after(this.end);
         }
