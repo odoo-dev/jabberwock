@@ -9,4 +9,7 @@ export class HeadingNode extends VElement {
     get name(): string {
         return super.name + ': ' + this.level;
     }
+    clone(): this {
+        return new this.constructor<typeof HeadingNode>(this.level);
+    }
 }
