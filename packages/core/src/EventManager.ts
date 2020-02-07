@@ -28,6 +28,12 @@ export class EventManager {
     async _onNormalizedEvent(customEvent: CustomEvent): Promise<void> {
         const payload = customEvent.detail;
         switch (customEvent.type) {
+            case 'tab':
+                if (customEvent.detail.shiftKey) {
+                    return this.editor.execCommand('outdent');
+                } else {
+                    return this.editor.execCommand('indent');
+                }
             case 'enter':
                 if (customEvent.detail.shiftKey) {
                     return this.editor.execCommand('insertLineBreak');

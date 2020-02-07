@@ -1,7 +1,7 @@
 import JWEditor from '../../core/src/JWEditor';
 import { JWPlugin } from '../../core/src/JWPlugin';
 import { RangeParams } from '../../core/src/CorePlugin';
-import { VNode } from '../../core/src/VNodes/VNode';
+import { VNode, RelativePosition, Point } from '../../core/src/VNodes/VNode';
 import { Char, InsertTextParams } from '../../plugin-char/Char';
 import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
@@ -36,32 +36,30 @@ export class Indent extends JWPlugin {
      */
     async indent(params: IndentParams): Promise<void> {
         const range = params.range || this.editor.vDocument.selection.range;
-        const selectedSegmentBreaks = range.selectedNodes(this._isSegmentBreak);
+        const segmentBreaks = range.retractedNodes(this._isSegmentBreak);
         // Only indent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
-        if (selectedSegmentBreaks.length) {
-            const segmentBreaks = new Set(selectedSegmentBreaks);
-            // The first and last lines are only partially selected, which means
-            // their segment break would not be found in `range.selectedNodes`.
-            segmentBreaks.add(range.start.ancestor(this._isSegmentBreak));
-            segmentBreaks.add(range.end.ancestor(this._isSegmentBreak));
-            for (const segmentBreak of segmentBreaks) {
-                // Insert 4 spaces before each character following a line break.
-                const firstChar = segmentBreak.next(CharNode);
-                await withRange(VRange.at(firstChar), async startOfLineRange => {
-                    const params: InsertTextParams = {
-                        text: this.tab,
-                        range: startOfLineRange,
-                    };
-                    await this.editor.execCommand('insertText', params);
-                });
-            }
-        } else {
+        if (range.isCollapsed() || !segmentBreaks.length) {
             const params: InsertTextParams = {
                 text: this.tab,
                 range: range,
             };
             await this.editor.execCommand('insertText', params);
+        } else {
+            // The first line of the selection is neither fully selected nor
+            // retracted so its segment break was not in `range.retractedNodes`.
+            segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
+            for (const segmentBreak of segmentBreaks) {
+                // Insert 4 spaces at the start of next segment.
+                const [node, position] = this._nextSegmentStart(segmentBreak);
+                await withRange(VRange.at(node, position), async range => {
+                    const params: InsertTextParams = {
+                        text: this.tab,
+                        range: range,
+                    };
+                    await this.editor.execCommand('insertText', params);
+                });
+            }
         }
     }
 
@@ -73,28 +71,27 @@ export class Indent extends JWPlugin {
      */
     outdent(params: OutdentParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const selectedSegmentBreaks = range.selectedNodes(this._isSegmentBreak);
+        const segmentBreaks = range.retractedNodes(this._isSegmentBreak);
+        // The first line of the selection is neither fully selected nor
+        // retracted so its segment break was not in `range.retractedNodes`.
+        segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
         // Only outdent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
-        if (selectedSegmentBreaks.length) {
-            const segmentBreaks = new Set(selectedSegmentBreaks);
-            // The first and last lines are only partially selected, which means
-            // their segment break would not be found in `range.selectedNodes`.
-            segmentBreaks.add(range.start.ancestor(this._isSegmentBreak));
-            segmentBreaks.add(range.end.ancestor(this._isSegmentBreak));
-            const isSpace = (node: VNode): boolean => {
-                return node.is(CharNode) && /^\s$/g.test(node.char);
-            };
+        if (segmentBreaks.length) {
             segmentBreaks.forEach(segmentBreak => {
                 for (let i = 0; i < this.tab.length; i++) {
-                    const indentationSpace = segmentBreak.next(isSpace);
-                    if (indentationSpace) {
-                        indentationSpace.remove();
+                    const space = this._nextIndentationSpace(segmentBreak);
+                    if (space) {
+                        space.remove();
                     }
                 }
             });
         }
     }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
 
     /**
      * Return true if the given VNode can be considered to be a segment break.
@@ -102,11 +99,45 @@ export class Indent extends JWPlugin {
      * @param params
      */
     _isSegmentBreak(node: VNode): boolean {
-        if (node.hasChildren()) {
-            const firstChild = node.firstChild();
-            return firstChild && firstChild.is(CharNode);
+        return !node.atomic || node.is(LineBreakNode);
+    }
+    /**
+     * Return the next segment start point after the given segment break.
+     *
+     * @param segmentBreak
+     */
+    _nextSegmentStart(segmentBreak: VNode): Point {
+        let reference = segmentBreak;
+        let position = RelativePosition.BEFORE;
+        if (segmentBreak.atomic) {
+            reference = segmentBreak.nextSibling();
+        } else if (segmentBreak.hasChildren()) {
+            reference = segmentBreak.firstChild();
         } else {
-            return node.is(LineBreakNode);
+            position = RelativePosition.INSIDE;
         }
+        return [reference, position];
+    }
+    /**
+     * Return true if the given VNode is a CharNode containing a space.
+     *
+     * @param node
+     */
+    _isSpace(node: VNode): boolean {
+        return node.is(CharNode) && /^\s$/g.test(node.char);
+    }
+    /**
+     * Return true if the given VNode can be considered to be a segment break.
+     *
+     * @param segmentBreak
+     */
+    _nextIndentationSpace(segmentBreak: VNode): VNode {
+        let space: VNode;
+        if (segmentBreak.atomic) {
+            space = segmentBreak.nextSibling();
+        } else {
+            space = segmentBreak.firstChild();
+        }
+        return space && space.test(this._isSpace) && space;
     }
 }

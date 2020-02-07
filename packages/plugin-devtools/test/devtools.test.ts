@@ -707,6 +707,8 @@ describe('Plugin: DevTools', () => {
                 'applyFormat',
                 'insertLineBreak',
                 'toggleList',
+                'indent',
+                'outdent',
                 'insert',
                 'insertParagraphBreak',
                 'setSelection',
