@@ -1,21 +1,12 @@
-import { VNode } from '../core/src/VNodes/VNode';
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
+import { Format } from '../plugin-inline/Format';
+import { InlineNode } from '../plugin-inline/InlineNode';
+import { VNode } from '../core/src/VNodes/VNode';
 
-export interface FormatType {
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-}
-export const FORMAT_TYPES = ['bold', 'italic', 'underline'];
-
-export class CharNode extends VNode {
+export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    // Format
-    bold = false;
-    italic = false;
-    underline = false;
-    constructor(char: string, format: FormatType = {}) {
+    constructor(char: string, format?: Format[]) {
         super();
         if (char.length !== 1) {
             throw new Error(
@@ -23,9 +14,9 @@ export class CharNode extends VNode {
             );
         }
         this.char = char;
-        this.bold = !!format.bold;
-        this.italic = !!format.italic;
-        this.underline = !!format.underline;
+        if (format) {
+            this.formats = format;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -41,25 +32,15 @@ export class CharNode extends VNode {
      * @override
      */
     clone(): this {
-        return new this.constructor<typeof CharNode>(this.char, this.format);
+        const clone = new this.constructor<typeof CharNode>(this.char, [...this.formats]);
+        clone.attributes = { ...this.attributes };
+        return clone;
     }
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    get format(): FormatType {
-        return {
-            bold: this.bold,
-            italic: this.italic,
-            underline: this.underline,
-        };
-    }
-    set format(format: FormatType) {
-        this.bold = !!format.bold;
-        this.italic = !!format.italic;
-        this.underline = !!format.underline;
-    }
     /**
      * Return the length of this VNode.
      */
@@ -84,9 +65,16 @@ export class CharNode extends VNode {
      */
     isSameTextNode(node: VNode): boolean {
         if (this.is(CharNode) && node.is(CharNode)) {
-            // Char VNodes are the same text node if they have the same format.
-            const formats = Object.keys({ ...this.format, ...node.format });
-            return formats.every(k => !!this.format[k] === !!node.format[k]);
+            // Char VNodes are the same text node if they have the same format,
+            // attributes and format attributes.
+            const attributes = [...Object.keys(this.attributes), ...Object.keys(node.attributes)];
+            return (
+                this.formats.length === node.formats.length &&
+                this.formats.every(aFormat => {
+                    return !!node.formats.find(bFormat => bFormat.isSameAs(aFormat));
+                }) &&
+                attributes.every(k => this.attributes[k] === node.attributes[k])
+            );
         } else if (this.is(MarkerNode) || node.is(MarkerNode)) {
             // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not

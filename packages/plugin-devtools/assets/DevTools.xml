@@ -54,9 +54,9 @@
             <span t-elif="props.vNode.char" t-on-click="onClickNode"
                 t-on-dblclick="onDblClickNode"
                 class="selectable-line" t-att-class="{
-                    bold: props.vNode.bold,
-                    italic: props.vNode.italic,
-                    underline: props.vNode.underline,
+                    bold: isBold(props.vNode),
+                    italic: isItalic(props.vNode),
+                    underline: isUnderline(props.vNode),
                     selected: props.selectedID == props.vNode.id,
                 }">
                 <t t-esc="repr()"/>
@@ -65,9 +65,9 @@
                 <span class="element-name selectable-line" t-on-click="onClickNode"
                     t-on-dblclick="onDblClickNode"
                     t-att-class="{
-                        bold: props.vNode.bold,
-                        italic: props.vNode.italic,
-                        underline: props.vNode.underline,
+                        bold: isBold(props.vNode),
+                        italic: isItalic(props.vNode),
+                        underline: isUnderline(props.vNode),
                         selected: props.selectedID == props.vNode.id,
                         'line-break': props.vNode.htmlTag === 'BR',
                     }">

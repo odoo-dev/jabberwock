@@ -34,7 +34,7 @@ export class List extends JWPlugin {
         },
     ];
     readonly parsers = [ListDomParser, ListItemDomParser];
-    readonly renderers = [ListDomRenderer, ListItemDomRenderer];
+    readonly renderers = [ListItemDomRenderer, ListDomRenderer];
 
     //--------------------------------------------------------------------------
     // Public

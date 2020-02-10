@@ -5,6 +5,7 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { ListNode, ListType } from '../ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/CharNode';
+import { BoldFormat } from '../../plugin-bold/BoldFormat';
 
 describe('ListDomRenderer', () => {
     describe('render', () => {
@@ -55,7 +56,7 @@ describe('ListDomRenderer', () => {
             const ul = new ListNode(ListType.UNORDERED);
             const p2 = new VElement('P');
             p2.append(new CharNode('a'));
-            p2.append(new CharNode('.', { bold: true }));
+            p2.append(new CharNode('.', [new BoldFormat()]));
             p2.append(new CharNode('a'));
             ul.append(p2);
 

@@ -10,6 +10,8 @@ export class HeadingNode extends VElement {
         return super.name + ': ' + this.level;
     }
     clone(): this {
-        return new this.constructor<typeof HeadingNode>(this.level);
+        const clone = new this.constructor<typeof HeadingNode>(this.level);
+        clone.attributes = { ...this.attributes };
+        return clone;
     }
 }

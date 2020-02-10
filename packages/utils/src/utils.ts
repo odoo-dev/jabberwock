@@ -17,6 +17,23 @@ export function isBlock(node: Node): boolean {
 }
 
 /**
+ * Return true if object a is deep equal to object b, false otherwise.
+ *
+ * @param a
+ * @param b
+ */
+export function deepEqualObjects(a: object, b: object): boolean {
+    const aKeys = Object.keys(a);
+    if (aKeys.length !== Object.keys(b).length) return false;
+    for (const key of aKeys) {
+        if (a[key] !== b[key]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
  * Convert certain special characters to unicode.
  */
 export function toUnicode(string: string): string {

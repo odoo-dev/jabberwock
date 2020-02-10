@@ -15,6 +15,8 @@ export class VElement extends VNode {
      * Return a new VNode with the same type and attributes as this VNode.
      */
     clone(): this {
-        return new this.constructor<typeof VElement>(this.htmlTag);
+        const clone = new this.constructor<typeof VElement>(this.htmlTag);
+        clone.attributes = { ...this.attributes };
+        return clone;
     }
 }

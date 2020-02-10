@@ -70,6 +70,21 @@ export class RenderingEngine<T = {}> {
     }
 
     /**
+     * Return the rendering of several nodes, so as to skip rendering them again
+     * later in the process.
+     *
+     * @param nodes
+     * @param rendering
+     */
+    async rendered(nodes: VNode[], rendering: [Renderer<T>, Promise<T>]): Promise<T> {
+        for (const node of nodes) {
+            const renderings = this.renderings.get(node) || [];
+            renderings.push(rendering);
+        }
+        return rendering[1];
+    }
+
+    /**
      * Trigger the rendering of the given node by the next compatible renderer
      * that has not yet produced a rendering for this run.
      *

@@ -152,7 +152,7 @@ describe('Plugin: DevTools', () => {
                 '</tbody>' +
                 '</table>' +
                 '<div class="divider">📖 My Properties</div>' +
-                '<table><tbody></tbody></table>' +
+                '<table><tbody><tr><td>attributes</td><td>{}</td></tr></tbody></table>' +
                 '<div class="divider">👪 My Family</div>' +
                 '<table>' +
                 '<tbody>' +
@@ -709,8 +709,8 @@ describe('Plugin: DevTools', () => {
                 'deleteBackward',
                 'deleteForward',
                 'selectAll',
+                'toggleFormat',
                 'insertText',
-                'applyFormat',
                 'insertLineBreak',
                 'applyHeadingStyle',
                 'toggleList',

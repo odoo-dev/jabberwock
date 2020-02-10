@@ -19,7 +19,11 @@ export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
             } else {
                 nodeName = node.constructor.name.toUpperCase() + '-' + node.id;
             }
-            domNode = document.createElement(nodeName);
+            const element = document.createElement(nodeName);
+            for (const name of Object.keys(node.attributes)) {
+                element.setAttribute(name, node.attributes[name]);
+            }
+            domNode = element;
         }
         // If a node is empty but could accomodate children,
         // fill it to make it visible.

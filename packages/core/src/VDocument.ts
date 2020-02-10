@@ -1,17 +1,11 @@
 import { VNode } from './VNodes/VNode';
-import { FormatType } from '../../plugin-char/CharNode';
+import { VRange } from './VRange';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { VSelection } from './VSelection';
 
 export class VDocument {
     root: VNode;
     selection = new VSelection();
-    /**
-     * When apply format on a collapsed range, cache the calculation of the format the following
-     * property.
-     * This value is reset each time the range change in a document.
-     */
-    formatCache: FormatType = null;
 
     constructor(root: FragmentNode) {
         this.root = root;

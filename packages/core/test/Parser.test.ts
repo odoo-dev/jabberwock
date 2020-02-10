@@ -5,7 +5,6 @@ import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { VElement } from '../src/VNodes/VElement';
 import { testEditor, renderTextualSelection } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { FormatDomParser } from '../../plugin-format/src/FormatDomParser';
 import { CharDomParser } from '../../plugin-char/CharDomParser';
 import { HeadingDomParser } from '../../plugin-heading/HeadingDomParser';
 import { LineBreakDomParser } from '../../plugin-linebreak/LineBreakDomParser';
@@ -14,18 +13,25 @@ import { ListDomParser } from '../../plugin-list/ListDomParser';
 import { ListItemDomParser } from '../../plugin-list/ListItemDomParser';
 import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
 import JWEditor from '../src/JWEditor';
+import { ItalicDomParser } from '../../plugin-italic/ItalicDomParser';
+import { BoldDomParser } from '../../plugin-bold/BoldDomParser';
+import { UnderlineDomParser } from '../../plugin-underline/UnderlineDomParser';
+import { SpanDomParser } from '../../plugin-span/SpanDomParser';
 
 describe('utils', () => {
     describe('Parser', () => {
         describe('parse()', async () => {
             const parser = new DomParsingEngine(new JWEditor());
-            parser.register(FormatDomParser);
             parser.register(CharDomParser);
             parser.register(HeadingDomParser);
             parser.register(LineBreakDomParser);
             parser.register(ParagraphDomParser);
             parser.register(ListDomParser);
             parser.register(ListItemDomParser);
+            parser.register(BoldDomParser);
+            parser.register(ItalicDomParser);
+            parser.register(UnderlineDomParser);
+            parser.register(SpanDomParser);
 
             it('should parse a "p" tag with some content', async () => {
                 const element = document.createElement('div');
@@ -68,32 +74,16 @@ describe('utils', () => {
                 const a = p.children()[0] as CharNode;
                 expect(a instanceof CharNode).to.be.true;
                 expect(a.char).to.equal('a');
-                expect(a.format).to.deep.equal({
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                });
+                expect(Object.keys(a.formats)).to.deep.equal([]);
                 const b = p.children()[1] as CharNode;
                 expect(b.char).to.equal('b');
-                expect(b.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                });
+                expect(b.formats.map(f => f.name)).to.deep.equal(['i']);
                 const c = p.children()[2] as CharNode;
                 expect(c.char).to.equal('c');
-                expect(c.format).to.deep.equal({
-                    bold: true,
-                    italic: true,
-                    underline: false,
-                });
+                expect(c.formats.map(f => f.name)).to.deep.equal(['i', 'b']);
                 const d = p.children()[3] as CharNode;
                 expect(d.char).to.equal('d');
-                expect(d.format).to.deep.equal({
-                    bold: false,
-                    italic: true,
-                    underline: false,
-                });
+                expect(d.formats.map(f => f.name)).to.deep.equal(['i']);
             });
         });
         describe('parse() who use selection', () => {

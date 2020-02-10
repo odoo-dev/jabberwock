@@ -118,10 +118,7 @@ export class CorePlugin extends JWPlugin {
      */
     setSelection(params: VSelectionParams): void {
         this.editor.vDocument.selection.set(params.vSelection);
-        // Each time the selection changes, we reset its format.
-        this.editor.vDocument.formatCache = null;
     }
-
     /**
      * Update the selection in such a way that it selects the entire document.
      *

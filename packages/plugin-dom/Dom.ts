@@ -8,6 +8,7 @@ import { DomSelectionDescription } from '../core/src/EventNormalizer';
 import { ParsingEngine } from '../core/src/ParsingEngine';
 import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
+import { RenderingEngine } from '../core/src/RenderingEngine';
 
 export class Dom extends JWPlugin {
     readonly parsingEngines = [DomParsingEngine];
@@ -221,8 +222,12 @@ export class Dom extends JWPlugin {
 
         let node = this.editor.vDocument.root.lastLeaf();
         while (node) {
-            const renderedNode = (await this.editor.renderers.dom.render(node)) as Node[];
-            for (const domNode of renderedNode) {
+            const domEngine = this.editor.renderers.dom as RenderingEngine<Node[]>;
+            await domEngine.render(node);
+            const renderings = domEngine.renderings.get(node);
+            const rendering = renderings[renderings.length - 1];
+            const renderedNodes = await rendering[1];
+            for (const domNode of renderedNodes) {
                 this.domMap.set(node, domNode, -1, 'unshift');
                 this._setChildNodes(node, domNode);
             }
