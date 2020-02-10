@@ -1,4 +1,3 @@
-import { Format } from '../../utils/src/Format';
 import { VNode } from './VNodes/VNode';
 
 export class VDocumentMap {
@@ -68,10 +67,10 @@ export class VDocumentMap {
         } else {
             this._fromDom.set(domNode, [node]);
         }
-        // Only if element is not a format and not already in the map to prevent
-        // overriding a VNode if it is representing by multiple Nodes. Only the
-        // first Node is mapped to the VNode.
-        if (!Format.tags.includes(domNode.nodeName) && !this._toDom.has(node)) {
+        // Only if element is not already in the map to prevent overriding a
+        // VNode if it is represented by multiple Nodes. Only the first Node is
+        // mapped to the VNode.
+        if (!this._toDom.has(node)) {
             this._toDom.set(node, [domNode, offset]);
         }
     }

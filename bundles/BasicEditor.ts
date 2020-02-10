@@ -6,15 +6,32 @@ import { Heading } from '../packages/plugin-heading/Heading';
 import { Paragraph } from '../packages/plugin-paragraph/Paragraph';
 import { List } from '../packages/plugin-list/List';
 import { Indent } from '../packages/plugin-indent/src/Indent';
-import { FormatPlugin } from '../packages/plugin-format/src/Format';
 import { ParagraphNode } from '../packages/plugin-paragraph/ParagraphNode';
+import { Span } from '../packages/plugin-span/Span';
+import { Bold } from '../packages/plugin-bold/Bold';
+import { Italic } from '../packages/plugin-italic/Italic';
+import { Underline } from '../packages/plugin-underline/Underline';
+import { Inline } from '../packages/plugin-inline/Inline';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
         super(editable);
         this.loadConfig({
-            plugins: [Dom, Char, FormatPlugin, LineBreak, Heading, Paragraph, List, Indent],
             createBaseContainer: () => new ParagraphNode(),
+            plugins: [
+                Dom,
+                Inline,
+                Char,
+                LineBreak,
+                Heading,
+                Paragraph,
+                List,
+                Indent,
+                Span,
+                Bold,
+                Italic,
+                Underline,
+            ],
         });
     }
 }

@@ -218,7 +218,8 @@ export class JWEditor {
 
             // Load renderers.
             if (plugin.renderers) {
-                for (const RendererClass of plugin.renderers) {
+                const renderers = plugin.renderers.slice().reverse();
+                for (const RendererClass of renderers) {
                     const renderingEngine = this.renderers[RendererClass.id];
                     if (renderingEngine) {
                         renderingEngine.register(RendererClass);

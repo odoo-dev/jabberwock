@@ -10,6 +10,9 @@ export class LineBreakDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: LineBreakNode): Promise<Node[]> {
         const rendering: Node[] = [document.createElement('br')];
+        for (const name of Object.keys(node.attributes)) {
+            (rendering[0] as Element).setAttribute(name, node.attributes[name]);
+        }
         if (!node.nextSibling()) {
             // If a LineBreakNode has no next sibling, it must be rendered
             // as two BRs in order for it to be visible.

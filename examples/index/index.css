@@ -13,3 +13,9 @@ jw-editable {
     padding: 10px;
     height: 100vh;
 }
+
+jw-editable .drop-cap {
+    font-size: 4.5em;
+    margin-top: .15em;
+    vertical-align: middle;
+}

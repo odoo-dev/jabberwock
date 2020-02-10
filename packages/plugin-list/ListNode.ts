@@ -25,6 +25,8 @@ export class ListNode extends VNode {
      *  @override
      */
     clone(): this {
-        return new this.constructor<typeof ListNode>(this.listType);
+        const clone = new this.constructor<typeof ListNode>(this.listType);
+        clone.attributes = { ...this.attributes };
+        return clone;
     }
 }

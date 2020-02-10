@@ -30,12 +30,12 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
+    attributes: Record<string, string> = {};
     children: Array<VNode> & {
         (predicate?: Predicate): VNode[];
         <T extends VNode>(predicate?: Constructor<T>): T[];
         <T>(predicate?: Predicate<T>): VNode[];
     } = new Children([]);
-
     constructor() {
         this.type = VNodeType.NODE;
         id++;
@@ -93,7 +93,9 @@ export class VNode {
      * Return a new VNode with the same type and attributes as this VNode.
      */
     clone(): this {
-        return new this.constructor();
+        const clone = new this.constructor();
+        clone.attributes = { ...this.attributes };
+        return clone;
     }
 
     //--------------------------------------------------------------------------

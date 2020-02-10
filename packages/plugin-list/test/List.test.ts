@@ -11,12 +11,15 @@ import { ListParams, List } from '../List';
 import { ListDomParser } from '../ListDomParser';
 import { ListItemDomParser } from '../ListItemDomParser';
 import { CharDomParser } from '../../plugin-char/CharDomParser';
-import { FormatDomParser } from '../../plugin-format/src/FormatDomParser';
 import { HeadingDomParser } from '../../plugin-heading/HeadingDomParser';
 import { LineBreakDomParser } from '../../plugin-linebreak/LineBreakDomParser';
 import { ParagraphDomParser } from '../../plugin-paragraph/ParagraphDomParser';
 import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
+import { ItalicDomParser } from '../../plugin-italic/ItalicDomParser';
+import { BoldDomParser } from '../../plugin-bold/BoldDomParser';
+import { UnderlineDomParser } from '../../plugin-underline/UnderlineDomParser';
+import { SpanDomParser } from '../../plugin-span/SpanDomParser';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('deleteForward');
@@ -48,13 +51,16 @@ describePlugin(List, testEditor => {
         const editor = new JWEditor();
         editor.loadConfig({ createBaseContainer: () => new ParagraphNode() });
         const engine = new DomParsingEngine(editor);
-        engine.register(FormatDomParser);
         engine.register(CharDomParser);
         engine.register(HeadingDomParser);
         engine.register(LineBreakDomParser);
         engine.register(ParagraphDomParser);
         engine.register(ListDomParser);
         engine.register(ListItemDomParser);
+        engine.register(ItalicDomParser);
+        engine.register(BoldDomParser);
+        engine.register(UnderlineDomParser);
+        engine.register(SpanDomParser);
         it('should parse a complex list', async () => {
             const element = document.createElement('div');
             element.innerHTML = [
@@ -108,7 +114,8 @@ describePlugin(List, testEditor => {
             expect(li1_0.children().length).to.equal(3);
             expect(li1_0.children()[0].toString()).to.equal('a');
             expect(li1_0.children()[1].toString()).to.equal('.');
-            expect((li1_0.children()[1] as CharNode).format.bold).to.be.true;
+            expect((li1_0.children()[1] as CharNode).formats.length).to.equal(1);
+            expect((li1_0.children()[1] as CharNode).formats[0].htmlTag).to.equal('B');
             expect(li1_0.children()[2].toString()).to.equal('a');
 
             const li1_1 = li1.children()[1];

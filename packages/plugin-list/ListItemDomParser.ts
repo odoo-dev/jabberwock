@@ -1,12 +1,14 @@
 import { VNode } from '../core/src/VNodes/VNode';
 import { isBlock } from '../utils/src/utils';
 import { AbstractParser } from '../core/src/AbstractParser';
+import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
 export class ListItemDomParser extends AbstractParser<Node> {
     static id = 'dom';
+    engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item.nodeName === 'LI';
+        return item instanceof Element && item.nodeName === 'LI';
     };
 
     /**
@@ -14,7 +16,7 @@ export class ListItemDomParser extends AbstractParser<Node> {
      *
      * @param context
      */
-    async parse(item: Node): Promise<VNode[]> {
+    async parse(item: Element): Promise<VNode[]> {
         const children = Array.from(item.childNodes);
         // An empty text node as first child should be skipped.
         while (children.length && this._isEmptyTextNode(children[0])) {

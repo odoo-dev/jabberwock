@@ -1,23 +1,16 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { CharNode } from '../../../plugin-char/CharNode';
+import { InlineNode } from '../../../plugin-inline/InlineNode'; // todo: remove dependency
 
 export class PathComponent extends OwlUIComponent<{}> {
     getNodeRepr(vNode: VNode): string {
-        const name: string = vNode.name || '?';
-        let format = '';
-        if (vNode instanceof CharNode) {
-            if (vNode.format.bold) {
-                format += '.b';
-            }
-            if (vNode.format.italic) {
-                format += '.i';
-            }
-            if (vNode.format.underline) {
-                format += '.u';
+        let repr: string = vNode.name || '?';
+        if (vNode instanceof InlineNode) {
+            for (const format of vNode.formats) {
+                repr += '.' + format.name;
             }
         }
-        return name + format;
+        return repr;
     }
     /**
      * Trigger a 'node-selected' custom event

@@ -3,6 +3,7 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
+import { InlineNode } from '../../../plugin-inline/InlineNode';
 
 interface NodeProps {
     isRoot: boolean;
@@ -116,6 +117,30 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      */
     toggleFolded(): void {
         this.state.folded = !this.state.folded;
+    }
+    /**
+     * Return true if the given node is bold.
+     *
+     * @param node
+     */
+    isBold(node: VNode): boolean {
+        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'b');
+    }
+    /**
+     * Return true if the given node is italic.
+     *
+     * @param node
+     */
+    isItalic(node: VNode): boolean {
+        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'i');
+    }
+    /**
+     * Return true if the given node is underline.
+     *
+     * @param node
+     */
+    isUnderline(node: VNode): boolean {
+        return node.is(InlineNode) && !!node.formats.find(format => format.name === 'u');
     }
 
     //--------------------------------------------------------------------------
