@@ -7,10 +7,10 @@
     "dev": "webpack-dev-server --config webpack-examples.config.js",
     "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-examples.config.js",
     "build-odoo": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-odoo.config.js",
-    "perf": "karma start --include-files test/**/*.perf.ts",
-    "coverage": "karma start --coverage",
-    "debug": "karma start --no-browsers --debug",
-    "test": "karma start"
+    "perf": "karma start --include-files **/*.perf.ts",
+    "coverage": "karma start --coverage --include-files **/*.test.ts",
+    "debug": "karma start --no-browsers --debug --include-files **/*.test.ts",
+    "test": "karma start --include-files **/*.test.ts"
   },
   "repository": {
     "type": "git",
