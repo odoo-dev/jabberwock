@@ -2,126 +2,7 @@
 import { expect } from 'chai';
 import { EventNormalizer, EventBatch } from '../src/EventNormalizer';
 import { Direction } from '../src/VSelection';
-
-type TriggerNativeEventsOption =
-    | MouseEventInit
-    | KeyboardEventInit
-    | CompositionEventInit
-    | InputEventInit
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | CustomEventInit<any>
-    | EventInit
-    | DragEventInit
-    | ClipboardEventInit;
-
-/**
- * Get the event type based on its name.
- *
- * @private
- * @param {string} eventName
- * @returns string
- *  'mouse' | 'keyboard' | 'unknown'
- */
-function _eventType(eventName: string): string {
-    const types = {
-        mouse: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
-        composition: ['composition'],
-        input: ['input'],
-        keyboard: ['key'],
-        drag: ['dragstart', 'dragend', 'drop'],
-        paste: ['paste'],
-    };
-    let type = 'unknown';
-    Object.keys(types).forEach(function(key) {
-        const isType = types[key].some(function(str) {
-            return eventName.toLowerCase().indexOf(str) !== -1;
-        });
-        if (isType) {
-            type = key;
-        }
-    });
-    return type;
-}
-/**
- * Trigger events natively on the specified target.
- *
- * @param {node} el
- * @param {string} eventName
- * @param {object} [options]
- * @returns {Promise <Event>}
- */
-function triggerEvent(el: Node, eventName: string, options: TriggerNativeEventsOption): Event {
-    if (!el) {
-        console.warn('Try to trigger an event on an undefined node');
-        return;
-    }
-    el = (el as HTMLElement).tagName ? el : el.parentNode;
-    if (!el.parentNode) {
-        console.warn('Try to trigger an event on a node out of the DOM');
-        return;
-    }
-    options = Object.assign(
-        {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-        },
-        options,
-    );
-    const type = _eventType(eventName);
-    let ev: Event;
-    switch (type) {
-        case 'mouse':
-        case 'contextmenu':
-            ev = new MouseEvent(eventName, options);
-            break;
-        case 'keyboard':
-            ev = new KeyboardEvent(eventName, options);
-            break;
-        case 'composition':
-            ev = new CompositionEvent(eventName, options);
-            break;
-        case 'drag':
-            ev = new DragEvent(eventName, options);
-            break;
-        case 'paste':
-            ev = new ClipboardEvent(eventName, options);
-            break;
-        case 'input':
-            ev = new InputEvent(eventName, options);
-            break;
-        default:
-            ev = new Event(eventName, options);
-            break;
-    }
-    el.dispatchEvent(ev);
-    return ev;
-}
-function setRange(
-    anchorNode: Node,
-    anchorOffset: number,
-    focusNode: Node,
-    focusOffset: number,
-): void {
-    const doc = anchorNode.ownerDocument;
-    const selection = doc.getSelection();
-    if (selection.rangeCount) {
-        const domSelection: Range = selection.getRangeAt(0);
-        domSelection.setStart(anchorNode, anchorOffset);
-        domSelection.collapse(true);
-    } else {
-        const domSelection: Range = doc.createRange();
-        domSelection.setStart(anchorNode, anchorOffset);
-        domSelection.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(domSelection);
-    }
-    selection.extend(focusNode, focusOffset);
-}
-
-async function nextTick(): Promise<void> {
-    return new Promise((resolve): number => setTimeout(resolve));
-}
+import { setRange, nextTick, triggerEvent } from './eventNormalizerUtils';
 
 describe('utils', () => {
     describe('EventNormalizer', () => {
@@ -134,8 +15,14 @@ describe('utils', () => {
             eventBatchs.push(res);
         }
         function callbackBefore(done: Function): void {
+            if (container) {
+                document.body.removeChild(container);
+                normalizer.destroy();
+            }
             container = document.createElement('container');
-            container.style.fontSize = '10px';
+            container.style.fontFamily = 'Courier, Courier New';
+            container.style.lineHeight = '20px';
+            container.style.fontSize = '18px';
             container.style.display = 'block';
             container.style.position = 'absolute';
             container.style.top = '0';
@@ -151,10 +38,25 @@ describe('utils', () => {
             done();
         }
         function callbackAfter(done: Function): void {
-            document.body.removeChild(container);
-            normalizer.destroy();
+            if (container) {
+                document.body.removeChild(container);
+                normalizer.destroy();
+                container = undefined;
+                normalizer = undefined;
+            }
             done();
         }
+
+        before(callbackBefore);
+        after(callbackAfter);
+
+        it('Check if your browser have an available font (Courier) to have valid test', async () => {
+            root.innerHTML = '<span>i</span>';
+            const rect = (root.firstChild as HTMLElement).getBoundingClientRect();
+            expect(rect.height).to.equal(20);
+            expect(rect.width).to.gt(10.5);
+            expect(rect.width).to.lt(11);
+        });
 
         describe('keyboard', () => {
             describe('insert', () => {
@@ -198,24 +100,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: 'o',
-                                    code: 'KeyO',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: 'o',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertText',
+                                    text: 'o',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -259,24 +147,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: ' ',
-                                    code: 'Space',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -316,24 +190,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: ' ',
-                                    code: 'Space',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -372,60 +232,19 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: 'o',
-                                    code: 'KeyO',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: 'o',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertText',
+                                    text: 'o',
+                                },
+
+                                {
+                                    type: 'insertText',
+                                    text: 'i',
                                 },
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: 'i',
-                                    code: 'KeyI',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: 'i',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
-                                },
-                                {
-                                    type: 'keyboard',
-                                    inputType: 'deleteContentBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'backward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteContent',
+                                    direction: 'BACKWARD',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -472,24 +291,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: 'ô',
-                                    code: 'KeyO',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: 'ô',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertText',
+                                    text: 'ô',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -540,24 +345,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: 'ô',
-                                    code: 'KeyO',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: 'ô',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertText',
+                                    text: 'ô',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -609,59 +400,29 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '',
-                                    to: '^',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 4,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: '^',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    text: '^',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
                         },
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '^',
-                                    to: 'ô',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 5,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'ô',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 4,
+                                        focusNode: text,
+                                        focusOffset: 5,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'ô',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -705,59 +466,29 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '',
-                                    to: '^',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 4,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: '^',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    text: '^',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
                         },
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '^',
-                                    to: 'ô',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 5,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'ô',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 4,
+                                        focusNode: text,
+                                        focusOffset: 5,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'ô',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -793,59 +524,29 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '',
-                                    to: '^',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 4,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: '^',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    text: '^',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
                         },
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '^',
-                                    to: 'ô',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 5,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'ô',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 4,
+                                        focusNode: text,
+                                        focusOffset: 5,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'ô',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -883,24 +584,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertText',
-                                    key: 'ô',
-                                    code: '',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: 'ô',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertText',
+                                    text: 'ô',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -938,30 +625,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'hillo',
-                                    to: 'hello',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 2,
-                                                focusNode: text,
-                                                focusOffset: 7,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'hello',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 7,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'hello',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1009,35 +686,24 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '\n',
-                                    to: 'hello ',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: br,
-                                                anchorOffset: 0,
-                                                focusNode: br,
-                                                focusOffset: 1,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'hello',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: br,
+                                        anchorOffset: 0,
+                                        focusNode: br,
+                                        focusOffset: 1,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'hello',
+                                    type: 'insertText',
+                                },
+                                {
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text, br]),
@@ -1074,30 +740,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'rates',
-                                    to: 'raths',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 13,
-                                                focusNode: text,
-                                                focusOffset: 18,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'raths',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 13,
+                                        focusNode: text,
+                                        focusOffset: 18,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'raths',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1140,24 +796,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'Unidentified',
-                                    inputType: 'insertCompositionText',
-                                    code: undefined,
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1200,35 +842,24 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'hillo',
-                                    to: 'hello ',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 2,
-                                                focusNode: text,
-                                                focusOffset: 7,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'hello',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 7,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'hello',
+                                    type: 'insertText',
+                                },
+                                {
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1276,46 +907,34 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'chris ',
-                                    to: 'Christophe ',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: textB,
-                                                anchorOffset: 0,
-                                                focusNode: text,
-                                                focusOffset: 2,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'Christophe',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 2,
-                                                focusNode: text,
-                                                focusOffset: 3,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: textB,
+                                        anchorOffset: 0,
+                                        focusNode: text,
+                                        focusOffset: 2,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'Christophe',
+                                    type: 'insertText',
+                                },
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 3,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([firstText, textB, b, newText, newB, text]),
@@ -1354,35 +973,24 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: '',
-                                    to: 'ha ',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 9,
-                                                focusNode: text,
-                                                focusOffset: 9,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'ha',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            text: ' ',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 9,
+                                        focusNode: text,
+                                        focusOffset: 9,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'ha',
+                                    type: 'insertText',
+                                },
+                                {
+                                    text: ' ',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1423,30 +1031,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'abc',
-                                    to: 'aXc',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 0,
-                                                focusNode: text,
-                                                focusOffset: 3,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'aXc',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 0,
+                                        focusNode: text,
+                                        focusOffset: 3,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'aXc',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1482,30 +1080,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'abc',
-                                    to: 'abc',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 0,
-                                                focusNode: text,
-                                                focusOffset: 3,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'abc',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 0,
+                                        focusNode: text,
+                                        focusOffset: 3,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'abc',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1535,24 +1123,7 @@ describe('utils', () => {
                     await nextTick();
                     await nextTick();
 
-                    expect(eventBatchs).to.deep.equal([
-                        {
-                            events: [
-                                {
-                                    type: 'keyboard',
-                                    key: 'ô',
-                                    code: 'KeyO',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: true,
-                                    actions: [],
-                                },
-                            ],
-                            mutatedElements: new Set(),
-                        },
-                    ]);
+                    expect(eventBatchs).to.deep.equal([]);
                 });
             });
 
@@ -1580,24 +1151,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteContentBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'backward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteContent',
+                                    direction: 'BACKWARD',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1624,24 +1181,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteContentForward',
-                                    key: 'Delete',
-                                    code: 'Delete',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'forward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteContent',
+                                    direction: 'FORWARD',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1668,24 +1211,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteContentBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'backward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteContent',
+                                    direction: 'BACKWARD',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1712,24 +1241,10 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteContentForward',
-                                    key: 'Delete',
-                                    code: 'Delete',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'forward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteContent',
+                                    direction: 'FORWARD',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1764,25 +1279,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteWordBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteWord',
-                                            direction: 'backward',
-                                            text: 'toto',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteWord',
+                                    direction: 'BACKWARD',
+                                    text: 'toto',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1815,25 +1316,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteWordBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteWord',
-                                            direction: 'backward',
-                                            text: 'test',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteWord',
+                                    direction: 'BACKWARD',
+                                    text: 'test',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -1866,25 +1353,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteWordBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteWord',
-                                            direction: 'backward',
-                                            text: 'test',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteWord',
+                                    direction: 'BACKWARD',
+                                    text: 'test',
                                 },
                             ],
                             mutatedElements: new Set([b]),
@@ -1919,25 +1392,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteWordBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteWord',
-                                            direction: 'backward',
-                                            text: 'test',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteWord',
+                                    direction: 'BACKWARD',
+                                    text: 'test',
                                 },
                             ],
                             mutatedElements: new Set([b, text]),
@@ -1974,31 +1433,17 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteHardLineBackward',
-                                    key: 'Backspace',
-                                    code: 'Backspace',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: true,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteHardLine',
-                                            direction: 'backward',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 0,
-                                                focusNode: text2,
-                                                focusOffset: 2,
-                                                direction: Direction.BACKWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteHardLine',
+                                    direction: 'BACKWARD',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 0,
+                                        focusNode: text2,
+                                        focusOffset: 2,
+                                        direction: Direction.BACKWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([text, b, text2]),
@@ -2033,25 +1478,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteWordForward',
-                                    key: 'Delete',
-                                    code: 'Delete',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteWord',
-                                            direction: 'forward',
-                                            text: 'ctest',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteWord',
+                                    direction: 'FORWARD',
+                                    text: 'ctest',
                                 },
                             ],
                             mutatedElements: new Set([text2, i, text3]),
@@ -2088,31 +1519,17 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteHardLineForward',
-                                    key: 'Delete',
-                                    code: 'Delete',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: true,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'deleteHardLine',
-                                            direction: 'forward',
-                                            domSelection: {
-                                                anchorNode: text2,
-                                                anchorOffset: 2,
-                                                focusNode: text3,
-                                                focusOffset: 2,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'deleteHardLine',
+                                    direction: 'FORWARD',
+                                    domSelection: {
+                                        anchorNode: text2,
+                                        anchorOffset: 2,
+                                        focusNode: text3,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([text2, i, text3]),
@@ -2142,23 +1559,34 @@ describe('utils', () => {
                     await nextTick();
                     await nextTick();
 
+                    expect(eventBatchs).to.deep.equal([]);
+                });
+                it('backspace (Edge)', async () => {
+                    const p = document.createElement('p');
+                    const text = document.createTextNode('hello');
+                    root.innerHTML = '';
+                    root.appendChild(p);
+                    p.appendChild(text);
+                    setRange(text, 5, text, 5);
+
+                    await nextTick();
+                    eventBatchs = [];
+                    triggerEvent(root, 'keydown', { key: 'Backspace', code: 'Backspace' });
+                    triggerEvent(root, 'keypress', { key: 'Backspace', code: 'Backspace' });
+                    text.textContent = 'hell';
+                    triggerEvent(root, 'input', {});
+                    setRange(text, 4, text, 4);
+                    await nextTick();
+
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'deleteHardLineForward',
-                                    key: 'Delete',
-                                    code: 'Delete',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: true,
-                                    defaultPrevented: false,
-                                    actions: [],
+                                    type: 'deleteContent',
+                                    direction: 'BACKWARD',
                                 },
                             ],
-                            mutatedElements: new Set([text3]),
+                            mutatedElements: new Set([text]),
                         },
                     ]);
                 });
@@ -2192,23 +1620,9 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertParagraph',
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertParagraph',
                                 },
                             ],
                             mutatedElements: new Set([newText, text, newP]),
@@ -2240,23 +1654,9 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertParagraph',
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertParagraph',
                                 },
                             ],
                             mutatedElements: new Set([newText, text, newP]),
@@ -2295,23 +1695,9 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertParagraph',
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertParagraph',
                                 },
                             ],
                             mutatedElements: new Set([text, newText, newP]),
@@ -2350,23 +1736,9 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertParagraph',
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertParagraph',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertParagraph',
                                 },
                             ],
                             mutatedElements: new Set([newText, text, newP]),
@@ -2396,25 +1768,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'insertLineBreak',
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'insertText',
-                                            text: '\n',
-                                            html: '<br/>',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'insertText',
+                                    text: '\n',
+                                    html: '<br/>',
                                 },
                             ],
                             mutatedElements: new Set([newText, text, br]),
@@ -2444,29 +1802,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'ArrowLeft',
-                                    code: 'ArrowLeft',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 3,
-                                                focusNode: text,
-                                                focusOffset: 3,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 3,
+                                        focusNode: text,
+                                        focusOffset: 3,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2488,29 +1833,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'ArrowLeft',
-                                    code: 'ArrowLeft',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: root,
-                                                anchorOffset: 0,
-                                                focusNode: root,
-                                                focusOffset: 0,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: root,
+                                        anchorOffset: 0,
+                                        focusNode: root,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2538,29 +1870,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'ArrowLeft',
-                                    code: 'ArrowLeft',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: false,
-                                    shiftKey: true,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 3,
-                                                direction: Direction.BACKWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 4,
+                                        focusNode: text,
+                                        focusOffset: 3,
+                                        direction: Direction.BACKWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2589,29 +1908,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'ArrowRight',
-                                    code: 'ArrowRight',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: true,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 3,
-                                                focusNode: text,
-                                                focusOffset: 5,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 3,
+                                        focusNode: text,
+                                        focusOffset: 5,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2644,49 +1950,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'Control',
-                                    code: 'ControlLeft',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [],
-                                },
-                            ],
-                            mutatedElements: new Set([]),
-                        },
-                        {
-                            events: [
-                                {
-                                    type: 'keyboard',
-                                    key: 'a',
-                                    code: 'KeyQ',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: root.childNodes[1].firstChild,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: root.firstChild.firstChild,
-                                                anchorOffset: 0,
-                                                focusNode: root.lastChild.lastChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'selectAll',
+                                    carretPosition: {
+                                        offsetNode: root.childNodes[1].firstChild,
+                                        offset: 1,
+                                    },
+                                    domSelection: {
+                                        anchorNode: root.firstChild.firstChild,
+                                        anchorOffset: 0,
+                                        focusNode: root.lastChild.lastChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2718,49 +1995,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'Control',
-                                    code: 'ControlLeft',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [],
-                                },
-                            ],
-                            mutatedElements: new Set([]),
-                        },
-                        {
-                            events: [
-                                {
-                                    type: 'keyboard',
-                                    key: 'a',
-                                    code: 'KeyQ',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: root.childNodes[1].firstChild,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: root.firstChild.firstChild,
-                                                anchorOffset: 0,
-                                                focusNode: root.lastChild.lastChild.previousSibling,
-                                                focusOffset: 0,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'selectAll',
+                                    carretPosition: {
+                                        offsetNode: root.childNodes[1].firstChild,
+                                        offset: 1,
+                                    },
+                                    domSelection: {
+                                        anchorNode: root.firstChild.firstChild,
+                                        anchorOffset: 0,
+                                        focusNode: root.lastChild.lastChild.previousSibling,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2786,49 +2034,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'Meta',
-                                    code: 'MetaLeft',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: true,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [],
-                                },
-                            ],
-                            mutatedElements: new Set([]),
-                        },
-                        {
-                            events: [
-                                {
-                                    type: 'keyboard',
-                                    key: 'a',
-                                    code: 'KeyQ',
-                                    altKey: false,
-                                    ctrlKey: false,
-                                    metaKey: true,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: root.childNodes[1].firstChild,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: root.firstChild.firstChild,
-                                                anchorOffset: 0,
-                                                focusNode: root.lastChild.lastChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'selectAll',
+                                    carretPosition: {
+                                        offsetNode: root.childNodes[1].firstChild,
+                                        offset: 1,
+                                    },
+                                    domSelection: {
+                                        anchorNode: root.firstChild.firstChild,
+                                        anchorOffset: 0,
+                                        focusNode: root.lastChild.lastChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2841,7 +2060,7 @@ describe('utils', () => {
                 before(callbackBefore);
                 after(callbackAfter);
 
-                it('ctrl + c to cut', async () => {
+                it('ctrl + x to cut', async () => {
                     root.innerHTML = '<div>abc<br/>abc<br/>abc</div>';
                     const p = root.firstChild;
                     const text1 = p.childNodes[0];
@@ -2856,36 +2075,27 @@ describe('utils', () => {
 
                     triggerEvent(root, 'keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
                     triggerEvent(p, 'beforeinput', { inputType: 'deleteByCut' });
-                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'bc\ndef\ngh');
+                    dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
+                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
                     (text1 as Text).textContent = 'ab';
                     p.removeChild(br1);
                     p.removeChild(text2);
                     p.removeChild(br2);
                     (text3 as Text).textContent = 'c';
+                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
                     setRange(text3, 0, text3, 0);
                     await nextTick();
                     await nextTick();
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'x',
-                                    code: 'KeyX',
-                                    inputType: 'deleteByCut',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            direction: 'forward',
-                                            type: 'deleteContent',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    direction: 'FORWARD',
+                                    type: 'deleteContent',
                                 },
                             ],
                             mutatedElements: new Set([text1, br1, text2, br2, text3]),
@@ -2916,25 +2126,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    key: 'v',
-                                    code: 'KeyV',
-                                    inputType: 'insertFromPaste',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            html: '<div>b</div>',
-                                            text: 'b',
-                                            type: 'insertHtml',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    html: '<div>b</div>',
+                                    text: 'b',
+                                    type: 'insertHtml',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -2967,20 +2163,7 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
-                                {
-                                    type: 'keyboard',
-                                    inputType: 'historyUndo',
-                                    key: 'z',
-                                    code: 'KeyW',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [{ type: 'historyUndo', origin: 'EventNormalizer' }],
-                                },
-                            ],
+                            actions: [{ type: 'historyUndo' }],
                             mutatedElements: new Set([text]),
                         },
                     ]);
@@ -3022,25 +2205,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'keyboard',
-                                    inputType: 'formatBold',
-                                    key: 'b',
-                                    code: 'KeyB',
-                                    altKey: false,
-                                    ctrlKey: true,
-                                    metaKey: false,
-                                    shiftKey: false,
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            format: 'bold',
-                                            type: 'applyFormat',
-                                            origin: 'EventNormalizer',
-                                            data: null,
-                                        },
-                                    ],
+                                    format: 'bold',
+                                    type: 'applyFormat',
+                                    data: null,
                                 },
                             ],
                             mutatedElements: new Set([text2, text, text3, span, b]),
@@ -3099,27 +2268,16 @@ describe('utils', () => {
                     await nextTick();
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: root,
-                                        offset: 0,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: root,
+                                        anchorOffset: 0,
+                                        focusNode: root,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: root,
-                                                anchorOffset: 0,
-                                                focusNode: root,
-                                                focusOffset: 0,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3159,39 +2317,28 @@ describe('utils', () => {
                     triggerEvent(p1, 'mousedown', {
                         button: 2,
                         detail: 1,
-                        clientX: 5,
+                        clientX: 10,
                         clientY: 10,
                     });
                     setRange(text1, 1, text1, 1);
                     setRange(text1, 1, text2, 1);
-                    triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 5, clientY: 18 });
-                    triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 5, clientY: 18 });
+                    triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+                    triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text2,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text1,
+                                        anchorOffset: 1,
+                                        focusNode: text2,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text1,
-                                                anchorOffset: 1,
-                                                focusNode: text2,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3204,41 +2351,31 @@ describe('utils', () => {
                     const i = root.childNodes[1];
                     await nextTick();
                     eventBatchs = [];
+
                     triggerEvent(i, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 40,
-                        clientY: 10,
+                        clientY: 25,
                     });
                     setRange(text, 3, text, 3);
-                    triggerEvent(i, 'click', { button: 2, detail: 0, clientX: 20, clientY: 10 });
-                    triggerEvent(i, 'mouseup', { button: 2, detail: 0, clientX: 20, clientY: 10 });
+                    triggerEvent(i, 'click', { button: 2, detail: 0, clientX: 50, clientY: 5 });
+                    triggerEvent(i, 'mouseup', { button: 2, detail: 0, clientX: 50, clientY: 5 });
                     await nextTick();
                     await nextTick();
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: i.firstChild,
-                                        offset: 2,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: i.firstChild,
+                                        anchorOffset: 2,
+                                        focusNode: i.firstChild,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: i.firstChild,
-                                                anchorOffset: 2,
-                                                focusNode: i.firstChild,
-                                                focusOffset: 2,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3251,9 +2388,29 @@ describe('utils', () => {
                     const text = p.firstChild;
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'touchstart', { detail: 0 });
+                    triggerEvent(p, 'touchstart', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 18,
+                                clientY: 10,
+                                target: p,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     await nextTick();
-                    triggerEvent(p, 'touchend', { detail: 0 });
+                    triggerEvent(p, 'touchend', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 18,
+                                clientY: 10,
+                                target: p,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     await nextTick();
                     triggerEvent(p, 'mousedown', {
                         button: 1,
@@ -3261,7 +2418,7 @@ describe('utils', () => {
                         clientX: 18,
                         clientY: 10,
                     });
-                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 18, clientY: 10 });
+                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 45, clientY: 10 });
                     setRange(text, 4, text, 4);
                     await nextTick();
                     triggerEvent(root, 'compositionstart', { data: '' });
@@ -3273,27 +2430,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 4,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 4,
+                                        focusNode: text,
+                                        focusOffset: 4,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 4,
-                                                focusNode: text,
-                                                focusOffset: 4,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3305,19 +2451,40 @@ describe('utils', () => {
                     const p = root.firstChild;
                     const text = p.firstChild;
                     setRange(text, 3, text, 3);
+
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'touchstart', { detail: 0 });
+                    triggerEvent(p, 'touchstart', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 24,
+                                clientY: 10,
+                                target: text,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     await nextTick();
-                    triggerEvent(p, 'touchend', { detail: 0 });
+                    triggerEvent(p, 'touchend', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 24,
+                                clientY: 10,
+                                target: p,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     await nextTick();
                     triggerEvent(p, 'mousedown', {
                         button: 1,
                         detail: 1,
-                        clientX: 14,
+                        clientX: 24,
                         clientY: 10,
                     });
-                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 14, clientY: 10 });
+                    triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 24, clientY: 10 });
                     setRange(text, 2, text, 2);
                     await nextTick();
                     triggerEvent(root, 'compositionupdate', { data: 'def' });
@@ -3326,27 +2493,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 3,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 2,
-                                                focusNode: text,
-                                                focusOffset: 2,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3367,27 +2523,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 1,
+                                        focusNode: text,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 1,
-                                                focusNode: text,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3425,27 +2570,16 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: input,
-                                        offset: 0,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: input,
+                                        anchorOffset: 0,
+                                        focusNode: input,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: input,
-                                                anchorOffset: 0,
-                                                focusNode: input,
-                                                focusOffset: 0,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3495,30 +2629,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'brillig',
-                                    to: 'brill',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 2,
-                                                focusNode: text,
-                                                focusOffset: 9,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'brill',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 9,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'brill',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -3575,30 +2699,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'brillig',
-                                    to: 'brill',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 2,
-                                                focusNode: text,
-                                                focusOffset: 9,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'brill',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 9,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'brill',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text, newText, newText2]),
@@ -3629,30 +2743,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'toves',
-                                    to: 'toes',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 7,
-                                                focusNode: text,
-                                                focusOffset: 12,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'toes',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 7,
+                                        focusNode: text,
+                                        focusOffset: 12,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'toes',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text]),
@@ -3693,30 +2797,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'brillig',
-                                    to: 'brill',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 6,
-                                                focusNode: text,
-                                                focusOffset: 13,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'brill',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 6,
+                                        focusNode: text,
+                                        focusOffset: 13,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'brill',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text, text2, text3]),
@@ -3769,33 +2863,80 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    from: 'toves',
-                                    to: 'toes',
-                                    type: 'composition',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            origin: 'EventNormalizer',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 7,
-                                                focusNode: text,
-                                                focusOffset: 12,
-                                                direction: 'BACKWARD',
-                                            },
-                                        },
-                                        {
-                                            text: 'toes',
-                                            type: 'insertText',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 7,
+                                        focusNode: text,
+                                        focusOffset: 12,
+                                        direction: 'FORWARD',
+                                    },
+                                },
+                                {
+                                    text: 'toes',
+                                    type: 'insertText',
                                 },
                             ],
                             mutatedElements: new Set([text, text2, br, span, text3, i2, i]),
+                        },
+                    ]);
+                });
+                it.skip('correction (Edge)', async () => {
+                    const p = document.createElement('p');
+                    const text = document.createTextNode('a brillig b');
+                    root.innerHTML = '';
+                    root.appendChild(p);
+                    p.appendChild(text);
+                    setRange(text, 4, text, 4);
+
+                    await nextTick();
+                    await nextTick();
+                    eventBatchs = [];
+                    triggerEvent(root, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 20,
+                        clientY: 10,
+                    });
+                    setRange(text, 2, text, 9);
+                    triggerEvent(root, 'contextmenu', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 20,
+                        clientY: 10,
+                    });
+
+                    await nextTick();
+                    eventBatchs = [];
+                    text.textContent = 'a  b';
+                    text.textContent = 'a brill b';
+                    // await nextTick(); TODO with Edge next version
+                    triggerEvent(root, 'input', {});
+                    setRange(text, 7, text, 7);
+                    await nextTick();
+                    await nextTick();
+
+                    expect(eventBatchs).to.deep.equal([
+                        {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 2,
+                                        focusNode: text,
+                                        focusOffset: 9,
+                                        direction: 'BACKWARD',
+                                    },
+                                },
+                                {
+                                    text: 'brill',
+                                    type: 'insertText',
+                                },
+                            ],
+                            mutatedElements: new Set([text]),
                         },
                     ]);
                 });
@@ -3832,57 +2973,35 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 1,
+                                        focusNode: text,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text,
-                                                anchorOffset: 1,
-                                                focusNode: text,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
                         },
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
+                                    type: 'selectAll',
+                                    carretPosition: {
                                         offsetNode: text,
                                         offset: 1,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: text,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: root,
-                                                anchorOffset: 0,
-                                                focusNode: other.firstChild,
-                                                focusOffset: 3,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    domSelection: {
+                                        anchorNode: root,
+                                        anchorOffset: 0,
+                                        focusNode: other.firstChild,
+                                        focusOffset: 3,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3901,15 +3020,16 @@ describe('utils', () => {
                     triggerEvent(p2, 'mousedown', {
                         button: 2,
                         detail: 1,
-                        clientX: 5,
-                        clientY: 34,
+                        clientX: 10,
+                        clientY: 65,
                     });
+
                     setRange(text2, 1, text2, 1);
                     triggerEvent(p2, 'contextmenu', {
                         button: 2,
                         detail: 0,
-                        clientX: 5,
-                        clientY: 34,
+                        clientX: 10,
+                        clientY: 65,
                     });
                     await nextTick();
                     await nextTick();
@@ -3919,57 +3039,35 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text2,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text2,
+                                        anchorOffset: 1,
+                                        focusNode: text2,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text2,
-                                                anchorOffset: 1,
-                                                focusNode: text2,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
                         },
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
+                                    type: 'selectAll',
+                                    carretPosition: {
                                         offsetNode: text2,
                                         offset: 1,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: text2,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: p1,
-                                                anchorOffset: 0,
-                                                focusNode: p3,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    domSelection: {
+                                        anchorNode: p1,
+                                        anchorOffset: 0,
+                                        focusNode: p3,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -3981,13 +3079,23 @@ describe('utils', () => {
                         '<div>a</div><div>b</div><div>c<br/><br/><i style="display: none;">text</i></div>';
                     const p1 = root.firstChild;
                     const text1 = p1.firstChild;
-                    const p2 = root.childNodes[1];
+                    const p2 = root.childNodes[1] as HTMLElement;
                     const text2 = p2.firstChild;
                     const p3 = root.childNodes[2];
                     await nextTick();
-                    triggerEvent(p2, 'mousedown', { button: 2, detail: 1 });
+                    triggerEvent(p2, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: p2.offsetLeft,
+                        clientY: p2.offsetTop,
+                    });
                     setRange(text2, 1, text2, 1);
-                    triggerEvent(p2, 'contextmenu', { button: 2, detail: 0 });
+                    triggerEvent(p2, 'contextmenu', {
+                        button: 2,
+                        detail: 0,
+                        clientX: p2.offsetLeft,
+                        clientY: p2.offsetTop,
+                    });
                     await nextTick();
                     await nextTick();
                     eventBatchs = [];
@@ -3997,31 +3105,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
+                                    type: 'selectAll',
+                                    carretPosition: {
                                         offsetNode: text2,
-                                        offset: 1,
+                                        offset: 0,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: text2,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: text1,
-                                                anchorOffset: 0,
-                                                focusNode: p3,
-                                                focusOffset: 2,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    domSelection: {
+                                        anchorNode: text1,
+                                        anchorOffset: 0,
+                                        focusNode: p3,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4078,21 +3175,42 @@ describe('utils', () => {
                     setRange(text1, 0, text1, 0);
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p2, 'touchstart', { button: 2, detail: 1 });
+                    triggerEvent(p2, 'touchstart', {
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 10,
+                                clientY: 25,
+                                target: p2,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     triggerEvent(p2, 'contextmenu', {
                         button: 0,
                         detail: 0,
-                        clientX: 5,
-                        clientY: 18,
+                        clientX: 10,
+                        clientY: 25,
                     });
                     setRange(text2, 1, text2, 1);
                     await nextTick();
-                    triggerEvent(p2, 'touchend', { button: 2, detail: 0 });
+                    triggerEvent(p2, 'touchend', {
+                        button: 2,
+                        detail: 0,
+                        touches: [
+                            new Touch({
+                                clientX: 10,
+                                clientY: 25,
+                                target: p2,
+                                identifier: Date.now(),
+                            }),
+                        ],
+                    });
                     triggerEvent(p2, 'contextmenu', {
                         button: 0,
                         detail: 0,
-                        clientX: 5,
-                        clientY: 18,
+                        clientX: 10,
+                        clientY: 45,
                     });
                     setRange(text1, 0, p3, 2);
                     await nextTick();
@@ -4100,57 +3218,35 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text2,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text2,
+                                        anchorOffset: 1,
+                                        focusNode: text2,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text2,
-                                                anchorOffset: 1,
-                                                focusNode: text2,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
                                 },
                             ],
                             mutatedElements: new Set([]),
                         },
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
+                                    type: 'selectAll',
+                                    carretPosition: {
                                         offsetNode: text2,
                                         offset: 1,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'selectAll',
-                                            target: {
-                                                offsetNode: text2,
-                                                offset: 1,
-                                            },
-                                            domSelection: {
-                                                anchorNode: text1,
-                                                anchorOffset: 0,
-                                                focusNode: p3,
-                                                focusOffset: 2,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    domSelection: {
+                                        anchorNode: text1,
+                                        anchorOffset: 0,
+                                        focusNode: p3,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4163,7 +3259,7 @@ describe('utils', () => {
                 before(callbackBefore);
                 after(callbackAfter);
 
-                it('use mouse cut', async () => {
+                it('use mouse cut (ubuntu chrome)', async () => {
                     root.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
                     const p = root.firstChild;
                     const text1 = p.childNodes[0];
@@ -4173,66 +3269,157 @@ describe('utils', () => {
                     const text3 = p.childNodes[4];
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'mousedown', { button: 2, detail: 1, clientX: 6, clientY: 10 });
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 11,
+                        clientY: 10,
+                    });
                     setRange(text1, 1, text1, 1);
                     setRange(text1, 1, text3, 2);
                     triggerEvent(root.lastChild, 'click', {
                         button: 2,
                         detail: 0,
-                        clientX: 10,
-                        clientY: 30,
+                        clientX: 22,
+                        clientY: 45,
                     });
                     triggerEvent(root.lastChild, 'mouseup', {
                         button: 2,
                         detail: 0,
-                        clientX: 10,
-                        clientY: 30,
+                        clientX: 22,
+                        clientY: 45,
                     });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(p, 'mousedown', { button: 2, detail: 1, clientX: 6, clientY: 20 });
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 10,
+                        clientY: 25,
+                    });
                     triggerEvent(p, 'contextmenu', {
                         button: 2,
                         detail: 0,
-                        clientX: 6,
-                        clientY: 20,
+                        clientX: 10,
+                        clientY: 25,
                     });
                     await nextTick();
                     await nextTick();
-                    triggerEvent(p, 'beforeinput', { inputType: 'deleteByCut' });
-                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'bc\ndef\ngh');
+                    dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
+                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
                     (text1 as Text).textContent = 'ab';
                     p.removeChild(br1);
                     p.removeChild(text2);
                     p.removeChild(br2);
                     (text3 as Text).textContent = 'i';
+                    triggerEvent(p, 'input', { inputType: 'deleteByCut' });
                     setRange(text3, 0, text3, 0);
                     await nextTick();
                     await nextTick();
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text3,
-                                        offset: 2,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text1,
+                                        anchorOffset: 1,
+                                        focusNode: text3,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: text1,
-                                                anchorOffset: 1,
-                                                focusNode: text3,
-                                                focusOffset: 2,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
+                        {
+                            actions: [
+                                {
+                                    direction: 'FORWARD',
+                                    type: 'deleteContent',
+                                },
+                            ],
+                            mutatedElements: new Set([text1, br1, text2, br2, text3]),
+                        },
+                    ]);
+                });
+                it.skip('use mouse cut (Edge)', async () => {
+                    root.innerHTML = '<div>abc<br/>def<br/>ghi</div>';
+                    const p = root.firstChild;
+                    const text1 = p.childNodes[0];
+                    const br1 = p.childNodes[1];
+                    const text2 = p.childNodes[2];
+                    const br2 = p.childNodes[3];
+                    const text3 = p.childNodes[4];
+                    await nextTick();
+                    eventBatchs = [];
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 11,
+                        clientY: 10,
+                    });
+                    setRange(text1, 1, text1, 1);
+                    setRange(text1, 1, text3, 2);
+                    triggerEvent(root.lastChild, 'click', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 22,
+                        clientY: 45,
+                    });
+                    triggerEvent(root.lastChild, 'mouseup', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 22,
+                        clientY: 45,
+                    });
+                    await nextTick();
+                    await nextTick();
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: 10,
+                        clientY: 25,
+                    });
+                    triggerEvent(p, 'contextmenu', {
+                        button: 2,
+                        detail: 0,
+                        clientX: 10,
+                        clientY: 25,
+                    });
+                    await nextTick();
+                    await nextTick();
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'bc\ndef\ngh');
+                    dataTransfer.setData('text/html', '<div>bc<br/>def<br/>gh</div>');
+                    triggerEvent(p, 'beforecut', { clipboardData: dataTransfer });
+                    triggerEvent(p, 'cut', { clipboardData: dataTransfer });
+                    (text1 as Text).textContent = 'ab';
+                    p.removeChild(br1);
+                    p.removeChild(text2);
+                    p.removeChild(br2);
+                    (text3 as Text).textContent = 'i';
+                    triggerEvent(p, 'input', {});
+                    setRange(text3, 0, text3, 0);
+                    await nextTick();
+                    await nextTick();
+
+                    expect(eventBatchs).to.deep.equal([
+                        {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text1,
+                                        anchorOffset: 1,
+                                        focusNode: text3,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
+                                    },
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4249,9 +3436,8 @@ describe('utils', () => {
                                     defaultPrevented: false,
                                     actions: [
                                         {
-                                            direction: 'forward',
+                                            direction: 'FORWARD',
                                             type: 'deleteContent',
-                                            origin: 'EventNormalizer',
                                         },
                                     ],
                                 },
@@ -4287,23 +3473,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromPaste',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 1,
-                                    },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            html: '<div>b</div>',
-                                            text: 'b',
-                                            type: 'insertHtml',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                    html: '<div>b</div>',
+                                    text: 'b',
+                                    type: 'insertHtml',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4323,60 +3497,45 @@ describe('utils', () => {
                     setRange(p.firstChild, 1, p.firstChild, 2);
                     await nextTick();
                     eventBatchs = [];
-                    triggerEvent(p, 'mousedown', { button: 0, detail: 1, clientX: 5, clientY: 5 });
+                    triggerEvent(p, 'mousedown', { button: 0, detail: 1, clientX: 15, clientY: 5 });
                     await nextTick();
-                    triggerEvent(p.firstChild, 'dragstart', { clientX: 5, clientY: 5 });
+                    triggerEvent(p.firstChild, 'dragstart', { clientX: 15, clientY: 5 });
                     await nextTick();
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'b');
                     dataTransfer.setData('text/html', '<div>b</div>');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
                     expect(dropEvent.defaultPrevented).to.equal(true);
-
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'deleteContent',
+                                    direction: 'FORWARD',
+                                },
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'forward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html: '<div>b</div>',
-                                            text: 'b',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    html: '<div>b</div>',
+                                    text: 'b',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4394,19 +3553,19 @@ describe('utils', () => {
                     eventBatchs = [];
                     triggerEvent(a, 'mousedown', { button: 0, detail: 1 });
                     await nextTick();
-                    triggerEvent(a, 'dragstart', { clientX: 5, clientY: 5 });
+                    triggerEvent(a, 'dragstart', { clientX: 15, clientY: 5 });
                     await nextTick();
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'https://www.odoo.com');
                     dataTransfer.setData('text/html', '<a href="https://www.odoo.com"></a>');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4414,38 +3573,25 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'deleteContent',
+                                    direction: 'FORWARD',
+                                },
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'forward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html: '<a href="https://www.odoo.com"></a>',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    text: 'https://www.odoo.com',
+                                    html: '<a href="https://www.odoo.com"></a>',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4478,7 +3624,7 @@ describe('utils', () => {
                     await nextTick();
                     const dataTransfer = new DataTransfer();
                     triggerEvent(svg, 'dragstart', {
-                        clientX: 5,
+                        clientX: 15,
                         clientY: 5,
                         dataTransfer: dataTransfer,
                     });
@@ -4486,12 +3632,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<svg>unload content</svg>');
                     dataTransfer.setData('text/uri-list', 'svg');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4499,38 +3645,25 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'deleteContent',
+                                    direction: 'FORWARD',
+                                },
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'deleteContent',
-                                            direction: 'forward',
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html: '<svg>unload content</svg>',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    text: 'svg',
+                                    html: '<svg>unload content</svg>',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4548,12 +3681,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/plain', '/mylink');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com/mylink');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4561,34 +3694,22 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html:
-                                                '<a href="https://www.odoo.com/mylink">https://www.odoo.com/mylink</a>',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    text: 'https://www.odoo.com/mylink',
+                                    html:
+                                        '<a href="https://www.odoo.com/mylink">https://www.odoo.com/mylink</a>',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4605,12 +3726,12 @@ describe('utils', () => {
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text/plain', 'b');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4618,33 +3739,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertText',
-                                            text: 'b',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertText',
+                                    text: 'b',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4662,12 +3770,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/plain', 'b');
                     dataTransfer.setData('text/html', '<div>b</div>');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4675,34 +3783,21 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html: '<div>b</div>',
-                                            text: 'b',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    html: '<div>b</div>',
+                                    text: 'b',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4721,12 +3816,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<img src="https://www.odoo.com/logo.png">');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com/logo.png');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4734,33 +3829,21 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html: '<img src="https://www.odoo.com/logo.png">',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    text: 'https://www.odoo.com/logo.png',
+                                    html: '<img src="https://www.odoo.com/logo.png">',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4779,12 +3862,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<a href="https://www.odoo.com">test</a>');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4792,33 +3875,21 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html: '<a href="https://www.odoo.com">test</a>',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    text: 'https://www.odoo.com',
+                                    html: '<a href="https://www.odoo.com">test</a>',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4837,12 +3908,12 @@ describe('utils', () => {
                     dataTransfer.setData('text/html', '<a href="https://www.odoo.com"></a>');
                     dataTransfer.setData('text/uri-list', 'https://www.odoo.com');
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4850,34 +3921,21 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertHtml',
-                                            html:
-                                                '<a href="https://www.odoo.com">https://www.odoo.com</a>',
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertHtml',
+                                    text: 'https://www.odoo.com',
+                                    html: '<a href="https://www.odoo.com">https://www.odoo.com</a>',
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4911,12 +3969,12 @@ describe('utils', () => {
                         ],
                     });
                     const dropEvent = triggerEvent(p2, 'drop', {
-                        clientX: 5,
-                        clientY: 20,
+                        clientX: 12,
+                        clientY: 25,
                         dataTransfer: dataTransfer,
                     });
                     await nextTick();
-                    triggerEvent(p2, 'dragend', { clientX: 5, clientY: 20 });
+                    triggerEvent(p2, 'dragend', { clientX: 12, clientY: 25 });
                     await nextTick();
                     await nextTick();
 
@@ -4924,33 +3982,20 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    inputType: 'insertFromDrop',
-                                    target: {
-                                        offsetNode: p2.firstChild,
-                                        offset: 1,
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p2.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p2.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
                                     },
-                                    defaultPrevented: true,
-                                    actions: [
-                                        {
-                                            type: 'setSelection',
-                                            domSelection: {
-                                                anchorNode: p2.firstChild,
-                                                anchorOffset: 1,
-                                                focusNode: p2.firstChild,
-                                                focusOffset: 1,
-                                                direction: Direction.FORWARD,
-                                            },
-                                            origin: 'EventNormalizer',
-                                        },
-                                        {
-                                            type: 'insertFiles',
-                                            files: files,
-                                            origin: 'EventNormalizer',
-                                        },
-                                    ],
+                                },
+                                {
+                                    type: 'insertFiles',
+                                    files: files,
                                 },
                             ],
                             mutatedElements: new Set([]),
@@ -4972,7 +4017,12 @@ describe('utils', () => {
                     setRange(text, 4, text, 4);
 
                     await nextTick();
-                    triggerEvent(p, 'mousedown', { button: 2, detail: 1 });
+                    triggerEvent(p, 'mousedown', {
+                        button: 2,
+                        detail: 1,
+                        clientX: p.offsetLeft,
+                        clientY: p.offsetTop,
+                    });
                     setRange(text, 1, text, 1);
                     triggerEvent(p, 'contextmenu', { button: 2, detail: 0 });
                     await nextTick();
@@ -4987,18 +4037,7 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
-                                {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 1,
-                                    },
-                                    inputType: 'historyUndo',
-                                    defaultPrevented: false,
-                                    actions: [{ type: 'historyUndo', origin: 'EventNormalizer' }],
-                                },
-                            ],
+                            actions: [{ type: 'historyUndo' }],
                             mutatedElements: new Set([text]),
                         },
                     ]);
@@ -5045,23 +4084,11 @@ describe('utils', () => {
 
                     expect(eventBatchs).to.deep.equal([
                         {
-                            events: [
+                            actions: [
                                 {
-                                    type: 'pointer',
-                                    target: {
-                                        offsetNode: text,
-                                        offset: 1,
-                                    },
-                                    inputType: 'formatBold',
-                                    defaultPrevented: false,
-                                    actions: [
-                                        {
-                                            format: 'bold',
-                                            type: 'applyFormat',
-                                            origin: 'EventNormalizer',
-                                            data: null,
-                                        },
-                                    ],
+                                    format: 'bold',
+                                    type: 'applyFormat',
+                                    data: null,
                                 },
                             ],
                             mutatedElements: new Set([text2, text, text3, span, b]),
