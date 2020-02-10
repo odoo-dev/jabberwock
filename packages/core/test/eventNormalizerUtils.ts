@@ -40,7 +40,7 @@ export interface TestCompositionEvent {
 }
 export interface TestInputEvent {
     type: 'beforeinput' | 'input';
-    // firefox does not provide data [or inputType, which is why theses key are
+    // Firefox does not provide data or inputType, which is why theses keys are
     // optionnal
     data?: string;
     inputType?: string;
@@ -53,13 +53,20 @@ export interface RemovedNodesTargetMutation {
 
 export interface AddedNodesTargetMutation {
     parentId: number;
+    // When a node is added and was already present in the DOM, we capture the
+    // `id` of the node attributed by a `NodeIndexGenerator`.
     nodeId?: number;
-    // todo: delete this key when all events are rewritten. It is there to
-    //       distinguish the interface.
+    // When a node is added from a mutation that was not in the DOM, the two
+    // following key `nodeValue` contain the created node value
     nodeValue?: string;
-    // todo: check if we still need this key.
+    // When a node is added from a mutation that was not in the DOM, the two
+    // following key `nodeType` contain the created node value
     nodeType?: number;
+    // If present in the mutation, the following `id` is attributed by a
+    // `NodeIndexGenerator`
     previousSiblingId?: number;
+    // If present in the mutation, the following `id` is attributed by a
+    // `NodeIndexGenerator`
     nextSiblingId?: number;
 }
 export interface TestMutationEvent {
@@ -74,11 +81,13 @@ export interface TestMutationEvent {
 export interface TestSelectionEvent {
     type: 'selection';
     focus: {
-        targetSelectionId: number;
+        // The `id` of the focus node provided by `NodeIndexGenerator`.
+        nodeId: number;
         offset: number;
     };
     anchor: {
-        targetSelectionId: number;
+        // The `id` of the anchor node provided by `NodeIndexGenerator`.
+        nodeId: number;
         offset: number;
     };
 }
@@ -91,35 +100,10 @@ export type TestEvent =
     | TestSelectionEvent;
 
 /**
- * Get the event type based on its name.
- *
- * @private
- * @param {string} eventName
- * @returns string
- *  'mouse' | 'keyboard' | 'unknown'
+ * The class exists because the original `InputEvent` does not allow to override
+ * its inputType property.
  */
-export function _eventType(eventName: string): string {
-    const types = {
-        MouseEvent: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
-        CompositionEvent: ['composition'],
-        InputEvent: ['input'],
-        KeyboardEvent: ['key'],
-        DragEvent: ['dragstart', 'dragend', 'drop'],
-        ClipboardEvent: ['beforecut', 'cut', 'paste'],
-        TouchEvent: ['touchstart', 'touchend'],
-    };
-    let type = 'unknown';
-    Object.keys(types).forEach(function(key) {
-        const isType = types[key].some(function(str) {
-            return eventName.toLowerCase().indexOf(str) !== -1;
-        });
-        if (isType) {
-            type = key;
-        }
-    });
-    return type;
-}
-class InputEventBis extends InputEvent {
+class SimulatedInputEvent extends InputEvent {
     eventInitDict: InputEventInit;
     constructor(type: string, eventInitDict?: InputEventInit) {
         super(type, eventInitDict);
@@ -129,6 +113,39 @@ class InputEventBis extends InputEvent {
         return this.eventInitDict.inputType;
     }
 }
+
+const eventTypes: Record<string, new (name: string, options: object) => Event> = {
+    'pointer': MouseEvent,
+    'contextmenu': MouseEvent,
+    'select': MouseEvent,
+    'wheel': MouseEvent,
+    'click': MouseEvent,
+    'dblclick': MouseEvent,
+    'mousedown': MouseEvent,
+    'mouseenter': MouseEvent,
+    'mouseleave': MouseEvent,
+    'mousemove': MouseEvent,
+    'mouseout': MouseEvent,
+    'mouseover': MouseEvent,
+    'mouseup': MouseEvent,
+    'compositionstart': CompositionEvent,
+    'compositionend': CompositionEvent,
+    'compositionupdate': CompositionEvent,
+    'input': SimulatedInputEvent,
+    'beforeinput': SimulatedInputEvent,
+    'keydown': KeyboardEvent,
+    'keypress': KeyboardEvent,
+    'keyup': KeyboardEvent,
+    'dragstart': DragEvent,
+    'dragend': DragEvent,
+    'drop': DragEvent,
+    'beforecut': ClipboardEvent,
+    'cut': ClipboardEvent,
+    'paste': ClipboardEvent,
+    'touchstart': TouchEvent,
+    'touchend': TouchEvent,
+};
+
 /**
  * Trigger events natively on the specified target.
  *
@@ -138,17 +155,17 @@ class InputEventBis extends InputEvent {
  * @returns {Promise <Event>}
  */
 export function triggerEvent(
-    el: Node,
+    el: Node | Element,
     eventName: string,
     options: TriggerNativeEventsOption,
 ): Event {
     if (!el) {
-        console.warn('Try to trigger an event on an undefined node');
+        console.warn('Impossible to trigger an event on an undefined node.');
         return;
     }
-    el = (el as HTMLElement).tagName ? el : el.parentNode;
-    if (!el.parentNode) {
-        console.warn('Try to trigger an event on a node out of the DOM');
+    const currentElement = el instanceof Element ? el : el.parentNode;
+    if (!currentElement.parentNode) {
+        console.warn('Impossible to trigger an event on a node out of the DOM.');
         return;
     }
     options = Object.assign(
@@ -159,41 +176,16 @@ export function triggerEvent(
         },
         options,
     );
-    const type = _eventType(eventName);
-    let ev: Event;
-    switch (type) {
-        case 'MouseEvent':
-            ev = new MouseEvent(eventName, options);
-            break;
-        case 'KeyboardEvent':
-            ev = new KeyboardEvent(eventName, options);
-            break;
-        case 'CompositionEvent':
-            ev = new CompositionEvent(eventName, options);
-            break;
-        case 'DragEvent':
-            ev = new DragEvent(eventName, options);
-            break;
-        case 'ClipboardEvent':
-            if (!('clipboardData' in options)) {
-                throw new Error('Wrong test');
-            }
-            ev = new ClipboardEvent(eventName, options);
-            break;
-        case 'InputEvent':
-            ev = new InputEventBis(eventName, options);
-            break;
-        case 'TouchEvent':
-            ev = new TouchEvent(eventName, options);
-            break;
-        default:
-            ev = new Event(eventName, options);
-            break;
+    const EventClass = eventTypes[eventName] || Event;
+    if (EventClass === ClipboardEvent && !('clipboardData' in options)) {
+        throw new Error('Wrong test');
     }
-    el.dispatchEvent(ev);
+    const ev = new EventClass(eventName, options);
+
+    currentElement.dispatchEvent(ev);
     return ev;
 }
-export function setRange(
+export function setSelection(
     startContainer: Node,
     startOffset: number,
     endContainer: Node,
@@ -219,34 +211,50 @@ export async function nextTick(): Promise<void> {
     return await new Promise((resolve): number => setTimeout(resolve));
 }
 
-export class NodeIndexContainer {
-    lastNodeId: number;
-    nodeIdMap: Map<Node, number>;
-    idNodeMap: Map<number, Node>;
-    containerElement: Element;
+/**
+ * The following class is used for recording javascript events (for the tool
+ * `getKeys`) and for simulating them (in the current file).
+ *
+ * It's purpose is to have a unique `id` of a `Node` between the time we record
+ * an event and the time we simulate it.
+ *
+ * This is achieved by recursively generate a new `id` to all DOM nodes before
+ * and when recording events (i.e. when new node are added) as well as before
+ * and when simulating events.
+ *
+ * Before and when simulating event we run the same logic.
+ *
+ * When recording, to retrieve the `id` of a `Node`, use the method `getId`.
+ *
+ * When simulating, to retrieve the `Node` associated to `id`, use the method
+ * `getNode`.
+ */
+export class NodeIndexGenerator {
+    /**
+     * The last `id` generated.
+     */
+    lastNodeId = 0;
+    readonly nodeIdMap: Map<Node, number> = new Map<Node, number>();
+    readonly idNodeMap: Map<number, Node> = new Map<number, Node>();
 
-    constructor(editable: Element) {
-        this.containerElement = editable;
-
-        this.addIdToAllNodes = this.addIdToAllNodes.bind(this);
-        this.resetContainerElement = this.resetContainerElement.bind(this);
-
-        this.resetContainerElement();
+    constructor(public readonly containerElement: Element) {
+        this.getnerateIds(this.containerElement);
     }
 
-    addIdToAllNodes(node: Node): void {
+    /**
+     * Generate ids recursively on `node`.
+     *
+     * @param node
+     */
+    getnerateIds(node: Node): void {
         if (!this.nodeIdMap.get(node)) {
             const newId = this.lastNodeId++;
             this.nodeIdMap.set(node, newId);
             this.idNodeMap.set(newId, node);
         }
-        node.childNodes.forEach(this.addIdToAllNodes);
-    }
-    resetContainerElement(): void {
-        this.lastNodeId = 0;
-        this.nodeIdMap = new Map<Node, number>();
-        this.idNodeMap = new Map<number, Node>();
-        this.addIdToAllNodes(this.containerElement);
+        for (const childNode of node.childNodes) {
+            this.getnerateIds(childNode);
+        }
     }
     getId(node: Node): number {
         return this.nodeIdMap.get(node);
@@ -255,36 +263,28 @@ export class NodeIndexContainer {
         return this.idNodeMap.get(id);
     }
 }
-
 /**
- * For each `eventStackList` in `triggerEvents()`, we need to retrieve
- * information of the `index` that is contained within a `parent` that has an
- * `id`.  It is possible that within the `eventStackList` loop, childs of a node
- * are removed. However, the index of a childNode within his parent is encoded
- * relative to the beggining of the stack when all nodes were still preset.
+ * Trigger events for of a list of stacks that where previously recorded with
+ * the tool `getKeys`.
  *
- * For that reason we cannot retrieve a childNode with
- * `parent.childNodes[index]` but we must do `offsetCacheMap[parentId + '$' +
- * index]`.
- *
- * Encode the key of the offsetCacheMap with "<parentId>$<childIndex>" (e.g. if
- * the parent id is 'a' and the offset is 0, the key will be encoded as "a$0").
+ * @param eventStackList All the stack that have been recorded.
  */
 export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
     const addedNodes: Node[] = [];
     const editableElement = document.getElementById('editable');
-    const nodeIndexContainer = new NodeIndexContainer(editableElement);
+    const nodeIndexGenerator = new NodeIndexGenerator(editableElement);
     for (const eventStack of eventStackList) {
-        eventStack.forEach((testEvent): void => {
+        let keyEventPrevented = false;
+        for (const testEvent of eventStack) {
             if (testEvent.type === 'mutation') {
                 const mutationEvent = testEvent;
                 const targetId = mutationEvent.targetId;
-                const mutatedNode = nodeIndexContainer.getNode(targetId);
+                const mutatedNode = nodeIndexGenerator.getNode(targetId);
                 if (testEvent.mutationType === 'childList') {
                     if (testEvent.removedNodes) {
                         testEvent.removedNodes
                             .map(removedNodeDescription => {
-                                return nodeIndexContainer.getNode(removedNodeDescription.nodeId);
+                                return nodeIndexGenerator.getNode(removedNodeDescription.nodeId);
                             })
                             .forEach(removedNode => {
                                 removedNode.parentNode.removeChild(removedNode);
@@ -293,7 +293,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                         testEvent.addedNodes.forEach(addedNodeDescription => {
                             let addedNode: Node;
                             if (addedNodeDescription.nodeId) {
-                                addedNode = nodeIndexContainer.getNode(addedNodeDescription.nodeId);
+                                addedNode = nodeIndexGenerator.getNode(addedNodeDescription.nodeId);
                             } else if (addedNodeDescription.nodeType === Node.ELEMENT_NODE) {
                                 const div = document.createElement('div');
                                 div.innerHTML = addedNodeDescription.nodeValue;
@@ -305,20 +305,22 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                             } else {
                                 throw new Error('Unknown node type');
                             }
-                            nodeIndexContainer.addIdToAllNodes(addedNode);
+                            // If a new DOM `Node` has been generated, add it to
+                            // be added to the nodeIndexGenerator maps.
+                            nodeIndexGenerator.getnerateIds(addedNode);
 
                             if (addedNodeDescription.previousSiblingId) {
-                                const previousSibling = nodeIndexContainer.getNode(
+                                const previousSibling = nodeIndexGenerator.getNode(
                                     addedNodeDescription.previousSiblingId,
                                 );
                                 (previousSibling as ChildNode).after(addedNode);
                             } else if (addedNodeDescription.nextSiblingId) {
-                                const nextSibling = nodeIndexContainer.getNode(
+                                const nextSibling = nodeIndexGenerator.getNode(
                                     addedNodeDescription.nextSiblingId,
                                 );
                                 (nextSibling as ChildNode).before(addedNode);
                             } else {
-                                const parentNode = nodeIndexContainer.getNode(
+                                const parentNode = nodeIndexGenerator.getNode(
                                     addedNodeDescription.parentId,
                                 );
                                 parentNode.appendChild(addedNode);
@@ -329,21 +331,30 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                     mutatedNode.textContent = mutationEvent.textContent;
                 }
             } else if (testEvent.type === 'selection') {
-                if (testEvent.anchor.targetSelectionId) {
+                if (testEvent.anchor.nodeId) {
                     const selectionEvent = testEvent;
-                    setRange(
-                        nodeIndexContainer.getNode(selectionEvent.anchor.targetSelectionId),
+                    setSelection(
+                        nodeIndexGenerator.getNode(selectionEvent.anchor.nodeId),
                         selectionEvent.anchor.offset,
-                        nodeIndexContainer.getNode(selectionEvent.focus.targetSelectionId),
+                        nodeIndexGenerator.getNode(selectionEvent.focus.nodeId),
                         selectionEvent.focus.offset,
                     );
                 }
             } else {
                 const { type, ...options } = testEvent;
-                triggerEvent(editableElement, type, options as TriggerNativeEventsOption);
+                if (!(keyEventPrevented && ['keydown', 'keypress', 'keyup'].includes(type))) {
+                    const event = triggerEvent(
+                        editableElement,
+                        type,
+                        options as TriggerNativeEventsOption,
+                    );
+                    keyEventPrevented = event.defaultPrevented;
+                }
             }
-        });
+        }
         await nextTick();
+        // The normalizer in some cases need two ticks to aggregate all
+        // informations (e.g. Safari).
         await nextTick();
     }
 }
@@ -351,7 +362,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
 export interface TestContext {
     container: HTMLElement;
     editable: HTMLElement;
-    div: HTMLElement;
+    divOutsideEditable: HTMLElement;
     eventBatches: EventBatch[];
     normalizer: EventNormalizer;
 }
@@ -374,13 +385,18 @@ export function testCallbackBefore(): TestContext {
     container.appendChild(div);
     document.body.appendChild(container);
     const eventBatchs = [];
-    const normalizer = new EventNormalizer(editable, (res: EventBatch): void => {
-        eventBatchs.push(res);
+    const normalizer = new EventNormalizer(editable, async function(
+        batchPromise: Promise<EventBatch>,
+    ): Promise<void> {
+        const batch = await batchPromise;
+        if (batch.actions.length > 0) {
+            eventBatchs.push(await batch);
+        }
     });
     return {
         container: container,
         editable: editable,
-        div: div,
+        divOutsideEditable: div,
         eventBatches: eventBatchs,
         normalizer: normalizer,
     };
