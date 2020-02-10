@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "webpack-dev-server",
     "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack",
-    "perf": "karma start --include-files test/**/*.perf.ts",
-    "coverage": "karma start --coverage",
+    "perf": "karma start --include-files **/*.perf.ts",
+    "coverage": "karma start --coverage --include-files **/*.test.ts --exclude-files **/*.perf.ts",
     "debug": "karma start --no-browsers --debug",
-    "test": "karma start"
+    "test": "karma start --exclude-files **/*.perf.ts"
   },
   "repository": {
     "type": "git",
