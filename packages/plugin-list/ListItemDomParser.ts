@@ -29,10 +29,10 @@ export class ListItemDomParser extends AbstractParser<Node> {
             const domNode = children[k];
             const parsedChild = await this.engine.parse(domNode);
             if (this._isInlineListItem(domNode)) {
-                // Inline elements in a list item should be wrapped in a P.
+                // Inline elements in a list item should be wrapped in a base container.
                 if (!this._isInlineListItem(domNode.previousSibling)) {
-                    const paragraph = await this.engine.parse(document.createElement('p'));
-                    nodes.push(...paragraph);
+                    const baseContainer = this.engine.editor.createBaseContainer();
+                    nodes.push(baseContainer);
                 }
                 nodes[nodes.length - 1].append(...parsedChild);
             } else {
