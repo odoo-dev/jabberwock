@@ -605,14 +605,20 @@ export class VNode {
     /**
      * Prepend a child to this node. Return self.
      */
-    prepend(child: VNode): VNode {
-        return this._insertAtIndex(child, 0);
+    prepend(...children: VNode[]): VNode {
+        for (const child of children) {
+            this._insertAtIndex(child, 0);
+        }
+        return this;
     }
     /**
      * Append a child to this VNode. Return self.
      */
-    append(child: VNode): VNode {
-        return this._insertAtIndex(child, this.children.length);
+    append(...children: VNode[]): VNode {
+        for (const child of children) {
+            this._insertAtIndex(child, this.children.length);
+        }
+        return this;
     }
     /**
      * Insert the given node before the given reference (which is a child of
