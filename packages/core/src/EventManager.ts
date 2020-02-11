@@ -20,6 +20,9 @@ export class EventManager {
             this._onNormalizedEvent.bind(this),
         );
     }
+    stop(): void {
+        this.eventNormalizer.destroy();
+    }
 
     //--------------------------------------------------------------------------
     // Private
