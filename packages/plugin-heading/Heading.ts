@@ -6,7 +6,7 @@ import { distinct } from '../utils/src/utils';
 import { VNode, isLeaf } from '../core/src/VNodes/VNode';
 
 export interface HeadingParams extends RangeParams {
-    nodeCreator: () => VNode;
+    level: number;
 }
 
 export class Heading extends JWPlugin {
@@ -20,37 +20,37 @@ export class Heading extends JWPlugin {
         {
             pattern: 'CTRL+SHIFT+<Digit0>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: this.editor.createBaseContainer },
+            commandArgs: { level: 0 },
         },
         {
             pattern: 'CTRL+SHIFT+<Digit1>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: (): HeadingNode => new HeadingNode(1) },
+            commandArgs: { level: 1 },
         },
         {
             pattern: 'CTRL+SHIFT+<Digit2>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: (): HeadingNode => new HeadingNode(2) },
+            commandArgs: { level: 2 },
         },
         {
             pattern: 'CTRL+SHIFT+<Digit3>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: (): HeadingNode => new HeadingNode(3) },
+            commandArgs: { level: 3 },
         },
         {
             pattern: 'CTRL+SHIFT+<Digit4>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: (): HeadingNode => new HeadingNode(4) },
+            commandArgs: { level: 4 },
         },
         {
             pattern: 'CTRL+SHIFT+<Digit5>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: (): HeadingNode => new HeadingNode(5) },
+            commandArgs: { level: 5 },
         },
         {
             pattern: 'CTRL+SHIFT+<Digit6>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { nodeCreator: (): HeadingNode => new HeadingNode(6) },
+            commandArgs: { level: 6 },
         },
     ];
 
@@ -75,9 +75,26 @@ export class Heading extends JWPlugin {
             );
         }
         for (const node of nodesToConvert) {
-            const heading = params.nodeCreator(); // todo: make sure to keep attributes
+            const heading = this._getFromLevel(params.level);
             node.before(heading);
             node.mergeWith(heading);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return a heading node or a base container based on the given level.
+     *
+     * @param level
+     */
+    _getFromLevel(level: number): VNode {
+        if (level === 0) {
+            return this.editor.createBaseContainer();
+        } else {
+            return new HeadingNode(level);
         }
     }
 }
