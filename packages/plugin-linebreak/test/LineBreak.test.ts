@@ -9,8 +9,7 @@ import { LineBreak } from '../LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LineBreakDomParser } from '../LineBreakDomParser';
-import { ParsingEngine } from '../../core/src/ParsingEngine';
-import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
+import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('insertLineBreak');
@@ -30,7 +29,7 @@ describePlugin(LineBreak, testEditor => {
             const p = document.createElement('p');
             const br = document.createElement('br');
             p.appendChild(br);
-            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const engine = new DomParsingEngine(new JWEditor());
             const result = await new LineBreakDomParser(engine).parse(br);
             expect(result instanceof Array).to.be.true;
             expect(result.length).to.equal(0);
@@ -41,13 +40,13 @@ describePlugin(LineBreak, testEditor => {
             const br2 = document.createElement('br');
             p.appendChild(br1);
             p.appendChild(br2);
-            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const engine = new DomParsingEngine(new JWEditor());
             const lineBreak = (await new LineBreakDomParser(engine).parse(br1))[0] as LineBreakNode;
             expect(lineBreak instanceof VNode).to.be.true;
             expect(lineBreak.atomic).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {
-            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const engine = new DomParsingEngine(new JWEditor());
             const span = document.createElement('span');
             expect(new LineBreakDomParser(engine).predicate(span)).to.be.false;
         });

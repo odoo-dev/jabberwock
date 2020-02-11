@@ -271,8 +271,12 @@ describe('core', () => {
                         return node;
                     }
                 }
+                class VNodeRenderingEngine extends RenderingEngine<VNode> {
+                    static id = 'VNode';
+                    static defaultRenderer = VNodeRenderer;
+                }
                 class VNodePlugin extends JWPlugin {
-                    renderingEngines = [new RenderingEngine<VNode>('VNode', VNodeRenderer)];
+                    renderingEngines = [VNodeRenderingEngine];
                 }
                 const editor = new JWEditor(document.createElement('p'));
                 editor.addPlugin(VNodePlugin);

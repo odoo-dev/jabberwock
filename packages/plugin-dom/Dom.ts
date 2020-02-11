@@ -2,17 +2,16 @@ import { JWPlugin } from '../core/src/JWPlugin';
 import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, VSelectionDescription, Direction } from '../core/src/VSelection';
 import { VDocumentMap } from '../core/src/VDocumentMap';
-import { DefaultDomRenderer } from './DefaultDomRenderer';
 import JWEditor from '../core/src/JWEditor';
-import { RenderingEngine } from '../core/src/RenderingEngine';
 import { nodeLength } from '../utils/src/utils';
 import { DomSelectionDescription } from '../core/src/EventNormalizer';
-import { DefaultDomParser } from './DefaultDomParser';
 import { ParsingEngine } from '../core/src/ParsingEngine';
+import { DomParsingEngine } from './DomParsingEngine';
+import { DomRenderingEngine } from './DomRenderingEngine';
 
 export class Dom extends JWPlugin {
-    readonly parsingEngines = [new ParsingEngine<Node>('dom', DefaultDomParser)];
-    readonly renderingEngines = [new RenderingEngine<Node[]>('dom', DefaultDomRenderer)];
+    readonly parsingEngines = [DomParsingEngine];
+    readonly renderingEngines = [DomRenderingEngine];
 
     domMap = new VDocumentMap();
 

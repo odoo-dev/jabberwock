@@ -192,11 +192,12 @@ export class JWEditor {
 
             // Load rendering engines.
             if (plugin.renderingEngines) {
-                for (const engine of plugin.renderingEngines) {
-                    const id = engine.id;
+                for (const EngineClass of plugin.renderingEngines) {
+                    const id = EngineClass.id;
                     if (this.renderers[id]) {
                         throw new Error(`Rendering engine ${id} already registered.`);
                     }
+                    const engine = new EngineClass(this);
                     this.renderers[id] = engine;
                     // Register renderers from previously loaded plugins as that
                     // could not be done earlier without the rendering engine.
@@ -285,11 +286,12 @@ export class JWEditor {
     _addPluginParser(plugin: JWPlugin): void {
         // Load parsing engines.
         if (plugin.parsingEngines) {
-            for (const engine of plugin.parsingEngines) {
-                const id = engine.id;
+            for (const EngineClass of plugin.parsingEngines) {
+                const id = EngineClass.id;
                 if (this.parsers[id]) {
                     throw new Error(`Rendering engine ${id} already registered.`);
                 }
+                const engine = new EngineClass(this);
                 this.parsers[id] = engine;
                 // Register parsing from previously loaded plugins as that
                 // could not be done earlier without the parsing engine.

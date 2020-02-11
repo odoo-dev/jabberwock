@@ -1,5 +1,6 @@
 import { VNode, Predicate } from './VNodes/VNode';
 import { Constructor } from '../../utils/src/utils';
+import JWEditor from './JWEditor';
 
 export type RenderingIdentifier = string;
 
@@ -12,14 +13,24 @@ export type RendererConstructor<T = {}> = Constructor<Renderer<T>> & {
     id: RenderingIdentifier;
 };
 
-export class RenderingEngine<T = {}> {
+export type RenderingEngineConstructor<T = {}> = Constructor<RenderingEngine> & {
     id: RenderingIdentifier;
-    renderers: Renderer<T>[] = [];
-    renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
+    defaultRenderer: Constructor<Renderer<T>>;
+};
 
-    constructor(identifier: string, DefaultRenderer: Constructor<Renderer<T>>) {
-        this.id = identifier;
-        const defaultRenderer = new DefaultRenderer(this);
+export interface RenderingEngine<T = {}> {
+    constructor: RenderingEngineConstructor<T>;
+}
+export class RenderingEngine<T = {}> {
+    static readonly id: RenderingIdentifier;
+    static readonly defaultRenderer: Constructor<Renderer>;
+    readonly editor: JWEditor;
+    readonly renderers: Renderer<T>[] = [];
+    readonly renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
+
+    constructor(editor: JWEditor) {
+        this.editor = editor;
+        const defaultRenderer = new this.constructor.defaultRenderer(this);
         if (defaultRenderer.predicate) {
             throw `Default renderer cannot have a predicate.`;
         } else {

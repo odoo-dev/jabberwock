@@ -12,13 +12,13 @@ import { LineBreakDomParser } from '../../plugin-linebreak/LineBreakDomParser';
 import { ParagraphDomParser } from '../../plugin-paragraph/ParagraphDomParser';
 import { ListDomParser } from '../../plugin-list/ListDomParser';
 import { ListItemDomParser } from '../../plugin-list/ListItemDomParser';
-import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
-import { ParsingEngine } from '../src/ParsingEngine';
+import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
+import JWEditor from '../src/JWEditor';
 
 describe('utils', () => {
     describe('Parser', () => {
         describe('parse()', async () => {
-            const parser = new ParsingEngine('dom', DefaultDomParser);
+            const parser = new DomParsingEngine(new JWEditor());
             parser.register(FormatDomParser);
             parser.register(CharDomParser);
             parser.register(HeadingDomParser);

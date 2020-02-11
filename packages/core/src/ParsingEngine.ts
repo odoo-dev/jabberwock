@@ -1,5 +1,6 @@
 import { VNode } from './VNodes/VNode';
 import { Constructor } from '../../utils/src/utils';
+import JWEditor from './JWEditor';
 
 export type ParsingIdentifier = string;
 
@@ -12,14 +13,24 @@ export type ParserConstructor<T = {}> = Constructor<Parser<T>> & {
     id: ParsingIdentifier;
 };
 
+export type ParsingEngineConstructor<T = {}> = Constructor<ParsingEngine> & {
+    id: ParsingIdentifier;
+    defaultParser: ParserConstructor<T>;
+};
+
+export interface ParsingEngine<T = {}> {
+    constructor: ParsingEngineConstructor<T>;
+}
 export class ParsingEngine<T = {}> {
-    readonly id: ParsingIdentifier;
+    static readonly id: ParsingIdentifier;
+    static defaultParser: Constructor<Parser>;
+    readonly editor: JWEditor;
     readonly parsers: Parser<T>[] = [];
     readonly parsingMap = new Map<T, VNode[]>();
 
-    constructor(identifier: string, DefaultParser: Constructor<Parser<T>>) {
-        this.id = identifier;
-        const defaultParser = new DefaultParser(this);
+    constructor(editor: JWEditor) {
+        this.editor = editor;
+        const defaultParser = new this.constructor.defaultParser(this);
         if (defaultParser.predicate) {
             throw `Default renderer cannot have a predicate.`;
         } else {

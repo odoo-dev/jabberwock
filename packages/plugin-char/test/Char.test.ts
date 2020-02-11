@@ -6,8 +6,7 @@ import { InsertTextParams, FormatParams, Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { describePlugin } from '../../utils/src/testUtils';
 import { CharDomParser } from '../CharDomParser';
-import { ParsingEngine } from '../../core/src/ParsingEngine';
-import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
+import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
@@ -37,8 +36,8 @@ describePlugin(Char, testEditor => {
             editor.stop();
         });
         it('should parse a textNode', async () => {
+            const engine = new DomParsingEngine(new JWEditor());
             const text = document.createTextNode('abc');
-            const engine = new ParsingEngine('dom', DefaultDomParser);
             const nodes = await new CharDomParser(engine).parse(text);
             expect(nodes.length).to.equal(3);
             expect((nodes[0] as CharNode).char).to.equal('a');
@@ -46,7 +45,7 @@ describePlugin(Char, testEditor => {
             expect((nodes[2] as CharNode).char).to.equal('c');
         });
         it('should not parse a SPAN node', async () => {
-            const engine = new ParsingEngine('dom', DefaultDomParser);
+            const engine = new DomParsingEngine(new JWEditor());
             const nodes = await new CharDomParser(engine).parse(document.createElement('span'))[1];
             expect(nodes).to.be.undefined;
         });

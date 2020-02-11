@@ -15,8 +15,7 @@ import { FormatDomParser } from '../../plugin-format/src/FormatDomParser';
 import { HeadingDomParser } from '../../plugin-heading/HeadingDomParser';
 import { LineBreakDomParser } from '../../plugin-linebreak/LineBreakDomParser';
 import { ParagraphDomParser } from '../../plugin-paragraph/ParagraphDomParser';
-import { ParsingEngine } from '../../core/src/ParsingEngine';
-import { DefaultDomParser } from '../../plugin-dom/DefaultDomParser';
+import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('deleteForward');
@@ -45,7 +44,7 @@ const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
 
 describePlugin(List, testEditor => {
     describe('parse', () => {
-        const engine = new ParsingEngine('dom', DefaultDomParser);
+        const engine = new DomParsingEngine(new JWEditor());
         engine.register(FormatDomParser);
         engine.register(CharDomParser);
         engine.register(HeadingDomParser);
