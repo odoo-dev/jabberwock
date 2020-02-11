@@ -16,10 +16,6 @@ export interface InsertParams extends RangeParams {
     node: VNode;
 }
 
-export interface ParagraphParams extends RangeParams {
-    nodeCreator: () => VNode;
-}
-
 export interface VSelectionParams {
     vSelection: VSelectionDescription;
 }
@@ -44,9 +40,6 @@ export class CorePlugin extends JWPlugin {
         },
         selectAll: {
             handler: this.selectAll.bind(this),
-        },
-        applyParagraph: {
-            handler: (): void => {},
         },
     };
     constructor(editor) {

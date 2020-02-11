@@ -6,6 +6,7 @@ import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
+import { VElement } from './VNodes/VElement';
 
 export type ExecCommandHook = (command: string, args: CommandArgs) => void;
 import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
@@ -28,6 +29,7 @@ export interface JWEditorConfig {
     theme?: string;
     plugins?: Array<typeof JWPlugin>;
     shortcuts?: Shortcut[];
+    createBaseContainer?: () => VNode;
 }
 
 export class JWEditor {
@@ -47,6 +49,7 @@ export class JWEditor {
     execCommandHooks: ExecCommandHook[] = [];
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
+    createBaseContainer: () => VNode = () => new VElement('P');
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -241,6 +244,9 @@ export class JWEditor {
             for (const shortcut of config.shortcuts) {
                 this._loadShortcut(shortcut, this.keymaps.user);
             }
+        }
+        if (config.createBaseContainer) {
+            this.createBaseContainer = config.createBaseContainer;
         }
     }
 
