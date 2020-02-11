@@ -16,43 +16,13 @@ export class Heading extends JWPlugin {
             handler: this.applyHeadingStyle.bind(this),
         },
     };
-    shortcuts = [
-        {
-            pattern: 'CTRL+SHIFT+<Digit0>',
+    shortcuts = [0, 1, 2, 3, 4, 5, 6].map(level => {
+        return {
+            pattern: 'CTRL+SHIFT+<Digit' + level + '>',
             commandId: 'applyHeadingStyle',
-            commandArgs: { level: 0 },
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit1>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: 1 },
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit2>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: 2 },
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit3>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: 3 },
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit4>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: 4 },
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit5>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: 5 },
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit6>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: 6 },
-        },
-    ];
+            commandArgs: { level: level },
+        };
+    });
 
     //--------------------------------------------------------------------------
     // Public
@@ -75,7 +45,7 @@ export class Heading extends JWPlugin {
             );
         }
         for (const node of nodesToConvert) {
-            const heading = this._getFromLevel(params.level);
+            const heading = this._createHeadingContainer(params.level);
             node.before(heading);
             node.mergeWith(heading);
         }
@@ -90,7 +60,7 @@ export class Heading extends JWPlugin {
      *
      * @param level
      */
-    _getFromLevel(level: number): VNode {
+    _createHeadingContainer(level: number): VNode {
         if (level === 0) {
             return this.editor.createBaseContainer();
         } else {
