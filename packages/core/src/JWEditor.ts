@@ -307,9 +307,9 @@ export class JWEditor {
         // Load parsers.
         if (plugin.parsers) {
             for (const ParserClass of plugin.parsers) {
-                const renderingEngine = this.parsers[ParserClass.id];
-                if (renderingEngine) {
-                    renderingEngine.register(ParserClass);
+                const parsingEngine = this.parsers[ParserClass.id];
+                if (parsingEngine) {
+                    parsingEngine.register(ParserClass);
                 }
             }
         }
