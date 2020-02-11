@@ -274,6 +274,7 @@ export class JWEditor {
         for (const plugin of this.plugins) {
             await plugin.stop();
         }
+        this.eventManager.stop();
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
