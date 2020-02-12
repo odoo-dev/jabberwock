@@ -14,11 +14,11 @@ export abstract class FormatDomParser extends AbstractParser<Node> {
     applyFormat(format: Format, nodes: VNode[]): void {
         for (const node of nodes) {
             if (node.is(InlineNode)) {
-                node.formats.unshift(format);
+                format.applyTo(node);
             } else {
                 const inlineNodes = node.descendants(InlineNode);
                 for (const inline of inlineNodes) {
-                    inline.formats.unshift(format);
+                    format.applyTo(inline);
                 }
             }
         }
