@@ -2185,6 +2185,18 @@ describePlugin(List, testEditor => {
                                     '<ol><li><h1 class="a">abc</h1></li><li><h1 class="a"><br></h1></li><li><h1 class="a">[]<br></h1></li></ol>',
                             });
                         });
+                        it('should add two list items with a font at the end of a list within a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore:
+                                    '<ul><li>ab</li><ul><li><font style="color: red;">cd[]</font></li></ul><li>ef</li></ul>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ul><li>ab<ul><li><font style="color: red;">cd</font></li><li><br></li><li>[]<br></li></ul></li><li>ef</li></ul>',
+                            });
+                        });
                     });
                 });
                 describe('Unordered', () => {

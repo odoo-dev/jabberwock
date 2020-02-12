@@ -6,13 +6,12 @@ When implementing the tests for the delete, backspace and enter keys, certain te
         1. [Two function calls -> redundant](#f-s-tfc)
         2. [Multiple block contexts within a list item](#f-s-li)
     2. [To convert later](#f-todo)
-        1. [Classes](#f-t-classes)
+        1. [Unbreakable](#f-t-unbreakable)
         2. [PRE](#f-t-pre)
         3. [Tables](#f-t-tables)
-        4. [SPAN](#f-t-span)
-        5. [Pictograms](#f-t-pictograms)
-        6. [HR](#f-t-hr)
-        7. [Integration](#f-t-integration)
+        4. [Pictograms](#f-t-pictograms)
+        5. [HR](#f-t-hr)
+        6. [Integration](#f-t-integration)
 2. [Backspace (`deleteBackward`)](#backward)
     1. [Skipped](#b-skipped)
         1. [Two function calls -> redundant](#b-s-tfc)
@@ -20,19 +19,15 @@ When implementing the tests for the delete, backspace and enter keys, certain te
         3. [Whitespace, format](#b-s-wsf)
         4. [Different spec?](#b-s-spec)
     2. [To convert later](#b-todo)
-        1. [Classes](#b-t-classes)
-        2. [PRE](#b-t-pre)
-        3. [Tables](#b-t-tables)
-        4. [SPAN](#b-t-span)
-        5. [Pictograms](#b-t-pictograms)
-        6. [HR](#b-t-hr)
-        7. [Integration](#b-t-integration)
+        1. [PRE](#b-t-pre)
+        2. [Tables](#b-t-tables)
+        3. [Pictograms](#b-t-pictograms)
+        4. [HR](#b-t-hr)
+        5. [Integration](#b-t-integration)
 3. [Enter (`insertParagraphBreak`)](#enter)
     1. [To convert later](#e-todo)
-        1. [Classes](#e-t-classes)
-        2. [Buttons](#e-t-buttons)
-        3. [SPAN, FONT](#e-t-span)
-        4. [Integration](#e-t-integration)
+        1. [Buttons](#e-t-buttons)
+        2. [Integration](#e-t-integration)
 4. [List (`toggleList`)](#list)
     1. [Skipped](#l-skipped)
     2. [To convert later](#l-todo)
@@ -78,37 +73,6 @@ Note: These were tests for the delete key in we3. When implementing one, always 
     }],
     test: "<ul><li>a</li><li><p>b◆c</p></li></ul>",
 },
-```
-
-### To convert later<a name="f-todo"></a>
-(when their related feature is implemented)
-
-#### Classes<a name="f-t-classes"></a>
-```javascript
-{
-    name: "in empty-p.a (p after): DELETE",
-    content: '<p class="a"><br/>◆</p><p>dom to edit</p>',
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: '<p class="a">◆dom to edit</p>',
-},
-{
-    name: "in empty-p.a (p after): DELETE (2)",
-    content: '<p class="a"><br/>◆</p><p>dom to edit</p>',
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: '<p class="a">◆dom to edit</p>',
-},
-{
-    name: "in p > span.a (div > span.a after): DELETE at end (must do nothing)",
-    content: '<p><span class="a">dom to◆</span></p><div><span class="a">edit</span></div>',
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: '<p><span class="a">dom to◆</span></p><div><span class="a">edit</span></div>',
-},
 {
     name: "in li > p (p.o_default_snippet_text after): DELETE at end",
     content: '<ul><li><p>toto</p></li><li><p>xxx◆</p><p class="o_default_snippet_text">yyy</p></li><li><p>tutu</p></li></ul>',
@@ -116,6 +80,21 @@ Note: These were tests for the delete key in we3. When implementing one, always 
         key: 'DELETE',
     }],
     test: "<ul><li><p>toto</p></li><li><p>xxx◆yyy</p></li><li><p>tutu</p></li></ul>",
+},
+```
+
+### To convert later<a name="f-todo"></a>
+(when their related feature is implemented)
+
+#### Unbreakable<a name="f-t-unbreakable"></a>
+```javascript
+{
+    name: "in p > span.a (div > span.a after): DELETE at end (must do nothing)",
+    content: '<p><span class="a">dom to◆</span></p><div><span class="a">edit</span></div>',
+    steps: [{
+        key: 'DELETE',
+    }],
+    test: '<p><span class="a">dom to◆</span></p><div><span class="a">edit</span></div>',
 },
 ```
 
@@ -202,26 +181,6 @@ Note: These were tests for the delete key in we3. When implementing one, always 
         key: 'DELETE',
     }],
     test: '<table class="table table-bordered"><tbody><tr><td><p>dom ◆o edit</p></td></tr></tbody></table>',
-},
-```
-
-#### SPAN<a name="f-t-span"></a>
-```javascript
-{
-    name: "in complex-dom (span > b -> ENTER): DELETE",
-    content: "<p><span><b>dom◆</b></span><br/><span><b>to edit</b></span></p>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<p><span><b>dom◆to edit</b></span></p>",
-},
-{
-    name: "in p.a > span.b (p.c > span.b after): DELETE at end",
-    content: "<p class=\"a\"><span class=\"b\">dom to&nbsp;◆</span></p><p class=\"c\"><span class=\"b\">edit</span></p>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<p class=\"a\"><span class=\"b\">dom to ◆edit</span></p>",
 },
 ```
 
@@ -381,6 +340,14 @@ always make sure to also implement its inverse in forward tests.
     }],
     test: "<ul><li><p>toto</p></li><li><p>xxx◆yyy</p></li><li><p>tutu</p></li></ul>",
 },
+{
+    name: "in p (div > span.a before - span.a after): BACKSPACE at beginning (must do nothing)",
+    content: "<div><p><span class=\"a\">dom to&nbsp;</span></p></div><p><span class=\"a\">◆edit</span></p>",
+    steps: [{
+        key: 'BACKSPACE',
+    }],
+    test: "<div><p><span class=\"a\">dom to&nbsp;</span></p></div><p><span class=\"a\">◆edit</span></p>",
+},
 ```
 
 #### Whitespace, format<a name="b-s-wsf"></a>
@@ -423,50 +390,6 @@ always make sure to also implement its inverse in forward tests.
 ```
 
 ### To convert later
-
-#### Classes<a name="b-t-classes"></a>
-```javascript
-{
-    name: "in p (empty-p.a before): BACKSPACE",
-    content: '<p class="a"><br></p><p>◆dom to edit</p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: '<p class="a">◆dom to edit</p>',
-},
-{
-    name: "in p (p > span.a before - span.b after): BACKSPACE at beginning (must attach them)",
-    content: '<p><span class="a">dom to</span></p><p><span class="b">◆edit</span></p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<p><span class=\"a\">dom to</span><span class=\"b\">◆edit</span></p>",
-},
-{
-    name: "in p (p > span.a before - span.a after): BACKSPACE (must merge them)",
-    content: '<p><span class="a">dom to</span></p><p><span class="a">◆edit</span></p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<p><span class=\"a\">dom to◆edit</span></p>",
-},
-{
-    name: "in p (div > span.a before - span.a after): BACKSPACE at beginning (must do nothing)",
-    content: "<div><p><span class=\"a\">dom to&nbsp;</span></p></div><p><span class=\"a\">◆edit</span></p>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<div><p><span class=\"a\">dom to&nbsp;</span></p></div><p><span class=\"a\">◆edit</span></p>",
-},
-{
-    name: "in p.c (p.a > span.b before - span.b after): BACKSPACE at beginning",
-    content: '<p class="a"><span class="b">dom to</span></p><p class="c"><span class="b">◆edit</span></p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: '<p class="a"><span class="b">dom to◆edit</span></p>',
-},
-```
 
 #### PRE<a name="b-t-pre"></a>
 ```javascript
@@ -602,28 +525,6 @@ always make sure to also implement its inverse in forward tests.
 },
 ```
 
-#### SPAN<a name="b-t-span"></a>
-```javascript
-{
-    name: "in complex-dom (span > b -> ENTER in contents): BACKSPACE",
-    content: "<p><span><b>dom<br></b></span><br><span><b>◆&nbsp;to edit</b></span></p>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<p><span><b>dom<br/>◆&nbsp;to edit</b></span></p>",
-},
-{
-    name: "in complex-dom (span > b -> ENTER in contents): 2 x BACKSPACE",
-    content: "<p><span><b>dom<br></b></span><br><span><b>a◆ to edit</b></span></p>",
-    steps: [{
-        key: 'BACKSPACE',
-    }, {
-        key: 'BACKSPACE',
-    }],
-    test: "<p><span><b>dom<br/>◆&nbsp;to edit</b></span></p>",
-},
-```
-
 #### Pictograms<a name="b-t-pictograms"></a>
 ```javascript
 {
@@ -730,109 +631,6 @@ always make sure to also implement its inverse in forward tests.
 
 ### To convert later<a name="e-todo"></a>
 Note: The tests that are commented out were found as is in we3. They were either "todo" or "toremove"...
-
-#### Classes<a name="e-t-classes"></a>
-```javascript
-{
-    name: "in p (other-p > span.a before - p > span.b after): ENTER at beginning",
-    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">◆edit</span></p>",
-    steps: [{
-        key: 'ENTER',
-    }],
-    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">◆edit</span></p>",
-},
-{
-    name: "in p (other-p > span.a before - p > span.b after): ENTER -> 'a' at beginning",
-    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">◆edit</span></p>",
-    steps: [{
-        key: 'ENTER',
-    }, {
-        key: 'a',
-    }],
-    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">a◆edit</span></p>",
-},
-{
-    name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER at beginning",
-    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">◆edit</span></p>",
-    steps: [{
-        key: 'ENTER',
-        shiftKey: true,
-    }],
-    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>◆edit</span></p>",
-},
-{
-    name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER -> 'a' at beginning",
-    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">◆edit</span></p>",
-    steps: [{
-        key: 'ENTER',
-        shiftKey: true,
-    }, {
-        key: 'a',
-    }],
-    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>a◆edit</span></p>",
-},
-// {
-//     name: "in p (other-p > span.a before - p > span.b after): ENTER at beginning",
-//     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-//     steps: [{
-//         start: "p:eq(1):contents()[0]->0",
-//         key: 'ENTER',
-//     }],
-//     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">edit</span></p>",
-//         start: "span:eq(2):contents()[0]->0",
-//     },
-// },
-// {
-//     name: "in p (other-p > span.a before - p > span.b after): ENTER -> 'a' at beginning",
-//     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-//     steps: [{
-//         start: "p:eq(1):contents()[0]->0",
-//         key: 'ENTER',
-//     }, {
-//         key: 'a',
-//     }],
-//     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">aedit</span></p>",
-//         start: "span:eq(2):contents()[0]->1",
-//     },
-// },
-// {
-//     name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER at beginning",
-//     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-//     steps: [{
-//         start: "p:eq(1):contents()[0]->0",
-//         key: 'ENTER',
-//         shiftKey: true,
-//     }],
-//     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>edit</span></p>",
-//         start: "span:eq(1):contents()[1]->0",
-//     },
-// },
-// {
-//     name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER -> 'a' at beginning",
-//     content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
-//     steps: [{
-//         start: "p:eq(1):contents()[0]->0",
-//         key: 'ENTER',
-//         shiftKey: true,
-//     }, {
-//         key: 'a',
-//     }],
-//     test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>aedit</span></p>",
-//         start: "span:eq(1):contents()[1]->1",
-//     },
-// },
-// {
-//     name: "in ul.list-group > li: ENTER at end",
-//     content: '<ul class="list-group"><li><p>dom to edit</p></li></ul>',
-//     steps: [{
-//         start: "p:contents()[0]->11",
-//         key: 'ENTER',
-//     }, {
-//         key: 'ENTER',
-//     }],
-//     test: '<ul class="list-group"><li><p>dom to edit</p></li><li><p><br/></p></li><li><p><br/>◆</p></li></ul>',
-// },
-```
 
 #### Buttons<a name="e-t-buttons"></a>
 ```javascript
@@ -966,107 +764,6 @@ Note: The tests that are commented out were found as is in we3. They were either
 //         start: "a:eq(1):contents()[0]->1",
 //     },
 // },
-```
-
-#### SPAN<a name="e-t-span"></a>
-```javascript
-{
-    name: "in span > b: ENTER",
-    content: "<span><b>dom◆ to edit</b></span>",
-    steps: [{
-        key: 'ENTER',
-    }],
-    test: "<p><span><b>dom</b></span></p><p><span><b>◆&nbsp;to edit</b></span></p>",
-},
-{
-    name: "in span > b: SHIFT+ENTER -> ENTER",
-    content: "<span><b>dom◆ to edit</b></span>",
-    steps: [{
-        key: 'ENTER',
-        shiftKey: true,
-    }, {
-        key: 'ENTER',
-    }],
-    test: "<p><span><b>dom<br/><br/></b></span></p><p><span><b>◆&nbsp;to edit</b></span></p>",
-    // the extra BR appeared to make the first one visible
-},
-{
-    name: "in span > b: ENTER -> 'a'",
-    content: "<span><b>dom◆ to edit</b></span>",
-    steps: [{
-        key: 'ENTER',
-    }, {
-        key: 'a',
-    }],
-    test: "<p><span><b>dom</b></span></p><p><span><b>a◆ to edit</b></span></p>",
-},
-{
-    name: "in span > b: SHIFT+ENTER",
-    content: "<span><b>dom◆ to edit</b></span>",
-    steps: [{
-        key: 'ENTER',
-        shiftKey: true,
-    }],
-    test: "<p><span><b>dom<br/>◆&nbsp;to edit</b></span></p>",
-},
-{
-    name: "in span > b: SHIFT+ENTER -> 'a'",
-    content: "<span><b>dom◆ to edit</b></span>",
-    steps: [{
-        key: 'ENTER',
-        shiftKey: true,
-    }, {
-        key: 'a',
-    }],
-    test: "<p><span><b>dom<br/>a◆ to edit</b></span></p>",
-},
-{
-    name: "in span > b: SHIFT+ENTER -> ENTER -> 'a'",
-    content: "<span><b>dom◆ to edit</b></span>",
-    steps: [{
-        key: 'ENTER',
-        shiftKey: true,
-    }, {
-        key: 'ENTER',
-    }, {
-        key: 'a',
-    }],
-    test: "<p><span><b>dom<br/><br/></b></span></p><p><span><b>a◆ to edit</b></span></p>",
-    // the extra BR appeared to make the first one visible
-},
-// {
-//     name: "in span > b: ENTER",
-//     content: "<span><b>dom to edit</b></span>",
-//     steps: [{
-//         start: "b:contents()[0]->3",
-//         key: 'ENTER',
-//     }],
-//     test: "<span><b>dom</b></span><br/><span><b>&nbsp;to edit</b></span>",
-//         start: "b:eq(1)->0",
-//     },
-// },
-// {
-//     name: "in span > b: SHIFT+ENTER",
-//     content: "<span><b>dom to edit</b></span>",
-//     steps: [{
-//         start: "b:contents()[0]->3",
-//         key: 'ENTER',
-//         shiftKey: true,
-//     }],
-//     test: "<span><b>dom<br/>&nbsp;to edit</b></span>",
-//         start: "b:contents()[2]->0",
-//     },
-// },
-{
-    name: "in indented-li with font: 2x ENTER at end",
-    content: '<ul><li><p>aaa</p></li><ul><li><p><font style="color: red;">dom to edit◆</font></p></li></ul><li><p>bbb</p></li></ul>',
-    steps: [{
-        key: 'ENTER',
-    }, {
-        key: 'ENTER',
-    }],
-    test: '<ul><li><p>aaa</p></li><li class="o_indent"><ul><li><p><font style="color:red">dom to edit</font></p></li></ul></li><li>▶<br/>◀</li><li><p>bbb</p></li></ul>',
-},
 ```
 
 #### Integration<a name="e-t-integration"></a>
@@ -1555,6 +1252,99 @@ Note: The tests that are commented out were found as is in we3. They were either
     }],
     test: "<ul><li><br/></li><li>a◆</li></ul>",
 },
+{
+    name: "in p (other-p > span.a before - p > span.b after): ENTER -> 'a' at beginning",
+    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">◆edit</span></p>",
+    steps: [{
+        key: 'ENTER',
+    }, {
+        key: 'a',
+    }],
+    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/></span></p><p><span class=\"b\">a◆edit</span></p>",
+},
+{
+    name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER -> 'a' at beginning",
+    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">◆edit</span></p>",
+    steps: [{
+        key: 'ENTER',
+        shiftKey: true,
+    }, {
+        key: 'a',
+    }],
+    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>a◆edit</span></p>",
+},
+{
+    name: "in p (other-p > span.a before - p > span.b after): SHIFT+ENTER -> 'a' at beginning",
+    content: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\">edit</span></p>",
+    steps: [{
+        start: "p:eq(1):contents()[0]->0",
+        key: 'ENTER',
+        shiftKey: true,
+    }, {
+        key: 'a',
+    }],
+    test: "<p><span class=\"a\">dom to</span></p><p><span class=\"b\"><br/>aedit</span></p>",
+        start: "span:eq(1):contents()[1]->1",
+    },
+},
+it('should insert a line break within a span with bold then split their paragraph container in two', async () => {
+    await testEditor(BasicEditor, {
+        contentBefore: '<p><span><b>ab[]cd</b></span></p>',
+        stepFunction: async (editor: JWEditor) => {
+            await insertLineBreak(editor);
+            await insertParagraphBreak(editor);
+        },
+        contentAfter:
+            '<p><span><b>ab</b></span><br/><br/></p><p><span><b>[]cd</b></span></p>',
+    });
+});
+{
+    name: "in span > b: SHIFT+ENTER -> ENTER",
+    content: "",
+    steps: [{
+        key: 'ENTER',
+        shiftKey: true,
+    }, {
+        key: 'ENTER',
+    }],
+    test: "",
+    // the extra BR appeared to make the first one visible
+},
+{
+    name: "in span > b: ENTER -> 'a'",
+    content: "<span><b>dom◆ to edit</b></span>",
+    steps: [{
+        key: 'ENTER',
+    }, {
+        key: 'a',
+    }],
+    test: "<p><span><b>dom</b></span></p><p><span><b>a◆ to edit</b></span></p>",
+},
+// {
+//     name: "in span > b: SHIFT+ENTER -> 'a'",
+//     content: "<span><b>dom◆ to edit</b></span>",
+//     steps: [{
+//         key: 'ENTER',
+//         shiftKey: true,
+//     }, {
+//         key: 'a',
+//     }],
+//     test: "<p><span><b>dom<br/>a◆ to edit</b></span></p>",
+// },
+// {
+//     name: "in span > b: SHIFT+ENTER -> ENTER -> 'a'",
+//     content: "<span><b>dom◆ to edit</b></span>",
+//     steps: [{
+//         key: 'ENTER',
+//         shiftKey: true,
+//     }, {
+//         key: 'ENTER',
+//     }, {
+//         key: 'a',
+//     }],
+//     test: "<p><span><b>dom<br/><br/></b></span></p><p><span><b>a◆ to edit</b></span></p>",
+//     // the extra BR appeared to make the first one visible
+// },
 ```
 
 ## List (`toggleList`)<a name="list"></a>

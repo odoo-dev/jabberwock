@@ -345,6 +345,25 @@ describePlugin(LineBreak, testEditor => {
                         });
                     });
                 });
+                describe('With attributes', () => {
+                    it('should insert a line break before a span with class', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<p><span class="a">dom to</span></p><p><span class="b">[]edit</span></p>',
+                            stepFunction: insertLineBreak,
+                            contentAfter:
+                                '<p><span class="a">dom to</span></p><p><br><span class="b">[]edit</span></p>',
+                        });
+                    });
+                    it('should insert a line break within a span with a bold', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<p><span><b>ab[]cd</b></span></p>',
+                            stepFunction: insertLineBreak,
+                            contentAfter:
+                                '<p><span><b>ab</b></span><br><span><b>[]cd</b></span></p>',
+                        });
+                    });
+                });
             });
             describe('Selection not collapsed', () => {
                 it('should delete the first half of a paragraph, then insert a <br>', async () => {

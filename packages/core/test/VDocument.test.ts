@@ -344,6 +344,67 @@ describe('VDocument', () => {
                     });
                 });
             });
+            describe('With attributes', () => {
+                it('should merge a paragraph without class into an empty paragraph with a class', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p class="a"><br>[]</p><p>abc</p>',
+                        stepFunction: deleteForward,
+                        contentAfter: '<p class="a">[]abc</p>',
+                    });
+                });
+                it('should merge two paragraphs with spans of same classes', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span class="a">dom to[]</span></p><p><span class="a">edit</span></p>',
+                        stepFunction: deleteForward,
+                        contentAfter: '<p><span class="a">dom to[]edit</span></p>',
+                    });
+                });
+                it('should merge two paragraphs with spans of different classes without merging the spans', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span class="a">dom to[]</span></p><p><span class="b">edit</span></p>',
+                        stepFunction: deleteForward,
+                        contentAfter:
+                            '<p><span class="a">dom to[]</span><span class="b">edit</span></p>',
+                    });
+                });
+                it('should merge two paragraphs of different classes, each containing spans of the same class', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p class="a"><span class="b">ab[]</span></p><p class="c"><span class="b">cd</span></p>',
+                        stepFunction: deleteForward,
+                        contentAfter: '<p class="a"><span class="b">ab[]cd</span></p>',
+                    });
+                });
+                it('should merge two paragraphs of different classes, each containing spans of different classes without merging the spans', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p class="a"><span class="b">ab[]</span></p><p class="c"><span class="d">cd</span></p>',
+                        stepFunction: deleteForward,
+                        contentAfter:
+                            '<p class="a"><span class="b">ab[]</span><span class="d">cd</span></p>',
+                    });
+                });
+                it('should delete a line break between two spans with bold and merge these formats', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p><span><b>ab[]</b></span><br/><span><b>cd</b></span></p>',
+                        stepFunction: deleteForward,
+                        contentAfter: '<p><span><b>ab[]cd</b></span></p>',
+                    });
+                });
+                it('should delete a character in a span with bold, then a line break between two spans with bold and merge these formats', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span><b>a[]b</b></span><br><span><b><br>cde</b></span></p>',
+                        stepFunction: async (editor: JWEditor) => {
+                            await deleteForward(editor);
+                            await deleteForward(editor);
+                        },
+                        contentAfter: '<p><span><b>a[]</b></span><br><span><b>cde</b></span></p>',
+                    });
+                });
+            });
         });
 
         describe('Selection not collapsed', () => {
@@ -876,6 +937,66 @@ describe('VDocument', () => {
                     });
                 });
             });
+            describe('With attributes', () => {
+                it('should merge a paragraph without class into an empty paragraph with a class', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p class="a"><br></p><p>[]abc</p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p class="a">[]abc</p>',
+                    });
+                });
+                it('should merge two paragraphs with spans of same classes', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span class="a">ab</span></p><p><span class="a">[]cd</span></p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p><span class="a">ab[]cd</span></p>',
+                    });
+                });
+                it('should merge two paragraphs with spans of different classes without merging the spans', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span class="a">ab</span></p><p><span class="b">[]cd</span></p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p><span class="a">ab[]</span><span class="b">cd</span></p>',
+                    });
+                });
+                it('should merge two paragraphs of different classes, each containing spans of the same class', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p class="a"><span class="b">ab</span></p><p class="c"><span class="b">[]cd</span></p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p class="a"><span class="b">ab[]cd</span></p>',
+                    });
+                });
+                it('should merge two paragraphs of different classes, each containing spans of different classes without merging the spans', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p class="a"><span class="b">ab</span></p><p class="c"><span class="d">[]cd</span></p>',
+                        stepFunction: deleteBackward,
+                        contentAfter:
+                            '<p class="a"><span class="b">ab[]</span><span class="d">cd</span></p>',
+                    });
+                });
+                it('should delete a line break between two spans with bold and merge these formats', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p><span><b>ab</b></span><br/><span><b>[]cd</b></span></p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p><span><b>ab[]cd</b></span></p>',
+                    });
+                });
+                it('should delete a character in a span with bold, then a line break between two spans with bold and merge these formats', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span><b>ab<br></b></span><br><span><b>c[]de</b></span></p>',
+                        stepFunction: async (editor: JWEditor) => {
+                            await deleteBackward(editor);
+                            await deleteBackward(editor);
+                        },
+                        contentAfter: '<p><span><b>ab</b></span><br><span><b>[]de</b></span></p>',
+                    });
+                });
+            });
         });
 
         describe('Selection not collapsed', () => {
@@ -1251,6 +1372,25 @@ describe('VDocument', () => {
                         stepFunction: insertParagraphBreak,
                         // The space should have been parsed away.
                         contentAfter: '<p><b>abc</b></p><p>[]<br></p>',
+                    });
+                });
+            });
+            describe('With attributes', () => {
+                it('should insert an empty paragraph before a paragraph with a span with a class', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<p><span class="a">ab</span></p><p><span class="b">[]cd</span></p>',
+                        stepFunction: insertParagraphBreak,
+                        contentAfter:
+                            '<p><span class="a">ab</span></p><p><br></p><p><span class="b">[]cd</span></p>',
+                    });
+                });
+                it('should split a paragraph with a span with a bold in two', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p><span><b>ab[]cd</b></span></p>',
+                        stepFunction: insertParagraphBreak,
+                        contentAfter:
+                            '<p><span><b>ab</b></span></p><p><span><b>[]cd</b></span></p>',
                     });
                 });
             });
