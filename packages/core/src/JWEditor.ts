@@ -7,11 +7,11 @@ import { CorePlugin } from './CorePlugin';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
 import { VElement } from './VNodes/VElement';
-
-export type ExecCommandHook = (command: string, args: CommandArgs) => void;
 import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
+
+export type CommandHook = (command: string, args: CommandArgs) => void;
 
 export enum Platform {
     MAC = 'mac',
@@ -46,7 +46,7 @@ export class JWEditor {
         user: new Keymap(),
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
-    execCommandHooks: ExecCommandHook[] = [];
+    commandHooks: Record<CommandIdentifier, CommandHook[]> = {};
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
     createBaseContainer: () => VNode = () => new VElement('P');
@@ -179,6 +179,10 @@ export class JWEditor {
             Object.keys(plugin.commands).forEach(key => {
                 this.dispatcher.registerCommand(key, plugin.commands[key]);
             });
+            // Register the hooks of this plugin.
+            for (const [id, hook] of Object.entries(plugin.commandHooks)) {
+                this.registerCommandHook(id, hook);
+            }
             // register the shortcuts for this plugin.
             if (plugin.shortcuts) {
                 for (const shortcut of plugin.shortcuts) {
@@ -251,8 +255,11 @@ export class JWEditor {
      *
      * @param hook The function that will be executed.
      */
-    registerExecCommandHook(hook: ExecCommandHook): void {
-        this.execCommandHooks.push(hook);
+    registerCommandHook(id: CommandIdentifier, hook?: CommandHook): void {
+        if (!this.commandHooks[id]) {
+            this.commandHooks[id] = [];
+        }
+        this.commandHooks[id].push(hook);
     }
 
     /**
@@ -264,7 +271,9 @@ export class JWEditor {
     async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
         await this.dispatcher.dispatch(id, args);
 
-        for (const hookCallback of this.execCommandHooks) {
+        const hooks = this.commandHooks[id] || [];
+        const globalHooks = this.commandHooks['*'] || [];
+        for (const hookCallback of [...hooks, ...globalHooks]) {
             await hookCallback(id, args);
         }
     }

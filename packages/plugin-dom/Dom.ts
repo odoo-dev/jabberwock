@@ -2,7 +2,6 @@ import { JWPlugin } from '../core/src/JWPlugin';
 import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, VSelectionDescription, Direction } from '../core/src/VSelection';
 import { VDocumentMap } from '../core/src/VDocumentMap';
-import JWEditor from '../core/src/JWEditor';
 import { nodeLength } from '../utils/src/utils';
 import { DomSelectionDescription } from '../core/src/EventNormalizer';
 import { ParsingEngine } from '../core/src/ParsingEngine';
@@ -12,13 +11,11 @@ import { DomRenderingEngine } from './DomRenderingEngine';
 export class Dom extends JWPlugin {
     readonly parsingEngines = [DomParsingEngine];
     readonly renderingEngines = [DomRenderingEngine];
+    commandHooks = {
+        '*': this._renderInEditable.bind(this),
+    };
 
     domMap = new VDocumentMap();
-
-    constructor(editor: JWEditor) {
-        super(editor);
-        this.editor.registerExecCommandHook(this._renderInEditable.bind(this));
-    }
 
     async start(): Promise<void> {
         const node = this.editor._originalEditable;
