@@ -10,9 +10,9 @@ import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
 import { BoldFormat } from '../../plugin-bold/BoldFormat';
 import { ItalicFormat } from '../../plugin-italic/ItalicFormat';
 import { FormatParams } from '../../plugin-inline/Inline';
+import { Constructor } from '../../utils/src/utils';
 import { Format } from '../../plugin-inline/Format';
 import { UnderlineFormat } from '../../plugin-underline/UnderlineFormat';
-import { Constructor } from '../../utils/src/utils';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {
@@ -51,14 +51,6 @@ describePlugin(Char, testEditor => {
             const engine = new DomParsingEngine(new JWEditor());
             const nodes = await new CharDomParser(engine).parse(document.createElement('span'))[1];
             expect(nodes).to.be.undefined;
-        });
-        it('should parse text with nested similar formats', async () => {
-            await testEditor(BasicEditor, {
-                contentBefore:
-                    '<p>a<span class="outer">bc<span class="inner">de</span>fg</span>h</p>',
-                contentAfter:
-                    '<p>a<span class="outer">bc</span><span class="outer"><span class="inner">de</span></span><span class="outer">fg</span>h</p>',
-            });
         });
     });
     describe('CharNode', () => {
@@ -324,47 +316,6 @@ describePlugin(Char, testEditor => {
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b><u>b[]</u></b>a',
-                    });
-                });
-            });
-
-            describe('Selection not collapsed', () => {
-                it('should be bold when selected is not bold', async () => {
-                    await testEditor(BasicEditor, {
-                        contentBefore: 'a[b]c',
-                        stepFunction: async (editor: JWEditor) => {
-                            await toggleFormat(editor, BoldFormat);
-                        },
-                        contentAfter: 'a[<b>b]</b>c',
-                    });
-                });
-                it('should not be bold when selected is bold', async () => {
-                    await testEditor(BasicEditor, {
-                        contentBefore: 'a<b>[b]</b>c',
-                        stepFunction: async (editor: JWEditor) => {
-                            await toggleFormat(editor, BoldFormat);
-                        },
-                        contentAfter: 'a[b]c',
-                    });
-                });
-                it('should be bold when one of the selected is bold', async () => {
-                    await testEditor(BasicEditor, {
-                        contentBefore: 'a<b>[b</b>c]',
-                        stepFunction: async (editor: JWEditor) => {
-                            await toggleFormat(editor, BoldFormat);
-                        },
-                        contentAfter: 'a[<b>bc]</b>',
-                    });
-                });
-                it('should not be bold but keep attributes when selected is bold with various attributes', async () => {
-                    await testEditor(BasicEditor, {
-                        contentBefore:
-                            'a<b style="color: red">b[cd</b><b style="color: green">ef]g</b>',
-                        stepFunction: async (editor: JWEditor) => {
-                            await toggleFormat(editor, BoldFormat);
-                        },
-                        contentAfter:
-                            'a<b style="color: red">b[</b><span style="color: red">cd</span><span style="color: green">ef]</span><b style="color: green">g</b>',
                     });
                 });
             });
