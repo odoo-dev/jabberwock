@@ -1,4 +1,5 @@
 import { deepEqualObjects } from '../utils/src/utils';
+import { InlineNode } from './InlineNode';
 
 export class Format {
     htmlTag: string; // TODO: remove this reference to DOM.
@@ -27,6 +28,9 @@ export class Format {
             node.setAttribute(name, this.attributes[name]);
         }
         return node;
+    }
+    applyTo(node: InlineNode): void {
+        node.formats.unshift(this);
     }
     clone(): Format {
         const clone = new (this.constructor as typeof Format)();

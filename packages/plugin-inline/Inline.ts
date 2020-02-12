@@ -69,7 +69,7 @@ export class Inline extends JWPlugin {
             } else {
                 for (const inline of selectedInlines) {
                     if (!inline.formats.find(f => f instanceof FormatClass)) {
-                        inline.formats.push(new FormatClass());
+                        new FormatClass().applyTo(inline);
                     }
                 }
             }
