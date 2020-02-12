@@ -21,7 +21,10 @@ export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
             }
             const element = document.createElement(nodeName);
             for (const name of Object.keys(node.attributes)) {
-                element.setAttribute(name, node.attributes[name]);
+                const value = node.attributes[name];
+                if (typeof value === 'string') {
+                    element.setAttribute(name, value);
+                }
             }
             domNode = element;
         }

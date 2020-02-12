@@ -30,7 +30,7 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
-    attributes: Record<string, string> = {};
+    attributes: Record<string, string | Record<string, string>> = {};
     children: Array<VNode> & {
         (predicate?: Predicate): VNode[];
         <T extends VNode>(predicate?: Constructor<T>): T[];

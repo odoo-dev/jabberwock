@@ -19,7 +19,10 @@ export class CharFormatDomRenderer extends InlineFormatDomRenderer {
         if (attributeNames.length) {
             const span = document.createElement('span');
             for (const name of attributeNames) {
-                span.setAttribute(name, node.attributes[name]);
+                const value = node.attributes[name];
+                if (typeof value === 'string') {
+                    span.setAttribute(name, value);
+                }
             }
             textNode.forEach(child => span.appendChild(child));
             rendering = [span];

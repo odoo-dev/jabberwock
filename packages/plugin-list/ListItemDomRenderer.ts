@@ -43,6 +43,16 @@ export class ListItemDomRenderer extends AbstractRenderer<Node[]> {
                 domListItem.appendChild(domNode);
             }
         }
+        // Render the node's attributes that were stored on the technical key
+        // that specifies those attributes belong on the list item.
+        if (node.attributes['li-attributes']) {
+            for (const name of Object.keys(node.attributes['li-attributes'])) {
+                const value = node.attributes['li-attributes'][name];
+                if (typeof value === 'string') {
+                    domListItem.setAttribute(name, value);
+                }
+            }
+        }
         return [domListItem];
     }
 }

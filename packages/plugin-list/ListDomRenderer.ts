@@ -11,6 +11,13 @@ export class ListDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: ListNode): Promise<Node[]> {
         const tag = node.listType === ListType.ORDERED ? 'OL' : 'UL';
         const domListNode = document.createElement(tag);
+        // Render the list's attributes.
+        for (const name of Object.keys(node.attributes)) {
+            const value = node.attributes[name];
+            if (typeof value === 'string') {
+                domListNode.setAttribute(name, value);
+            }
+        }
 
         for (const child of node.children) {
             const renderedChild = await this.engine.render(child);
