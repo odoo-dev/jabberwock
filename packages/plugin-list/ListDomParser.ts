@@ -24,6 +24,7 @@ export class ListDomParser extends AbstractParser<Node> {
         }
         const listType = item.nodeName === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
         const listNode = new ListNode(listType);
+        listNode.attributes = this.engine.parseAttributes(item);
         const nodes = await this.engine.parse(...item.childNodes);
         listNode.append(...nodes);
         return [listNode];

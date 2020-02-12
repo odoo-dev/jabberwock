@@ -203,6 +203,7 @@ export class List extends JWPlugin {
         listItems.forEach(item => {
             lists.push(item.parent);
             const newList = item.parent.splitAt(item);
+            delete item.attributes['li-attributes'];
             newList.before(item);
             lists.push(newList);
         });

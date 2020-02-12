@@ -27,6 +27,9 @@ export class ListItemDomParser extends AbstractParser<Node> {
             return [];
         }
         const nodes: VNode[] = [];
+        // Parse the list item's attributes into a technical key of the node's
+        // attributes, that will be read only by ListItemDomRenderer.
+        const itemAttributes = { 'li-attributes': this.engine.parseAttributes(item) };
         for (let k = 0; k < children.length; k++) {
             const domNode = children[k];
             const parsedChild = await this.engine.parse(domNode);
@@ -34,11 +37,15 @@ export class ListItemDomParser extends AbstractParser<Node> {
                 // Inline elements in a list item should be wrapped in a base container.
                 if (!this._isInlineListItem(domNode.previousSibling)) {
                     const baseContainer = this.engine.editor.createBaseContainer();
+                    baseContainer.attributes = itemAttributes;
                     nodes.push(baseContainer);
                 }
                 nodes[nodes.length - 1].append(...parsedChild);
             } else {
-                nodes.push(...(await this.engine.parse(domNode)));
+                for (const child of parsedChild) {
+                    child.attributes = { ...child.attributes, ...itemAttributes };
+                }
+                nodes.push(...parsedChild);
             }
         }
         return nodes;

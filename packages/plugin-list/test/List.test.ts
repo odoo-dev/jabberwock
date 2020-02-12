@@ -2140,6 +2140,52 @@ describePlugin(List, testEditor => {
                             });
                         });
                     });
+                    describe('With attributes', () => {
+                        it('should add two list items at the end of a list with a class', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ol class="a"><li>abc[]</li></ol>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ol class="a"><li>abc</li><li><br></li><li>[]<br></li></ol>',
+                            });
+                        });
+                        it('should add two list items with a class at the end of a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ol><li class="a">abc[]</li></ol>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ol><li class="a">abc</li><li class="a"><br></li><li class="a">[]<br></li></ol>',
+                            });
+                        });
+                        it('should add two list items with a class and a heading at the end of a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ol><li class="a"><h1>abc[]</h1></li></ol>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ol><li class="a"><h1>abc</h1></li><li class="a"><h1><br></h1></li><li class="a"><h1>[]<br></h1></li></ol>',
+                            });
+                        });
+                        it('should add two list items with a heading with a class at the end of a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ol><li><h1 class="a">abc[]</h1></li></ol>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ol><li><h1 class="a">abc</h1></li><li><h1 class="a"><br></h1></li><li><h1 class="a">[]<br></h1></li></ol>',
+                            });
+                        });
+                    });
                 });
                 describe('Unordered', () => {
                     describe('Basic', () => {
@@ -2208,6 +2254,52 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ul><li><p><b>[]<br></b></p></li></ul>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
+                            });
+                        });
+                    });
+                    describe('With attributes', () => {
+                        it('should add two list items at the end of a list with a class', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ul class="a"><li>abc[]</li></ul>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ul class="a"><li>abc</li><li><br></li><li>[]<br></li></ul>',
+                            });
+                        });
+                        it('should add two list items with a class at the end of a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ul><li class="a">abc[]</li></ul>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ul><li class="a">abc</li><li class="a"><br></li><li class="a">[]<br></li></ul>',
+                            });
+                        });
+                        it('should add two list items with a class and a heading at the end of a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ul><li class="a"><h1>abc[]</h1></li></ul>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ul><li class="a"><h1>abc</h1></li><li class="a"><h1><br></h1></li><li class="a"><h1>[]<br></h1></li></ul>',
+                            });
+                        });
+                        it('should add two list items with a heading with a class at the end of a list', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ul><li><h1 class="a">abc[]</h1></li></ul>',
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
+                                },
+                                contentAfter:
+                                    '<ul><li><h1 class="a">abc</h1></li><li><h1 class="a"><br></h1></li><li><h1 class="a">[]<br></h1></li></ul>',
                             });
                         });
                     });
