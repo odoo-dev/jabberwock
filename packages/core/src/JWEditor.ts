@@ -317,7 +317,10 @@ export class JWEditor {
         const hooks = this.commandHooks[id] || [];
         const regexHooks = this._matchRegexHooks(id);
         for (const hookCallback of distinct([...hooks, ...regexHooks])) {
-            result = await hookCallback(args, id, result);
+            const currentResult = await hookCallback(args, id, result);
+            if (typeof currentResult !== 'undefined') {
+                result = currentResult;
+            }
         }
         return result;
     }

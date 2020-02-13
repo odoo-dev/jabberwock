@@ -13,6 +13,9 @@ export class Inline extends JWPlugin {
         toggleFormat: {
             handler: this.toggleFormat.bind(this),
         },
+        'query.isAllFormat': {
+            handler: this.isAllFormat.bind(this),
+        },
     };
 
     //--------------------------------------------------------------------------
@@ -34,10 +37,7 @@ export class Inline extends JWPlugin {
 
         // If every char in the range has the format `FormatClass`, remove
         // the format for all of them.
-        const allHaveFormat = selectedInlines.every(inline => {
-            return !!inline.formats.find(f => f instanceof FormatClass);
-        });
-        if (allHaveFormat) {
+        if (this._isAllFormat(FormatClass, range)) {
             for (const inline of selectedInlines) {
                 const index = inline.formats.findIndex(f => f instanceof FormatClass);
                 // Apply the attributes of the format we're about to remove to
@@ -58,5 +58,22 @@ export class Inline extends JWPlugin {
                 }
             }
         }
+    }
+    isAllFormat(params: FormatParams): boolean {
+        const range = params.range || this.editor.vDocument.selection.range;
+        return this._isAllFormat(params.FormatClass, range);
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _isAllFormat(
+        FormatClass: Constructor<Format>,
+        range = this.editor.vDocument.selection.range,
+    ): boolean {
+        return range.selectedNodes(InlineNode).every(inline => {
+            return !!inline.formats.find(format => format instanceof FormatClass);
+        });
     }
 }
