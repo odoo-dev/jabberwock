@@ -3,6 +3,7 @@ import { RangeParams } from '../core/src/CorePlugin';
 import { Format } from './Format';
 import { InlineNode } from './InlineNode';
 import { Constructor } from '../utils/src/utils';
+import { VNode } from '../core/src/VNodes/VNode';
 
 export interface FormatParams extends RangeParams {
     FormatClass: Constructor<Format>;
@@ -79,19 +80,21 @@ export class Inline extends JWPlugin {
      * Get the format for the next insertion.
      */
     getCurrentFormats(range = this.editor.vDocument.selection.range): Format[] {
-        let formats: Format[] = [];
         if (this.formatCache) {
             return this.formatCache;
-        } else if (range.isCollapsed()) {
-            const inlineToCopyFormat = range.start.previousSibling() || range.start.nextSibling();
-            if (inlineToCopyFormat && inlineToCopyFormat.is(InlineNode)) {
-                formats = [...inlineToCopyFormat.formats];
-            }
-        } else {
-            const selectedInlines = range.selectedNodes(InlineNode);
-            selectedInlines.forEach(inline => (formats = [...formats, ...inline.formats]));
         }
-        return formats;
+
+        let inlineToCopyFormat: VNode;
+        if (range.isCollapsed()) {
+            inlineToCopyFormat = range.start.previousSibling() || range.start.nextSibling();
+        } else {
+            inlineToCopyFormat = range.start.nextSibling();
+        }
+        if (inlineToCopyFormat && inlineToCopyFormat.is(InlineNode)) {
+            return [...inlineToCopyFormat.formats];
+        }
+
+        return [];
     }
     /**
      * Each time the selection changes, we reset its format.
