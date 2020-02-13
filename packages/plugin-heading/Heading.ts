@@ -46,6 +46,7 @@ export class Heading extends JWPlugin {
         }
         for (const node of nodesToConvert) {
             const heading = this._createHeadingContainer(params.level);
+            heading.attributes = { ...node.attributes };
             node.before(heading);
             node.mergeWith(heading);
         }

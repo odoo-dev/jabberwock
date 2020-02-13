@@ -70,7 +70,7 @@ export class Char extends JWPlugin {
      *
      * @param params
      */
-    toggleFormat(params: FormatParams): void {
+    toggleFormat(_: never, params: FormatParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         const FormatClass = params.FormatClass;
 
