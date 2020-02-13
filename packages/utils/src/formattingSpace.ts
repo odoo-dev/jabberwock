@@ -1,4 +1,4 @@
-import { isBlock } from './utils';
+import { isBlock } from './isBlock';
 
 /**
  * Return a string with the value of a text node stripped of its formatting

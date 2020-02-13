@@ -1,7 +1,7 @@
 import { LineBreakNode } from './LineBreakNode';
 import { AbstractParser } from '../core/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
-import { isBlock } from '../utils/src/utils';
+import { isBlock } from '../utils/src/isBlock';
 
 export class LineBreakDomParser extends AbstractParser<Node> {
     static id = 'dom';

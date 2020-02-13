@@ -1,22 +1,6 @@
 export type Constructor<T> = new (...args) => T;
 
 /**
- * Return true if the given node is a block-level element, false otherwise.
- *
- * @param node
- */
-export function isBlock(node: Node): boolean {
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-        return false;
-    }
-    const temporaryElement = document.createElement(node.nodeName);
-    document.body.appendChild(temporaryElement);
-    const display = window.getComputedStyle(temporaryElement).display;
-    document.body.removeChild(temporaryElement);
-    return display.includes('block') || display.includes('list');
-}
-
-/**
  * Return true if object a is deep equal to object b, false otherwise.
  *
  * @param a

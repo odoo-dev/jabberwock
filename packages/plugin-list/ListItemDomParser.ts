@@ -1,5 +1,5 @@
 import { VNode } from '../core/src/VNodes/VNode';
-import { isBlock } from '../utils/src/utils';
+import { isBlock } from '../utils/src/isBlock';
 import { AbstractParser } from '../core/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
