@@ -11,7 +11,7 @@ import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 
-export type CommandHook = (command: string, args: CommandArgs) => void;
+export type CommandHook = <T = {}>(command: string, args: CommandArgs, result: T) => T;
 
 export enum Platform {
     MAC = 'mac',
@@ -268,14 +268,15 @@ export class JWEditor {
      * @param id name identifier of the command to execute
      * @param args arguments object of the command to execute
      */
-    async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
-        await this.dispatcher.dispatch(id, args);
+    async execCommand<T = {}>(id: CommandIdentifier, args?: CommandArgs): Promise<T> {
+        let result = await this.dispatcher.dispatch<T>(id, args);
 
         const hooks = this.commandHooks[id] || [];
         const globalHooks = this.commandHooks['*'] || [];
         for (const hookCallback of [...hooks, ...globalHooks]) {
-            await hookCallback(id, args);
+            result = await hookCallback(id, args, result);
         }
+        return result;
     }
 
     /**
