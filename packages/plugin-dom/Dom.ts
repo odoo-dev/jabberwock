@@ -13,7 +13,7 @@ export class Dom extends JWPlugin {
     readonly parsingEngines = [DomParsingEngine];
     readonly renderingEngines = [DomRenderingEngine];
     commandHooks = {
-        '*': this._renderInEditable.bind(this),
+        '/^[^query\\.]/': this._renderInEditable.bind(this),
     };
 
     domMap = new VDocumentMap();

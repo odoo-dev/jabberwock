@@ -10,6 +10,7 @@ import { VElement } from './VNodes/VElement';
 import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { distinct } from '../../utils/src/utils';
 
 export type CommandHook = <T = {}>(args: CommandArgs, commandId: string, result: T) => T;
 
@@ -279,6 +280,31 @@ export class JWEditor {
         this.commandHooks[id].push(hook);
     }
 
+    get regexCommandHooks(): Record<string, CommandHook[]> {
+        const names = Object.keys(this.commandHooks).filter(
+            hook => hook.startsWith('/') && hook.endsWith('/'),
+        );
+        return names.reduce((hooks, name) => {
+            hooks[name] = this.commandHooks[name];
+            return hooks;
+        }, {});
+    }
+
+    _matchRegexHooks(id: CommandIdentifier): CommandHook[] {
+        const pairs = Object.keys(this.regexCommandHooks).reduce((hooks, name) => {
+            try {
+                const regex = new RegExp(name.slice(1, name.length - 1));
+                if (regex.test(id)) {
+                    hooks[name] = this.regexCommandHooks[name];
+                }
+            } catch {
+                return hooks;
+            }
+            return hooks;
+        }, {});
+        return Object.keys(pairs).flatMap(name => pairs[name]);
+    }
+
     /**
      * Execute the given command.
      *
@@ -289,8 +315,8 @@ export class JWEditor {
         let result = await this.dispatcher.dispatch<T>(id, args);
 
         const hooks = this.commandHooks[id] || [];
-        const globalHooks = this.commandHooks['*'] || [];
-        for (const hookCallback of [...hooks, ...globalHooks]) {
+        const regexHooks = this._matchRegexHooks(id);
+        for (const hookCallback of distinct([...hooks, ...regexHooks])) {
             result = await hookCallback(args, id, result);
         }
         return result;

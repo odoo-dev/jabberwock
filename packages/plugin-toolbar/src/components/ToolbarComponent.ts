@@ -10,7 +10,7 @@ export class ToolbarComponent extends OwlUIComponent<{}> {
     selected = new Map(this.buttons.map(button => [button, false]));
 
     async willStart(): Promise<void> {
-        this.env.editor.registerCommandHook('*', this.refresh.bind(this));
+        this.env.editor.registerCommandHook('/^[^query\\.]/', this.refresh.bind(this));
         return super.willStart();
     }
 
