@@ -20,10 +20,9 @@ export class Inline extends JWPlugin {
     //--------------------------------------------------------------------------
 
     /**
-     * Apply the `format` to the selection.
+     * Apply the `format` to the range.
      *
-     * If the selection is collapsed, set the format on the selection so we know
-     * in the next insert which format should be used.
+     * @param params
      */
     toggleFormat(params: FormatParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
@@ -41,15 +40,18 @@ export class Inline extends JWPlugin {
         if (allHaveFormat) {
             for (const inline of selectedInlines) {
                 const index = inline.formats.findIndex(f => f instanceof FormatClass);
+                // Apply the attributes of the format we're about to remove to
+                // the inline itself.
                 const matchingFormat = inline.formats[index];
                 for (const key of Object.keys(matchingFormat.attributes)) {
                     inline.attributes[key] = matchingFormat.attributes[key];
                 }
+                // Remove the format.
                 inline.formats.splice(index, 1);
             }
+        } else {
             // If there is at least one char in the range without the format
             // `FormatClass`, set the format for all nodes.
-        } else {
             for (const inline of selectedInlines) {
                 if (!inline.formats.find(f => f instanceof FormatClass)) {
                     new FormatClass().applyTo(inline);

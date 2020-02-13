@@ -1,11 +1,9 @@
 import { AbstractParser } from '../core/src/AbstractParser';
 import { VNode } from '../core/src/VNodes/VNode';
-import { InlineNode } from '../plugin-inline/InlineNode';
+import { InlineNode } from './InlineNode';
 import { Format } from './Format';
 
-export abstract class FormatDomParser extends AbstractParser<Node> {
-    static id = 'dom';
-
+export abstract class FormatParser extends AbstractParser<Node> {
     /**
      * Parse a span node.
      *

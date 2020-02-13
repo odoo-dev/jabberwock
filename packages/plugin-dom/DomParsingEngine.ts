@@ -10,13 +10,9 @@ export class DomParsingEngine extends ParsingEngine<Node> {
      * @param node
      */
     parseAttributes(node: Element): Record<string, string> {
-        if (node.attributes) {
-            return Array.from(node.attributes).reduce((attributes, attribute) => {
-                attributes[attribute.name] = attribute.value;
-                return attributes;
-            }, {});
-        } else {
-            return {};
-        }
+        return Array.from(node.attributes || []).reduce((attributes, attribute) => {
+            attributes[attribute.name] = attribute.value;
+            return attributes;
+        }, {});
     }
 }

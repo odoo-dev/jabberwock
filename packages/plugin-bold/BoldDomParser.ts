@@ -1,9 +1,10 @@
-import { FormatDomParser } from '../plugin-inline/FormatDomParser';
+import { FormatParser } from '../plugin-inline/FormatParser';
 import { VNode } from '../core/src/VNodes/VNode';
 import { BoldFormat } from './BoldFormat';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
-export class BoldDomParser extends FormatDomParser {
+export class BoldDomParser extends FormatParser {
+    static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {

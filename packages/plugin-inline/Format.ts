@@ -40,7 +40,7 @@ export class Format {
     }
     isSameAs(otherFormat: Format): boolean {
         return (
-            this.constructor.name === otherFormat.constructor.name &&
+            otherFormat instanceof this.constructor &&
             deepEqualObjects(this.attributes, otherFormat.attributes)
         );
     }
