@@ -1,16 +1,20 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { CharNode } from './CharNode';
 import { RangeParams } from '../core/src/CorePlugin';
-import { Inline } from '../plugin-inline/Inline';
+import { FormatParams, Inline } from '../plugin-inline/Inline';
 import { CharFormatDomRenderer } from './CharFormatDomRenderer';
 import { CharDomRenderer } from './CharDomRenderer';
 import { CharDomParser } from './CharDomParser';
+import { Format } from '../plugin-inline/Format';
+import { InlineNode } from '../plugin-inline/InlineNode';
+import { VNode } from '../core/src/VNodes/VNode';
 
 export interface InsertTextParams extends RangeParams {
     text: string;
 }
 
 export class Char extends JWPlugin {
+    static dependencies = [Inline];
     readonly parsers = [CharDomParser];
     readonly renderers = [CharFormatDomRenderer, CharDomRenderer];
     commands = {
@@ -18,6 +22,16 @@ export class Char extends JWPlugin {
             handler: this.insertText.bind(this),
         },
     };
+    commandHooks = {
+        toggleFormat: this.toggleFormat.bind(this),
+        setSelection: this.resetFormatCache.bind(this),
+    };
+    /**
+     * When apply format on a collapsed range, cache the calculation of the
+     * format the following property. This value is reset each time the range
+     * change in a document.
+     */
+    formatCache: Format[] = null;
 
     //--------------------------------------------------------------------------
     // Public
@@ -37,11 +51,7 @@ export class Char extends JWPlugin {
     insertText(params: InsertTextParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         const text = params.text;
-        const inlinePlugin = this.editor.plugins.find(plugin => plugin instanceof Inline) as Inline; // todo: some form of hook...
-        let formats = [];
-        if (inlinePlugin) {
-            formats = inlinePlugin.getCurrentFormats();
-        }
+        const formats = this.getCurrentFormats();
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
@@ -52,8 +62,48 @@ export class Char extends JWPlugin {
             const vNode = new CharNode(char, formats);
             range.start.before(vNode);
         });
-        if (inlinePlugin) {
-            inlinePlugin.resetFormatCache();
+        this.resetFormatCache();
+    }
+    toggleFormat(params: FormatParams): void {
+        const range = params.range || this.editor.vDocument.selection.range;
+        const FormatClass = params.FormatClass;
+
+        if (!range.isCollapsed()) return;
+
+        if (!this.formatCache) {
+            this.formatCache = this.getCurrentFormats();
         }
+        const index = this.formatCache.findIndex(f => f instanceof FormatClass);
+        if (index !== -1) {
+            this.formatCache.splice(index, 1);
+        } else {
+            this.formatCache.push(new FormatClass());
+        }
+    }
+    /**
+     * Get the format for the next insertion.
+     */
+    getCurrentFormats(range = this.editor.vDocument.selection.range): Format[] {
+        if (this.formatCache) {
+            return this.formatCache;
+        }
+
+        let inlineToCopyFormat: VNode;
+        if (range.isCollapsed()) {
+            inlineToCopyFormat = range.start.previousSibling() || range.start.nextSibling();
+        } else {
+            inlineToCopyFormat = range.start.nextSibling();
+        }
+        if (inlineToCopyFormat && inlineToCopyFormat.is(InlineNode)) {
+            return [...inlineToCopyFormat.formats];
+        }
+
+        return [];
+    }
+    /**
+     * Each time the selection changes, we reset its format.
+     */
+    resetFormatCache(): void {
+        this.formatCache = null;
     }
 }
