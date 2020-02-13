@@ -11,7 +11,7 @@ import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 
-export type CommandHook = (command: string, args: CommandArgs) => void;
+export type CommandHook = (args: CommandArgs, commandId: string) => void;
 
 export enum Platform {
     MAC = 'mac',
@@ -275,7 +275,7 @@ export class JWEditor {
         const hooks = this.commandHooks[id] || [];
         const globalHooks = this.commandHooks['*'] || [];
         for (const hookCallback of [...hooks, ...globalHooks]) {
-            await hookCallback(id, args);
+            await hookCallback(args, id);
         }
     }
 
