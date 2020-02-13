@@ -45,7 +45,7 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
      * Refresh this component with respect to the recent dispatching of the
      * given command with the given arguments.
      */
-    refresh(id: CommandIdentifier, args: CommandArgs): void {
+    refresh(args: CommandArgs, id: CommandIdentifier): void {
         this.state.commands.push([id, args]);
         this.render();
     }
