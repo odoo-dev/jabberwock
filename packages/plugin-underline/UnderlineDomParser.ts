@@ -1,9 +1,10 @@
-import { FormatDomParser } from '../plugin-inline/FormatDomParser';
+import { FormatParser } from '../plugin-inline/FormatParser';
 import { VNode } from '../core/src/VNodes/VNode';
 import { UnderlineFormat } from './UnderlineFormat';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
-export class UnderlineDomParser extends FormatDomParser {
+export class UnderlineDomParser extends FormatParser {
+    static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {

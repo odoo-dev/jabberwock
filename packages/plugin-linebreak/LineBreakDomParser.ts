@@ -12,11 +12,7 @@ export class LineBreakDomParser extends AbstractParser<Node> {
     };
 
     async parse(item: Element): Promise<LineBreakNode[]> {
-        if (!this._nextLeafInSameBlock(item)) {
-            // A <br/> at the end edge of a block is there only to make its
-            // parent visible. Consume it since it was just parsed as its parent
-            // element node. TODO: do this less naively to account for
-            // formatting space.
+        if (this._isInvisibleBR(item)) {
             return [];
         }
         const lineBreak = new LineBreakNode();
@@ -29,21 +25,18 @@ export class LineBreakDomParser extends AbstractParser<Node> {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the next leaf of the given node without crossing over blocks.
+     * Return true if the given <br/> node is invisible. A <br/> at the end edge
+     * of a block or before another block is there only to make its parent
+     * visible. Consume it since it was just parsed as its parent element node.
+     * TODO: account for formatting space.
      *
-     * @param item
+     * @param node
      */
-    _nextLeafInSameBlock(item: Node): Node {
-        let next = item.nextSibling;
-        if (!next) {
-            return item.parentNode && this._nextLeafInSameBlock(item.parentNode);
-        } else if (isBlock(next)) {
-            return;
-        } else {
-            while (next.firstChild) {
-                next = next.firstChild;
-            }
-            return next;
+    _isInvisibleBR(node: Node): boolean {
+        // Search for another non-block cousin in the same block parent.
+        while (node && !node.nextSibling && node.parentNode && !isBlock(node.parentNode)) {
+            node = node.parentNode;
         }
+        return !node || !node.nextSibling || isBlock(node.nextSibling);
     }
 }

@@ -64,6 +64,12 @@ export class Char extends JWPlugin {
         });
         this.resetFormatCache();
     }
+    /**
+     * If the range is collapsed, set the format on the range so we know
+     * in the next insert which format should be used.
+     *
+     * @param params
+     */
     toggleFormat(params: FormatParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
         const FormatClass = params.FormatClass;
