@@ -6,7 +6,7 @@ export interface CommandDefinition {
     description?: string;
     handler: CommandHandler;
 }
-export type CommandHandler = (args: CommandArgs) => void;
+export type CommandHandler = <T = {}>(args: CommandArgs) => T;
 export interface CommandArgs {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
@@ -33,11 +33,11 @@ export class Dispatcher {
      * @param commandId The name of the command.
      * @param args The arguments of the command.
      */
-    async dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): Promise<void> {
+    async dispatch<T = {}>(commandId: CommandIdentifier, args: CommandArgs = {}): Promise<T> {
         const commands = this.commands[commandId];
         if (commands) {
             for (const command of commands) {
-                await command.handler(args);
+                return await command.handler(args);
             }
         }
     }

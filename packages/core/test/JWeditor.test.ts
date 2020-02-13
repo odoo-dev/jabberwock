@@ -183,7 +183,10 @@ describe('core', () => {
                                         ];
                                     },
                                 );
-                                editor.execCommand = (): Promise<void> => Promise.resolve();
+                                editor.execCommand = <T>(): Promise<T> => {
+                                    let trolleybus: T;
+                                    return Promise.resolve(trolleybus);
+                                };
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
@@ -218,7 +221,10 @@ describe('core', () => {
                                         },
                                     ],
                                 });
-                                editor.execCommand = (): Promise<void> => Promise.resolve();
+                                editor.execCommand = <T>(): Promise<T> => {
+                                    let trolleybus: T;
+                                    return Promise.resolve(trolleybus);
+                                };
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
@@ -253,7 +259,10 @@ describe('core', () => {
                                         },
                                     ],
                                 });
-                                editor.execCommand = (): Promise<void> => Promise.resolve();
+                                editor.execCommand = <T>(): Promise<T> => {
+                                    let trolleybus: T;
+                                    return Promise.resolve(trolleybus);
+                                };
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
