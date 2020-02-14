@@ -1,7 +1,7 @@
 import JWEditor, { Mode } from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
-import { ModeError } from '../../utils/errors';
+import { ModeError } from '../../utils/src/errors';
 
 describe('core', () => {
     describe('JWEditor', () => {

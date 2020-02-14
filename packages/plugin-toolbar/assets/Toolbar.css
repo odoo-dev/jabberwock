@@ -1,0 +1,100 @@
+jw-toolbar {
+    display: block;
+    min-height: 14px;
+    padding: 1px;
+    background-color: #875A7B;
+    border-bottom: 1px solid #68465f;
+    color: white;
+    overflow: hidden;
+    font-family: "Montserrat", sans-serif;
+    text-align: center;
+}
+
+/* TODO: remove this when layout manager is merged */
+jw-toolbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+jw-editable {
+    margin-top: 40px;
+}
+/* */
+
+jw-toolbar span {
+    font-weight: 600;
+    padding: 5px;
+}
+
+jw-toolbar .pressed {
+    background-color: #9c8897;
+    color: white;
+}
+
+jw-toolbar jw-separator {
+    display: inline-block;
+    background-color: #c1a8ba;
+    height: 30px;
+    width: 1px;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    vertical-align: bottom;
+}
+
+jw-toolbar toolbar-group jw-separator {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+jw-toolbar toolbar-group {
+    display: inline-block;
+    margin: 5px;
+}
+
+jw-toolbar select, jw-toolbar option {
+    background-color: white;
+    border: 1px solid #68465f;
+    padding: 5px;
+    height: 30px !important;
+}
+
+jw-toolbar option:disabled {
+    background-color: #875A7B;
+    color: white;
+    font-weight: bold;
+}
+
+jw-toolbar button {
+    background-color: white;
+    border: 1px solid #68465f;
+    padding: 5px;
+    width: 30px !important;
+    height: 30px !important;
+}
+
+jw-toolbar .h1 {
+    font-size: 2em;
+    font-weight: bold;
+}
+jw-toolbar .h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+jw-toolbar .h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+}
+jw-toolbar .h4 {
+    font-size: 1em;
+    font-weight: bold;
+}
+jw-toolbar .h5 {
+    font-size: 0.83em;
+    font-weight: bold;
+}
+jw-toolbar .h6 {
+    font-size: 0.67em;
+    font-weight: bold;
+}

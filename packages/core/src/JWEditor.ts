@@ -12,7 +12,7 @@ import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { ModeError } from '../../utils/errors';
+import { ModeError } from '../../utils/src/errors';
 
 export enum Mode {
     CONFIGURATION = 'configuration',

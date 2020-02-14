@@ -8,7 +8,7 @@ export interface OwlUIEnv extends Env {
 }
 
 export class OwlUI {
-    pluginsRegistry: JWOwlUIPlugin[] = [];
+    plugins: JWOwlUIPlugin[] = [];
     env: OwlUIEnv;
     constructor(editor: JWEditor) {
         // Create the owl `env` variable shared by all plugins components.
@@ -31,7 +31,7 @@ export class OwlUI {
     addPlugin(PluginClass: typeof JWOwlUIPlugin): void {
         this.env.qweb.addTemplates(PluginClass.templates);
         const plugin = new PluginClass(this.env);
-        this.pluginsRegistry.push(plugin);
+        this.plugins.push(plugin);
     }
 
     /**
@@ -39,7 +39,7 @@ export class OwlUI {
      *
      */
     async start(): Promise<void> {
-        for (const plugin of this.pluginsRegistry) {
+        for (const plugin of this.plugins) {
             await plugin.start();
         }
     }
@@ -49,7 +49,7 @@ export class OwlUI {
      *
      */
     async stop(): Promise<void> {
-        for (const plugin of this.pluginsRegistry) {
+        for (const plugin of this.plugins) {
             await plugin.stop();
         }
     }

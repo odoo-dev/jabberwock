@@ -1,4 +1,4 @@
-import { Mode } from '../core/src/JWEditor';
+import { Mode } from '../../core/src/JWEditor';
 
 /**
  * Creates an instance representing a custom error adapting to the constructor
