@@ -1,6 +1,6 @@
-import { VNode } from './VNodes/VNode';
+import { VNode } from '../core/src/VNodes/VNode';
 
-export class VDocumentMap {
+export class DomMap {
     _fromDom = new Map<Node, VNode[]>();
     _toDom = new Map<VNode, [Node, number]>();
 

@@ -1,7 +1,7 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, VSelectionDescription, Direction } from '../core/src/VSelection';
-import { VDocumentMap } from '../core/src/VDocumentMap';
+import { DomMap } from './DomMap';
 import { nodeLength } from '../utils/src/utils';
 import { DomSelectionDescription } from '../core/src/EventNormalizer';
 import { ParsingEngine } from '../core/src/ParsingEngine';
@@ -16,7 +16,7 @@ export class Dom extends JWPlugin {
         '*': this._renderInEditable.bind(this),
     };
 
-    domMap = new VDocumentMap();
+    domMap = new DomMap();
 
     async start(): Promise<void> {
         const node = this.editor._originalEditable;
