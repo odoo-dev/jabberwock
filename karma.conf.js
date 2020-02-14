@@ -19,6 +19,50 @@ module.exports = function(config) {
             ],
         });
     }
+
+    const webpackConfig = {
+        mode: 'development',
+        module: {
+            rules: [
+                {
+                    test: /\.ts$/,
+                    use: [
+                        'cache-loader',
+                        {
+                            loader: 'ts-loader',
+                            options: {
+                                configFile: 'tsconfig-base.json',
+                            },
+                        },
+                    ],
+                },
+                ...coverageLoaders,
+                {
+                    test: /\.css$/i,
+                    use: ['style-loader', 'css-loader'],
+                },
+                {
+                    test: /\.xml$/i,
+                    use: ['text-loader'],
+                },
+            ],
+        },
+        resolve: {
+            extensions: ['.ts', '.js'],
+        },
+        optimization: {
+            removeAvailableModules: false,
+            removeEmptyChunks: false,
+            splitChunks: false,
+        },
+    }
+
+    let port = 0;
+    if (config.debug) {
+        port = 9876;
+        webpackConfig.devtool = 'inline-source-map';
+    }
+
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
@@ -45,7 +89,7 @@ module.exports = function(config) {
         reporters: [...coverageReporters, 'mocha'],
 
         // web server port
-        port: 9876,
+        port: port,
 
         // enable / disable colors in the output (reporters and logs)
         colors: true,
@@ -71,43 +115,7 @@ module.exports = function(config) {
         mine: {
             'text/x-typescript': ['ts'],
         },
-        webpack: {
-            mode: 'development',
-            devtool: 'inline-source-map',
-            module: {
-                rules: [
-                    {
-                        test: /\.ts$/,
-                        use: [
-                            'cache-loader',
-                            {
-                                loader: 'ts-loader',
-                                options: {
-                                    configFile: 'tsconfig-base.json',
-                                },
-                            },
-                        ],
-                    },
-                    ...coverageLoaders,
-                    {
-                        test: /\.css$/i,
-                        use: ['style-loader', 'css-loader'],
-                    },
-                    {
-                        test: /\.xml$/i,
-                        use: ['text-loader'],
-                    },
-                ],
-            },
-            resolve: {
-                extensions: ['.ts', '.js'],
-            },
-            optimization: {
-                removeAvailableModules: false,
-                removeEmptyChunks: false,
-                splitChunks: false,
-            },
-        },
+        webpack: webpackConfig,
 
         coverageIstanbulReporter: {
             reports: [ 'html', 'text-summary', 'lcovonly' ],

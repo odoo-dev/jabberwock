@@ -9,6 +9,7 @@
     "postinstall": "npm link owl-framework",
     "perf": "karma start --include-files test/**/*.perf.ts",
     "coverage": "karma start --coverage",
+    "debug": "karma start --no-browsers --debug",
     "test": "karma start"
   },
   "repository": {
