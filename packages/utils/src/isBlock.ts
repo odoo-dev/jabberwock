@@ -58,7 +58,7 @@ export function isBlock(node: Node): boolean {
         }
         // The node might not be in the DOM, in which case it has no CSS values.
         if (style.display) {
-            result = style.display.includes('block') || style.display.includes('list');
+            result = !style.display.includes('inline') && style.display !== 'contents';
         } else {
             result = blockTagNames.includes(node.nodeName);
         }
