@@ -420,7 +420,8 @@ describe('core', () => {
                     editor.loadPlugin(B);
                     editor.loadPlugin(C);
                     await editor.start();
-                    expect(editor.plugins.map(p => p.constructor.name)).to.eql([
+                    const plugins = Array.from(editor.plugins.values());
+                    expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'A',
                         'B',
@@ -434,7 +435,8 @@ describe('core', () => {
                     editor.loadPlugin(C);
                     editor.loadPlugin(E);
                     await editor.start();
-                    expect(editor.plugins.map(p => p.constructor.name)).to.eql([
+                    const plugins = Array.from(editor.plugins.values());
+                    expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'A',
                         'B',
@@ -450,7 +452,8 @@ describe('core', () => {
                     editor.loadPlugin(C, { toto: 3 });
                     editor.loadPlugin(F);
                     await editor.start();
-                    expect(editor.plugins.map(p => p.constructor.name)).to.eql([
+                    const plugins = Array.from(editor.plugins.values());
+                    expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'A',
                         'B',
@@ -458,7 +461,7 @@ describe('core', () => {
                         'D',
                         'F',
                     ]);
-                    const c = editor.plugins.find(p => p instanceof C);
+                    const c = editor.plugins.get(C);
                     expect((c.configuration as LocalConfig).toto).to.eql(3);
                 });
                 it('with dependencies without overwrite previous configuration but change order', async () => {
@@ -468,7 +471,8 @@ describe('core', () => {
                     editor.loadPlugin(B);
                     editor.loadPlugin(C, { toto: 3 });
                     await editor.start();
-                    expect(editor.plugins.map(p => p.constructor.name)).to.eql([
+                    const plugins = Array.from(editor.plugins.values());
+                    expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'A',
                         'D',
@@ -476,7 +480,7 @@ describe('core', () => {
                         'F',
                         'B',
                     ]);
-                    const c = editor.plugins.find(p => p instanceof C);
+                    const c = editor.plugins.get(C);
                     expect((c.configuration as LocalConfig).toto).to.eql(3);
                 });
                 it('with dependencies without overwrite previous configuration but change order', async () => {
@@ -487,7 +491,8 @@ describe('core', () => {
                     editor.loadPlugin(B);
                     editor.loadPlugin(C, { toto: 3 });
                     await editor.start();
-                    expect(editor.plugins.map(p => p.constructor.name)).to.eql([
+                    const plugins = Array.from(editor.plugins.values());
+                    expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'A',
                         'D',
@@ -496,7 +501,7 @@ describe('core', () => {
                         'F',
                         'B',
                     ]);
-                    const c = editor.plugins.find(p => p instanceof C);
+                    const c = editor.plugins.get(C);
                     expect((c.configuration as LocalConfig).toto).to.eql(3);
                 });
             });

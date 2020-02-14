@@ -34,6 +34,9 @@ export interface JWEditorConfig {
     shortcuts?: Shortcut[];
     createBaseContainer?: () => VNode;
 }
+interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
+    get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
+}
 
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
@@ -43,7 +46,7 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     contextManager: ContextManager;
-    plugins: JWPlugin[];
+    plugins: PluginMap = new Map();
     configuration: JWEditorConfig = {
         plugins: [],
         createBaseContainer: () => new VElement('P'),
@@ -64,7 +67,7 @@ export class JWEditor {
         // We need to guarantee it's a block so it can contain other blocks.
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
-        this.plugins = [];
+        this.plugins = new Map();
 
         this.contextManager = new ContextManager(this);
 
@@ -142,12 +145,12 @@ export class JWEditor {
         // Attach the keymaps to the editable.
         this.editable.addEventListener('keydown', this._onKeydown.bind(this));
 
-        for (const plugin of this.plugins) {
+        for (const plugin of this.plugins.values()) {
             await plugin.start();
         }
 
         // Init the event manager now that the cloned editable is in the DOM.
-        const domPlugin = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
+        const domPlugin = this.plugins.get(Dom) as Dom;
         this.eventManager = new EventManager(this, domPlugin);
     }
 
@@ -210,7 +213,7 @@ export class JWEditor {
         for (const [PluginClass, configuration] of Plugins) {
             const plugin = new PluginClass(this, configuration);
 
-            this.plugins.push(plugin);
+            this.plugins.set(PluginClass, plugin);
 
             // Register the commands of this plugin.
             Object.keys(plugin.commands).forEach(key => {
@@ -241,7 +244,7 @@ export class JWEditor {
                     this.renderers[id] = engine;
                     // Register renderers from previously loaded plugins as that
                     // could not be done earlier without the rendering engine.
-                    for (const plugin of this.plugins) {
+                    for (const plugin of this.plugins.values()) {
                         if (plugin.renderers) {
                             const renderers = [...plugin.renderers].reverse();
                             for (const RendererClass of renderers) {
@@ -325,7 +328,7 @@ export class JWEditor {
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
-        for (const plugin of this.plugins) {
+        for (const plugin of this.plugins.values()) {
             await plugin.stop();
         }
         this.eventManager.stop();
@@ -351,7 +354,7 @@ export class JWEditor {
                 this.parsers[id] = engine;
                 // Register parsing from previously loaded plugins as that
                 // could not be done earlier without the parsing engine.
-                for (const plugin of this.plugins) {
+                for (const plugin of this.plugins.values()) {
                     if (plugin.parsers) {
                         for (const ParserClass of plugin.parsers) {
                             if (ParserClass.id === id) {
