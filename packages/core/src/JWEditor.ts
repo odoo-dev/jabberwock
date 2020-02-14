@@ -12,6 +12,7 @@ import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
+import { Constructor } from '../../utils/src/utils';
 
 export enum Platform {
     MAC = 'mac',
@@ -31,6 +32,9 @@ export interface JWEditorConfig {
     shortcuts?: Shortcut[];
     createBaseContainer?: () => VNode;
 }
+interface PluginMap extends Map<Constructor<JWPlugin>, JWPlugin> {
+    get<T extends JWPlugin>(constructor: Constructor<T>): T;
+}
 
 export class JWEditor {
     el: HTMLElement;
@@ -39,7 +43,7 @@ export class JWEditor {
     dispatcher: Dispatcher;
     eventManager: EventManager;
     contextManager: ContextManager;
-    plugins: JWPlugin[];
+    plugins: PluginMap;
     vDocument: VDocument;
     selection = new VSelection();
     autoFocus = false;
@@ -58,7 +62,7 @@ export class JWEditor {
         // We need to guarantee it's a block so it can contain other blocks.
         this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
-        this.plugins = [];
+        this.plugins = new Map();
 
         this.contextManager = new ContextManager(this);
 
@@ -123,12 +127,12 @@ export class JWEditor {
         // Attach the keymaps to the editable.
         this.editable.addEventListener('keydown', this._onKeydown.bind(this));
 
-        for (const plugin of this.plugins) {
+        for (const plugin of this.plugins.values()) {
             await plugin.start();
         }
 
         // Init the event manager now that the cloned editable is in the DOM.
-        const domPlugin = this.plugins.find(plugin => plugin instanceof Dom) as Dom;
+        const domPlugin = this.plugins.get(Dom) as Dom;
         this.eventManager = new EventManager(this, domPlugin);
     }
 
@@ -157,7 +161,7 @@ export class JWEditor {
         let offset = 1;
         while (offset <= pluginsToLoad.length) {
             const Plugin = pluginsToLoad[pluginsToLoad.length - offset];
-            if (this.plugins.find(plugin => plugin instanceof Plugin)) {
+            if (this.plugins.get(Plugin)) {
                 // Protect against loading the same plugin twice.
                 pluginsToLoad.splice(pluginsToLoad.length - offset, 1);
             } else {
@@ -174,7 +178,7 @@ export class JWEditor {
         // Load plugins.
         for (const pluginClass of pluginsToLoad) {
             const plugin: JWPlugin = new pluginClass(this);
-            this.plugins.push(plugin);
+            this.plugins.set(pluginClass, plugin);
             // Register the commands of this plugin.
             Object.keys(plugin.commands).forEach(key => {
                 this.dispatcher.registerCommand(key, plugin.commands[key]);
@@ -204,7 +208,7 @@ export class JWEditor {
                     this.renderers[id] = engine;
                     // Register renderers from previously loaded plugins as that
                     // could not be done earlier without the rendering engine.
-                    for (const plugin of this.plugins) {
+                    for (const plugin of this.plugins.values()) {
                         if (plugin.renderers) {
                             for (const RendererClass of plugin.renderers) {
                                 if (RendererClass.id === id) {
@@ -265,7 +269,7 @@ export class JWEditor {
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
-        for (const plugin of this.plugins) {
+        for (const plugin of this.plugins.values()) {
             await plugin.stop();
         }
         this.eventManager.stop();
@@ -290,7 +294,7 @@ export class JWEditor {
                 this.parsers[id] = engine;
                 // Register parsing from previously loaded plugins as that
                 // could not be done earlier without the parsing engine.
-                for (const plugin of this.plugins) {
+                for (const plugin of this.plugins.values()) {
                     if (plugin.parsers) {
                         for (const ParserClass of plugin.parsers) {
                             if (ParserClass.id === id) {
