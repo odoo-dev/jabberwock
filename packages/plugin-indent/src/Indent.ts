@@ -36,7 +36,7 @@ export class Indent extends JWPlugin {
      */
     async indent(params: IndentParams): Promise<void> {
         const range = params.range || this.editor.vDocument.selection.range;
-        const segmentBreaks = range.retractedNodes(this._isSegmentBreak);
+        const segmentBreaks = range.traversedNodes(this._isSegmentBreak);
         // Only indent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
         if (range.isCollapsed() || !segmentBreaks.length) {
@@ -47,7 +47,7 @@ export class Indent extends JWPlugin {
             await this.editor.execCommand('insertText', params);
         } else {
             // The first line of the selection is neither fully selected nor
-            // retracted so its segment break was not in `range.retractedNodes`.
+            // traversed so its segment break was not in `range.traversedNodes`.
             segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
             for (const segmentBreak of segmentBreaks) {
                 // Insert 4 spaces at the start of next segment.
@@ -71,9 +71,9 @@ export class Indent extends JWPlugin {
      */
     outdent(params: OutdentParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const segmentBreaks = range.retractedNodes(this._isSegmentBreak);
+        const segmentBreaks = range.traversedNodes(this._isSegmentBreak);
         // The first line of the selection is neither fully selected nor
-        // retracted so its segment break was not in `range.retractedNodes`.
+        // traversed so its segment break was not in `range.traversedNodes`.
         segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
         // Only outdent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.

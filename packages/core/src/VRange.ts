@@ -89,23 +89,6 @@ export class VRange {
         return this.startContainer.children[startIndex + 1] === this.end;
     }
     /**
-     * Return a list of all the nodes traversed from start to end of this range.
-     */
-    retractedNodes(predicate?: Predicate): VNode[];
-    retractedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
-    retractedNodes<T>(predicate?: Predicate<T>): VNode[];
-    retractedNodes<T>(predicate?: Predicate<T>): VNode[] {
-        const selectedNodes: VNode[] = [];
-        let node = this.start;
-        const bound = this.end.next();
-        while ((node = node.next()) && node !== bound) {
-            if (node.test(predicate)) {
-                selectedNodes.push(node);
-            }
-        }
-        return selectedNodes;
-    }
-    /**
      * Return a list of all nodes that are fully selected by this range.
      */
     selectedNodes(predicate?: Predicate): VNode[];
@@ -122,6 +105,43 @@ export class VRange {
             }
         }
         return selectedNodes;
+    }
+    /**
+     * Return a list of all the nodes currently targeted by the range. If the
+     * range is collapsed, the targeted node is the container of the range.
+     * Otherwise, the targeted nodes are the ones encountered by traversing the
+     * tree from the start to end of this range.
+     */
+    targetedNodes(predicate?: Predicate): VNode[];
+    targetedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
+    targetedNodes<T>(predicate?: Predicate<T>): VNode[];
+    targetedNodes<T>(predicate?: Predicate<T>): VNode[] {
+        const targetedNodes: VNode[] = [];
+
+        const closestStartAncestor = this.start.closest(predicate);
+        if (closestStartAncestor) {
+            targetedNodes.push(closestStartAncestor);
+        }
+
+        return targetedNodes.concat(this.traversedNodes(predicate));
+    }
+
+    /**
+     * Return a list of all the nodes traversed from start to end of this range.
+     */
+    traversedNodes(predicate?: Predicate): VNode[];
+    traversedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
+    traversedNodes<T>(predicate?: Predicate<T>): VNode[];
+    traversedNodes<T>(predicate?: Predicate<T>): VNode[] {
+        const retractedNodes = [];
+        let node = this.start;
+        const bound = this.end.next();
+        while ((node = node.next()) && node !== bound) {
+            if (node.test(predicate)) {
+                retractedNodes.push(node);
+            }
+        }
+        return retractedNodes;
     }
 
     //--------------------------------------------------------------------------
