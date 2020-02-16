@@ -544,14 +544,12 @@ export class VNode {
     descendants<T>(predicate?: Predicate<T>): VNode[];
     descendants<T>(predicate?: Predicate<T>): VNode[] {
         const descendants = [];
-        if (this.children.length) {
-            let currentDescendant = this.firstChild();
-            do {
-                if (currentDescendant.test(predicate)) {
-                    descendants.push(currentDescendant);
-                }
-                currentDescendant = this._descendantAfter(currentDescendant);
-            } while (currentDescendant);
+        let currentDescendant = this.firstChild();
+        while (currentDescendant) {
+            if (currentDescendant.test(predicate)) {
+                descendants.push(currentDescendant);
+            }
+            currentDescendant = this._descendantAfter(currentDescendant);
         }
         return descendants;
     }
