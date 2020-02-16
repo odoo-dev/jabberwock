@@ -741,6 +741,27 @@ export class VNode {
         this.remove();
     }
 
+    /**
+     * Wrap this node in the given node by inserting the given node at this
+     * node's position in its parent and appending this node to the given node.
+     *
+     * @param node
+     */
+    wrap(node: VNode): void {
+        this.before(node);
+        node.append(this);
+    }
+
+    /**
+     * Unwrap this node by moving its children before it then removing it.
+     */
+    unwrap(): void {
+        for (const child of this.children.slice()) {
+            this.before(child);
+        }
+        this.remove();
+    }
+
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
