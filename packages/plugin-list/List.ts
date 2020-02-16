@@ -50,17 +50,11 @@ export class List extends JWPlugin {
         const type = params.type;
         const range = params.range || this.editor.vDocument.selection.range;
 
-        // Retrieve the nodes in the selection.
-        let selectedNodes: Array<VNode>;
-        if (range.isCollapsed()) {
-            // Toggle the parent if the range is collapsed.
-            selectedNodes = [range.start.parent];
-        } else {
-            selectedNodes = range.selectedNodes();
-        }
+        // Retrieve the nodes targeted by the range.
+        const targetedNodes = range.targetedNodes();
 
-        // Check if all selected nodes are within a list of the same type.
-        const areAllInMatchingList = selectedNodes.every(node => {
+        // Check if all targeted nodes are within a list of the same type.
+        const areAllInMatchingList = targetedNodes.every(node => {
             const listAncestor = node.ancestor(ListNode);
             return listAncestor && listAncestor.listType === type;
         });
@@ -69,7 +63,7 @@ export class List extends JWPlugin {
         if (areAllInMatchingList) {
             // If all selected nodes are within a list of the same type,
             // "unlist" them.
-            this._unlist(selectedNodes);
+            this._unlist(targetedNodes);
         } else {
             this._convertToList(range, type);
         }
