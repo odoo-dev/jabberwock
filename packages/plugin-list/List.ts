@@ -1,6 +1,5 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { ListNode, ListType } from './ListNode';
-import { distinct } from '../utils/src/utils';
 import { VNode } from '../core/src/VNodes/VNode';
 import { RangeParams } from '../core/src/CorePlugin';
 import { ListDomRenderer } from './ListDomRenderer';
@@ -50,11 +49,8 @@ export class List extends JWPlugin {
         const type = params.type;
         const range = params.range || this.editor.vDocument.selection.range;
 
-        // Retrieve the nodes targeted by the range.
-        const targetedNodes = range.targetedNodes();
-
         // Check if all targeted nodes are within a list of the same type.
-        const areAllInMatchingList = targetedNodes.every(node => {
+        const areAllInMatchingList = range.targetedNodes().every(node => {
             const listAncestor = node.ancestor(ListNode);
             return listAncestor && listAncestor.listType === type;
         });
@@ -63,7 +59,7 @@ export class List extends JWPlugin {
         if (areAllInMatchingList) {
             // If all selected nodes are within a list of the same type,
             // "unlist" them.
-            this._unlist(targetedNodes);
+            this._unlist(range);
         } else {
             this._convertToList(range, type);
         }
@@ -125,34 +121,26 @@ export class List extends JWPlugin {
      *
      * @param nodes
      */
-    _unlist(nodes: Array<VNode>): void {
-        // Get the direct children of each list to unlist.
-        const listItems = distinct(
-            nodes.map(node => {
-                if (node.parent && node.parent.is(ListNode)) {
-                    return node;
-                } else {
-                    return node.ancestor(ancestor => {
-                        return ancestor.parent && ancestor.parent.is(ListNode);
-                    });
+    _unlist(range): void {
+        withRange(VRange.clone(range), workingRange => {
+            // Extend the range to cover the entirety of its containers.
+            if (workingRange.startContainer.hasChildren()) {
+                workingRange.setStart(workingRange.startContainer.firstChild());
+            }
+            if (workingRange.endContainer.hasChildren()) {
+                workingRange.setEnd(workingRange.endContainer.lastChild());
+            }
+
+            const nodes = workingRange.split(ListNode);
+            for (const list of nodes) {
+                for (const nestedList of list.descendants(ListNode)) {
+                    // TODO: automatically invalidate `li-attributes`.
+                    for (const child of nestedList.children) {
+                        delete child.attributes['li-attributes'];
+                    }
+                    nestedList.unwrap();
                 }
-            }),
-        );
-
-        // Split the lists and move their contents to move out of them.
-        const lists = [];
-        listItems.forEach(item => {
-            lists.push(item.parent);
-            const newList = item.parent.splitAt(item);
-            delete item.attributes['li-attributes'];
-            newList.before(item);
-            lists.push(newList);
-        });
-
-        // Remove empty lists.
-        lists.forEach(list => {
-            if (!list.hasChildren()) {
-                list.remove();
+                list.unwrap();
             }
         });
     }
