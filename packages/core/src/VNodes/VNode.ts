@@ -512,6 +512,18 @@ export class VNode {
         return nextSiblings;
     }
     /**
+     * Return the closest node from this node that matches the given predicate.
+     * Start with this node then go up the ancestors tree until finding a match.
+     *
+     * @param predicate
+     */
+    closest(predicate: Predicate): VNode;
+    closest<T extends VNode>(predicate: Constructor<T>): T;
+    closest<T>(predicate: Predicate<T>): VNode;
+    closest<T>(predicate: Predicate<T>): VNode {
+        return this.test(predicate) ? this : this.ancestor(predicate);
+    }
+    /**
      * Return all ancestors of the current node that satisfy the given
      * predicate. If no predicate is given return all the ancestors of the
      * current node.
