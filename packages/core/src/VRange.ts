@@ -18,6 +18,14 @@ export class VRange {
         return VRange.selecting(reference, position, reference, position);
     }
     /**
+     * Return the context of a range at the location of the given range.
+     *
+     * @param range
+     */
+    static clone(range: VRange): [Point, Point] {
+        return [[range.start, RelativePosition.BEFORE], [range.end, RelativePosition.AFTER]];
+    }
+    /**
      * Return the context of a range selecting the given nodes.
      * Consider `ab` (`[` = start, `]` = end):
      * `select(a)` => `[a]b`
