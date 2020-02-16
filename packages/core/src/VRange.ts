@@ -246,6 +246,52 @@ export class VRange {
         return this;
     }
     /**
+     * Split the range containers up to their common ancestor. Return all
+     * children of the common ancestor that are targeted by the range after the
+     * split. If a predicate is given, splitting continues up to and including
+     * the node closest to the common ancestor that matches the predicate.
+     *
+     * @param predicate
+     */
+    split<T>(predicate?: Predicate<T>): VNode[] {
+        const ancestor = this.startContainer.commonAncestor(this.endContainer);
+        const closest = ancestor.closest(predicate);
+        const container = closest ? closest.parent : ancestor;
+
+        // Split the start ancestors.
+        let start = this.start;
+        do {
+            let startAncestor = start.parent;
+            // Do not split at the start edge of a node.
+            if (start.previousSibling()) {
+                startAncestor = startAncestor.splitAt(start);
+            }
+            start = startAncestor;
+        } while (start.parent !== container);
+
+        // Split the end ancestors.
+        let end = this.end;
+        do {
+            const endAncestor = end.parent;
+            // Do not split at the end edge of a node.
+            if (end.nextSibling()) {
+                endAncestor.splitAt(end);
+                endAncestor.append(end);
+            }
+            end = endAncestor;
+        } while (end.parent !== container);
+
+        // Return all top-most split nodes between and including start and end.
+        const nodes = [];
+        let node = start;
+        while (node !== end) {
+            nodes.push(node);
+            node = node.nextSibling();
+        }
+        nodes.push(end);
+        return nodes;
+    }
+    /**
      * Empty the range by removing selected nodes and collapsing it by merging
      * nodes between start and end.
      */
