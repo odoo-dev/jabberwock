@@ -1,0 +1,15 @@
+body {
+    margin:0;
+    height:100vh;
+}
+
+jw-editor {
+    display: block;
+    height: 100vh;
+}
+
+jw-editable {
+    display: block;
+    padding: 10px;
+    height: 100vh;
+}

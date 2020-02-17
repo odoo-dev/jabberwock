@@ -1,10 +1,11 @@
 import { BasicEditor } from '../../bundles/BasicEditor';
-import { jabberwocky } from '../utils/jabberwocky';
-import './index.css';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
+import template from './demo.xml';
+import './demo.css';
 
 const editor = new BasicEditor();
-jabberwocky.init(editor.editable);
+
+editor.editable.innerHTML = template;
 
 editor.addPlugin(DevTools);
 
