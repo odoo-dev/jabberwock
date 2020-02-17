@@ -21,6 +21,9 @@ import { BoldDomParser } from '../../plugin-bold/BoldDomParser';
 import { UnderlineDomParser } from '../../plugin-underline/UnderlineDomParser';
 import { SpanDomParser } from '../../plugin-span/SpanDomParser';
 import { InsertTextParams } from '../../plugin-char/Char';
+import { InlineNode } from '../../plugin-inline/InlineNode';
+import { LinkDomParser } from '../../plugin-link/LinkDomParser';
+import { SuperscriptDomParser } from '../../plugin-superscript/SuperscriptDomParser';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('deleteForward');
@@ -71,6 +74,8 @@ describePlugin(List, testEditor => {
         engine.register(BoldDomParser);
         engine.register(UnderlineDomParser);
         engine.register(SpanDomParser);
+        engine.register(LinkDomParser);
+        engine.register(SuperscriptDomParser);
         it('should parse a complex list', async () => {
             const element = document.createElement('div');
             element.innerHTML = [
@@ -202,6 +207,119 @@ describePlugin(List, testEditor => {
             expect(li3_3.children()[2].toString()).to.equal('4');
             /* eslint-enable @typescript-eslint/camelcase */
         });
+        it('should parse a list item with several blocks, inlines and whitespace', async () => {
+            const element = document.createElement('div');
+            /* eslint-disable prettier/prettier */
+            element.innerHTML = [
+                '<ol>\n',
+                '    <li>\n',
+                '        <h1>heading</h1> \n',
+                '        <span>a \n',
+                            '<a href="a"><sup><i><b>b</b></i></sup></a> \n',
+                            '<a href="b"><sup><i><b>c</b></i></sup></a>',
+                        '</span> \n',
+                        '<span>d \n',
+                            '<i>e</i> \n',
+                            'f \n',
+                            '<a href="c">g</a> \n',
+                            '<a href="d"">h</a>',
+                        '</span>',
+                '    </li>',
+                '</ol>'
+            ].join('');
+            /* eslint-enable prettier/prettier */
+            const node = (await engine.parse(element))[0];
+
+            expect(node.children().length).to.equal(1);
+            const list = node.firstChild() as ListNode;
+            expect(list.toString()).to.equal('ListNode: ' + ListType.ORDERED);
+            expect(list.listType).to.equal(ListType.ORDERED);
+
+            expect(list.children().length).to.equal(2);
+            const headingLi = list.children()[0];
+            expect(headingLi.toString()).to.equal('HeadingNode: 1');
+            expect(headingLi.children().length).to.equal(7);
+            expect(headingLi.children()[0].toString()).to.equal('h');
+            expect(headingLi.children()[1].toString()).to.equal('e');
+            expect(headingLi.children()[2].toString()).to.equal('a');
+            expect(headingLi.children()[3].toString()).to.equal('d');
+            expect(headingLi.children()[4].toString()).to.equal('i');
+            expect(headingLi.children()[5].toString()).to.equal('n');
+            expect(headingLi.children()[6].toString()).to.equal('g');
+
+            const li = list.children()[1];
+            expect(li.toString()).to.equal('ParagraphNode');
+            expect(li.children().length).to.equal(15);
+
+            function mapFormats(node: InlineNode): string[] {
+                return node.formats.map(format => format.constructor.name);
+            }
+
+            expect(li.children()[0].toString()).to.equal('a');
+            expect(mapFormats(li.children()[0] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[1].toString()).to.equal(' ');
+            expect(mapFormats(li.children()[1] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[2].toString()).to.equal('b');
+            expect(mapFormats(li.children()[2] as InlineNode)).to.deep.equal([
+                'SpanFormat',
+                'LinkFormat',
+                'SuperscriptFormat',
+                'ItalicFormat',
+                'BoldFormat',
+            ]);
+
+            expect(li.children()[3].toString()).to.equal(' ');
+            expect(mapFormats(li.children()[3] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[4].toString()).to.equal('c');
+            expect(mapFormats(li.children()[4] as InlineNode)).to.deep.equal([
+                'SpanFormat',
+                'LinkFormat',
+                'SuperscriptFormat',
+                'ItalicFormat',
+                'BoldFormat',
+            ]);
+
+            expect(li.children()[5].toString()).to.equal(' ');
+            expect((li.children()[5] as InlineNode).formats).to.deep.equal([]);
+
+            expect(li.children()[6].toString()).to.equal('d');
+            expect(mapFormats(li.children()[6] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[7].toString()).to.equal(' ');
+            expect(mapFormats(li.children()[7] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[8].toString()).to.equal('e');
+            expect(mapFormats(li.children()[8] as InlineNode)).to.deep.equal([
+                'SpanFormat',
+                'ItalicFormat',
+            ]);
+            expect(li.children()[9].toString()).to.equal(' ');
+            expect(mapFormats(li.children()[9] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[10].toString()).to.equal('f');
+            expect(mapFormats(li.children()[10] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[11].toString()).to.equal(' ');
+            expect(mapFormats(li.children()[11] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[12].toString()).to.equal('g');
+            expect(mapFormats(li.children()[12] as InlineNode)).to.deep.equal([
+                'SpanFormat',
+                'LinkFormat',
+            ]);
+
+            expect(li.children()[13].toString()).to.equal(' ');
+            expect(mapFormats(li.children()[13] as InlineNode)).to.deep.equal(['SpanFormat']);
+
+            expect(li.children()[14].toString()).to.equal('h');
+            expect(mapFormats(li.children()[14] as InlineNode)).to.deep.equal([
+                'SpanFormat',
+                'LinkFormat',
+            ]);
+        });
     });
     describe('toggleList', () => {
         describe('Range collapsed', () => {
@@ -235,6 +353,15 @@ describePlugin(List, testEditor => {
                             contentAfter: '<div><ul><li>ab[]cd</li></ul></div>',
                         });
                     });
+                    it('should turn a paragraph with formats into a list', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<p><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</p>',
+                            stepFunction: toggleUnorderedList,
+                            contentAfter:
+                                '<ul><li><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</li></ul>',
+                        });
+                    });
                 });
                 describe('Remove', () => {
                     it('should turn an empty list into a paragraph', async () => {
@@ -263,6 +390,15 @@ describePlugin(List, testEditor => {
                             contentBefore: '<p>ab</p><ul><li>cd</li><li>ef[]gh</li></ul>',
                             stepFunction: toggleUnorderedList,
                             contentAfter: '<p>ab</p><ul><li>cd</li></ul><p>ef[]gh</p>',
+                        });
+                    });
+                    it('should turn a list with formats into a paragraph', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<ul><li><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</li></ul>',
+                            stepFunction: toggleUnorderedList,
+                            contentAfter:
+                                '<p><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</p>',
                         });
                     });
                 });
@@ -297,6 +433,15 @@ describePlugin(List, testEditor => {
                             contentAfter: '<div><ol><li>ab[]cd</li></ol></div>',
                         });
                     });
+                    it('should turn a paragraph with formats into a list', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<p><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</p>',
+                            stepFunction: toggleOrderedList,
+                            contentAfter:
+                                '<ol><li><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</li></ol>',
+                        });
+                    });
                 });
                 describe('Remove', () => {
                     it('should turn an empty list into a paragraph', async () => {
@@ -325,6 +470,15 @@ describePlugin(List, testEditor => {
                             contentBefore: '<p>ab</p><ol><li>cd</li><li>ef[]gh</li></ol>',
                             stepFunction: toggleOrderedList,
                             contentAfter: '<p>ab</p><ol><li>cd</li></ol><p>ef[]gh</p>',
+                        });
+                    });
+                    it('should turn a list with formats into a paragraph', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore:
+                                '<ol><li><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</li></ol>',
+                            stepFunction: toggleOrderedList,
+                            contentAfter:
+                                '<p><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</p>',
                         });
                     });
                 });

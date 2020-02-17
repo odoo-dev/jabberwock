@@ -18,46 +18,44 @@ export class ListItemDomParser extends AbstractParser<Node> {
      */
     async parse(item: Element): Promise<VNode[]> {
         const children = Array.from(item.childNodes);
-        // An empty text node as first child should be skipped.
-        while (children.length && this._isEmptyTextNode(children[0])) {
-            children.shift();
-        }
         // A list item with no children should be skipped.
         if (!children.length) {
             return [];
         }
         const nodes: VNode[] = [];
+        let inlinesContainer: VNode;
         // Parse the list item's attributes into a technical key of the node's
         // attributes, that will be read only by ListItemDomRenderer.
         const itemAttributes = { 'li-attributes': this.engine.parseAttributes(item) };
-        for (let k = 0; k < children.length; k++) {
-            const domNode = children[k];
-            const parsedChild = await this.engine.parse(domNode);
-            if (this._isInlineListItem(domNode)) {
-                // Inline elements in a list item should be wrapped in a base container.
-                if (!this._isInlineListItem(domNode.previousSibling)) {
-                    const baseContainer = this.engine.editor.createBaseContainer();
-                    baseContainer.attributes = itemAttributes;
-                    nodes.push(baseContainer);
+        for (let childIndex = 0; childIndex < children.length; childIndex++) {
+            const domChild = children[childIndex];
+            const parsedChild = await this.engine.parse(domChild);
+            if (parsedChild.length) {
+                if (this._isInlineListItem(domChild)) {
+                    // Contiguous inline elements in a list item should be
+                    // wrapped together in a base container.
+                    if (!inlinesContainer) {
+                        inlinesContainer = this.engine.editor.createBaseContainer();
+                        inlinesContainer.attributes = itemAttributes;
+                        nodes.push(inlinesContainer);
+                    }
+                    inlinesContainer.append(...parsedChild);
+                } else {
+                    inlinesContainer = null; // Close the inlinesContainer.
+                    for (const child of parsedChild) {
+                        child.attributes = { ...child.attributes, ...itemAttributes };
+                    }
+                    nodes.push(...parsedChild);
                 }
-                nodes[nodes.length - 1].append(...parsedChild);
-            } else {
-                for (const child of parsedChild) {
-                    child.attributes = { ...child.attributes, ...itemAttributes };
-                }
-                nodes.push(...parsedChild);
             }
         }
-        return nodes;
-    }
-
-    /**
-     * Return true if the node is a text node containing only whitespace or nothing.
-     *
-     * @param item
-     */
-    _isEmptyTextNode(item: Node): boolean {
-        return item.nodeType === Node.TEXT_NODE && /^\s*$/.test(item.textContent);
+        // A list item with children but whose parsing returned nothing should
+        // be parsed as an empty base container. Eg: <li><br/></li>: li has a
+        // child so it will not return [] above (and therefore be ignored), but
+        // br will parse to nothing because it's a placeholder br, not a real
+        // line break. We cannot ignore that li because it does in fact exist so
+        // we parse it as an empty base container.
+        return nodes.length ? nodes : [this.engine.editor.createBaseContainer()];
     }
 
     /**
@@ -66,6 +64,6 @@ export class ListItemDomParser extends AbstractParser<Node> {
      * @param item
      */
     _isInlineListItem(item: Node): boolean {
-        return item && ((!isBlock(item) && !this._isEmptyTextNode(item)) || item.nodeName === 'BR');
+        return item && (!isBlock(item) || item.nodeName === 'BR');
     }
 }
