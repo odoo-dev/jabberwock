@@ -4,8 +4,9 @@ const path = require('path');
 module.exports = {
     mode: 'development',
     entry: {
-        'index': './examples/index/index.ts',
+        'jabberwocky': './examples/jabberwocky/jabberwocky.ts',
         'jabberwockipedia': './examples/jabberwockipedia/jabberwockipedia.ts',
+        'demo': './examples/demo/demo.ts',
     },
     devtool: 'inline-source-map',
     output: {
