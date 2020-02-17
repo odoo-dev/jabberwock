@@ -1,5 +1,6 @@
 import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { CharNode } from './CharNode';
+import { InlineNode } from '../plugin-inline/InlineNode';
 
 export class CharDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
@@ -22,8 +23,15 @@ export class CharDomRenderer extends AbstractRenderer<Node[]> {
             }
             next = next.nextSibling();
         }
-        // Browsers don't render leading/trailing space chars otherwise.
-        text = text.replace(/^ | $/g, '\u00A0');
+        // Render block edge spaces as non-breakable space (otherwise browsers
+        // won't render them).
+        const previous = node.previousSibling();
+        if (!previous || !previous.is(InlineNode)) {
+            text = text.replace(/^ /g, '\u00A0');
+        }
+        if (!next || !next.is(InlineNode)) {
+            text = text.replace(/ $/g, '\u00A0');
+        }
         const rendering = Promise.resolve([document.createTextNode(text)]);
         return this.engine.rendered(charNodes, [this, rendering]);
     }
