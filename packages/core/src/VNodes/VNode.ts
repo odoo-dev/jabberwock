@@ -29,6 +29,9 @@ export interface VNode {
     constructor: VNodeConstructor & this;
 }
 export class VNode {
+    static test(node: VNode): boolean {
+        return node && node.test(this);
+    }
     static readonly atomic: boolean = false;
     readonly type: VNodeType;
     readonly id = id;
