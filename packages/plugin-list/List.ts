@@ -129,10 +129,10 @@ export class List extends JWPlugin {
      */
     indent(params: IndentParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const listItems = range.targetedNodes(node => node.parent && node.parent.is(ListNode));
+        const items = range.targetedNodes(node => ListNode.test(node.parent));
 
         // Filter out non-identable list items.
-        const itemsToIndent = listItems.filter(item => {
+        const itemsToIndent = items.filter(item => {
             const nodeIndex = item.parent.children().indexOf(item);
             if (nodeIndex === 0) {
                 // Do not indent the first list item of a list.
@@ -144,7 +144,7 @@ export class List extends JWPlugin {
             } else {
                 // Do not indent items of a targeted nested list, since they
                 // will automatically be indented with their list ancestor.
-                return !listItems.includes(item.ancestor(ListNode));
+                return !items.includes(item.ancestor(ListNode));
             }
         });
 
@@ -183,12 +183,12 @@ export class List extends JWPlugin {
      */
     outdent(params: OutdentParams): void {
         const range = params.range || this.editor.vDocument.selection.range;
-        const listItems = range.targetedNodes(node => node.parent && node.parent.is(ListNode));
+        const items = range.targetedNodes(node => ListNode.test(node.parent));
 
         // Do not outdent items of a targeted nested list, since they
         // will automatically be outdented with their list ancestor.
-        const itemsToOutdent = listItems.filter(item => {
-            return !listItems.includes(item.ancestor(ListNode));
+        const itemsToOutdent = items.filter(item => {
+            return !items.includes(item.ancestor(ListNode));
         });
 
         if (!itemsToOutdent.length) return;
