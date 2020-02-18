@@ -17,6 +17,9 @@ export class List extends JWPlugin {
     static isListItem(node: VNode): boolean {
         return node.parent && node.parent.is(ListNode);
     }
+    static isInList(type: ListType, node: VNode): boolean {
+        return node && !!node.closest(ListNode[type]);
+    }
     commands = {
         toggleList: {
             title: 'Toggle list',
@@ -72,7 +75,7 @@ export class List extends JWPlugin {
 
             // If all targeted nodes are within a list of given type then unlist
             // them. Otherwise, convert them to the given list type.
-            if (range.targetedNodes().every(node => node.closest(ListNode[type]))) {
+            if (range.targetedNodes().every(List.isInList.bind(List, type))) {
                 // Unlist the targeted nodes.
                 const nodesToUnlist = range.split(ListNode);
                 for (const list of nodesToUnlist) {
