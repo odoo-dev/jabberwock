@@ -37,12 +37,12 @@ export class List extends JWPlugin {
         {
             pattern: 'CTRL+SHIFT+<Digit7>',
             commandId: 'toggleList',
-            commandArgs: { type: 'ordered' } as ListParams,
+            commandArgs: { type: ListType.ORDERED } as ListParams,
         },
         {
             pattern: 'CTRL+SHIFT+<Digit8>',
             commandId: 'toggleList',
-            commandArgs: { type: 'unordered' } as ListParams,
+            commandArgs: { type: ListType.UNORDERED } as ListParams,
         },
     ];
     readonly parsers = [ListDomParser, ListItemDomParser];
@@ -70,17 +70,12 @@ export class List extends JWPlugin {
                 range.setEnd(range.endContainer.lastChild());
             }
 
-            const nodes = range.split(ListNode);
-
-            // Check if all targeted nodes are within a list of the same type.
-            const areAllInMatchingList = range.targetedNodes().every(node => {
-                const listAncestor = node.ancestor(ListNode);
-                return listAncestor && listAncestor.listType === type;
-            });
-
-            if (areAllInMatchingList) {
+            // If all targeted nodes are within a list of given type then unlist
+            // them. Otherwise, convert them to the given list type.
+            if (range.targetedNodes().every(node => node.closest(ListNode[type]))) {
                 // Unlist the targeted nodes.
-                for (const list of nodes) {
+                const nodesToUnlist = range.split(ListNode);
+                for (const list of nodesToUnlist) {
                     for (const nestedList of list.descendants(ListNode)) {
                         // TODO: automatically invalidate `li-attributes`.
                         for (const child of nestedList.children) {
@@ -93,7 +88,8 @@ export class List extends JWPlugin {
             } else {
                 // Convert the targeted nodes to the given list type.
                 let newList = new ListNode(type);
-                for (const node of nodes) {
+                const nodesToConvert = range.split(ListNode);
+                for (const node of nodesToConvert) {
                     // Convert nested lists into the new type.
                     for (const nestedList of node.descendants(ListNode)) {
                         const newNestedList = new ListNode(type);
@@ -113,17 +109,13 @@ export class List extends JWPlugin {
                 // <ol><li>a</li></ol><ol><li>b</li></ol>
                 // => <ol><li>a</li><li>b</li></ol>).
                 const previousSibling = newList.previousSibling();
-                if (
-                    previousSibling &&
-                    previousSibling.is(ListNode) &&
-                    previousSibling.listType === type
-                ) {
+                if (previousSibling && previousSibling.is(ListNode[type])) {
                     newList.mergeWith(previousSibling);
                     newList = previousSibling;
                 }
 
                 const nextSibling = newList.nextSibling();
-                if (nextSibling && nextSibling.is(ListNode) && nextSibling.listType === type) {
+                if (nextSibling && nextSibling.is(ListNode[type])) {
                     nextSibling.mergeWith(newList);
                 }
             }
@@ -168,23 +160,18 @@ export class List extends JWPlugin {
         }
 
         for (const item of itemsToIndent) {
-            const listType = item.ancestor(ListNode).listType;
+            const type = item.ancestor(ListNode).listType;
             const prev = item.previousSibling();
             const next = item.nextSibling();
             // If possible, indent the item by putting it into a pre-existing
             // list sibling of the same type.
-            if (prev && prev.is(ListNode) && prev.listType === listType) {
+            if (ListNode[type](prev)) {
                 prev.append(item);
-            } else if (
-                next &&
-                next.is(ListNode) &&
-                next.listType === listType &&
-                !itemsToIndent.includes(next)
-            ) {
+            } else if (ListNode[type](next) && !itemsToIndent.includes(next)) {
                 next.prepend(item);
             } else {
                 // If no other candidate exists then wrap it in a new ListNode.
-                item.wrap(new ListNode(listType));
+                item.wrap(new ListNode(type));
             }
         }
     }

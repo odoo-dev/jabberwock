@@ -94,7 +94,7 @@ describePlugin(List, testEditor => {
 
             expect(node.children.length).to.equal(1);
             const list = node.firstChild() as ListNode;
-            expect(list.toString()).to.equal('ListNode: unordered');
+            expect(list.toString()).to.equal('ListNode: ' + ListType.UNORDERED);
             expect(list.listType).to.equal(ListType.UNORDERED);
             expect(list.children.length).to.equal(4); // li0, li1, li2, li3
 
@@ -104,7 +104,7 @@ describePlugin(List, testEditor => {
             expect(li0.firstChild().toString()).to.equal('a');
 
             const li1 = list.children()[1] as ListNode;
-            expect(li1.toString()).to.equal('ListNode: unordered');
+            expect(li1.toString()).to.equal('ListNode: ' + ListType.UNORDERED);
             expect(li1.listType).to.equal(ListType.UNORDERED);
             expect(li1.children().length).to.equal(5);
 
@@ -140,7 +140,7 @@ describePlugin(List, testEditor => {
             expect(li1_3.children()[2].toString()).to.equal('d');
 
             const li1_4 = li1.children()[4] as ListNode;
-            expect(li1_4.toString()).to.equal('ListNode: unordered');
+            expect(li1_4.toString()).to.equal('ListNode: ' + ListType.UNORDERED);
             expect(li1_4.listType).to.equal(ListType.UNORDERED);
             expect(li1_4.children().length).to.equal(1);
 
@@ -159,7 +159,7 @@ describePlugin(List, testEditor => {
             expect(li2.firstChild().toString()).to.equal('b');
 
             const li3 = list.children()[3] as ListNode;
-            expect(li3.toString()).to.equal('ListNode: ordered');
+            expect(li3.toString()).to.equal('ListNode: ' + ListType.ORDERED);
             expect(li3.listType).to.equal(ListType.ORDERED);
             expect(li3.children().length).to.equal(4);
 

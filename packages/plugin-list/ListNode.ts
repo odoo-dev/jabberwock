@@ -1,11 +1,19 @@
 import { VNode } from '../core/src/VNodes/VNode';
 
 export enum ListType {
-    ORDERED = 'ordered',
-    UNORDERED = 'unordered',
+    ORDERED = 'ORDERED',
+    UNORDERED = 'UNORDERED',
 }
 
 export class ListNode extends VNode {
+    // Typescript currently doesn't support using enum as keys in interfaces.
+    // Source: https://github.com/microsoft/TypeScript/issues/13042
+    static ORDERED(node: VNode): node is ListNode {
+        return node && node.is(ListNode) && node.listType === ListType.ORDERED;
+    }
+    static UNORDERED(node: VNode): node is ListNode {
+        return node && node.is(ListNode) && node.listType == ListType.UNORDERED;
+    }
     listType: ListType;
     constructor(listType: ListType) {
         super();
