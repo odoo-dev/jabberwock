@@ -130,6 +130,7 @@ devtools-mainpane {
     overflow: auto;
     flex-direction: column;
     width: 100%;
+    margin-bottom: 50px;
 }
 
 mainpane-contents {
@@ -261,6 +262,7 @@ devtools-sidepane .properties {
     padding: 10px;
     height: 100%;
     overflow: auto;
+    margin-bottom: 30px;
 }
 
 devtools-sidepane .properties .divider {
