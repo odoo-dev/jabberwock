@@ -3,9 +3,10 @@ import { CommandDefinition } from './Dispatcher';
 import JWEditor from './JWEditor';
 
 interface MatchItem {
-    maxPredicateLength: number;
     lastPredicatePosition: number;
-    command: CommandDefinition;
+    maxPredicateLength: number;
+    // If undefined, it means no command has been found yet.
+    command: CommandDefinition | undefined;
 }
 
 export class ContextManager {
@@ -16,7 +17,7 @@ export class ContextManager {
     }
 
     //--------------------------------------------------------------------------
-    // Private
+    // Public
     //--------------------------------------------------------------------------
 
     /**
@@ -31,9 +32,9 @@ export class ContextManager {
      * The context is the `vDocument.selection.range.start.ancestors()`.
      *
      * Specificity is defined with:
-     * - `lvl2`: if the last predicate of a command "a" have a higher index in
-     *   ancestors than the last predicate of a command "b"; command "a" have
-     *   more specificity
+     * - `lvl2`: if the last predicate of a command "a" is deeper in the tree
+     *   than the last predicate of a command "b"; command "a" have more
+     *   specificity
      * - `lvl1`: if two or more commands have the same `lvl2` specificity; the
      *   command with predicates with higher length will have more specificity
      * - `lvl0`: if the command has no predicates, there is no specificity
@@ -81,7 +82,7 @@ export class ContextManager {
      * The ancestors list is `['ul', 'li', 'p']`.
      *
      * The 4 command `commandUlP`, `commandP`, `commandUl`, `commandAny` could
-     * match the `command` but not `commandImage`.
+     * match the `command` identifier but not `commandImage`.
      *
      * The priority is calculated with "`lvl2`,`lvl1`".
      * - `commandUlP` specificity: 2,2 `lvl2`: 2 means the last predicate
@@ -103,8 +104,8 @@ export class ContextManager {
      */
     match(commands: CommandDefinition[]): CommandDefinition | undefined {
         let maxItem: MatchItem = {
-            maxPredicateLength: 0,
             lastPredicatePosition: -1,
+            maxPredicateLength: 0,
             command: undefined,
         };
         let ancestors: VNode[] = [];
@@ -118,12 +119,15 @@ export class ContextManager {
             const lastPredicate = predicates.pop();
             let currentLastPredicatePosition = -1;
             if (lastPredicate) {
-                const found = [...currentAncestors]
-                    .reverse()
-                    .find(node => node.test(lastPredicate));
+                const found = [...currentAncestors].find(node => node.test(lastPredicate));
                 if (found) {
-                    currentLastPredicatePosition = currentAncestors.indexOf(found);
-                    currentAncestors.splice(currentLastPredicatePosition);
+                    const index = currentAncestors.indexOf(found);
+                    currentLastPredicatePosition = currentAncestors.length - 1 - index;
+                    // todo: decide this line or the previous line is clearer
+                    // currentLastPredicatePosition = [...currentAncestors].reverse().indexOf(found);
+                    // remove all ancestors so we do not check them again later
+                    // in the code.
+                    currentAncestors.splice(0, index);
                 } else {
                     continue;
                 }
@@ -139,10 +143,12 @@ export class ContextManager {
                         predicates.pop();
                     }
                 }
+                // If all predicates have been consumed, it mean's it matches
+                // all predicates.
                 if (!predicates.length) {
                     maxItem = {
-                        maxPredicateLength: predicatesLength,
                         lastPredicatePosition: currentLastPredicatePosition,
+                        maxPredicateLength: predicatesLength,
                         command: command,
                     };
                 }

@@ -39,6 +39,7 @@ export class Dispatcher {
     async dispatch(commandId: CommandIdentifier, args: CommandArgs = {}): Promise<void> {
         const commands = this.commands[commandId];
         if (!commands) {
+            console.warn(`Command ${commandId} is not found in the system.`);
             return;
         }
         const command = this.editor.contextManager.match(commands);
