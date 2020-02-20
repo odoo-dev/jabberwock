@@ -5,9 +5,9 @@ import { FormatParams, Inline } from '../plugin-inline/Inline';
 import { CharFormatDomRenderer } from './CharFormatDomRenderer';
 import { CharDomRenderer } from './CharDomRenderer';
 import { CharDomParser } from './CharDomParser';
-import { Format } from '../plugin-inline/Format';
 import { InlineNode } from '../plugin-inline/InlineNode';
 import { VNode } from '../core/src/VNodes/VNode';
+import { Formats } from '../plugin-inline/Formats';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
@@ -31,7 +31,7 @@ export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
      * format the following property. This value is reset each time the range
      * change in a document.
      */
-    formatCache: Format[] = null;
+    formatCache: Formats = null;
 
     //--------------------------------------------------------------------------
     // Public
@@ -59,7 +59,7 @@ export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new CharNode(char, formats);
+            const vNode = new CharNode(char, formats.clone());
             range.start.before(vNode);
         });
         this.resetFormatCache();
@@ -79,17 +79,12 @@ export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
         if (!this.formatCache) {
             this.formatCache = this.getCurrentFormats();
         }
-        const index = this.formatCache.findIndex(f => f instanceof FormatClass);
-        if (index !== -1) {
-            this.formatCache.splice(index, 1);
-        } else {
-            this.formatCache.push(new FormatClass());
-        }
+        this.formatCache.toggle(FormatClass);
     }
     /**
      * Get the format for the next insertion.
      */
-    getCurrentFormats(range = this.editor.selection.range): Format[] {
+    getCurrentFormats(range = this.editor.selection.range): Formats {
         if (this.formatCache) {
             return this.formatCache;
         }
@@ -101,10 +96,10 @@ export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
             inlineToCopyFormat = range.start.nextSibling();
         }
         if (inlineToCopyFormat && inlineToCopyFormat.is(InlineNode)) {
-            return [...inlineToCopyFormat.formats];
+            return inlineToCopyFormat.formats.clone();
         }
 
-        return [];
+        return new Formats();
     }
     /**
      * Each time the selection changes, we reset its format.

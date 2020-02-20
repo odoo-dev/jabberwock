@@ -6,6 +6,7 @@ import { ListNode, ListType } from '../ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/CharNode';
 import { BoldFormat } from '../../plugin-bold/BoldFormat';
+import { Formats } from '../../plugin-inline/Formats';
 
 describe('ListDomRenderer', () => {
     describe('render', () => {
@@ -56,7 +57,7 @@ describe('ListDomRenderer', () => {
             const ul = new ListNode(ListType.UNORDERED);
             const p2 = new VElement('P');
             p2.append(new CharNode('a'));
-            p2.append(new CharNode('.', [new BoldFormat()]));
+            p2.append(new CharNode('.', new Formats(BoldFormat)));
             p2.append(new CharNode('a'));
             ul.append(p2);
 
