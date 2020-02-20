@@ -44,7 +44,7 @@ export class Dispatcher {
         }
         const command = this.editor.contextManager.match(commands);
         if (command) {
-            command.handler(args);
+            await command.handler(args);
         }
     }
 
