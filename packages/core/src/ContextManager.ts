@@ -2,13 +2,6 @@ import { VNode } from './VNodes/VNode';
 import { CommandDefinition } from './Dispatcher';
 import JWEditor from './JWEditor';
 
-interface MatchItem {
-    specificityLvl2: number;
-    maxPredicateLength: number;
-    // If undefined, it means no command has been found yet.
-    command: CommandDefinition | undefined;
-}
-
 export class ContextManager {
     editor: JWEditor;
 
@@ -103,59 +96,46 @@ export class ContextManager {
      * @param commandId
      */
     match(commands: CommandDefinition[]): CommandDefinition | undefined {
-        let maxItem: MatchItem = {
-            specificityLvl2: -1,
-            maxPredicateLength: 0,
-            command: undefined,
-        };
+        let currentMaxLvl2 = -1;
+        let currentMaxLength = 0;
+        let currentCommand;
+
         let ancestors: VNode[] = [];
         if (this.editor.vDocument) {
             ancestors = this.editor.vDocument.selection.range.start.ancestors();
         }
         const maximumSpecificity = ancestors.length - 1;
         for (const command of commands) {
-            const currentAncestors = [...ancestors];
-            const predicatesLength = command.predicates ? command.predicates.length : 0;
             const predicates = (command.predicates && [...command.predicates]) || [];
-            const lastPredicate = predicates.pop();
-
-            let specificityLvl2 = -1;
-            if (lastPredicate) {
-                const found = currentAncestors.find(node => node.test(lastPredicate));
-                if (found) {
-                    const indexInAncestors = currentAncestors.indexOf(found);
-
-                    // The lower the index in ancestors, the higher the specificity.
-                    specificityLvl2 = maximumSpecificity - indexInAncestors;
-
-                    // Remove already tested ancestors to avoid retesting them later on.
-                    currentAncestors.splice(0, indexInAncestors + 1);
-                } else {
-                    continue;
+            let lvl2 = -1;
+            let ancestorIndex = 0;
+            const predicatesReversed = [...predicates].reverse();
+            let match;
+            if (predicates.length === 0) {
+                match = true;
+            } else {
+                for (const pred of predicatesReversed) {
+                    match = false;
+                    while (!match && ancestorIndex < ancestors.length) {
+                        if (ancestors[ancestorIndex].test(pred)) {
+                            match = true;
+                            if (lvl2 === -1) {
+                                // The lower the index in ancestors, the higher the specificity.
+                                lvl2 = maximumSpecificity - ancestorIndex;
+                            }
+                        }
+                        ancestorIndex++;
+                    }
+                    // Stop checking the predicates of this command as one of them don't match.
+                    if (!match) break;
                 }
             }
-            if (
-                specificityLvl2 >= maxItem.specificityLvl2 &&
-                predicatesLength >= maxItem.maxPredicateLength
-            ) {
-                while (currentAncestors.length > 0 && predicates.length > 0) {
-                    const ancestor = currentAncestors.shift();
-                    const lastPredicate = predicates[predicates.length - 1];
-                    if (ancestor.test(lastPredicate)) {
-                        predicates.pop();
-                    }
-                }
-                // If all predicates have been consumed, it mean's it matches
-                // all predicates.
-                if (!predicates.length) {
-                    maxItem = {
-                        specificityLvl2: specificityLvl2,
-                        maxPredicateLength: predicatesLength,
-                        command: command,
-                    };
-                }
+            if (match && currentMaxLvl2 <= lvl2 && currentMaxLength <= predicates.length) {
+                currentMaxLvl2 = lvl2;
+                currentMaxLength = predicates.length;
+                currentCommand = command;
             }
         }
-        return maxItem.command;
+        return currentCommand;
     }
 }

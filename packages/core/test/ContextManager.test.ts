@@ -88,12 +88,12 @@ describe('core', () => {
                         const callback = (): void => {};
                         const commands: CommandDefinition[] = [
                             {
-                                title: 'list1',
+                                title: 'paragraph',
                                 predicates: [ParagraphNode],
                                 handler: callback,
                             },
                             {
-                                title: 'list2',
+                                title: 'list',
                                 predicates: [ListNode],
                                 handler: callback,
                             },
