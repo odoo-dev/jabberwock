@@ -177,7 +177,11 @@ export class VRange {
      * @param [position]
      */
     setStart(reference: VNode, position = RelativePosition.BEFORE): void {
-        reference = reference.firstLeaf();
+        if (position === RelativePosition.BEFORE) {
+            reference = reference.firstLeaf();
+        } else {
+            reference = reference.lastLeaf();
+        }
         if (!reference.hasChildren() && !reference.atomic) {
             reference.prepend(this.start);
         } else if (position === RelativePosition.AFTER && reference !== this.end) {
@@ -199,7 +203,11 @@ export class VRange {
      * @param [position]
      */
     setEnd(reference: VNode, position = RelativePosition.AFTER): void {
-        reference = reference.lastLeaf();
+        if (position === RelativePosition.BEFORE) {
+            reference = reference.firstLeaf();
+        } else {
+            reference = reference.lastLeaf();
+        }
         if (!reference.hasChildren() && !reference.atomic) {
             reference.append(this.end);
         } else if (position === RelativePosition.BEFORE && reference !== this.start) {
