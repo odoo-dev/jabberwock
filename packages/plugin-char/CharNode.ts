@@ -1,12 +1,12 @@
 import { MarkerNode } from '../core/src/VNodes/MarkerNode';
-import { Format } from '../plugin-inline/Format';
 import { InlineNode } from '../plugin-inline/InlineNode';
 import { VNode } from '../core/src/VNodes/VNode';
+import { Formats } from '../plugin-inline/Formats';
 
 export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    constructor(char: string, format?: Format[]) {
+    constructor(char: string, format?: Formats) {
         super();
         if (char.length !== 1) {
             throw new Error(
@@ -32,7 +32,7 @@ export class CharNode extends InlineNode {
      * @override
      */
     clone(): this {
-        const clone = new this.constructor<typeof CharNode>(this.char, [...this.formats]);
+        const clone = new this.constructor<typeof CharNode>(this.char, this.formats.clone());
         clone.attributes = { ...this.attributes };
         return clone;
     }

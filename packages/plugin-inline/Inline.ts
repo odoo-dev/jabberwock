@@ -35,25 +35,24 @@ export class Inline extends JWPlugin {
         // If every char in the range has the format `FormatClass`, remove
         // the format for all of them.
         const allHaveFormat = selectedInlines.every(inline => {
-            return !!inline.formats.find(f => f instanceof FormatClass);
+            return !!inline.formats.get(FormatClass);
         });
         if (allHaveFormat) {
             for (const inline of selectedInlines) {
-                const index = inline.formats.findIndex(f => f instanceof FormatClass);
                 // Apply the attributes of the format we're about to remove to
                 // the inline itself.
-                const matchingFormat = inline.formats[index];
+                const matchingFormat = inline.formats.get(FormatClass);
                 for (const key of Object.keys(matchingFormat.attributes)) {
                     inline.attributes[key] = matchingFormat.attributes[key];
                 }
                 // Remove the format.
-                inline.formats.splice(index, 1);
+                inline.formats.remove(matchingFormat);
             }
         } else {
             // If there is at least one char in the range without the format
             // `FormatClass`, set the format for all nodes.
             for (const inline of selectedInlines) {
-                if (!inline.formats.find(f => f instanceof FormatClass)) {
+                if (!inline.formats.get(FormatClass)) {
                     new FormatClass().applyTo(inline);
                 }
             }

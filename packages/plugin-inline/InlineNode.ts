@@ -1,6 +1,6 @@
 import { VNode } from '../core/src/VNodes/VNode';
-import { Format } from './Format';
+import { Formats } from './Formats';
 
 export class InlineNode extends VNode {
-    formats: Format[] = [];
+    formats = new Formats();
 }
