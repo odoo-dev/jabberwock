@@ -3,7 +3,7 @@ import { CommandDefinition } from './Dispatcher';
 import JWEditor from './JWEditor';
 
 interface MatchItem {
-    lastPredicatePosition: number;
+    specificityLvl2: number;
     maxPredicateLength: number;
     // If undefined, it means no command has been found yet.
     command: CommandDefinition | undefined;
@@ -104,7 +104,7 @@ export class ContextManager {
      */
     match(commands: CommandDefinition[]): CommandDefinition | undefined {
         let maxItem: MatchItem = {
-            lastPredicatePosition: -1,
+            specificityLvl2: -1,
             maxPredicateLength: 0,
             command: undefined,
         };
@@ -112,32 +112,34 @@ export class ContextManager {
         if (this.editor.vDocument) {
             ancestors = this.editor.vDocument.selection.range.start.ancestors();
         }
+        const maximumSpecificity = ancestors.length - 1;
         for (const command of commands) {
             const currentAncestors = [...ancestors];
             const predicatesLength = command.predicates ? command.predicates.length : 0;
             const predicates = (command.predicates && [...command.predicates]) || [];
             const lastPredicate = predicates.pop();
-            let currentLastPredicatePosition = -1;
+
+            let specificityLvl2 = -1;
             if (lastPredicate) {
-                const found = [...currentAncestors].find(node => node.test(lastPredicate));
+                const found = currentAncestors.find(node => node.test(lastPredicate));
                 if (found) {
-                    const index = currentAncestors.indexOf(found);
-                    currentLastPredicatePosition = currentAncestors.length - 1 - index;
-                    // todo: decide this line or the previous line is clearer
-                    // currentLastPredicatePosition = [...currentAncestors].reverse().indexOf(found);
-                    // remove all ancestors so we do not check them again later
-                    // in the code.
-                    currentAncestors.splice(0, index);
+                    const indexInAncestors = currentAncestors.indexOf(found);
+
+                    // The lower the index in ancestors, the higher the specificity.
+                    specificityLvl2 = maximumSpecificity - indexInAncestors;
+
+                    // Remove already tested ancestors to avoid retesting them later on.
+                    currentAncestors.splice(0, indexInAncestors + 1);
                 } else {
                     continue;
                 }
             }
             if (
-                currentLastPredicatePosition >= maxItem.lastPredicatePosition &&
+                specificityLvl2 >= maxItem.specificityLvl2 &&
                 predicatesLength >= maxItem.maxPredicateLength
             ) {
                 while (currentAncestors.length > 0 && predicates.length > 0) {
-                    const ancestor = currentAncestors.pop();
+                    const ancestor = currentAncestors.shift();
                     const lastPredicate = predicates[predicates.length - 1];
                     if (ancestor.test(lastPredicate)) {
                         predicates.pop();
@@ -147,7 +149,7 @@ export class ContextManager {
                 // all predicates.
                 if (!predicates.length) {
                     maxItem = {
-                        lastPredicatePosition: currentLastPredicatePosition,
+                        specificityLvl2: specificityLvl2,
                         maxPredicateLength: predicatesLength,
                         command: command,
                     };

@@ -7,7 +7,7 @@ export interface CommandDefinition {
     title?: string;
     description?: string;
     handler: CommandHandler;
-    predicates?: Predicate<VNode>[];
+    predicates?: Predicate<VNode | boolean>[];
 }
 export type CommandHandler = (args: CommandArgs) => void;
 export interface CommandArgs {
