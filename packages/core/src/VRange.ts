@@ -321,7 +321,17 @@ export class VRange {
                 this.endContainer.mergeWith(ancestor);
                 ancestor = this.endContainer.parent;
             }
-            this.endContainer.mergeWith(this.startContainer);
+            if (this.endContainer.ancestors().includes(this.startContainer)) {
+                const endContainer = this.endContainer;
+                for (const child of endContainer.children.slice()) {
+                    endContainer.before(child);
+                }
+                endContainer.remove();
+            } else if (this.startContainer.ancestors().includes(this.endContainer)) {
+                // TODO
+            } else {
+                this.endContainer.mergeWith(this.startContainer);
+            }
         }
     }
     /**
