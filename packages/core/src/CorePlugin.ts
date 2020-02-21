@@ -113,7 +113,7 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     setSelection(params: VSelectionParams): void {
-        this.editor.vDocument.selection.set(params.vSelection);
+        this.editor.selection.set(params.vSelection);
     }
     /**
      * Update the selection in such a way that it selects the entire document.
@@ -121,7 +121,7 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     selectAll(params: VSelectionParams): void {
-        this.editor.vDocument.selection.set({
+        this.editor.selection.set({
             anchorNode: this.editor.vDocument.root.firstLeaf(),
             anchorPosition: RelativePosition.BEFORE,
             focusNode: this.editor.vDocument.root.lastLeaf(),

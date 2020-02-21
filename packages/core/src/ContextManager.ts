@@ -1,4 +1,3 @@
-import { VNode } from './VNodes/VNode';
 import { CommandDefinition, CommandContext } from './Dispatcher';
 import JWEditor from './JWEditor';
 
@@ -8,6 +7,9 @@ export class ContextManager {
 
     constructor(editor: JWEditor) {
         this.editor = editor;
+        this.defaultContext = {
+            range: this.editor.selection.range,
+        };
     }
 
     //--------------------------------------------------------------------------
@@ -23,7 +25,7 @@ export class ContextManager {
      * Commands with more specificity will have priority.  If there is multiples
      * commands with the same specificity, the last defined will be retured.
      *
-     * The context is the `vDocument.selection.range.start.ancestors()`.
+     * The context is the `editor.selection.range.start.ancestors()`.
      *
      * Specificity is defined with:
      * - `lvl2`: if the last predicate of a command "a"'s selector is deeper in
@@ -106,11 +108,6 @@ export class ContextManager {
         let matchingCommand: CommandDefinition;
         let matchingContext: CommandContext;
 
-        let ancestors: VNode[] = [];
-        if (this.editor.vDocument) {
-            ancestors = this.editor.vDocument.selection.range.start.ancestors();
-        }
-        const maximumDepth = ancestors.length - 1;
         for (const command of commands) {
             const context = { ...this.defaultContext, ...command.context, ...paramsContext };
             let firstMatchDepth = -1;

@@ -35,7 +35,7 @@ export class Dom extends JWPlugin {
             (node === selection.anchorNode || node.contains(selection.anchorNode)) &&
             (node === selection.focusNode || node.contains(selection.focusNode))
         ) {
-            this.editor.vDocument.selection.set(this.parseSelection(selection));
+            this.editor.selection.set(this.parseSelection(selection));
         }
 
         this.domMap.clear();
@@ -210,7 +210,7 @@ export class Dom extends JWPlugin {
             for (const renderedChild of rendering) {
                 this.editor.editable.appendChild(renderedChild);
             }
-            this.renderSelection(this.editor.vDocument.selection, this.editor.editable);
+            this.renderSelection(this.editor.selection, this.editor.editable);
         }
     }
 

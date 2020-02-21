@@ -41,6 +41,7 @@ export class JWEditor {
     contextManager: ContextManager;
     plugins: JWPlugin[];
     vDocument: VDocument;
+    selection = new VSelection();
     autoFocus = false;
     keymaps = {
         default: new Keymap(),
@@ -98,11 +99,8 @@ export class JWEditor {
         }
         this.vDocument = new VDocument(root);
 
-        if (
-            this.autoFocus &&
-            (!this.vDocument.selection.anchor.parent || !this.vDocument.selection.focus.parent)
-        ) {
-            this.vDocument.selection.setAt(this.vDocument.root);
+        if (this.autoFocus && (!this.selection.anchor.parent || !this.selection.focus.parent)) {
+            this.selection.setAt(this.vDocument.root);
         }
 
         // Deep clone the given editable node in order to break free of any

@@ -154,10 +154,10 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      * @returns {string}
      */
     _getNodeRepr(node: VNode): string {
-        if (node === this.env.editor.vDocument.selection.anchor) {
+        if (node === this.env.editor.selection.anchor) {
             return ANCHOR_CHAR;
         }
-        if (node === this.env.editor.vDocument.selection.focus) {
+        if (node === this.env.editor.selection.focus) {
             return FOCUS_CHAR;
         }
         if (node.name) {
@@ -170,12 +170,12 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
      */
     _getSelectionMarkersAncestors(): Set<number> {
         const selectionMarkersAncestors = new Set<number>();
-        let ancestor = this.env.editor.vDocument.selection.anchor.parent;
+        let ancestor = this.env.editor.selection.anchor.parent;
         while (ancestor) {
             selectionMarkersAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
         }
-        ancestor = this.env.editor.vDocument.selection.focus.parent;
+        ancestor = this.env.editor.selection.focus.parent;
         while (ancestor) {
             selectionMarkersAncestors.add(ancestor.id);
             ancestor = ancestor.parent;
