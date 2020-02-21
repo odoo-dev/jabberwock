@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import JWEditor from '../src/JWEditor';
 import * as sinon from 'sinon';
-import { Dispatcher, CommandDefinition } from '../src/Dispatcher';
+import { Dispatcher, CommandDefinition, CommandParams } from '../src/Dispatcher';
 
 describe('utils', () => {
     describe('Dispatcher', () => {
@@ -14,9 +14,14 @@ describe('utils', () => {
                     handler: callback,
                 };
                 dispatcher.registerCommand('myCommand', command);
-                await dispatcher.dispatch('myCommand', { arrayArg: ['argOne', 'argTwo'] });
+                await dispatcher.dispatch('myCommand', {
+                    arrayArg: ['argOne', 'argTwo'],
+                } as CommandParams);
                 expect(callback.callCount).to.eql(1);
-                expect(callback.args[0][0]).to.eql({ arrayArg: ['argOne', 'argTwo'] });
+                expect(callback.args[0][0]).to.eql({
+                    ...{ arrayArg: ['argOne', 'argTwo'] },
+                    ...{ context: editor.contextManager.defaultContext },
+                });
             });
             it('dispatch an event without argument', async () => {
                 const callback = sinon.fake();
@@ -28,7 +33,9 @@ describe('utils', () => {
                 dispatcher.registerCommand('myCommand', command);
                 await dispatcher.dispatch('myCommand');
                 expect(callback.callCount).to.eql(1);
-                expect(callback.args[0][0]).to.eql({});
+                expect(callback.args[0][0]).to.eql({
+                    context: editor.contextManager.defaultContext,
+                });
             });
             it('dispatch an event that trigger last callbacks', async () => {
                 const callbackCommand = sinon.fake();

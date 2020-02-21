@@ -1,5 +1,5 @@
 import { BoundCommand, Keymap } from './Keymap';
-import { Dispatcher, CommandIdentifier, CommandArgs } from './Dispatcher';
+import { Dispatcher, CommandIdentifier } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin } from './JWPlugin';
 import { VDocument } from './VDocument';
@@ -11,8 +11,7 @@ import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager } from './ContextManager';
-
-export type CommandHook = (args: CommandArgs, commandId: string) => void;
+import { VSelection } from './VSelection';
 
 export enum Platform {
     MAC = 'mac',
@@ -48,7 +47,6 @@ export class JWEditor {
         user: new Keymap(),
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
-    commandHooks: Record<CommandIdentifier, CommandHook[]> = {};
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
     createBaseContainer: () => VNode = () => new VElement('P');
@@ -185,7 +183,7 @@ export class JWEditor {
             });
             // Register the hooks of this plugin.
             for (const [id, hook] of Object.entries(plugin.commandHooks)) {
-                this.registerCommandHook(id, hook);
+                this.dispatcher.registerCommandHook(id, hook);
             }
             // register the shortcuts for this plugin.
             if (plugin.shortcuts) {
@@ -256,31 +254,13 @@ export class JWEditor {
     }
 
     /**
-     * Register a callback that will be executed for each `execCommand` call.
-     *
-     * @param hook The function that will be executed.
-     */
-    registerCommandHook(id: CommandIdentifier, hook?: CommandHook): void {
-        if (!this.commandHooks[id]) {
-            this.commandHooks[id] = [];
-        }
-        this.commandHooks[id].push(hook);
-    }
-
-    /**
      * Execute the given command.
      *
      * @param id name identifier of the command to execute
      * @param args arguments object of the command to execute
      */
-    async execCommand(id: CommandIdentifier, args?: CommandArgs): Promise<void> {
+    async execCommand(id: CommandIdentifier, args = {}): Promise<void> {
         await this.dispatcher.dispatch(id, args);
-
-        const hooks = this.commandHooks[id] || [];
-        const globalHooks = this.commandHooks['*'] || [];
-        for (const hookCallback of [...hooks, ...globalHooks]) {
-            await hookCallback(args, id);
-        }
     }
 
     /**

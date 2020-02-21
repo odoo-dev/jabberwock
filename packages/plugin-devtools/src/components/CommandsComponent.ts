@@ -1,5 +1,5 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { CommandIdentifier, CommandArgs, CommandDefinition } from '../../../core/src/Dispatcher';
+import { CommandIdentifier, CommandParams, CommandDefinition } from '../../../core/src/Dispatcher';
 
 interface CommandsState {
     currentTab: string;
@@ -10,7 +10,7 @@ interface CommandsState {
 }
 interface CommandsProps {
     // Stack of all commands executed since init.
-    commands: Array<[CommandIdentifier, CommandArgs]>;
+    commands: Array<[CommandIdentifier, CommandParams]>;
 }
 
 export class CommandsComponent extends OwlUIComponent<CommandsProps> {

@@ -1,10 +1,12 @@
 import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { CommandDefinition } from '../src/Dispatcher';
+import { CommandDefinition, CommandParams, CommandContext } from '../src/Dispatcher';
 import { expect } from 'chai';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { VNode } from '../src/VNodes/VNode';
+import { VRange } from '../src/VRange';
+import { VSelection } from '../src/VSelection';
 
 describe('core', () => {
     describe('ContextManager', () => {
@@ -26,8 +28,12 @@ describe('core', () => {
                             },
                         ];
 
-                        const matchedCommand = editor.contextManager.match(commands);
-                        expect(matchedCommand).to.equal(commands[0]);
+                        const result = editor.contextManager.match(commands);
+                        const [matchedCommand, computedContext] = result;
+                        expect(matchedCommand).to.deep.equal(commands[0]);
+                        expect(computedContext).to.deep.equal({
+                            range: editor.selection.range,
+                        });
                     },
                 });
             });
@@ -48,8 +54,12 @@ describe('core', () => {
                             },
                         ];
 
-                        const matchedCommand = editor.contextManager.match(commands);
-                        expect(matchedCommand).to.equal(commands[1]);
+                        const result = editor.contextManager.match(commands);
+                        const [matchedCommand, computedContext] = result;
+                        expect(matchedCommand).to.deep.equal(commands[1]);
+                        expect(computedContext).to.deep.equal({
+                            range: editor.selection.range,
+                        });
                     },
                 });
             });
@@ -76,8 +86,12 @@ describe('core', () => {
                             },
                         ];
 
-                        const matchedCommand = editor.contextManager.match(commands);
-                        expect(matchedCommand).to.equal(commands[1]);
+                        const result = editor.contextManager.match(commands);
+                        const [matchedCommand, computedContext] = result;
+                        expect(matchedCommand).to.deep.equal(commands[1]);
+                        expect(computedContext).to.deep.equal({
+                            range: editor.selection.range,
+                        });
                     },
                 });
             });
@@ -99,8 +113,12 @@ describe('core', () => {
                             },
                         ];
 
-                        const matchedCommand = editor.contextManager.match(commands);
-                        expect(matchedCommand).to.equal(commands[0]);
+                        const result = editor.contextManager.match(commands);
+                        const [matchedCommand, computedContext] = result;
+                        expect(matchedCommand).to.deep.equal(commands[0]);
+                        expect(computedContext).to.deep.equal({
+                            range: editor.selection.range,
+                        });
                     },
                 });
             });
@@ -133,8 +151,12 @@ describe('core', () => {
                             },
                         ];
 
-                        const matchedCommand = editor.contextManager.match(commands);
-                        expect(matchedCommand).to.equal(commands[1]);
+                        const result = editor.contextManager.match(commands);
+                        const [matchedCommand, computedContext] = result;
+                        expect(matchedCommand).to.deep.equal(commands[1]);
+                        expect(computedContext).to.deep.equal({
+                            range: editor.selection.range,
+                        });
                     },
                 });
             });
@@ -156,8 +178,56 @@ describe('core', () => {
                             },
                         ];
 
-                        const matchedCommand = editor.contextManager.match(commands);
-                        expect(matchedCommand).to.equal(undefined);
+                        const result = editor.contextManager.match(commands);
+                        const [matchedCommand, matchedContext] = result;
+                        expect(matchedCommand).to.be.undefined;
+                        expect(matchedContext).to.be.undefined;
+                    },
+                });
+            });
+            it('should match according to specified context', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<div><div><p>cd</p></div></div>' +
+                        '<ul><li></li><li><ul><li><p>c</p></li></ul></li><li><div>[]</div></li></ul>',
+                    stepFunction: (editor: BasicEditor) => {
+                        const callback = (): void => {};
+                        const newSelection = new VSelection();
+                        newSelection.setAt(editor.vDocument.root);
+                        const commands: CommandDefinition[] = [
+                            {
+                                title: 'paragraph',
+                                selector: [ParagraphNode],
+                                context: {
+                                    range: newSelection.range,
+                                },
+                                handler: callback,
+                            },
+                            {
+                                title: 'list',
+                                selector: [ListNode],
+                                handler: callback,
+                            },
+                        ];
+
+                        // Default context is override by the command's context.
+                        const result1 = editor.contextManager.match(commands);
+                        const [matchedCommand1, computedContext1] = result1;
+                        expect(matchedCommand1).to.deep.equal(commands[0]);
+                        expect(computedContext1).to.deep.equal({
+                            range: newSelection.range,
+                        });
+
+                        // Which itself can still be overriden by the caller.
+                        const context: CommandContext = {
+                            range: editor.selection.range,
+                        };
+                        const result2 = editor.contextManager.match(commands, context);
+                        const [matchedCommand2, computedContext2] = result2;
+                        expect(matchedCommand2).to.deep.equal(commands[1]);
+                        expect(computedContext2).to.deep.equal({
+                            range: editor.selection.range,
+                        });
                     },
                 });
             });

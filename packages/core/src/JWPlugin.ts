@@ -1,5 +1,5 @@
-import JWEditor, { CommandHook } from './JWEditor';
-import { CommandIdentifier, CommandDefinition } from './Dispatcher';
+import JWEditor from './JWEditor';
+import { CommandIdentifier, CommandDefinition, CommandHook } from './Dispatcher';
 import { Shortcut } from './JWEditor';
 import { RendererConstructor, RenderingEngineConstructor } from './RenderingEngine';
 import { ParserConstructor, ParsingEngineConstructor } from './ParsingEngine';

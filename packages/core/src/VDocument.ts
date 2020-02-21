@@ -18,7 +18,7 @@ export class VDocument {
     /**
      * Insert a paragraph break.
      */
-    insertParagraphBreak(range = this.selection.range): void {
+    insertParagraphBreak(range): void {
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
@@ -30,7 +30,7 @@ export class VDocument {
      *
      * @param node
      */
-    insert(node: VNode, range = this.selection.range): void {
+    insert(node: VNode, range): void {
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
