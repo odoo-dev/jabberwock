@@ -6,8 +6,8 @@ export type CommandIdentifier = string;
 export interface CommandDefinition {
     title?: string;
     description?: string;
+    selector?: Predicate<VNode | boolean>[];
     handler: CommandHandler;
-    predicates?: Predicate<VNode | boolean>[];
 }
 export type CommandHandler = (args: CommandArgs) => void;
 export interface CommandArgs {
