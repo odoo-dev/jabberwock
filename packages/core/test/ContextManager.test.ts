@@ -17,7 +17,7 @@ describe('core', () => {
                         const commands: CommandDefinition[] = [
                             {
                                 title: 'list',
-                                predicates: [ListNode],
+                                selector: [ListNode],
                                 handler: callback,
                             },
                             {
@@ -39,7 +39,7 @@ describe('core', () => {
                         const commands: CommandDefinition[] = [
                             {
                                 title: 'list',
-                                predicates: [ListNode],
+                                selector: [ListNode],
                                 handler: callback,
                             },
                             {
@@ -61,17 +61,17 @@ describe('core', () => {
                         const commands: CommandDefinition[] = [
                             {
                                 title: 'list1',
-                                predicates: [ListNode, ListNode],
+                                selector: [ListNode, ListNode],
                                 handler: callback,
                             },
                             {
                                 title: 'list2',
-                                predicates: [ListNode, ListNode],
+                                selector: [ListNode, ListNode],
                                 handler: callback,
                             },
                             {
                                 title: 'list3',
-                                predicates: [ListNode],
+                                selector: [ListNode],
                                 handler: callback,
                             },
                         ];
@@ -89,12 +89,12 @@ describe('core', () => {
                         const commands: CommandDefinition[] = [
                             {
                                 title: 'paragraph',
-                                predicates: [ParagraphNode],
+                                selector: [ParagraphNode],
                                 handler: callback,
                             },
                             {
                                 title: 'list',
-                                predicates: [ListNode],
+                                selector: [ListNode],
                                 handler: callback,
                             },
                         ];
@@ -118,17 +118,17 @@ describe('core', () => {
                         const commands: CommandDefinition[] = [
                             {
                                 title: 'list1',
-                                predicates: [isOl, isUl, ParagraphNode],
+                                selector: [isOl, isUl, ParagraphNode],
                                 handler: callback,
                             },
                             {
                                 title: 'list2',
-                                predicates: [isUl, isOl, ParagraphNode],
+                                selector: [isUl, isOl, ParagraphNode],
                                 handler: callback,
                             },
                             {
                                 title: 'list3',
-                                predicates: [isOl, isUl, ParagraphNode],
+                                selector: [isOl, isUl, ParagraphNode],
                                 handler: callback,
                             },
                         ];
@@ -138,7 +138,7 @@ describe('core', () => {
                     },
                 });
             });
-            it('should match no command when no predicates applies', async () => {
+            it('should match no command when no predicates apply', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<ul><li><p>ab</p></li></ul><p>[]c</p>',
                     stepFunction: (editor: BasicEditor) => {
@@ -146,12 +146,12 @@ describe('core', () => {
                         const commands: CommandDefinition[] = [
                             {
                                 title: 'list1',
-                                predicates: [ListNode, ListNode],
+                                selector: [ListNode, ListNode],
                                 handler: callback,
                             },
                             {
                                 title: 'list2',
-                                predicates: [ListNode],
+                                selector: [ListNode],
                                 handler: callback,
                             },
                         ];

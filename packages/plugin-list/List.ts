@@ -27,12 +27,12 @@ export class List extends JWPlugin {
         },
         indent: {
             title: 'Indent list items',
-            predicates: [ListNode],
+            selector: [ListNode],
             handler: this.indent.bind(this),
         },
         outdent: {
             title: 'Outdent list items',
-            predicates: [ListNode],
+            selector: [ListNode],
             handler: this.outdent.bind(this),
         },
     };

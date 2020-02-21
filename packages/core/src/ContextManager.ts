@@ -25,34 +25,34 @@ export class ContextManager {
      * The context is the `vDocument.selection.range.start.ancestors()`.
      *
      * Specificity is defined with:
-     * - `lvl2`: if the last predicate of a command "a" is deeper in the tree
-     *   than the last predicate of a command "b"; command "a" have more
-     *   specificity
+     * - `lvl2`: if the last predicate of a command "a"'s selector is deeper in
+     *   the tree than the last predicate of a command "b"'s selector; command
+     *   "a" have more specificity
      * - `lvl1`: if two or more commands have the same `lvl2` specificity; the
-     *   command with predicates with higher length will have more specificity
-     * - `lvl0`: if the command has no predicates, there is no specificity
+     *   command with the longest selector will have more specificity
+     * - `lvl0`: if the command has no selector, there is no specificity
      *
      * For example:
      * ```typescript
      * const commandUlP: CommandDefinition = {
-     *     predicates: [isUl, isP],
-     *     callback: () =>{},
+     *     selector: [isUl, isP],
+     *     handler: () =>{},
      * }
      * const commandP: CommandDefinition = {
-     *     predicates: [isP],
-     *     callback: () =>{},
+     *     selector: [isP],
+     *     handler: () =>{},
      * }
      * const commandUl: CommandDefinition = {
-     *     predicates: [isUl],
-     *     callback: () =>{},
+     *     selector: [isUl],
+     *     handler: () =>{},
      * }
      * const commandImage: CommandDefinition = {
-     *     predicates: [isImage],
-     *     callback: () =>{},
+     *     selector: [isImage],
+     *     handler: () =>{},
      * }
      * const commandAny: CommandDefinition = {
-     *     predicates: [],
-     *     callback: () =>{},
+     *     selector: [],
+     *     handler: () =>{},
      * }
      * dispatcher.registerCommand('command', commandUlP)
      * dispatcher.registerCommand('command', commandP)
@@ -79,17 +79,17 @@ export class ContextManager {
      *
      * The priority is calculated with "`lvl2`,`lvl1`".
      * - `commandUlP` specificity: 2,2 `lvl2`: 2 means the last predicate
-     *   (`isP`) is found at index 2 in ancestors `lvl1`: 2 means there is 2
-     *   predicates in `commandUlP`
+     *   (`isP`) is found at depth 2 in ancestors `lvl1`: 2 means there are 2
+     *   predicates in `commandUlP`'s selector
      * - `commandP` specificity: 2,1 `lvl2`: 2 means the last predicate (`isP`)
-     *   is found at index 2 in ancestors `lvl1`: 1 means there is 1 predicates
-     *   in `commandP`
+     *   is found at depth 2 in ancestors `lvl1`: 1 means there is 1 predicate
+     *   in `commandP`'s selector
      * - `commandUl` specificity: 0,1 `lvl0`: 0 means the last predicate
-     *   (`isUl`) is found at index 0 in ancestors `lvl1`: 1 means there is 1
-     *   predicates in `commandP`
-     * - `commandAny` specificity: -1,0 No predicates means no specificity.
-     *   `lvl0`: -1 means it has no index.  `lvl1`: 0 means there is 0
-     *   predicates in `commandAny`
+     *   (`isUl`) is found at depth 0 in ancestors `lvl1`: 1 means there is 1
+     *   predicate in `commandP`'s selector
+     * - `commandAny` specificity: -1,0 No selector means no specificity.
+     *   `lvl0`: -1 means it has no depth.  `lvl1`: 0 means there is 0
+     *   predicates in `commandAny`'s selector
      *
      * The result will be `commandUlP` because it has the highest specificity.
      *
@@ -97,7 +97,7 @@ export class ContextManager {
      */
     match(commands: CommandDefinition[]): CommandDefinition | undefined {
         let currentMaxFirstMatchDepth = -1;
-        let currentMaxLength = 0;
+        let currentMaxSelectorLength = 0;
         let currentCommand;
 
         let ancestors: VNode[] = [];
@@ -106,14 +106,14 @@ export class ContextManager {
         }
         const maximumDepth = ancestors.length - 1;
         for (const command of commands) {
-            const predicates = command.predicates || [];
+            const selector = command.selector || [];
             let firstMatchDepth = -1;
             let ancestorIndex = 0;
             let match;
-            if (predicates.length === 0) {
+            if (selector.length === 0) {
                 match = true;
             } else {
-                for (const predicate of [...predicates].reverse()) {
+                for (const predicate of [...selector].reverse()) {
                     match = false;
                     while (!match && ancestorIndex < ancestors.length) {
                         if (ancestors[ancestorIndex].test(predicate)) {
@@ -135,10 +135,10 @@ export class ContextManager {
             if (
                 match &&
                 currentMaxFirstMatchDepth <= firstMatchDepth &&
-                currentMaxLength <= predicates.length
+                currentMaxSelectorLength <= selector.length
             ) {
                 currentMaxFirstMatchDepth = firstMatchDepth;
-                currentMaxLength = predicates.length;
+                currentMaxSelectorLength = selector.length;
                 currentCommand = command;
             }
         }
