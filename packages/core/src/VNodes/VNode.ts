@@ -7,6 +7,8 @@ export enum RelativePosition {
     INSIDE = 'INSIDE',
 }
 
+export type Attributes = Record<string, string | Record<string, string>>;
+
 export enum VNodeType {
     NODE = 'node',
     MARKER = 'markerNode',
@@ -36,7 +38,7 @@ export class VNode {
     readonly type: VNodeType;
     readonly id = id;
     parent: VNode;
-    attributes: Record<string, string | Record<string, string>> = {};
+    attributes: Attributes = {};
     children: Array<VNode> & {
         (predicate?: Predicate): VNode[];
         <T extends VNode>(predicate?: Constructor<T>): T[];

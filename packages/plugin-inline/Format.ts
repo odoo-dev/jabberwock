@@ -1,5 +1,6 @@
 import { deepEqualObjects, Constructor } from '../utils/src/utils';
 import { InlineNode } from './InlineNode';
+import { Attributes } from '../core/src/VNodes/VNode';
 
 interface FormatConstructor {
     new <T extends Constructor<Format>>(...args: ConstructorParameters<T>): this;
@@ -9,7 +10,7 @@ export interface Format {
 }
 export class Format {
     htmlTag: string; // TODO: remove this reference to DOM.
-    attributes: Record<string, string> = {};
+    attributes: Attributes = {};
     constructor(htmlTag?: string) {
         this.htmlTag = htmlTag;
     }
@@ -31,7 +32,10 @@ export class Format {
     render(): Node {
         const node = document.createElement(this.htmlTag);
         for (const name of Object.keys(this.attributes)) {
-            node.setAttribute(name, this.attributes[name]);
+            const attribute = this.attributes[name];
+            if (typeof attribute === 'string') {
+                node.setAttribute(name, attribute);
+            }
         }
         return node;
     }

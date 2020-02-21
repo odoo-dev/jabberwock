@@ -1,8 +1,10 @@
 import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { ImageNode } from './ImageNode';
+import { DomRenderingEngine } from '../plugin-dom/DomRenderingEngine';
 
 export class ImageDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
+    engine: DomRenderingEngine;
     predicate = ImageNode;
 
     /**
@@ -10,12 +12,7 @@ export class ImageDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: ImageNode): Promise<Node[]> {
         const image = document.createElement('img');
-        for (const name of Object.keys(node.attributes)) {
-            const value = node.attributes[name];
-            if (typeof value === 'string') {
-                image.setAttribute(name, value);
-            }
-        }
+        this.engine.renderAttributesTo(node.attributes, image);
         return [image];
     }
 }

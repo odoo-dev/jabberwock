@@ -6,7 +6,7 @@ export class LinkFormat extends Format {
         this.url = url;
     }
     get url(): string {
-        return this.attributes.href;
+        return this.attributes.href as string;
     }
     set url(url: string) {
         this.attributes.href = url;
