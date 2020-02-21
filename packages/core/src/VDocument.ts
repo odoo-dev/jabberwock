@@ -1,11 +1,8 @@
 import { VNode } from './VNodes/VNode';
-import { VRange } from './VRange';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { VSelection } from './VSelection';
 
 export class VDocument {
     root: VNode;
-    selection = new VSelection();
 
     constructor(root: FragmentNode) {
         this.root = root;
