@@ -772,7 +772,9 @@ describePlugin(Indent, testEditor => {
                     const dNode = editor.vDocument.root.next(node => node.name === 'd');
                     await withRange(VRange.selecting(bNode, dNode), async range => {
                         const indentParams: IndentParams = {
-                            range: range,
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('indent', indentParams);
                     });
@@ -856,7 +858,9 @@ describePlugin(Indent, testEditor => {
                     const dNode = editor.vDocument.root.next(node => node.name === 'd');
                     await withRange(VRange.selecting(bNode, dNode), async range => {
                         const indentParams: IndentParams = {
-                            range: range,
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('outdent', indentParams);
                     });

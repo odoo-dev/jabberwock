@@ -1,18 +1,14 @@
 import { JWPlugin } from './JWPlugin';
 import JWEditor from './JWEditor';
+import { CommandParams } from './Dispatcher';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
-import { VRange } from './VRange';
 
-export interface RangeParams {
-    range?: VRange;
-}
+export type InsertParagraphBreakParams = CommandParams;
+export type DeleteBackwardParams = CommandParams;
+export type DeleteForwardParams = CommandParams;
 
-export type InsertParagraphBreakParams = RangeParams;
-export type DeleteBackwardParams = RangeParams;
-export type DeleteForwardParams = RangeParams;
-
-export interface InsertParams extends RangeParams {
+export interface InsertParams extends CommandParams {
     node: VNode;
 }
 
@@ -55,7 +51,7 @@ export class CorePlugin extends JWPlugin {
      * Insert a paragraph break.
      */
     insertParagraphBreak(params: InsertParagraphBreakParams): void {
-        this.editor.vDocument.insertParagraphBreak(params.range);
+        this.editor.vDocument.insertParagraphBreak(params.context.range);
     }
     /**
      * Insert a VNode at the current position of the selection.
@@ -63,13 +59,13 @@ export class CorePlugin extends JWPlugin {
      * @param params
      */
     insert(params: InsertParams): void {
-        this.editor.vDocument.insert(params.node, params.range);
+        this.editor.vDocument.insert(params.node, params.context.range);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
      */
     deleteBackward(params: DeleteForwardParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         if (range.isCollapsed()) {
             // Basic case: remove the node directly preceding the range.
             const previousSibling = range.start.previousSibling();
@@ -93,7 +89,7 @@ export class CorePlugin extends JWPlugin {
      * Delete in the forward direction (delete key expected behavior).
      */
     deleteForward(params: DeleteForwardParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         if (range.isCollapsed()) {
             // Basic case: remove the node directly following the range.
             const nextSibling = range.end.nextSibling();

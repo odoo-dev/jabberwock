@@ -1,6 +1,6 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { CharNode } from './CharNode';
-import { RangeParams } from '../core/src/CorePlugin';
+import { CommandParams } from '../core/src/Dispatcher';
 import { FormatParams, Inline } from '../plugin-inline/Inline';
 import { CharFormatDomRenderer } from './CharFormatDomRenderer';
 import { CharDomRenderer } from './CharDomRenderer';
@@ -9,7 +9,7 @@ import { Format } from '../plugin-inline/Format';
 import { InlineNode } from '../plugin-inline/InlineNode';
 import { VNode } from '../core/src/VNodes/VNode';
 
-export interface InsertTextParams extends RangeParams {
+export interface InsertTextParams extends CommandParams {
     text: string;
 }
 
@@ -49,7 +49,7 @@ export class Char extends JWPlugin {
      * @param params
      */
     insertText(params: InsertTextParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         const text = params.text;
         const formats = this.getCurrentFormats();
         // Remove the contents of the range if needed.
@@ -71,7 +71,7 @@ export class Char extends JWPlugin {
      * @param params
      */
     toggleFormat(params: FormatParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         const FormatClass = params.FormatClass;
 
         if (!range.isCollapsed()) return;
@@ -89,7 +89,7 @@ export class Char extends JWPlugin {
     /**
      * Get the format for the next insertion.
      */
-    getCurrentFormats(range = this.editor.vDocument.selection.range): Format[] {
+    getCurrentFormats(range = this.editor.selection.range): Format[] {
         if (this.formatCache) {
             return this.formatCache;
         }

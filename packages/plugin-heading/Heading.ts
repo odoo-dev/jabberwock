@@ -1,11 +1,11 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { HeadingDomParser } from './HeadingDomParser';
 import { HeadingNode } from './HeadingNode';
-import { RangeParams } from '../core/src/CorePlugin';
+import { CommandParams } from '../core/src/Dispatcher';
 import { distinct } from '../utils/src/utils';
 import { VNode, isLeaf } from '../core/src/VNodes/VNode';
 
-export interface HeadingParams extends RangeParams {
+export interface HeadingParams extends CommandParams {
     level: number;
 }
 
@@ -34,7 +34,7 @@ export class Heading extends JWPlugin {
      * @param params
      */
     applyHeadingStyle(params: HeadingParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         let nodesToConvert: VNode[];
         if (range.isCollapsed()) {
             nodesToConvert = [range.start.parent];

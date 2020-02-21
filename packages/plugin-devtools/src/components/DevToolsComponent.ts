@@ -1,7 +1,7 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { CommandIdentifier, CommandArgs } from '../../../core/src/Dispatcher';
+import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -9,7 +9,7 @@ interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     currentTab: string; // Name of the current tab
-    commands: Array<[CommandIdentifier, CommandArgs]>;
+    commands: Array<[CommandIdentifier, CommandParams]>;
 }
 
 export class DevToolsComponent extends OwlUIComponent<{}> {
@@ -26,7 +26,7 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
     _heightOnLastMousedown: number;
 
     async willStart(): Promise<void> {
-        this.env.editor.registerCommandHook('*', this.refresh.bind(this));
+        this.env.editor.dispatcher.registerCommandHook('*', this.refresh.bind(this));
         return super.willStart();
     }
 
@@ -45,8 +45,8 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
      * Refresh this component with respect to the recent dispatching of the
      * given command with the given arguments.
      */
-    refresh(args: CommandArgs, id: CommandIdentifier): void {
-        this.state.commands.push([id, args]);
+    refresh(params: CommandParams, id: CommandIdentifier): void {
+        this.state.commands.push([id, params]);
         this.render();
     }
     /**

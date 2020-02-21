@@ -1,11 +1,11 @@
-import { CommandIdentifier, CommandArgs } from './Dispatcher';
+import { CommandIdentifier } from './Dispatcher';
 
 export interface BoundCommand {
     /**
      * An undefined `commandId` effectively unbinds the shortcut.
      */
     readonly commandId: CommandIdentifier | undefined;
-    readonly commandArgs?: CommandArgs;
+    readonly commandArgs?: {};
 }
 
 interface ModifiedShortcut {
@@ -103,11 +103,7 @@ export class Keymap {
      * @param commandId
      * @param commandArgs
      */
-    bindShortcut(
-        patternString: string,
-        commandId?: CommandIdentifier,
-        commandArgs?: CommandArgs,
-    ): void {
+    bindShortcut(patternString: string, commandId?: CommandIdentifier, commandArgs?): void {
         this.shortcuts.unshift({
             pattern: this.parsePattern(patternString),
             boundCommand: { commandId, commandArgs },

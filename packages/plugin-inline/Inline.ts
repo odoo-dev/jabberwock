@@ -1,10 +1,10 @@
 import { JWPlugin } from '../core/src/JWPlugin';
-import { RangeParams } from '../core/src/CorePlugin';
+import { CommandParams } from '../core/src/Dispatcher';
 import { Format } from './Format';
 import { InlineNode } from './InlineNode';
 import { Constructor } from '../utils/src/utils';
 
-export interface FormatParams extends RangeParams {
+export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 
@@ -25,7 +25,7 @@ export class Inline extends JWPlugin {
      * @param params
      */
     toggleFormat(params: FormatParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         const FormatClass = params.FormatClass;
 
         if (range.isCollapsed()) return;

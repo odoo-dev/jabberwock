@@ -7,7 +7,8 @@ describe('VRange', () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<v>abc<w>de[f<x>ghi<y>jkl<z>mno</z>pqr</y>stu</x>vw</w>xy]z</v>',
                 stepFunction: async (editor: BasicEditor) => {
-                    const nodes = editor.vDocument.selection.range.split();
+                    editor.dispatcher.registerCommand('refresh', { handler: () => {} });
+                    const nodes = editor.selection.range.split();
                     editor.vDocument.root.lastChild().after(nodes[0]);
                     await editor.execCommand('refresh');
                 },

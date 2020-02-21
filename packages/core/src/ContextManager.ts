@@ -1,9 +1,10 @@
 import { VNode } from './VNodes/VNode';
-import { CommandDefinition } from './Dispatcher';
+import { CommandDefinition, CommandContext } from './Dispatcher';
 import JWEditor from './JWEditor';
 
 export class ContextManager {
     editor: JWEditor;
+    defaultContext: CommandContext;
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -93,12 +94,17 @@ export class ContextManager {
      *
      * The result will be `commandUlP` because it has the highest specificity.
      *
-     * @param commandId
+     * @param commands
+     * @param paramsContext
      */
-    match(commands: CommandDefinition[]): CommandDefinition | undefined {
-        let currentMaxFirstMatchDepth = -1;
-        let currentMaxSelectorLength = 0;
-        let currentCommand;
+    match(
+        commands: CommandDefinition[],
+        paramsContext?: CommandContext,
+    ): [CommandDefinition, CommandContext] | [undefined, undefined] {
+        let maxFirstMatchDepth = -1;
+        let maxSelectorLength = 0;
+        let matchingCommand: CommandDefinition;
+        let matchingContext: CommandContext;
 
         let ancestors: VNode[] = [];
         if (this.editor.vDocument) {
@@ -106,13 +112,17 @@ export class ContextManager {
         }
         const maximumDepth = ancestors.length - 1;
         for (const command of commands) {
-            const selector = command.selector || [];
+            const context = { ...this.defaultContext, ...command.context, ...paramsContext };
             let firstMatchDepth = -1;
             let ancestorIndex = 0;
             let match;
+            const selector = command.selector || [];
             if (selector.length === 0) {
                 match = true;
             } else {
+                const range = context.range;
+                const ancestors = range.start.ancestors();
+                const maximumDepth = ancestors.length - 1;
                 for (const predicate of [...selector].reverse()) {
                     match = false;
                     while (!match && ancestorIndex < ancestors.length) {
@@ -134,14 +144,15 @@ export class ContextManager {
 
             if (
                 match &&
-                currentMaxFirstMatchDepth <= firstMatchDepth &&
-                currentMaxSelectorLength <= selector.length
+                maxFirstMatchDepth <= firstMatchDepth &&
+                maxSelectorLength <= selector.length
             ) {
-                currentMaxFirstMatchDepth = firstMatchDepth;
-                currentMaxSelectorLength = selector.length;
-                currentCommand = command;
+                maxFirstMatchDepth = firstMatchDepth;
+                maxSelectorLength = selector.length;
+                matchingCommand = command;
+                matchingContext = context;
             }
         }
-        return currentCommand;
+        return [matchingCommand, matchingContext];
     }
 }

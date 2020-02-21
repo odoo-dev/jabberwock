@@ -1462,8 +1462,10 @@ describe('VDocument', () => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     await withRange(VRange.at(aNode), async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });
@@ -1478,8 +1480,10 @@ describe('VDocument', () => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     await withRange(VRange.selecting(aNode, aNode), async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });
@@ -1498,8 +1502,10 @@ describe('VDocument', () => {
                     ];
                     await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });
@@ -1518,8 +1524,10 @@ describe('VDocument', () => {
                     ];
                     await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });
@@ -1538,8 +1546,10 @@ describe('VDocument', () => {
                     ];
                     await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });
@@ -1559,8 +1569,10 @@ describe('VDocument', () => {
                     ];
                     await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });
@@ -1580,8 +1592,10 @@ describe('VDocument', () => {
                     ];
                     await withRange(rangeParams, async range => {
                         const insertParams: InsertTextParams = {
-                            range: range,
                             text: 'c',
+                            context: {
+                                range: range,
+                            },
                         };
                         await editor.execCommand('insertText', insertParams);
                     });

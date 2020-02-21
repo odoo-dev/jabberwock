@@ -1,7 +1,7 @@
 import { JWPlugin } from '../core/src/JWPlugin';
 import { ListNode, ListType } from './ListNode';
 import { VNode } from '../core/src/VNodes/VNode';
-import { RangeParams } from '../core/src/CorePlugin';
+import { CommandParams } from '../core/src/Dispatcher';
 import { ListDomRenderer } from './ListDomRenderer';
 import { ListItemDomRenderer } from './ListItemDomRenderer';
 import { ListDomParser } from './ListDomParser';
@@ -9,7 +9,7 @@ import { ListItemDomParser } from './ListItemDomParser';
 import { withRange, VRange } from '../core/src/VRange';
 import { IndentParams, OutdentParams } from '../plugin-indent/src/Indent';
 
-export interface ListParams extends RangeParams {
+export interface ListParams extends CommandParams {
     type: ListType;
 }
 
@@ -62,7 +62,7 @@ export class List extends JWPlugin {
      */
     toggleList(params: ListParams): void {
         const type = params.type;
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
 
         withRange(VRange.clone(range), range => {
             // Extend the range to cover the entirety of its containers.
@@ -131,7 +131,7 @@ export class List extends JWPlugin {
      * @param params
      */
     indent(params: IndentParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         const items = range.targetedNodes(node => ListNode.test(node.parent));
 
         // Filter out non-identable list items.
@@ -185,7 +185,7 @@ export class List extends JWPlugin {
      * @param params
      */
     outdent(params: OutdentParams): void {
-        const range = params.range || this.editor.vDocument.selection.range;
+        const range = params.context.range;
         const items = range.targetedNodes(node => ListNode.test(node.parent));
 
         // Do not outdent items of a targeted nested list, since they
