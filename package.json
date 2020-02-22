@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "webpack-dev-server",
     "build": "webpack",
-    "postinstall": "npm link owl-framework",
     "perf": "karma start --include-files test/**/*.perf.ts",
     "coverage": "karma start --coverage",
     "debug": "karma start --no-browsers --debug",
@@ -29,6 +28,7 @@
     "@types/sinon": "^7.0.13",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
+    "@odoo/owl": "^1.0.5",
     "acorn": "^7.0.0",
     "cache-loader": "^4.1.0",
     "chai": "^4.2.0",

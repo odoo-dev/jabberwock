@@ -1,7 +1,7 @@
 import { JWEditor } from '../../core/src/JWEditor';
 import { JWOwlUIPlugin } from './JWOwlUIPlugin';
-import { QWeb } from 'owl-framework';
-import { Env } from 'owl-framework/src/component/component';
+import { Env } from '@odoo/owl/dist/types/component/component';
+import { QWeb } from '@odoo/owl';
 
 export interface OwlUIEnv extends Env {
     editor: JWEditor;

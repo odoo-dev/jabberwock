@@ -20,21 +20,6 @@ npm run build
 See [package.json](./package.json)
 See the "run" script in [package.json](./package.json)
 
-### use dev tools
-1. Get permissions to access odoo/owl
-2. Somewhere in your disk:
-```bash
-git clone git@github.com:odoo/owl.git
-```
-3. In the folder where you cloned owl:
-```bash
-npm link
-```
-4. In this repository:
-```bash
-npm link owl-framework
-```
-
 ## Story
 During the dark age of the web came version 5.5 of Internet Explorer.\
 In its wake, the contentEditable attribute was born.\

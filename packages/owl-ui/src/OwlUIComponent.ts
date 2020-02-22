@@ -1,13 +1,8 @@
-import { Component } from 'owl-framework';
-import { Env } from 'owl-framework/src/component/component';
-import JWEditor from '../../core/src/JWEditor';
-import { useState } from 'owl-framework/src/hooks';
+import { Component } from '@odoo/owl';
+import { useState } from '@odoo/owl';
+import { OwlUIEnv } from './OwlUI';
 
-interface OwlUIEnv extends Env {
-    editor: JWEditor;
-}
-
-export class OwlUIComponent<Props> extends Component<OwlUIEnv, Props> {
+export class OwlUIComponent<Props> extends Component<Props, OwlUIEnv> {
     state: {};
 
     _storageKeyPrefix = 'OwlUI' + this.constructor.name + ':';
