@@ -157,28 +157,26 @@ export class VRange {
     //--------------------------------------------------------------------------
 
     /**
-     * Collapse the range. Return self.
+     * Collapse the range.
      *
      * @param [edge] range edge on which to collapse
      */
-    collapse(edge = this.start): this {
+    collapse(edge = this.start): void {
         if (edge === this.start) {
             this.setEnd(edge);
         } else if (edge === this.end) {
             this.setStart(edge);
         }
-        return this;
     }
     /**
      * Set the range's start point (in traversal order) at the given location,
      * targetting a `reference` VNode and specifying the `position` in reference
      * to that VNode ('BEFORE', 'AFTER'), like in an `xpath.
-     * Return self.
      *
      * @param reference
      * @param [position]
      */
-    setStart(reference: VNode, position = RelativePosition.BEFORE): this {
+    setStart(reference: VNode, position = RelativePosition.BEFORE): void {
         reference = reference.firstLeaf();
         if (!reference.hasChildren() && !reference.atomic) {
             reference.prepend(this.start);
@@ -191,18 +189,16 @@ export class VRange {
         } else {
             reference.before(this.start);
         }
-        return this;
     }
     /**
      * Set the range's end point (in traversal order) at the given location,
      * targetting a `reference` VNode and specifying the `position` in reference
      * to that VNode ('BEFORE', 'AFTER'), like in an `xpath.
-     * Return self.
      *
      * @param reference
      * @param [position]
      */
-    setEnd(reference: VNode, position = RelativePosition.AFTER): this {
+    setEnd(reference: VNode, position = RelativePosition.AFTER): void {
         reference = reference.lastLeaf();
         if (!reference.hasChildren() && !reference.atomic) {
             reference.append(this.end);
@@ -215,7 +211,6 @@ export class VRange {
         } else {
             reference.after(this.end);
         }
-        return this;
     }
     /**
      * Extend this range in such a way that it includes the given node.
@@ -227,7 +222,7 @@ export class VRange {
      *
      * @param targetNode The node to extend the range to.
      */
-    extendTo(targetNode: VNode): this {
+    extendTo(targetNode: VNode): void {
         let position: RelativePosition;
         if (targetNode.isBefore(this.start)) {
             targetNode = targetNode.previous();
@@ -251,7 +246,6 @@ export class VRange {
                 this.setEnd(targetNode, position);
             }
         }
-        return this;
     }
     /**
      * Split the range containers up to their common ancestor. Return all

@@ -603,72 +603,69 @@ export class VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Insert the given VNode before this VNode. Return self.
+     * Insert the given VNode before this VNode.
      *
      * @param node
      */
-    before(node: VNode): VNode {
+    before(node: VNode): void {
         if (!this.parent) {
             throw 'Cannot insert a VNode before a VNode with no parent.';
         }
-        return this.parent.insertBefore(node, this);
+        this.parent.insertBefore(node, this);
     }
     /**
-     * Insert the given VNode after this VNode. Return self.
+     * Insert the given VNode after this VNode.
      *
      * @param node
      */
-    after(node: VNode): VNode {
+    after(node: VNode): void {
         if (!this.parent) {
             throw 'Cannot insert a VNode after a VNode with no parent.';
         }
-        return this.parent.insertAfter(node, this);
+        this.parent.insertAfter(node, this);
     }
     /**
-     * Prepend a child to this node. Return self.
+     * Prepend a child to this node.
      */
-    prepend(...children: VNode[]): VNode {
+    prepend(...children: VNode[]): void {
         for (const child of children) {
             this._insertAtIndex(child, 0);
         }
-        return this;
     }
     /**
-     * Append a child to this VNode. Return self.
+     * Append a child to this VNode.
      */
-    append(...children: VNode[]): VNode {
+    append(...children: VNode[]): void {
         for (const child of children) {
             this._insertAtIndex(child, this.children.length);
         }
-        return this;
     }
     /**
      * Insert the given node before the given reference (which is a child of
-     * this VNode). Return self.
+     * this VNode).
      *
      * @param node
      * @param reference
      */
-    insertBefore(node: VNode, reference: VNode): VNode {
+    insertBefore(node: VNode, reference: VNode): void {
         const index = this.children.indexOf(reference);
         if (index < 0) {
             throw new Error('The given VNode is not a child of this VNode');
         }
-        return this._insertAtIndex(node, index);
+        this._insertAtIndex(node, index);
     }
     /**
-     * Insert the given node after the given reference (which is a child of this
-     * VNode). Return self.
+     * Insert the given node after the given reference (a child of this VNode).
      *
      * @param node
      * @param reference
      */
-    insertAfter(node: VNode, reference: VNode): VNode {
+    insertAfter(node: VNode, reference: VNode): void {
         const index = this.children.indexOf(reference);
         if (index < 0) {
             throw new Error('The given VNode is not a child of this VNode');
         }
-        return this._insertAtIndex(node, index + 1);
+        this._insertAtIndex(node, index + 1);
     }
     /**
      * Remove all children of this VNode.
@@ -687,16 +684,16 @@ export class VNode {
         }
     }
     /**
-     * Remove the given child from this VNode. Return self.
+     * Remove the given child from this VNode.
      *
      * @param child
      */
-    removeChild(child: VNode): VNode {
+    removeChild(child: VNode): void {
         const index = this.children.indexOf(child);
         if (index < 0) {
             throw new Error('The given VNode is not a child of this VNode');
         }
-        return this._removeAtIndex(index);
+        this._removeAtIndex(index);
     }
     /**
      * Remove this node in forward direction. (e.g. `Delete` key)
@@ -823,13 +820,12 @@ export class VNode {
     }
     /**
      * Insert a VNode at the given index within this VNode's children.
-     * Return self.
      *
      * @param child
      * @param index The index at which the insertion must take place within this
      * VNode's parent, holding marker nodes into account.
      */
-    _insertAtIndex(child: VNode, index: number): VNode {
+    _insertAtIndex(child: VNode, index: number): void {
         if (child.parent) {
             const currentIndex = child.parent.children.indexOf(child);
             if (index && child.parent === this && currentIndex < index) {
@@ -839,17 +835,15 @@ export class VNode {
         }
         this.children.splice(index, 0, child);
         child.parent = this;
-        return this;
     }
     /**
-     * Remove the nth child from this node. Return self.
+     * Remove the nth child from this node.
      *
      * @param index The index of the child to remove including marker nodes.
      */
-    _removeAtIndex(index: number): VNode {
+    _removeAtIndex(index: number): void {
         const child = this.children.splice(index, 1)[0];
         child.parent = undefined;
-        return this;
     }
     /**
      * Return a convenient string representation of this node and its

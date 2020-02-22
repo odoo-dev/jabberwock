@@ -37,11 +37,11 @@ export class VSelection {
         return this.range.isCollapsed();
     }
     /**
-     * Update the selection according to the given description. Return self.
+     * Update the selection according to the given description.
      *
      * @param selection
      */
-    set(selection: VSelectionDescription): this {
+    set(selection: VSelectionDescription): void {
         this._direction = selection.direction;
         this.select(
             selection.anchorNode,
@@ -49,18 +49,18 @@ export class VSelection {
             selection.focusNode,
             selection.focusPosition,
         );
-        return this;
     }
     /**
      * Set a collapsed selection at the given location, targetting a `reference`
      * VNode and specifying the `position` in reference to that VNode ('BEFORE',
-     * 'AFTER'), like in an `xpath`. Return self.
+     * 'AFTER'), like in an `xpath`.
      *
      * @param position
      * @param reference
      */
-    setAt(reference: VNode, position = RelativePosition.BEFORE): this {
-        return this.setAnchor(reference, position).collapse();
+    setAt(reference: VNode, position = RelativePosition.BEFORE): void {
+        this.setAnchor(reference, position);
+        this.collapse();
     }
     /**
      * Update the selection to select the given nodes.
@@ -77,19 +77,19 @@ export class VSelection {
      * @param [focusNode] default: `startNode`
      * @param [focusPosition] default: `RelativePosition.AFTER`
      */
-    select(anchorNode: VNode, focusNode?: VNode): this;
+    select(anchorNode: VNode, focusNode?: VNode): void;
     select(
         anchorNode: VNode,
         anchorPosition: RelativePosition,
         focusNode: VNode,
         focusPosition: RelativePosition,
-    ): this;
+    ): void;
     select(
         anchorNode: VNode,
         anchorPosition: RelativePosition | VNode = RelativePosition.BEFORE,
         focusNode: VNode = anchorNode,
         focusPosition: RelativePosition = RelativePosition.AFTER,
-    ): this {
+    ): void {
         if (anchorPosition instanceof VNode) {
             focusNode = anchorPosition;
             anchorPosition = RelativePosition.BEFORE;
@@ -101,41 +101,38 @@ export class VSelection {
             this.setAnchor(anchorNode, anchorPosition);
             this.setFocus(focusNode, focusPosition);
         }
-        return this;
     }
     /**
      * Set the anchor of the selection by targetting a `reference` VNode and
      * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
      * like in an `xpath`. If no relative position if given, include the
-     * reference node in the selection. Return self.
+     * reference node in the selection.
      *
      * @param reference
      * @param [position]
      */
-    setAnchor(reference: VNode, position = RelativePosition.BEFORE): this {
+    setAnchor(reference: VNode, position = RelativePosition.BEFORE): void {
         if (this.direction === Direction.FORWARD) {
             this.range.setStart(reference, position);
         } else {
             this.range.setEnd(reference, position);
         }
-        return this;
     }
     /**
      * Set the focus of the selection by targetting a `reference` VNode and
      * specifying the `position` in reference to that VNode ('BEFORE', 'AFTER'),
      * like in an `xpath`. If no relative position if given, include the
-     * reference node in the selection. Return self.
+     * reference node in the selection.
      *
      * @param reference
      * @param [position]
      */
-    setFocus(reference: VNode, position = RelativePosition.AFTER): this {
+    setFocus(reference: VNode, position = RelativePosition.AFTER): void {
         if (this.direction === Direction.FORWARD) {
             this.range.setEnd(reference, position);
         } else {
             this.range.setStart(reference, position);
         }
-        return this;
     }
     /**
      * Extend the selection from its anchor to the given location, targetting a
@@ -144,7 +141,7 @@ export class VSelection {
      * @param reference
      * @param [direction] default: Direction.FORWARD
      */
-    extendTo(reference: VNode, direction = Direction.FORWARD): this {
+    extendTo(reference: VNode, direction = Direction.FORWARD): void {
         let position: RelativePosition;
         if (direction === Direction.FORWARD) {
             if (reference.hasChildren()) {
@@ -166,14 +163,12 @@ export class VSelection {
         if (reference) {
             this.setFocus(reference, position);
         }
-        return this;
     }
     /**
-     * Collapse the selection on its anchor. Return self.
+     * Collapse the selection on its anchor.
      *
      */
-    collapse(): this {
+    collapse(): void {
         this.range.collapse(this.anchor);
-        return this;
     }
 }
