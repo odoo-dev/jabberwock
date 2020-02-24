@@ -31,7 +31,7 @@ module.exports = function(config) {
                         {
                             loader: 'ts-loader',
                             options: {
-                                configFile: 'tsconfig-base.json',
+                                configFile: 'tsconfig.json',
                             },
                         },
                     ],
