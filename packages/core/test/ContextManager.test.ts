@@ -33,6 +33,7 @@ describe('core', () => {
                         expect(matchedCommand).to.deep.equal(commands[0]);
                         expect(computedContext).to.deep.equal({
                             range: editor.selection.range,
+                            selector: [editor.selection.range.start.ancestor(ListNode)],
                         });
                     },
                 });
@@ -89,8 +90,10 @@ describe('core', () => {
                         const result = editor.contextManager.match(commands);
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[1]);
+                        const closestList = editor.selection.range.start.closest(ListNode);
                         expect(computedContext).to.deep.equal({
                             range: editor.selection.range,
+                            selector: [closestList.ancestor(ListNode), closestList],
                         });
                     },
                 });
@@ -118,6 +121,7 @@ describe('core', () => {
                         expect(matchedCommand).to.deep.equal(commands[0]);
                         expect(computedContext).to.deep.equal({
                             range: editor.selection.range,
+                            selector: [editor.selection.range.start.ancestor(ParagraphNode)],
                         });
                     },
                 });
@@ -156,6 +160,11 @@ describe('core', () => {
                         expect(matchedCommand).to.deep.equal(commands[1]);
                         expect(computedContext).to.deep.equal({
                             range: editor.selection.range,
+                            selector: [
+                                editor.selection.range.start.ancestor(isUl),
+                                editor.selection.range.start.ancestor(isOl),
+                                editor.selection.range.start.ancestor(ParagraphNode),
+                            ],
                         });
                     },
                 });
@@ -216,6 +225,7 @@ describe('core', () => {
                         expect(matchedCommand1).to.deep.equal(commands[0]);
                         expect(computedContext1).to.deep.equal({
                             range: newSelection.range,
+                            selector: [newSelection.range.start.ancestor(ParagraphNode)],
                         });
 
                         // Which itself can still be overriden by the caller.
@@ -227,6 +237,7 @@ describe('core', () => {
                         expect(matchedCommand2).to.deep.equal(commands[1]);
                         expect(computedContext2).to.deep.equal({
                             range: editor.selection.range,
+                            selector: [editor.selection.range.start.ancestor(ListNode)],
                         });
                     },
                 });
