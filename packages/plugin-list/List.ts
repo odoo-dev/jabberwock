@@ -9,6 +9,7 @@ import { ListItemDomParser } from './ListItemDomParser';
 import { withRange, VRange } from '../core/src/VRange';
 import { IndentParams, OutdentParams } from '../plugin-indent/src/Indent';
 import { Context } from '../core/src/ContextManager';
+import { InsertParagraphBreakParams } from '../core/src/CorePlugin';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -35,6 +36,14 @@ export class List extends JWPlugin {
             title: 'Outdent list items',
             selector: [ListNode],
             handler: this.outdent.bind(this),
+        },
+        insertParagraphBreak: {
+            selector: [ListNode, List.isListItem],
+            check: (context: Context): boolean => {
+                const [list, listItem] = context.selector;
+                return !listItem.hasChildren() && listItem === list.lastChild();
+            },
+            handler: this.insertParagraphBreak.bind(this),
         },
     };
     shortcuts = [
@@ -228,6 +237,23 @@ export class List extends JWPlugin {
             } else {
                 list.unwrap();
             }
+        }
+    }
+
+    /**
+     * Insert a paragraph break in the last empty item of a list by unwrapping
+     * the list item from the list, thus becoming the new paragraph.
+     *
+     * @param params
+     */
+    insertParagraphBreak(params: InsertParagraphBreakParams): void {
+        const range = params.context.range;
+        const listItem = range.startContainer;
+        const listNode = listItem.ancestor(ListNode);
+        if (listNode.children().length === 1) {
+            listNode.unwrap();
+        } else {
+            listNode.after(listItem);
         }
     }
 }
