@@ -40,7 +40,7 @@ export interface TestCompositionEvent {
 }
 export interface TestInputEvent {
     type: 'beforeinput' | 'input';
-    // firefox does not provide data [or inputType, which is why theses key are
+    // Firefox does not provide data or inputType, which is why theses keys are
     // optionnal
     data?: string;
     inputType?: string;
@@ -53,13 +53,20 @@ export interface RemovedNodesTargetMutation {
 
 export interface AddedNodesTargetMutation {
     parentId: number;
+    // When a node is added and was already present in the DOM, we capture the
+    // `id` of the node attributed by a `NodeIndexContainer`.
     nodeId?: number;
-    // todo: delete this key when all events are rewritten. It is there to
-    //       distinguish the interface.
+    // When a node is added from a mutation that was not in the DOM, the two
+    // following key `nodeValue` contain the created node value
     nodeValue?: string;
-    // todo: check if we still need this key.
+    // When a node is added from a mutation that was not in the DOM, the two
+    // following key `nodeType` contain the created node value
     nodeType?: number;
+    // If present in the mutation, the following `id` is attributed by a
+    // `NodeIndexContainer`
     previousSiblingId?: number;
+    // If present in the mutation, the following `id` is attributed by a
+    // `NodeIndexContainer`
     nextSiblingId?: number;
 }
 export interface TestMutationEvent {
@@ -74,10 +81,12 @@ export interface TestMutationEvent {
 export interface TestSelectionEvent {
     type: 'selection';
     focus: {
+        // The `id` of the focus node provided by `NodeIndexContainer`.
         targetSelectionId: number;
         offset: number;
     };
     anchor: {
+        // The `id` of the anchor node provided by `NodeIndexContainer`.
         targetSelectionId: number;
         offset: number;
     };
