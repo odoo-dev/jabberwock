@@ -283,18 +283,10 @@ export class NodeIndexGenerator {
 }
 
 /**
- * For each `eventStackList` in `triggerEvents()`, we need to retrieve
- * information of the `index` that is contained within a `parent` that has an
- * `id`.  It is possible that within the `eventStackList` loop, childs of a node
- * are removed. However, the index of a childNode within his parent is encoded
- * relative to the beggining of the stack when all nodes were still preset.
+ * Trigger events for of a list of stacks that where previously recorded with
+ * the tool `getKeys`.
  *
- * For that reason we cannot retrieve a childNode with
- * `parent.childNodes[index]` but we must do `offsetCacheMap[parentId + '$' +
- * index]`.
- *
- * Encode the key of the offsetCacheMap with "<parentId>$<childIndex>" (e.g. if
- * the parent id is 'a' and the offset is 0, the key will be encoded as "a$0").
+ * @param eventStackList All the stack that have been recorded.
  */
 export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
     const addedNodes: Node[] = [];
@@ -331,6 +323,8 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                             } else {
                                 throw new Error('Unknown node type');
                             }
+                            // If a new DOM `Node` has been generated, add it to
+                            // be added to the nodeIndexGenerator maps.
                             nodeIndexGenerator.getnerateIds(addedNode);
 
                             if (addedNodeDescription.previousSiblingId) {
@@ -370,6 +364,9 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
             }
         });
         await nextTick();
+        // After the first nextTick(which trigger a setTimeout), there is still
+        // some microtasks that might execute.  We wait another tick (i.e.
+        // setTimeout) to be sure every microtasks have been executed.
         await nextTick();
     }
 }
