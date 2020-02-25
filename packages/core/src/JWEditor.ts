@@ -10,7 +10,7 @@ import { VElement } from './VNodes/VElement';
 import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { ContextManager } from './ContextManager';
+import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
 
 export enum Platform {
@@ -331,7 +331,7 @@ export class JWEditor {
             if (!shortcut.platform && this._platform === Platform.MAC) {
                 shortcut.pattern = shortcut.pattern.replace(/ctrl/gi, 'CMD');
             }
-            keymap.bindShortcut(shortcut.pattern, shortcut.commandId, shortcut.commandArgs);
+            keymap.bindShortcut(shortcut.pattern, shortcut);
         }
     }
 
@@ -342,14 +342,20 @@ export class JWEditor {
      * @param event
      */
     _onKeydown(event: KeyboardEvent): void {
-        const commandUser = this.keymaps.user.match(event);
-        const commandDefault = !commandUser && this.keymaps.default.match(event);
-        const command = commandUser || commandDefault;
+        let command: BoundCommand;
+        let context: Context;
+        const userCommands = this.keymaps.user.match(event);
+        [command, context] = this.contextManager.match(userCommands);
+        if (!command) {
+            const defaultCommands = this.keymaps.default.match(event);
+            [command, context] = this.contextManager.match(defaultCommands);
+        }
         if (command && command.commandId) {
+            const params = { context, ...command.commandArgs };
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            this.execCommand(command.commandId, command.commandArgs);
+            this.execCommand(command.commandId, params);
         }
     }
 }

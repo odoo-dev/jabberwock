@@ -1,4 +1,6 @@
 import { CommandIdentifier } from './Dispatcher';
+import { Predicate, VNode } from './VNodes/VNode';
+import { Context } from './ContextManager';
 
 export interface BoundCommand {
     /**
@@ -6,6 +8,8 @@ export interface BoundCommand {
      */
     readonly commandId: CommandIdentifier | undefined;
     readonly commandArgs?: {};
+    readonly selector?: Predicate<VNode | boolean>[];
+    readonly check?: (context: Context) => boolean;
 }
 
 interface ModifiedShortcut {
@@ -92,31 +96,29 @@ export class Keymap {
     //--------------------------------------------------------------------------
 
     /**
-     * Add or remove a shortuct.
+     * Bind a shortuct.
      *
-     * If `commandId` is set, add the shortcut.
-     *
-     * If there is no `commandId`, it means that we want nothing to execute.
-     * Thus unbinding the command.
+     * If there is no `command.commandId`, it means that we want nothing to
+     * execute, thus replacing the command originally bound on this shortcut.
      *
      * @param patternString
-     * @param commandId
-     * @param commandArgs
+     * @param command
      */
-    bindShortcut(patternString: string, commandId?: CommandIdentifier, commandArgs?): void {
-        this.shortcuts.unshift({
+    bindShortcut(patternString: string, command: BoundCommand): void {
+        this.shortcuts.push({
             pattern: this.parsePattern(patternString),
-            boundCommand: { commandId, commandArgs },
+            boundCommand: command,
         });
     }
 
     /**
-     * Get first BoundCommand found when providing `keyEvent`.
+     * Return all bound commands which shortcut match the given `keyEvent`.
      *
      * @param keyEvent
      */
-    match(keyEvent: KeyboardEvent): BoundCommand {
-        const matchingMappings = this.shortcuts.find(shortcut => {
+    match(keyEvent: KeyboardEvent): BoundCommand[] {
+        const matchingCommands: BoundCommand[] = [];
+        for (const shortcut of this.shortcuts) {
             const modifiers = shortcut.pattern.modifiers;
 
             let match: boolean;
@@ -133,9 +135,16 @@ export class Keymap {
                 modifiers.has('META') === keyEvent.metaKey &&
                 modifiers.has('ALT') === keyEvent.altKey;
 
-            return match;
-        });
-        return matchingMappings && matchingMappings.boundCommand;
+            if (match) {
+                if (!shortcut.boundCommand.commandId) {
+                    // An `undefined` command unbounds the other commands
+                    // previously registered on this shortcut.
+                    matchingCommands.length = 0;
+                }
+                matchingCommands.push(shortcut.boundCommand);
+            }
+        }
+        return matchingCommands;
     }
 
     /**
@@ -146,9 +155,9 @@ export class Keymap {
      */
     parsePattern(pattern: string): ShortcutPattern {
         const tokens = pattern
-            .trim()
             .replace(/cmd/gi, 'META')
-            .split(/[+]/);
+            .split(/[+]/)
+            .map(token => token.trim());
         const keyCode = tokens.pop();
         const modifiers = new Set(tokens.map(token => token.toUpperCase()));
         if (!keyCode) {

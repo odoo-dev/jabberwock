@@ -39,7 +39,7 @@ describe('core', () => {
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => l.boundCommand.commandId,
                     );
-                    expect(expectedCommands).to.eql(['command-pc', 'command-all']);
+                    expect(expectedCommands).to.eql(['command-all', 'command-pc']);
                 });
                 it('should transform ctrl to CMD if no platform on mac', () => {
                     const editor = new JWEditor();
@@ -72,7 +72,7 @@ describe('core', () => {
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => [...l.pattern.modifiers][0],
                     );
-                    expect(expectedCommands).to.eql(['CTRL', 'META', 'META']);
+                    expect(expectedCommands).to.eql(['META', 'META', 'CTRL']);
                 });
                 it('should not transform ctrl to CMD if no platform on pc', () => {
                     const editor = new JWEditor();
@@ -134,7 +134,7 @@ describe('core', () => {
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => l.boundCommand.commandId,
                     );
-                    expect(expectedCommands).to.eql(['command-mac', 'command-all']);
+                    expect(expectedCommands).to.eql(['command-all', 'command-mac']);
                 });
                 it('should load the config for keymap', () => {
                     const editor = new JWEditor();
@@ -162,7 +162,7 @@ describe('core', () => {
                     const expectedCommands = editor.keymaps.user.shortcuts.map(
                         l => l.boundCommand.commandId,
                     );
-                    expect(expectedCommands).to.eql(['command-pc', 'command-all']);
+                    expect(expectedCommands).to.eql(['command-all', 'command-pc']);
                 });
                 describe('onKeydown', () => {
                     it('should trigger default shortuct', async () => {
@@ -187,7 +187,10 @@ describe('core', () => {
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
-                                expect(execSpy.args).to.eql([['command-all', undefined]]);
+                                const params = {
+                                    context: editor.contextManager.defaultContext,
+                                };
+                                expect(execSpy.args).to.eql([['command-all', params]]);
                             },
                         });
                     });
@@ -222,7 +225,10 @@ describe('core', () => {
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
                                 await keydown(editor.editable, 'b', { ctrlKey: true });
-                                expect(execSpy.args).to.eql([['command-b', undefined]]);
+                                const params = {
+                                    context: editor.contextManager.defaultContext,
+                                };
+                                expect(execSpy.args).to.eql([['command-b', params]]);
                             },
                         });
                     });

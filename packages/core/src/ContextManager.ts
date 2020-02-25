@@ -1,9 +1,20 @@
-import { CommandDefinition, CommandContext } from './Dispatcher';
 import JWEditor from './JWEditor';
+import { VRange } from './VRange';
+import { Predicate, VNode } from './VNodes/VNode';
+
+export type Context = {
+    range?: VRange;
+};
+
+interface Contextual {
+    context?: Context;
+    selector?: Predicate<VNode | boolean>[];
+    check?: (context: Context) => boolean;
+}
 
 export class ContextManager {
     editor: JWEditor;
-    defaultContext: CommandContext;
+    defaultContext: Context;
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -96,24 +107,21 @@ export class ContextManager {
      *
      * The result will be `commandUlP` because it has the highest specificity.
      *
-     * @param commands
+     * @param items
      * @param paramsContext
      */
-    match(
-        commands: CommandDefinition[],
-        paramsContext?: CommandContext,
-    ): [CommandDefinition, CommandContext] | [undefined, undefined] {
+    match<T extends Contextual>(items: T[], paramsContext?: Context): [T, Context] {
         let maxFirstMatchDepth = -1;
         let maxSelectorLength = 0;
-        let matchingCommand: CommandDefinition;
-        let matchingContext: CommandContext;
+        let matchingItem: T;
+        let matchingContext: Context;
 
-        for (const command of commands) {
-            const context = { ...this.defaultContext, ...command.context, ...paramsContext };
+        for (const item of items) {
+            const context = { ...this.defaultContext, ...item.context, ...paramsContext };
             let firstMatchDepth = -1;
             let ancestorIndex = 0;
             let match;
-            const selector = command.selector || [];
+            const selector = item.selector || [];
             if (selector.length === 0) {
                 match = true;
             } else {
@@ -142,14 +150,15 @@ export class ContextManager {
             if (
                 match &&
                 maxFirstMatchDepth <= firstMatchDepth &&
-                maxSelectorLength <= selector.length
+                maxSelectorLength <= selector.length &&
+                (!item.check || item.check(context))
             ) {
                 maxFirstMatchDepth = firstMatchDepth;
                 maxSelectorLength = selector.length;
-                matchingCommand = command;
+                matchingItem = item;
                 matchingContext = context;
             }
         }
-        return [matchingCommand, matchingContext];
+        return [matchingItem, matchingContext];
     }
 }

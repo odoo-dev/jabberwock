@@ -1,12 +1,12 @@
 import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { CommandDefinition, CommandParams, CommandContext } from '../src/Dispatcher';
+import { CommandDefinition } from '../src/Dispatcher';
 import { expect } from 'chai';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { VNode } from '../src/VNodes/VNode';
-import { VRange } from '../src/VRange';
 import { VSelection } from '../src/VSelection';
+import { Context } from '../src/ContextManager';
 
 describe('core', () => {
     describe('ContextManager', () => {
@@ -219,7 +219,7 @@ describe('core', () => {
                         });
 
                         // Which itself can still be overriden by the caller.
-                        const context: CommandContext = {
+                        const context: Context = {
                             range: editor.selection.range,
                         };
                         const result2 = editor.contextManager.match(commands, context);
