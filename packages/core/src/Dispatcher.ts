@@ -1,21 +1,18 @@
 import { CommandDefinition } from './Dispatcher';
 import JWEditor from './JWEditor';
 import { VNode, Predicate } from './VNodes/VNode';
-import { VRange } from './VRange';
+import { Context } from './ContextManager';
 
 export type CommandIdentifier = string;
-export interface CommandContext {
-    range?: VRange;
-}
 export interface CommandDefinition {
     title?: string;
     description?: string;
     selector?: Predicate<VNode | boolean>[];
-    context?: CommandContext;
+    context?: Context;
     handler: CommandHandler;
 }
 export interface CommandParams {
-    context?: CommandContext;
+    context?: Context;
 }
 export type CommandHandler = (args) => void;
 export type CommandHook = (params: CommandParams, commandId: string) => void;

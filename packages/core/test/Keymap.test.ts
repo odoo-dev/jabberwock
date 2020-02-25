@@ -10,8 +10,7 @@ describe('core', () => {
             keymap = new Keymap();
         });
         it('should bindShortcut', () => {
-            const keymap = new Keymap();
-            keymap.bindShortcut('a', 'command');
+            keymap.bindShortcut('a', { commandId: 'command' });
             expect(keymap.shortcuts.length === 1);
         });
         describe('parsePatter ', () => {
@@ -28,7 +27,7 @@ describe('core', () => {
                 expect([...pattern.modifiers]).to.deep.equal(['META']);
             });
             it('should get 0 modifiers and 1 key', () => {
-                keymap.bindShortcut('a', 'command');
+                keymap.bindShortcut('a', { commandId: 'command' });
                 const pattern = keymap.parsePattern('a');
                 expect('key' in pattern).to.be.true;
                 if ('key' in pattern) {
@@ -53,7 +52,7 @@ describe('core', () => {
                 expect([...pattern.modifiers]).to.deep.equal(['CTRL', 'SHIFT']);
             });
             it('should get 0 modifiers and 1 code', () => {
-                keymap.bindShortcut('a', 'command');
+                keymap.bindShortcut('a', { commandId: 'command' });
                 const pattern = keymap.parsePattern('<KeyA>');
                 expect('code' in pattern).to.be.true;
                 if ('code' in pattern) {
@@ -93,95 +92,97 @@ describe('core', () => {
         });
         describe('match', () => {
             it('should match shortcuts with key', () => {
-                keymap.bindShortcut('a', 'command-a');
-                keymap.bindShortcut('b', 'command-b');
+                keymap.bindShortcut('a', { commandId: 'command-a' });
+                keymap.bindShortcut('b', { commandId: 'command-b' });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommand: BoundCommand = {
-                    commandId: 'command-a',
-                    commandArgs: undefined,
-                };
-                expect(call).to.deep.equal(expectedCommand);
+                const expectedCommands: BoundCommand[] = [
+                    {
+                        commandId: 'command-a',
+                    },
+                ];
+                expect(call).to.deep.equal(expectedCommands);
             });
             it('should match shortcuts with code', () => {
-                keymap.bindShortcut('<KeyA>', 'command-a');
-                keymap.bindShortcut('b', 'command-b');
+                keymap.bindShortcut('<KeyA>', { commandId: 'command-a' });
+                keymap.bindShortcut('b', { commandId: 'command-b' });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommand: BoundCommand = {
-                    commandId: 'command-a',
-                    commandArgs: undefined,
-                };
-                expect(call).to.deep.equal(expectedCommand);
+                const expectedCommands: BoundCommand[] = [
+                    {
+                        commandId: 'command-a',
+                    },
+                ];
+                expect(call).to.deep.equal(expectedCommands);
             });
             it('should match shortcuts with command args', () => {
                 const args = { propA: 'valA' };
-                keymap.bindShortcut('<KeyA>', 'command-a', args);
+                keymap.bindShortcut('<KeyA>', { commandId: 'command-a', commandArgs: args });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommand: BoundCommand = {
-                    commandId: 'command-a',
-                    commandArgs: args,
-                };
-                expect(call).to.deep.equal(expectedCommand);
+                const expectedCommands: BoundCommand[] = [
+                    {
+                        commandId: 'command-a',
+                        commandArgs: args,
+                    },
+                ];
+                expect(call).to.deep.equal(expectedCommands);
             });
             it('should not trigger the map with modifiers', () => {
                 const args = { propA: 'valA' };
-                keymap.bindShortcut('a', 'command-a', args);
-                keymap.bindShortcut('ctrl  +a', 'command-a', args);
+                keymap.bindShortcut('a', { commandId: 'command-a', commandArgs: args });
+                keymap.bindShortcut('ctrl  +a', { commandId: 'command-b', commandArgs: args });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommand: BoundCommand = {
-                    commandId: 'command-a',
-                    commandArgs: args,
-                };
-                expect(call).to.deep.equal(expectedCommand);
-            });
-            it('should match the last shortuct when both are found in the system', () => {
-                keymap.bindShortcut('A', 'command-a');
-                keymap.bindShortcut('A', 'command-b');
-                const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommand: BoundCommand = {
-                    commandId: 'command-b',
-                    commandArgs: undefined,
-                };
-                expect(call).to.deep.equal(expectedCommand);
+                const expectedCommands: BoundCommand[] = [
+                    {
+                        commandId: 'command-a',
+                        commandArgs: args,
+                    },
+                ];
+                expect(call).to.deep.equal(expectedCommands);
             });
             it('should remove a shortuct if there is no commandIdentifier', () => {
-                keymap.bindShortcut('a', 'command-a');
-                keymap.bindShortcut('a');
-                keymap.bindShortcut('a', 'command-a');
-                keymap.bindShortcut('a');
-                const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommand: BoundCommand = {
+                keymap.bindShortcut('a', { commandId: 'command-a' });
+                keymap.bindShortcut('a', {
                     commandId: undefined,
-                    commandArgs: undefined,
-                };
-                expect(call).to.deep.equal(expectedCommand);
+                    commandArgs: ['first unbinding'],
+                });
+                keymap.bindShortcut('a', { commandId: 'command-a' });
+                keymap.bindShortcut('a', {
+                    commandId: undefined,
+                    commandArgs: ['second unbinding'],
+                });
+                const call = keymap.match(keydownEvent('a', 'KeyA'));
+                const expectedCommands: BoundCommand[] = [
+                    {
+                        commandId: undefined,
+                        commandArgs: ['second unbinding'],
+                    },
+                ];
+                expect(call).to.deep.equal(expectedCommands);
             });
             describe('modifier', () => {
                 it('should match shortcuts only when one modifier is active', () => {
-                    keymap.bindShortcut('ctRl+<KeyA>', 'command-a');
+                    keymap.bindShortcut('ctRl+<KeyA>', { commandId: 'command-a' });
                     const call = keymap.match(keydownEvent('a', 'KeyA', { ctrlKey: true }));
-                    const expectedCommand: BoundCommand = {
-                        commandId: 'command-a',
-                        commandArgs: undefined,
-                    };
-                    expect(call).to.deep.equal(expectedCommand);
+                    const expectedCommands: BoundCommand[] = [
+                        {
+                            commandId: 'command-a',
+                        },
+                    ];
+                    expect(call).to.deep.equal(expectedCommands);
                 });
                 it('should match shortcuts only when one modifier is active but not the others', () => {
-                    keymap.bindShortcut('cTrl+<KeyA>', 'command-a');
+                    keymap.bindShortcut('cTrl+<KeyA>', { commandId: 'command-a' });
                     const call = keymap.match(
                         keydownEvent('a', 'KeyA', { ctrlKey: true, altKey: true }),
                     );
-                    expect(call).to.deep.equal(undefined);
+                    expect(call).to.deep.equal([]);
                 });
                 it('should match shortcuts only when multiples modifier are active', () => {
-                    keymap.bindShortcut('Ctrl+alt+<KeyA>', 'command-a');
+                    keymap.bindShortcut('Ctrl+alt+<KeyA>', { commandId: 'command-a' });
                     const call = keymap.match(
                         keydownEvent('a', 'KeyA', { ctrlKey: true, altKey: true }),
                     );
-                    const expectedCommand: BoundCommand = {
-                        commandId: 'command-a',
-                        commandArgs: undefined,
-                    };
-                    expect(call).to.deep.equal(expectedCommand);
+                    const expectedCommands: BoundCommand[] = [{ commandId: 'command-a' }];
+                    expect(call).to.deep.equal(expectedCommands);
                 });
             });
         });
