@@ -211,125 +211,27 @@ type TriggerEventBatchCallback = (batch: EventBatch) => void;
  * contenteditable specification and are inconsistent.
  *
  * ## Goal of the normalizer
- * 1. To trigger the same event for the same action accross all browsers and
- *    devices
- * 2. To hook any change that happend in the
- *    (editable)[todo:link_to_the_editable_definition] in the
- *    DOM.
+ * 1. Hook any change that happend in an element called the `editable`.
+ * 2. Trigger the same event for the same action accross all browsers and
+ *    devices.
  *
  * ## Strategy
- * Hook all javascript events that modify the editable element. Then, trigger
+ * Hook all javascript events that modify the `editable` element. Then, trigger
  * normalized events.
  *
  * ## How to use this normalizer?
  * 1. Javascript Events occurs
- * 2. Normalize javascript `Events` to `NormalizedEvent`.
- * 3. Update our `VDocument` in regard of triggered normalized events actions.
- * 4. Render the element that mutated in HTML in the editable.
+ * 2. Normalize javascript one or more `Event` to one or more
+ *    `NormalizedAction`.
+ * 3. Update our `VDocument` in regard of triggered normalized actions.
+ * 4. Render what changed in the `VDocument` HTML in the `editable`.
  *
  * The normalizer does not preventDefault most of the change in the editable
  * happen (the exception for "paste" and "drop" javascript event).
  *
- * ## The Normalized event
- * The normalized event have tree important key: `type`, `inputType`, `actions`.
  *
- * - `type`: provide information about which mecanical device triggered it.
- *   The value can be "keyboard" or "pointer".
- * - `inputType`: provide information about the intention of the user.  A
- *   complete list of the values can be found below. `inputType` is not present
- *   in the normalized event if the `type` is "composition".
- * - `actions`: provide informations about what happen in the editable in the
- *    DOM. A complete list of values can be found below.
- *
- * ### Type
- * The key `type` provide information about which mecanical device triggered it.
- * The value can be "keyboard", "pointer".
- *
- * #### Type "keyboard"
- *
- * The keyboard type is triggered by anything from the keyboard but not necessarily from a
- * javascript keyboard event (keydown, keypress). The reason is because some virtual devices have
- * information of the key that is not preset in a keydown nor keypress .
- *
- * If it's a not keyboard event, `code` property will be empty ('').
- *
- * #### Type "pointer"
- * The pointer event can come from:
- * - contextmenu
- * - drop
- * - <todo: make an exhaustive list>
- *
- * ## inputType
- * The key `inputType` provide information about the intention of the user. The sementics of the
- * values are the same as the w3c specification (see
- * https://www.w3.org/TR/input-events-2/#interface-InputEvent-Attributes).
- *
- * This key is the most usefull to hook what the user actually wanted to perform.
- *
- * | inputType                    | type keyboard | type pointer |
- * |------------------------------|---------------|--------------|
- * | insertText                   |       x       |              |
- * | insertCompositionText        |               |              |
- * | insertParagraph              |               |              |
- * | insertLineBreak              |               |              |
- * | insertFromPaste              |               |              |
- * | insertFromDrop               |               |              |
- * | deleteContentBackward        |               |              |
- * | deleteContentForward         |               |              |
- * | deleteWordBackward           |               |              |
- * | deleteHardLineBackward       |               |              |
- * | deleteWordForward            |               |              |
- * | deleteHardLineForward        |               |              |
- * | deleteByCut                  |               |              |
- * | historyUndo                  |               |              |
- * | historyRedo                  |               |              |
- * | formatBold                   |               |              |
- * | formatItalic                 |               |              |
- * | formatUnderline              |               |              |
- * | formatStrikeThrough          |               |              |
- * | formatSuperscript            |               |              |
- * | formatSubscript              |               |              |
- * | formatJustifyFull            |               |              |
- * | formatJustifyCenter          |               |              |
- * | formatJustifyRight           |               |              |
- * | formatJustifyLeft            |               |              |
- * | formatIndent                 |               |              |
- * | formatOutdent                |               |              |
- * | formatRemove                 |               |              |
- * | formatSetBlockTextDirection  |               |              |
- * | formatSetInlineTextDirection |               |              |
- *
- * We do not handle all inputTypes of the (DOM input event
- * specification)[https://www.w3.org/TR/input-events-2/#interface-InputEvent-Attributes].
- *
- * Some events (such as "formatBackColor", "formatFontColor", "formatFontName")
- * have additional informations attached. We currently do not attach them to the
- * normalized event.
- *
- * Sometimes it is impossible to retrieve the inputType. For instance, when the
- * user has only clicked, and only a mousedown is intercepted.
- *
- * ## Action
- * The actions for each normalized events are there to show what happened in the
- * editabe in the DOM.
- *
- * | actions         | In keyboard event | In pointer event |
- * |-----------------|-------------------|------------------|
- * | insertFiles     |                   |                  |
- * | insertText      |                   |                  |
- * | insertParagraph |                   |                  |
- * | insertHtml      |                   |                  |
- * | historyUndo     |                   |                  |
- * | historyRedo     |                   |                  |
- * | applyFormat     |                   |                  |
- * | selectAll       |                   |                  |
- * | setRange        |                   |                  |
- * | deleteContent   |                   |                  |
- * | deleteWord      |                   |                  |
- * | deleteHardLine  |                   |                  |
- *
- * ### Handeling javascript events
- * A javascript event almost is never prevented and almost always alter the
+ * ## Handeling javascript events
+ * A javascript event is almost never prevented and almost always alter the
  * editable in the DOM.
  *
  * The reason that we do not prevent default is because we need more
@@ -339,9 +241,9 @@ type TriggerEventBatchCallback = (batch: EventBatch) => void;
  * There is an exception for the event 'paste' and 'drop'.
  *
  * The reason to preventDefault 'paste' is because most of the time, browsers
- * paste content that need to be cleaned. For that reason we block it from being
- * inserted in the editable element but the informations can be found in the
- * triggered normalized events actions.
+ * paste content that need to be cleaned. For that reason we prevent it from
+ * being inserted in the editable element but the informations can be found in
+ * the triggered normalized events actions.
  *
  * The reason to preventDefault 'drop' is because some browsers change page when
  * dropping an image or an url that comes from the address bar (e.g. chrome).
@@ -371,7 +273,6 @@ type TriggerEventBatchCallback = (batch: EventBatch) => void;
  *   - Firefox
  */
 
-// todo chm: drag/drop between two editor in the same page.
 export class EventNormalizer {
     /**
      * HTML element that represents the editable zone. Only events happening
