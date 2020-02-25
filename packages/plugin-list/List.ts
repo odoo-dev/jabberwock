@@ -8,6 +8,7 @@ import { ListDomParser } from './ListDomParser';
 import { ListItemDomParser } from './ListItemDomParser';
 import { withRange, VRange } from '../core/src/VRange';
 import { IndentParams, OutdentParams } from '../plugin-indent/src/Indent';
+import { Context } from '../core/src/ContextManager';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -46,6 +47,14 @@ export class List extends JWPlugin {
             pattern: 'CTRL+SHIFT+<Digit8>',
             commandId: 'toggleList',
             commandArgs: { type: ListType.UNORDERED } as ListParams,
+        },
+        {
+            pattern: 'Backspace',
+            selector: [List.isListItem],
+            check: (context: Context): boolean => {
+                return !context.range.start.previousSibling();
+            },
+            commandId: 'outdent',
         },
     ];
     readonly parsers = [ListDomParser, ListItemDomParser];

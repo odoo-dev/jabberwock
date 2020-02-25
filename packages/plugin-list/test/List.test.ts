@@ -4,7 +4,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { InsertParams } from '../../core/src/CorePlugin';
 import { ListType, ListNode } from '../ListNode';
 import { CharNode } from '../../plugin-char/CharNode';
-import { describePlugin } from '../../utils/src/testUtils';
+import { describePlugin, keydown } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { ListParams, List } from '../List';
@@ -44,6 +44,9 @@ const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
         type: ListType.UNORDERED,
     };
     await editor.execCommand('toggleList', params);
+};
+const backspace = async (editor: JWEditor): Promise<void> => {
+    await keydown(editor.editable, 'Backspace');
 };
 
 describePlugin(List, testEditor => {
@@ -1218,64 +1221,70 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ol><li>abc[]def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        it.skip('should outdent a list item', async () => {
+                        it('should outdent a list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><ol><li>[]abc</li></ol></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ol><li>[]abc</li></ol>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<p>abc</p><ol><li><ol><li>[]def</li></ol></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ol><li>[]def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty list item within a list', async () => {
+                        it('should outdent while nested within a list item', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore:
+                                    '<ol><li><div>abc</div></li><li><div><div>[]def</div></div></li></ol>',
+                                stepFunction: backspace,
+                                contentAfter:
+                                    '<ol><li><div>abc</div></li></ol><div><div>[]def</div></div>',
+                            });
+                            // With a div before the list:
+                            await testEditor(BasicEditor, {
+                                contentBefore:
+                                    '<div>abc</div><ol><li><div><div>[]def</div></div></li></ol>',
+                                stepFunction: backspace,
+                                contentAfter: '<div>abc</div><div><div>[]def</div></div>',
+                            });
+                        });
+                        it('should outdent an empty list item within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li>abc</li><li><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter:
-                                    '<ol><li>abc</li><li>[]<br></li><li><ol></li><br></li></ol></li><li><p>def</p></li></ol>',
+                                    '<ol><li>abc</li><li>[]<br><ol><li><br></li></ol></li><li>def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty list within a list', async () => {
+                        it('should outdent an empty list within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li>abc</li><li><ol><li>[]<br></li></ol></li><li>def</li></ol>',
-                                stepFunction: deleteBackward,
-                                contentAfter:
-                                    '<ol><li>abc</li><li>[]<br></li><li><p>def</p></li></ol>',
+                                stepFunction: backspace,
+                                contentAfter: '<ol><li>abc</li><li>[]<br></li><li>def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty list', async () => {
+                        it('should outdent an empty list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><ol><li><br>[]</li></ol></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ol><li>[]<br></li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip("should outdent a list to the point that it's a paragraph", async () => {
+                        it("should outdent a list to the point that it's a paragraph", async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li>[]<br></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p>[]<br></p>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore: '<p><br></p><ol><li>[]<br></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p><br></p><p>[]<br></p>',
                             });
                         });
@@ -1449,64 +1458,54 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ul><li>abc[]def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        it.skip('should outdent a list item', async () => {
+                        it('should outdent a list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><ul><li>[]abc</li></ul></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ul><li>[]abc</li></ul>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<p>abc</p><ul><li><ul><li>[]def</li></ul></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ul><li>[]def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty list item within a list', async () => {
+                        it('should outdent an empty list item within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li>abc</li><li><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter:
-                                    '<ul><li>abc</li><li>[]<br></li><li><ul></li><br></li></ul></li><li><p>def</p></li></ul>',
+                                    '<ul><li>abc</li><li>[]<br><ul><li><br></li></ul></li><li>def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty list within a list', async () => {
+                        it('should outdent an empty list within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li>abc</li><li><ul><li>[]<br></li></ul></li><li>def</li></ul>',
-                                stepFunction: deleteBackward,
-                                contentAfter:
-                                    '<ul><li>abc</li><li>[]<br></li><li><p>def</p></li></ul>',
+                                stepFunction: backspace,
+                                contentAfter: '<ul><li>abc</li><li>[]<br></li><li>def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty list', async () => {
+                        it('should outdent an empty list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><ul><li><br>[]</li></ul></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ul><li>[]<br></li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip("should outdent a list to the point that it's a paragraph", async () => {
+                        it("should outdent a list to the point that it's a paragraph", async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li>[]<br></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p>[]<br></p>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore: '<p><br></p><ul><li>[]<br></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p><br></p><p>[]<br></p>',
                             });
                         });
@@ -1638,49 +1637,41 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ul><li>abc[]def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        it.skip('should outdent an ordered list item that is within a unordered list', async () => {
+                        it('should outdent an ordered list item that is within a unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><ol><li>[]abc</li></ol></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ul><li>[]abc</li></ul>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<p>abc</p><ul><li><ol><li>[]def</li></ol></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ul><li>[]def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty ordered list item within an unordered list', async () => {
+                        it('should outdent an empty ordered list item within an unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li>abc</li><li><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter:
-                                    '<ul><li>abc</li><li>[]<br></li><li><ol></li><br></li></ol></li><li><p>def</p></li></ul>',
+                                    '<ul><li>abc</li><li>[]<br><ol><li><br></li></ol></li><li>def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty ordered list within an unordered list', async () => {
+                        it('should outdent an empty ordered list within an unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li>abc</li><li><ol><li>[]<br></li></ol></li><li>def</li></ul>',
-                                stepFunction: deleteBackward,
-                                contentAfter:
-                                    '<ul><li>abc</li><li>[]<br></li><li><p>def</p></li></ul>',
+                                stepFunction: backspace,
+                                contentAfter: '<ul><li>abc</li><li>[]<br></li><li>def</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty ordered list within an unordered list', async () => {
+                        it('should outdent an empty ordered list within an unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><ol><li><br>[]</li></ol></li></ul>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ul><li>[]<br></li></ul>',
                             });
                         });
@@ -1736,49 +1727,41 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ol><li>abc[]def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        it.skip('should outdent an unordered list item that is within a ordered list', async () => {
+                        it('should outdent an unordered list item that is within a ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><ul><li>[]abc</li></ul></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ol><li>[]abc</li></ol>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<p>abc</p><ol><li><ul><li>[]def</li></ul></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ol><li>[]def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty unordered list item within an ordered list', async () => {
+                        it('should outdent an empty unordered list item within an ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li>abc</li><li><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter:
-                                    '<ol><li>abc</li><li>[]<br></li><li><ul></li><br></li></ul></li><li><p>def</p></li></ol>',
+                                    '<ol><li>abc</li><li>[]<br><ul><li><br></li></ul></li><li>def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty unordered list within an ordered list', async () => {
+                        it('should outdent an empty unordered list within an ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li>abc</li><li><ul><li>[]<br></li></ul></li><li>def</li></ol>',
-                                stepFunction: deleteBackward,
-                                contentAfter:
-                                    '<ol><li>abc</li><li>[]<br></li><li><p>def</p></li></ol>',
+                                stepFunction: backspace,
+                                contentAfter: '<ol><li>abc</li><li>[]<br></li><li>def</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should outdent an empty unordered list within an ordered list', async () => {
+                        it('should outdent an empty unordered list within an ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><ul><li><br>[]</li></ul></li></ol>',
-                                stepFunction: deleteBackward,
+                                stepFunction: backspace,
                                 contentAfter: '<ol><li>[]<br></li></ol>',
                             });
                         });
