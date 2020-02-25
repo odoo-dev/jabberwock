@@ -365,7 +365,7 @@ export class EventNormalizer {
      * tick as well. This variable stores the return value of the `setTimeout`
      * call in order to `clearTimeout` it later on.
      */
-    _clickTimeout: NodeJS.Timeout;
+    _clickTimeout: number;
 
     constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
         this.editable = editable;
@@ -1422,8 +1422,8 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
-        clearTimeout(this._clickTimeout);
-        this._clickTimeout = setTimeout(() => {
+        window.clearTimeout(this._clickTimeout);
+        this._clickTimeout = window.setTimeout(() => {
             if (!this._selectionHasChanged || this._currentlySelectingAll) {
                 return;
             }
@@ -1494,7 +1494,7 @@ export class EventNormalizer {
         this._initialCaretPosition = this._locateEvent(ev);
 
         // clearTimeout(this._clickTimeout);
-        this._clickTimeout = setTimeout(() => this._analyzeSelectionChange(ev), 0);
+        this._clickTimeout = window.setTimeout(() => this._analyzeSelectionChange(ev), 0);
     }
     /**
      * Analyze a change of selection to trigger a pointer event for it.
