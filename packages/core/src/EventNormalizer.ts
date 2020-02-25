@@ -175,7 +175,7 @@ export interface EventBatch {
 }
 
 interface DataTransferDetails {
-    type: string;
+    type: 'drop' | 'paste' | 'cut';
     'text/plain': string;
     'text/html': string;
     'text/uri-list': string;
@@ -1699,7 +1699,7 @@ export class EventNormalizer {
         }
         const clipboard = ev.clipboardData;
         const pasteEvent: DataTransferDetails = {
-            type: ev.type,
+            type: ev.type as ('cut' | 'paste'),
             'text/plain': clipboard.getData('text/plain'),
             'text/html': clipboard.getData('text/html'),
             'text/uri-list': clipboard.getData('text/uri-list'),
