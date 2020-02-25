@@ -20,6 +20,7 @@ import { ItalicDomParser } from '../../plugin-italic/ItalicDomParser';
 import { BoldDomParser } from '../../plugin-bold/BoldDomParser';
 import { UnderlineDomParser } from '../../plugin-underline/UnderlineDomParser';
 import { SpanDomParser } from '../../plugin-span/SpanDomParser';
+import { InsertTextParams } from '../../plugin-char/Char';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('deleteForward');
@@ -47,6 +48,12 @@ const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
 };
 const backspace = async (editor: JWEditor): Promise<void> => {
     await keydown(editor.editable, 'Backspace');
+};
+const insertText = async (editor: JWEditor, text: string): Promise<void> => {
+    const params: InsertTextParams = {
+        text: text,
+    };
+    await editor.execCommand('insertText', params);
 };
 
 describePlugin(List, testEditor => {
@@ -2080,42 +2087,36 @@ describePlugin(List, testEditor => {
                     describe('Removing items', () => {
                         // TODO: MAKE IT PASS
                         // TODO: determine whether this is the expected behavior
-                        it.skip('should add an empty list item at the end of a list, then remove it', async () => {
+                        it('should add an empty list item at the end of a list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li>abc[]</li></ol>',
-                                stepFunction: (editor: JWEditor) => {
-                                    insertParagraphBreak(editor);
-                                    insertParagraphBreak(editor);
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
                                 },
                                 contentAfter: '<ol><li>abc</li></ol><p>[]<br></p>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should add an empty list item at the end of an indented list, then remove it', async () => {
+                        it('should add an empty list item at the end of an indented list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li>abc</li><li><ol><li>def[]</li></ol></li><li>ghi</li></ol>',
-                                stepFunction: (editor: JWEditor) => {
-                                    insertParagraphBreak(editor);
-                                    insertParagraphBreak(editor);
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li>abc</li><li><ol><li>def</li></ol></li><li>[]<br></li><li>ghi</li></ol>',
+                                    '<ol><li>abc<ol><li>def</li></ol></li><li>[]<br></li><li>ghi</li></ol>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should remove a list', async () => {
+                        it('should remove a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><p>[]<br></p></li></ol>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should remove a list set to bold', async () => {
+                        it('should remove a list set to bold', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><p><b>[]<br></b></p></li></ol>',
                                 stepFunction: insertParagraphBreak,
@@ -2129,10 +2130,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ol class="a"><li>abc[]</li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol class="a"><li>abc</li><li><br></li><li>[]<br></li></ol>',
+                                    '<ol class="a"><li>abc</li><li>b</li><li>[]<br></li></ol>',
                             });
                         });
                         it('should add two list items with a class at the end of a list', async () => {
@@ -2140,10 +2142,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ol><li class="a">abc[]</li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li class="a">abc</li><li class="a"><br></li><li class="a">[]<br></li></ol>',
+                                    '<ol><li class="a">abc</li><li class="a">b</li><li class="a">[]<br></li></ol>',
                             });
                         });
                         it('should add two list items with a class and a heading at the end of a list', async () => {
@@ -2151,10 +2154,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ol><li class="a"><h1>abc[]</h1></li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li class="a"><h1>abc</h1></li><li class="a"><h1><br></h1></li><li class="a"><h1>[]<br></h1></li></ol>',
+                                    '<ol><li class="a"><h1>abc</h1></li><li class="a"><h1>b</h1></li><li class="a"><h1>[]<br></h1></li></ol>',
                             });
                         });
                         it('should add two list items with a heading with a class at the end of a list', async () => {
@@ -2162,10 +2166,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ol><li><h1 class="a">abc[]</h1></li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li><h1 class="a">abc</h1></li><li><h1 class="a"><br></h1></li><li><h1 class="a">[]<br></h1></li></ol>',
+                                    '<ol><li><h1 class="a">abc</h1></li><li><h1 class="a">b</h1></li><li><h1 class="a">[]<br></h1></li></ol>',
                             });
                         });
                         it('should add two list items with a font at the end of a list within a list', async () => {
@@ -2174,10 +2179,11 @@ describePlugin(List, testEditor => {
                                     '<ul><li>ab</li><ul><li><font style="color: red;">cd[]</font></li></ul><li>ef</li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li>ab<ul><li><font style="color: red;">cd</font></li><li><br></li><li>[]<br></li></ul></li><li>ef</li></ul>',
+                                    '<ul><li>ab<ul><li><font style="color: red;">cd</font></li><li>b</li><li>[]<br></li></ul></li><li>ef</li></ul>',
                             });
                         });
                     });
@@ -2207,44 +2213,36 @@ describePlugin(List, testEditor => {
                         });
                     });
                     describe('Removing items', () => {
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should add an empty list item at the end of a list, then remove it', async () => {
+                        it('should add an empty list item at the end of a list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li>abc[]</li></ul>',
-                                stepFunction: (editor: JWEditor) => {
-                                    insertParagraphBreak(editor);
-                                    insertParagraphBreak(editor);
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
                                 },
                                 contentAfter: '<ul><li>abc</li></ul><p>[]<br></p>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should add an empty list item at the end of an indented list, then remove it', async () => {
+                        it('should add an empty list item at the end of an indented list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li>abc</li><li><ul><li>def[]</li></ul></li><li>ghi</li></ul>',
-                                stepFunction: (editor: JWEditor) => {
-                                    insertParagraphBreak(editor);
-                                    insertParagraphBreak(editor);
+                                stepFunction: async (editor: JWEditor) => {
+                                    await insertParagraphBreak(editor);
+                                    await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li>abc</li><li><ul><li>def</li></ul></li><li>[]<br></li><li>ghi</li></ul>',
+                                    '<ul><li>abc<ul><li>def</li></ul></li><li>[]<br></li><li>ghi</li></ul>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should remove a list', async () => {
+                        it('should remove a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><p>[]<br></p></li></ul>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
                         });
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
-                        it.skip('should remove a list set to bold', async () => {
+                        it('should remove a list set to bold', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><p><b>[]<br></b></p></li></ul>',
                                 stepFunction: insertParagraphBreak,
@@ -2258,10 +2256,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ul class="a"><li>abc[]</li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul class="a"><li>abc</li><li><br></li><li>[]<br></li></ul>',
+                                    '<ul class="a"><li>abc</li><li>b</li><li>[]<br></li></ul>',
                             });
                         });
                         it('should add two list items with a class at the end of a list', async () => {
@@ -2269,10 +2268,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ul><li class="a">abc[]</li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li class="a">abc</li><li class="a"><br></li><li class="a">[]<br></li></ul>',
+                                    '<ul><li class="a">abc</li><li class="a">b</li><li class="a">[]<br></li></ul>',
                             });
                         });
                         it('should add two list items with a class and a heading at the end of a list', async () => {
@@ -2280,10 +2280,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ul><li class="a"><h1>abc[]</h1></li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li class="a"><h1>abc</h1></li><li class="a"><h1><br></h1></li><li class="a"><h1>[]<br></h1></li></ul>',
+                                    '<ul><li class="a"><h1>abc</h1></li><li class="a"><h1>b</h1></li><li class="a"><h1>[]<br></h1></li></ul>',
                             });
                         });
                         it('should add two list items with a heading with a class at the end of a list', async () => {
@@ -2291,10 +2292,11 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ul><li><h1 class="a">abc[]</h1></li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
+                                    await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li><h1 class="a">abc</h1></li><li><h1 class="a"><br></h1></li><li><h1 class="a">[]<br></h1></li></ul>',
+                                    '<ul><li><h1 class="a">abc</h1></li><li><h1 class="a">b</h1></li><li><h1 class="a">[]<br></h1></li></ul>',
                             });
                         });
                     });
