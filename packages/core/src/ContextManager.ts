@@ -4,6 +4,7 @@ import { Predicate, VNode } from './VNodes/VNode';
 
 export type Context = {
     range?: VRange;
+    selector?: VNode[];
 };
 
 interface Contextual {
@@ -125,6 +126,7 @@ export class ContextManager {
             if (selector.length === 0) {
                 match = true;
             } else {
+                context.selector = [];
                 const range = context.range;
                 const ancestors = range.start.ancestors();
                 const maximumDepth = ancestors.length - 1;
@@ -133,6 +135,7 @@ export class ContextManager {
                     while (!match && ancestorIndex < ancestors.length) {
                         if (ancestors[ancestorIndex].test(predicate)) {
                             match = true;
+                            context.selector.unshift(ancestors[ancestorIndex]);
                             if (firstMatchDepth === -1) {
                                 // Deeper match has higher specificity. So lower
                                 // index in ancestors, means higher specificity.
