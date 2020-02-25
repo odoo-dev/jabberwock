@@ -43,7 +43,7 @@ export class EventManager {
                 };
                 return ['setSelection', vSelectionParams];
             }
-            case 'insertParagraph':
+            case 'insertParagraphBreak':
                 return ['insertParagraphBreak', {}];
             case 'deleteWord':
             case 'deleteContent':

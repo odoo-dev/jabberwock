@@ -99,8 +99,8 @@ interface InsertHtmlAction {
     text: string;
 }
 
-interface InsertParagraphAction {
-    type: 'insertParagraph';
+interface InsertParagraphBreakAction {
+    type: 'insertParagraphBreak';
 }
 
 interface InsertFilesAction {
@@ -149,7 +149,7 @@ interface HistoryAction {
 export type NormalizedAction =
     | InsertTextAction
     | InsertHtmlAction
-    | InsertParagraphAction
+    | InsertParagraphBreakAction
     | InsertFilesAction
     | DeleteContentAction
     | DeleteWordAction
@@ -913,7 +913,7 @@ export class EventNormalizer {
         isMultiKey = false,
     ):
         | InsertTextAction
-        | InsertParagraphAction
+        | InsertParagraphBreakAction
         | InsertTextAction
         | SetSelectionAction
         | DeleteWordAction
@@ -937,8 +937,8 @@ export class EventNormalizer {
                 } else {
                     // todo: see with DMO: is it really necessary as we can infer it from the
                     //       previous action?
-                    const insertParagraphAction: InsertParagraphAction = {
-                        type: 'insertParagraph',
+                    const insertParagraphAction: InsertParagraphBreakAction = {
+                        type: 'insertParagraphBreak',
                     };
                     return insertParagraphAction;
                 }

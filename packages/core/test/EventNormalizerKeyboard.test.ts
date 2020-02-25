@@ -5138,7 +5138,7 @@ describe('utils', () => {
 
                         keyboardActions = [
                             {
-                                type: 'insertParagraph',
+                                type: 'insertParagraphBreak',
                             },
                         ];
                     });
@@ -5198,7 +5198,7 @@ describe('utils', () => {
 
                         const keyboardActions: NormalizedAction[] = [
                             {
-                                type: 'insertParagraph',
+                                type: 'insertParagraphBreak',
                             },
                         ];
 
@@ -5244,7 +5244,7 @@ describe('utils', () => {
 
                         const keyboardActions: NormalizedAction[] = [
                             {
-                                type: 'insertParagraph',
+                                type: 'insertParagraphBreak',
                             },
                         ];
 
@@ -5290,7 +5290,7 @@ describe('utils', () => {
 
                         const keyboardActions: NormalizedAction[] = [
                             {
-                                type: 'insertParagraph',
+                                type: 'insertParagraphBreak',
                             },
                         ];
 
