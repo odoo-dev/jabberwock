@@ -46,11 +46,13 @@ export class EventManager {
             case 'insertParagraphBreak':
                 return ['insertParagraphBreak', {}];
             case 'deleteWord':
-            case 'deleteContent':
-                return [
-                    action.direction === Direction.FORWARD ? 'deleteForward' : 'deleteBackward',
-                    {},
-                ];
+            case 'deleteContent': {
+                if (action.direction === Direction.FORWARD) {
+                    return ['deleteForward', {}];
+                } else {
+                    return ['deleteBackward', {}];
+                }
+            }
             case 'applyFormat':
                 return ['applyFormat', { format: action.format }];
             default:
