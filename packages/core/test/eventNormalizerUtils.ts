@@ -99,35 +99,36 @@ export type TestEvent =
     | TestMutationEvent
     | TestSelectionEvent;
 
-/**
- * Get the event type based on its name.
- *
- * @private
- * @param {string} eventName
- * @returns string
- *  'mouse' | 'keyboard' | 'unknown'
- */
-export function _eventType(eventName: string): string {
-    const types = {
-        MouseEvent: ['click', 'mouse', 'pointer', 'contextmenu', 'select', 'wheel'],
-        CompositionEvent: ['composition'],
-        InputEvent: ['input'],
-        KeyboardEvent: ['key'],
-        DragEvent: ['dragstart', 'dragend', 'drop'],
-        ClipboardEvent: ['beforecut', 'cut', 'paste'],
-        TouchEvent: ['touchstart', 'touchend'],
-    };
-    let type = 'unknown';
-    Object.keys(types).forEach(function(key) {
-        const isType = types[key].some(function(str) {
-            return eventName.toLowerCase().indexOf(str) !== -1;
-        });
-        if (isType) {
-            type = key;
-        }
-    });
-    return type;
+const _eventTypes = {
+    MouseEvent: [
+        'pointer',
+        'contextmenu',
+        'select',
+        'wheel',
+        'click',
+        'dblclick',
+        'mousedown',
+        'mouseenter',
+        'mouseleave',
+        'mousemove',
+        'mouseout',
+        'mouseover',
+        'mouseup',
+    ],
+    CompositionEvent: ['compositionstart', 'compositionend', 'compositionupdate'],
+    InputEvent: ['input', 'beforeinput'],
+    KeyboardEvent: ['keydown', 'keypress', 'keyup'],
+    DragEvent: ['dragstart', 'dragend', 'drop'],
+    ClipboardEvent: ['beforecut', 'cut', 'paste'],
+    TouchEvent: ['touchstart', 'touchend'],
+};
+const _eventTypeMap: Record<string, string> = {};
+for (const type of Object.keys(_eventTypes)) {
+    for (const name of _eventTypes[type]) {
+        _eventTypeMap[name] = type;
+    }
 }
+
 class InputEventBis extends InputEvent {
     eventInitDict: InputEventInit;
     constructor(type: string, eventInitDict?: InputEventInit) {
@@ -168,7 +169,7 @@ export function triggerEvent(
         },
         options,
     );
-    const type = _eventType(eventName);
+    const type = _eventTypeMap[eventName];
     let ev: Event;
     switch (type) {
         case 'MouseEvent':
