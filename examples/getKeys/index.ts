@@ -6,7 +6,7 @@ import {
     TestSelectionEvent,
     TestMutationEvent,
     testContentNormalizer,
-    NodeIndexContainer,
+    NodeIndexGenerator,
     RemovedNodesTargetMutation,
     AddedNodesTargetMutation,
 } from '../../packages/core/test/eventNormalizerUtils';
@@ -29,7 +29,7 @@ let offsetCacheMap: Map<Node, { index: number; parentId: string }>;
 let currentEventStack = null;
 let allEventStacks = [];
 
-const nodeIndexContainer = new NodeIndexContainer(editable);
+let nodeIndexGenerator = new NodeIndexGenerator(editable);
 /**
  * Add `node` and all his `childNodes` recursively in the `offsetCacheMap`.
  */
@@ -137,11 +137,11 @@ function logSelection(): void {
         const testSelectionEvent: TestSelectionEvent = {
             type: 'selection',
             focus: {
-                targetSelectionId: nodeIndexContainer.getId(selection.focusNode),
+                targetSelectionId: nodeIndexGenerator.getId(selection.focusNode),
                 offset: selection.focusOffset,
             },
             anchor: {
-                targetSelectionId: nodeIndexContainer.getId(selection.anchorNode),
+                targetSelectionId: nodeIndexGenerator.getId(selection.anchorNode),
                 offset: selection.anchorOffset,
             },
         };
@@ -156,14 +156,14 @@ function logMutation(mutation: MutationRecord): void {
         //       stack, the textContent being set is not the proper one. We should watch on the
         //       next mutation of type 'charData' ang
         textContent: mutation.target.textContent,
-        targetId: nodeIndexContainer.getId(mutation.target),
+        targetId: nodeIndexGenerator.getId(mutation.target),
     };
     const removedNodes = Array.from(mutation.removedNodes);
     const addedNodes = Array.from(mutation.addedNodes);
     if (removedNodes.length) {
         testMutationEvent.removedNodes = removedNodes.map((node: Node) => {
             const removeMutationInfo: RemovedNodesTargetMutation = {
-                nodeId: nodeIndexContainer.getId(node),
+                nodeId: nodeIndexGenerator.getId(node),
             };
             return removeMutationInfo;
         });
@@ -173,26 +173,26 @@ function logMutation(mutation: MutationRecord): void {
             const nodeValue =
                 (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).outerHTML) ||
                 (node.nodeType === Node.TEXT_NODE && node.nodeValue);
-            const existingId = nodeIndexContainer.getId(node);
+            const existingId = nodeIndexGenerator.getId(node);
             if (typeof existingId === 'number') {
                 return {
-                    parentId: nodeIndexContainer.getId(mutation.target),
+                    parentId: nodeIndexGenerator.getId(mutation.target),
                     nodeId: existingId,
                 };
             } else {
-                nodeIndexContainer.addIdToAllNodes(node);
+                nodeIndexGenerator.getnerateIds(node);
                 const addMutationInfo: AddedNodesTargetMutation = {
-                    parentId: nodeIndexContainer.getId(mutation.target),
+                    parentId: nodeIndexGenerator.getId(mutation.target),
                     nodeValue: nodeValue,
                     nodeType: node.nodeType,
                 };
                 if (mutation.previousSibling) {
-                    addMutationInfo.previousSiblingId = nodeIndexContainer.getId(
+                    addMutationInfo.previousSiblingId = nodeIndexGenerator.getId(
                         mutation.previousSibling,
                     );
                 }
                 if (mutation.nextSibling) {
-                    addMutationInfo.nextSiblingId = nodeIndexContainer.getId(mutation.nextSibling);
+                    addMutationInfo.nextSiblingId = nodeIndexGenerator.getId(mutation.nextSibling);
                 }
                 return addMutationInfo;
             }
@@ -206,7 +206,7 @@ copyButton.addEventListener('click', () => {
 });
 function clear(): void {
     console.clear();
-    nodeIndexContainer.resetContainerElement();
+    nodeIndexGenerator = new NodeIndexGenerator(editable);
     exportArea.textContent = '';
     currentEventStack = null;
     allEventStacks = [];
@@ -222,7 +222,7 @@ Object.keys(testContentNormalizer).forEach(key => {
     button.style.cursor = 'pointer';
     button.textContent = key;
     button.addEventListener('click', () => {
-        nodeIndexContainer.resetContainerElement();
+        nodeIndexGenerator = new NodeIndexGenerator(editable);
         setContentNormalizer(key);
     });
     templatesElement.appendChild(button);

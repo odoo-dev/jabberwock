@@ -54,7 +54,7 @@ export interface RemovedNodesTargetMutation {
 export interface AddedNodesTargetMutation {
     parentId: number;
     // When a node is added and was already present in the DOM, we capture the
-    // `id` of the node attributed by a `NodeIndexContainer`.
+    // `id` of the node attributed by a `NodeIndexGenerator`.
     nodeId?: number;
     // When a node is added from a mutation that was not in the DOM, the two
     // following key `nodeValue` contain the created node value
@@ -63,10 +63,10 @@ export interface AddedNodesTargetMutation {
     // following key `nodeType` contain the created node value
     nodeType?: number;
     // If present in the mutation, the following `id` is attributed by a
-    // `NodeIndexContainer`
+    // `NodeIndexGenerator`
     previousSiblingId?: number;
     // If present in the mutation, the following `id` is attributed by a
-    // `NodeIndexContainer`
+    // `NodeIndexGenerator`
     nextSiblingId?: number;
 }
 export interface TestMutationEvent {
@@ -81,12 +81,12 @@ export interface TestMutationEvent {
 export interface TestSelectionEvent {
     type: 'selection';
     focus: {
-        // The `id` of the focus node provided by `NodeIndexContainer`.
+        // The `id` of the focus node provided by `NodeIndexGenerator`.
         targetSelectionId: number;
         offset: number;
     };
     anchor: {
-        // The `id` of the anchor node provided by `NodeIndexContainer`.
+        // The `id` of the anchor node provided by `NodeIndexGenerator`.
         targetSelectionId: number;
         offset: number;
     };
@@ -229,34 +229,50 @@ export async function nextTick(): Promise<void> {
     return await new Promise((resolve): number => setTimeout(resolve));
 }
 
-export class NodeIndexContainer {
-    lastNodeId: number;
-    nodeIdMap: Map<Node, number>;
-    idNodeMap: Map<number, Node>;
-    containerElement: Element;
+/**
+ * The following class is used for recording event (for the tool `getKeys`) and
+ * for simulating them (in the current file).
+ *
+ * It's purpose is to have a unique `id` of a `Node` between the time we record
+ * an event and the time we simulate it.
+ *
+ * This is achieved by recursively generate a new `id` to all DOM nodes before
+ * and when recording events (i.e. when new node are added) as well as before
+ * and when simulating events.
+ *
+ * Before and when simulating event we run the same logic.
+ *
+ * When recording, to retrieve the `id` of a `Node`, use the method `getId`.
+ *
+ * When simulating, to retrieve the `Node` associated to `id`, use the method
+ * `getNode`.
+ */
+export class NodeIndexGenerator {
+    /**
+     * The last `id` generated.
+     */
+    lastNodeId = 0;
+    readonly nodeIdMap: Map<Node, number> = new Map<Node, number>();
+    readonly idNodeMap: Map<number, Node> = new Map<number, Node>();
 
-    constructor(editable: Element) {
-        this.containerElement = editable;
-
-        this.addIdToAllNodes = this.addIdToAllNodes.bind(this);
-        this.resetContainerElement = this.resetContainerElement.bind(this);
-
-        this.resetContainerElement();
+    constructor(public readonly containerElement: Element) {
+        this.getnerateIds(this.containerElement);
     }
 
-    addIdToAllNodes(node: Node): void {
+    /**
+     * Generate ids recursively on `node`.
+     *
+     * @param node
+     */
+    getnerateIds(node: Node): void {
         if (!this.nodeIdMap.get(node)) {
             const newId = this.lastNodeId++;
             this.nodeIdMap.set(node, newId);
             this.idNodeMap.set(newId, node);
         }
-        node.childNodes.forEach(this.addIdToAllNodes);
-    }
-    resetContainerElement(): void {
-        this.lastNodeId = 0;
-        this.nodeIdMap = new Map<Node, number>();
-        this.idNodeMap = new Map<number, Node>();
-        this.addIdToAllNodes(this.containerElement);
+        for (const childNode of node.childNodes) {
+            this.getnerateIds(childNode);
+        }
     }
     getId(node: Node): number {
         return this.nodeIdMap.get(node);
@@ -283,18 +299,18 @@ export class NodeIndexContainer {
 export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
     const addedNodes: Node[] = [];
     const editableElement = document.getElementById('editable');
-    const nodeIndexContainer = new NodeIndexContainer(editableElement);
+    const nodeIndexGenerator = new NodeIndexGenerator(editableElement);
     for (const eventStack of eventStackList) {
         eventStack.forEach((testEvent): void => {
             if (testEvent.type === 'mutation') {
                 const mutationEvent = testEvent;
                 const targetId = mutationEvent.targetId;
-                const mutatedNode = nodeIndexContainer.getNode(targetId);
+                const mutatedNode = nodeIndexGenerator.getNode(targetId);
                 if (testEvent.mutationType === 'childList') {
                     if (testEvent.removedNodes) {
                         testEvent.removedNodes
                             .map(removedNodeDescription => {
-                                return nodeIndexContainer.getNode(removedNodeDescription.nodeId);
+                                return nodeIndexGenerator.getNode(removedNodeDescription.nodeId);
                             })
                             .forEach(removedNode => {
                                 removedNode.parentNode.removeChild(removedNode);
@@ -303,7 +319,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                         testEvent.addedNodes.forEach(addedNodeDescription => {
                             let addedNode: Node;
                             if (addedNodeDescription.nodeId) {
-                                addedNode = nodeIndexContainer.getNode(addedNodeDescription.nodeId);
+                                addedNode = nodeIndexGenerator.getNode(addedNodeDescription.nodeId);
                             } else if (addedNodeDescription.nodeType === Node.ELEMENT_NODE) {
                                 const div = document.createElement('div');
                                 div.innerHTML = addedNodeDescription.nodeValue;
@@ -315,20 +331,20 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                             } else {
                                 throw new Error('Unknown node type');
                             }
-                            nodeIndexContainer.addIdToAllNodes(addedNode);
+                            nodeIndexGenerator.getnerateIds(addedNode);
 
                             if (addedNodeDescription.previousSiblingId) {
-                                const previousSibling = nodeIndexContainer.getNode(
+                                const previousSibling = nodeIndexGenerator.getNode(
                                     addedNodeDescription.previousSiblingId,
                                 );
                                 (previousSibling as ChildNode).after(addedNode);
                             } else if (addedNodeDescription.nextSiblingId) {
-                                const nextSibling = nodeIndexContainer.getNode(
+                                const nextSibling = nodeIndexGenerator.getNode(
                                     addedNodeDescription.nextSiblingId,
                                 );
                                 (nextSibling as ChildNode).before(addedNode);
                             } else {
-                                const parentNode = nodeIndexContainer.getNode(
+                                const parentNode = nodeIndexGenerator.getNode(
                                     addedNodeDescription.parentId,
                                 );
                                 parentNode.appendChild(addedNode);
@@ -342,9 +358,9 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                 if (testEvent.anchor.targetSelectionId) {
                     const selectionEvent = testEvent;
                     setRange(
-                        nodeIndexContainer.getNode(selectionEvent.anchor.targetSelectionId),
+                        nodeIndexGenerator.getNode(selectionEvent.anchor.targetSelectionId),
                         selectionEvent.anchor.offset,
-                        nodeIndexContainer.getNode(selectionEvent.focus.targetSelectionId),
+                        nodeIndexGenerator.getNode(selectionEvent.focus.targetSelectionId),
                         selectionEvent.focus.offset,
                     );
                 }
