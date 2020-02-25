@@ -184,7 +184,7 @@ function logMutation(mutation: MutationRecord): void {
                 const addMutationInfo: AddedNodesTargetMutation = {
                     parentId: nodeIndexContainer.getId(mutation.target),
                     nodeValue: nodeValue,
-                    nodeType: Node.ELEMENT_NODE,
+                    nodeType: node.nodeType,
                 };
                 if (mutation.previousSibling) {
                     addMutationInfo.previousSiblingId = nodeIndexContainer.getId(
@@ -192,9 +192,7 @@ function logMutation(mutation: MutationRecord): void {
                     );
                 }
                 if (mutation.nextSibling) {
-                    addMutationInfo.previousSiblingId = nodeIndexContainer.getId(
-                        mutation.previousSibling,
-                    );
+                    addMutationInfo.nextSiblingId = nodeIndexContainer.getId(mutation.nextSibling);
                 }
                 return addMutationInfo;
             }
