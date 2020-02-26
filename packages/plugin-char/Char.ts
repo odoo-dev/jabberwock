@@ -1,4 +1,4 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { CharNode } from './CharNode';
 import { CommandParams } from '../core/src/Dispatcher';
 import { FormatParams, Inline } from '../plugin-inline/Inline';
@@ -13,7 +13,7 @@ export interface InsertTextParams extends CommandParams {
     text: string;
 }
 
-export class Char extends JWPlugin {
+export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
     readonly parsers = [CharDomParser];
     readonly renderers = [CharFormatDomRenderer, CharDomRenderer];

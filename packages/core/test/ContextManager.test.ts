@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';

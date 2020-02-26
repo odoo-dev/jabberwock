@@ -1,4 +1,4 @@
-import { JWPlugin } from './JWPlugin';
+import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
 import { VSelectionDescription } from './VSelection';
@@ -16,7 +16,7 @@ export interface VSelectionParams {
     vSelection: VSelectionDescription;
 }
 
-export class CorePlugin extends JWPlugin {
+export class CorePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
     editor: JWEditor;
     commands = {
         insert: {
@@ -38,10 +38,6 @@ export class CorePlugin extends JWPlugin {
             handler: this.selectAll.bind(this),
         },
     };
-    constructor(editor) {
-        super(editor.dispatcher);
-        this.editor = editor;
-    }
 
     //--------------------------------------------------------------------------
     // Public

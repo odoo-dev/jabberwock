@@ -4,28 +4,20 @@ import { Shortcut } from './JWEditor';
 import { RendererConstructor, RenderingEngineConstructor } from './RenderingEngine';
 import { ParserConstructor, ParsingEngineConstructor } from './ParsingEngine';
 
-export interface JWPluginConfig {
-    name?: string;
-}
+export type JWPluginConfig = {};
 
-export class JWPlugin {
+export class JWPlugin<T extends JWPluginConfig = {}> {
     static readonly dependencies: Array<typeof JWPlugin> = [];
     readonly parsingEngines: ParsingEngineConstructor[];
     readonly parsers: ParserConstructor[];
     readonly renderingEngines: RenderingEngineConstructor[] = [];
     readonly renderers: RendererConstructor[];
     name: string;
-    editor: JWEditor;
     commands: Record<CommandIdentifier, CommandDefinition> = {};
     commandHooks: Record<CommandIdentifier, CommandHook> = {};
     shortcuts: Shortcut[];
 
-    constructor(editor: JWEditor, options: JWPluginConfig = {}) {
-        this.editor = editor;
-        // by default the name is that of its constructor (eg.: 'JWPlugin')
-        // todo: namespace
-        this.name = options.name || this.constructor.name;
-    }
+    constructor(public editor: JWEditor, public configuration: T) {}
 
     /**
      * Start the plugin. Called when the editor starts.

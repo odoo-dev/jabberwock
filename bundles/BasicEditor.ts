@@ -16,21 +16,22 @@ import { Inline } from '../packages/plugin-inline/Inline';
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
         super(editable);
-        this.loadConfig({
+
+        this.configure({
             createBaseContainer: () => new ParagraphNode(),
             plugins: [
-                Dom,
-                Inline,
-                Char,
-                LineBreak,
-                Heading,
-                Paragraph,
-                List,
-                Indent,
-                Span,
-                Bold,
-                Italic,
-                Underline,
+                [Dom],
+                [Inline],
+                [Char],
+                [LineBreak],
+                [Heading],
+                [Paragraph],
+                [List],
+                [Indent],
+                [Span],
+                [Bold],
+                [Italic],
+                [Underline],
             ],
         });
     }

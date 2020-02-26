@@ -1,4 +1,4 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { CommandParams } from '../core/src/Dispatcher';
 import { Format } from './Format';
 import { InlineNode } from './InlineNode';
@@ -8,7 +8,7 @@ export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 
-export class Inline extends JWPlugin {
+export class Inline<T extends JWPluginConfig> extends JWPlugin<T> {
     commands = {
         toggleFormat: {
             handler: this.toggleFormat.bind(this),

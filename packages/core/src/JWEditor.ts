@@ -1,7 +1,7 @@
 import { BoundCommand, Keymap } from './Keymap';
 import { Dispatcher, CommandIdentifier } from './Dispatcher';
 import { EventManager } from './EventManager';
-import { JWPlugin } from './JWPlugin';
+import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { VNode } from './VNodes/VNode';
@@ -12,6 +12,7 @@ import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
+import { isConstructor } from '../../utils/src/utils';
 
 export enum Platform {
     MAC = 'mac',
@@ -29,10 +30,7 @@ export interface Shortcut extends BoundCommand {
 }
 
 export interface JWEditorConfig {
-    autoFocus?: boolean;
-    debug?: boolean;
-    theme?: string;
-    plugins?: Array<typeof JWPlugin>;
+    plugins?: [typeof JWPlugin, JWPluginConfig?][];
     shortcuts?: Shortcut[];
     createBaseContainer?: () => VNode;
 }
@@ -46,9 +44,12 @@ export class JWEditor {
     eventManager: EventManager;
     contextManager: ContextManager;
     plugins: JWPlugin[];
+    configuration: JWEditorConfig = {
+        plugins: [],
+        createBaseContainer: () => new VElement('P'),
+    };
     vDocument: VDocument;
     selection = new VSelection();
-    autoFocus = false;
     keymaps = {
         default: new Keymap(),
         user: new Keymap(),
@@ -56,7 +57,6 @@ export class JWEditor {
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
-    createBaseContainer: () => VNode = () => new VElement('P');
 
     constructor(editable?: HTMLElement) {
         this.el = document.createElement('jw-editor');
@@ -82,7 +82,14 @@ export class JWEditor {
 
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
-        this.addPlugin(CorePlugin);
+        this.loadPlugin(CorePlugin);
+    }
+
+    /**
+     * Create the most basic VNode container for the current configuration.
+     */
+    get createBaseContainer(): () => VNode {
+        return this.configuration.createBaseContainer;
     }
 
     /**
@@ -90,6 +97,15 @@ export class JWEditor {
      */
     async start(): Promise<void> {
         this._mode = Mode.EDITION;
+        this._loadPlugins();
+
+        // Load configured editor-level shortcuts.
+        if (this.configuration.shortcuts) {
+            for (const shortcut of this.configuration.shortcuts) {
+                this._loadShortcut(shortcut, this.keymaps.user);
+            }
+        }
+
         const root = new FragmentNode();
         if (this._originalEditable.innerHTML !== '') {
             if (!this.parsers.dom) {
@@ -105,10 +121,6 @@ export class JWEditor {
             }
         }
         this.vDocument = new VDocument(root);
-
-        if (this.autoFocus && (!this.selection.anchor.parent || !this.selection.focus.parent)) {
-            this.selection.setAt(this.vDocument.root);
-        }
 
         // Deep clone the given editable node in order to break free of any
         // handler that might have been previously registered.
@@ -154,38 +166,52 @@ export class JWEditor {
     //--------------------------------------------------------------------------
 
     /**
-     * Load the given plugin into this editor instance.
+     * Load the given plugin with given configuration.
      *
      * @param Plugin
+     * @param config
      */
-    addPlugin(Plugin: typeof JWPlugin): void {
+    loadPlugin<T extends typeof JWPlugin>(Plugin: T, config?: ConstructorParameters<T>[1]): void {
         if (this._mode === Mode.EDITION) {
             throw new Error("You can't add plugin when the editor is already started");
         }
+        const index = this.configuration.plugins.findIndex(([p]) => p === Plugin);
+        if (index !== -1) {
+            // Protect against loading the same plugin twice.
+            this.configuration.plugins.splice(index, 1);
+        }
+        this.configuration.plugins.push([Plugin, config || {}]);
+    }
 
+    /**
+     * Load the plugins specified in the editor configuration.
+     *
+     */
+    private _loadPlugins(): void {
         // Resolve dependencies.
-        const pluginsToLoad = [Plugin];
-        let offset = 1;
-        while (offset <= pluginsToLoad.length) {
-            const Plugin = pluginsToLoad[pluginsToLoad.length - offset];
-            if (this.plugins.find(plugin => plugin instanceof Plugin)) {
-                // Protect against loading the same plugin twice.
-                pluginsToLoad.splice(pluginsToLoad.length - offset, 1);
-            } else {
-                // Add new dependencies to check.
-                for (const dependency of Plugin.dependencies) {
-                    if (!pluginsToLoad.includes(dependency)) {
-                        pluginsToLoad.unshift(dependency);
-                    }
+        const Plugins = this.configuration.plugins.slice();
+        for (let offset = 1; offset <= Plugins.length; offset++) {
+            const index = Plugins.length - offset;
+            const [Plugin] = Plugins[index];
+            for (const Dependency of Plugin.dependencies.slice().reverse()) {
+                const depIndex = Plugins.findIndex(([p]) => p === Dependency);
+                if (depIndex === -1) {
+                    // Load the missing dependency with no config parameters.
+                    Plugins.splice(index, 0, [Dependency, {}]);
+                } else if (depIndex > index) {
+                    // Load the dependency before the plugin depending on it.
+                    const [[Dep, config]] = Plugins.splice(depIndex, 1);
+                    Plugins.splice(index, 0, [Dep, config]);
                 }
-                offset++;
             }
         }
 
         // Load plugins.
-        for (const pluginClass of pluginsToLoad) {
-            const plugin: JWPlugin = new pluginClass(this);
+        for (const [PluginClass, configuration] of Plugins) {
+            const plugin = new PluginClass(this, configuration);
+
             this.plugins.push(plugin);
+
             // Register the commands of this plugin.
             Object.keys(plugin.commands).forEach(key => {
                 this.dispatcher.registerCommand(key, plugin.commands[key]);
@@ -217,7 +243,8 @@ export class JWEditor {
                     // could not be done earlier without the rendering engine.
                     for (const plugin of this.plugins) {
                         if (plugin.renderers) {
-                            for (const RendererClass of plugin.renderers) {
+                            const renderers = [...plugin.renderers].reverse();
+                            for (const RendererClass of renderers) {
                                 if (RendererClass.id === id) {
                                     engine.register(RendererClass);
                                 }
@@ -229,7 +256,7 @@ export class JWEditor {
 
             // Load renderers.
             if (plugin.renderers) {
-                const renderers = plugin.renderers.slice().reverse();
+                const renderers = [...plugin.renderers].reverse();
                 for (const RendererClass of renderers) {
                     const renderingEngine = this.renderers[RendererClass.id];
                     if (renderingEngine) {
@@ -241,29 +268,46 @@ export class JWEditor {
     }
 
     /**
-     * Load the given config in this editor instance.
+     * Configure this editor instance with the given `config` object, or
+     * configure the given plugin with the given configuration object.
      *
-     * @param config
+     * @param editorConfig | Plugin
+     * @param [PluginConfig]
      */
-    loadConfig(config: JWEditorConfig): void {
+    configure(editorConfig: JWEditorConfig): void;
+    configure<T extends typeof JWPlugin>(
+        Plugin: T,
+        pluginConfig: ConstructorParameters<T>[1],
+    ): void;
+    configure<T extends typeof JWPlugin>(
+        PluginOrEditorConfig: JWEditorConfig | T,
+        pluginConfig?: ConstructorParameters<T>[1],
+    ): void {
         if (this._mode === Mode.EDITION) {
             throw new Error(
                 "You can't change the configuration when the editor is already started",
             );
         }
-        if (config.autoFocus) {
-            this.autoFocus = config.autoFocus;
-        }
-        if (config.plugins) {
-            config.plugins.forEach(pluginClass => this.addPlugin(pluginClass));
-        }
-        if (config.shortcuts) {
-            for (const shortcut of config.shortcuts) {
-                this._loadShortcut(shortcut, this.keymaps.user);
+        if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
+            const Plugin = PluginOrEditorConfig;
+            const conf = this.configuration.plugins.find(([p]) => p === Plugin);
+            if (conf) {
+                // Update the previous config if the plugin was already added.
+                conf[1] = { ...conf[1], ...pluginConfig };
+            } else {
+                // Add the new plugin constructor and his configuration.
+                this.configuration.plugins.push([Plugin, pluginConfig]);
             }
-        }
-        if (config.createBaseContainer) {
-            this.createBaseContainer = config.createBaseContainer;
+        } else {
+            const preconf = this.configuration;
+            const conf = PluginOrEditorConfig;
+            const configuration = { ...preconf, ...conf };
+            // The `plugins` configuration key is an array so it needs to be
+            // handled separately in order to properly merge it.
+            if (conf.plugins) {
+                configuration.plugins = [...preconf.plugins, ...conf.plugins];
+            }
+            this.configuration = configuration;
         }
     }
 

@@ -1,4 +1,4 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { VNode, RelativePosition } from '../core/src/VNodes/VNode';
 import { VSelection, VSelectionDescription, Direction } from '../core/src/VSelection';
 import { DomMap } from './DomMap';
@@ -9,9 +9,16 @@ import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
 import { RenderingEngine } from '../core/src/RenderingEngine';
 
-export class Dom extends JWPlugin {
+interface DomConfig extends JWPluginConfig {
+    autoFocus?: boolean;
+}
+
+export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     readonly parsingEngines = [DomParsingEngine];
     readonly renderingEngines = [DomRenderingEngine];
+    configuration = this.configuration || {
+        autoFocus: false,
+    };
     commandHooks = {
         '*': this._renderInEditable.bind(this),
     };
@@ -19,26 +26,29 @@ export class Dom extends JWPlugin {
     domMap = new DomMap();
 
     async start(): Promise<void> {
-        const node = this.editor._originalEditable;
-        this.domMap.set(this.editor.vDocument.root, node);
-        const engine = this.editor.parsers.dom as ParsingEngine<Node>;
+        const editable = this.editor._originalEditable;
 
+        // Construct DOM map from the parsing in order to parse the selection.
+        this.domMap.set(this.editor.vDocument.root, editable);
+        const engine = this.editor.parsers.dom as ParsingEngine<Node>;
         for (const [domNode, nodes] of engine.parsingMap) {
             for (const node of nodes) {
                 this.domMap.set(node, domNode);
             }
         }
 
-        // Parse the selection
-        const selection = node.ownerDocument.getSelection();
+        // Parse the selection.
+        const selection = editable.ownerDocument.getSelection();
+        const anchorNode = selection.anchorNode;
+        const focusNode = selection.focusNode;
         if (
-            (node === selection.anchorNode || node.contains(selection.anchorNode)) &&
-            (node === selection.focusNode || node.contains(selection.focusNode))
+            (editable === anchorNode || editable.contains(anchorNode)) &&
+            (editable === focusNode || editable.contains(focusNode))
         ) {
             this.editor.selection.set(this.parseSelection(selection));
+        } else if (this.configuration.autoFocus) {
+            this.editor.selection.setAt(this.editor.vDocument.root);
         }
-
-        this.domMap.clear();
 
         return this._renderInEditable();
     }

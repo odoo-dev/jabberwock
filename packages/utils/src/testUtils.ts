@@ -6,7 +6,6 @@ import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
-import { Dom } from '../../plugin-dom/Dom';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -104,8 +103,7 @@ async function testPlugin(
     }
     const container = document.createElement('p');
     const editor = initSpec(Editor, spec, container);
-    editor.addPlugin(Plugin);
-    editor.addPlugin(Dom);
+    editor.loadPlugin(Plugin);
     await testSpec(editor, spec);
     container.remove();
 }
@@ -135,7 +133,7 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
 async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     // Forward debug mode from the spec to the editor.
     if (spec.debug) {
-        editor.addPlugin(DevTools);
+        editor.loadPlugin(DevTools);
     }
 
     if (spec.beforeStart) {
