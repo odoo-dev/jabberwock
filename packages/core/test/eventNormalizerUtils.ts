@@ -155,17 +155,17 @@ const eventTypes: Record<string, new (name: string, options: object) => Event> =
  * @returns {Promise <Event>}
  */
 export function triggerEvent(
-    el: Node,
+    el: Node | Element,
     eventName: string,
     options: TriggerNativeEventsOption,
 ): Event {
     if (!el) {
-        console.warn('Try to trigger an event on an undefined node');
+        console.warn('Impossible to trigger an event on an undefined node.');
         return;
     }
-    el = (el as HTMLElement).tagName ? el : el.parentNode;
-    if (!el.parentNode) {
-        console.warn('Try to trigger an event on a node out of the DOM');
+    const currentElement = el instanceof Element ? el : el.parentNode;
+    if (!currentElement.parentNode) {
+        console.warn('Impossible to trigger an event on a node out of the DOM.');
         return;
     }
     options = Object.assign(
@@ -182,7 +182,7 @@ export function triggerEvent(
     }
     const ev = new EventClass(eventName, options);
 
-    el.dispatchEvent(ev);
+    currentElement.dispatchEvent(ev);
     return ev;
 }
 export function setRange(
