@@ -275,7 +275,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
     const editableElement = document.getElementById('editable');
     const nodeIndexGenerator = new NodeIndexGenerator(editableElement);
     for (const eventStack of eventStackList) {
-        eventStack.forEach((testEvent): void => {
+        for (const testEvent of eventStack) {
             if (testEvent.type === 'mutation') {
                 const mutationEvent = testEvent;
                 const targetId = mutationEvent.targetId;
@@ -344,7 +344,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                 const { type, ...options } = testEvent;
                 triggerEvent(editableElement, type, options as TriggerNativeEventsOption);
             }
-        });
+        }
         await nextTick();
         // After the first nextTick(which trigger a setTimeout), there is still
         // some microtasks that might execute.  We wait another tick (i.e.
