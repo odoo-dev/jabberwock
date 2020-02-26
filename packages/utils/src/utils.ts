@@ -1,6 +1,15 @@
 export type Constructor<T> = new (...args) => T;
 
 /**
+ * Return whether the given constructor is a constructor of given superClass.
+ *
+ * @param constructor
+ * @param superClass
+ */
+export function isConstructor<T extends Function>(constructor, superClass: T): constructor is T {
+    return constructor.prototype instanceof superClass || constructor === superClass;
+}
+/**
  * Return true if object a is deep equal to object b, false otherwise.
  *
  * @param a

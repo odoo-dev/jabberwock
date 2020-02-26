@@ -1,4 +1,4 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { ListNode, ListType } from './ListNode';
 import { VNode } from '../core/src/VNodes/VNode';
 import { CommandParams } from '../core/src/Dispatcher';
@@ -15,7 +15,7 @@ export interface ListParams extends CommandParams {
     type: ListType;
 }
 
-export class List extends JWPlugin {
+export class List<T extends JWPluginConfig> extends JWPlugin<T> {
     static isListItem(node: VNode): boolean {
         return node.parent && node.parent.is(ListNode);
     }

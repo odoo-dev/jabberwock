@@ -3,5 +3,6 @@
         "target": "esnext",
         "incremental": true,
         "moduleResolution": "node",
+        "sourceMap": true
     },
 }

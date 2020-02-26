@@ -7,7 +7,7 @@ import { HeadingNode } from '../../plugin-heading/HeadingNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
-import { JWPlugin } from '../src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
@@ -1128,11 +1128,11 @@ describe('core', () => {
                         }
                     }
 
-                    class MyCustomPlugin extends JWPlugin {
+                    class MyCustomPlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                         readonly parsers = [MyCustomParser];
                     }
-                    editor.addPlugin(Dom);
-                    editor.addPlugin(MyCustomPlugin);
+                    editor.loadPlugin(Dom);
+                    editor.loadPlugin(MyCustomPlugin);
                     await editor.start();
                     const customVNode = editor.vDocument.root.firstChild();
                     expect(customVNode.constructor.name).to.equal('MyCustomNode');

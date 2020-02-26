@@ -59,7 +59,7 @@ const insertText = async (editor: JWEditor, text: string): Promise<void> => {
 describePlugin(List, testEditor => {
     describe('parse', () => {
         const editor = new JWEditor();
-        editor.loadConfig({ createBaseContainer: () => new ParagraphNode() });
+        editor.configure({ createBaseContainer: () => new ParagraphNode() });
         const engine = new DomParsingEngine(editor);
         engine.register(CharDomParser);
         engine.register(HeadingDomParser);

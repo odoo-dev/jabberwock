@@ -1,4 +1,4 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { HeadingDomParser } from './HeadingDomParser';
 import { HeadingNode } from './HeadingNode';
 import { CommandParams } from '../core/src/Dispatcher';
@@ -9,7 +9,7 @@ export interface HeadingParams extends CommandParams {
     level: number;
 }
 
-export class Heading extends JWPlugin {
+export class Heading<T extends JWPluginConfig> extends JWPlugin<T> {
     readonly parsers = [HeadingDomParser];
     commands = {
         applyHeadingStyle: {

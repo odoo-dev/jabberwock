@@ -1,10 +1,10 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { LineBreakNode } from './LineBreakNode';
 import { LineBreakDomParser } from './LineBreakDomParser';
 import { LineBreakDomRenderer } from './LineBreakDomRenderer';
 import { InsertParams } from '../core/src/CorePlugin';
 
-export class LineBreak extends JWPlugin {
+export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> {
     readonly parsers = [LineBreakDomParser];
     renderers = [LineBreakDomRenderer];
     commands = {

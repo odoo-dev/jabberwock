@@ -1,5 +1,5 @@
 import JWEditor from '../../core/src/JWEditor';
-import { JWPlugin } from '../../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { VNode, RelativePosition, Point } from '../../core/src/VNodes/VNode';
 import { Char, InsertTextParams } from '../../plugin-char/Char';
@@ -11,7 +11,7 @@ import { withRange, VRange } from '../../core/src/VRange';
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
 
-export class Indent extends JWPlugin {
+export class Indent<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Char, LineBreak];
     editor: JWEditor;
     commands = {

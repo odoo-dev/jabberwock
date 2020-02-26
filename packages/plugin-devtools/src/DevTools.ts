@@ -1,8 +1,8 @@
-import { JWPlugin } from '../../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { OwlUI } from '../../owl-ui/src/OwlUI';
 import { DevToolsUI } from './DevToolsUI';
 
-export class DevTools extends JWPlugin {
+export class DevTools<T extends JWPluginConfig> extends JWPlugin<T> {
     ui = new OwlUI(this.editor);
     /**
      * Start the ui when the editor stops.
