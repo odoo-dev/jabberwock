@@ -2696,6 +2696,9 @@ describe('utils', () => {
                         });
 
                         it('deleteWordBackward word in middle of sentence with style (ubuntu chrome)', async () => {
+                            // todo: document this for all tests
+                            // <p>Hey, <b>hello[]</b> world</p>
+                            // ctrl + backspace
                             await triggerEvents([
                                 [
                                     {
