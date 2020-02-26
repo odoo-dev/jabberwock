@@ -99,37 +99,11 @@ export type TestEvent =
     | TestMutationEvent
     | TestSelectionEvent;
 
-const _eventTypes = {
-    MouseEvent: [
-        'pointer',
-        'contextmenu',
-        'select',
-        'wheel',
-        'click',
-        'dblclick',
-        'mousedown',
-        'mouseenter',
-        'mouseleave',
-        'mousemove',
-        'mouseout',
-        'mouseover',
-        'mouseup',
-    ],
-    CompositionEvent: ['compositionstart', 'compositionend', 'compositionupdate'],
-    InputEvent: ['input', 'beforeinput'],
-    KeyboardEvent: ['keydown', 'keypress', 'keyup'],
-    DragEvent: ['dragstart', 'dragend', 'drop'],
-    ClipboardEvent: ['beforecut', 'cut', 'paste'],
-    TouchEvent: ['touchstart', 'touchend'],
-};
-const _eventTypeMap: Record<string, string> = {};
-for (const type of Object.keys(_eventTypes)) {
-    for (const name of _eventTypes[type]) {
-        _eventTypeMap[name] = type;
-    }
-}
-
-class InputEventBis extends InputEvent {
+/**
+ * The class exists because the original `InputEvent` does not allow to override
+ * its inputType property.
+ */
+class SimulatedInputEvent extends InputEvent {
     eventInitDict: InputEventInit;
     constructor(type: string, eventInitDict?: InputEventInit) {
         super(type, eventInitDict);
@@ -139,6 +113,39 @@ class InputEventBis extends InputEvent {
         return this.eventInitDict.inputType;
     }
 }
+
+const eventTypes: Record<string, new (name: string, options: object) => Event> = {
+    'pointer': MouseEvent,
+    'contextmenu': MouseEvent,
+    'select': MouseEvent,
+    'wheel': MouseEvent,
+    'click': MouseEvent,
+    'dblclick': MouseEvent,
+    'mousedown': MouseEvent,
+    'mouseenter': MouseEvent,
+    'mouseleave': MouseEvent,
+    'mousemove': MouseEvent,
+    'mouseout': MouseEvent,
+    'mouseover': MouseEvent,
+    'mouseup': MouseEvent,
+    'compositionstart': CompositionEvent,
+    'compositionend': CompositionEvent,
+    'compositionupdate': CompositionEvent,
+    'input': SimulatedInputEvent,
+    'beforeinput': SimulatedInputEvent,
+    'keydown': KeyboardEvent,
+    'keypress': KeyboardEvent,
+    'keyup': KeyboardEvent,
+    'dragstart': DragEvent,
+    'dragend': DragEvent,
+    'drop': DragEvent,
+    'beforecut': ClipboardEvent,
+    'cut': ClipboardEvent,
+    'paste': ClipboardEvent,
+    'touchstart': TouchEvent,
+    'touchend': TouchEvent,
+};
+
 /**
  * Trigger events natively on the specified target.
  *
@@ -169,37 +176,12 @@ export function triggerEvent(
         },
         options,
     );
-    const type = _eventTypeMap[eventName];
-    let ev: Event;
-    switch (type) {
-        case 'MouseEvent':
-            ev = new MouseEvent(eventName, options);
-            break;
-        case 'KeyboardEvent':
-            ev = new KeyboardEvent(eventName, options);
-            break;
-        case 'CompositionEvent':
-            ev = new CompositionEvent(eventName, options);
-            break;
-        case 'DragEvent':
-            ev = new DragEvent(eventName, options);
-            break;
-        case 'ClipboardEvent':
-            if (!('clipboardData' in options)) {
-                throw new Error('Wrong test');
-            }
-            ev = new ClipboardEvent(eventName, options);
-            break;
-        case 'InputEvent':
-            ev = new InputEventBis(eventName, options);
-            break;
-        case 'TouchEvent':
-            ev = new TouchEvent(eventName, options);
-            break;
-        default:
-            ev = new Event(eventName, options);
-            break;
+    const EventClass = eventTypes[eventName] || Event;
+    if (EventClass === ClipboardEvent && !('clipboardData' in options)) {
+        throw new Error('Wrong test');
     }
+    const ev = new EventClass(eventName, options);
+
     el.dispatchEvent(ev);
     return ev;
 }
