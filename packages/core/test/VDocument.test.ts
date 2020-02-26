@@ -526,73 +526,6 @@ describe('VDocument', () => {
                     contentAfter: '<h1>[]gh</h1>',
                 });
             });
-            it('should delete a selection from within a block to within a child of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore: '<div class="a">ab[cd<div class="b">ef]gh</div>ijk</div>',
-                    stepFunction: deleteForward,
-                    contentAfter: '<div class="a">ab[]<span class="b">gh</span><br>ijk</div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore: '<div class="a">ab]cd<div class="b">ef[gh</div>ijk</div>',
-                    stepFunction: deleteForward,
-                    contentAfter: '<div class="a">ab[]<span class="b">gh</span><br>ijk</div>',
-                });
-            });
-            it('should delete a selection to within a block from within a child of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">de[fg</div>hi]jk<div class="c">lmn</div></div>',
-                    stepFunction: deleteForward,
-                    contentAfter:
-                        '<div class="a">abc<div class="b">de[]<span style="a">jk</span></div><div class="c">lmn</div></div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">de]fg</div>hi[jk<div class="c">lmn</div></div>',
-                    stepFunction: deleteForward,
-                    contentAfter: '<div class="a">ab[]<span class="b">gh</span><br>ijk</div>',
-                });
-            });
-            it('should delete a selection from within a block to within a grandchild of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">ab[cd<div class="b">efg<div class="c">hi]jk</div>lmn</div>opq</div>',
-                    stepFunction: deleteForward,
-                    contentAfter:
-                        '<div class="a">ab[]<span class="c">jk</span><div class="b">lmn</div>opq</div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">ab]cd<div class="b">efg<div class="c">hi[jk</div>lmn</div>opq</div>',
-                    stepFunction: deleteForward,
-                    contentAfter:
-                        '<div class="a">ab[]<span class="c">jk</span><div class="b">lmn</div>opq</div>',
-                });
-            });
-            it('should delete a selection to within a block from within a grandchild of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[ij</div>klm</div>no]pq</div>',
-                    stepFunction: deleteForward,
-                    contentAfter:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[]<span class="a">pq</span></div></div></div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[ij</div>klm</div>no]pq</div>',
-                    stepFunction: deleteForward,
-                    contentAfter:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[]<span class="a">pq</span></div></div></div>',
-                });
-            });
         });
     });
     // Note: implementing a test for deleteBackward, make sure to implement
@@ -1185,73 +1118,6 @@ describe('VDocument', () => {
                     contentAfter: '<h1>[]gh</h1>',
                 });
             });
-            it('should delete a selection from within a block to within a child of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore: '<div class="a">ab[cd<div class="b">ef]gh</div>ijk</div>',
-                    stepFunction: deleteBackward,
-                    contentAfter: '<div class="a">ab[]<span class="b">gh</span><br>ijk</div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore: '<div class="a">ab]cd<div class="b">ef[gh</div>ijk</div>',
-                    stepFunction: deleteBackward,
-                    contentAfter: '<div class="a">ab[]<span class="b">gh</span><br>ijk</div>',
-                });
-            });
-            it('should delete a selection to within a block from within a child of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">de[fg</div>hi]jk<div class="c">lmn</div></div>',
-                    stepFunction: deleteBackward,
-                    contentAfter:
-                        '<div class="a">abc<div class="b">de[]<span style="a">jk</span></div><div class="c">lmn</div></div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">de]fg</div>hi[jk<div class="c">lmn</div></div>',
-                    stepFunction: deleteBackward,
-                    contentAfter: '<div class="a">ab[]<span class="b">gh</span><br>ijk</div>',
-                });
-            });
-            it('should delete a selection from within a block to within a grandchild of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">ab[cd<div class="b">efg<div class="c">hi]jk</div>lmn</div>opq</div>',
-                    stepFunction: deleteBackward,
-                    contentAfter:
-                        '<div class="a">ab[]<span class="c">jk</span><div class="b">lmn</div>opq</div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">ab]cd<div class="b">efg<div class="c">hi[jk</div>lmn</div>opq</div>',
-                    stepFunction: deleteBackward,
-                    contentAfter:
-                        '<div class="a">ab[]<span class="c">jk</span><div class="b">lmn</div>opq</div>',
-                });
-            });
-            it('should delete a selection to within a block from within a grandchild of the same block', async () => {
-                // Forward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[ij</div>klm</div>no]pq</div>',
-                    stepFunction: deleteBackward,
-                    contentAfter:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[]<span class="a">pq</span></div></div></div>',
-                });
-                // Backward selection
-                await testEditor(BasicEditor, {
-                    contentBefore:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[ij</div>klm</div>no]pq</div>',
-                    stepFunction: deleteBackward,
-                    contentAfter:
-                        '<div class="a">abc<div class="b">def<div class="c">gh[]<span class="a">pq</span></div></div></div>',
-                });
-            });
         });
     });
     describe('insertParagraphBreak', () => {
@@ -1319,23 +1185,6 @@ describe('VDocument', () => {
                         stepFunction: insertParagraphBreak,
                         // The space should have been parsed away.
                         contentAfter: '<p>abc</p><p>[]<br></p>',
-                    });
-                });
-                it('should wrap a text node into a new paragraph', async () => {
-                    await testEditor(BasicEditor, {
-                        contentBefore: 'ab[]cd',
-                        stepFunction: insertParagraphBreak,
-                        contentAfter: 'ab<p>[]cd</p>',
-                    });
-                });
-                it('should insert an empty paragraph after a text node', async () => {
-                    await testEditor(BasicEditor, {
-                        contentBefore: 'ab[]<p>cd</p>',
-                        stepFunction: insertParagraphBreak,
-                        contentAfter: 'ab<p>[]<br></p><p>cd</p>',
-                        // Note: contenteditable doesn't natively behave like
-                        // this. It would do `ab<div><br><p>cd</p></div>`
-                        // instead but we consider this to be poor behavior.
                     });
                 });
             });
