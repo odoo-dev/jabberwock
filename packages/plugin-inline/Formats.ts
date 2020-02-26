@@ -3,23 +3,14 @@ import { Constructor } from '../utils/src/utils';
 
 export class Formats extends Array<Format> {
     constructor(...formats: Array<Format | Constructor<Format>>) {
-        // Native constructor of Array takes a number. It is called with a
-        // number ie. by `splice`.
-        super(typeof formats[0] === 'number' ? formats[0] : 0);
-        if (typeof formats[0] !== 'number') {
+        // Native Array constructor takes the length as argument.
+        const length = formats[0];
+        if (typeof length === 'number') {
+            super(length);
+        } else {
+            super(0);
             this.append(...formats);
         }
-    }
-
-    //--------------------------------------------------------------------------
-    // Lifecycle
-    //--------------------------------------------------------------------------
-
-    /**
-     * Return an new instance of the class, with a copy of its contents.
-     */
-    clone(): Formats {
-        return new Formats(...this);
     }
 
     //--------------------------------------------------------------------------
@@ -27,8 +18,8 @@ export class Formats extends Array<Format> {
     //--------------------------------------------------------------------------
 
     /**
-     * Push one or more formats to the array. If one of the formats passed is an
-     * uninstantiated format class, instantiate it.
+     * Append one or more formats to the array. If one of the given formats is a
+     * format class constructor, instantiate it.
      *
      * @param formats
      */
@@ -42,8 +33,8 @@ export class Formats extends Array<Format> {
         }
     }
     /**
-     * Unshift one or more formats to the array. If one of the formats passed is
-     * an uninstantiated format class, instantiate it.
+     * Prepend one or more formats to the array. If one of the given formats is
+     * a format class constructor, instantiate it.
      *
      * @param formats
      */
@@ -58,42 +49,38 @@ export class Formats extends Array<Format> {
     }
     /**
      * Return the first format in the array that is an instance of the given
-     * format class, if any. If the format passed is actually an instance,
-     * return it if it was present in the array.
+     * format class, if any. If the format passed is a format instance, return
+     * it if it was present in the array.
      *
      * @param format
      */
     get<T extends Format>(format: T | Constructor<T>): T {
         if (format instanceof Format) {
-            return this.find(formatInstance => formatInstance === format) as T;
+            return this.find(instance => instance === format) as T;
         } else {
-            return this.find(formatInstance => formatInstance instanceof format) as T;
-        }
-    }
-    /**
-     * Return the index of the first format in the array that is an instance of
-     * the given format class or that matches the particular instance passed (if
-     * an instance was passed and not a constructor), if any.
-     *
-     * @param format
-     */
-    getIndex(format: Format | Constructor<Format>): number {
-        if (format instanceof Format) {
-            return this.indexOf(format);
-        } else {
-            return this.findIndex(formatInstance => formatInstance instanceof format);
+            for (const instance of this) {
+                if (instance instanceof format) {
+                    return instance;
+                }
+            }
         }
     }
     /**
      * Remove the first format in the array that is an instance of the given
-     * format class or that matches the particular instance passed (if an
-     * instance was passed and not a constructor), if any. Return true if a
-     * format was removed, false otherwise.
+     * format class. If a format instance is given, remove that particuar
+     * instance from the array. Return true if a format was removed, false
+     * otherwise.
      *
      * @param format
      */
     remove(format: Format | Constructor<Format>): boolean {
-        const formatIndex = this.getIndex(format);
+        const formatIndex = this.findIndex(formatInstance => {
+            if (format instanceof Format) {
+                return formatInstance === format;
+            } else {
+                return formatInstance instanceof format;
+            }
+        });
         if (formatIndex === -1) {
             return false;
         } else {
@@ -103,10 +90,9 @@ export class Formats extends Array<Format> {
     }
     /**
      * Replace the first format in the array that is an instance of the given
-     * format class or that matches the particular instance passed (if an
-     * instance was passed and not a constructor), if any, with the given format
-     * instance. If the new format passed is a class, instantiate it.
-     * If no format was found, simply add the new format to the array.
+     * format class or that matches the particular instance passed with the
+     * given format instance. If the new format passed is a class, instantiate
+     * it. If no format was found, simply push the new format on the array.
      *
      * Return true if a format was replaced, false if the format was simply
      * added.
@@ -118,26 +104,37 @@ export class Formats extends Array<Format> {
         oldFormat: Format | Constructor<Format>,
         newFormat: Format | Constructor<Format>,
     ): boolean {
-        const formatIndex = this.getIndex(oldFormat);
-        const newFormatInstance = newFormat instanceof Format ? newFormat : new newFormat();
-        if (formatIndex === -1) {
+        const oldFormatIndex = this.findIndex(formatInstance => {
+            if (oldFormat instanceof Format) {
+                return formatInstance === oldFormat;
+            } else {
+                return formatInstance instanceof oldFormat;
+            }
+        });
+        if (oldFormatIndex === -1) {
             this.append(newFormat);
             return false;
         } else {
-            this.splice(formatIndex, 1, newFormatInstance);
+            const format = newFormat instanceof Format ? newFormat : new newFormat();
+            this[oldFormatIndex] = format;
             return true;
         }
     }
     /**
      * Remove the first format in the array that is an instance of the given
-     * format class or that matches the particular instance passed (if an
-     * instance was passed and not a constructor).
-     * If no format was found, add the format passed instead.
-     * If the new format passed is a class, instantiate it.
+     * format class or that matches the particular instance passed.
+     * If no format was found, add the given format instead.
+     * If the given new format is a class, instantiate it.
      *
      * @param format
      */
     toggle(format: Format | Constructor<Format>): void {
         this.remove(format) || this.append(format);
+    }
+    /**
+     * Return an new instance of the class, with a copy of its contents.
+     */
+    clone(): Formats {
+        return new Formats(...this);
     }
 }
