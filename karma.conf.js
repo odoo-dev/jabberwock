@@ -58,9 +58,12 @@ module.exports = function(config) {
     }
 
     let port = 0;
+    let mochaTimeout = 2000;
     if (config.debug) {
         port = 9876;
         webpackConfig.devtool = 'inline-source-map';
+        // When debuging in the browser, do not timeout
+        mochaTimeout = 1000000;
     }
 
     config.set({
@@ -128,5 +131,10 @@ module.exports = function(config) {
         mochaReporter: {
             showDiff: true,
         },
+        client: {
+            mocha:{
+                timeout: mochaTimeout
+            }
+        }
     });
 };
