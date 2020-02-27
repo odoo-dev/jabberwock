@@ -640,6 +640,7 @@ export class EventNormalizer {
 
         // Compute the set of mutated elements accross all observed events.
         const mutatedElements = this._mutationNormalizer.getMutatedElements();
+        this._mutationNormalizer.stop();
 
         // When the browser trigger multiples keydown at once, for each keydown
         // there is always also a keypress and an input that must be present.
@@ -708,7 +709,6 @@ export class EventNormalizer {
             normalizedActions.push(historyAction);
         }
 
-        this._mutationNormalizer.stop();
         this._events = null;
 
         // Select all on safari does not provide all the informations the first
