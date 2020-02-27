@@ -11,6 +11,7 @@ import { Dom } from '../../plugin-dom/Dom';
 export interface TestEditorSpec {
     contentBefore: string;
     contentAfter?: string;
+    beforeStart?: (editor: JWEditor) => void | Promise<void>;
     stepFunction?: (editor: JWEditor) => void | Promise<void>;
     debug?: boolean;
 }
@@ -135,6 +136,10 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     // Forward debug mode from the spec to the editor.
     if (spec.debug) {
         editor.addPlugin(DevTools);
+    }
+
+    if (spec.beforeStart) {
+        await spec.beforeStart(editor);
     }
 
     // Start the editor and execute the step code.
