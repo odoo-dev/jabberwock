@@ -471,9 +471,9 @@ export class EventNormalizer {
             if (ev.type === 'keydown') {
                 this._multiKeyMap.push({});
             }
-            const lastKeydownMap = this._multiKeyMap[this._multiKeyMap.length - 1];
-            if (lastKeydownMap) {
-                lastKeydownMap[ev.type] = ev;
+            const lastMultiKeys = this._multiKeyStack[this._multiKeyStack.length - 1];
+            if (lastMultiKeys) {
+                lastMultiKeys[ev.type] = ev;
             }
         }
 
