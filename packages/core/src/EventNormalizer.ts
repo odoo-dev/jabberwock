@@ -298,7 +298,7 @@ export class EventNormalizer {
      * Map is used to gather informations when multiples keys are found in the
      * same stack.
      */
-    _multiKeyMap: {
+    _multiKeyStack: {
         keydown?: KeyboardEvent;
         keypress?: KeyboardEvent;
         input?: InputEvent;
@@ -469,7 +469,7 @@ export class EventNormalizer {
             // triggered between the three (keydown, keypress, input).  So we
             // create a new map each time a 'keydown' is registred.
             if (ev.type === 'keydown') {
-                this._multiKeyMap.push({});
+                this._multiKeyStack.push({});
             }
             const lastMultiKeys = this._multiKeyStack[this._multiKeyStack.length - 1];
             if (lastMultiKeys) {
@@ -641,13 +641,13 @@ export class EventNormalizer {
 
         // When the browser trigger multiples keydown at once, for each keydown
         // there is always also a keypress and an input that must be present.
-        const possibleMultiKeydown = this._multiKeyMap.every(
+        const possibleMultiKeydown = this._multiKeyStack.every(
             keydownMap => keydownMap.keydown && keydownMap.keypress && keydownMap.input,
         );
         // if there is only one _multiKeyMap, it means that there is no
         // multiples keys pushed.
-        if (this._multiKeyMap.length > 1 && possibleMultiKeydown) {
-            this._multiKeyMap.map(keydownMap => {
+        if (this._multiKeyStack.length > 1 && possibleMultiKeydown) {
+            this._multiKeyStack.map(keydownMap => {
                 const keyboardAction = this._getKeyboardAction(
                     keydownMap.keydown.key,
                     keydownMap.input.inputType,
@@ -724,7 +724,7 @@ export class EventNormalizer {
         this._secondTickObservation = false;
         this._eventsMap = {};
         this._followsPointerAction = false;
-        this._multiKeyMap = [];
+        this._multiKeyStack = [];
     }
     _getCompositionData(
         compositionEvent: CompositionEvent,
