@@ -798,7 +798,7 @@ export class EventNormalizer {
         | DeleteContentAction {
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
-            // Keys ctrl+x (or another potential user mapping) can trigger an
+            // Keys ctrl+x or another potential user mapping can trigger an
             // inputType 'deleteByCut'
             if (key === 'Backspace' || key === 'Delete' || inputType === 'deleteByCut') {
                 return this._getRemoveAction(key, inputType, isMultiKey);
