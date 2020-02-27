@@ -439,25 +439,10 @@ export class EventNormalizer {
     /**
      * Register given event on the this._events queue. If the queue is not yet
      * initialized or has been cleared prior to this call, re-initialize it.
-     *
      * After a tick (setTimeout 0ms) the '_processEvents' method is called. All
      * events that happened during the tick are read from the queue and the
      * analysis tries to extract the actions desired by the user such as insert,
      * delete, backspace, spell checking, special characters, etc.
-     *
-     * Used in:
-     * - _onKeyDownOrKeyPress: called with javascript native `Event` of type
-     *                         'keydown' or 'keypress'
-     * - _onDrop: called with a `DataTransferDetails`
-     * - _onClipboard: called with a `DataTransferDetails`
-     * - _onSelectionChange: called with a `DataTransferDetails`
-     *
-     *  Directly called for the following javascript native `Event`:
-     *  - compositionstart
-     *  - compositionupdate
-     *  - compositionend
-     *  - beforeinput
-     *  - input
      *
      * @see _processEvents
      * @private
@@ -476,8 +461,8 @@ export class EventNormalizer {
         }
 
         // It is possible to have multiples keys that must trigger multiples
-        // times that are being push in the same tick.  To be able to handle
-        // this case in `_processEvents`, we aggregate the informations in
+        // times that are being push in the same tick. To be able to handle this
+        // case in `_processEvents`, we aggregate the informations in
         // `_keydownMap`.
         if (['keydown', 'keypress', 'input'].includes(ev.type)) {
             // In the multiples key case, a 'keydown' is always the first event
@@ -508,7 +493,7 @@ export class EventNormalizer {
      * information has been gathered from all registred events.
      *
      * It could take up to two tick in the browser to gather all the sufficient
-     * information.  (e.g. Safari)
+     * information. (e.g. Safari)
      *
      * @private
      */
