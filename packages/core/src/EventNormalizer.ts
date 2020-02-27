@@ -612,16 +612,15 @@ export class EventNormalizer {
                 inputTypeCommands.has(inputEvent.inputType) &&
                 this._initialCaretPosition);
 
-        // In case of accent inserted from a Mac, check the char before was one
-        // of the special accent temporarily inserted in the DOM (e.g. '^', '`',
-        // ...).
+        // In case of accent inserted from a Mac, check that the char before was
+        // one of the special accent temporarily inserted in the DOM (e.g. '^',
+        // '`', ...).
         //
-        // todo: Check the following heuristic that check this case could be
-        //       erroneous in some case.  In order to be more specific, we might
-        //       need to specify exacly thoses accents ('^', '`', ...) rather
-        //       than letting go anything that comes from only one char.  Which
-        //       would reducte the margin of errors (but might not get them
-        //       all).
+        // todo: Check the following heuristic does not create problems. In
+        //       order to be more specific, we might need to specify exacly
+        //       thoses accents ('^', '`', ...) rather than letting go anything
+        //       that comes from only one char. Which would reduce the margin of
+        //       errors (but we might not get them all).
         const macAccent =
             compositionData &&
             compositionData.compositionFrom.length === 1 &&
