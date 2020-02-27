@@ -34,8 +34,18 @@ describe('utils', () => {
                         clientX: 200,
                         clientY: 200,
                     });
-                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 1);
-                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 2);
+                    setSelection(
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                    );
+                    setSelection(
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                        ctx.divOutsideEditable.firstChild,
+                        2,
+                    );
                     triggerEvent(ctx.divOutsideEditable, 'click', {
                         button: 2,
                         detail: 0,
@@ -63,7 +73,12 @@ describe('utils', () => {
                         clientX: 5,
                         clientY: 5,
                     });
-                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 1);
+                    setSelection(
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                    );
                     triggerEvent(ctx.editable, 'click', {
                         button: 2,
                         detail: 0,
@@ -109,14 +124,24 @@ describe('utils', () => {
                         clientX: 200,
                         clientY: 200,
                     });
-                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 1);
+                    setSelection(
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                        ctx.divOutsideEditable.firstChild,
+                        1,
+                    );
                     triggerEvent(ctx.divOutsideEditable, 'contextmenu', {
                         button: 2,
                         detail: 0,
                         clientX: 200,
                         clientY: 200,
                     });
-                    setSelection(ctx.divOutsideEditable.firstChild, 0, ctx.divOutsideEditable.firstChild, 2);
+                    setSelection(
+                        ctx.divOutsideEditable.firstChild,
+                        0,
+                        ctx.divOutsideEditable.firstChild,
+                        2,
+                    );
                     await nextTick();
                     await nextTick();
                     expect(ctx.eventBatches).to.deep.equal([]);
