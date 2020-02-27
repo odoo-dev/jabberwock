@@ -36,8 +36,6 @@ export class EventManager {
                 }
             case 'selectAll':
             case 'setSelection': {
-                // Todo: This is wrong in case the normalizer provide a range in the DOM that is not
-                //       present in the VDocument.
                 const vSelectionParams: VSelectionParams = {
                     vSelection: this.domPlugin.parseSelection(action.domSelection),
                 };
