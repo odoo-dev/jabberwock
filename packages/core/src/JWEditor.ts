@@ -18,6 +18,11 @@ export enum Platform {
     PC = 'pc',
 }
 
+enum Mode {
+    CONFIGURATION = 'configuration',
+    EDITION = 'edition',
+}
+
 export interface Shortcut extends BoundCommand {
     platform?: Platform;
     pattern: string;
@@ -33,6 +38,7 @@ export interface JWEditorConfig {
 }
 
 export class JWEditor {
+    private _mode: Mode = Mode.CONFIGURATION;
     el: HTMLElement;
     _originalEditable: HTMLElement;
     editable: HTMLElement;
@@ -83,6 +89,7 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
+        this._mode = Mode.EDITION;
         const root = new FragmentNode();
         if (this._originalEditable.innerHTML !== '') {
             if (!this.parsers.dom) {
@@ -152,6 +159,10 @@ export class JWEditor {
      * @param Plugin
      */
     addPlugin(Plugin: typeof JWPlugin): void {
+        if (this._mode === Mode.EDITION) {
+            throw new Error("You can't add plugin when the editor is already started");
+        }
+
         // Resolve dependencies.
         const pluginsToLoad = [Plugin];
         let offset = 1;
@@ -235,6 +246,11 @@ export class JWEditor {
      * @param config
      */
     loadConfig(config: JWEditorConfig): void {
+        if (this._mode === Mode.EDITION) {
+            throw new Error(
+                "You can't change the configuration when the editor is already started",
+            );
+        }
         if (config.autoFocus) {
             this.autoFocus = config.autoFocus;
         }
@@ -272,6 +288,7 @@ export class JWEditor {
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
+        this._mode = Mode.CONFIGURATION;
     }
 
     //--------------------------------------------------------------------------

@@ -11,11 +11,27 @@ import { RenderingEngine } from '../src/RenderingEngine';
 describe('core', () => {
     describe('JWEditor', () => {
         describe('addPlugin', () => {
+            it('should throw an error if the editor is already started', async () => {
+                const editor = new JWEditor();
+                await editor.start();
+                expect(() => {
+                    editor.addPlugin(
+                        class A extends JWPlugin {
+                            shortcuts = [
+                                {
+                                    pattern: 'cTrL+A',
+                                    commandId: 'command-all',
+                                },
+                            ];
+                        },
+                    );
+                }).to.throw(/plugin.*already started/i);
+            });
+
             describe('defaultShortcuts & loadConfig', () => {
                 it('should only register default mapping for pc and other', () => {
                     const editor = new JWEditor();
                     editor._platform = Platform.PC;
-                    editor.start();
                     editor.addPlugin(
                         class A extends JWPlugin {
                             shortcuts = [
@@ -36,6 +52,7 @@ describe('core', () => {
                             ];
                         },
                     );
+                    editor.start();
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => l.boundCommand.commandId,
                     );
@@ -44,7 +61,6 @@ describe('core', () => {
                 it('should transform ctrl to CMD if no platform on mac', () => {
                     const editor = new JWEditor();
                     editor._platform = Platform.MAC;
-                    editor.start();
                     editor.addPlugin(
                         class A extends JWPlugin {
                             shortcuts = [
@@ -69,6 +85,7 @@ describe('core', () => {
                             ];
                         },
                     );
+                    editor.start();
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => [...l.pattern.modifiers][0],
                     );
@@ -77,7 +94,6 @@ describe('core', () => {
                 it('should not transform ctrl to CMD if no platform on pc', () => {
                     const editor = new JWEditor();
                     editor._platform = Platform.PC;
-                    editor.start();
                     editor.addPlugin(
                         class A extends JWPlugin {
                             shortcuts = [
@@ -102,6 +118,7 @@ describe('core', () => {
                             ];
                         },
                     );
+                    editor.start();
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => [...l.pattern.modifiers][0],
                     );
@@ -110,7 +127,6 @@ describe('core', () => {
                 it('should only register default mapping for mac and other', () => {
                     const editor = new JWEditor();
                     editor._platform = Platform.MAC;
-                    editor.start();
                     editor.addPlugin(
                         class A extends JWPlugin {
                             shortcuts = [
@@ -131,6 +147,7 @@ describe('core', () => {
                             ];
                         },
                     );
+                    editor.start();
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
                         l => l.boundCommand.commandId,
                     );
@@ -139,7 +156,6 @@ describe('core', () => {
                 it('should load the config for keymap', () => {
                     const editor = new JWEditor();
                     editor._platform = Platform.PC;
-                    editor.start();
                     editor.loadConfig({
                         debug: true,
                         shortcuts: [
@@ -159,6 +175,7 @@ describe('core', () => {
                             },
                         ],
                     });
+                    editor.start();
                     const expectedCommands = editor.keymaps.user.shortcuts.map(
                         l => l.boundCommand.commandId,
                     );
@@ -168,11 +185,7 @@ describe('core', () => {
                     it('should trigger default shortuct', async () => {
                         await testEditor(JWEditor, {
                             contentBefore: '',
-                            stepFunction: async editor => {
-                                editor._platform = Platform.PC;
-                                // todo: to remove when the normalizer will
-                                //       not be in included by default
-                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
+                            beforeStart: async editor => {
                                 editor.addPlugin(
                                     class A extends JWPlugin {
                                         shortcuts = [
@@ -183,6 +196,12 @@ describe('core', () => {
                                         ];
                                     },
                                 );
+                            },
+                            stepFunction: async editor => {
+                                editor._platform = Platform.PC;
+                                // todo: to remove when the normalizer will
+                                //       not be in included by default
+                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
@@ -197,11 +216,7 @@ describe('core', () => {
                     it('should trigger the binding from the user config rather the default', async () => {
                         await testEditor(JWEditor, {
                             contentBefore: '',
-                            stepFunction: async editor => {
-                                editor._platform = Platform.PC;
-                                // todo: to remove when the normalizer will
-                                //       not be in included by default
-                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
+                            beforeStart: async editor => {
                                 editor.addPlugin(
                                     class A extends JWPlugin {
                                         shortcuts = [
@@ -221,6 +236,12 @@ describe('core', () => {
                                         },
                                     ],
                                 });
+                            },
+                            stepFunction: async editor => {
+                                editor._platform = Platform.PC;
+                                // todo: to remove when the normalizer will
+                                //       not be in included by default
+                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
@@ -235,11 +256,7 @@ describe('core', () => {
                     it('should remove the binding from the user config', async () => {
                         await testEditor(JWEditor, {
                             contentBefore: '',
-                            stepFunction: async editor => {
-                                editor._platform = Platform.PC;
-                                // todo: to remove when the normalizer will
-                                //       not be in included by default
-                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
+                            beforeStart: async editor => {
                                 editor.addPlugin(
                                     class A extends JWPlugin {
                                         shortcuts = [
@@ -259,6 +276,12 @@ describe('core', () => {
                                         },
                                     ],
                                 });
+                            },
+                            stepFunction: async editor => {
+                                editor._platform = Platform.PC;
+                                // todo: to remove when the normalizer will
+                                //       not be in included by default
+                                editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
                                 await keydown(editor.editable, 'a', { ctrlKey: true });
@@ -268,6 +291,23 @@ describe('core', () => {
                         });
                     });
                 });
+            });
+        });
+        describe('loadConfig', () => {
+            it('should throw an error if the editor is already started', async () => {
+                const editor = new JWEditor();
+                await editor.start();
+                expect(() => {
+                    editor.loadConfig({
+                        debug: true,
+                        shortcuts: [
+                            {
+                                pattern: 'CTRL+A',
+                                commandId: 'command-all',
+                            },
+                        ],
+                    });
+                }).to.throw(/config.*already started/i);
             });
         });
         describe('render', () => {
