@@ -345,9 +345,8 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
             }
         }
         await nextTick();
-        // After the first nextTick(which trigger a setTimeout), there is still
-        // some microtasks that might execute.  We wait another tick (i.e.
-        // setTimeout) to be sure every microtasks have been executed.
+        // The normalizer in some cases need two ticks to aggregate all
+        // informations (e.g. Safari).
         await nextTick();
     }
 }
