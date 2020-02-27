@@ -839,11 +839,14 @@ export class EventNormalizer {
     _getDropActions(ev: DataTransferDetails): (DeleteContentAction | SetSelectionAction)[] {
         const actions = [];
         if (ev.draggingFromEditable && !ev.files.length) {
-            const deleteContentAction: DeleteContentAction = {
-                type: 'deleteContent',
-                direction: Direction.FORWARD,
-            };
-            actions.push(deleteContentAction);
+            const selection = this.editable.ownerDocument.getSelection();
+            if (!selection.isCollapsed) {
+                const deleteContentAction: DeleteContentAction = {
+                    type: 'deleteContent',
+                    direction: Direction.FORWARD,
+                };
+                actions.push(deleteContentAction);
+            }
         }
 
         const setSelectionAction: SetSelectionAction = {

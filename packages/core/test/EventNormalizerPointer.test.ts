@@ -1803,7 +1803,63 @@ describe('utils', () => {
             });
 
             describe('drag and drop', () => {
-                it('from self content', async () => {
+                it('from self content with collapsed selection', async () => {
+                    ctx.editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
+                    const firstDiv = ctx.editable.firstChild;
+                    const secondDiv = ctx.editable.childNodes[1];
+                    setSelection(firstDiv.firstChild, 1, firstDiv.firstChild, 1);
+                    await nextTick();
+                    ctx.eventBatches.splice(0);
+                    triggerEvent(firstDiv, 'mousedown', {
+                        button: 0,
+                        detail: 1,
+                        clientX: 15,
+                        clientY: 5,
+                    });
+                    await nextTick();
+                    triggerEvent(firstDiv.firstChild, 'dragstart', { clientX: 15, clientY: 5 });
+                    await nextTick();
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text/plain', 'b');
+                    dataTransfer.setData('text/html', '<div>b</div>');
+                    const dropEvent = triggerEvent(secondDiv, 'drop', {
+                        clientX: 12,
+                        clientY: 25,
+                        dataTransfer: dataTransfer,
+                    });
+                    await nextTick();
+                    triggerEvent(secondDiv, 'dragend', { clientX: 12, clientY: 25 });
+                    await nextTick();
+                    await nextTick();
+
+                    expect(dropEvent.defaultPrevented).to.equal(true);
+                    const normalizedActions: NormalizedAction[] = [
+                        {
+                            type: 'setSelection',
+                            domSelection: {
+                                anchorNode: secondDiv.firstChild,
+                                anchorOffset: 1,
+                                focusNode: secondDiv.firstChild,
+                                focusOffset: 1,
+                                direction: Direction.FORWARD,
+                            },
+                        },
+                        {
+                            type: 'insertHtml',
+                            html: '<div>b</div>',
+                            text: 'b',
+                        },
+                    ];
+
+                    const batchEvents: EventBatch[] = [
+                        {
+                            actions: normalizedActions,
+                            mutatedElements: new Set([]),
+                        },
+                    ];
+                    expect(ctx.eventBatches).to.deep.equal(batchEvents);
+                });
+                it('from self content with uncollapsed selection', async () => {
                     ctx.editable.innerHTML = '<div>abc</div><div>def</div><div>ghi</div>';
                     const p = ctx.editable.firstChild;
                     const p2 = ctx.editable.childNodes[1];
@@ -1889,10 +1945,6 @@ describe('utils', () => {
 
                     const normalizedActions: NormalizedAction[] = [
                         {
-                            type: 'deleteContent',
-                            direction: Direction.FORWARD,
-                        },
-                        {
                             type: 'setSelection',
                             domSelection: {
                                 anchorNode: p2.firstChild,
@@ -1963,10 +2015,6 @@ describe('utils', () => {
                     expect(dropEvent.defaultPrevented).to.equal(true);
 
                     const normalizedActions: NormalizedAction[] = [
-                        {
-                            type: 'deleteContent',
-                            direction: Direction.FORWARD,
-                        },
                         {
                             type: 'setSelection',
                             domSelection: {
