@@ -1,4 +1,5 @@
 import { CaretPosition } from '../core/src/EventNormalizer';
+import { targetDeepest } from './src/Dom';
 
 export function caretPositionFromPoint(x: number, y: number): CaretPosition {
     if ((!x && x !== 0) || (!y && y !== 0)) return;
@@ -16,18 +17,6 @@ export function caretPositionFromPoint(x: number, y: number): CaretPosition {
         };
     }
 
-    // Target deepest node.
-    let offsetNode = caretPosition.offsetNode;
-    let offset = caretPosition.offset;
-    while (offsetNode.hasChildNodes()) {
-        if (offset >= offsetNode.childNodes.length) {
-            offsetNode = offsetNode.lastChild;
-            offset = offsetNode.childNodes.length - 1;
-        } else {
-            offsetNode = offsetNode.childNodes[offset];
-            offset = 0;
-        }
-    }
-
+    const [offsetNode, offset] = targetDeepest(caretPosition.offsetNode, caretPosition.offset);
     return { offsetNode, offset };
 }
