@@ -749,18 +749,11 @@ export class EventNormalizer {
                 compositionDataString += ' ';
             }
 
-            return inputEvent && this._getCompositionFromString(compositionDataString);
-        } else {
+            return this._getCompositionFromString(compositionDataString);
+        } else if (inputEvent && inputEvent.inputType === 'insertReplacementText') {
             // safari trigger an input with 'insertReplacementText' when it
             // correct a word.
-            const isSafariCorrection =
-                inputEvent && inputEvent.inputType === 'insertReplacementText';
-            // todo: to remove when edge will not be covered anymore.
-            const isEdgeCorrection = inputEvent && inputEvent.inputType === '';
-
-            if (isSafariCorrection || isEdgeCorrection) {
-                return this._getCompositionFromString(inputEvent.data);
-            }
+            return this._getCompositionFromString(inputEvent.data);
         }
     }
 
