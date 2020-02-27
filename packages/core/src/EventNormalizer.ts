@@ -739,8 +739,6 @@ export class EventNormalizer {
 
             // Specific case for SwiftKey. Swiftkey add a space in the
             // inputEvent but not in the composition event.
-            //
-            // test: add space with auto-correction (SwiftKey)
             const isSwiftKeyAutocorrect =
                 inputEvent.inputType === 'insertText' &&
                 inputEvent.data &&
