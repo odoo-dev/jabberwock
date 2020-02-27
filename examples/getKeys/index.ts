@@ -137,11 +137,11 @@ function logSelection(): void {
         const testSelectionEvent: TestSelectionEvent = {
             type: 'selection',
             focus: {
-                targetSelectionId: nodeIndexGenerator.getId(selection.focusNode),
+                nodeId: nodeIndexGenerator.getId(selection.focusNode),
                 offset: selection.focusOffset,
             },
             anchor: {
-                targetSelectionId: nodeIndexGenerator.getId(selection.anchorNode),
+                nodeId: nodeIndexGenerator.getId(selection.anchorNode),
                 offset: selection.anchorOffset,
             },
         };

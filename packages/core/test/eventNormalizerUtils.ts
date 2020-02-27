@@ -82,12 +82,12 @@ export interface TestSelectionEvent {
     type: 'selection';
     focus: {
         // The `id` of the focus node provided by `NodeIndexGenerator`.
-        targetSelectionId: number;
+        nodeId: number;
         offset: number;
     };
     anchor: {
         // The `id` of the anchor node provided by `NodeIndexGenerator`.
-        targetSelectionId: number;
+        nodeId: number;
         offset: number;
     };
 }
@@ -212,8 +212,8 @@ export async function nextTick(): Promise<void> {
 }
 
 /**
- * The following class is used for recording event (for the tool `getKeys`) and
- * for simulating them (in the current file).
+ * The following class is used for recording javascript events (for the tool
+ * `getKeys`) and for simulating them (in the current file).
  *
  * It's purpose is to have a unique `id` of a `Node` between the time we record
  * an event and the time we simulate it.
@@ -263,7 +263,6 @@ export class NodeIndexGenerator {
         return this.idNodeMap.get(id);
     }
 }
-
 /**
  * Trigger events for of a list of stacks that where previously recorded with
  * the tool `getKeys`.
@@ -331,12 +330,12 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                     mutatedNode.textContent = mutationEvent.textContent;
                 }
             } else if (testEvent.type === 'selection') {
-                if (testEvent.anchor.targetSelectionId) {
+                if (testEvent.anchor.nodeId) {
                     const selectionEvent = testEvent;
                     setRange(
-                        nodeIndexGenerator.getNode(selectionEvent.anchor.targetSelectionId),
+                        nodeIndexGenerator.getNode(selectionEvent.anchor.nodeId),
                         selectionEvent.anchor.offset,
-                        nodeIndexGenerator.getNode(selectionEvent.focus.targetSelectionId),
+                        nodeIndexGenerator.getNode(selectionEvent.focus.nodeId),
                         selectionEvent.focus.offset,
                     );
                 }
