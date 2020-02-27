@@ -185,7 +185,7 @@ export function triggerEvent(
     currentElement.dispatchEvent(ev);
     return ev;
 }
-export function setRange(
+export function setSelection(
     startContainer: Node,
     startOffset: number,
     endContainer: Node,
@@ -332,7 +332,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
             } else if (testEvent.type === 'selection') {
                 if (testEvent.anchor.nodeId) {
                     const selectionEvent = testEvent;
-                    setRange(
+                    setSelection(
                         nodeIndexGenerator.getNode(selectionEvent.anchor.nodeId),
                         selectionEvent.anchor.offset,
                         nodeIndexGenerator.getNode(selectionEvent.focus.nodeId),
