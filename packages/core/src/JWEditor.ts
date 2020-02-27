@@ -12,7 +12,224 @@ import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
-import { Constructor } from '../../utils/src/utils';
+import { Constructor, MagicConstructor } from '../../utils/src/utils';
+import { Char } from '../../plugin-char/Char';
+
+// type PluginConfig<P extends JWPlugin, T extends typeof JWPlugin>
+
+class A {
+    constructor(s: string, config: { a: number }) {}
+}
+class B extends A {
+    constructor(s: string, config: { a: number; b: string }) {
+        super(s, config);
+        console.log(config.b);
+    }
+}
+class C extends A {
+    constructor(s: string, config: { a: number; c: string }) {
+        super(s, config);
+        console.log(config.c);
+    }
+}
+
+// type Config<P extends typeof A> = [P, ConstructorParameters<P>[1]];
+
+// const x: Config<typeof B> = [B];
+
+type Config<P extends typeof A = typeof A> = P extends new (...args) => any
+    ? [P, ConstructorParameters<P>]
+    : never;
+type ConfigTuple<T = [any, any] | [any]> = T extends [infer P, {}]
+    ? P extends typeof A
+        ? [P, ConstructorParameters<P>]
+        : never
+    : [typeof A];
+
+type ConfigFuck<T = [any, any] | [any]> = T extends [infer P, {}]
+    ? P extends typeof A
+        ? [P, ConstructorParameters<P>]
+        : never
+    : [typeof A];
+
+const x: ConfigTuple = [A];
+const y: ConfigTuple<typeof B> = [B, {}];
+
+function check<P extends typeof A, C extends ConstructorParameters<P>[1]>(p: P, c: C): [P, C] {
+    return [p, c];
+}
+
+const b: Array<[typeof A, ConstructorParameters<typeof A>[1]]> = [check(A, {}), check(B, {})];
+
+const k = b[1][1];
+const v = new b[1][0]('', b[1][1]);
+
+const a: Array<[typeof A, ConstructorParameters<typeof A>]> = [check(A, {}), check(B, {})];
+
+type TaMaman<
+    P extends typeof A = typeof A,
+    C extends ConstructorParameters<P> = ConstructorParameters<P>
+> = [P, C];
+
+export type ValuesOf<T extends any[]> = T[number];
+
+type Magic<F extends any[]> = F &
+    {
+        [I in number]: F[I] extends [infer X, any]
+            ? X extends new (...args: infer K) => any
+                ? [X, K[1]]
+                : never
+            : Function;
+    };
+// const z: Magic<typeof A> = [[A, {}], [B, {}]];
+
+a;
+x;
+y;
+z;
+
+// function configure<P extends typeof A>(config: {
+//     plugins: Magic<Array<[P, {}]>
+// }): void {
+//     for (const [x, y] of config.plugins) {
+//         new x('', y);
+//     }
+// }
+
+// configure({
+//     plugins: [[A, {}], [B, {}]],
+// });
+
+// type MagicFuck<U, V, W, X, Y, Z> =
+//     | [Fucker<U>]
+//     | [Fucker<U>, Fucker<V>]
+//     | [Fucker<U>, Fucker<V>, Fucker<W>]
+//     | [Fucker<U>, Fucker<V>, Fucker<W>, Fucker<X>]
+//     | [Fucker<U>, Fucker<V>, Fucker<W>, Fucker<X>, Fucker<Y>]
+//     | [Fucker<U>, Fucker<V>, Fucker<W>, Fucker<X>, Fucker<Y>, Fucker<Z>];
+
+// // const z: MagicFuck<typeof A, typeof B, typeof C> = [[A, {}], [B, {}], [C, {}]];
+
+// function configureFuck<U, V, W, X, Y, Z>(config: { plugins: MagicFuck<U, V, W, X, Y, Z> }): void {
+//     for (const [x, y] of config.plugins) {
+//         new x('', y);
+//     }
+// }
+
+// configureFuck({
+//     plugins: [[B, {}], [A, { a: 42 }], [C, { a: 42, c: '' }]],
+// });
+
+type PluginConfiguration<T> = T extends typeof A
+    ? [T, ConstructorParameters<T>[1] & ConstructorParameters<typeof A>[1]]
+    : [typeof A, ConstructorParameters<typeof A>[1]];
+
+type PluginsConfig<U, V, W> = Array<[typeof A, ConstructorParameters<typeof A>[1]]> & {
+    0?: PluginConfiguration<U>;
+    1?: PluginConfiguration<V>;
+    2?: PluginConfiguration<W>;
+};
+
+function configure<U, V, W>(config: { plugins: PluginsConfig<U, V, W> }): void {
+    for (const [x, y] of config.plugins) {
+        new x('', y);
+    }
+}
+
+configure({
+    plugins: [[B, {}], [A, {}], [C, {}]],
+});
+
+type MagicBrol<F extends any[] = Array<[typeof A, {}]>> = {
+    0?: F[0] extends [infer X, any]
+        ? X extends new (...args: infer K) => any
+            ? [X, K[1]]
+            : never
+        : Function;
+    1?: F[1] extends [infer X, any]
+        ? X extends new (...args: infer K) => any
+            ? [X, K[1]]
+            : never
+        : Function;
+    2?: F[2] extends [infer X, any]
+        ? X extends new (...args: infer K) => any
+            ? [X, K[1]]
+            : never
+        : Function;
+};
+
+function configureBrol<P extends typeof A>(config: {
+    plugins: MagicBrol;
+}): void {
+    for (const [x, y] of config.plugins) {
+        new x('', y);
+    }
+}
+
+configureBrol({
+    plugins: [[B, {}], [A, {}], [C, {}]],
+});
+
+// function configure<P extends typeof A, C extends ConstructorParameters<P>[1]>(config: {
+//     plugins: Array<[P, C]>;
+// }): void {
+//     for (const [x, y] of config.plugins) {
+//         new x('', y);
+//     }
+// }
+
+// configure({
+//     plugins: [[A, {}], [B, {}]],
+// });
+
+// type PluginConfig<
+//     P extends typeof JWPlugin,
+//     C extends new () => P = new () => P,
+//     M extends MagicConstructor<P, C> = MagicConstructor<P, C>
+// > = [C, ConstructorParameters<C>[0]];
+
+// const x: PluginConfig<Char> = [Char];
+// x;
+
+// type PluginConfigs<P extends Constructor<JWPlugin> = Constructor<JWPlugin>> = PluginConfig<P>[];
+// type PluginConfig<T extends typeof JWPlugin> = [T, ConstructorParameters<T>[1]];
+
+// type PluginConfigs<P extends Array<Constructor<JWPlugin>> = Array<Constructor<JWPlugin>>> = {
+//     [I in keyof P]: P[I] extends Constructor<JWPlugin> ? [P[I], ConstructorParameters<P[I]>[1]]: never;
+// };
+
+const plugins: PluginConfigs = [
+    [Char],
+    [77777, {}],
+    [Char, {}],
+    [Char, { template: 'rr' as string }],
+    [Char, { template: 'template' as string, num: 5 }],
+    // [Brol, {
+    //     option: 2,
+    //     mode: 'coucou',
+    //     template: template as string,
+    // }],
+    // [OtherBrol],
+    // [OwlLayout2, { template: template as string }],
+    // OtherBrol,
+    // [OwlLayout3, { template: template as string }],
+];
+console.log(plugins);
+
+type Commands<T extends JWPlugin> = T['commands'];
+type CommandParams<T extends JWPlugin, K extends keyof Commands<T>> = Parameters<
+    Commands<T>[K]['handler']
+>[0];
+
+function execCommand<T extends JWPlugin, K extends keyof Commands<T> = keyof Commands<T>>(
+    commandName: K,
+    params: CommandParams<T, K>,
+): void {
+    commandName;
+    params;
+}
+
+execCommand<Char>('insertText', { text: 'd' });
 
 export enum Platform {
     MAC = 'mac',

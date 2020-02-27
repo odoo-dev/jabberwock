@@ -1,4 +1,4 @@
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { CharNode } from './CharNode';
 import { CommandParams } from '../core/src/Dispatcher';
 import { FormatParams, Inline } from '../plugin-inline/Inline';
@@ -10,10 +10,15 @@ import { VNode } from '../core/src/VNodes/VNode';
 import { Format } from '../plugin-inline/Format';
 import { Formats } from '../plugin-inline/Formats';
 import { Constructor } from '../utils/src/utils';
+import JWEditor from '../core/src/JWEditor';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
     formats?: Formats | Array<Format | Constructor<Format>>;
+}
+
+export interface CharX {
+    new (editor: JWEditor, config: JWPluginConfig, tamere: number): Char;
 }
 
 export class Char extends JWPlugin {
@@ -22,7 +27,7 @@ export class Char extends JWPlugin {
     readonly renderers = [CharFormatDomRenderer, CharDomRenderer];
     commands = {
         insertText: {
-            handler: this.insertText.bind(this),
+            handler: this.insertText,
         },
     };
     commandHooks = {
@@ -35,6 +40,10 @@ export class Char extends JWPlugin {
      * change in a document.
      */
     formatCache: Formats = null;
+
+    constructor(editor: JWEditor, config: JWPluginConfig, public tamere: number) {
+        super(editor);
+    }
 
     //--------------------------------------------------------------------------
     // Public

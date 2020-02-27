@@ -1,3 +1,6 @@
+export type MagicConstructor<R, T extends new (...args) => R> = new (
+    ...args: ConstructorParameters<T>
+) => R;
 export type Constructor<T> = new (...args) => T;
 
 /**

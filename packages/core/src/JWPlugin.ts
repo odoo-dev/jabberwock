@@ -3,11 +3,17 @@ import { CommandIdentifier, CommandDefinition, CommandHook } from './Dispatcher'
 import { Shortcut } from './JWEditor';
 import { RendererConstructor, RenderingEngineConstructor } from './RenderingEngine';
 import { ParserConstructor, ParsingEngineConstructor } from './ParsingEngine';
+import { Constructor } from '../../utils/src/utils';
 
 export interface JWPluginConfig {
     name?: string;
 }
-
+interface JWPluginConstructor {
+    new <T extends Constructor<JWPlugin>>(...args: ConstructorParameters<T>): this;
+}
+export interface JWPlugin {
+    constructor: JWPluginConstructor & this;
+}
 export class JWPlugin {
     static readonly dependencies: Array<typeof JWPlugin> = [];
     readonly parsingEngines: ParsingEngineConstructor[];
