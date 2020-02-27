@@ -658,6 +658,18 @@ export class EventNormalizer {
                     normalizedActions.push(keyboardAction);
                 }
             });
+        } else if (cutEvent) {
+            const deleteContentAction: DeleteContentAction = {
+                type: 'deleteContent',
+                direction: Direction.FORWARD,
+            };
+            // remove previously parsed keyboard action as we only want to remove
+            normalizedActions.push(deleteContentAction);
+        }
+        if (dropEvent) {
+            normalizedActions.push(...this._getDropActions(dropEvent));
+        } else if (pasteEvent) {
+            normalizedActions.push(this._getDataTransferAction(pasteEvent));
         } else if (
             normalizedActions.length === 0 &&
             ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard)
@@ -674,26 +686,10 @@ export class EventNormalizer {
             if (macAccent) {
                 normalizedActions = compositionData.actions;
             }
-        } else if (normalizedActions.length === 0 && (caretPosition || compositionData)) {
-            if (compositionData) {
-                normalizedActions.push(...compositionData.actions);
-            }
+        } else if (normalizedActions.length === 0 && compositionData) {
+            normalizedActions.push(...compositionData.actions);
         }
-        if (cutEvent) {
-            const deleteContentAction: DeleteContentAction = {
-                type: 'deleteContent',
-                direction: Direction.FORWARD,
-            };
-            normalizedActions = [deleteContentAction];
-        } else if (dropEvent) {
-            normalizedActions.push(...this._getDropActions(dropEvent));
-        } else if (pasteEvent) {
-            normalizedActions.push(this._getDataTransferAction(pasteEvent));
-        } else if (
-            inputEvent &&
-            inputEvent.inputType &&
-            inputEvent.inputType.indexOf('format') === 0
-        ) {
+        if (inputEvent && inputEvent.inputType && inputEvent.inputType.indexOf('format') === 0) {
             const formatName = inputEvent.inputType.replace('format', '').toLowerCase();
 
             const applyFormatAction: ApplyFormatAction = {
@@ -800,7 +796,7 @@ export class EventNormalizer {
         if (isInsertOrRemoveAction) {
             // Keys ctrl+x or another potential user mapping can trigger an
             // inputType 'deleteByCut'
-            if (key === 'Backspace' || key === 'Delete' || inputType === 'deleteByCut') {
+            if (key === 'Backspace' || key === 'Delete') {
                 return this._getRemoveAction(key, inputType, isMultiKey);
             } else if (key === 'Enter') {
                 if (inputType === 'insertLineBreak') {
