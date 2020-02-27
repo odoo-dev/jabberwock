@@ -354,7 +354,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
 export interface TestContext {
     container: HTMLElement;
     editable: HTMLElement;
-    div: HTMLElement;
+    divOutsideEditable: HTMLElement;
     eventBatches: EventBatch[];
     normalizer: EventNormalizer;
 }
@@ -383,7 +383,7 @@ export function testCallbackBefore(): TestContext {
     return {
         container: container,
         editable: editable,
-        div: div,
+        divOutsideEditable: div,
         eventBatches: eventBatchs,
         normalizer: normalizer,
     };

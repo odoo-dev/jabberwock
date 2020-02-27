@@ -28,21 +28,21 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '<div>abc</div>';
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.div, 'mousedown', {
+                    triggerEvent(ctx.divOutsideEditable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 200,
                         clientY: 200,
                     });
-                    setSelection(ctx.div.firstChild, 1, ctx.div.firstChild, 1);
-                    setSelection(ctx.div.firstChild, 1, ctx.div.firstChild, 2);
-                    triggerEvent(ctx.div, 'click', {
+                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 1);
+                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 2);
+                    triggerEvent(ctx.divOutsideEditable, 'click', {
                         button: 2,
                         detail: 0,
                         clientX: 200,
                         clientY: 200,
                     });
-                    triggerEvent(ctx.div, 'mouseup', {
+                    triggerEvent(ctx.divOutsideEditable, 'mouseup', {
                         button: 2,
                         detail: 0,
                         clientX: 200,
@@ -63,7 +63,7 @@ describe('utils', () => {
                         clientX: 5,
                         clientY: 5,
                     });
-                    setSelection(ctx.div.firstChild, 1, ctx.div.firstChild, 1);
+                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 1);
                     triggerEvent(ctx.editable, 'click', {
                         button: 2,
                         detail: 0,
@@ -103,20 +103,20 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '<div>abc</div>';
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.div, 'mousedown', {
+                    triggerEvent(ctx.divOutsideEditable, 'mousedown', {
                         button: 2,
                         detail: 1,
                         clientX: 200,
                         clientY: 200,
                     });
-                    setSelection(ctx.div.firstChild, 1, ctx.div.firstChild, 1);
-                    triggerEvent(ctx.div, 'contextmenu', {
+                    setSelection(ctx.divOutsideEditable.firstChild, 1, ctx.divOutsideEditable.firstChild, 1);
+                    triggerEvent(ctx.divOutsideEditable, 'contextmenu', {
                         button: 2,
                         detail: 0,
                         clientX: 200,
                         clientY: 200,
                     });
-                    setSelection(ctx.div.firstChild, 0, ctx.div.firstChild, 2);
+                    setSelection(ctx.divOutsideEditable.firstChild, 0, ctx.divOutsideEditable.firstChild, 2);
                     await nextTick();
                     await nextTick();
                     expect(ctx.eventBatches).to.deep.equal([]);
@@ -1270,7 +1270,7 @@ describe('utils', () => {
                     });
                     await nextTick();
                     await nextTick();
-                    setSelection(ctx.editable, 0, ctx.div.firstChild, 3);
+                    setSelection(ctx.editable, 0, ctx.divOutsideEditable.firstChild, 3);
                     await nextTick();
                     await nextTick();
 
@@ -1297,7 +1297,7 @@ describe('utils', () => {
                             domSelection: {
                                 anchorNode: ctx.editable,
                                 anchorOffset: 0,
-                                focusNode: ctx.div.firstChild,
+                                focusNode: ctx.divOutsideEditable.firstChild,
                                 focusOffset: 3,
                                 direction: Direction.FORWARD,
                             },
