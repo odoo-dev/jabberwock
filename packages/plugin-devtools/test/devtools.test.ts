@@ -746,7 +746,7 @@ describe('Plugin: DevTools', () => {
             await click(button);
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.textContent).to.equal('insertTextsetSelectionsetSelection');
+            expect(subpanel.textContent).to.equal('insertTextsetSelection');
         });
         it('should select "setSelection"', async () => {
             await openDevTools(devtools);
@@ -913,10 +913,10 @@ describe('Plugin: DevTools', () => {
                     '<tbody>' +
                     '<tr><td>vSelection</td><td><table><tbody>' +
                     '<tr><td> direction </td><td>FORWARD</td></tr>' +
-                    '<tr><td> anchor </td><td>BEFORE ' +
+                    '<tr><td> anchor </td><td> ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
-                    '<tr><td> focus </td><td>AFTER ' +
+                    '<tr><td> focus </td><td> ' +
                     charBeforeChange.id +
                     ' (b) </td></tr>' +
                     '</tbody></table></td></tr>' +
