@@ -826,13 +826,16 @@ export class EventNormalizer {
         } else if (navigationKey.has(key)) {
             const setSelectionAction: SetSelectionAction = {
                 type: 'setSelection',
-                // Set the range according to the current one. Set the origin
-                // key in order to track the source of the move.
                 domSelection: this._getSelection(),
             };
             return setSelectionAction;
         }
     }
+    /**
+     * Get the actions for a event `ev` of type drop.
+     *
+     * @param ev
+     */
     _getDropActions(ev: DataTransferDetails): (DeleteContentAction | SetSelectionAction)[] {
         const actions = [];
         if (ev.draggingFromEditable && !ev.files.length) {
