@@ -91,11 +91,9 @@ function renderAllStatcks(): void {
             return stack.filter(event => !eventToRemove.has(event));
         })
         .filter(stack => stack.length);
-    console.log('newEventStack:', newEventStack);
     exportArea.textContent = JSON.stringify(newEventStack);
 }
 function logComposition(compositionEvent: CompositionEvent): void {
-    console.log('compositionEvent:', compositionEvent);
     const testCompositionEvent: TestCompositionEvent = {
         type: compositionEvent.type as 'compositionstart' | 'compositionupdate' | 'compositionend',
         data: compositionEvent.data,
@@ -103,7 +101,6 @@ function logComposition(compositionEvent: CompositionEvent): void {
     registerTestEvent(testCompositionEvent);
 }
 function logInput(inputEvent: InputEvent): void {
-    console.log('inputEvent:', inputEvent);
     const testInputEvent: TestInputEvent = {
         type: inputEvent.type as 'input' | 'beforeinput',
         data: inputEvent.data,
@@ -242,7 +239,6 @@ editable.addEventListener('input', logInput);
 document.addEventListener('selectionchange', logSelection);
 
 const observer = new MutationObserver((mutationsList): void => {
-    console.log('mutationsList:', mutationsList);
     mutationsList.forEach(logMutation);
 });
 observer.observe(editable, {
