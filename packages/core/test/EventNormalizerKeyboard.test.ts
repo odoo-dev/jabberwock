@@ -75,8 +75,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -92,8 +92,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -112,8 +112,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -128,8 +128,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -148,8 +148,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -165,21 +165,21 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -196,8 +196,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -213,8 +213,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -232,8 +232,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -248,8 +248,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -268,8 +268,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -298,13 +298,13 @@ describe('utils', () => {
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -322,8 +322,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -339,8 +339,8 @@ describe('utils', () => {
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -379,8 +379,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -402,8 +402,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': ' ', 'code': 'Space' }],
@@ -424,8 +424,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -440,8 +440,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': ' ', 'code': 'Space' }],
@@ -460,8 +460,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -489,21 +489,21 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': ' ', 'code': 'Space' }],
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -521,8 +521,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -544,8 +544,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': ' ', 'code': 'Space' }],
@@ -564,8 +564,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -580,8 +580,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': ' ', 'code': 'Space' }],
@@ -600,8 +600,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -639,13 +639,13 @@ describe('utils', () => {
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -663,8 +663,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -691,8 +691,8 @@ describe('utils', () => {
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -771,8 +771,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'Dead', 'code': 'BracketLeft' }],
@@ -789,8 +789,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -809,8 +809,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [{ 'type': 'keydown', 'key': 'Dead', 'code': 'BracketLeft' }],
@@ -827,8 +827,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -847,8 +847,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -873,13 +873,13 @@ describe('utils', () => {
                                 { 'type': 'keydown', 'key': 'Dead', 'code': 'BracketLeft' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': '^', 'code': 'BracketLeft' }],
@@ -920,13 +920,13 @@ describe('utils', () => {
                                 { 'type': 'keydown', 'key': 'ô', 'code': 'KeyO' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -949,8 +949,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -975,8 +975,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'Dead', 'code': 'BracketLeft' }],
@@ -1002,13 +1002,13 @@ describe('utils', () => {
                                 { 'type': 'compositionend', 'data': 'ô' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
@@ -1031,8 +1031,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -1052,8 +1052,8 @@ describe('utils', () => {
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                             [{ 'type': 'keyup', 'key': '^', 'code': 'BracketLeft' }],
@@ -1093,8 +1093,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -1110,8 +1110,8 @@ describe('utils', () => {
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -1136,8 +1136,8 @@ describe('utils', () => {
                             [
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                    'focus': { 'nodeId': 2, 'offset': 16 },
+                                    'anchor': { 'nodeId': 2, 'offset': 16 },
                                 },
                             ],
                             [
@@ -1166,13 +1166,13 @@ describe('utils', () => {
                                 { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                                 {
                                     'type': 'selection',
-                                    'focus': { 'targetSelectionId': 2, 'offset': 17 },
-                                    'anchor': { 'targetSelectionId': 2, 'offset': 17 },
+                                    'focus': { 'nodeId': 2, 'offset': 17 },
+                                    'anchor': { 'nodeId': 2, 'offset': 17 },
                                 },
                             ],
                         ]);
@@ -1489,8 +1489,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1528,8 +1528,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1547,8 +1547,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                 ],
                                 [{ 'type': 'keyup', 'key': 'Backspace', 'code': 'Backspace' }],
@@ -1567,8 +1567,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1591,21 +1591,21 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                 ],
                                 [{ 'type': 'keyup', 'key': 'Backspace', 'code': 'Backspace' }],
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                 ],
                             ]);
@@ -1623,8 +1623,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1662,8 +1662,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1681,8 +1681,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                 ],
                                 [{ 'type': 'keyup', 'key': 'Backspace', 'code': 'Backspace' }],
@@ -1701,8 +1701,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1726,8 +1726,8 @@ describe('utils', () => {
                                     { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                 ],
                             ]);
@@ -1745,8 +1745,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1775,13 +1775,13 @@ describe('utils', () => {
                                     { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 15 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 15 },
+                                        'focus': { 'nodeId': 2, 'offset': 15 },
+                                        'anchor': { 'nodeId': 2, 'offset': 15 },
                                     },
                                 ],
                             ]);
@@ -1820,8 +1820,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1863,8 +1863,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                 ],
                                 [
@@ -1891,8 +1891,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -1923,8 +1923,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                 ],
                                 [
@@ -1951,8 +1951,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -2000,13 +2000,13 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                 ],
                                 [
@@ -2033,8 +2033,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -2076,8 +2076,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                 ],
                                 [
@@ -2104,8 +2104,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -2136,8 +2136,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                 ],
                                 [
@@ -2164,8 +2164,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 16 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 16 },
+                                        'focus': { 'nodeId': 2, 'offset': 16 },
+                                        'anchor': { 'nodeId': 2, 'offset': 16 },
                                     },
                                 ],
                                 [
@@ -2195,13 +2195,13 @@ describe('utils', () => {
                                     { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 11 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 11 },
+                                        'focus': { 'nodeId': 2, 'offset': 11 },
+                                        'anchor': { 'nodeId': 2, 'offset': 11 },
                                     },
                                 ],
                             ]);
@@ -2243,8 +2243,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -2292,8 +2292,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2320,8 +2320,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -2352,8 +2352,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2380,8 +2380,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -2429,8 +2429,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2445,13 +2445,13 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                             ]);
@@ -2469,8 +2469,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -2518,8 +2518,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2546,8 +2546,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -2578,8 +2578,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2606,8 +2606,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -2643,13 +2643,13 @@ describe('utils', () => {
                                     { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                             ]);
@@ -2703,8 +2703,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 5 },
+                                        'focus': { 'nodeId': 4, 'offset': 5 },
+                                        'anchor': { 'nodeId': 4, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2747,8 +2747,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2775,8 +2775,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 5 },
+                                        'focus': { 'nodeId': 4, 'offset': 5 },
+                                        'anchor': { 'nodeId': 4, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2807,8 +2807,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2835,8 +2835,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 5 },
+                                        'focus': { 'nodeId': 4, 'offset': 5 },
+                                        'anchor': { 'nodeId': 4, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2885,8 +2885,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2937,8 +2937,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 5 },
+                                        'focus': { 'nodeId': 4, 'offset': 5 },
+                                        'anchor': { 'nodeId': 4, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -2981,8 +2981,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3009,8 +3009,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 5, 'offset': 1 },
-                                        'anchor': { 'targetSelectionId': 5, 'offset': 1 },
+                                        'focus': { 'nodeId': 5, 'offset': 1 },
+                                        'anchor': { 'nodeId': 5, 'offset': 1 },
                                     },
                                 ],
                                 [
@@ -3048,8 +3048,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3076,8 +3076,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 5 },
+                                        'focus': { 'nodeId': 4, 'offset': 5 },
+                                        'anchor': { 'nodeId': 4, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3108,13 +3108,13 @@ describe('utils', () => {
                                     { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                             ]);
@@ -3164,8 +3164,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 7, 'offset': 1 },
-                                        'anchor': { 'targetSelectionId': 7, 'offset': 1 },
+                                        'focus': { 'nodeId': 7, 'offset': 1 },
+                                        'anchor': { 'nodeId': 7, 'offset': 1 },
                                     },
                                 ],
                                 [
@@ -3208,8 +3208,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3236,8 +3236,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 7, 'offset': 1 },
-                                        'anchor': { 'targetSelectionId': 7, 'offset': 1 },
+                                        'focus': { 'nodeId': 7, 'offset': 1 },
+                                        'anchor': { 'nodeId': 7, 'offset': 1 },
                                     },
                                 ],
                                 [
@@ -3282,8 +3282,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3310,8 +3310,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 7, 'offset': 1 },
-                                        'anchor': { 'targetSelectionId': 7, 'offset': 1 },
+                                        'focus': { 'nodeId': 7, 'offset': 1 },
+                                        'anchor': { 'nodeId': 7, 'offset': 1 },
                                     },
                                 ],
                                 [
@@ -3360,8 +3360,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3412,8 +3412,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 7, 'offset': 1 },
-                                        'anchor': { 'targetSelectionId': 7, 'offset': 1 },
+                                        'focus': { 'nodeId': 7, 'offset': 1 },
+                                        'anchor': { 'nodeId': 7, 'offset': 1 },
                                     },
                                 ],
                                 [
@@ -3462,8 +3462,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3514,8 +3514,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 8, 'offset': 0 },
-                                        'anchor': { 'targetSelectionId': 8, 'offset': 0 },
+                                        'focus': { 'nodeId': 8, 'offset': 0 },
+                                        'anchor': { 'nodeId': 8, 'offset': 0 },
                                     },
                                 ],
                                 [
@@ -3547,8 +3547,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -3575,8 +3575,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 7, 'offset': 1 },
-                                        'anchor': { 'targetSelectionId': 7, 'offset': 1 },
+                                        'focus': { 'nodeId': 7, 'offset': 1 },
+                                        'anchor': { 'nodeId': 7, 'offset': 1 },
                                     },
                                 ],
                                 [
@@ -3607,13 +3607,13 @@ describe('utils', () => {
                                     { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                             ]);
@@ -3658,8 +3658,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -3743,8 +3743,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -3785,8 +3785,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 0 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 0 },
+                                        'focus': { 'nodeId': 2, 'offset': 0 },
+                                        'anchor': { 'nodeId': 2, 'offset': 0 },
                                     },
                                 ],
                                 [
@@ -3822,8 +3822,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -3871,8 +3871,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 0 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 0 },
+                                        'focus': { 'nodeId': 2, 'offset': 0 },
+                                        'anchor': { 'nodeId': 2, 'offset': 0 },
                                     },
                                 ],
                                 [{ 'type': 'keyup', 'key': 'Meta', 'code': 'MetaLeft' }],
@@ -3891,8 +3891,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -3949,8 +3949,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 10 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 10 },
+                                        'focus': { 'nodeId': 2, 'offset': 10 },
+                                        'anchor': { 'nodeId': 2, 'offset': 10 },
                                     },
                                 ],
                                 [
@@ -3981,8 +3981,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 0 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 0 },
+                                        'focus': { 'nodeId': 2, 'offset': 0 },
+                                        'anchor': { 'nodeId': 2, 'offset': 0 },
                                     },
                                 ],
                                 [{ 'type': 'keyup', 'key': 'Meta', 'code': 'OSLeft' }],
@@ -4064,8 +4064,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4103,8 +4103,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4181,8 +4181,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4220,8 +4220,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4259,8 +4259,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4378,8 +4378,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4427,8 +4427,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4455,8 +4455,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4530,8 +4530,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4590,13 +4590,13 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                             ]);
@@ -4614,8 +4614,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4683,8 +4683,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4711,8 +4711,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4816,8 +4816,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4869,8 +4869,8 @@ describe('utils', () => {
                                     },
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -4906,8 +4906,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 2, 'offset': 5 },
-                                        'anchor': { 'targetSelectionId': 2, 'offset': 5 },
+                                        'focus': { 'nodeId': 2, 'offset': 5 },
+                                        'anchor': { 'nodeId': 2, 'offset': 5 },
                                     },
                                 ],
                                 [
@@ -5012,8 +5012,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 12 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 12 },
+                                        'focus': { 'nodeId': 4, 'offset': 12 },
+                                        'anchor': { 'nodeId': 4, 'offset': 12 },
                                     },
                                 ],
                                 [
@@ -5074,8 +5074,8 @@ describe('utils', () => {
                                 [
                                     {
                                         'type': 'selection',
-                                        'focus': { 'targetSelectionId': 4, 'offset': 12 },
-                                        'anchor': { 'targetSelectionId': 4, 'offset': 12 },
+                                        'focus': { 'nodeId': 4, 'offset': 12 },
+                                        'anchor': { 'nodeId': 4, 'offset': 12 },
                                     },
                                 ],
                                 [
