@@ -576,15 +576,15 @@ export class EventNormalizer {
         //       thoses accents ('^', '`', ...) rather than letting go anything
         //       that comes from only one char. Which would reduce the margin of
         //       errors (but we might not get them all).
-        const macAccent =
+        const compositionReplaceOneChar =
             compositionData &&
             compositionData.compositionFrom.length === 1 &&
             compositionData.compositionTo.length === 1;
-        const macAccentOneChar =
+        const compositionAddOneChar =
             compositionData &&
             compositionData.compositionFrom === '' &&
             compositionData.compositionTo.length === 1;
-        const isCompositionKeyboard = macAccentOneChar || macAccent;
+        const isCompositionKeyboard = compositionAddOneChar || compositionReplaceOneChar;
 
         const isVirtualKeyboard =
             (compositionEvent && (key && key.length !== 1)) || isGoogleKeyboardBackspace;
@@ -637,7 +637,7 @@ export class EventNormalizer {
                 normalizedActions.push(keyboardAction);
             }
 
-            if (macAccent) {
+            if (compositionReplaceOneChar) {
                 normalizedActions = compositionData.actions;
             }
         } else if (normalizedActions.length === 0 && compositionData) {
