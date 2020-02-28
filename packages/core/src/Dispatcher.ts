@@ -1,4 +1,3 @@
-import { CommandDefinition } from './Dispatcher';
 import JWEditor from './JWEditor';
 import { VNode, Predicate } from './VNodes/VNode';
 import { Context } from './ContextManager';
