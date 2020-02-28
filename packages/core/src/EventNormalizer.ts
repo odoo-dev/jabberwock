@@ -78,8 +78,6 @@ const alphabetsContainingSpaces = new RegExp(
         ')$',
 );
 
-const multiKeyEvents = ['keydown', 'keypress', 'input'];
-
 /**
  * These javascript event types might, in case of safari or spell-checking
  * keyboard, trigger dom events in multiple javascript stacks. They will require
@@ -467,8 +465,8 @@ export class EventNormalizer {
         // It is possible to have multiples keys that must trigger multiples
         // times that are being push in the same tick. To be able to handle this
         // case in `_processEvents`, we aggregate the informations in
-        // `_keydownMap`.
-        if (multiKeyEvents.includes(ev.type)) {
+        // `_multiKeyStack`.
+        if (['keydown', 'keypress', 'input'].includes(ev.type)) {
             // In the multiple key case, a 'keydown' is always the first event
             // triggered between the three (keydown, keypress, input).  So we
             // create a new map each time a 'keydown' is registred.
