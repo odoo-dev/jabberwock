@@ -463,6 +463,33 @@ describe('core', () => {
                         expect(root.siblings()).to.deep.equal([]);
                     });
                 });
+                describe('adjacents', () => {
+                    it('should return the adjacent nodes', async () => {
+                        expect(h1.adjacents()).to.deep.equal([a, c, p]);
+                        expect(h1.adjacents(CharNode)).to.deep.equal([a, c]);
+                        expect(b.adjacents()).to.deep.equal([], 'siblings without the markers');
+                        expect(root.adjacents()).to.deep.equal([]);
+                    });
+                    it('should return the adjacent nodes', async () => {
+                        const container = new VNode();
+                        const a = new CharNode('a');
+                        container.append(a);
+                        const h2 = new HeadingNode(2);
+                        container.append(h2);
+                        const b = new CharNode('b');
+                        container.append(b);
+                        const c = new CharNode('c');
+                        container.append(c);
+                        const d = new CharNode('d');
+                        container.append(d);
+                        const h3 = new HeadingNode(3);
+                        container.append(h3);
+                        const e = new CharNode('e');
+                        container.append(e);
+                        expect(c.adjacents()).to.deep.equal([a, h2, b, d, h3, e]);
+                        expect(c.adjacents(CharNode)).to.deep.equal([b, d]);
+                    });
+                });
                 describe('firstChild', () => {
                     it('should return the firstChild node', async () => {
                         expect(root.firstChild()).to.deep.equal(a, 'root.firstChild = a');

@@ -253,6 +253,25 @@ export class VNode {
         return siblings;
     }
     /**
+     * Return the nodes adjacent to this VNode that satisfy the given predicate.
+     */
+    adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
+    adjacents<T>(predicate?: Predicate<T>): VNode[];
+    adjacents<T>(predicate?: Predicate<T>): VNode[] {
+        const adjacents: VNode[] = [];
+        let sibling: VNode = this.previousSibling();
+        while (sibling && sibling.test(predicate)) {
+            adjacents.unshift(sibling);
+            sibling = sibling.previousSibling();
+        }
+        sibling = this.nextSibling();
+        while (sibling && sibling.test(predicate)) {
+            adjacents.push(sibling);
+            sibling = sibling.nextSibling();
+        }
+        return adjacents;
+    }
+    /**
      * Return the first ancestor of this VNode that satisfies the given
      * predicate.
      *
