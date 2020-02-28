@@ -232,7 +232,6 @@ export class VNode {
     /**
      * Return the siblings of this VNode which satisfy the given predicate.
      */
-    siblings(predicate?: Predicate): VNode[];
     siblings<T extends VNode>(predicate?: Predicate<T>): T[];
     siblings<T>(predicate?: Predicate<T>): VNode[];
     siblings<T>(predicate?: Predicate<T>): VNode[] {
@@ -259,7 +258,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    ancestor(predicate?: Predicate): VNode;
     ancestor<T extends VNode>(predicate?: Predicate<T>): T;
     ancestor<T>(predicate?: Predicate<T>): VNode;
     ancestor<T>(predicate?: Predicate<T>): VNode {
@@ -275,7 +273,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    firstChild(predicate?: Predicate): VNode;
     firstChild<T extends VNode>(predicate?: Predicate<T>): T;
     firstChild<T>(predicate?: Predicate<T>): VNode;
     firstChild<T>(predicate?: Predicate<T>): VNode {
@@ -291,7 +288,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    lastChild(predicate?: Predicate): VNode;
     lastChild<T extends VNode>(predicate?: Predicate<T>): T;
     lastChild<T>(predicate?: Predicate<T>): VNode;
     lastChild<T>(predicate?: Predicate<T>): VNode {
@@ -307,7 +303,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    firstLeaf(predicate?: Predicate): VNode;
     firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     firstLeaf<T>(predicate?: Predicate<T>): VNode;
     firstLeaf<T>(predicate?: Predicate<T>): VNode {
@@ -326,7 +321,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    lastLeaf(predicate?: Predicate): VNode;
     lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     lastLeaf<T>(predicate?: Predicate<T>): VNode;
     lastLeaf<T>(predicate?: Predicate<T>): VNode {
@@ -345,7 +339,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    firstDescendant(predicate?: Predicate): VNode;
     firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
     firstDescendant<T>(predicate?: Predicate<T>): VNode;
     firstDescendant<T>(predicate?: Predicate<T>): VNode {
@@ -361,7 +354,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    lastDescendant(predicate?: Predicate): VNode;
     lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
     lastDescendant<T>(predicate?: Predicate<T>): VNode;
     lastDescendant<T>(predicate?: Predicate<T>): VNode {
@@ -380,7 +372,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previousSibling(predicate?: Predicate): VNode;
     previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
     previousSibling<T>(predicate?: Predicate<T>): VNode;
     previousSibling<T>(predicate?: Predicate<T>): VNode {
@@ -399,7 +390,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    nextSibling(predicate?: Predicate): VNode;
     nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
     nextSibling<T>(predicate?: Predicate<T>): VNode;
     nextSibling<T>(predicate?: Predicate<T>): VNode {
@@ -419,7 +409,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previous(predicate?: Predicate): VNode;
     previous<T extends VNode>(predicate?: Predicate<T>): T;
     previous<T>(predicate?: Predicate<T>): VNode;
     previous<T>(predicate?: Predicate<T>): VNode {
@@ -443,7 +432,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    next(predicate?: Predicate): VNode;
     next<T extends VNode>(predicate?: Predicate<T>): T;
     next<T>(predicate?: Predicate<T>): VNode;
     next<T>(predicate?: Predicate<T>): VNode {
@@ -474,7 +462,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previousLeaf(predicate?: Predicate): VNode;
     previousLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     previousLeaf<T>(predicate?: Predicate<T>): VNode;
     previousLeaf<T>(predicate?: Predicate<T>): VNode {
@@ -489,7 +476,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    nextLeaf(predicate?: Predicate): VNode;
     nextLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     nextLeaf<T>(predicate?: Predicate<T>): VNode;
     nextLeaf<T>(predicate?: Predicate<T>): VNode {
@@ -504,7 +490,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    previousSiblings(predicate?: Predicate): VNode[];
     previousSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
     previousSiblings<T>(predicate?: Predicate<T>): VNode[];
     previousSiblings<T>(predicate?: Predicate<T>): VNode[] {
@@ -525,7 +510,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    nextSiblings(predicate?: Predicate): VNode[];
     nextSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
     nextSiblings<T>(predicate?: Predicate<T>): VNode[];
     nextSiblings<T>(predicate?: Predicate<T>): VNode[] {
@@ -545,7 +529,6 @@ export class VNode {
      *
      * @param predicate
      */
-    closest(predicate: Predicate): VNode;
     closest<T extends VNode>(predicate: Predicate<T>): T;
     closest<T>(predicate: Predicate<T>): VNode;
     closest<T>(predicate: Predicate<T>): VNode {
@@ -558,7 +541,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    ancestors(predicate?: Predicate): VNode[];
     ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
     ancestors<T>(predicate?: Predicate<T>): VNode[];
     ancestors<T>(predicate?: Predicate<T>): VNode[] {
@@ -579,7 +561,6 @@ export class VNode {
      *
      * @param [predicate]
      */
-    descendants(predicate?: Predicate): VNode[];
     descendants<T extends VNode>(predicate?: Predicate<T>): T[];
     descendants<T>(predicate?: Predicate<T>): VNode[];
     descendants<T>(predicate?: Predicate<T>): VNode[] {
@@ -598,7 +579,6 @@ export class VNode {
      *
      * @param node
      */
-    commonAncestor(node: VNode, predicate?: Predicate): VNode;
     commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
     commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
     commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
