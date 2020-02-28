@@ -1,9 +1,12 @@
 import { InlineFormatDomRenderer } from '../plugin-inline/InlineFormatDomRenderer';
 import { CharNode } from './CharNode';
+import { DomRenderingEngine } from '../plugin-dom/DomRenderingEngine';
 
 export class CharFormatDomRenderer extends InlineFormatDomRenderer {
     static id = 'dom';
+    engine: DomRenderingEngine;
     predicate = CharNode;
+
     async render(node: CharNode): Promise<Node[]> {
         const previousSibling = node.previousSibling();
         if (previousSibling && node.isSameTextNode(previousSibling)) {
@@ -18,12 +21,7 @@ export class CharFormatDomRenderer extends InlineFormatDomRenderer {
         const attributeNames = Object.keys(node.attributes);
         if (attributeNames.length) {
             const span = document.createElement('span');
-            for (const name of attributeNames) {
-                const value = node.attributes[name];
-                if (typeof value === 'string') {
-                    span.setAttribute(name, value);
-                }
-            }
+            this.engine.renderAttributes(node.attributes, span);
             textNode.forEach(child => span.appendChild(child));
             rendering = [span];
         } else {
