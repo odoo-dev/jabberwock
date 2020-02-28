@@ -92,7 +92,6 @@ interface InsertTextAction {
     text: string;
 }
 
-// ? why do we have InsertHtml if we have insertText?
 interface InsertHtmlAction {
     type: 'insertHtml';
     html: string;
