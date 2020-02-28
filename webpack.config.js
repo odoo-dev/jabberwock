@@ -40,8 +40,8 @@ module.exports = {
     },
     devServer: {
         contentBase: './examples',
-        // Access to the normalizer tool through an ip other than '0.0.0.0'
-        // (i.e. localhost) for external devices (e.g. mobile, Macbook).
+        // Webpack check that the host is `0.0.0.0` by default. Disable that
+        // check to access the server from external devices.
         disableHostCheck: true,
     },
     // We might require this configuration in the future to
