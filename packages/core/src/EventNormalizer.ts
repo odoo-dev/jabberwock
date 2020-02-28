@@ -552,13 +552,6 @@ export class EventNormalizer {
             (keydownEvent &&
                 keydownEvent.key === 'Unidentified' &&
                 this._inferKeyFromInput(inputEvent));
-        // in the test "accent (mac safari)", an erroneous code is triggered
-        // (BracketLeft).  to prevent the code from being set, we check if a key
-        // is dead.
-        const isDeadKey = keydownEvent && keydownEvent.key === 'Dead';
-        const code =
-            !isDeadKey &&
-            ((keydownEvent && keydownEvent.code) || (keypressEvent && keypressEvent.code));
         const isAccentMac =
             inputEvent &&
             compositionEvent &&
@@ -573,20 +566,6 @@ export class EventNormalizer {
             // todo: Do we really need to set the inputType when making a
             //       "special accent" in mac?
             (isAccentMac && 'insertCompositionText');
-        const defaultPrevented =
-            (cutEvent && false) ||
-            (dropEvent && true) ||
-            (pasteEvent && true) ||
-            (keydownEvent && keydownEvent.defaultPrevented) ||
-            (keypressEvent && keypressEvent.defaultPrevented) ||
-            (inputEvent && inputEvent.defaultPrevented);
-        const caretPosition =
-            (cutEvent && cutEvent.caretPosition) ||
-            (dropEvent && dropEvent.caretPosition) ||
-            (pasteEvent && pasteEvent.caretPosition) ||
-            (inputEvent &&
-                inputTypeCommands.has(inputEvent.inputType) &&
-                this._initialCaretPosition);
 
         // In case of accent inserted from a Mac, check that the char before was
         // one of the special accent temporarily inserted in the DOM (e.g. '^',
