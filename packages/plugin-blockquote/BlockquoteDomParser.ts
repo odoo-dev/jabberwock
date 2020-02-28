@@ -7,7 +7,7 @@ export class BlockquoteDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'BLOCKQUOTE';
+        return item instanceof Element && item.tagName === 'BLOCKQUOTE';
     };
 
     async parse(item: Element): Promise<BlockquoteNode[]> {

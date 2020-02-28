@@ -689,7 +689,7 @@ describe('Plugin: DevTools', () => {
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
 
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.firstElementChild.nodeName).to.equal('TABLE');
+            expect(subpanel.firstElementChild.tagName).to.equal('TABLE');
         });
         it('should change sub panel to "Registry"', async () => {
             await openDevTools(devtools);
@@ -701,7 +701,7 @@ describe('Plugin: DevTools', () => {
             await click(button);
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
             const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.firstElementChild.nodeName).to.equal('DIV');
+            expect(subpanel.firstElementChild.tagName).to.equal('DIV');
             expect(Array.from(subpanel.childNodes).map((n: Node) => n.textContent)).to.deep.equal([
                 'insert',
                 'insertParagraphBreak',

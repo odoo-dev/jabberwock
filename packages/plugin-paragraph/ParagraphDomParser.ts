@@ -7,7 +7,7 @@ export class ParagraphDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'P';
+        return item instanceof Element && item.tagName === 'P';
     };
 
     async parse(item: Element): Promise<ParagraphNode[]> {

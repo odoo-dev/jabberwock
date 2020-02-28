@@ -8,7 +8,7 @@ export class LinkDomParser extends FormatParser {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'A';
+        return item instanceof Element && item.tagName === 'A';
     };
 
     async parse(item: Element): Promise<VNode[]> {

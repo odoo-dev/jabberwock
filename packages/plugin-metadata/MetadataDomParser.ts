@@ -19,11 +19,11 @@ export class MetadataDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && METADATA_NODENAMES.includes(item.nodeName);
+        return item instanceof Element && METADATA_NODENAMES.includes(item.tagName);
     };
 
     async parse(item: Element): Promise<MetadataNode[]> {
-        const technical = new MetadataNode(item.nodeName as 'SCRIPT' | 'STYLE');
+        const technical = new MetadataNode(item.tagName as 'SCRIPT' | 'STYLE');
         technical.attributes = this.engine.parseAttributes(item);
         technical.contents = item.innerHTML;
         return [technical];

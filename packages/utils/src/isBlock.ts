@@ -60,7 +60,7 @@ export function isBlock(node: Node): boolean {
         if (style.display) {
             result = style.display.includes('block') || style.display.includes('list');
         } else {
-            result = blockTagNames.includes(node.nodeName);
+            result = blockTagNames.includes(node.tagName);
         }
     } else {
         result = false;

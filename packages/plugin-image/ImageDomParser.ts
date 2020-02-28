@@ -7,7 +7,7 @@ export class ImageDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'IMG';
+        return item instanceof Element && item.tagName === 'IMG';
     };
 
     async parse(item: Element): Promise<ImageNode[]> {

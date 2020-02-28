@@ -8,7 +8,7 @@ export class LineBreakDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'BR';
+        return item instanceof Element && item.tagName === 'BR';
     };
 
     async parse(item: Element): Promise<LineBreakNode[]> {

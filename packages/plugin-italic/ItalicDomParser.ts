@@ -8,7 +8,7 @@ export class ItalicDomParser extends FormatParser {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && (item.nodeName === 'I' || item.nodeName === 'EM');
+        return item instanceof Element && (item.tagName === 'I' || item.tagName === 'EM');
     };
 
     /**
@@ -17,7 +17,7 @@ export class ItalicDomParser extends FormatParser {
      * @param item
      */
     async parse(item: Element): Promise<VNode[]> {
-        const italic = new ItalicFormat(item.nodeName as 'I' | 'EM');
+        const italic = new ItalicFormat(item.tagName as 'I' | 'EM');
         italic.attributes = this.engine.parseAttributes(item);
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(italic, children);

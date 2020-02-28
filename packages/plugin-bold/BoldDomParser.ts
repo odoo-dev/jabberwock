@@ -8,7 +8,7 @@ export class BoldDomParser extends FormatParser {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && (item.nodeName === 'B' || item.nodeName === 'STRONG');
+        return item instanceof Element && (item.tagName === 'B' || item.tagName === 'STRONG');
     };
 
     /**
@@ -17,7 +17,7 @@ export class BoldDomParser extends FormatParser {
      * @param item
      */
     async parse(item: Element): Promise<VNode[]> {
-        const bold = new BoldFormat(item.nodeName as 'B' | 'STRONG');
+        const bold = new BoldFormat(item.tagName as 'B' | 'STRONG');
         bold.attributes = this.engine.parseAttributes(item);
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(bold, children);

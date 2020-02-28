@@ -10,7 +10,7 @@ export class ListDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && listTags.includes(item.nodeName);
+        return item instanceof Element && listTags.includes(item.tagName);
     };
 
     /**
@@ -19,10 +19,8 @@ export class ListDomParser extends AbstractParser<Node> {
      * @param context
      */
     async parse(item: Element): Promise<VNode[]> {
-        if (!listTags.includes(item.nodeName)) {
-            return;
-        }
-        const listType = item.nodeName === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
+        if (!listTags.includes(item.tagName)) return;
+        const listType = item.tagName === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
         const listNode = new ListNode(listType);
         listNode.attributes = this.engine.parseAttributes(item);
         const nodes = await this.engine.parse(...item.childNodes);

@@ -8,7 +8,7 @@ export class SuperscriptDomParser extends FormatParser {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'SUP';
+        return item instanceof Element && item.tagName === 'SUP';
     };
 
     /**
