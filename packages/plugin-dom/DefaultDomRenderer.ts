@@ -2,9 +2,12 @@ import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { VNode, isMarker } from '../core/src/VNodes/VNode';
 import { FragmentNode } from '../core/src/VNodes/FragmentNode';
 import { VElement } from '../core/src/VNodes/VElement';
+import { DomRenderingEngine } from './DomRenderingEngine';
 
 export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
+    engine: DomRenderingEngine;
+
     async render(node: VNode): Promise<Node[]> {
         let domNode: Node;
         if (isMarker(node)) {
@@ -20,12 +23,7 @@ export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
                 nodeName = node.constructor.name.toUpperCase() + '-' + node.id;
             }
             const element = document.createElement(nodeName);
-            for (const name of Object.keys(node.attributes)) {
-                const value = node.attributes[name];
-                if (typeof value === 'string') {
-                    element.setAttribute(name, value);
-                }
-            }
+            this.engine.renderAttributes(node.attributes, element);
             domNode = element;
         }
         // If a node is empty but could accomodate children,

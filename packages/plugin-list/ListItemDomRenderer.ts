@@ -3,9 +3,11 @@ import { VNode } from '../core/src/VNodes/VNode';
 import { ListNode } from './ListNode';
 import { VElement } from '../core/src/VNodes/VElement';
 import { List } from './List';
+import { DomRenderingEngine } from '../plugin-dom/DomRenderingEngine';
 
 export class ListItemDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
+    engine: DomRenderingEngine;
     predicate = List.isListItem;
 
     async render(node: VNode): Promise<Node[]> {
@@ -45,13 +47,9 @@ export class ListItemDomRenderer extends AbstractRenderer<Node[]> {
         }
         // Render the node's attributes that were stored on the technical key
         // that specifies those attributes belong on the list item.
-        if (node.attributes['li-attributes']) {
-            for (const name of Object.keys(node.attributes['li-attributes'])) {
-                const value = node.attributes['li-attributes'][name];
-                if (typeof value === 'string') {
-                    domListItem.setAttribute(name, value);
-                }
-            }
+        const liAttributes = node.attributes['li-attributes'];
+        if (liAttributes && typeof liAttributes !== 'string') {
+            this.engine.renderAttributes(liAttributes, domListItem);
         }
         return [domListItem];
     }

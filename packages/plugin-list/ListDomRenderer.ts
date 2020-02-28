@@ -1,23 +1,16 @@
 import { AbstractRenderer } from '../core/src/AbstractRenderer';
 import { ListNode, ListType } from './ListNode';
+import { DomRenderingEngine } from '../plugin-dom/DomRenderingEngine';
 
 export class ListDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
+    engine: DomRenderingEngine;
     predicate = ListNode;
 
-    /**
-     * Render the ListNode in currentContext.
-     */
     async render(node: ListNode): Promise<Node[]> {
         const tag = node.listType === ListType.ORDERED ? 'OL' : 'UL';
         const domListNode = document.createElement(tag);
-        // Render the list's attributes.
-        for (const name of Object.keys(node.attributes)) {
-            const value = node.attributes[name];
-            if (typeof value === 'string') {
-                domListNode.setAttribute(name, value);
-            }
-        }
+        this.engine.renderAttributes(node.attributes, domListNode);
 
         for (const child of node.children) {
             const renderedChild = await this.engine.render(child);
