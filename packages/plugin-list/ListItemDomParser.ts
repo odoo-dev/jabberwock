@@ -8,7 +8,7 @@ export class ListItemDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'LI';
+        return item instanceof Element && item.tagName === 'LI';
     };
 
     /**

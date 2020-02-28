@@ -8,7 +8,7 @@ export class SubscriptDomParser extends FormatParser {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'SUB';
+        return item instanceof Element && item.tagName === 'SUB';
     };
 
     /**

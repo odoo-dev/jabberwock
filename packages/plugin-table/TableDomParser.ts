@@ -7,7 +7,7 @@ export class TableDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'TABLE';
+        return item instanceof Element && item.tagName === 'TABLE';
     };
 
     async parse(item: Element): Promise<TableNode[]> {

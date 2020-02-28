@@ -8,7 +8,7 @@ export class UnderlineDomParser extends FormatParser {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'U';
+        return item instanceof Element && item.tagName === 'U';
     };
 
     /**

@@ -9,7 +9,7 @@ export class YoutubeDomParser extends AbstractParser<Node> {
     predicate = (item: Node): boolean => {
         const isYoutubeVideo =
             item instanceof Element &&
-            item.nodeName === 'IFRAME' &&
+            item.tagName === 'IFRAME' &&
             item.getAttribute('src').includes('youtu');
         return isYoutubeVideo;
     };

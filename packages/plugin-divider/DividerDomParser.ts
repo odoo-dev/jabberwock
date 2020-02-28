@@ -7,7 +7,7 @@ export class DividerDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.nodeName === 'DIV';
+        return item instanceof Element && item.tagName === 'DIV';
     };
 
     async parse(item: Element): Promise<DividerNode[]> {
