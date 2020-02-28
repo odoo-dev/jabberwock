@@ -230,10 +230,28 @@ export class VNode {
         return this.children()[n - 1];
     }
     /**
-     * Return this VNode's siblings.
+     * Return the siblings of this VNode which satisfy the given predicate.
      */
-    get siblings(): VNode[] {
-        return (this.parent && this.parent.children()) || [];
+    siblings(predicate?: Predicate): VNode[];
+    siblings<T extends VNode>(predicate?: Predicate<T>): T[];
+    siblings<T>(predicate?: Predicate<T>): VNode[];
+    siblings<T>(predicate?: Predicate<T>): VNode[] {
+        const siblings: VNode[] = [];
+        let sibling: VNode = this.previousSibling();
+        while (sibling) {
+            if (sibling.test(predicate)) {
+                siblings.unshift(sibling);
+            }
+            sibling = sibling.previousSibling();
+        }
+        sibling = this.nextSibling();
+        while (sibling) {
+            if (sibling.test(predicate)) {
+                siblings.push(sibling);
+            }
+            sibling = sibling.nextSibling();
+        }
+        return siblings;
     }
     /**
      * Return the first ancestor of this VNode that satisfies the given
