@@ -291,7 +291,6 @@ export function renderTextualSelection(): void {
     const anchor = targetDeepest(selection.anchorNode, selection.anchorOffset);
     const focus = targetDeepest(selection.focusNode, selection.focusOffset);
 
-    _insertCharAt(ANCHOR_CHAR, ...anchor);
 
     // If the range characters have to be inserted within the same parent and
     // the anchor range character has to be before the focus range character,
@@ -302,6 +301,7 @@ export function renderTextualSelection(): void {
     if (anchorNode === focusNode && anchorOffset <= focusOffset) {
         focusOffset++;
     }
+    _insertCharAt(ANCHOR_CHAR, ...anchor);
     _insertCharAt(FOCUS_CHAR, focusNode, focusOffset);
 }
 
