@@ -5328,13 +5328,7 @@ describe('utils', () => {
                         await nextTick();
                         await nextTick();
 
-                        const keyboardActions: NormalizedAction[] = [
-                            {
-                                type: 'insertText',
-                                text: '\n',
-                                html: '<br/>',
-                            },
-                        ];
+                        const keyboardActions: NormalizedAction[] = [{ type: 'insertLineBreak' }];
 
                         const batchEvents: EventBatch[] = [
                             {

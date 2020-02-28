@@ -90,8 +90,6 @@ const MultiStackEventTypes = ['input', 'compositionend', 'selectAll'];
 interface InsertTextAction {
     type: 'insertText';
     text: string;
-    // ? do we keep the `html` key?
-    html?: string;
 }
 
 // ? why do we have InsertHtml if we have insertText?
@@ -103,6 +101,10 @@ interface InsertHtmlAction {
 
 interface InsertParagraphBreakAction {
     type: 'insertParagraphBreak';
+}
+
+interface InsertLineBreakAction {
+    type: 'insertLineBreak';
 }
 
 interface InsertFilesAction {
@@ -151,6 +153,7 @@ interface HistoryAction {
 export type NormalizedAction =
     | InsertTextAction
     | InsertHtmlAction
+    | InsertLineBreakAction
     | InsertParagraphBreakAction
     | InsertFilesAction
     | DeleteContentAction
@@ -786,7 +789,7 @@ export class EventNormalizer {
         hasMutatedElements: boolean,
         isMultiKey = false,
     ):
-        | InsertTextAction
+        | InsertLineBreakAction
         | InsertParagraphBreakAction
         | InsertTextAction
         | SetSelectionAction
@@ -801,16 +804,11 @@ export class EventNormalizer {
                 return this._getRemoveAction(key, inputType, isMultiKey);
             } else if (key === 'Enter') {
                 if (inputType === 'insertLineBreak') {
-                    const insertTextAction: InsertTextAction = {
-                        type: 'insertText',
-                        text: '\n',
-                        // todo: see with DMO: is it usefull to add the html?
-                        html: '<br/>',
+                    const insertLineBreakAction: InsertLineBreakAction = {
+                        type: 'insertLineBreak',
                     };
-                    return insertTextAction;
+                    return insertLineBreakAction;
                 } else {
-                    // todo: see with DMO: is it really necessary as we can infer it from the
-                    //       previous action?
                     const insertParagraphAction: InsertParagraphBreakAction = {
                         type: 'insertParagraphBreak',
                     };
