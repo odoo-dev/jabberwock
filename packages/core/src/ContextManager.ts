@@ -120,29 +120,33 @@ export class ContextManager {
         for (const item of items) {
             const context = { ...this.defaultContext, ...item.context, ...paramsContext };
             let firstMatchDepth = -1;
-            let ancestorIndex = 0;
+            let index = 0;
             let match;
             const selector = item.selector || [];
             if (selector.length === 0) {
                 match = true;
             } else {
                 context.selector = [];
-                const range = context.range;
-                const ancestors = range.start.ancestors();
-                const maximumDepth = ancestors.length - 1;
+                const start = context.range.start;
+                const nodes = start.ancestors();
+                const node = start.previousSibling() || start.nextSibling();
+                if (node) {
+                    nodes.unshift(node);
+                }
+                const maximumDepth = nodes.length - 1;
                 for (const predicate of [...selector].reverse()) {
                     match = false;
-                    while (!match && ancestorIndex < ancestors.length) {
-                        if (ancestors[ancestorIndex].test(predicate)) {
+                    while (!match && index < nodes.length) {
+                        if (nodes[index].test(predicate)) {
                             match = true;
-                            context.selector.unshift(ancestors[ancestorIndex]);
+                            context.selector.unshift(nodes[index]);
                             if (firstMatchDepth === -1) {
                                 // Deeper match has higher specificity. So lower
                                 // index in ancestors, means higher specificity.
-                                firstMatchDepth = maximumDepth - ancestorIndex;
+                                firstMatchDepth = maximumDepth - index;
                             }
                         }
-                        ancestorIndex++;
+                        index++;
                     }
                     // Stop checking the predicates of this particular command
                     // since at least one of them don't match the context.
