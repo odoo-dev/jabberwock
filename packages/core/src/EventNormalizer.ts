@@ -619,8 +619,7 @@ export class EventNormalizer {
             };
             // remove previously parsed keyboard action as we only want to remove
             normalizedActions.push(deleteContentAction);
-        }
-        if (dropEvent) {
+        } else if (dropEvent) {
             normalizedActions.push(...this._getDropActions(dropEvent));
         } else if (pasteEvent) {
             normalizedActions.push(this._getDataTransferAction(pasteEvent));
@@ -643,6 +642,7 @@ export class EventNormalizer {
         } else if (normalizedActions.length === 0 && compositionData) {
             normalizedActions.push(...compositionData.actions);
         }
+
         if (inputEvent && inputEvent.inputType && inputEvent.inputType.indexOf('format') === 0) {
             const formatName = inputEvent.inputType.replace('format', '').toLowerCase();
 
