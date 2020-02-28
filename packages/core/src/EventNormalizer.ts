@@ -520,7 +520,6 @@ export class EventNormalizer {
         const inputEvent = this._eventsMap.input;
         const customSelectAllEvent = this._eventsMap.customSelectAll;
         const compositionEvent = this._eventsMap.lastComposition;
-        const compositionStartEvent = this._eventsMap.compositionstart;
         const cutEvent = this._eventsMap.cut;
         const dropEvent = this._eventsMap.drop;
         const pasteEvent = this._eventsMap.paste;
@@ -532,26 +531,6 @@ export class EventNormalizer {
             compositionData.compositionFrom.slice(0, -1) === compositionData.compositionTo &&
             keydownEvent &&
             keydownEvent.key === 'Unidentified';
-
-        const googleKeyboardKey =
-            keydownEvent &&
-            keydownEvent.key === 'Unidentified' &&
-            inputEvent &&
-            inputEvent.inputType === 'insertCompositionText' &&
-            compositionStartEvent &&
-            compositionStartEvent.data === '' &&
-            this._events.filter(event => event.type === 'compositionstart').length === 1 &&
-            this._events.filter(event => event.type === 'compositionupdate').length === 2 &&
-            this._events.filter(event => event.type === 'compositionend').length === 0 &&
-            inputEvent.data[inputEvent.data.length - 1];
-        const swiftKeyInsertKey =
-            keydownEvent &&
-            keydownEvent.key === 'Unidentified' &&
-            inputEvent &&
-            inputEvent.inputType === 'insertText' &&
-            !googleKeyboardKey &&
-            this._events.filter(event => event.type === 'input').length === 1 &&
-            inputEvent.data;
 
         //
         // First pass to get the informations
@@ -570,8 +549,6 @@ export class EventNormalizer {
                 keydownEvent.key !== 'Dead' &&
                 keydownEvent.key) ||
             (isGoogleKeyboardBackspace && 'Backspace') ||
-            googleKeyboardKey ||
-            swiftKeyInsertKey ||
             (keydownEvent &&
                 keydownEvent.key === 'Unidentified' &&
                 this._inferKeyFromInput(inputEvent));
@@ -592,7 +569,6 @@ export class EventNormalizer {
             (dropEvent && 'insertFromDrop') ||
             (pasteEvent && 'insertFromPaste') ||
             (isGoogleKeyboardBackspace && 'deleteContentBackward') ||
-            (!!googleKeyboardKey && 'insertText') ||
             (inputEvent && inputEvent.inputType) ||
             // todo: Do we really need to set the inputType when making a
             //       "special accent" in mac?
@@ -632,10 +608,7 @@ export class EventNormalizer {
         const isCompositionKeyboard = macAccentOneChar || macAccent;
 
         const isVirtualKeyboard =
-            (compositionEvent && (key && key.length !== 1)) ||
-            isGoogleKeyboardBackspace ||
-            !!googleKeyboardKey ||
-            !!swiftKeyInsertKey;
+            (compositionEvent && (key && key.length !== 1)) || isGoogleKeyboardBackspace;
 
         // Compute the set of mutated elements accross all observed events.
         const mutatedElements = this._mutationNormalizer.getMutatedElements();
