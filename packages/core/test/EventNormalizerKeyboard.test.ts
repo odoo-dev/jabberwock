@@ -5533,17 +5533,6 @@ describe('utils', () => {
                     const keyboardActions: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: ctx.editable.childNodes[1].firstChild,
-                                offset: 1,
-                            },
-                            domSelection: {
-                                anchorNode: ctx.editable.firstChild.firstChild,
-                                anchorOffset: 0,
-                                focusNode: ctx.editable.lastChild.lastChild,
-                                focusOffset: 1,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
                     const batchEvents: EventBatch[] = [
@@ -5589,17 +5578,6 @@ describe('utils', () => {
                     const keyboardActions: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: ctx.editable.childNodes[1].firstChild,
-                                offset: 1,
-                            },
-                            domSelection: {
-                                anchorNode: ctx.editable.firstChild.firstChild,
-                                anchorOffset: 0,
-                                focusNode: ctx.editable.lastChild.lastChild.previousSibling,
-                                focusOffset: 0,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
                     const batchEvents: EventBatch[] = [
@@ -5652,17 +5630,6 @@ describe('utils', () => {
                     const keyboardActions: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: ctx.editable.childNodes[1].firstChild,
-                                offset: 1,
-                            },
-                            domSelection: {
-                                anchorNode: ctx.editable.firstChild.firstChild,
-                                anchorOffset: 0,
-                                focusNode: ctx.editable.lastChild.lastChild,
-                                focusOffset: 1,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
                     const batchEvents: EventBatch[] = [

@@ -35,6 +35,8 @@ export class EventManager {
                     return ['insertText', { text: action.text }];
                 }
             case 'selectAll':
+                // todo: add selectAll command in the editor
+                return ['selectAll', {}];
             case 'setSelection': {
                 const vSelectionParams: VSelectionParams = {
                     vSelection: this.domPlugin.parseSelection(action.domSelection),

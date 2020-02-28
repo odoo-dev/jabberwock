@@ -1315,17 +1315,6 @@ describe('utils', () => {
                     const pointerActions2: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: text,
-                                offset: 1,
-                            },
-                            domSelection: {
-                                anchorNode: ctx.editable,
-                                anchorOffset: 0,
-                                focusNode: ctx.divOutsideEditable.firstChild,
-                                focusOffset: 3,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
 
@@ -1386,17 +1375,6 @@ describe('utils', () => {
                     const pointerActions2: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: text2,
-                                offset: 1,
-                            },
-                            domSelection: {
-                                anchorNode: p1,
-                                anchorOffset: 0,
-                                focusNode: p3,
-                                focusOffset: 1,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
                     const batchEvents: EventBatch[] = [
@@ -1443,17 +1421,6 @@ describe('utils', () => {
                     const normalizedActions: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: text2,
-                                offset: 0,
-                            },
-                            domSelection: {
-                                anchorNode: text1,
-                                anchorOffset: 0,
-                                focusNode: p3,
-                                focusOffset: 2,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
 
@@ -1573,17 +1540,6 @@ describe('utils', () => {
                     const pointerActions2: NormalizedAction[] = [
                         {
                             type: 'selectAll',
-                            carretPosition: {
-                                offsetNode: text2,
-                                offset: 1,
-                            },
-                            domSelection: {
-                                anchorNode: text1,
-                                anchorOffset: 0,
-                                focusNode: p3,
-                                focusOffset: 2,
-                                direction: Direction.FORWARD,
-                            },
                         },
                     ];
                     const batchEvents: EventBatch[] = [

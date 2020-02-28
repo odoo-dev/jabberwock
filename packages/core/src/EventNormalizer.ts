@@ -127,8 +127,6 @@ interface DeleteHardLineAction {
 
 interface SelectAllAction {
     type: 'selectAll';
-    carretPosition: CaretPosition;
-    domSelection: DomSelectionDescription;
 }
 
 interface SetSelectionAction {
@@ -329,12 +327,6 @@ export class EventNormalizer {
      */
     _followsPointerAction: boolean;
     /**
-     * In some cases, the observation must be delayed to the next tick. In these
-     * cases, this control variable will be set to true such that the analysis
-     * process knows the current event queue processing has been delayed.
-     */
-    _secondTickObservation = false;
-    /**
      * Callback function to trigger for each user action.
      */
     _triggerEventBatch: TriggerEventBatchCallback;
@@ -368,7 +360,12 @@ export class EventNormalizer {
      * call in order to `clearTimeout` it later on.
      */
     _clickTimeout: number;
-
+    _modifierKeys = {
+        ctrlKey: false,
+        altKey: false,
+        metaKey: false,
+        shiftKey: false,
+    };
     constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
         this.editable = editable;
         this._triggerEventBatch = callback;
@@ -380,6 +377,10 @@ export class EventNormalizer {
         this._bindEvent(editable, 'beforeinput', this._registerEvent);
         this._bindEvent(editable, 'input', this._registerEvent);
 
+        this._bindEvent(document, 'onkeydown', this._onSelectionChange);
+        this._bindEvent(document, 'onkeypress', this._onSelectionChange);
+        this._bindEvent(document, 'onkeyup', this._onSelectionChange);
+
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
         this._bindEvent(document, 'click', this._onClick);
         this._bindEvent(document, 'touchend', this._onClick);
@@ -388,6 +389,8 @@ export class EventNormalizer {
         this._bindEvent(document, 'touchstart', this._onPointerDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
+        this._bindEvent(document, 'onkeyup', this._updateModifiersKeys);
+
         this._bindEvent(editable, 'cut', this._onClipboard);
         this._bindEvent(editable, 'paste', this._onClipboard);
         this._bindEvent(editable, 'dragstart', this._onDragStart);
@@ -455,7 +458,6 @@ export class EventNormalizer {
             // user action. Re-initialize the queue such that the analysis is
             // not polluted by previous observations.
             this._events = [];
-            this._secondTickObservation = false;
             // Start observing mutations.
             this._mutationNormalizer.start();
             // All events during this tick will be processed in the next one.
@@ -499,7 +501,13 @@ export class EventNormalizer {
      *
      * @private
      */
-    _processEvents(): void {
+
+    /**
+     * In some cases, the observation must be delayed to the next tick. In these
+     * cases, this control variable will be set to true such that the analysis
+     * process knows the current event queue processing has been delayed.
+     */
+    _processEvents(secondTickObservation = false): void {
         // In some cases, for example cutting with Cmd+X on Safari, the browser
         // triggers events in two different stacks. In such cases, observing
         // events occuring during one tick is not enough so we need to delay the
@@ -507,9 +515,8 @@ export class EventNormalizer {
         const needSecondTickObservation = this._events.every(ev => {
             return !MultiStackEventTypes.includes(ev.type);
         });
-        if (needSecondTickObservation && !this._secondTickObservation) {
-            this._secondTickObservation = true;
-            setTimeout(this._processEvents.bind(this));
+        if (needSecondTickObservation && !secondTickObservation) {
+            setTimeout(this._processEvents.bind(this, true));
             return;
         }
 
@@ -623,14 +630,12 @@ export class EventNormalizer {
             normalizedActions.push(...this._getDropActions(dropEvent));
         } else if (pasteEvent) {
             normalizedActions.push(this._getDataTransferAction(pasteEvent));
+        } else if (customSelectAllEvent) {
+            normalizedActions.push(this._getSelectAll());
         } else if (
             normalizedActions.length === 0 &&
             ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard)
         ) {
-            if (customSelectAllEvent) {
-                normalizedActions.push(this._getSelectAll());
-            }
-
             const keyboardAction = this._getKeyboardAction(key, inputType, !!mutatedElements.size);
             if (keyboardAction) {
                 normalizedActions.push(keyboardAction);
@@ -660,24 +665,17 @@ export class EventNormalizer {
             normalizedActions.push(historyAction);
         }
 
-        this._events = null;
-
-        // Select all on safari does not provide all the informations the first
-        // stack so wait for the second one.
-        if (!normalizedActions.length && key === 'a' && keydownEvent && keydownEvent.metaKey) {
-            return;
-        }
-
         if (normalizedActions.length > 0) {
             this._triggerEventBatch({
                 actions: normalizedActions,
                 mutatedElements,
             });
         }
-        this._secondTickObservation = false;
+
         this._eventsMap = {};
         this._followsPointerAction = false;
         this._multiKeyStack = [];
+        this._events = null;
     }
     _getCompositionData(
         compositionEvent: CompositionEvent,
@@ -1137,8 +1135,6 @@ export class EventNormalizer {
     _getSelectAll(): SelectAllAction {
         const selectAllAction: SelectAllAction = {
             type: 'selectAll',
-            carretPosition: this._initialCaretPosition,
-            domSelection: this._getSelection(),
         };
         return selectAllAction;
     }
@@ -1376,6 +1372,7 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
+        this._updateModifiersKeys(ev);
         this._registerEvent(ev);
         const selection = this._getSelection();
         const [offsetNode, offset] = targetDeepest(selection.anchorNode, selection.anchorOffset);
@@ -1538,6 +1535,20 @@ export class EventNormalizer {
         };
         this._registerEvent(pasteEvent);
     }
+
+    /**
+     * Update the modifiers keys to know which modifiers keys are pushed.
+     *
+     * @param e
+     */
+    _updateModifiersKeys(e: KeyboardEvent): void {
+        this._modifierKeys = {
+            ctrlKey: e.ctrlKey,
+            altKey: e.altKey,
+            metaKey: e.metaKey,
+            shiftKey: e.shiftKey,
+        };
+    }
     /**
      * On each change of selection, check if it might be a "selectAll" action.
      *
@@ -1566,9 +1577,10 @@ export class EventNormalizer {
         // a select all. Outside of these cases, there is no need to make the
         // costly check.
         // 1. Following a modified key being pressed. (e.g. Ctrl+A)
-        const modifiedKeyEvent =
-            this._eventsMap.keydown &&
-            (this._eventsMap.keydown.ctrlKey || this._eventsMap.keydown.metaKey);
+        // const modifiedKeyEvent =
+        //     this._eventsMap.keydown &&
+        //     (this._eventsMap.keydown.ctrlKey || this._eventsMap.keydown.metaKey);
+        const modifiedKeyEvent = this._modifierKeys.ctrlKey || this._modifierKeys.metaKey;
 
         // This heuristic protects against a costly `_isSelectAll` call.
         const heuristic = modifiedKeyEvent || this._followsPointerAction;
@@ -1585,8 +1597,6 @@ export class EventNormalizer {
                 // was when the select all was triggered.
                 const selectAllAction: SelectAllAction = {
                     type: 'selectAll',
-                    carretPosition: this._initialCaretPosition,
-                    domSelection: this._getSelection(),
                 };
 
                 // We did not find any case where a select all triggered from
