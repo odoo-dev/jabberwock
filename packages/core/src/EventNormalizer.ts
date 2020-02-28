@@ -481,7 +481,7 @@ export class EventNormalizer {
 
         this._eventsMap[ev.type] = ev;
         if (ev.type.startsWith('composition')) {
-            // Most of the time we only need the last composition of the
+            // In most cases we only need the last composition of the
             // registred events
             this._eventsMap.lastComposition = ev as CompositionEvent;
         }
