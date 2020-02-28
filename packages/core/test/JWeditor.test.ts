@@ -186,6 +186,7 @@ describe('core', () => {
                         await testEditor(JWEditor, {
                             contentBefore: '',
                             beforeStart: async editor => {
+                                editor._platform = Platform.PC;
                                 editor.addPlugin(
                                     class A extends JWPlugin {
                                         shortcuts = [
@@ -198,7 +199,6 @@ describe('core', () => {
                                 );
                             },
                             stepFunction: async editor => {
-                                editor._platform = Platform.PC;
                                 // todo: to remove when the normalizer will
                                 //       not be in included by default
                                 editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
@@ -217,6 +217,7 @@ describe('core', () => {
                         await testEditor(JWEditor, {
                             contentBefore: '',
                             beforeStart: async editor => {
+                                editor._platform = Platform.PC;
                                 editor.addPlugin(
                                     class A extends JWPlugin {
                                         shortcuts = [
@@ -238,7 +239,6 @@ describe('core', () => {
                                 });
                             },
                             stepFunction: async editor => {
-                                editor._platform = Platform.PC;
                                 // todo: to remove when the normalizer will
                                 //       not be in included by default
                                 editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
