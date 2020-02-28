@@ -457,9 +457,10 @@ describe('core', () => {
                 });
                 describe('siblings', () => {
                     it('should return the node siblings', async () => {
-                        expect(h1.siblings).to.deep.equal([a, h1, c, p]);
-                        expect(b.siblings).to.deep.equal([b], 'siblings without the markers');
-                        expect(root.siblings).to.deep.equal([]);
+                        expect(h1.siblings()).to.deep.equal([a, c, p]);
+                        expect(h1.siblings(CharNode)).to.deep.equal([a, c]);
+                        expect(b.siblings()).to.deep.equal([], 'siblings without the markers');
+                        expect(root.siblings()).to.deep.equal([]);
                     });
                 });
                 describe('firstChild', () => {
@@ -959,7 +960,7 @@ describe('core', () => {
                         a.before(b);
                         const c = new CharNode('c');
                         a.before(c);
-                        expect(a.siblings).to.deep.equal([b, c, a]);
+                        expect(a.siblings()).to.deep.equal([b, c]);
                     });
                     it('should throw if no parent', async () => {
                         const root = new VNode();
@@ -978,7 +979,7 @@ describe('core', () => {
                         a.after(b);
                         const c = new CharNode('c');
                         a.after(c);
-                        expect(a.siblings).to.deep.equal([a, c, b]);
+                        expect(a.siblings()).to.deep.equal([c, b]);
                     });
                     it('should move a node after another', async () => {
                         const root = new VNode();
@@ -989,7 +990,7 @@ describe('core', () => {
                         const c = new CharNode('c');
                         root.append(c);
                         b.after(a);
-                        expect(a.siblings).to.deep.equal([b, a, c]);
+                        expect(a.siblings()).to.deep.equal([b, c]);
                     });
                     it('should throw if no parent', async () => {
                         const root = new VNode();
@@ -1008,7 +1009,7 @@ describe('core', () => {
                         root.insertBefore(b, a);
                         const c = new CharNode('c');
                         root.insertBefore(c, a);
-                        expect(a.siblings).to.deep.equal([b, c, a]);
+                        expect(a.siblings()).to.deep.equal([b, c]);
                     });
                     it('should throw when try to insert before unknown node', async () => {
                         expect(() => {
@@ -1025,7 +1026,7 @@ describe('core', () => {
                         root.insertAfter(b, a);
                         const c = new CharNode('c');
                         root.insertAfter(c, a);
-                        expect(a.siblings).to.deep.equal([a, c, b]);
+                        expect(a.siblings()).to.deep.equal([c, b]);
                     });
                     it('should throw when try to insert after unknown node', async () => {
                         expect(() => {
@@ -1042,9 +1043,9 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode('c');
                         root.append(c);
-                        expect(a.siblings).to.deep.equal([a, b, c]);
+                        expect(a.siblings()).to.deep.equal([b, c]);
                         b.remove();
-                        expect(a.siblings).to.deep.equal([a, c]);
+                        expect(a.siblings()).to.deep.equal([c]);
                     });
                 });
                 describe('removeChild', () => {
@@ -1056,9 +1057,9 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode('c');
                         root.append(c);
-                        expect(a.siblings).to.deep.equal([a, b, c]);
+                        expect(a.siblings()).to.deep.equal([b, c]);
                         root.removeChild(b);
-                        expect(a.siblings).to.deep.equal([a, c]);
+                        expect(a.siblings()).to.deep.equal([c]);
                     });
                     it('should throw when try to remove a unknown node', async () => {
                         expect(() => {
