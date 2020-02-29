@@ -38,7 +38,7 @@ export interface JWEditorConfig {
     shortcuts?: Shortcut[];
     createBaseContainer?: () => VNode;
 }
-interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
+export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
 }
 
