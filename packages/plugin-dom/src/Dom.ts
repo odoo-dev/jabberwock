@@ -8,6 +8,7 @@ import { ParsingEngine } from '../../core/src/ParsingEngine';
 import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
 import { RenderingEngine } from '../../core/src/RenderingEngine';
+import { Parser } from '../../plugin-parser/src/Parser';
 
 interface DomConfig extends JWPluginConfig {
     autoFocus?: boolean;
@@ -15,6 +16,7 @@ interface DomConfig extends JWPluginConfig {
 }
 
 export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
+    static dependencies = [Parser];
     readonly parsingEngines = [DomParsingEngine];
     readonly renderingEngines = [DomRenderingEngine];
     configuration = this.configuration || {
@@ -36,7 +38,14 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
             this.editable = target.cloneNode(true) as HTMLElement;
 
             if (target.innerHTML !== '') {
-                const parsedEditable = await this.editor.parsers.dom.parse(target);
+                const parser = this.editor.plugins.get(Parser);
+                const domParser = parser && parser.engines.dom;
+                if (!domParser) {
+                    // TODO: remove this when the editor can be instantiated on
+                    // something else than DOM.
+                    throw new Error(`No DOM parser installed.`);
+                }
+                const parsedEditable = await domParser.parse(target);
                 for (const parsedNode of parsedEditable) {
                     for (const child of parsedNode.children.slice()) {
                         this.editor.vDocument.root.append(child);
@@ -54,7 +63,8 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
         this.editable.setAttribute('contenteditable', 'true');
 
         // Construct DOM map from the parsing in order to parse the selection.
-        const engine = this.editor.parsers.dom as ParsingEngine<Node>;
+        const parser = this.editor.plugins.get(Parser);
+        const engine = parser.engines.dom as ParsingEngine<Node>;
         for (const [domNode, nodes] of engine.parsingMap) {
             for (const node of nodes) {
                 this.domMap.set(node, domNode);

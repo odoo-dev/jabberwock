@@ -428,6 +428,7 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
+                        'Parser',
                         'A',
                         'B',
                         'C',
@@ -443,6 +444,7 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
+                        'Parser',
                         'A',
                         'B',
                         'C',
@@ -460,6 +462,7 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
+                        'Parser',
                         'A',
                         'B',
                         'C',
@@ -479,6 +482,7 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
+                        'Parser',
                         'A',
                         'D',
                         'C',
@@ -499,6 +503,7 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
+                        'Parser',
                         'A',
                         'D',
                         'E',
