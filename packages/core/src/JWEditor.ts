@@ -286,13 +286,15 @@ export class JWEditor {
         } else {
             const preconf = this.configuration;
             const conf = PluginOrEditorConfig;
-            const configuration = { ...preconf, ...conf };
-            // The `plugins` configuration key is an array so it needs to be
+            this.configuration = { ...preconf, ...conf };
+            // The `plugins` configuration key is special so it needs to be
             // handled separately in order to properly merge it.
             if (conf.plugins) {
-                configuration.plugins = [...preconf.plugins, ...conf.plugins];
+                this.configuration.plugins = [...preconf.plugins];
+                for (const [Plugin, pluginConfiguration] of conf.plugins) {
+                    this.loadPlugin(Plugin, pluginConfiguration);
+                }
             }
-            this.configuration = configuration;
         }
     }
 
