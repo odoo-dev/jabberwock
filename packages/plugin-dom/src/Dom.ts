@@ -38,7 +38,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
             this.editable = target.cloneNode(true) as HTMLElement;
 
             if (target.innerHTML !== '') {
-                const parser = this.editor.plugins.get(Parser);
+                const parser = this.dependencies.get(Parser);
                 const domParser = parser && parser.engines.dom;
                 if (!domParser) {
                     // TODO: remove this when the editor can be instantiated on
@@ -63,7 +63,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
         this.editable.setAttribute('contenteditable', 'true');
 
         // Construct DOM map from the parsing in order to parse the selection.
-        const parser = this.editor.plugins.get(Parser);
+        const parser = this.dependencies.get(Parser);
         const engine = parser.engines.dom as ParsingEngine<Node>;
         for (const [domNode, nodes] of engine.parsingMap) {
             for (const node of nodes) {
