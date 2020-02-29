@@ -1,4 +1,5 @@
 import JWEditor from '../packages/core/src/JWEditor';
+import { Parser } from '../packages/plugin-parser/src/Parser';
 import { Dom } from '../packages/plugin-dom/src/Dom';
 import { Char } from '../packages/plugin-char/src/Char';
 import { LineBreak } from '../packages/plugin-linebreak/src/LineBreak';
@@ -29,6 +30,7 @@ export class BasicEditor extends JWEditor {
         this.configure({
             createBaseContainer: () => new ParagraphNode(),
             plugins: [
+                [Parser],
                 [Dom],
                 [Inline],
                 [Char],
