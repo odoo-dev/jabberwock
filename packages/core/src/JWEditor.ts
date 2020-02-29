@@ -7,12 +7,12 @@ import { CorePlugin } from './CorePlugin';
 import { VNode } from './VNodes/VNode';
 import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
 import { VElement } from './VNodes/VElement';
-import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
+import { Parser } from '../../plugin-parser/src/Parser';
 
 export enum Platform {
     MAC = 'mac',
@@ -23,6 +23,10 @@ enum Mode {
     CONFIGURATION = 'configuration',
     EDITION = 'edition',
 }
+
+export type Loadable = {};
+export type Loader = (loadable: Loadable) => void;
+export type Plugins<T> = IterableIterator<JWPlugin & T>;
 
 export interface Shortcut extends ConfiguredCommand {
     platform?: Platform;
@@ -59,7 +63,7 @@ export class JWEditor {
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
-    parsers: Record<ParsingIdentifier, ParsingEngine> = {};
+    loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
 
     constructor() {
@@ -73,6 +77,7 @@ export class JWEditor {
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
         this.loadPlugin(CorePlugin);
+        this.loadPlugin(Parser);
     }
 
     /**
@@ -192,9 +197,6 @@ export class JWEditor {
                 }
             }
 
-            // Register the parsing functions of this plugin.
-            this._addPluginParser(plugin);
-
             // Load rendering engines.
             if (plugin.renderingEngines) {
                 for (const EngineClass of plugin.renderingEngines) {
@@ -226,6 +228,24 @@ export class JWEditor {
                     const renderingEngine = this.renderers[RendererClass.id];
                     if (renderingEngine) {
                         renderingEngine.register(RendererClass);
+                    }
+                }
+            }
+
+            for (const loadable of Object.keys(this.loaders)) {
+                if (plugin[loadable] && this.loaders[loadable]) {
+                    this.loaders[loadable](plugin[loadable]);
+                }
+            }
+
+            if (plugin.loaders) {
+                for (const loadable of Object.keys(plugin.loaders)) {
+                    if (this.loaders[loadable]) {
+                        throw new Error(
+                            `Another loader is already registered for loadable ${loadable}.`,
+                        );
+                    } else {
+                        this.loaders[loadable] = plugin.loaders[loadable];
                     }
                 }
             }
@@ -296,44 +316,6 @@ export class JWEditor {
         this.eventManager.stop();
         this.el.remove();
         this._mode = Mode.CONFIGURATION;
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    _addPluginParser(plugin: JWPlugin): void {
-        // Load parsing engines.
-        if (plugin.parsingEngines) {
-            for (const EngineClass of plugin.parsingEngines) {
-                const id = EngineClass.id;
-                if (this.parsers[id]) {
-                    throw new Error(`Rendering engine ${id} already registered.`);
-                }
-                const engine = new EngineClass(this);
-                this.parsers[id] = engine;
-                // Register parsing from previously loaded plugins as that
-                // could not be done earlier without the parsing engine.
-                for (const plugin of this.plugins.values()) {
-                    if (plugin.parsers) {
-                        for (const ParserClass of plugin.parsers) {
-                            if (ParserClass.id === id) {
-                                engine.register(ParserClass);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        // Load parsers.
-        if (plugin.parsers) {
-            for (const ParserClass of plugin.parsers) {
-                const parsingEngine = this.parsers[ParserClass.id];
-                if (parsingEngine) {
-                    parsingEngine.register(ParserClass);
-                }
-            }
-        }
     }
 
     /**
