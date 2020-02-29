@@ -21,6 +21,7 @@ import { Blockquote } from '../packages/plugin-blockquote/Blockquote';
 import { Youtube } from '../packages/plugin-youtube/Youtube';
 import { Table } from '../packages/plugin-table/Table';
 import { Metadata } from '../packages/plugin-metadata/Metadata';
+import { Parser } from '../packages/plugin-parser/src/Parser';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -29,6 +30,7 @@ export class BasicEditor extends JWEditor {
         this.configure({
             createBaseContainer: () => new ParagraphNode(),
             plugins: [
+                [Parser],
                 [Dom],
                 [Inline],
                 [Char],
