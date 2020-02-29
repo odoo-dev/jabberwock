@@ -32,7 +32,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
 
         // Construct DOM map from the parsing in order to parse the selection.
         this.domMap.set(this.editor.vDocument.root, editable);
-        const parser = this.editor.plugins.get(Parser);
+        const parser = this.dependencies.get(Parser);
         const engine = parser.engines.dom as ParsingEngine<Node>;
         for (const [domNode, nodes] of engine.parsingMap) {
             for (const node of nodes) {
