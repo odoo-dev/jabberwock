@@ -8,12 +8,14 @@ import { ParsingEngine } from '../core/src/ParsingEngine';
 import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
 import { RenderingEngine } from '../core/src/RenderingEngine';
+import { Parser } from '../plugin-parser/src/Parser';
 
 interface DomConfig extends JWPluginConfig {
     autoFocus?: boolean;
 }
 
 export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
+    static dependencies = [Parser];
     readonly parsingEngines = [DomParsingEngine];
     readonly renderingEngines = [DomRenderingEngine];
     configuration = this.configuration || {
@@ -30,7 +32,8 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
 
         // Construct DOM map from the parsing in order to parse the selection.
         this.domMap.set(this.editor.vDocument.root, editable);
-        const engine = this.editor.parsers.dom as ParsingEngine<Node>;
+        const parser = this.editor.plugins.get(Parser);
+        const engine = parser.engines.dom as ParsingEngine<Node>;
         for (const [domNode, nodes] of engine.parsingMap) {
             for (const node of nodes) {
                 this.domMap.set(node, domNode);

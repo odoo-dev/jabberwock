@@ -13,14 +13,6 @@ export type ParserConstructor<T = {}> = Constructor<Parser<T>> & {
     id: ParsingIdentifier;
 };
 
-export type ParsingEngineConstructor<T = {}> = Constructor<ParsingEngine> & {
-    id: ParsingIdentifier;
-    defaultParser: ParserConstructor<T>;
-};
-
-export interface ParsingEngine<T = {}> {
-    constructor: ParsingEngineConstructor<T>;
-}
 export class ParsingEngine<T = {}> {
     static readonly id: ParsingIdentifier;
     static defaultParser: Constructor<Parser>;
@@ -88,4 +80,11 @@ export class ParsingEngine<T = {}> {
         }
         return nodes;
     }
+}
+export interface ParsingEngine<T = {}> {
+    constructor: {
+        new (...args: ConstructorParameters<typeof ParsingEngine>): ParsingEngine;
+        id: ParsingIdentifier;
+        defaultParser: ParserConstructor<T>;
+    };
 }
