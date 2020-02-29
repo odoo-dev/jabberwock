@@ -8,7 +8,7 @@ import { ListDomParser } from './ListDomParser';
 import { ListItemDomParser } from './ListItemDomParser';
 import { withRange, VRange } from '../core/src/VRange';
 import { IndentParams, OutdentParams } from '../plugin-indent/src/Indent';
-import { Context } from '../core/src/ContextManager';
+import { CheckingContext } from '../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../core/src/CorePlugin';
 
 export interface ListParams extends CommandParams {
@@ -39,7 +39,7 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> {
         },
         insertParagraphBreak: {
             selector: [ListNode, List.isListItem],
-            check: (context: Context): boolean => {
+            check: (context: CheckingContext): boolean => {
                 const [list, listItem] = context.selector;
                 return !listItem.hasChildren() && listItem === list.lastChild();
             },
@@ -60,7 +60,7 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> {
         {
             pattern: 'Backspace',
             selector: [List.isListItem],
-            check: (context: Context): boolean => {
+            check: (context: CheckingContext): boolean => {
                 return !context.range.start.previousSibling();
             },
             commandId: 'outdent',

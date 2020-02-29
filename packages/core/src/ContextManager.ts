@@ -2,15 +2,18 @@ import JWEditor from './JWEditor';
 import { VRange } from './VRange';
 import { Predicate, VNode } from './VNodes/VNode';
 
-export type Context = {
+export interface Context {
     range?: VRange;
+}
+
+export interface CheckingContext extends Context {
     selector?: VNode[];
-};
+}
 
 export interface Contextual {
     context?: Context;
     selector?: Predicate<VNode | boolean>[];
-    check?: (context: Context) => boolean;
+    check?: (context: CheckingContext) => boolean;
 }
 
 export class ContextManager {
@@ -121,44 +124,39 @@ export class ContextManager {
             const context = { ...this.defaultContext, ...item.context, ...paramsContext };
             let firstMatchDepth = -1;
             let index = 0;
-            let match;
             const selector = item.selector || [];
-            if (selector.length === 0) {
-                match = true;
-            } else {
-                context.selector = [];
-                const start = context.range.start;
-                const nodes = start.ancestors();
-                const node = start.previousSibling() || start.nextSibling();
-                if (node) {
-                    nodes.unshift(node);
-                }
-                const maximumDepth = nodes.length - 1;
-                for (const predicate of [...selector].reverse()) {
-                    match = false;
-                    while (!match && index < nodes.length) {
-                        if (nodes[index].test(predicate)) {
-                            match = true;
-                            context.selector.unshift(nodes[index]);
-                            if (firstMatchDepth === -1) {
-                                // Deeper match has higher specificity. So lower
-                                // index in ancestors, means higher specificity.
-                                firstMatchDepth = maximumDepth - index;
-                            }
+            const matches: VNode[] = [];
+            const start = context.range.start;
+            const nodes = start.ancestors();
+            const node = start.previousSibling() || start.nextSibling();
+            if (node) {
+                nodes.unshift(node);
+            }
+            const maximumDepth = nodes.length - 1;
+            for (const predicate of [...selector].reverse()) {
+                let matchFound = false;
+                while (!matchFound && index < nodes.length) {
+                    if (nodes[index].test(predicate)) {
+                        matchFound = true;
+                        matches.unshift(nodes[index]);
+                        if (firstMatchDepth === -1) {
+                            // Deeper match has higher specificity. So lower
+                            // index in ancestors, means higher specificity.
+                            firstMatchDepth = maximumDepth - index;
                         }
-                        index++;
                     }
-                    // Stop checking the predicates of this particular command
-                    // since at least one of them don't match the context.
-                    if (!match) break;
+                    index++;
                 }
+                // Stop checking the predicates of this particular command
+                // since at least one of them don't match the context.
+                if (!matchFound) break;
             }
 
             if (
-                match &&
+                matches.length === selector.length &&
                 maxFirstMatchDepth <= firstMatchDepth &&
                 maxSelectorLength <= selector.length &&
-                (!item.check || item.check(context))
+                (!item.check || item.check({ ...context, selector: matches }))
             ) {
                 maxFirstMatchDepth = firstMatchDepth;
                 maxSelectorLength = selector.length;
