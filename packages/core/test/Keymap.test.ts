@@ -1,4 +1,4 @@
-import { Keymap, BoundCommand } from '../src/Keymap';
+import { Keymap, ConfiguredCommand } from '../src/Keymap';
 import { expect } from 'chai';
 function keydownEvent(key, code, options = {}): KeyboardEvent {
     return new KeyboardEvent('keydown', { ...options, key, code });
@@ -95,7 +95,7 @@ describe('core', () => {
                 keymap.bindShortcut('a', { commandId: 'command-a' });
                 keymap.bindShortcut('b', { commandId: 'command-b' });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommands: BoundCommand[] = [
+                const expectedCommands: ConfiguredCommand[] = [
                     {
                         commandId: 'command-a',
                     },
@@ -106,7 +106,7 @@ describe('core', () => {
                 keymap.bindShortcut('<KeyA>', { commandId: 'command-a' });
                 keymap.bindShortcut('b', { commandId: 'command-b' });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommands: BoundCommand[] = [
+                const expectedCommands: ConfiguredCommand[] = [
                     {
                         commandId: 'command-a',
                     },
@@ -117,7 +117,7 @@ describe('core', () => {
                 const args = { propA: 'valA' };
                 keymap.bindShortcut('<KeyA>', { commandId: 'command-a', commandArgs: args });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommands: BoundCommand[] = [
+                const expectedCommands: ConfiguredCommand[] = [
                     {
                         commandId: 'command-a',
                         commandArgs: args,
@@ -130,7 +130,7 @@ describe('core', () => {
                 keymap.bindShortcut('a', { commandId: 'command-a', commandArgs: args });
                 keymap.bindShortcut('ctrl  +a', { commandId: 'command-b', commandArgs: args });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommands: BoundCommand[] = [
+                const expectedCommands: ConfiguredCommand[] = [
                     {
                         commandId: 'command-a',
                         commandArgs: args,
@@ -150,7 +150,7 @@ describe('core', () => {
                     commandArgs: ['second unbinding'],
                 });
                 const call = keymap.match(keydownEvent('a', 'KeyA'));
-                const expectedCommands: BoundCommand[] = [
+                const expectedCommands: ConfiguredCommand[] = [
                     {
                         commandId: undefined,
                         commandArgs: ['second unbinding'],
@@ -162,7 +162,7 @@ describe('core', () => {
                 it('should match shortcuts only when one modifier is active', () => {
                     keymap.bindShortcut('ctRl+<KeyA>', { commandId: 'command-a' });
                     const call = keymap.match(keydownEvent('a', 'KeyA', { ctrlKey: true }));
-                    const expectedCommands: BoundCommand[] = [
+                    const expectedCommands: ConfiguredCommand[] = [
                         {
                             commandId: 'command-a',
                         },
@@ -181,7 +181,7 @@ describe('core', () => {
                     const call = keymap.match(
                         keydownEvent('a', 'KeyA', { ctrlKey: true, altKey: true }),
                     );
-                    const expectedCommands: BoundCommand[] = [{ commandId: 'command-a' }];
+                    const expectedCommands: ConfiguredCommand[] = [{ commandId: 'command-a' }];
                     expect(call).to.deep.equal(expectedCommands);
                 });
             });

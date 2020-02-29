@@ -1,5 +1,5 @@
 import JWEditor from './JWEditor';
-import { CommandIdentifier, CommandDefinition, CommandHook } from './Dispatcher';
+import { CommandIdentifier, CommandImplementation, CommandHook } from './Dispatcher';
 import { Shortcut } from './JWEditor';
 import { RendererConstructor, RenderingEngineConstructor } from './RenderingEngine';
 import { ParserConstructor, ParsingEngineConstructor } from './ParsingEngine';
@@ -13,7 +13,7 @@ export class JWPlugin<T extends JWPluginConfig = {}> {
     readonly renderingEngines: RenderingEngineConstructor[] = [];
     readonly renderers: RendererConstructor[];
     name: string;
-    commands: Record<CommandIdentifier, CommandDefinition> = {};
+    commands: Record<CommandIdentifier, CommandImplementation> = {};
     commandHooks: Record<CommandIdentifier, CommandHook> = {};
     shortcuts: Shortcut[];
 

@@ -1,4 +1,4 @@
-import { BoundCommand, Keymap } from './Keymap';
+import { ConfiguredCommand, Keymap } from './Keymap';
 import { Dispatcher, CommandIdentifier } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
@@ -24,7 +24,7 @@ enum Mode {
     EDITION = 'edition',
 }
 
-export interface Shortcut extends BoundCommand {
+export interface Shortcut extends ConfiguredCommand {
     platform?: Platform;
     pattern: string;
 }
@@ -406,7 +406,7 @@ export class JWEditor {
      * @param event
      */
     _onKeydown(event: KeyboardEvent): void {
-        let command: BoundCommand;
+        let command: ConfiguredCommand;
         let context: Context;
         const userCommands = this.keymaps.user.match(event);
         [command, context] = this.contextManager.match(userCommands);

@@ -1,15 +1,12 @@
 import { CommandIdentifier } from './Dispatcher';
-import { Predicate, VNode } from './VNodes/VNode';
-import { Context } from './ContextManager';
+import { Contextual } from './ContextManager';
 
-export interface BoundCommand {
+export interface ConfiguredCommand extends Contextual {
     /**
      * An undefined `commandId` effectively unbinds the shortcut.
      */
     readonly commandId: CommandIdentifier | undefined;
     readonly commandArgs?: {};
-    readonly selector?: Predicate<VNode | boolean>[];
-    readonly check?: (context: Context) => boolean;
 }
 
 interface ModifiedShortcut {
@@ -28,7 +25,7 @@ type ShortcutPattern = KeyShortcutPattern | CodeShortcutPattern;
 
 interface Shortcut {
     pattern: ShortcutPattern;
-    boundCommand?: BoundCommand;
+    configuredCommand?: ConfiguredCommand;
 }
 
 /**
@@ -104,20 +101,20 @@ export class Keymap {
      * @param patternString
      * @param command
      */
-    bindShortcut(patternString: string, command: BoundCommand): void {
+    bindShortcut(patternString: string, command: ConfiguredCommand): void {
         this.shortcuts.push({
             pattern: this.parsePattern(patternString),
-            boundCommand: command,
+            configuredCommand: command,
         });
     }
 
     /**
-     * Return all bound commands which shortcut match the given `keyEvent`.
+     * Return all configured commands which shortcut match the given `keyEvent`.
      *
      * @param keyEvent
      */
-    match(keyEvent: KeyboardEvent): BoundCommand[] {
-        const matchingCommands: BoundCommand[] = [];
+    match(keyEvent: KeyboardEvent): ConfiguredCommand[] {
+        const matchingCommands: ConfiguredCommand[] = [];
         for (const shortcut of this.shortcuts) {
             const modifiers = shortcut.pattern.modifiers;
 
@@ -136,12 +133,12 @@ export class Keymap {
                 modifiers.has('ALT') === keyEvent.altKey;
 
             if (match) {
-                if (!shortcut.boundCommand.commandId) {
+                if (!shortcut.configuredCommand.commandId) {
                     // An `undefined` command unbounds the other commands
                     // previously registered on this shortcut.
                     matchingCommands.length = 0;
                 }
-                matchingCommands.push(shortcut.boundCommand);
+                matchingCommands.push(shortcut.configuredCommand);
             }
         }
         return matchingCommands;

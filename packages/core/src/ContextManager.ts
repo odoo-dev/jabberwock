@@ -7,7 +7,7 @@ export type Context = {
     selector?: VNode[];
 };
 
-interface Contextual {
+export interface Contextual {
     context?: Context;
     selector?: Predicate<VNode | boolean>[];
     check?: (context: Context) => boolean;
@@ -32,7 +32,7 @@ export class ContextManager {
      * Match a command from the current context (the `vDocument` selection).
      *
      * Search through all command with `commandId` and return the last
-     * `CommandDefinition` that match a particular context.
+     * `CommandImplementation` that match a particular context.
      *
      * Commands with more specificity will have priority.  If there is multiples
      * commands with the same specificity, the last defined will be retured.
@@ -49,23 +49,23 @@ export class ContextManager {
      *
      * For example:
      * ```typescript
-     * const commandUlP: CommandDefinition = {
+     * const commandUlP: CommandImplementation = {
      *     selector: [isUl, isP],
      *     handler: () =>{},
      * }
-     * const commandP: CommandDefinition = {
+     * const commandP: CommandImplementation = {
      *     selector: [isP],
      *     handler: () =>{},
      * }
-     * const commandUl: CommandDefinition = {
+     * const commandUl: CommandImplementation = {
      *     selector: [isUl],
      *     handler: () =>{},
      * }
-     * const commandImage: CommandDefinition = {
+     * const commandImage: CommandImplementation = {
      *     selector: [isImage],
      *     handler: () =>{},
      * }
-     * const commandAny: CommandDefinition = {
+     * const commandAny: CommandImplementation = {
      *     selector: [],
      *     handler: () =>{},
      * }

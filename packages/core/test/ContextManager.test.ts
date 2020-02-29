@@ -2,7 +2,7 @@
 import { ListNode, ListType } from '../../plugin-list/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { CommandDefinition } from '../src/Dispatcher';
+import { CommandImplementation } from '../src/Dispatcher';
 import { expect } from 'chai';
 import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
 import { VNode } from '../src/VNodes/VNode';
@@ -17,7 +17,7 @@ describe('core', () => {
                     contentBefore: '<ul><li><p>a[]b</p></li></ul><p>c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'list',
                                 selector: [ListNode],
@@ -44,7 +44,7 @@ describe('core', () => {
                     contentBefore: '<ul><li><p>ab</p></li></ul><p>[]c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'list',
                                 selector: [ListNode],
@@ -70,7 +70,7 @@ describe('core', () => {
                     contentBefore: '<ul><li><ul><li><p>a[]b</p></li></ul></li></ul><p>c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'list1',
                                 selector: [ListNode, ListNode],
@@ -104,7 +104,7 @@ describe('core', () => {
                     contentBefore: '<ul><li><ul><li><p>a[]b</p></li></ul></li></ul><p>c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'paragraph',
                                 selector: [ParagraphNode],
@@ -138,7 +138,7 @@ describe('core', () => {
                         const isOl = (node: VNode): boolean => {
                             return node instanceof ListNode && node.listType === ListType.ORDERED;
                         };
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'list1',
                                 selector: [isOl, isUl, ParagraphNode],
@@ -175,7 +175,7 @@ describe('core', () => {
                     contentBefore: '<ul><li><p>ab</p></li></ul><p>[]c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'list1',
                                 selector: [ListNode, ListNode],
@@ -204,7 +204,7 @@ describe('core', () => {
                         const callback = (): void => {};
                         const newSelection = new VSelection();
                         newSelection.setAt(editor.vDocument.root);
-                        const commands: CommandDefinition[] = [
+                        const commands: CommandImplementation[] = [
                             {
                                 title: 'paragraph',
                                 selector: [ParagraphNode],

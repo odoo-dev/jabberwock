@@ -1,13 +1,10 @@
 import JWEditor from './JWEditor';
-import { VNode, Predicate } from './VNodes/VNode';
-import { Context } from './ContextManager';
+import { Context, Contextual } from './ContextManager';
 
 export type CommandIdentifier = string;
-export interface CommandDefinition {
+export interface CommandImplementation extends Contextual {
     title?: string;
     description?: string;
-    selector?: Predicate<VNode | boolean>[];
-    context?: Context;
     handler: CommandHandler;
 }
 export interface CommandParams {
@@ -20,7 +17,7 @@ export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
     el: Element;
-    commands: Record<CommandIdentifier, CommandDefinition[]> = {};
+    commands: Record<CommandIdentifier, CommandImplementation[]> = {};
     commandHooks: Record<CommandIdentifier, CommandHook[]> = {};
 
     constructor(editor: JWEditor) {
@@ -35,7 +32,7 @@ export class Dispatcher {
     /**
      * Call all hooks registred for the command `id`.
      *
-     * @param commandId The name of the command.
+     * @param commandId The identifier of the command.
      * @param params The parameters of the command.
      */
     async dispatch(commandId: CommandIdentifier, params: CommandParams = {}): Promise<void> {
@@ -67,11 +64,11 @@ export class Dispatcher {
      * corresponding command.
      *
      */
-    registerCommand(id: CommandIdentifier, def: CommandDefinition): void {
+    registerCommand(id: CommandIdentifier, impl: CommandImplementation): void {
         if (!this.commands[id]) {
-            this.commands[id] = [def];
+            this.commands[id] = [impl];
         } else {
-            this.commands[id].push(def);
+            this.commands[id].push(impl);
         }
     }
 

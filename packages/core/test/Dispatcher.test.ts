@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import JWEditor from '../src/JWEditor';
 import * as sinon from 'sinon';
-import { Dispatcher, CommandDefinition, CommandParams } from '../src/Dispatcher';
+import { Dispatcher, CommandImplementation, CommandParams } from '../src/Dispatcher';
 
 describe('utils', () => {
     describe('Dispatcher', () => {
@@ -10,7 +10,7 @@ describe('utils', () => {
                 const callback = sinon.fake();
                 const editor = new JWEditor();
                 const dispatcher = new Dispatcher(editor);
-                const command: CommandDefinition = {
+                const command: CommandImplementation = {
                     handler: callback,
                 };
                 dispatcher.registerCommand('myCommand', command);
@@ -27,7 +27,7 @@ describe('utils', () => {
                 const callback = sinon.fake();
                 const editor = new JWEditor();
                 const dispatcher = new Dispatcher(editor);
-                const command: CommandDefinition = {
+                const command: CommandImplementation = {
                     handler: callback,
                 };
                 dispatcher.registerCommand('myCommand', command);
@@ -42,11 +42,11 @@ describe('utils', () => {
                 const callbackCommand2 = sinon.fake();
                 const editor = new JWEditor();
                 const dispatcher = new Dispatcher(editor);
-                const command: CommandDefinition = {
+                const command: CommandImplementation = {
                     title: 'command1',
                     handler: callbackCommand,
                 };
-                const command2: CommandDefinition = {
+                const command2: CommandImplementation = {
                     title: 'command2',
                     handler: callbackCommand2,
                 };

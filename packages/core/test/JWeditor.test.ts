@@ -88,7 +88,7 @@ describe('core', () => {
                     );
                     editor.start();
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
-                        l => l.boundCommand.commandId,
+                        l => l.configuredCommand.commandId,
                     );
                     expect(expectedCommands).to.eql(['command-all', 'command-pc']);
                 });
@@ -183,7 +183,7 @@ describe('core', () => {
                     );
                     editor.start();
                     const expectedCommands = editor.keymaps.default.shortcuts.map(
-                        l => l.boundCommand.commandId,
+                        l => l.configuredCommand.commandId,
                     );
                     expect(expectedCommands).to.eql(['command-all', 'command-mac']);
                 });
@@ -210,7 +210,7 @@ describe('core', () => {
                     });
                     editor.start();
                     const expectedCommands = editor.keymaps.user.shortcuts.map(
-                        l => l.boundCommand.commandId,
+                        l => l.configuredCommand.commandId,
                     );
                     expect(expectedCommands).to.eql(['command-all', 'command-pc']);
                 });

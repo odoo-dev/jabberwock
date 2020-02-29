@@ -224,7 +224,7 @@
         t-att-class="{active: props.isOpen}" tabindex="1"
         t-on-keydown="onKeydown">
         <devtools-contents t-if="props.isOpen">
-            <t t-set="selectedCommandDefinitions" t-value="state.registry[state.selectedCommandIdentifier]"/>
+            <t t-set="selectedCommandImplementations" t-value="state.registry[state.selectedCommandIdentifier]"/>
             <devtools-mainpane style="overflow: hidden">
                 <devtools-navbar>
                     <button t-on-click="openTab('queue')" t-att-class="{
@@ -344,14 +344,14 @@
         <div class="divider">Command definitions</div>
         <table>
             <tbody>
-                <tr t-foreach="selectedCommandDefinitions"
-                    t-as="selectedCommandDefinition" t-key="selectedCommandDefinition_index"
+                <tr t-foreach="selectedCommandImplementations"
+                    t-as="selectedCommandImplementation" t-key="selectedCommandImplementation_index"
                     class="selectable-line"
                     t-att-class="{
-                        selected: state.selectedCommandDefinitionIndex == handlerIndex,
+                        selected: state.selectedCommandImplementationIndex == handlerIndex,
                     }">
-                    <td><t t-esc="selectedCommandDefinition.handler.name"/></td>
-                    <td><t t-esc="selectedCommandDefinition.handler"/></td>
+                    <td><t t-esc="selectedCommandImplementation.handler.name"/></td>
+                    <td><t t-esc="selectedCommandImplementation.handler"/></td>
                 </tr>
             </tbody>
         </table>
