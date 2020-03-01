@@ -1157,7 +1157,9 @@ describe('core', () => {
                     }
 
                     class MyCustomPlugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                        readonly parsers = [MyCustomParser];
+                        readonly loadables = {
+                            parsers: [MyCustomParser],
+                        };
                     }
                     editor.loadPlugin(Dom);
                     editor.loadPlugin(MyCustomPlugin);

@@ -1,23 +1,15 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { ParsingEngine, ParserConstructor } from './ParsingEngine';
+import { ParsingEngine, ParserConstructor, ParsingEngineConstructor } from './ParsingEngine';
 import { Plugins } from '../../core/src/JWEditor';
 
-interface ParsingEngines {
-    readonly parsingEngines?: Array<typeof ParsingEngine>;
-}
-
-interface Parsers {
-    readonly parsers?: ParserConstructor[];
-}
-
-export class Parser<T extends JWPluginConfig> extends JWPlugin<T> {
-    readonly loaders = {
-        parsingEngines: this.loadParsingEngines.bind(this),
-        parsers: this.loadParsers.bind(this),
-    };
+export class Parser<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly engines: Record<string, ParsingEngine> = {};
+    readonly loaders = {
+        parsingEngines: this.loadParsingEngines,
+        parsers: this.loadParsers,
+    };
 
-    loadParsingEngines(parsingEngines: Array<typeof ParsingEngine>): void {
+    loadParsingEngines(parsingEngines: ParsingEngineConstructor[]): void {
         for (const EngineClass of parsingEngines) {
             const id = EngineClass.id;
             if (this.engines[id]) {
@@ -27,10 +19,10 @@ export class Parser<T extends JWPluginConfig> extends JWPlugin<T> {
             this.engines[id] = engine;
             // Register parsers from previously loaded plugins as that
             // could not be done earlier without the parsing engine.
-            const plugins: Plugins<Parsers> = this.editor.plugins.values();
+            const plugins: Plugins<Parser> = this.editor.plugins.values();
             for (const plugin of plugins) {
-                if (plugin.parsers) {
-                    for (const ParserClass of plugin.parsers) {
+                if (plugin.loadables.parsers) {
+                    for (const ParserClass of plugin.loadables.parsers) {
                         if (ParserClass.id === id) {
                             engine.register(ParserClass);
                         }

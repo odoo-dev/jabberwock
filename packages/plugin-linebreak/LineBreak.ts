@@ -3,9 +3,13 @@ import { LineBreakNode } from './LineBreakNode';
 import { LineBreakDomParser } from './LineBreakDomParser';
 import { LineBreakDomRenderer } from './LineBreakDomRenderer';
 import { InsertParams } from '../core/src/CorePlugin';
+import { Loadables } from '../core/src/JWEditor';
+import { Parser } from '../plugin-parser/src/Parser';
 
-export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> {
-    readonly parsers = [LineBreakDomParser];
+export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+    readonly loadables = {
+        parsers: [LineBreakDomParser],
+    };
     renderers = [LineBreakDomRenderer];
     commands = {
         insertLineBreak: {

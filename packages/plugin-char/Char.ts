@@ -8,15 +8,19 @@ import { CharDomParser } from './CharDomParser';
 import { InlineNode } from '../plugin-inline/InlineNode';
 import { VNode } from '../core/src/VNodes/VNode';
 import { Formats } from '../plugin-inline/Formats';
+import { Loadables } from '../core/src/JWEditor';
+import { Parser } from '../plugin-parser/src/Parser';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
     formats?: Formats;
 }
 
-export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Char<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
     static dependencies = [Inline];
-    readonly parsers = [CharDomParser];
+    readonly loadables = {
+        parsers: [CharDomParser],
+    };
     readonly renderers = [CharFormatDomRenderer, CharDomRenderer];
     commands = {
         insertText: {

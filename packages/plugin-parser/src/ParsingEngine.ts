@@ -9,10 +9,6 @@ export interface Parser<T = {}> {
     parse: (item: T) => Promise<VNode[]>;
 }
 
-export type ParserConstructor<T = {}> = Constructor<Parser<T>> & {
-    id: ParsingIdentifier;
-};
-
 export class ParsingEngine<T = {}> {
     static readonly id: ParsingIdentifier;
     static defaultParser: Constructor<Parser>;
@@ -81,10 +77,14 @@ export class ParsingEngine<T = {}> {
         return nodes;
     }
 }
+export type ParserConstructor<T = {}> = Constructor<Parser<T>> & {
+    id: ParsingIdentifier;
+};
+export type ParsingEngineConstructor<T = {}> = {
+    new (...args: ConstructorParameters<typeof ParsingEngine>): ParsingEngine;
+    id: ParsingIdentifier;
+    defaultParser: ParserConstructor<T>;
+};
 export interface ParsingEngine<T = {}> {
-    constructor: {
-        new (...args: ConstructorParameters<typeof ParsingEngine>): ParsingEngine;
-        id: ParsingIdentifier;
-        defaultParser: ParserConstructor<T>;
-    };
+    constructor: ParsingEngineConstructor;
 }
