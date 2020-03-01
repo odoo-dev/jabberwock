@@ -8,6 +8,7 @@ import { ParsingEngine } from '../../plugin-parser/src/ParsingEngine';
 import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
 import { RenderingEngine } from '../../core/src/RenderingEngine';
+import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 
 interface DomConfig extends JWPluginConfig {
@@ -15,10 +16,12 @@ interface DomConfig extends JWPluginConfig {
     target?: HTMLElement;
 }
 
-export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
+export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> implements Loadables<Parser> {
     static dependencies = [Parser];
-    readonly parsingEngines = [DomParsingEngine];
     readonly renderingEngines = [DomRenderingEngine];
+    readonly loadables = {
+        parsingEngines: [DomParsingEngine],
+    };
     configuration = this.configuration || {
         autoFocus: false,
     };

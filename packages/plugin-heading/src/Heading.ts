@@ -4,13 +4,17 @@ import { HeadingNode } from './HeadingNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { distinct } from '../../utils/src/utils';
 import { VNode, isLeaf } from '../../core/src/VNodes/VNode';
+import { Loadables } from '../../core/src/JWEditor';
+import { Parser } from '../../plugin-parser/src/Parser';
 
 export interface HeadingParams extends CommandParams {
     level: number;
 }
 
-export class Heading<T extends JWPluginConfig> extends JWPlugin<T> {
-    readonly parsers = [HeadingDomParser];
+export class Heading<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+    readonly loadables = {
+        parsers: [HeadingDomParser],
+    };
     commands = {
         applyHeadingStyle: {
             handler: this.applyHeadingStyle.bind(this),

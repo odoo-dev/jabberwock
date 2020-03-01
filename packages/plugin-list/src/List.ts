@@ -10,12 +10,14 @@ import { withRange, VRange } from '../../core/src/VRange';
 import { IndentParams, OutdentParams } from '../../plugin-indent/src/Indent';
 import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/CorePlugin';
+import { Loadables } from '../../core/src/JWEditor';
+import { Parser } from '../../plugin-parser/src/Parser';
 
 export interface ListParams extends CommandParams {
     type: ListType;
 }
 
-export class List<T extends JWPluginConfig> extends JWPlugin<T> {
+export class List<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
     static isListItem(node: VNode): boolean {
         return node.parent && node.parent.is(ListNode);
     }
@@ -66,8 +68,10 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> {
             commandId: 'outdent',
         },
     ];
-    readonly parsers = [ListDomParser, ListItemDomParser];
     readonly renderers = [ListItemDomRenderer, ListDomRenderer];
+    readonly loadables = {
+        parsers: [ListDomParser, ListItemDomParser],
+    };
 
     //--------------------------------------------------------------------------
     // Public

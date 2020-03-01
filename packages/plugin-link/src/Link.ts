@@ -7,13 +7,15 @@ import { LinkFormat } from './LinkFormat';
 import { InsertTextParams } from '../../plugin-char/src/Char';
 import { Formats } from '../../plugin-inline/src/Formats';
 import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
+import { Loadables } from '../../core/src/JWEditor';
+import { Parser } from '../../plugin-parser/src/Parser';
 
 export interface LinkParams extends CommandParams {
     label?: string;
     url?: string;
 }
 
-export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Link<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
     static isLink(node: VNode): node is InlineNode;
     static isLink(link: LinkFormat, node: VNode): node is InlineNode;
     static isLink(link: LinkFormat | VNode, node?: VNode): node is InlineNode {
@@ -24,7 +26,9 @@ export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
         return link instanceof VNode ? !!format : format === link;
     }
     static dependencies = [Inline];
-    readonly parsers = [LinkDomParser];
+    readonly loadables = {
+        parsers: [LinkDomParser],
+    };
     commands = {
         link: {
             handler: this.link.bind(this),
