@@ -1,5 +1,5 @@
 import { LineBreakNode } from './LineBreakNode';
-import { AbstractParser } from '../core/src/AbstractParser';
+import { AbstractParser } from '../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 import { isBlock } from '../utils/src/isBlock';
 

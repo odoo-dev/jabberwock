@@ -1,6 +1,6 @@
 import { VNode } from '../core/src/VNodes/VNode';
 import { ListNode, ListType } from './ListNode';
-import { AbstractParser } from '../core/src/AbstractParser';
+import { AbstractParser } from '../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
 const listTags = ['UL', 'OL'];

@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
-import { VElement } from '../src/VNodes/VElement';
+import { VElement } from '../../core/src/VNodes/VElement';
 import { testEditor, renderTextualSelection } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { CharDomParser } from '../../plugin-char/CharDomParser';
@@ -12,7 +12,7 @@ import { ParagraphDomParser } from '../../plugin-paragraph/ParagraphDomParser';
 import { ListDomParser } from '../../plugin-list/ListDomParser';
 import { ListItemDomParser } from '../../plugin-list/ListItemDomParser';
 import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
-import JWEditor from '../src/JWEditor';
+import JWEditor from '../../core/src/JWEditor';
 import { ItalicDomParser } from '../../plugin-italic/ItalicDomParser';
 import { BoldDomParser } from '../../plugin-bold/BoldDomParser';
 import { UnderlineDomParser } from '../../plugin-underline/UnderlineDomParser';

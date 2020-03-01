@@ -1,6 +1,5 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { ParsingEngine } from '../../core/src/ParsingEngine';
-import { ParserConstructor } from '../../core/src/ParsingEngine';
+import { ParsingEngine, ParserConstructor } from './ParsingEngine';
 import { Plugins } from '../../core/src/JWEditor';
 
 interface ParsingEngines {

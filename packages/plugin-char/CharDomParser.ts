@@ -1,6 +1,6 @@
 import { removeFormattingSpace } from '../utils/src/formattingSpace';
 import { CharNode } from './CharNode';
-import { AbstractParser } from '../core/src/AbstractParser';
+import { AbstractParser } from '../plugin-parser/src/AbstractParser';
 
 export class CharDomParser extends AbstractParser<Node> {
     static id = 'dom';

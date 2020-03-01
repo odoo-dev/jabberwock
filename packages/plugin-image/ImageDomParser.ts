@@ -1,5 +1,5 @@
 import { ImageNode } from './ImageNode';
-import { AbstractParser } from '../core/src/AbstractParser';
+import { AbstractParser } from '../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
 export class ImageDomParser extends AbstractParser<Node> {

@@ -1,4 +1,4 @@
-import { ParsingEngine } from '../core/src/ParsingEngine';
+import { ParsingEngine } from '../plugin-parser/src/ParsingEngine';
 import { DefaultDomParser } from './DefaultDomParser';
 
 export class DomParsingEngine extends ParsingEngine<Node> {

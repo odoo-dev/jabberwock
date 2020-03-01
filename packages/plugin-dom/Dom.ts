@@ -4,7 +4,7 @@ import { VSelection, VSelectionDescription, Direction } from '../core/src/VSelec
 import { DomMap } from './DomMap';
 import { nodeLength } from '../utils/src/utils';
 import { DomSelectionDescription } from '../core/src/EventNormalizer';
-import { ParsingEngine } from '../core/src/ParsingEngine';
+import { ParsingEngine } from '../plugin-parser/src/ParsingEngine';
 import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
 import { RenderingEngine } from '../core/src/RenderingEngine';

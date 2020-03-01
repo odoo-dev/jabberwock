@@ -1,4 +1,4 @@
-import { AbstractParser } from '../core/src/AbstractParser';
+import { AbstractParser } from '../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 import { TableNode } from './TableNode';
 

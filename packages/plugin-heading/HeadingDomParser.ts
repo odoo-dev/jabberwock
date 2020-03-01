@@ -1,5 +1,5 @@
 import { HeadingNode } from './HeadingNode';
-import { AbstractParser } from '../core/src/AbstractParser';
+import { AbstractParser } from '../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../plugin-dom/DomParsingEngine';
 
 const HeadingTags = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
