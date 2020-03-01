@@ -1,4 +1,4 @@
-import { AbstractParser } from '../../core/src/AbstractParser';
+import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { InlineNode } from './InlineNode';
 import { Format } from './Format';

@@ -1,6 +1,6 @@
-import { VNode } from './VNodes/VNode';
+import JWEditor from '../../core/src/JWEditor';
+import { VNode } from '../../core/src/VNodes/VNode';
 import { Constructor } from '../../utils/src/utils';
-import JWEditor from './JWEditor';
 
 export type ParsingIdentifier = string;
 

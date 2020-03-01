@@ -11,7 +11,7 @@ import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Dom } from '../../plugin-dom/src/Dom';
-import { AbstractParser } from '../src/AbstractParser';
+import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 
 describe('core', () => {
     describe('src', () => {
