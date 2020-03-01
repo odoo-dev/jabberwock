@@ -1,4 +1,4 @@
-import { VNode } from './VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 import { ParsingEngine, ParsingIdentifier, Parser } from './ParsingEngine';
 
 export abstract class AbstractParser<T = {}> implements Parser<T> {
