@@ -18,7 +18,7 @@ describePlugin(LineBreak, testEditor => {
         let editor: JWEditor;
         beforeEach(async () => {
             editor = new JWEditor();
-            editor.loadPlugin(LineBreak);
+            editor.load(LineBreak);
             await editor.start();
         });
         afterEach(() => {

@@ -33,7 +33,7 @@ describe('Plugin: DevTools', () => {
 
         editor = new BasicEditor();
         editor.configure(Dom, { target: root });
-        editor.loadPlugin(DevTools);
+        editor.load(DevTools);
 
         await editor.start();
 

@@ -8,7 +8,7 @@ describe('DefaultDomRenderer', () => {
     describe('render', () => {
         it('should render a VNode', async () => {
             const editor = new JWEditor();
-            editor.loadPlugin(Dom, { target: document.createElement('p') });
+            editor.load(Dom, { target: document.createElement('p') });
             await editor.start();
             const node = new VNode();
             editor.vDocument.root.append(node);

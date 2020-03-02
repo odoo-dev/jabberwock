@@ -105,7 +105,7 @@ async function testPlugin(
     }
     const container = document.createElement('p');
     const editor = initSpec(Editor, spec, container);
-    editor.loadPlugin(Plugin);
+    editor.load(Plugin);
     await testSpec(editor, spec);
     container.remove();
 }
@@ -139,7 +139,7 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
 async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     // Forward debug mode from the spec to the editor.
     if (spec.debug) {
-        editor.loadPlugin(DevTools);
+        editor.load(DevTools);
     }
 
     if (spec.beforeStart) {

@@ -208,7 +208,7 @@ describe('Keymap', () => {
     describe('loadShortcuts', () => {
         it('should only register default mapping for pc and other', async () => {
             editor.configure(Keymap, { platform: Platform.PC });
-            editor.loadPlugin(
+            editor.load(
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Keymap> = {
                         shortcuts: [
@@ -239,7 +239,7 @@ describe('Keymap', () => {
         });
         it('should transform ctrl to CMD if no platform on mac', async () => {
             editor.configure(Keymap, { platform: Platform.MAC });
-            editor.loadPlugin(
+            editor.load(
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Keymap> = {
                         shortcuts: [
@@ -274,7 +274,7 @@ describe('Keymap', () => {
         });
         it('should not transform ctrl to CMD if no platform on pc', async () => {
             editor.configure(Keymap, { platform: Platform.PC });
-            editor.loadPlugin(
+            editor.load(
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Keymap> = {
                         shortcuts: [
@@ -309,7 +309,7 @@ describe('Keymap', () => {
         });
         it('should only register default mapping for mac and other', async () => {
             editor.configure(Keymap, { platform: Platform.MAC });
-            editor.loadPlugin(
+            editor.load(
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Keymap> = {
                         shortcuts: [
@@ -340,7 +340,7 @@ describe('Keymap', () => {
         });
         it('should load the config for keymap', async () => {
             editor.configure(Keymap, { platform: Platform.PC });
-            const config: JWEditorConfig & Loadables<Keymap> = {
+            const loadables: Loadables<Keymap> = {
                 shortcuts: [
                     {
                         pattern: 'ctrL+a',
@@ -358,7 +358,7 @@ describe('Keymap', () => {
                     },
                 ],
             };
-            editor.configure(config);
+            editor.load(loadables);
             await editor.start();
             const keymap = editor.plugins.get(Keymap);
             const expectedCommands = keymap.mappings[LEVEL.USER].map(
@@ -373,7 +373,7 @@ describe('Keymap', () => {
                 contentBefore: '',
                 beforeStart: async editor => {
                     editor.configure(Keymap, { platform: Platform.PC });
-                    const config: JWEditorConfig & Loadables<Keymap> = {
+                    const loadables: Loadables<Keymap> = {
                         shortcuts: [
                             {
                                 pattern: 'CTRL+A',
@@ -381,7 +381,7 @@ describe('Keymap', () => {
                             },
                         ],
                     };
-                    editor.configure(config);
+                    editor.load(loadables);
                 },
                 stepFunction: async editor => {
                     editor.execCommand = (): Promise<void> => Promise.resolve();
@@ -400,7 +400,7 @@ describe('Keymap', () => {
                 contentBefore: '',
                 beforeStart: async editor => {
                     editor.configure(Keymap, { platform: Platform.PC });
-                    editor.loadPlugin(
+                    editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
                             loadables: Loadables<Keymap> = {
                                 shortcuts: [
@@ -434,7 +434,7 @@ describe('Keymap', () => {
                 contentBefore: '',
                 beforeStart: async editor => {
                     editor.configure(Keymap, { platform: Platform.PC });
-                    editor.loadPlugin(
+                    editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
                             loadables: Loadables<Keymap> = {
                                 shortcuts: [
@@ -446,13 +446,15 @@ describe('Keymap', () => {
                             };
                         },
                     );
-                    const config: JWEditorConfig & Loadables<Keymap> = {
-                        shortcuts: [
-                            {
-                                pattern: 'CTRL+A',
-                                commandId: 'command-b',
-                            },
-                        ],
+                    const config: JWEditorConfig & { loadables: Loadables<Keymap> } = {
+                        loadables: {
+                            shortcuts: [
+                                {
+                                    pattern: 'CTRL+A',
+                                    commandId: 'command-b',
+                                },
+                            ],
+                        },
                     };
                     editor.configure(config);
                 },
@@ -477,7 +479,7 @@ describe('Keymap', () => {
                 contentBefore: '',
                 beforeStart: async editor => {
                     editor.configure(Keymap, { platform: Platform.PC });
-                    editor.loadPlugin(
+                    editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
                             loadables: Loadables<Keymap> = {
                                 shortcuts: [
@@ -489,13 +491,15 @@ describe('Keymap', () => {
                             };
                         },
                     );
-                    const config: JWEditorConfig & Loadables<Keymap> = {
-                        shortcuts: [
-                            {
-                                pattern: 'CTRL+A',
-                                commandId: undefined,
-                            },
-                        ],
+                    const config: JWEditorConfig & { loadables: Loadables<Keymap> } = {
+                        loadables: {
+                            shortcuts: [
+                                {
+                                    pattern: 'CTRL+A',
+                                    commandId: undefined,
+                                },
+                            ],
+                        },
                     };
                     editor.configure(config);
                 },
