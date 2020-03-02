@@ -9,6 +9,7 @@ import { Formats } from '../../plugin-inline/src/Formats';
 import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 export interface LinkParams extends CommandParams {
     label?: string;
@@ -26,9 +27,6 @@ export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
         return link instanceof VNode ? !!format : format === link;
     }
     static dependencies = [Inline];
-    readonly loadables: Loadables<Parser> = {
-        parsers: [LinkDomParser],
-    };
     commands = {
         link: {
             handler: this.link.bind(this),
@@ -37,23 +35,26 @@ export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
             handler: this.unlink.bind(this),
         },
     };
-    shortcuts = [
-        {
-            pattern: 'CTRL+K',
-            selector: [(node: VNode): boolean => !Link.isLink(node)],
-            commandId: 'link',
-            // TODO: use dialog to get params
-            commandArgs: {
-                url: 'https://en.wikipedia.org/wiki/Jabberwocky',
-                label: 'Jabberwockipedia',
+    readonly loadables: Loadables<Parser & Keymap> = {
+        parsers: [LinkDomParser],
+        shortcuts: [
+            {
+                pattern: 'CTRL+K',
+                selector: [(node: VNode): boolean => !Link.isLink(node)],
+                commandId: 'link',
+                // TODO: use dialog to get params
+                commandArgs: {
+                    url: 'https://en.wikipedia.org/wiki/Jabberwocky',
+                    label: 'Jabberwockipedia',
+                },
             },
-        },
-        {
-            pattern: 'CTRL+K',
-            selector: [Link.isLink],
-            commandId: 'unlink',
-        },
-    ];
+            {
+                pattern: 'CTRL+K',
+                selector: [Link.isLink],
+                commandId: 'unlink',
+            },
+        ],
+    };
 
     //--------------------------------------------------------------------------
     // Public

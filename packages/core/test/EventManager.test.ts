@@ -3,6 +3,8 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { expect } from 'chai';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
+import { Loadables } from '../src/JWEditor';
+import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 describe('core', () => {
     describe('EventManager', () => {
@@ -16,7 +18,11 @@ describe('core', () => {
                                 commands = {
                                     'fake-command': { handler: (): void => {} },
                                 };
-                                shortcuts = [{ pattern: '<Backspace>', commandId: 'fake-command' }];
+                                loadables: Loadables<Keymap> = {
+                                    shortcuts: [
+                                        { pattern: '<Backspace>', commandId: 'fake-command' },
+                                    ],
+                                };
                             },
                         );
                     },

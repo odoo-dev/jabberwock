@@ -1,4 +1,3 @@
-import { ConfiguredCommand, Keymap } from './Keymap';
 import { Dispatcher, CommandIdentifier, CommandParams } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
@@ -8,16 +7,12 @@ import { VNode } from './VNodes/VNode';
 import { VElement } from './VNodes/VElement';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
-import { ContextManager, Context } from './ContextManager';
+import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-
-export enum Platform {
-    MAC = 'mac',
-    PC = 'pc',
-}
+import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 enum Mode {
     CONFIGURATION = 'configuration',
@@ -25,21 +20,19 @@ enum Mode {
 }
 
 export type Loadable = {};
-export type Loader<T extends Loadable = Loadable> = (loadable: T) => void;
+export type Loader<T extends Loadable = Loadable> = (
+    loadable: T,
+    source?: JWPlugin | JWEditorConfig,
+) => void;
 export type Loadables<T extends JWPlugin> = {
     [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L : never;
 };
 export type Plugins<T extends JWPlugin> = IterableIterator<JWPlugin & { loadables: Loadables<T> }>;
 
-export interface Shortcut extends ConfiguredCommand {
-    platform?: Platform;
-    pattern: string;
-}
-
 export interface JWEditorConfig {
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
-    shortcuts?: Shortcut[];
     createBaseContainer?: () => VNode;
+    loadables?: Record<string, Loadable>;
 }
 export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
@@ -60,11 +53,6 @@ export class JWEditor {
     };
     vDocument: VDocument;
     selection = new VSelection();
-    keymaps = {
-        default: new Keymap(),
-        user: new Keymap(),
-    };
-    _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
 
@@ -81,6 +69,7 @@ export class JWEditor {
         this.loadPlugin(CorePlugin);
         this.loadPlugin(Parser);
         this.loadPlugin(Renderer);
+        this.loadPlugin(Keymap);
     }
 
     /**
@@ -100,10 +89,11 @@ export class JWEditor {
         this._mode = Mode.EDITION;
         this._loadPlugins();
 
-        // Load configured editor-level shortcuts.
-        if (this.configuration.shortcuts) {
-            for (const shortcut of this.configuration.shortcuts) {
-                this._loadShortcut(shortcut, this.keymaps.user);
+        // Load editor-level loadables.
+        for (const loadableId of Object.keys(this.loaders)) {
+            const loadable = this.configuration[loadableId];
+            if (loadable) {
+                this.loaders[loadableId](loadable, this.configuration);
             }
         }
 
@@ -118,7 +108,7 @@ export class JWEditor {
         // Init the event manager now that the cloned editable is in the DOM.
         const domPlugin = this.plugins.get(Dom);
         if (domPlugin) {
-            // Attach the keymaps to the editable.
+            // Attach the keymap listener to the editable.
             domPlugin.editable.addEventListener('keydown', this.processKeydown.bind(this));
             this.eventManager = new EventManager(this, domPlugin);
         }
@@ -183,17 +173,12 @@ export class JWEditor {
             for (const [id, hook] of Object.entries(plugin.commandHooks)) {
                 this.dispatcher.registerCommandHook(id, hook);
             }
-            // register the shortcuts for this plugin.
-            if (plugin.shortcuts) {
-                for (const shortcut of plugin.shortcuts) {
-                    this._loadShortcut(shortcut, this.keymaps.default);
-                }
-            }
 
             // Load loadables.
-            for (const loadable of Object.keys(this.loaders)) {
-                if (plugin.loadables[loadable]) {
-                    this.loaders[loadable](plugin.loadables[loadable]);
+            for (const loadableId of Object.keys(this.loaders)) {
+                const loadable = plugin.loadables[loadableId];
+                if (loadable) {
+                    this.loaders[loadableId](loadable, plugin);
                 }
             }
 
@@ -289,44 +274,20 @@ export class JWEditor {
         this._mode = Mode.CONFIGURATION;
     }
 
-    /**
-     * Load a shortcut in the keymap depending on the platform.
-     *
-     * - If the shortuct has no platform property; load the shortuct in both
-     *   platform ('mac' and 'pc').
-     * - If the shortuct has no platform property and the current platform is
-     *   mac, modify the ctrl key to meta key.
-     * - If the shortuct has a platform property, only load the shortcut for
-     *   that platform.
-     * - If no `mapping.commandId` is declared, it means removing the shortcut.
-     *
-     * @param shortcut The shortuct definition.
-     * @param priority  The highest priority is the one that prevail.
-     */
-    _loadShortcut(shortcut: Shortcut, keymap: Keymap): void {
-        if (!shortcut.platform || shortcut.platform === this._platform) {
-            if (!shortcut.platform && this._platform === Platform.MAC) {
-                shortcut.pattern = shortcut.pattern.replace(/ctrl/gi, 'CMD');
-            }
-            keymap.bindShortcut(shortcut.pattern, shortcut);
-        }
-    }
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
 
     /**
-     * Listener added to the DOM that `execCommand` if a shortcut has been found
-     * in one of the keymaps.
+     * KeyboardEvent listener to be added to the DOM that calls `execCommand` if
+     * the keys pressed match one of the shortcut registered in the keymap.
      *
      * @param event
      */
     async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
-        let command: ConfiguredCommand;
-        let context: Context;
-        const userCommands = this.keymaps.user.match(event);
-        [command, context] = this.contextManager.match(userCommands);
-        if (!command) {
-            const defaultCommands = this.keymaps.default.match(event);
-            [command, context] = this.contextManager.match(defaultCommands);
-        }
+        const keymap = this.plugins.get(Keymap);
+        const commands = keymap.match(event);
+        const [command, context] = this.contextManager.match(commands);
         if (command && command.commandId) {
             const params = { context, ...command.commandArgs };
             event.preventDefault();

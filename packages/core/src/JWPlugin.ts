@@ -1,6 +1,5 @@
 import JWEditor, { Loader, PluginMap, Loadable } from './JWEditor';
 import { CommandIdentifier, CommandImplementation, CommandHook } from './Dispatcher';
-import { Shortcut } from './JWEditor';
 
 export type JWPluginConfig = {};
 
@@ -12,7 +11,6 @@ export class JWPlugin<T extends JWPluginConfig = {}> {
     name: string;
     commands: Record<CommandIdentifier, CommandImplementation> = {};
     commandHooks: Record<CommandIdentifier, CommandHook> = {};
-    shortcuts: Shortcut[];
 
     constructor(public editor: JWEditor, public configuration: T) {
         // Populate instantiated dependencies.
