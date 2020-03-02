@@ -13,7 +13,7 @@ describe('core', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>[]</p>',
                     beforeStart: (editor: BasicEditor) => {
-                        editor.loadPlugin(
+                        editor.load(
                             class FakePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                                 commands = {
                                     'fake-command': { handler: (): void => {} },

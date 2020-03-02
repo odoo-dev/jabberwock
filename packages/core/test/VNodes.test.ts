@@ -1160,8 +1160,8 @@ describe('core', () => {
                             parsers: [MyCustomParser],
                         };
                     }
-                    editor.loadPlugin(Dom, { target: root });
-                    editor.loadPlugin(MyCustomPlugin);
+                    editor.load(Dom, { target: root });
+                    editor.load(MyCustomPlugin);
                     await editor.start();
                     const customVNode = editor.vDocument.root.firstChild();
                     expect(customVNode.constructor.name).to.equal('MyCustomNode');

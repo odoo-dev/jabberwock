@@ -4,5 +4,5 @@ import { Dom } from '../../packages/plugin-dom/src/Dom';
 
 const editor = new BasicEditor();
 editor.configure(Dom, { target: document.getElementById('example') });
-editor.loadPlugin(DevTools);
+editor.load(DevTools);
 editor.start();

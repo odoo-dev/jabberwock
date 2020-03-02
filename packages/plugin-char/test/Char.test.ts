@@ -32,7 +32,7 @@ describePlugin(Char, testEditor => {
         let editor: JWEditor;
         beforeEach(async () => {
             editor = new JWEditor();
-            editor.loadPlugin(Char);
+            editor.load(Char);
             await editor.start();
         });
         afterEach(() => {
