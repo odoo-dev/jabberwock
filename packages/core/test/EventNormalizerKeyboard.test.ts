@@ -1,6 +1,6 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import { EventBatch, NormalizedAction } from '../src/EventNormalizer';
+import { EventBatch, NormalizedAction, ModifierKeys } from '../src/EventNormalizer';
 import { Direction } from '../src/VSelection';
 import {
     testCallbackAfter,
@@ -12,6 +12,13 @@ import {
     testContentNormalizer,
     testCallbackBefore,
 } from './eventNormalizerUtils';
+
+const defaultModifierKeys: ModifierKeys = {
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    shiftKey: false,
+};
 
 describe('utils', () => {
     describe('EventNormalizer', () => {
@@ -1794,6 +1801,10 @@ describe('utils', () => {
                                 {
                                     actions: keyboardActions,
                                     mutatedElements: new Set([text]),
+                                    inferredKeydownEvent: {
+                                        ...defaultModifierKeys,
+                                        code: 'Backspace',
+                                    },
                                 },
                             ];
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
@@ -2275,6 +2286,10 @@ describe('utils', () => {
                                 {
                                     actions: keyboardActions,
                                     mutatedElements: new Set([text]),
+                                    inferredKeydownEvent: {
+                                        ...defaultModifierKeys,
+                                        code: 'Backspace',
+                                    },
                                 },
                             ];
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
@@ -2723,6 +2738,10 @@ describe('utils', () => {
                                 {
                                     actions: keyboardActions,
                                     mutatedElements: new Set([text]),
+                                    inferredKeydownEvent: {
+                                        ...defaultModifierKeys,
+                                        code: 'Backspace',
+                                    },
                                 },
                             ];
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
@@ -3188,6 +3207,10 @@ describe('utils', () => {
                                 {
                                     actions: keyboardActions,
                                     mutatedElements: new Set([b, lastText]),
+                                    inferredKeydownEvent: {
+                                        ...defaultModifierKeys,
+                                        code: 'Backspace',
+                                    },
                                 },
                             ];
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
@@ -3687,6 +3710,10 @@ describe('utils', () => {
                                 {
                                     actions: keyboardActions,
                                     mutatedElements: new Set([b, lastText]),
+                                    inferredKeydownEvent: {
+                                        ...defaultModifierKeys,
+                                        code: 'Backspace',
+                                    },
                                 },
                             ];
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);

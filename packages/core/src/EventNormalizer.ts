@@ -165,6 +165,28 @@ export interface CaretPosition {
 }
 
 /**
+ * The modifiers keys being pushed at a particular time.
+ */
+export interface ModifierKeys {
+    ctrlKey: boolean;
+    altKey: boolean;
+    metaKey: boolean;
+    shiftKey: boolean;
+}
+
+/**
+ * The code that we infer for virtual keyboard that do not provide them.
+ */
+type InferredCodeValue = 'Enter' | 'Backspace' | 'Delete';
+
+/**
+ * The infered keydown event for virtual keboard.
+ */
+export interface InferredKeydownEvent extends ModifierKeys {
+    code: InferredCodeValue;
+}
+
+/**
  * One eventBatch contain all element being triggered and normalized from one or more events stacks
  * (in case of safari)
  */
@@ -172,6 +194,11 @@ export interface EventBatch {
     // We currently only need an array of event in case of multikeypress.
     actions: NormalizedAction[];
     mutatedElements?: Set<Node>;
+    /**
+     * In the case of virtual keyboard, infer the key being pushed for 'Enter',
+     * 'Backspace', 'Delete'.
+     */
+    inferredKeydownEvent?: InferredKeydownEvent;
 }
 
 interface DataTransferDetails {
@@ -360,7 +387,10 @@ export class EventNormalizer {
      * call in order to `clearTimeout` it later on.
      */
     _clickTimeout: number;
-    _modifierKeys = {
+    /**
+     * Cache the state of modifiers keys on each keystrokes.
+     */
+    _modifierKeys: ModifierKeys = {
         ctrlKey: false,
         altKey: false,
         metaKey: false,
@@ -539,10 +569,14 @@ export class EventNormalizer {
             keydownEvent &&
             keydownEvent.key === 'Unidentified';
 
+        const inferredKeydownEvent: InferredKeydownEvent =
+            keydownEvent &&
+            keydownEvent.key === 'Unidentified' &&
+            this._inferKeydownEvent(inputEvent);
         //
         // First pass to get the informations
         //
-        const key =
+        const key: string =
             (keypressEvent &&
                 keypressEvent.key !== 'Unidentified' &&
                 keypressEvent.key !== 'Dead' &&
@@ -558,7 +592,8 @@ export class EventNormalizer {
             (isGoogleKeyboardBackspace && 'Backspace') ||
             (keydownEvent &&
                 keydownEvent.key === 'Unidentified' &&
-                this._inferKeyFromInput(inputEvent));
+                inferredKeydownEvent &&
+                inferredKeydownEvent.code);
         const isAccentMac =
             inputEvent &&
             compositionEvent &&
@@ -568,7 +603,6 @@ export class EventNormalizer {
             (cutEvent && 'deleteByCut') ||
             (dropEvent && 'insertFromDrop') ||
             (pasteEvent && 'insertFromPaste') ||
-            (isGoogleKeyboardBackspace && 'deleteContentBackward') ||
             (inputEvent && inputEvent.inputType) ||
             // todo: Do we really need to set the inputType when making a
             //       "special accent" in mac?
@@ -593,8 +627,7 @@ export class EventNormalizer {
             compositionData.compositionTo.length === 1;
         const isCompositionKeyboard = compositionAddOneChar || compositionReplaceOneChar;
 
-        const isVirtualKeyboard =
-            (compositionEvent && (key && key.length !== 1)) || isGoogleKeyboardBackspace;
+        const isVirtualKeyboard = compositionEvent && key && key.length !== 1;
 
         // Compute the set of mutated elements accross all observed events.
         const mutatedElements = this._mutationNormalizer.getMutatedElements();
@@ -666,10 +699,14 @@ export class EventNormalizer {
         }
 
         if (normalizedActions.length > 0) {
-            this._triggerEventBatch({
+            const batch: EventBatch = {
                 actions: normalizedActions,
                 mutatedElements,
-            });
+            };
+            if (inferredKeydownEvent) {
+                batch.inferredKeydownEvent = inferredKeydownEvent;
+            }
+            this._triggerEventBatch(batch);
         }
 
         this._eventsMap = {};
@@ -678,8 +715,8 @@ export class EventNormalizer {
         this._events = null;
     }
     _getCompositionData(
-        compositionEvent: CompositionEvent,
-        inputEvent: InputEvent,
+        compositionEvent: CompositionEvent | undefined,
+        inputEvent: InputEvent | undefined,
     ): CompositionData | undefined {
         if (compositionEvent && inputEvent) {
             let compositionDataString: string = compositionEvent.data;
@@ -704,21 +741,23 @@ export class EventNormalizer {
         }
     }
 
-    // todo: discuss with DMO, do we still try to infer the key from input?
-    _inferKeyFromInput(inputEvent: InputEvent): string {
-        // Case for virtual keyboard: Some virtual keyboards does not trigger
-        // keydown when a key is pushed but send an input instead.
-        //
-        // In that case, infer the key that has been pushed from the
-        // inputEvent.inputType.
+    /**
+     * Infer a `KeyboardEvent` `code` from an `InputEvent`
+     */
+    _inferKeydownEvent(inputEvent: InputEvent): InferredKeydownEvent {
+        let code: InferredCodeValue;
         if (inputEvent.inputType === 'insertParagraph') {
-            return 'Enter';
+            code = 'Enter';
         } else if (inputEvent.inputType === 'deleteContentBackward') {
-            return 'Backspace';
+            code = 'Backspace';
         } else if (inputEvent.inputType === 'deleteContentForward') {
-            return 'Delete';
-        } else if (inputEvent.data && inputEvent.data.length === 1) {
-            return inputEvent.data;
+            code = 'Delete';
+        }
+        if (code) {
+            return {
+                ...this._modifierKeys,
+                code: code,
+            };
         }
     }
     /**
