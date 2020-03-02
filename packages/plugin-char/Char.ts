@@ -17,10 +17,9 @@ export interface InsertTextParams extends CommandParams {
     formats?: Formats;
 }
 
-export class Char<T extends JWPluginConfig> extends JWPlugin<T>
-    implements Loadables<Parser & Renderer> {
+export class Char<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [CharDomParser],
         renderers: [CharFormatDomRenderer, CharDomRenderer],
     };

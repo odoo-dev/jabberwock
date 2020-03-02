@@ -5,9 +5,9 @@ import { BoldDomParser } from './BoldDomParser';
 import { Loadables } from '../core/src/JWEditor';
 import { Parser } from '../plugin-parser/src/Parser';
 
-export class Bold<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser>{
+export class Bold<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser> = {
         parsers: [BoldDomParser],
     };
     shortcuts = [

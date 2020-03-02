@@ -4,9 +4,9 @@ import { Inline } from '../plugin-inline/Inline';
 import { Loadables } from '../core/src/JWEditor';
 import { Parser } from '../plugin-parser/src/Parser';
 
-export class Subscript<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class Subscript<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser> = {
         parsers: [SubscriptDomParser],
     };
 }

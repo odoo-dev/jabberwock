@@ -15,7 +15,7 @@ export interface LinkParams extends CommandParams {
     url?: string;
 }
 
-export class Link<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
     static isLink(node: VNode): node is InlineNode;
     static isLink(link: LinkFormat, node: VNode): node is InlineNode;
     static isLink(link: LinkFormat | VNode, node?: VNode): node is InlineNode {
@@ -26,7 +26,7 @@ export class Link<T extends JWPluginConfig> extends JWPlugin<T> implements Loada
         return link instanceof VNode ? !!format : format === link;
     }
     static dependencies = [Inline];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser> = {
         parsers: [LinkDomParser],
     };
     commands = {

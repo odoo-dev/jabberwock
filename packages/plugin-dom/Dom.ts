@@ -16,10 +16,9 @@ interface DomConfig extends JWPluginConfig {
     autoFocus?: boolean;
 }
 
-export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T>
-    implements Loadables<Parser & Renderer> {
+export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     static dependencies = [Parser, Renderer];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser & Renderer> = {
         parsingEngines: [DomParsingEngine],
         renderingEngines: [DomRenderingEngine],
     };
