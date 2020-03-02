@@ -62,21 +62,25 @@ const insertText = async (editor: JWEditor, text: string): Promise<void> => {
 
 describePlugin(List, testEditor => {
     describe('parse', () => {
-        const editor = new JWEditor();
-        editor.configure({ createBaseContainer: () => new ParagraphNode() });
-        const engine = new DomParsingEngine(editor);
-        engine.register(CharDomParser);
-        engine.register(HeadingDomParser);
-        engine.register(LineBreakDomParser);
-        engine.register(ParagraphDomParser);
-        engine.register(ListDomParser);
-        engine.register(ListItemDomParser);
-        engine.register(ItalicDomParser);
-        engine.register(BoldDomParser);
-        engine.register(UnderlineDomParser);
-        engine.register(SpanDomParser);
-        engine.register(LinkDomParser);
-        engine.register(SuperscriptDomParser);
+        let editor: JWEditor;
+        let engine: DomParsingEngine;
+        beforeEach(async () => {
+            editor = new JWEditor();
+            editor.configure({ createBaseContainer: () => new ParagraphNode() });
+            engine = new DomParsingEngine(editor);
+            engine.register(CharDomParser);
+            engine.register(HeadingDomParser);
+            engine.register(LineBreakDomParser);
+            engine.register(ParagraphDomParser);
+            engine.register(ListDomParser);
+            engine.register(ListItemDomParser);
+            engine.register(ItalicDomParser);
+            engine.register(BoldDomParser);
+            engine.register(UnderlineDomParser);
+            engine.register(SpanDomParser);
+            engine.register(LinkDomParser);
+            engine.register(SuperscriptDomParser);
+        });
         it('should parse a complex list', async () => {
             const element = document.createElement('div');
             element.innerHTML = [
