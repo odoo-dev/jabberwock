@@ -117,7 +117,6 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
-                        'Renderer',
                         'Keymap',
                         'A',
                         'B',
@@ -135,7 +134,6 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
-                        'Renderer',
                         'Keymap',
                         'A',
                         'B',
@@ -155,7 +153,6 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
-                        'Renderer',
                         'Keymap',
                         'A',
                         'B',
@@ -177,7 +174,6 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
-                        'Renderer',
                         'Keymap',
                         'A',
                         'D',
@@ -200,7 +196,6 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
-                        'Renderer',
                         'Keymap',
                         'A',
                         'D',

@@ -27,6 +27,7 @@ describe('Renderer', () => {
             }
             const editor = new JWEditor(document.createElement('p'));
             editor.loadPlugin(VNodePlugin);
+            editor.loadPlugin(Renderer);
             await editor.start();
             const node = new VNode();
             editor.vDocument.root.append(node);

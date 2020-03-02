@@ -11,7 +11,6 @@ import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 enum Mode {
@@ -81,7 +80,6 @@ export class JWEditor {
         // between the core commands and the VDocument.
         this.loadPlugin(CorePlugin);
         this.loadPlugin(Parser);
-        this.loadPlugin(Renderer);
         this.loadPlugin(Keymap);
     }
 

@@ -1,4 +1,7 @@
 import JWEditor from '../packages/core/src/JWEditor';
+import { Parser } from '../packages/plugin-parser/src/Parser';
+import { Renderer } from '../packages/plugin-renderer/src/Renderer';
+import { Keymap } from '../packages/plugin-keymap/src/Keymap';
 import { Dom } from '../packages/plugin-dom/Dom';
 import { Char } from '../packages/plugin-char/Char';
 import { LineBreak } from '../packages/plugin-linebreak/LineBreak';
@@ -21,7 +24,6 @@ import { Blockquote } from '../packages/plugin-blockquote/Blockquote';
 import { Youtube } from '../packages/plugin-youtube/Youtube';
 import { Table } from '../packages/plugin-table/Table';
 import { Metadata } from '../packages/plugin-metadata/Metadata';
-import { Parser } from '../packages/plugin-parser/src/Parser';
 
 export class BasicEditor extends JWEditor {
     constructor(editable?: HTMLElement) {
@@ -31,6 +33,8 @@ export class BasicEditor extends JWEditor {
             createBaseContainer: () => new ParagraphNode(),
             plugins: [
                 [Parser],
+                [Renderer],
+                [Keymap],
                 [Dom],
                 [Inline],
                 [Char],
