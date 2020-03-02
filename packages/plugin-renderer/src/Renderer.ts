@@ -5,7 +5,6 @@ import {
     RenderingEngine,
     RenderingEngineConstructor,
 } from './RenderingEngine';
-import { Plugins } from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 
 export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -33,19 +32,6 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
             }
             const engine = new EngineClass(this);
             this.engines[id] = engine;
-            // Register renderers from previously loaded plugins as that
-            // could not be done earlier without the rendering engine.
-            const plugins: Plugins<Renderer> = this.editor.plugins.values();
-            for (const plugin of plugins) {
-                if (plugin.loadables.renderers) {
-                    const renderers = [...plugin.loadables.renderers].reverse();
-                    for (const RendererClass of renderers) {
-                        if (RendererClass.id === id) {
-                            engine.register(RendererClass);
-                        }
-                    }
-                }
-            }
         }
     }
 

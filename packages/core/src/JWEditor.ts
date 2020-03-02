@@ -26,7 +26,6 @@ export type Loader<T extends Loadable = Loadable> = (
 export type Loadables<T extends JWPlugin> = {
     [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L : never;
 };
-export type Plugins<T extends JWPlugin> = IterableIterator<JWPlugin & { loadables: Loadables<T> }>;
 
 export interface JWEditorConfig {
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
@@ -172,33 +171,28 @@ export class JWEditor {
                 this.dispatcher.registerCommandHook(id, hook);
             }
 
-            // Load loadables.
-            for (const loadableId of Object.keys(this.loaders)) {
-                const loadable = plugin.loadables[loadableId];
-                if (loadable) {
-                    this.loaders[loadableId](loadable, plugin);
-                }
-            }
-
             // Load loaders.
-            for (const loadable of Object.keys(plugin.loaders)) {
-                if (this.loaders[loadable]) {
+            for (const loadableIdentifier of Object.keys(plugin.loaders)) {
+                if (this.loaders[loadableIdentifier]) {
                     throw new Error(
-                        `Another loader is already registered for loadable ${loadable}.`,
+                        `Another loader is already registered for loadable ${loadableIdentifier}.`,
                     );
                 } else {
                     // Bind loaders to the plugin itself. This preserves the
                     // typing of the loader parameters which would be lost if
                     // the binding was done in the plugin definition.
-                    const loader = plugin.loaders[loadable].bind(plugin);
-                    this.loaders[loadable] = loader;
+                    const loader = plugin.loaders[loadableIdentifier];
+                    this.loaders[loadableIdentifier] = loader.bind(plugin);
+                }
+            }
+        }
 
-                    // Load the loadables of the previously loaded plugins.
-                    for (const previousPlugin of this.plugins.values()) {
-                        if (previousPlugin.loadables[loadable]) {
-                            loader(previousPlugin.loadables[loadable]);
-                        }
-                    }
+        // Load loadables.
+        for (const loadableIdentifier of Object.keys(this.loaders)) {
+            for (const plugin of this.plugins.values()) {
+                const loadable = plugin.loadables[loadableIdentifier];
+                if (loadable) {
+                    this.loaders[loadableIdentifier](loadable, plugin);
                 }
             }
         }
