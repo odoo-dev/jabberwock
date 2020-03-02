@@ -71,6 +71,8 @@ describe('utils', () => {
                         ];
                     });
                     it('should insert char at the end of a word (ubuntu chrome)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -108,6 +110,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (ubuntu firefox)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -144,6 +148,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (mac safari)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -192,6 +198,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (mac chrome)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -228,6 +236,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (mac firefox)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -264,6 +274,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (GBoard)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -318,6 +330,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char at the end of a word (SwiftKey)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: o
                         await triggerEvents([
                             [
                                 {
@@ -375,6 +389,8 @@ describe('utils', () => {
                         ];
                     });
                     it('should insert space at the end of a word (ubuntu chrome)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: <Space>
                         await triggerEvents([
                             [
                                 {
@@ -456,6 +472,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert space at the end of a word (mac safari)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: <Space>
                         await triggerEvents([
                             [
                                 {
@@ -517,6 +535,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert space at the end of a word (mac chrome)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: <Space>
                         await triggerEvents([
                             [
                                 {
@@ -560,6 +580,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert space at the end of a word (mac firefox)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: <Space>
                         await triggerEvents([
                             [
                                 {
@@ -596,6 +618,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert space at the end of a word (SwiftKey)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: <Space>
                         await triggerEvents([
                             [
                                 {
@@ -659,6 +683,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert space at the end of a word (GBoard)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: <Space>
                         await triggerEvents([
                             [
                                 {
@@ -767,6 +793,8 @@ describe('utils', () => {
                         ];
                     });
                     it('should insert char with accent at the end of a word (ubuntu chrome)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -805,6 +833,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (ubuntu firefox)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -843,6 +873,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (mac safari)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -945,6 +977,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (mac chrome)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -1027,6 +1061,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (mac firefox)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -1089,6 +1125,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (SwiftKey)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -1132,6 +1170,8 @@ describe('utils', () => {
                         expect(ctx.eventBatches).to.deep.equal(batchEvents);
                     });
                     it('should insert char with accent at the end of a word (GBoard)', async () => {
+                        // <p>Hey, hello world[]<br>Hillo world.</p>
+                        // key: ^o
                         await triggerEvents([
                             [
                                 {
@@ -1187,6 +1227,8 @@ describe('utils', () => {
                     });
                 });
                 it('should insert multiples key in same stack (ubuntu chrome)', async () => {
+                    // <p>hell[]</p>
+                    // key: oi<backspace>
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
                     ctx.editable.innerHTML = '';
@@ -1320,6 +1362,8 @@ describe('utils', () => {
 
             describe('completion/correction', () => {
                 it('should add space when hitting a word completion (SwiftKey)', async () => {
+                    // <p>a hello[]</p>
+                    // <SPACE>
                     ctx.editable.innerHTML = '<p>a hello</p>';
                     const p = document.querySelector('p');
                     const text = p.childNodes[0];
@@ -1370,6 +1414,8 @@ describe('utils', () => {
                     expect(ctx.eventBatches).to.deep.equal(batchEvents);
                 });
                 it('should add space from auto-correction (SwiftKey)', async () => {
+                    // <p>a hello[]</p>
+                    // <SPACE>
                     ctx.editable.innerHTML = '<p>a hillo</p>';
                     const p = document.querySelector('p');
                     const text = p.childNodes[0];
@@ -1485,6 +1531,8 @@ describe('utils', () => {
                             ];
                         });
                         it('should deleteContentBackward one letter (ubuntu chrome)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1524,6 +1572,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('should deleteContentBackward one letter (ubuntu firefox)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1563,6 +1613,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('should deleteContentBackward one letter (mac safari)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1619,6 +1671,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('should deleteContentBackward one letter (mac chrome)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1658,6 +1712,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('should deleteContentBackward one letter (mac firefox)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1697,6 +1753,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('should deleteContentBackward one letter (SwiftKey)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1741,6 +1799,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('should deleteContentBackward one letter (GBoard)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1816,6 +1876,8 @@ describe('utils', () => {
                             ];
                         });
                         it('deleteWordBackward at the end of word (ubuntu chrome)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <CTRL>+<BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -1887,6 +1949,8 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('deleteWordBackward at the end of word (ubuntu firefox)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
+                            // <CTRL>+<BACKSPACE>
                             await triggerEvents([
                                 [
                                     {
@@ -2160,6 +2224,7 @@ describe('utils', () => {
                             expect(ctx.eventBatches).to.deep.equal(batchEvents);
                         });
                         it('deleteContentBackward at the end of word (SwiftKey)', async () => {
+                            // <p>Hey, hello world[]<br>Hillo world.</p>
                             await triggerEvents([
                                 [
                                     {
