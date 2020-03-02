@@ -1,6 +1,6 @@
-import { VNode, Predicate } from './VNodes/VNode';
+import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 import { Constructor } from '../../utils/src/utils';
-import JWEditor from './JWEditor';
+import JWEditor from '../../core/src/JWEditor';
 
 export type RenderingIdentifier = string;
 

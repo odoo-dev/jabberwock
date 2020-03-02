@@ -1,15 +1,12 @@
 import JWEditor, { Loader, PluginMap, Loadable } from './JWEditor';
 import { CommandIdentifier, CommandImplementation, CommandHook } from './Dispatcher';
 import { Shortcut } from './JWEditor';
-import { RendererConstructor, RenderingEngineConstructor } from './RenderingEngine';
 
 export type JWPluginConfig = {};
 
 export class JWPlugin<T extends JWPluginConfig = {}> {
     static readonly dependencies: Array<typeof JWPlugin> = [];
     readonly dependencies: PluginMap = new Map();
-    readonly renderingEngines: RenderingEngineConstructor[] = [];
-    readonly renderers: RendererConstructor[];
     readonly loaders: Record<string, Loader> = {};
     readonly loadables: Record<string, Loadable> = {};
     name: string;

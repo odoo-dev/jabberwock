@@ -22,7 +22,8 @@ export class Parser<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             const plugins: Plugins<Parser> = this.editor.plugins.values();
             for (const plugin of plugins) {
                 if (plugin.loadables.parsers) {
-                    for (const ParserClass of plugin.loadables.parsers) {
+                    const parsers = [...plugin.loadables.parsers].reverse();
+                    for (const ParserClass of parsers) {
                         if (ParserClass.id === id) {
                             engine.register(ParserClass);
                         }
@@ -33,6 +34,7 @@ export class Parser<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     }
 
     loadParsers(parsers: ParserConstructor[]): void {
+        parsers = [...parsers].reverse();
         for (const ParserClass of parsers) {
             const parsingEngine = this.engines[ParserClass.id];
             if (parsingEngine) {

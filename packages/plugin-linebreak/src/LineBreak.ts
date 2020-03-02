@@ -5,12 +5,14 @@ import { LineBreakDomRenderer } from './LineBreakDomRenderer';
 import { InsertParams } from '../../core/src/CorePlugin';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
-export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T>
+    implements Loadables<Parser & Renderer> {
     readonly loadables = {
         parsers: [LineBreakDomParser],
+        renderers: [LineBreakDomRenderer],
     };
-    renderers = [LineBreakDomRenderer];
     commands = {
         insertLineBreak: {
             handler: this.insertLineBreak.bind(this),
