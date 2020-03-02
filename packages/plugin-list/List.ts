@@ -13,6 +13,7 @@ import { CheckingContext } from '../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../core/src/CorePlugin';
 import { Parser } from '../plugin-parser/src/Parser';
 import { Renderer } from '../plugin-renderer/src/Renderer';
+import { Keymap } from '../plugin-keymap/src/Keymap';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -49,29 +50,29 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> {
             handler: this.insertParagraphBreak.bind(this),
         },
     };
-    shortcuts = [
-        {
-            pattern: 'CTRL+SHIFT+<Digit7>',
-            commandId: 'toggleList',
-            commandArgs: { type: ListType.ORDERED } as ListParams,
-        },
-        {
-            pattern: 'CTRL+SHIFT+<Digit8>',
-            commandId: 'toggleList',
-            commandArgs: { type: ListType.UNORDERED } as ListParams,
-        },
-        {
-            pattern: 'Backspace',
-            selector: [List.isListItem],
-            check: (context: CheckingContext): boolean => {
-                return !context.range.start.previousSibling();
-            },
-            commandId: 'outdent',
-        },
-    ];
-    readonly loadables: Loadables<Parser & Renderer> = {
+    readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [ListDomParser, ListItemDomParser],
         renderers: [ListItemDomRenderer, ListDomRenderer],
+        shortcuts: [
+            {
+                pattern: 'CTRL+SHIFT+<Digit7>',
+                commandId: 'toggleList',
+                commandArgs: { type: ListType.ORDERED } as ListParams,
+            },
+            {
+                pattern: 'CTRL+SHIFT+<Digit8>',
+                commandId: 'toggleList',
+                commandArgs: { type: ListType.UNORDERED } as ListParams,
+            },
+            {
+                pattern: 'Backspace',
+                selector: [List.isListItem],
+                check: (context: CheckingContext): boolean => {
+                    return !context.range.start.previousSibling();
+                },
+                commandId: 'outdent',
+            },
+        ],
     };
 
     //--------------------------------------------------------------------------

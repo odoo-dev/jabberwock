@@ -1,4 +1,4 @@
-import JWEditor from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { VNode, RelativePosition, Point } from '../../core/src/VNodes/VNode';
@@ -7,6 +7,7 @@ import { CharNode } from '../../plugin-char/CharNode';
 import { LineBreak } from '../../plugin-linebreak/LineBreak';
 import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
 import { withRange, VRange } from '../../core/src/VRange';
+import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
@@ -24,16 +25,18 @@ export class Indent<T extends JWPluginConfig> extends JWPlugin<T> {
             handler: this.outdent.bind(this),
         },
     };
-    shortcuts = [
-        {
-            pattern: 'TAB',
-            commandId: 'indent',
-        },
-        {
-            pattern: 'SHIFT+TAB',
-            commandId: 'outdent',
-        },
-    ];
+    loadables: Loadables<Keymap> = {
+        shortcuts: [
+            {
+                pattern: 'TAB',
+                commandId: 'indent',
+            },
+            {
+                pattern: 'SHIFT+TAB',
+                commandId: 'outdent',
+            },
+        ],
+    };
     tab = '    ';
 
     //--------------------------------------------------------------------------
