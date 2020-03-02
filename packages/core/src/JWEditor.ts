@@ -5,7 +5,6 @@ import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
 import { CorePlugin } from './CorePlugin';
 import { VNode } from './VNodes/VNode';
-import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
 import { VElement } from './VNodes/VElement';
 import { Dom } from '../../plugin-dom/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
@@ -13,6 +12,7 @@ import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 export enum Platform {
     MAC = 'mac',
@@ -67,7 +67,6 @@ export class JWEditor {
         user: new Keymap(),
     };
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
-    renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     loaders: Record<string, Loader> = {};
 
     constructor(editable?: HTMLElement) {
@@ -96,6 +95,7 @@ export class JWEditor {
         // between the core commands and the VDocument.
         this.loadPlugin(CorePlugin);
         this.loadPlugin(Parser);
+        this.loadPlugin(Renderer);
     }
 
     /**
@@ -166,16 +166,6 @@ export class JWEditor {
         this.eventManager = new EventManager(this, domPlugin);
     }
 
-    async render<T>(renderingId: string, node: VNode): Promise<T | void> {
-        const engine = this.renderers[renderingId];
-        if (!engine) {
-            // The caller might want to fallback on another rendering.
-            return;
-        }
-        engine.renderings.clear();
-        return engine.render(node) as Promise<T>;
-    }
-
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -239,41 +229,6 @@ export class JWEditor {
             if (plugin.shortcuts) {
                 for (const shortcut of plugin.shortcuts) {
                     this._loadShortcut(shortcut, this.keymaps.default);
-                }
-            }
-
-            // Load rendering engines.
-            if (plugin.renderingEngines) {
-                for (const EngineClass of plugin.renderingEngines) {
-                    const id = EngineClass.id;
-                    if (this.renderers[id]) {
-                        throw new Error(`Rendering engine ${id} already registered.`);
-                    }
-                    const engine = new EngineClass(this);
-                    this.renderers[id] = engine;
-                    // Register renderers from previously loaded plugins as that
-                    // could not be done earlier without the rendering engine.
-                    for (const plugin of this.plugins.values()) {
-                        if (plugin.renderers) {
-                            const renderers = [...plugin.renderers].reverse();
-                            for (const RendererClass of renderers) {
-                                if (RendererClass.id === id) {
-                                    engine.register(RendererClass);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Load renderers.
-            if (plugin.renderers) {
-                const renderers = [...plugin.renderers].reverse();
-                for (const RendererClass of renderers) {
-                    const renderingEngine = this.renderers[RendererClass.id];
-                    if (renderingEngine) {
-                        renderingEngine.register(RendererClass);
-                    }
                 }
             }
 

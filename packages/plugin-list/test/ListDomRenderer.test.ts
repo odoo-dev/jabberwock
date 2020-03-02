@@ -7,6 +7,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/CharNode';
 import { BoldFormat } from '../../plugin-bold/BoldFormat';
 import { Formats } from '../../plugin-inline/Formats';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 describe('ListDomRenderer', () => {
     describe('render', () => {
@@ -117,7 +118,8 @@ describe('ListDomRenderer', () => {
             ol.append(p9);
             motherList.append(ol);
 
-            const rendered = await editor.render<Node[]>('dom', root);
+            const renderer = editor.plugins.get(Renderer);
+            const rendered = await renderer.render<Node[]>('dom', root);
             if (expect(rendered).to.exist) {
                 const innerHTMLContainer = document.createElement('p');
                 innerHTMLContainer.append(rendered[0]);

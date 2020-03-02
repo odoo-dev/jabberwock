@@ -4,6 +4,7 @@ import { Char } from '../Char';
 import { CharNode } from '../CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { Dom } from '../../plugin-dom/Dom';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 describe('CharDomRenderer', () => {
     describe('render', () => {
@@ -25,7 +26,8 @@ describe('CharDomRenderer', () => {
             root.append(new CharNode(' '));
             root.append(new CharNode('b'));
 
-            const rendered = await editor.render<Element[]>('dom', root);
+            const renderer = editor.plugins.get(Renderer);
+            const rendered = await renderer.render<Element[]>('dom', root);
             if (expect(rendered).to.exist) {
                 const innerHTMLContainer = document.createElement('p');
                 innerHTMLContainer.append(rendered[0]);
@@ -40,7 +42,8 @@ describe('CharDomRenderer', () => {
             root.append(new CharNode(' '));
             root.append(new CharNode('b'));
 
-            const rendered = await editor.render<Element[]>('dom', root);
+            const renderer = editor.plugins.get(Renderer);
+            const rendered = await renderer.render<Element[]>('dom', root);
             if (expect(rendered).to.exist) {
                 const innerHTMLContainer = document.createElement('p');
                 innerHTMLContainer.append(rendered[0]);

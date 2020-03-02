@@ -12,12 +12,14 @@ import { IndentParams, OutdentParams } from '../plugin-indent/src/Indent';
 import { CheckingContext } from '../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../core/src/CorePlugin';
 import { Parser } from '../plugin-parser/src/Parser';
+import { Renderer } from '../plugin-renderer/src/Renderer';
 
 export interface ListParams extends CommandParams {
     type: ListType;
 }
 
-export class List<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class List<T extends JWPluginConfig> extends JWPlugin<T>
+    implements Loadables<Parser & Renderer> {
     static isListItem(node: VNode): boolean {
         return node.parent && node.parent.is(ListNode);
     }
@@ -68,9 +70,9 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> implements Loada
             commandId: 'outdent',
         },
     ];
-    readonly renderers = [ListItemDomRenderer, ListDomRenderer];
     readonly loadables = {
         parsers: [ListDomParser, ListItemDomParser],
+        renderers: [ListItemDomRenderer, ListDomRenderer],
     };
 
     //--------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { Renderer, RenderingIdentifier } from './RenderingEngine';
 import { RenderingEngine } from './RenderingEngine';
-import { VNode, Predicate } from './VNodes/VNode';
+import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 
 export abstract class AbstractRenderer<T> implements Renderer<T> {
     static id: RenderingIdentifier;

@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Dom } from '../Dom';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 describe('DefaultDomRenderer', () => {
     describe('render', () => {
@@ -11,7 +12,8 @@ describe('DefaultDomRenderer', () => {
             await editor.start();
             const node = new VNode();
             editor.vDocument.root.append(node);
-            const element = await editor.render<Node[]>('dom', editor.vDocument.root);
+            const renderer = editor.plugins.get(Renderer);
+            const element = await renderer.render<Node[]>('dom', editor.vDocument.root);
             if (expect(element).to.exist) {
                 expect(element[0].firstChild.nodeName).to.equal('VNODE-' + node.id);
             }

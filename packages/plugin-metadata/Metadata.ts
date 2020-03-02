@@ -3,10 +3,12 @@ import { MetadataDomParser } from './MetadataDomParser';
 import { MetadataDomRenderer } from './MetaDataDomRenderer';
 import { Loadables } from '../core/src/JWEditor';
 import { Parser } from '../plugin-parser/src/Parser';
+import { Renderer } from '../plugin-renderer/src/Renderer';
 
-export class Metadata<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class Metadata<T extends JWPluginConfig> extends JWPlugin<T>
+    implements Loadables<Parser & Renderer> {
     readonly loadables = {
         parsers: [MetadataDomParser],
+        renderers: [MetadataDomRenderer],
     };
-    readonly renderers = [MetadataDomRenderer];
 }

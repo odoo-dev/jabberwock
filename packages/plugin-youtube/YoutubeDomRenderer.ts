@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../core/src/AbstractRenderer';
+import { AbstractRenderer } from '../plugin-renderer/src/AbstractRenderer';
 import { YoutubeNode } from './YoutubeNode';
 import { DomRenderingEngine } from '../plugin-dom/DomRenderingEngine';
 

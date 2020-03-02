@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../core/src/AbstractRenderer';
+import { AbstractRenderer } from '../plugin-renderer/src/AbstractRenderer';
 import { CharNode } from './CharNode';
 import { InlineNode } from '../plugin-inline/InlineNode';
 

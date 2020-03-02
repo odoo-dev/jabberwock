@@ -10,18 +10,20 @@ import { VNode } from '../core/src/VNodes/VNode';
 import { Formats } from '../plugin-inline/Formats';
 import { Loadables } from '../core/src/JWEditor';
 import { Parser } from '../plugin-parser/src/Parser';
+import { Renderer } from '../plugin-renderer/src/Renderer';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
     formats?: Formats;
 }
 
-export class Char<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class Char<T extends JWPluginConfig> extends JWPlugin<T>
+    implements Loadables<Parser & Renderer> {
     static dependencies = [Inline];
     readonly loadables = {
         parsers: [CharDomParser],
+        renderers: [CharFormatDomRenderer, CharDomRenderer],
     };
-    readonly renderers = [CharFormatDomRenderer, CharDomRenderer];
     commands = {
         insertText: {
             handler: this.insertText.bind(this),
