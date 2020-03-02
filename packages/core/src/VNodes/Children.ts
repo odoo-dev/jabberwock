@@ -27,8 +27,8 @@ for (const propertyName of [...stringProperties, ...symbolProperties]) {
  * properties of the redirected function are redirected on the callable source.
  */
 const redirection: ProxyHandler<CallableArray> = {
-    apply: function(target): {} {
-        return target[call](target[source]);
+    apply: function(target, thisArg, argArray): {} {
+        return target[call].call(target[source], target[source], ...argArray);
     },
     get: function(target, property): {}[] {
         if (property === source) {
