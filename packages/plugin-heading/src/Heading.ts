@@ -11,8 +11,8 @@ export interface HeadingParams extends CommandParams {
     level: number;
 }
 
-export class Heading<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
-    readonly loadables = {
+export class Heading<T extends JWPluginConfig> extends JWPlugin<T> {
+    readonly loadables: Loadables<Parser> = {
         parsers: [HeadingDomParser],
     };
     commands = {

@@ -7,9 +7,8 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 
-export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T>
-    implements Loadables<Parser & Renderer> {
-    readonly loadables = {
+export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> {
+    readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [LineBreakDomParser],
         renderers: [LineBreakDomRenderer],
     };

@@ -4,9 +4,9 @@ import { Inline } from '../../plugin-inline/src/Inline';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export class Span<T extends JWPluginConfig> extends JWPlugin<T> implements Loadables<Parser> {
+export class Span<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser> = {
         parsers: [SpanDomParser],
     };
 }
