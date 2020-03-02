@@ -6,27 +6,28 @@ import { distinct } from '../../utils/src/utils';
 import { VNode, isLeaf } from '../../core/src/VNodes/VNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 export interface HeadingParams extends CommandParams {
     level: number;
 }
 
 export class Heading<T extends JWPluginConfig> extends JWPlugin<T> {
-    readonly loadables: Loadables<Parser> = {
-        parsers: [HeadingDomParser],
-    };
     commands = {
         applyHeadingStyle: {
             handler: this.applyHeadingStyle.bind(this),
         },
     };
-    shortcuts = [0, 1, 2, 3, 4, 5, 6].map(level => {
-        return {
-            pattern: 'CTRL+SHIFT+<Digit' + level + '>',
-            commandId: 'applyHeadingStyle',
-            commandArgs: { level: level },
-        };
-    });
+    readonly loadables: Loadables<Parser & Keymap> = {
+        parsers: [HeadingDomParser],
+        shortcuts: [0, 1, 2, 3, 4, 5, 6].map(level => {
+            return {
+                pattern: 'CTRL+SHIFT+<Digit' + level + '>',
+                commandId: 'applyHeadingStyle',
+                commandArgs: { level: level },
+            };
+        }),
+    };
 
     //--------------------------------------------------------------------------
     // Public
