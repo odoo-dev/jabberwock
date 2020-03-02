@@ -22,6 +22,8 @@ import { Blockquote } from '../packages/plugin-blockquote/src/Blockquote';
 import { Youtube } from '../packages/plugin-youtube/src/Youtube';
 import { Table } from '../packages/plugin-table/src/Table';
 import { Metadata } from '../packages/plugin-metadata/src/Metadata';
+import { Renderer } from '../packages/plugin-renderer/src/Renderer';
+import { Keymap } from '../packages/plugin-keymap/src/Keymap';
 
 export class BasicEditor extends JWEditor {
     constructor() {
@@ -31,6 +33,8 @@ export class BasicEditor extends JWEditor {
             createBaseContainer: () => new ParagraphNode(),
             plugins: [
                 [Parser],
+                [Renderer],
+                [Keymap],
                 [Dom],
                 [Inline],
                 [Char],
