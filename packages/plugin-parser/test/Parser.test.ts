@@ -21,18 +21,20 @@ import { SpanDomParser } from '../../plugin-span/SpanDomParser';
 describe('utils', () => {
     describe('Parser', () => {
         describe('parse()', async () => {
-            const parser = new DomParsingEngine(new JWEditor());
-            parser.register(CharDomParser);
-            parser.register(HeadingDomParser);
-            parser.register(LineBreakDomParser);
-            parser.register(ParagraphDomParser);
-            parser.register(ListDomParser);
-            parser.register(ListItemDomParser);
-            parser.register(BoldDomParser);
-            parser.register(ItalicDomParser);
-            parser.register(UnderlineDomParser);
-            parser.register(SpanDomParser);
-
+            let parser: DomParsingEngine;
+            beforeEach(async () => {
+                parser = new DomParsingEngine(new JWEditor());
+                parser.register(CharDomParser);
+                parser.register(HeadingDomParser);
+                parser.register(LineBreakDomParser);
+                parser.register(ParagraphDomParser);
+                parser.register(ListDomParser);
+                parser.register(ListItemDomParser);
+                parser.register(BoldDomParser);
+                parser.register(ItalicDomParser);
+                parser.register(UnderlineDomParser);
+                parser.register(SpanDomParser);
+            });
             it('should parse a "p" tag with some content', async () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a</p>';
