@@ -19,18 +19,15 @@ enum Mode {
 }
 
 export type Loadable = {};
-export type Loader<T extends Loadable = Loadable> = (
-    loadable: T,
-    source?: JWPlugin | JWEditorConfig,
-) => void;
-export type Loadables<T extends JWPlugin> = {
-    [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L : never;
+export type Loader<L extends Loadable = Loadable> = (loadable: L[], source?: JWPlugin | {}) => void;
+export type Loadables<T extends JWPlugin = JWPlugin> = {
+    [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L[] : never;
 };
 
 export interface JWEditorConfig {
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
     createBaseContainer?: () => VNode;
-    loadables?: Record<string, Loadable>;
+    loadables?: Loadables;
 }
 export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
@@ -48,6 +45,7 @@ export class JWEditor {
     configuration: JWEditorConfig = {
         plugins: [],
         createBaseContainer: () => new VElement('P'),
+        loadables: {},
     };
     vDocument: VDocument;
     selection = new VSelection();
@@ -77,9 +75,9 @@ export class JWEditor {
 
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
-        this.loadPlugin(CorePlugin);
-        this.loadPlugin(Parser);
-        this.loadPlugin(Keymap);
+        this.load(CorePlugin);
+        this.load(Parser);
+        this.load(Keymap);
     }
 
     /**
@@ -97,10 +95,12 @@ export class JWEditor {
         this._loadPlugins();
 
         // Load editor-level loadables.
-        for (const loadableId of Object.keys(this.loaders)) {
-            const loadable = this.configuration[loadableId];
-            if (loadable) {
-                this.loaders[loadableId](loadable, this.configuration);
+        if (this.configuration.loadables) {
+            for (const loadableId of Object.keys(this.loaders)) {
+                const loadable = this.configuration.loadables[loadableId];
+                if (loadable) {
+                    this.loaders[loadableId](loadable, this.configuration);
+                }
             }
         }
 
@@ -162,16 +162,34 @@ export class JWEditor {
      * @param Plugin
      * @param config
      */
-    loadPlugin<T extends typeof JWPlugin>(Plugin: T, config?: ConstructorParameters<T>[1]): void {
-        if (this._mode === Mode.EDITION) {
-            throw new Error("You can't add plugin when the editor is already started");
+    load(loadables: Loadables): void;
+    load<P extends typeof JWPlugin>(Plugin: P, config?: ConstructorParameters<P>[1]): void;
+    load<P extends typeof JWPlugin>(
+        Plugin: P | Loadables,
+        config?: ConstructorParameters<P>[1],
+    ): void {
+        // Actual loading is deferred to `start`.
+        if (this._mode !== Mode.CONFIGURATION) {
+            throw new Error(`Load only allowed in ${Mode.CONFIGURATION} mode.`);
+        } else if (isConstructor(Plugin, JWPlugin)) {
+            const plugins = this.configuration.plugins;
+            const index = plugins.findIndex(([p]) => p === Plugin);
+            if (index !== -1) {
+                // Protect against loading the same plugin twice.
+                plugins.splice(index, 1);
+            }
+            plugins.push([Plugin, config || {}]);
+        } else {
+            const configuredLoadables = this.configuration.loadables;
+            for (const loadableIdentifier of Object.keys(Plugin)) {
+                const loadables = Plugin[loadableIdentifier];
+                if (configuredLoadables[loadableIdentifier]) {
+                    configuredLoadables[loadableIdentifier].push(...loadables);
+                } else {
+                    configuredLoadables[loadableIdentifier] = [...loadables];
+                }
+            }
         }
-        const index = this.configuration.plugins.findIndex(([p]) => p === Plugin);
-        if (index !== -1) {
-            // Protect against loading the same plugin twice.
-            this.configuration.plugins.splice(index, 1);
-        }
-        this.configuration.plugins.push([Plugin, config || {}]);
     }
 
     /**
@@ -231,9 +249,9 @@ export class JWEditor {
         // Load loadables.
         for (const loadableIdentifier of Object.keys(this.loaders)) {
             for (const plugin of this.plugins.values()) {
-                const loadable = plugin.loadables[loadableIdentifier];
-                if (loadable) {
-                    this.loaders[loadableIdentifier](loadable, plugin);
+                const loadableArray = plugin.loadables[loadableIdentifier];
+                if (loadableArray) {
+                    this.loaders[loadableIdentifier](loadableArray, plugin);
                 }
             }
         }
@@ -274,13 +292,17 @@ export class JWEditor {
             const preconf = this.configuration;
             const conf = PluginOrEditorConfig;
             this.configuration = { ...preconf, ...conf };
-            // The `plugins` configuration key is special so it needs to be
-            // handled separately in order to properly merge it.
+            // Handle special `plugins` configuration key through `load`.
             if (conf.plugins) {
                 this.configuration.plugins = [...preconf.plugins];
                 for (const [Plugin, pluginConfiguration] of conf.plugins) {
-                    this.loadPlugin(Plugin, pluginConfiguration);
+                    this.load(Plugin, pluginConfiguration);
                 }
+            }
+            // Handle special `loadables` configuration key through `load`.
+            if (conf.loadables) {
+                this.configuration.loadables = { ...preconf.loadables };
+                this.load(conf.loadables);
             }
         }
     }

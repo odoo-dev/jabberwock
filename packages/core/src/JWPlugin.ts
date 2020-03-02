@@ -1,4 +1,4 @@
-import JWEditor, { Loader, PluginMap, Loadable } from './JWEditor';
+import JWEditor, { Loader, PluginMap, Loadables } from './JWEditor';
 import { CommandIdentifier, CommandImplementation, CommandHook } from './Dispatcher';
 
 export type JWPluginConfig = {};
@@ -7,7 +7,7 @@ export class JWPlugin<T extends JWPluginConfig = {}> {
     static readonly dependencies: Array<typeof JWPlugin> = [];
     readonly dependencies: PluginMap = new Map();
     readonly loaders: Record<string, Loader> = {};
-    readonly loadables: Record<string, Loadable> = {};
+    readonly loadables: Loadables = {};
     name: string;
     commands: Record<CommandIdentifier, CommandImplementation> = {};
     commandHooks: Record<CommandIdentifier, CommandHook> = {};

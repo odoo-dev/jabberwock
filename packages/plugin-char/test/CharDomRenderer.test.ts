@@ -12,8 +12,8 @@ describe('CharDomRenderer', () => {
         let root: FragmentNode;
         beforeEach(async () => {
             editor = new JWEditor(document.createElement('p'));
-            editor.loadPlugin(Dom);
-            editor.loadPlugin(Char);
+            editor.load(Dom);
+            editor.load(Char);
             await editor.start();
             root = editor.vDocument.root;
         });

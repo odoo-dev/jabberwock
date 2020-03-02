@@ -8,7 +8,7 @@ const editor = new BasicEditor();
 
 editor.editable.innerHTML = template;
 
-editor.loadPlugin(DevTools);
+editor.load(DevTools);
 
 editor.configure(Dom, {
     autoFocus: true,

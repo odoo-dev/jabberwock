@@ -9,7 +9,7 @@ jabberwocky.init(editor.editable);
 
 editor.editable.style.textAlign = 'center';
 
-editor.loadPlugin(DevTools);
+editor.load(DevTools);
 
 editor.configure(Dom, {
     autoFocus: true,

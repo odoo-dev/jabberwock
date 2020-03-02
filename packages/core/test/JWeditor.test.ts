@@ -11,8 +11,8 @@ describe('core', () => {
                 await editor.start();
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {}
                 expect(() => {
-                    editor.loadPlugin(A);
-                }).to.throw(/plugin.*already started/i);
+                    editor.load(A);
+                }).to.throw();
             });
             it('should load a plugin configuration', async () => {
                 const editor = new JWEditor();
@@ -25,7 +25,7 @@ describe('core', () => {
                         configInStart = this.configuration;
                     }
                 }
-                editor.loadPlugin(A, { toto: 5 });
+                editor.load(A, { toto: 5 });
                 await editor.start();
                 expect(configInStart.toto).to.eql(5);
             });
@@ -41,8 +41,8 @@ describe('core', () => {
                         configInStart = this.configuration;
                     }
                 }
-                editor.loadPlugin(A, { toto: 5, titi: 9 });
-                editor.loadPlugin(A, { toto: 3 });
+                editor.load(A, { toto: 5, titi: 9 });
+                editor.load(A, { toto: 3 });
                 await editor.start();
                 expect(configInStart.toto).to.eql(3);
                 expect(configInStart.titi).to.eql(undefined);
@@ -69,7 +69,7 @@ describe('core', () => {
                         configInStart = this.configuration;
                     }
                 }
-                editor.loadPlugin(A, { toto: 5, titi: 9 });
+                editor.load(A, { toto: 5, titi: 9 });
                 editor.configure(A, { toto: 3 });
                 await editor.start();
                 expect(configInStart.toto).to.eql(3);
@@ -109,9 +109,9 @@ describe('core', () => {
 
                 it('should start all plugins in order', async () => {
                     const editor = new JWEditor();
-                    editor.loadPlugin(A, {});
-                    editor.loadPlugin(B);
-                    editor.loadPlugin(C);
+                    editor.load(A, {});
+                    editor.load(B);
+                    editor.load(C);
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
@@ -125,10 +125,10 @@ describe('core', () => {
                 });
                 it('with dependencies automatically add before the plugin', async () => {
                     const editor = new JWEditor();
-                    editor.loadPlugin(A);
-                    editor.loadPlugin(B);
-                    editor.loadPlugin(C);
-                    editor.loadPlugin(E);
+                    editor.load(A);
+                    editor.load(B);
+                    editor.load(C);
+                    editor.load(E);
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
@@ -144,10 +144,10 @@ describe('core', () => {
                 });
                 it('with dependencies without overwrite previous configuration and order', async () => {
                     const editor = new JWEditor();
-                    editor.loadPlugin(A);
-                    editor.loadPlugin(B);
-                    editor.loadPlugin(C, { toto: 3 });
-                    editor.loadPlugin(F);
+                    editor.load(A);
+                    editor.load(B);
+                    editor.load(C, { toto: 3 });
+                    editor.load(F);
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
@@ -165,10 +165,10 @@ describe('core', () => {
                 });
                 it('with dependencies without overwrite previous configuration but change order', async () => {
                     const editor = new JWEditor();
-                    editor.loadPlugin(A);
-                    editor.loadPlugin(F);
-                    editor.loadPlugin(B);
-                    editor.loadPlugin(C, { toto: 3 });
+                    editor.load(A);
+                    editor.load(F);
+                    editor.load(B);
+                    editor.load(C, { toto: 3 });
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
@@ -186,11 +186,11 @@ describe('core', () => {
                 });
                 it('with dependencies without overwrite previous configuration but change order', async () => {
                     const editor = new JWEditor();
-                    editor.loadPlugin(A);
-                    editor.loadPlugin(E);
-                    editor.loadPlugin(F);
-                    editor.loadPlugin(B);
-                    editor.loadPlugin(C, { toto: 3 });
+                    editor.load(A);
+                    editor.load(E);
+                    editor.load(F);
+                    editor.load(B);
+                    editor.load(C, { toto: 3 });
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
