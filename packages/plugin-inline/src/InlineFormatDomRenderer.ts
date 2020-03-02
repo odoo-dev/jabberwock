@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../core/src/AbstractRenderer';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { InlineNode } from './InlineNode';
 import { Predicate, VNode } from '../../core/src/VNodes/VNode';
 import { Format } from './Format';

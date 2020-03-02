@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../core/src/AbstractRenderer';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { ListNode, ListType } from './ListNode';
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
 

@@ -1,4 +1,4 @@
-import { RenderingEngine } from '../../core/src/RenderingEngine';
+import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { DefaultDomRenderer } from './DefaultDomRenderer';
 
 export class DomRenderingEngine extends RenderingEngine<Node[]> {

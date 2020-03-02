@@ -7,20 +7,22 @@ import { DomSelectionDescription } from '../../core/src/EventNormalizer';
 import { ParsingEngine } from '../../plugin-parser/src/ParsingEngine';
 import { DomParsingEngine } from './DomParsingEngine';
 import { DomRenderingEngine } from './DomRenderingEngine';
-import { RenderingEngine } from '../../core/src/RenderingEngine';
+import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 interface DomConfig extends JWPluginConfig {
     autoFocus?: boolean;
     target?: HTMLElement;
 }
 
-export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> implements Loadables<Parser> {
-    static dependencies = [Parser];
-    readonly renderingEngines = [DomRenderingEngine];
+export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T>
+    implements Loadables<Parser & Renderer> {
+    static dependencies = [Parser, Renderer];
     readonly loadables = {
         parsingEngines: [DomParsingEngine],
+        renderingEngines: [DomRenderingEngine],
     };
     configuration = this.configuration || {
         autoFocus: false,
@@ -263,7 +265,8 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> implements
         this.editable.innerHTML = '';
 
         this.domMap.set(this.editor.vDocument.root, this.editable);
-        const rendering = await this.editor.render<Node[]>('dom', this.editor.vDocument.root);
+        const renderer = this.dependencies.get(Renderer);
+        const rendering = await renderer.render<Node[]>('dom', this.editor.vDocument.root);
         if (rendering) {
             await this._generateDomMap();
             for (const renderedChild of rendering) {
@@ -278,7 +281,8 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> implements
 
         let node = this.editor.vDocument.root.lastLeaf();
         while (node) {
-            const domEngine = this.editor.renderers.dom as RenderingEngine<Node[]>;
+            const renderer = this.dependencies.get(Renderer);
+            const domEngine = renderer.engines.dom as RenderingEngine<Node[]>;
             await domEngine.render(node);
             const renderings = domEngine.renderings.get(node);
             const rendering = renderings[renderings.length - 1];

@@ -5,6 +5,7 @@ import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { LineBreakNode } from '../src/LineBreakNode';
 import { Dom } from '../../plugin-dom/src/Dom';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 describe('LineBreakDomRenderer', () => {
     describe('render', () => {
@@ -25,7 +26,8 @@ describe('LineBreakDomRenderer', () => {
             const lineBreak = new LineBreakNode();
             p.append(lineBreak);
             root.append(p);
-            const element = await editor.render<Node[]>('dom', root);
+            const renderer = editor.plugins.get(Renderer);
+            const element = await renderer.render<Node[]>('dom', root);
             if (expect(element).to.exist) {
                 const domElement = element[0];
                 expect(domElement.childNodes.length).to.equal(1);
@@ -42,7 +44,8 @@ describe('LineBreakDomRenderer', () => {
             const c = new VElement('FAKE-CHAR');
             p.append(c);
             root.append(p);
-            const element = await editor.render<Node[]>('dom', root);
+            const renderer = editor.plugins.get(Renderer);
+            const element = await renderer.render<Node[]>('dom', root);
             if (expect(element).to.exist) {
                 const domElement = element[0];
                 expect(domElement.childNodes.length).to.equal(1);

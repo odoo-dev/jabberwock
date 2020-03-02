@@ -4,9 +4,6 @@ import { expect } from 'chai';
 import { Platform } from '../src/JWEditor';
 import { keydown, testEditor } from '../../utils/src/testUtils';
 import { spy } from 'sinon';
-import { AbstractRenderer } from '../src/AbstractRenderer';
-import { VNode } from '../src/VNodes/VNode';
-import { RenderingEngine } from '../src/RenderingEngine';
 import { Dom } from '../../plugin-dom/src/Dom';
 
 describe('core', () => {
@@ -429,6 +426,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
+                        'Renderer',
                         'A',
                         'B',
                         'C',
@@ -445,6 +443,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
+                        'Renderer',
                         'A',
                         'B',
                         'C',
@@ -463,6 +462,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
+                        'Renderer',
                         'A',
                         'B',
                         'C',
@@ -483,6 +483,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
+                        'Renderer',
                         'A',
                         'D',
                         'C',
@@ -504,6 +505,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'CorePlugin',
                         'Parser',
+                        'Renderer',
                         'A',
                         'D',
                         'E',
@@ -514,34 +516,6 @@ describe('core', () => {
                     const c = editor.plugins.get(C);
                     expect((c.configuration as LocalConfig).toto).to.eql(3);
                 });
-            });
-        });
-        describe('render', () => {
-            it('should return a rendering or void', async () => {
-                class VNodeRenderer extends AbstractRenderer<VNode> {
-                    async render(node: VNode): Promise<VNode> {
-                        return node;
-                    }
-                }
-                class VNodeRenderingEngine extends RenderingEngine<VNode> {
-                    static id = 'VNode';
-                    static defaultRenderer = VNodeRenderer;
-                }
-                class VNodePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                    renderingEngines = [VNodeRenderingEngine];
-                }
-                const editor = new JWEditor();
-                editor.loadPlugin(Dom, { target: document.createElement('p') });
-                editor.loadPlugin(VNodePlugin);
-                await editor.start();
-                const node = new VNode();
-                editor.vDocument.root.append(node);
-                const rendering = await editor.render<VNode>('VNode', editor.vDocument.root);
-                if (expect(rendering).to.exist) {
-                    expect(rendering).to.equal(editor.vDocument.root);
-                }
-                const voidRendering = await editor.render<VNode>('vNode', editor.vDocument.root);
-                expect(voidRendering).to.not.exist;
             });
         });
     });

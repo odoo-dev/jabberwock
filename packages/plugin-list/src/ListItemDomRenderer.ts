@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../core/src/AbstractRenderer';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ListNode } from './ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';

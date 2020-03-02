@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../core/src/AbstractRenderer';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { VNode, isMarker } from '../../core/src/VNodes/VNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
