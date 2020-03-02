@@ -18,8 +18,7 @@ export interface ListParams extends CommandParams {
     type: ListType;
 }
 
-export class List<T extends JWPluginConfig> extends JWPlugin<T>
-    implements Loadables<Parser & Renderer> {
+export class List<T extends JWPluginConfig> extends JWPlugin<T> {
     static isListItem(node: VNode): boolean {
         return node.parent && node.parent.is(ListNode);
     }
@@ -70,7 +69,7 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T>
             commandId: 'outdent',
         },
     ];
-    readonly loadables = {
+    readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [ListDomParser, ListItemDomParser],
         renderers: [ListItemDomRenderer, ListDomRenderer],
     };

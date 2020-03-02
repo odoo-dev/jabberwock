@@ -26,12 +26,10 @@ enum Mode {
 
 export type Loadable = {};
 export type Loader<T extends Loadable = Loadable> = (loadable: T) => void;
-export interface Loadables<T extends JWPlugin> {
-    readonly loadables: {
-        [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L : never;
-    };
-}
-export type Plugins<T extends JWPlugin> = IterableIterator<JWPlugin & Loadables<T>>;
+export type Loadables<T extends JWPlugin> = {
+    [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L : never;
+};
+export type Plugins<T extends JWPlugin> = IterableIterator<JWPlugin & { loadables: Loadables<T> }>;
 
 export interface Shortcut extends ConfiguredCommand {
     platform?: Platform;

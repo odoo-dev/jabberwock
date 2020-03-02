@@ -21,9 +21,8 @@ describe('Renderer', () => {
                 static id = 'VNode';
                 static defaultRenderer = VNodeRenderer;
             }
-            class VNodePlugin<T extends JWPluginConfig> extends JWPlugin<T>
-                implements Loadables<Renderer> {
-                loadables = {
+            class VNodePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                loadables: Loadables<Renderer> = {
                     renderingEngines: [VNodeRenderingEngine],
                 };
             }
