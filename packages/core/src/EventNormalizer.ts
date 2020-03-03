@@ -784,8 +784,6 @@ export class EventNormalizer {
         | DeleteContentAction {
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
-            // Keys ctrl+x or another potential user mapping can trigger an
-            // inputType 'deleteByCut'
             if (key === 'Backspace' || key === 'Delete') {
                 return this._getRemoveAction(key, inputType, isMultiKey);
             } else if (key === 'Enter') {
@@ -872,55 +870,56 @@ export class EventNormalizer {
         const html = dataTransfer['text/html'].replace(/\x00/g, ''); // replace for drag&drop from firefox to chrome
         const text = dataTransfer['text/plain'];
 
-        if (html) {
-            if (uri) {
-                const temp = document.createElement('temp');
-                temp.innerHTML = html;
-                const element = temp.querySelector('a, img');
-                if (element) {
-                    if (
-                        !dataTransfer.draggingFromEditable &&
-                        element.nodeName === 'A' &&
-                        element.innerHTML === ''
-                    ) {
-                        // add default content if it's external link
-                        element.innerHTML = uri;
-                    }
-                    const insertHtmlAction: InsertHtmlAction = {
-                        type: 'insertHtml',
-                        html: element.outerHTML,
-                        text: uri,
-                    };
-                    return insertHtmlAction;
-                } else {
-                    const insertHtmlAction: InsertHtmlAction = {
-                        type: 'insertHtml',
-                        html: html,
-                        text: uri,
-                    };
-                    return insertHtmlAction;
+        if (html && uri) {
+            const temp = document.createElement('temp');
+            temp.innerHTML = html;
+            const element = temp.querySelector('a, img');
+            if (element) {
+                if (
+                    !dataTransfer.draggingFromEditable &&
+                    element.nodeName === 'A' &&
+                    element.innerHTML === ''
+                ) {
+                    // add default content if it's external link
+                    element.innerHTML = uri;
                 }
+                const insertHtmlAction: InsertHtmlAction = {
+                    type: 'insertHtml',
+                    html: element.outerHTML,
+                    text: uri,
+                };
+                return insertHtmlAction;
+            } else {
+                const insertHtmlAction: InsertHtmlAction = {
+                    type: 'insertHtml',
+                    html: html,
+                    text: uri,
+                };
+                return insertHtmlAction;
             }
+        } else if (html) {
             const insertHtmlAction: InsertHtmlAction = {
                 type: 'insertHtml',
+                // Cross browser drag & drop will add useless meta tag at the
+                // beginning of the html.
                 html: html && html.replace(/^<meta[^>]+>/, ''),
                 text: text,
             };
             return insertHtmlAction;
-        }
-        if (uri) {
+        } else if (uri) {
             const insertHtmlAction: InsertHtmlAction = {
                 type: 'insertHtml',
                 html: '<a href="' + uri + '">' + uri + '</a>',
                 text: uri,
             };
             return insertHtmlAction;
+        } else {
+            const insertTextAction: InsertTextAction = {
+                type: 'insertText',
+                text: text,
+            };
+            return insertTextAction;
         }
-        const insertTextAction: InsertTextAction = {
-            type: 'insertText',
-            text: text,
-        };
-        return insertTextAction;
     }
     /**
      * Process the given compiled event as a composition to identify the text
