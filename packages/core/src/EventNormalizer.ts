@@ -664,7 +664,10 @@ export class EventNormalizer {
         } else if (pasteEvent) {
             normalizedActions.push(this._getDataTransferAction(pasteEvent));
         } else if (customSelectAllEvent) {
-            normalizedActions.push(this._getSelectAll());
+            const selectAllAction: SelectAllAction = {
+                type: 'selectAll',
+            };
+            normalizedActions.push(selectAllAction);
         } else if (
             normalizedActions.length === 0 &&
             ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard)
@@ -922,11 +925,10 @@ export class EventNormalizer {
         }
     }
     /**
-     * Process the given compiled event as a composition to identify the text
-     * that was inserted.
+     * Process the composition to identify the text that was inserted.
      *
      * Attention, there is a case impossible to retrieve the complete
-     * information.  In the case of we don't have the event data and mutation
+     * information. In the case of we don't have the event data and mutation
      * and we might have "a b" change from a composition to "a c". We receive
      * the word change "b" to "c" instead of "a b" to "a c".
      *
@@ -935,13 +937,17 @@ export class EventNormalizer {
     _getCompositionFromString(compositionData: string): CompositionData {
         const charMap = this._mutationNormalizer.getCharactersMapping();
 
+        // The goal of this function is to precisely find what was inserted by
+        // a keyboard supporting spell-checking and suggestions.
+        // Example (`|` represents the text cursor):
+        //   Previous content: 'My friend Christofe| was here.'
+        //   Current content:  'My friend Christophe Matthieu| was here.'
+        //   Actual text inserted by the keyboard: 'Christophe Matthieu'
+
         let index = charMap.index;
         let insert = charMap.insert;
         let remove = charMap.remove;
 
-        // We didn't found what was the intention or the action because it look
-        // the same most of the time (if not in all case) insert and remove will
-        // be both empty, other times, ev.data has always priority
         if (insert === remove && compositionData) {
             insert = compositionData;
             remove = compositionData;
@@ -975,7 +981,6 @@ export class EventNormalizer {
             insertEnd += selection.focusOffset;
             index = insertEnd - insert.length;
         } else {
-            // it's the index not yet finished
             let offset = index + insert.length - 1;
             if (
                 charMap.current.nodes[offset] &&
@@ -1009,9 +1014,9 @@ export class EventNormalizer {
             remove = beginWord + remove;
             insert = beginWord + insert;
             index -= beginWord.length;
-            // when a virtual keyboard (at least swiftKey) add a space at the
-            // end of each composition in that case the insert will be ' '. So
-            // we filter out these events
+            // Some virtual keyboards (e.g. SwiftKey) add a space at the end of
+            // each composition such that the insert is ' '. We filter out those
+            // events.
         } else if (
             compositionData &&
             insert &&
@@ -1027,15 +1032,16 @@ export class EventNormalizer {
             }
         }
 
-        // Virtual keyboard that add space (e.g. SwiftKey)
-        const hadEndSpace = remove[remove.length - 1] === ' ';
-        const hasEndSpace = insert[insert.length - 1] === ' ';
+        // Trim the trailing space added by some virtual keyboards (e.g.
+        // SwiftKey).
+        const removedEndSpace = remove[remove.length - 1] === ' ';
+        const insertedEndSpace = insert[insert.length - 1] === ' ';
         let rawRemove = remove;
         let rawInsert = insert;
-        if (hasEndSpace) {
-            if (hadEndSpace) {
+        if (insertedEndSpace && removedEndSpace) {
                 rawRemove = rawRemove.slice(0, -1);
             }
+        if (insertedEndSpace) {
             rawInsert = rawInsert.slice(0, -1);
         }
 
@@ -1062,8 +1068,8 @@ export class EventNormalizer {
         };
         const actions = [setSelectionAction, insertTextAction];
 
-        if (hasEndSpace) {
-            if (hadEndSpace) {
+        if (insertedEndSpace) {
+            if (removedEndSpace) {
                 index += rawRemove.length;
 
                 const setSelectionAction: SetSelectionAction = {
@@ -1105,9 +1111,6 @@ export class EventNormalizer {
         inputType: string,
         isMultiKey: boolean,
     ): DeleteWordAction | DeleteHardLineAction | DeleteContentAction {
-        // ? why do we set the direction instead of just letting the event continue and being
-        // the same name as the input events API?
-
         const direction = key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
         // Get characterMapping to retrieve which word has been deleted.
         const characterMapping = this._mutationNormalizer.getCharactersMapping();
@@ -1138,7 +1141,6 @@ export class EventNormalizer {
             inputType === 'deleteSoftLineForward' ||
             inputType === 'deleteSoftLineBackward'
         ) {
-            // todo: come to see me later
             const deleteHardLineAction: DeleteHardLineAction = {
                 type: 'deleteHardLine',
                 direction: direction,
@@ -1153,7 +1155,6 @@ export class EventNormalizer {
                         characterMapping.previous.offsets[
                             characterMapping.index + characterMapping.remove.length - 1
                         ] + 1,
-                    // todo: why DeleteHardLineAction has a direction as well as DeleteHardLineAction.domRange
                     direction: direction,
                 },
             };
@@ -1164,17 +1165,6 @@ export class EventNormalizer {
             direction: direction,
         };
         return deleteContentAction;
-    }
-    /**
-     * @private
-     * @param {KeyboardEvent} ev
-     * @returns CompiledEvent
-     */
-    _getSelectAll(): SelectAllAction {
-        const selectAllAction: SelectAllAction = {
-            type: 'selectAll',
-        };
-        return selectAllAction;
     }
     /**
      * Return true if the given node can be considered a textual node, that is
@@ -1199,7 +1189,7 @@ export class EventNormalizer {
         let selectionDescription: DomSelectionDescription;
         const selection = this.editable.ownerDocument.getSelection();
 
-        let leftToRight: boolean;
+        let forward: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection in the DOM. Create a fake one.
             selectionDescription = {
@@ -1213,16 +1203,16 @@ export class EventNormalizer {
             // The selection direction is sorely missing from the DOM api.
             const nativeRange = selection.getRangeAt(0);
             if (selection.anchorNode === selection.focusNode) {
-                leftToRight = selection.anchorOffset <= selection.focusOffset;
+                forward = selection.anchorOffset <= selection.focusOffset;
             } else {
-                leftToRight = selection.anchorNode === nativeRange.startContainer;
+                forward = selection.anchorNode === nativeRange.startContainer;
             }
             selectionDescription = {
                 anchorNode: selection.anchorNode,
                 anchorOffset: selection.anchorOffset,
                 focusNode: selection.focusNode,
                 focusOffset: selection.focusOffset,
-                direction: leftToRight ? Direction.FORWARD : Direction.BACKWARD,
+                direction: forward ? Direction.FORWARD : Direction.BACKWARD,
             };
         }
 
