@@ -447,7 +447,6 @@ export class EventNormalizer {
      * given listener function. See _unbindEvents to unbind all events bound by
      * calling this function.
      *
-     * @private
      * @param target element on which to listen for events
      * @param type of the event to listen
      * @param listener to call when the even occurs on the target
@@ -464,7 +463,6 @@ export class EventNormalizer {
     /**
      * Unbind all events bound by calls to _bindEvent.
      *
-     * @private
      */
     _unbindEvents(): void {
         this._eventListeners.forEach(({ target, type, listener }) => {
@@ -480,7 +478,6 @@ export class EventNormalizer {
      * delete, backspace, spell checking, special characters, etc.
      *
      * @see _processEvents
-     * @private
      */
     _registerEvent(ev: EventToProcess): void {
         if (this._events === null) {
@@ -529,7 +526,6 @@ export class EventNormalizer {
      * It could take up to two tick in the browser to gather all the sufficient
      * information. (e.g. Safari)
      *
-     * @private
      */
 
     /**
@@ -932,7 +928,6 @@ export class EventNormalizer {
      * and we might have "a b" change from a composition to "a c". We receive
      * the word change "b" to "c" instead of "a b" to "a c".
      *
-     * @private
      */
     _getCompositionFromString(compositionData: string): CompositionData {
         const charMap = this._mutationNormalizer.getCharactersMapping();
@@ -1104,7 +1099,6 @@ export class EventNormalizer {
      *
      * In the case of cut event, the direction will be `Direction.FORWARD`.
      *
-     * @private
      */
     _getRemoveAction(
         key: string,
@@ -1170,7 +1164,6 @@ export class EventNormalizer {
      * Return true if the given node can be considered a textual node, that is
      * a text node or a BR node.
      *
-     * @private
      * @param node
      */
     _isTextualNode(node: Node): boolean {
@@ -1226,7 +1219,7 @@ export class EventNormalizer {
                 !target.contains(selectionDescription.anchorNode) &&
                 !target.contains(selectionDescription.focusNode)
             ) {
-                const caretPosition = this._locateEvent(ev);
+                const caretPosition = this._getEventCaretPosition(ev);
                 selectionDescription = {
                     anchorNode: caretPosition.offsetNode,
                     anchorOffset: caretPosition.offset,
@@ -1353,7 +1346,7 @@ export class EventNormalizer {
         }
         return this._isVisible(el.parentNode);
     }
-    _locateEvent(ev: MouseEvent | TouchEvent): CaretPosition {
+    _getEventCaretPosition(ev: MouseEvent | TouchEvent): CaretPosition {
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);
@@ -1370,7 +1363,6 @@ export class EventNormalizer {
     /**
      * Catch setSelection and selectAll actions
      *
-     * @private
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
@@ -1379,7 +1371,7 @@ export class EventNormalizer {
             if (!this._selectionHasChanged || this._currentlySelectingAll) {
                 return;
             }
-            this._initialCaretPosition = this._locateEvent(ev);
+            this._initialCaretPosition = this._getEventCaretPosition(ev);
             const setSelectionAction: SetSelectionAction = {
                 type: 'setSelection',
                 domSelection: this._getSelection(ev),
@@ -1398,7 +1390,6 @@ export class EventNormalizer {
     /**
      * Catch Enter, Backspace, Delete and insert actions
      *
-     * @private
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
@@ -1413,7 +1404,6 @@ export class EventNormalizer {
      * on when the user stops dragging its selection and the selection has
      * changed.
      *
-     * @private
      * @param {MouseEvent} ev
      */
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
@@ -1422,7 +1412,7 @@ export class EventNormalizer {
             this._initialCaretPosition = undefined;
         } else {
             this._clickedInEditable = true;
-            this._initialCaretPosition = this._locateEvent(ev);
+            this._initialCaretPosition = this._getEventCaretPosition(ev);
             this._selectionHasChanged = false;
 
             this._followsPointerAction = true;
@@ -1444,9 +1434,8 @@ export class EventNormalizer {
         // When the users clicks in the DOM, the range is set in the next tick.
         // The observation of the resulting range must thus be delayed to the
         // next tick as well. Store the data we have now before it gets invalid.
-        this._initialCaretPosition = this._locateEvent(ev);
+        this._initialCaretPosition = this._getEventCaretPosition(ev);
 
-        // clearTimeout(this._clickTimeout);
         this._clickTimeout = window.setTimeout(() => this._analyzeSelectionChange(ev), 0);
     }
     /**
@@ -1480,41 +1469,30 @@ export class EventNormalizer {
      * store additional information that are specific to this point in time,
      * such as the current range and the initial caret position.
      *
-     * ? why do we need to store thoses additional informations?
+     * In some browser we need to infer the drop from other events.
      *
-     * In some browser the drop (maybe) exists. In other browser, we need to
-     * fetch it from others eventsf
+     * Example of droppable object are file, text, url.
      *
-     * drop:
-     * - file
-     * - text drag/drop
-     *   - from another software
-     *   - fromm our vDocument
-     * when we paste or drop, the position is hard to get.
-     * depending of the browser, the position where is inserted is different.
-     * So we need to get the position before it's inserted.
-     *
-     * some browser add style on the image, the span inconsistently on the drop
-     * or paste
+     * Drop event can originate from another software, outside the editor zone
+     * or inside the editor zone.
      *
      * @param ev
      */
     _onDrop(ev: DragEvent): void {
-        // Prevent default behavior (e.g. prevent file from being opened.)
+        // Prevent default behavior (e.g. prevent file from being opened in the
+        // current tab).
         ev.preventDefault();
 
         const transfer = ev.dataTransfer;
 
-        // Extract files using the DataTransferItemList interface.
         const files = [];
-        for (let i = 0; i < transfer.items.length; i++) {
-            const item = transfer.items[i];
+        for (const item of transfer.items) {
             if (item.kind === 'file') {
                 files.push(item.getAsFile());
             }
         }
 
-        const caretPosition = this._locateEvent(ev);
+        const caretPosition = this._getEventCaretPosition(ev);
         const dropEvent: DataTransferDetails = {
             type: 'drop',
             'text/plain': transfer.getData('text/plain'),
@@ -1522,8 +1500,6 @@ export class EventNormalizer {
             'text/uri-list': transfer.getData('text/uri-list'),
             files: files,
             originalEvent: ev,
-            // TODO: This looks wrong. Shouldn't it give me the range from
-            // where I dragged the stuff if draggingFromEditable is true ?
             selection: {
                 anchorNode: caretPosition.offsetNode,
                 anchorOffset: caretPosition.offset,
@@ -1583,15 +1559,10 @@ export class EventNormalizer {
      * On each change of selection, check if it might be a "selectAll" action.
      *
      * A "selectAll" action can be triggered by:
-     * - The shortcut 'ctrl+a'
+     * - The shortcut 'CTRL+A'
+     * - A user mapping of the OS or browser
      * - From the context menu
-     * - A user mapping in the browser?
-     * - programmatically?
-     * - from somehing else?
-     *
-     * Why the event "selectAll" matter
-     *
-     * @private
+     * - Programmatically
      */
     _onSelectionChange(): void {
         if (!this._initialCaretPosition) {
