@@ -1039,8 +1039,8 @@ export class EventNormalizer {
         let rawRemove = remove;
         let rawInsert = insert;
         if (insertedEndSpace && removedEndSpace) {
-                rawRemove = rawRemove.slice(0, -1);
-            }
+            rawRemove = rawRemove.slice(0, -1);
+        }
         if (insertedEndSpace) {
             rawInsert = rawInsert.slice(0, -1);
         }
@@ -1245,11 +1245,21 @@ export class EventNormalizer {
      * @param selection
      */
     _isSelectAll(selection: DomSelectionDescription): boolean {
-        let startContainer = selection.anchorNode;
-        let startOffset = selection.anchorOffset;
-        let endContainer = selection.focusNode;
-        let endOffset = selection.focusOffset;
-
+        let startContainer: Node;
+        let startOffset: number;
+        let endContainer: Node;
+        let endOffset: number;
+        if (Direction.FORWARD) {
+            startContainer = selection.anchorNode;
+            startOffset = selection.anchorOffset;
+            endContainer = selection.focusNode;
+            endOffset = selection.focusOffset;
+        } else {
+            startContainer = selection.focusNode;
+            startOffset = selection.focusOffset;
+            endContainer = selection.anchorNode;
+            endOffset = selection.anchorOffset;
+        }
         const body = this.editable.ownerDocument.body;
         // The selection might still be on a node which has since been removed.
         const invalidStart = !startContainer || !body.contains(startContainer);
@@ -1267,16 +1277,8 @@ export class EventNormalizer {
             return false;
         }
 
-        // TODO: browser range are not necessarily set `startContainer` and `endContainer` to lowest
-        //       possible depth
-        if (startContainer.childNodes[startOffset]) {
-            startContainer = startContainer.childNodes[startOffset];
-            startOffset = 0;
-        }
-        if (endContainer.childNodes[endOffset]) {
-            endContainer = endContainer.childNodes[endOffset];
-            endOffset = 0;
-        }
+        [startContainer, startOffset] = targetDeepest(startContainer, startOffset);
+        [endContainer, endOffset] = targetDeepest(endContainer, endOffset);
 
         if (
             startOffset !== 0 ||
@@ -1304,29 +1306,29 @@ export class EventNormalizer {
     _isAtVisibleEdge(element: Node, side: 'start' | 'end'): boolean {
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
-        let node: Node = this.editable;
+        let currentNode: Node = this.editable;
         const child = side === 'start' ? 'firstChild' : 'lastChild';
         const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
         let crossVisible = false;
-        while (node) {
-            if (node === element) {
+        while (currentNode) {
+            if (currentNode === element) {
                 // The element was reached without finding another visible node.
                 return !crossVisible;
             }
-            if (this._isTextualNode(node) && this._isVisible(node)) {
+            if (this._isTextualNode(currentNode) && this._isVisible(currentNode)) {
                 // There is a textual node in editable beyond the given element.
                 crossVisible = true;
             }
             // Continue the depth-first search.
-            if (node[child]) {
-                node = node[child];
-            } else if (node[sibling]) {
-                node = node[sibling];
-            } else if (node.parentNode === this.editable) {
+            if (currentNode[child]) {
+                currentNode = currentNode[child];
+            } else if (currentNode[sibling]) {
+                currentNode = currentNode[sibling];
+            } else if (currentNode.parentNode === this.editable) {
                 // Depth-first search has checked all elements in editable.
                 return true;
             } else {
-                node = node.parentNode[sibling];
+                currentNode = currentNode.parentNode[sibling];
             }
         }
         return false;
