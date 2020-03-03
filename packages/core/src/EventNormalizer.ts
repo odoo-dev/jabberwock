@@ -971,7 +971,7 @@ export class EventNormalizer {
             let insertEnd = 0;
             // The text has been flattened in the characters mapping. When
             // the index of the node has been found, use the range offset
-            // to find the index of the proper character.
+            // to find the index of the character proper.
             insertEnd += selection.focusOffset;
             index = insertEnd - insert.length;
         } else {
