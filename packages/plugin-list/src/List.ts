@@ -10,6 +10,7 @@ import { withRange, VRange } from '../../core/src/VRange';
 import { IndentParams, OutdentParams } from '../../plugin-indent/src/Indent';
 import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/Core';
+import { DeleteBackwardParams } from '../../core/src/Core';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
@@ -49,6 +50,11 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             },
             handler: this.insertParagraphBreak,
         },
+    };
+    commandHooks = {
+        // TODO: replace this with `onSiblingsChange` when we introduce events.
+        deleteBackward: this.rejoin.bind(this),
+        deleteForward: this.rejoin.bind(this),
     };
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [ListDomParser, ListItemDomParser],
@@ -167,18 +173,23 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (!itemsToIndent.length) return;
 
         for (const item of itemsToIndent) {
-            const type = item.ancestor(ListNode).listType;
             const prev = item.previousSibling();
             const next = item.nextSibling();
-            // If possible, indent the item by putting it into a pre-existing
-            // list sibling of the same type.
-            if (ListNode.test(prev)) {
+            // Indent the item by putting it into a pre-existing list sibling.
+            if (prev && prev.is(ListNode)) {
                 prev.append(item);
+                // The two list siblings might be rejoinable now that the lower
+                // level item breaking them into two different lists is no more.
+                const listType = prev.listType;
+                if (ListNode[listType](next) && !itemsToIndent.includes(next)) {
+                    next.mergeWith(prev);
+                }
             } else if (ListNode.test(next) && !itemsToIndent.includes(next)) {
                 next.prepend(item);
             } else {
                 // If no other candidate exists then wrap it in a new ListNode.
-                item.wrap(new ListNode(type));
+                const listType = item.ancestor(ListNode).listType;
+                item.wrap(new ListNode(listType));
             }
         }
     }
@@ -231,6 +242,32 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             listNode.unwrap();
         } else {
             listNode.after(listItem);
+        }
+    }
+
+    /**
+     * Rejoin same type lists that are now direct siblings after the remove.
+     *
+     * @param params
+     */
+    rejoin(params: DeleteBackwardParams): void {
+        const range = params.context.range;
+        const listAncestors = range.start.ancestors(ListNode);
+        if (listAncestors.length) {
+            let list: VNode = listAncestors[listAncestors.length - 1];
+            let nextSibling = list && list.nextSibling();
+            while (
+                list &&
+                nextSibling &&
+                list.is(ListNode) &&
+                nextSibling.is(ListNode[list.listType])
+            ) {
+                const nextList = list.lastChild();
+                const nextListSibling = nextSibling.firstChild();
+                nextSibling.mergeWith(list);
+                list = nextList;
+                nextSibling = nextListSibling;
+            }
         }
     }
 }
