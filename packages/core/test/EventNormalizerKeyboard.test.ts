@@ -1,7 +1,8 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import { EventBatch, NormalizedAction, ModifierKeys } from '../src/EventNormalizer';
+import { EventBatch, NormalizedAction } from '../src/EventNormalizer';
 import { Direction } from '../src/VSelection';
+import { defaultModifierKeys } from './EventNormalizer.test';
 import {
     testCallbackAfter,
     TestContext,
@@ -12,13 +13,6 @@ import {
     testContentNormalizer,
     testCallbackBefore,
 } from './eventNormalizerUtils';
-
-const defaultModifierKeys: ModifierKeys = {
-    ctrlKey: false,
-    altKey: false,
-    metaKey: false,
-    shiftKey: false,
-};
 
 describe('utils', () => {
     describe('EventNormalizer', () => {

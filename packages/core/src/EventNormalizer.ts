@@ -590,19 +590,11 @@ export class EventNormalizer {
                 keydownEvent.key === 'Unidentified' &&
                 inferredKeydownEvent &&
                 inferredKeydownEvent.code);
-        const isAccentMac =
-            inputEvent &&
-            compositionEvent &&
-            compositionEvent.data &&
-            compositionEvent.data.length > 0;
         const inputType =
             (cutEvent && 'deleteByCut') ||
             (dropEvent && 'insertFromDrop') ||
             (pasteEvent && 'insertFromPaste') ||
-            (inputEvent && inputEvent.inputType) ||
-            // todo: Do we really need to set the inputType when making a
-            //       "special accent" in mac?
-            (isAccentMac && 'insertCompositionText');
+            (inputEvent && inputEvent.inputType);
 
         // In case of accent inserted from a Mac, check that the char before was
         // one of the special accent temporarily inserted in the DOM (e.g. '^',
@@ -642,7 +634,6 @@ export class EventNormalizer {
                     keydownMap.keydown.key,
                     keydownMap.input.inputType,
                     !!mutatedElements.size,
-                    true,
                 );
                 if (keyboardAction) {
                     normalizedActions.push(keyboardAction);
@@ -772,7 +763,6 @@ export class EventNormalizer {
         key: string,
         inputType: string,
         hasMutatedElements: boolean,
-        isMultiKey = false,
     ):
         | InsertLineBreakAction
         | InsertParagraphBreakAction
@@ -784,7 +774,7 @@ export class EventNormalizer {
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
             if (key === 'Backspace' || key === 'Delete') {
-                return this._getRemoveAction(key, inputType, isMultiKey);
+                return this._getRemoveAction(key, inputType);
             } else if (key === 'Enter') {
                 if (inputType === 'insertLineBreak') {
                     const insertLineBreakAction: InsertLineBreakAction = {
@@ -1103,15 +1093,10 @@ export class EventNormalizer {
     _getRemoveAction(
         key: string,
         inputType: string,
-        isMultiKey: boolean,
     ): DeleteWordAction | DeleteHardLineAction | DeleteContentAction {
         const direction = key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
         // Get characterMapping to retrieve which word has been deleted.
         const characterMapping = this._mutationNormalizer.getCharactersMapping();
-        // todo: check if we can remove this condition or get rid of `isMultiKey`
-        if (!isMultiKey && characterMapping.insert === characterMapping.remove) {
-            return;
-        }
 
         const isSwiftKeyDeleteWord =
             (inputType === 'deleteContentForward' || inputType === 'deleteContentBackward') &&
@@ -1238,21 +1223,15 @@ export class EventNormalizer {
      * @param selection
      */
     _isSelectAll(selection: DomSelectionDescription): boolean {
-        let startContainer: Node;
-        let startOffset: number;
-        let endContainer: Node;
-        let endOffset: number;
-        if (Direction.FORWARD) {
-            startContainer = selection.anchorNode;
-            startOffset = selection.anchorOffset;
-            endContainer = selection.focusNode;
-            endOffset = selection.focusOffset;
-        } else {
-            startContainer = selection.focusNode;
-            startOffset = selection.focusOffset;
-            endContainer = selection.anchorNode;
-            endOffset = selection.anchorOffset;
+        // The selection from the context menu or a shortcut never have
+        // direction forward.
+        if (selection.direction === Direction.BACKWARD) {
+            return false;
         }
+        let startContainer = selection.anchorNode;
+        let startOffset = selection.anchorOffset;
+        let endContainer = selection.focusNode;
+        let endOffset = selection.focusOffset;
         const body = this.editable.ownerDocument.body;
         // The selection might still be on a node which has since been removed.
         const invalidStart = !startContainer || !body.contains(startContainer);
@@ -1330,6 +1309,9 @@ export class EventNormalizer {
      * Determine if a node is considered visible.
      */
     _isVisible(el: Node): boolean {
+        if (el === document) {
+            return false;
+        }
         if (el === this.editable) {
             // The editable node was reached without encountering a hidden
             // container. The editable node is supposed to be visible.

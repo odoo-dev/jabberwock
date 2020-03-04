@@ -1,6 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import { EventBatch, NormalizedAction } from '../src/EventNormalizer';
+import { Direction } from '../src/VSelection';
+import { EventBatch, NormalizedAction, ModifierKeys } from '../src/EventNormalizer';
 import {
     testCallbackAfter,
     TestContext,
@@ -8,6 +9,13 @@ import {
     nextTick,
     testCallbackBefore,
 } from './eventNormalizerUtils';
+
+export const defaultModifierKeys: ModifierKeys = {
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    shiftKey: false,
+};
 
 describe('utils', () => {
     describe('EventNormalizer', () => {
@@ -23,6 +31,49 @@ describe('utils', () => {
             ctx.eventBatches.splice(0);
         });
 
+        describe('_inferKeydownEvent', () => {
+            it('should infer Enter from insertParagraph', () => {
+                expect(
+                    ctx.normalizer._inferKeydownEvent({
+                        inputType: 'insertParagraph',
+                    } as InputEvent),
+                ).to.deep.equal({ ...defaultModifierKeys, code: 'Enter' });
+            });
+            it('should infer Backspace from deleteContentBackward', () => {
+                expect(
+                    ctx.normalizer._inferKeydownEvent({
+                        inputType: 'deleteContentBackward',
+                    } as InputEvent),
+                ).to.deep.equal({ ...defaultModifierKeys, code: 'Backspace' });
+            });
+            it('should infer Delete from deleteContentForward', () => {
+                expect(
+                    ctx.normalizer._inferKeydownEvent({
+                        inputType: 'deleteContentForward',
+                    } as InputEvent),
+                ).to.deep.equal({ ...defaultModifierKeys, code: 'Delete' });
+            });
+            it('should not infer anything', () => {
+                expect(ctx.normalizer._inferKeydownEvent({ inputType: '' } as InputEvent)).to.be
+                    .undefined;
+            });
+        });
+
+        describe('_isAtVisibleEdge', () => {
+            let divOutside;
+            before(() => {
+                divOutside = document.createElement('div');
+                document.body.appendChild(divOutside);
+            });
+            after(() => {
+                document.body.removeChild(divOutside);
+            });
+
+            it('should not be at visible edge', () => {
+                const isAtVisibleEdge = ctx.normalizer._isAtVisibleEdge(divOutside, 'start');
+                expect(isAtVisibleEdge).to.be.false;
+            });
+        });
         describe('_isSelectAll', () => {
             it('should selectAll', async () => {
                 ctx.editable.innerHTML = '<div>ab</div><div>cd</div>';
@@ -48,7 +99,7 @@ describe('utils', () => {
                 expect(ctx.eventBatches).to.deep.equal(batchEvents);
             });
 
-            it('should not selectAll', async () => {
+            it('should not selectAll for all selection forward that does not select all', async () => {
                 ctx.editable.innerHTML = '<div>ab</div><div>cd</div>';
                 const abTextNode = ctx.editable.childNodes[0].childNodes[0];
                 const cdTextNode = ctx.editable.childNodes[1].childNodes[0];
@@ -67,6 +118,19 @@ describe('utils', () => {
 
                 const batchEvents: EventBatch[] = [];
                 expect(ctx.eventBatches).to.deep.equal(batchEvents);
+            });
+            it('should not selectAll for direction backward', async () => {
+                ctx.editable.innerHTML = '<div>ab</div><div>cd</div>';
+                const abTextNode = ctx.editable.childNodes[0].childNodes[0];
+                const cdTextNode = ctx.editable.childNodes[1].childNodes[0];
+                const isSelectAll = ctx.normalizer._isSelectAll({
+                    anchorNode: cdTextNode,
+                    anchorOffset: 2,
+                    focusNode: abTextNode,
+                    focusOffset: 0,
+                    direction: Direction.BACKWARD,
+                });
+                expect(isSelectAll).to.be.false;
             });
         });
     });
