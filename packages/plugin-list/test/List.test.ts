@@ -3,7 +3,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
 import { ListType, ListNode } from '../src/ListNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
-import { describePlugin, keydown } from '../../utils/src/testUtils';
+import { describePlugin, keydown, unformat } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { List } from '../src/List';
@@ -709,11 +709,31 @@ describePlugin(List, testEditor => {
                 });
                 it('should turn a p, an ul list with ao. one nested ul, and another p into one ol with a nested ol', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore:
-                            '<p>a[b</p><ul><li>cd<ul><li>ef</li></ul></li><li>gh</li></ul><p>i]j</p>',
+                        contentBefore: unformat(`
+                            <p>a[b</p>
+                            <ul>
+                                <li>cd</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>ef</li>
+                                    </ul>
+                                </li>
+                                <li>gh</li>
+                            </ul>
+                            <p>i]j</p>`),
                         stepFunction: toggleOrderedList,
-                        contentAfter:
-                            '<ol><li>a[b</li><li>cd<ol><li>ef</li></ol></li><li>gh</li><li>i]j</li></ol>',
+                        contentAfter: unformat(`
+                            <ol>
+                                <li>a[b</li>
+                                <li>cd</li>
+                                <li style="list-style: none;">
+                                    <ol>
+                                        <li>ef</li>
+                                    </ol>
+                                </li>
+                                <li>gh</li>
+                                <li>i]j</li>
+                            </ol>`),
                     });
                 });
                 it('should turn an unordered list item and a paragraph into two list items within an ordered list', async () => {
@@ -749,86 +769,86 @@ describePlugin(List, testEditor => {
                 });
                 it('should turn an unordered list within an unordered list into an ordered list within an unordered list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: [
-                            /* eslint-disable prettier/prettier */
-                            '<ul>',
-                                '<li>ab',
-                                    '<ul>',
-                                        '<li>c[d</li>',
-                                        '<li>e]f</li>',
-                                    '</ul>',
-                                '</li>',
-                                '<li>gh</li>',
-                            '</ul>',
-                        ].join(''),
+                        contentBefore: unformat(`
+                            <ul>
+                                <li>ab</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>c[d</li>
+                                        <li>e]f</li>
+                                    </ul>
+                                </li>
+                                <li>gh</li>
+                            </ul>`),
                         stepFunction: toggleOrderedList,
-                        contentAfter: [
-                            '<ul>',
-                                '<li>ab',
-                                    '<ol>',
-                                        '<li>c[d</li>',
-                                        '<li>e]f</li>',
-                                    '</ol>',
-                                '</li>',
-                                '<li>gh</li>',
-                            '</ul>',
-                        ].join(''),
-                            /* eslint-enable prettier/prettier */
+                        contentAfter: unformat(`
+                            <ul>
+                                <li>ab</li>
+                                <li style="list-style: none;">
+                                    <ol>
+                                        <li>c[d</li>
+                                        <li>e]f</li>
+                                    </ol>
+                                </li>
+                                <li>gh</li>
+                            </ul>`),
                     });
                 });
                 it('should turn an unordered list with mixed nested elements into an ordered list with only unordered elements', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: [
-                            /* eslint-disable prettier/prettier */
-                            '<ul>',
-                                '<li>a[b</li>',
-                                '<li>cd',
-                                    '<ul>',
-                                        '<li>ef</li>',
-                                        '<li>gh',
-                                            '<ol>',
-                                                '<li>ij</li>',
-                                                '<li>kl',
-                                                    '<ul>',
-                                                        '<li>mn</li>',
-                                                    '</ul>',
-                                                '</li>',
-                                                '<li>op</li>',
-                                            '</ol>',
-                                        '</li>',
-                                    '</ul>',
-                                '</li>',
-                                '<li>q]r</li>',
-                                '<li>st</li>',
-                            '</ul>',
-                        ].join(''),
+                        contentBefore: unformat(`
+                            <ul>
+                                <li>a[b</li>
+                                <li>cd</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>ef</li>
+                                        <li>gh</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>ij</li>
+                                                <li>kl</li>
+                                                <li style="list-style: none;">
+                                                    <ul>
+                                                        <li>mn</li>
+                                                    </ul>
+                                                </li>
+                                                <li>op</li>
+                                            </ol>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>q]r</li>
+                                <li>st</li>
+                            </ul>`),
                         stepFunction: toggleOrderedList,
-                        contentAfter: [
-                            '<ol>',
-                                '<li>a[b</li>',
-                                '<li>cd',
-                                    '<ol>',
-                                        '<li>ef</li>',
-                                        '<li>gh',
-                                            '<ol>',
-                                                '<li>ij</li>',
-                                                '<li>kl',
-                                                    '<ol>',
-                                                        '<li>mn</li>',
-                                                    '</ol>',
-                                                '</li>',
-                                                '<li>op</li>',
-                                            '</ol>',
-                                        '</li>',
-                                    '</ol>',
-                                '</li>',
-                                '<li>q]r</li>',
-                            '</ol>',
-                            '<ul>',
-                                '<li>st</li>',
-                            '</ul>',
-                        ].join(''),
-                            /* eslint-enable prettier/prettier */
+                        contentAfter: unformat(`
+                            <ol>
+                                <li>a[b</li>
+                                <li>cd</li>
+                                <li style="list-style: none;">
+                                    <ol>
+                                        <li>ef</li>
+                                        <li>gh</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>ij</li>
+                                                <li>kl</li>
+                                                <li style="list-style: none;">
+                                                    <ol>
+                                                        <li>mn</li>
+                                                    </ol>
+                                                </li>
+                                                <li>op</li>
+                                            </ol>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>q]r</li>
+                            </ol>
+                            <ul>
+                                <li>st</li>
+                            </ul>`),
                     });
                 });
             });
@@ -845,9 +865,11 @@ describePlugin(List, testEditor => {
                             contentAfter: '<ul><li>[]<br></li></ul>',
                         });
                         await testEditor(BasicEditor, {
-                            contentBefore: '<ul><li><ul><li>abc[]</li></ul></li></ul>',
+                            contentBefore:
+                                '<ul><li style="list-style: none;"><ul><li>abc[]</li></ul></li></ul>',
                             stepFunction: deleteForward,
-                            contentAfter: '<ul><li><ul><li>abc[]</li></ul></li></ul>',
+                            contentAfter:
+                                '<ul><li style="list-style: none;"><ul><li>abc[]</li></ul></li></ul>',
                         });
                     });
                     it('should delete the first character in a list item', async () => {
@@ -909,21 +931,25 @@ describePlugin(List, testEditor => {
                     it('should merge an indented list item into a non-indented list item', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ol><li>abc[]<ol><li>def</li><li>ghi</li></ol></li></ol>',
+                                '<ol><li>abc[]</li><li style="list-style: none;"><ol><li>def</li><li>ghi</li></ol></li></ol>',
                             stepFunction: deleteForward,
-                            contentAfter: '<ol><li>abc[]def<ol><li>ghi</li></ol></li></ol>',
+                            contentAfter:
+                                '<ol><li>abc[]def</li><li style="list-style: none;"><ol><li>ghi</li></ol></li></ol>',
                         });
                     });
                     it('should merge a non-indented list item into an indented list item', async () => {
                         await testEditor(BasicEditor, {
-                            contentBefore: '<ul><li><ul><li>abc[]</li></ul></li><li>def</li></ul>',
+                            contentBefore:
+                                '<ul><li style="list-style: none;"><ul><li>abc[]</li></ul></li><li>def</li></ul>',
                             stepFunction: deleteForward,
-                            contentAfter: '<ul><li><ul><li>abc[]def</li></ul></li></ul>',
+                            contentAfter:
+                                '<ul><li style="list-style: none;"><ul><li>abc[]def</li></ul></li></ul>',
                         });
                     });
                     it('should merge the only item in an indented list into a non-indented list item and remove the now empty indented list', async () => {
                         await testEditor(BasicEditor, {
-                            contentBefore: '<ul><li>abc[]</li><li><ul><li>def</li></ul></li></ul>',
+                            contentBefore:
+                                '<ul><li>abc[]</li><li style="list-style: none;"><ul><li>def</li></ul></li></ul>',
                             stepFunction: deleteForward,
                             contentAfter: '<ul><li>abc[]def</li></ul>',
                         });
@@ -1052,14 +1078,14 @@ describePlugin(List, testEditor => {
                         // Forward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ol><li>ab[cd</li><li><ol><li>ef]gh</li></ol></li></ol>',
+                                '<ol><li>ab[cd</li><li style="list-style: none;"><ol><li>ef]gh</li></ol></li></ol>',
                             stepFunction: deleteForward,
                             contentAfter: '<ol><li>ab[]gh</li></ol>',
                         });
                         // Backward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ol><li>ab]cd</li><li><ol><li>ef[gh</li></ol></li></ol>',
+                                '<ol><li>ab]cd</li><li style="list-style: none;"><ol><li>ef[gh</li></ol></li></ol>',
                             stepFunction: deleteForward,
                             contentAfter: '<ol><li>ab[]gh</li></ol>',
                         });
@@ -1142,14 +1168,14 @@ describePlugin(List, testEditor => {
                         // Forward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ul><li>ab[cd</li><li><ul><li>ef]gh</li></ul></li></ul>',
+                                '<ul><li>ab[cd</li><li style="list-style: none;"><ul><li>ef]gh</li></ul></li></ul>',
                             stepFunction: deleteForward,
                             contentAfter: '<ul><li>ab[]gh</li></ul>',
                         });
                         // Backward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ul><li>ab]cd</li><li><ul><li>ef[gh</li></ul></li></ul>',
+                                '<ul><li>ab]cd</li><li style="list-style: none;"><ul><li>ef[gh</li></ul></li></ul>',
                             stepFunction: deleteForward,
                             contentAfter: '<ul><li>ab[]gh</li></ul>',
                         });
@@ -1205,14 +1231,14 @@ describePlugin(List, testEditor => {
                             // Forward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>ab[cd</li><li><ul><li>ef]gh</li></ul></li></ol>',
+                                    '<ol><li>ab[cd</li><li style="list-style: none;"><ul><li>ef]gh</li></ul></li></ol>',
                                 stepFunction: deleteForward,
                                 contentAfter: '<ol><li>ab[]gh</li></ol>',
                             });
                             // Backward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>ab]cd</li><li><ul><li>ef[gh</li></ul></li></ol>',
+                                    '<ol><li>ab]cd</li><li style="list-style: none;"><ul><li>ef[gh</li></ul></li></ol>',
                                 stepFunction: deleteForward,
                                 contentAfter: '<ol><li>ab[]gh</li></ol>',
                             });
@@ -1253,14 +1279,14 @@ describePlugin(List, testEditor => {
                             // Forward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>ab[cd</li><li><ol><li>ef]gh</li></ol></li></ul>',
+                                    '<ul><li>ab[cd</li><li style="list-style: none;"><ol><li>ef]gh</li></ol></li></ul>',
                                 stepFunction: deleteForward,
                                 contentAfter: '<ul><li>ab[]gh</li></ul>',
                             });
                             // Backward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>ab]cd</li><li><ol><li>ef[gh</li></ol></li></ul>',
+                                    '<ul><li>ab]cd</li><li style="list-style: none;"><ol><li>ef[gh</li></ol></li></ul>',
                                 stepFunction: deleteForward,
                                 contentAfter: '<ul><li>ab[]gh</li></ul>',
                             });
@@ -1298,9 +1324,11 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ol><li>[]<br></li></ol>',
                             });
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><ol><li>[]abc</li></ol></li></ol>',
+                                contentBefore:
+                                    '<ol><li style="list-style: none;"><ol><li>[]abc</li></ol></li></ol>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ol><li><ol><li>[]abc</li></ol></li></ol>',
+                                contentAfter:
+                                    '<ol><li style="list-style: none;"><ol><li>[]abc</li></ol></li></ol>',
                             });
                         });
                         it('should delete the first character in a list item', async () => {
@@ -1362,37 +1390,40 @@ describePlugin(List, testEditor => {
                         it('should merge an indented list item into a non-indented list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc<ol><li>[]def</li><li>ghi</li></ol></li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>[]def</li><li>ghi</li></ol></li></ol>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ol><li>abc[]def<ol><li>ghi</li></ol></li></ol>',
+                                contentAfter:
+                                    '<ol><li>abc[]def</li><li style="list-style: none;"><ol><li>ghi</li></ol></li></ol>',
                             });
                         });
                         it('should merge a non-indented list item into an indented list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li><ol><li>abc</li></ol></li><li>[]def</li></ol>',
+                                    '<ol><li style="list-style: none;"><ol><li>abc</li></ol></li><li>[]def</li></ol>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ol><li><ol><li>abc[]def</li></ol></li></ol>',
+                                contentAfter:
+                                    '<ol><li style="list-style: none;"><ol><li>abc[]def</li></ol></li></ol>',
                             });
                         });
                         it('should merge the only item in an indented list into a non-indented list item and remove the now empty indented list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ol><li>[]def</li></ol></li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>[]def</li></ol></li></ol>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ol><li>abc[]def</li></ol>',
                             });
                         });
                         it('should outdent a list item', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><ol><li>[]abc</li></ol></li></ol>',
+                                contentBefore:
+                                    '<ol><li style="list-style: none;"><ol><li>[]abc</li></ol></li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<ol><li>[]abc</li></ol>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<p>abc</p><ol><li><ol><li>[]def</li></ol></li></ol>',
+                                    '<p>abc</p><ol><li style="list-style: none;"><ol><li>[]def</li></ol></li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ol><li>[]def</li></ol>',
                             });
@@ -1416,23 +1447,24 @@ describePlugin(List, testEditor => {
                         it('should outdent an empty list item within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ol>',
                                 stepFunction: backspace,
                                 contentAfter:
-                                    '<ol><li>abc</li><li>[]<br><ol><li><br></li></ol></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li>[]<br></li><li style="list-style: none;"><ol><li><br></li></ol></li><li>def</li></ol>',
                             });
                         });
                         it('should outdent an empty list within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ol><li>[]<br></li></ol></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>[]<br></li></ol></li><li>def</li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<ol><li>abc</li><li>[]<br></li><li>def</li></ol>',
                             });
                         });
                         it('should outdent an empty list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><ol><li><br>[]</li></ol></li></ol>',
+                                contentBefore:
+                                    '<ol><li style="list-style: none;"><ol><li><br>[]</li></ol></li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<ol><li>[]<br></li></ol>',
                             });
@@ -1535,9 +1567,11 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ul><li>[]<br></li></ul>',
                             });
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><ul><li>[]abc</li></ul></li></ul>',
+                                contentBefore:
+                                    '<ul><li style="list-style: none;"><ul><li>[]abc</li></ul></li></ul>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ul><li><ul><li>[]abc</li></ul></li></ul>',
+                                contentAfter:
+                                    '<ul><li style="list-style: none;"><ul><li>[]abc</li></ul></li></ul>',
                             });
                         });
                         it('should delete the first character in a list item', async () => {
@@ -1598,38 +1632,56 @@ describePlugin(List, testEditor => {
                     describe('Indented', () => {
                         it('should merge an indented list item into a non-indented list item', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore:
-                                    '<ul><li>abc<ul><li>[]def</li><li>ghi</li></ul></li></ul>',
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li>abc</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>[]def</li>
+                                                <li>ghi</li>
+                                            </ul>
+                                        </li>
+                                    </ul>`),
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ul><li>abc[]def<ul><li>ghi</li></ul></li></ul>',
+                                contentAfter: unformat(`
+                                    <ul>
+                                        <li>abc[]def</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>ghi</li>
+                                            </ul>
+                                        </li>
+                                    </ul>`),
                             });
                         });
                         it('should merge a non-indented list item into an indented list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li><ul><li>abc</li></ul></li><li>[]def</li></ul>',
+                                    '<ul><li style="list-style: none;"><ul><li>abc</li></ul></li><li>[]def</li></ul>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ul><li><ul><li>abc[]def</li></ul></li></ul>',
+                                contentAfter:
+                                    '<ul><li style="list-style: none;"><ul><li>abc[]def</li></ul></li></ul>',
                             });
                         });
                         it('should merge the only item in an indented list into a non-indented list item and remove the now empty indented list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ul><li>[]def</li></ul></li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ul><li>[]def</li></ul></li></ul>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ul><li>abc[]def</li></ul>',
                             });
                         });
                         it('should outdent a list item', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><ul><li>[]abc</li></ul></li></ul>',
+                                contentBefore:
+                                    '<ul><li style="list-style: none;"><ul><li>[]abc</li></ul></li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<ul><li>[]abc</li></ul>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<p>abc</p><ul><li><ul><li>[]def</li></ul></li></ul>',
+                                    '<p>abc</p><ul><li style="list-style: none;"><ul><li>[]def</li></ul></li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ul><li>[]def</li></ul>',
                             });
@@ -1637,23 +1689,24 @@ describePlugin(List, testEditor => {
                         it('should outdent an empty list item within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ul>',
                                 stepFunction: backspace,
                                 contentAfter:
-                                    '<ul><li>abc</li><li>[]<br><ul><li><br></li></ul></li><li>def</li></ul>',
+                                    '<ul><li>abc</li><li>[]<br></li><li style="list-style: none;"><ul><li><br></li></ul></li><li>def</li></ul>',
                             });
                         });
                         it('should outdent an empty list within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ul><li>[]<br></li></ul></li><li>def</li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ul><li>[]<br></li></ul></li><li>def</li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<ul><li>abc</li><li>[]<br></li><li>def</li></ul>',
                             });
                         });
                         it('should outdent an empty list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><ul><li><br>[]</li></ul></li></ul>',
+                                contentBefore:
+                                    '<ul><li style="list-style: none;"><ul><li><br>[]</li></ul></li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<ul><li>[]<br></li></ul>',
                             });
@@ -1778,37 +1831,40 @@ describePlugin(List, testEditor => {
                         it('should merge an ordered list item that is in an unordered list item into a non-indented list item', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc<ol><li>[]def</li><li>ghi</li></ol></li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ol><li>[]def</li><li>ghi</li></ol></li></ul>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ul><li>abc[]def<ol><li>ghi</li></ol></li></ul>',
+                                contentAfter:
+                                    '<ul><li>abc[]def</li><li style="list-style: none;"><ol><li>ghi</li></ol></li></ul>',
                             });
                         });
                         it('should merge an ordered list item into an unordered list item that is in the same ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li><ul><li>abc</li></ul></li><li>[]def</li></ol>',
+                                    '<ol><li style="list-style: none;"><ul><li>abc</li></ul></li><li>[]def</li></ol>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ol><li><ul><li>abc[]def</li></ul></li></ol>',
+                                contentAfter:
+                                    '<ol><li style="list-style: none;"><ul><li>abc[]def</li></ul></li></ol>',
                             });
                         });
                         it('should merge the only item in an ordered list that is in an unordered list into a list item that is in the same unordered list, and remove the now empty ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ol><li>[]def</li></ol></li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ol><li>[]def</li></ol></li></ul>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ul><li>abc[]def</li></ul>',
                             });
                         });
                         it('should outdent an ordered list item that is within a unordered list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><ol><li>[]abc</li></ol></li></ul>',
+                                contentBefore:
+                                    '<ul><li style="list-style: none;"><ol><li>[]abc</li></ol></li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<ul><li>[]abc</li></ul>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<p>abc</p><ul><li><ol><li>[]def</li></ol></li></ul>',
+                                    '<p>abc</p><ul><li style="list-style: none;"><ol><li>[]def</li></ol></li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ul><li>[]def</li></ul>',
                             });
@@ -1816,23 +1872,24 @@ describePlugin(List, testEditor => {
                         it('should outdent an empty ordered list item within an unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ul>',
                                 stepFunction: backspace,
                                 contentAfter:
-                                    '<ul><li>abc</li><li>[]<br><ol><li><br></li></ol></li><li>def</li></ul>',
+                                    '<ul><li>abc</li><li>[]<br></li><li style="list-style: none;"><ol><li><br></li></ol></li><li>def</li></ul>',
                             });
                         });
                         it('should outdent an empty ordered list within an unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ol><li>[]<br></li></ol></li><li>def</li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ol><li>[]<br></li></ol></li><li>def</li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<ul><li>abc</li><li>[]<br></li><li>def</li></ul>',
                             });
                         });
                         it('should outdent an empty ordered list within an unordered list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><ol><li><br>[]</li></ol></li></ul>',
+                                contentBefore:
+                                    '<ul><li style="list-style: none;"><ol><li><br>[]</li></ol></li></ul>',
                                 stepFunction: backspace,
                                 contentAfter: '<ul><li>[]<br></li></ul>',
                             });
@@ -1867,38 +1924,56 @@ describePlugin(List, testEditor => {
                         });
                         it('should merge an unordered list item that is in an ordered list item into a non-indented list item', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore:
-                                    '<ol><li>abc<ul><li>[]def</li><li>ghi</li></ul></li></ol>',
+                                contentBefore: unformat(`
+                                    <ol>
+                                        <li>abc</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>[]def</li>
+                                                <li>ghi</li>
+                                            </ul>
+                                        </li>
+                                    </ol>`),
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ol><li>abc[]def<ul><li>ghi</li></ul></li></ol>',
+                                contentAfter: unformat(`
+                                    <ol>
+                                        <li>abc[]def</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>ghi</li>
+                                            </ul>
+                                        </li>
+                                    </ol>`),
                             });
                         });
                         it('should merge an unordered list item into an ordered list item that is in the same unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li><ol><li>abc</li></ol></li><li>[]def</li></ul>',
+                                    '<ul><li style="list-style: none;"><ol><li>abc</li></ol></li><li>[]def</li></ul>',
                                 stepFunction: deleteBackward,
-                                contentAfter: '<ul><li><ol><li>abc[]def</li></ol></li></ul>',
+                                contentAfter:
+                                    '<ul><li style="list-style: none;"><ol><li>abc[]def</li></ol></li></ul>',
                             });
                         });
                         it('should merge the only item in an unordered list that is in an ordered list into a list item that is in the same ordered list, and remove the now empty unordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ul><li>[]def</li></ul></li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ul><li>[]def</li></ul></li></ol>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ol><li>abc[]def</li></ol>',
                             });
                         });
                         it('should outdent an unordered list item that is within a ordered list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><ul><li>[]abc</li></ul></li></ol>',
+                                contentBefore:
+                                    '<ol><li style="list-style: none;"><ul><li>[]abc</li></ul></li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<ol><li>[]abc</li></ol>',
                             });
                             // With a paragraph before the list:
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<p>abc</p><ol><li><ul><li>[]def</li></ul></li></ol>',
+                                    '<p>abc</p><ol><li style="list-style: none;"><ul><li>[]def</li></ul></li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<p>abc</p><ol><li>[]def</li></ol>',
                             });
@@ -1906,23 +1981,24 @@ describePlugin(List, testEditor => {
                         it('should outdent an empty unordered list item within an ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ol>',
                                 stepFunction: backspace,
                                 contentAfter:
-                                    '<ol><li>abc</li><li>[]<br><ul><li><br></li></ul></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li>[]<br></li><li style="list-style: none;"><ul><li><br></li></ul></li><li>def</li></ol>',
                             });
                         });
                         it('should outdent an empty unordered list within an ordered list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ul><li>[]<br></li></ul></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ul><li>[]<br></li></ul></li><li>def</li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<ol><li>abc</li><li>[]<br></li><li>def</li></ol>',
                             });
                         });
                         it('should outdent an empty unordered list within an ordered list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><ul><li><br>[]</li></ul></li></ol>',
+                                contentBefore:
+                                    '<ol><li style="list-style: none;"><ul><li><br>[]</li></ul></li></ol>',
                                 stepFunction: backspace,
                                 contentAfter: '<ol><li>[]<br></li></ol>',
                             });
@@ -1980,14 +2056,14 @@ describePlugin(List, testEditor => {
                         // Forward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ol><li>ab[cd</li><li><ol><li>ef]gh</li></ol></li></ol>',
+                                '<ol><li>ab[cd</li><li style="list-style: none;"><ol><li>ef]gh</li></ol></li></ol>',
                             stepFunction: deleteBackward,
                             contentAfter: '<ol><li>ab[]gh</li></ol>',
                         });
                         // Backward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ol><li>ab]cd</li><li><ol><li>ef[gh</li></ol></li></ol>',
+                                '<ol><li>ab]cd</li><li style="list-style: none;"><ol><li>ef[gh</li></ol></li></ol>',
                             stepFunction: deleteBackward,
                             contentAfter: '<ol><li>ab[]gh</li></ol>',
                         });
@@ -2070,14 +2146,14 @@ describePlugin(List, testEditor => {
                         // Forward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ul><li>ab[cd</li><li><ul><li>ef]gh</li></ul></li></ul>',
+                                '<ul><li>ab[cd</li><li style="list-style: none;"><ul><li>ef]gh</li></ul></li></ul>',
                             stepFunction: deleteBackward,
                             contentAfter: '<ul><li>ab[]gh</li></ul>',
                         });
                         // Backward selection
                         await testEditor(BasicEditor, {
                             contentBefore:
-                                '<ul><li>ab]cd</li><li><ul><li>ef[gh</li></ul></li></ul>',
+                                '<ul><li>ab]cd</li><li style="list-style: none;"><ul><li>ef[gh</li></ul></li></ul>',
                             stepFunction: deleteBackward,
                             contentAfter: '<ul><li>ab[]gh</li></ul>',
                         });
@@ -2133,14 +2209,14 @@ describePlugin(List, testEditor => {
                             // Forward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>ab[cd</li><li><ul><li>ef]gh</li></ul></li></ol>',
+                                    '<ol><li>ab[cd</li><li style="list-style: none;"><ul><li>ef]gh</li></ul></li></ol>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ol><li>ab[]gh</li></ol>',
                             });
                             // Backward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>ab]cd</li><li><ul><li>ef[gh</li></ul></li></ol>',
+                                    '<ol><li>ab]cd</li><li style="list-style: none;"><ul><li>ef[gh</li></ul></li></ol>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ol><li>ab[]gh</li></ol>',
                             });
@@ -2181,14 +2257,14 @@ describePlugin(List, testEditor => {
                             // Forward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>ab[cd</li><li><ol><li>ef]gh</li></ol></li></ul>',
+                                    '<ul><li>ab[cd</li><li style="list-style: none;"><ol><li>ef]gh</li></ol></li></ul>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ul><li>ab[]gh</li></ul>',
                             });
                             // Backward selection
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>ab]cd</li><li><ol><li>ef[gh</li></ol></li></ul>',
+                                    '<ul><li>ab]cd</li><li style="list-style: none;"><ol><li>ef[gh</li></ol></li></ul>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ul><li>ab[]gh</li></ul>',
                             });
@@ -2255,13 +2331,13 @@ describePlugin(List, testEditor => {
                         it('should add an empty list item at the end of an indented list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ol><li>abc</li><li><ol><li>def[]</li></ol></li><li>ghi</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>def[]</li></ol></li><li>ghi</li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li>abc<ol><li>def</li></ol></li><li>[]<br></li><li>ghi</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>def</li></ol></li><li>[]<br></li><li>ghi</li></ol>',
                             });
                         });
                         it('should remove a list', async () => {
@@ -2330,15 +2406,35 @@ describePlugin(List, testEditor => {
                         });
                         it('should add two list items with a font at the end of a list within a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore:
-                                    '<ul><li>ab</li><ul><li><font style="color: red;">cd[]</font></li></ul><li>ef</li></ul>',
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li>ab</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>
+                                                    <font style="color: red;">cd[]</font>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>ef</li>
+                                    </ul>`),
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
-                                contentAfter:
-                                    '<ul><li>ab<ul><li><font style="color: red;">cd</font></li><li>b</li><li>[]<br></li></ul></li><li>ef</li></ul>',
+                                contentAfter: unformat(`
+                                    <ul>
+                                        <li>ab</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li><font style="color: red;">cd</font></li>
+                                                <li>b</li>
+                                                <li>[]<br></li>
+                                            </ul>
+                                        </li>
+                                        <li>ef</li>
+                                    </ul>`),
                             });
                         });
                     });
@@ -2381,13 +2477,13 @@ describePlugin(List, testEditor => {
                         it('should add an empty list item at the end of an indented list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul><li>abc</li><li><ul><li>def[]</li></ul></li><li>ghi</li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ul><li>def[]</li></ul></li><li>ghi</li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li>abc<ul><li>def</li></ul></li><li>[]<br></li><li>ghi</li></ul>',
+                                    '<ul><li>abc</li><li style="list-style: none;"><ul><li>def</li></ul></li><li>[]<br></li><li>ghi</li></ul>',
                             });
                         });
                         it('should remove a list', async () => {

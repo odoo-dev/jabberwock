@@ -1,4 +1,4 @@
-import { describePlugin } from '../../utils/src/testUtils';
+import { describePlugin, unformat } from '../../utils/src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
 import { Indent } from '../src/Indent';
 import { withRange, VRange } from '../../core/src/VRange';
@@ -13,43 +13,49 @@ describePlugin(Indent, testEditor => {
     describe('List', () => {
         describe('indent', () => {
             describe('with selection collapsed', () => {
-                it('should not indent the first element of a list', async () => {
+                it('should indent the first element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a[]</li>
                         <li>b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
-                        <li>a[]</li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li>a[]</li>
+                            </ul>
+                        </li>
                         <li>b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent the last element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>[]b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>[]b</li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
-                it('should not indent further than existing identation', async () => {
+                it('should indent multi-level', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>
                             a
@@ -57,51 +63,61 @@ describePlugin(Indent, testEditor => {
                                 <li>[]b</li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
-                                <li>[]b</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[]b</li>
+                                    </ul>
+                                </li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent the last element of a list with proper with unordered list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ol>
                         <li>a</li>
                         <li>[]b</li>
-                    </ol>`.replace(/[\s\n]+/g, ''),
+                    </ol>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ol>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ol>
                                 <li>[]b</li>
                             </ol>
                         </li>
-                    </ol>`.replace(/[\s\n]+/g, ''),
+                    </ol>`),
                     });
                 });
                 it('should indent the middle element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>[]b</li>
                         <li>c</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>[]b</li>
                             </ul>
@@ -109,112 +125,128 @@ describePlugin(Indent, testEditor => {
                         <li>
                             c
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
-                it('should not indent if the first element of a list is selected', async () => {
+                it('should indent even if the first element of a list is selected', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>[]a</li>
                         <li>b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
-                        <li>[]a</li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li>[]a</li>
+                            </ul>
+                        </li>
                         <li>b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
-                it('should indent the last element of a list with sublist', async () => {
+                it('should indent only one element of a list with sublist', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>
                             []b
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>c</li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
-                                <li>
-                                    []b
-                                    <ul>
-                                        <li>c</li>
-                                    </ul>
-                                </li>
+                                <li>[]b</li>
+                                <li>c</li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent with mixed lists', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>
                             []b
+                        </li>
+                        <li style="list-style: none;">
                             <ol>
                                 <li>c</li>
                             </ol>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>
                                     []b
-                                    <ol>
-                                        <li>c</li>
-                                    </ol>
                                 </li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                        <li style="list-style: none;">
+                            <ol>
+                                <li>c</li>
+                            </ol>
+                        </li>
+                    </ul>`),
                     });
                 });
             });
             describe('with selection', () => {
-                it('should not indent the first element of a list', async () => {
+                it('should indent the first element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>[a]</li>
                         <li>b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
-                        <li>[a]</li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li>[a]</li>
+                            </ul>
+                        </li>
                         <li>b</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent the middle element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>[b]</li>
                         <li>c</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>[b]</li>
                             </ul>
@@ -222,35 +254,80 @@ describePlugin(Indent, testEditor => {
                         <li>
                             c
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
-                it('should not indent further than existing identation', async () => {
+                it('should indent multi-level', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>[b]</li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
-                                <li>[b]</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[b]</li>
+                                    </ul>
+                                </li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
+                    });
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                    <ul>
+                        <li>
+                            a
+                        </li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[b]</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>`),
+                        stepFunction: indent,
+                        contentAfter: unformat(`
+                    <ul>
+                        <li>
+                            a
+                        </li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>[b]</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>`),
                     });
                 });
-                it('should not indent further than existing identation', async () => {
+                it('should indent multi-level', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>
                             a
@@ -262,37 +339,92 @@ describePlugin(Indent, testEditor => {
                                 </li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
-                                <li>[b
+                                <li style="list-style: none;">
                                     <ul>
-                                        <li>c]</li>
+                                        <li>[b</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>c]</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
+                    });
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                    <ul>
+                        <li>
+                            a
+                        </li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[b
+                                            <ul>
+                                                <li>c]</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>`),
+                        stepFunction: indent,
+                        contentAfter: unformat(`
+                    <ul>
+                        <li>
+                            a
+                        </li>
+                        <li style="list-style: none;">
+                            <ul>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>[b</li>
+                                                <li style="list-style: none;">
+                                                    <ul>
+                                                        <li>c]</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>`),
                     });
                 });
                 it('should indent multiples list item in the middle element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>[b</li>
                         <li>c]</li>
                         <li>d</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>[b</li>
                                 <li>c]</li>
@@ -301,12 +433,12 @@ describePlugin(Indent, testEditor => {
                         <li>
                             d
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent multiples list item in the middle element of a list with sublist', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>
@@ -317,15 +449,19 @@ describePlugin(Indent, testEditor => {
                         </li>
                         <li>d]</li>
                         <li>e</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>
                                     [b
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>c</li>
                                     </ul>
@@ -334,12 +470,12 @@ describePlugin(Indent, testEditor => {
                             </ul>
                         </li>
                         <li>e</li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent with mixed lists', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                     <ul>
                         <li>a</li>
                         <li>
@@ -348,31 +484,37 @@ describePlugin(Indent, testEditor => {
                                 <li>]c</li>
                             </ol>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                     <ul>
                         <li>
                             a
+                        </li>
+                        <li style="list-style: none;">
                             <ul>
                                 <li>
                                     [b
+                                </li>
+                                <li style="list-style: none;">
                                     <ol>
                                         <li>]c</li>
                                     </ol>
                                 </li>
                             </ul>
                         </li>
-                    </ul>`.replace(/[\s\n]+/g, ''),
+                    </ul>`),
                     });
                 });
                 it('should indent nested list and list with elements in a upper level than the rangestart', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>
                                     b
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>c</li>
                                         <li>[d</li>
@@ -380,6 +522,8 @@ describePlugin(Indent, testEditor => {
                                 </li>
                                 <li>
                                     e
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>f</li>
                                         <li>g</li>
@@ -387,22 +531,28 @@ describePlugin(Indent, testEditor => {
                                 </li>
                                 <li>h]</li>
                                 <li>i</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: indent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>
                                     b
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>
                                             c
+                                        </li>
+                                        <li style="list-style: none;">
                                             <ul>
                                                 <li>[d</li>
                                             </ul>
                                         </li>
                                         <li>
                                         e
+                                        </li>
+                                        <li style="list-style: none;">
                                         <ul>
                                             <li>f</li>
                                             <li>g</li>
@@ -412,7 +562,7 @@ describePlugin(Indent, testEditor => {
                                     </ul>
                                 </li>
                                 <li>i</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
             });
@@ -421,7 +571,7 @@ describePlugin(Indent, testEditor => {
             describe('with selection collapsed', () => {
                 it('should outdent the last element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
@@ -429,40 +579,44 @@ describePlugin(Indent, testEditor => {
                                         <li>[]b</li>
                                     </ul>
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>[]b</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
                 it('should outdent the last element of a list with proper with unordered list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ol>
                                 <li>
                                     a
+                                </li>
+                                <li style="list-style: none;">
                                     <ol>
                                         <li>[]b</li>
                                     </ol>
                                 </li>
-                            </ol>`.replace(/[\s\n]+/g, ''),
+                            </ol>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ol>
                                 <li>a</li>
                                 <li>[]b</li>
-                            </ol>`.replace(/[\s\n]+/g, ''),
+                            </ol>`),
                     });
                 });
                 it('should outdent the middle element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>[]b</li>
                                     </ul>
@@ -470,92 +624,88 @@ describePlugin(Indent, testEditor => {
                                 <li>
                                     c
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>[]b</li>
                                 <li>c</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
                 it('should outdent if the first element of a list is selected', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>[]a</li>
                                 <li>b</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <p>[]a</p>
                             <ul>
                                 <li>b</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
                 it('should outdent the last element of a list with sublist', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
-                                    <ul>
-                                        <li>
-                                            []b
-                                            <ul>
-                                                <li>c</li>
-                                            </ul>
-                                        </li>
-                                    </ul>
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
-                        stepFunction: outdent,
-                        contentAfter: `
-                            <ul>
-                                <li>a</li>
-                                <li>
-                                    []b
+                                <li style="list-style: none;">
                                     <ul>
-                                        <li>c</li>
-                                    </ul>
-                                </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
-                    });
-                    await testEditor(BasicEditor, {
-                        contentBefore: `
-                            <ul>
-                                <li>
-                                    a
-                                    <ul>
-                                        <li>
-                                            b
+                                        <li style="list-style: none;">
                                             <ul>
                                                 <li>[]c</li>
                                             </ul>
                                         </li>
                                     </ul>
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>
                                     a
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
-                                        <li>b</li>
                                         <li>[]c</li>
                                     </ul>
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
+                    });
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                            <ul>
+                                <li>
+                                    a
+                                </li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[]c</li>
+                                    </ul>
+                                </li>
+                            </ul>`),
+                        stepFunction: outdent,
+                        contentAfter: unformat(`
+                            <ul>
+                                <li>
+                                    a
+                                </li>
+                                <li>[]c</li>
+                            </ul>`),
                     });
                 });
             });
             describe('with selection', () => {
                 it('should outdent the middle element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
@@ -566,19 +716,19 @@ describePlugin(Indent, testEditor => {
                                 <li>
                                     c
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>[b]</li>
                                 <li>c</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
                 it('should inoutdentdent multiples list item in the middle element of a list', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
@@ -590,20 +740,20 @@ describePlugin(Indent, testEditor => {
                                 <li>
                                     d
                                 </li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>[b</li>
                                 <li>c]</li>
                                 <li>d</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
                 it('should outdent multiples list item in the middle element of a list with sublist', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
@@ -618,23 +768,25 @@ describePlugin(Indent, testEditor => {
                                     </ul>
                                 </li>
                                 <li>e</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>
                                     [b
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>c</li>
                                     </ul>
                                 </li>
                                 <li>d]</li>
                                 <li>e</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>
                                     a
@@ -649,12 +801,14 @@ describePlugin(Indent, testEditor => {
                                     </ul>
                                 </li>
                                 <li>e</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>
                                     a
+                                </li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>b</li>
                                         <li>[c</li>
@@ -662,12 +816,12 @@ describePlugin(Indent, testEditor => {
                                 </li>
                                 <li>d]</li>
                                 <li>e</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
                 it('should outdent nested list and list with elements in a upper level than the rangestart', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: `
+                        contentBefore: unformat(`
                             <ul>
                                 <li>a</li>
                                 <li>
@@ -690,18 +844,20 @@ describePlugin(Indent, testEditor => {
                                     </ul>
                                 </li>
                                 <li>i</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                         stepFunction: outdent,
-                        contentAfter: `
+                        contentAfter: unformat(`
                             <ul>
                                 <li>a</li>
-                                <li>b
+                                <li>b</li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>c</li>
                                         <li>[d</li>
                                     </ul>
                                 </li>
-                                <li>e
+                                <li>e</li>
+                                <li style="list-style: none;">
                                     <ul>
                                         <li>f</li>
                                         <li>g</li>
@@ -709,7 +865,7 @@ describePlugin(Indent, testEditor => {
                                 </li>
                                 <li>h]</li>
                                 <li>i</li>
-                            </ul>`.replace(/[\s\n]+/g, ''),
+                            </ul>`),
                     });
                 });
             });

@@ -29,22 +29,31 @@ neologisms such as " galumphing" and "chortle".
 <ul>
   <li>
     1
+  </li>
+  <li style="list-style: none;">
     <ul>
       <li>1.1</li>
       <li>
         1.2
+      </li>
+      <li style="list-style: none;">
         <ol>
             <li>1.2.1</li>
             <li>1.2.2</li>
-            <li>1.2.3
+            <li>1.2.3</li>
+            <li style="list-style: none;">
               <ul>
                 <li>
                   1.2.3.1
+                </li>
+                <li style="list-style: none;">
                   <ul><li>1.2.3.1.1</li></ul>
                 </li>
                 <li>1.2.3.2</li>
                 <li>
                   1.2.3.3
+                </li>
+                <li style="list-style: none;">
                   <ul><li>1.2.3.3.1</li></ul>
                 </li>
               </ul>
@@ -53,11 +62,15 @@ neologisms such as " galumphing" and "chortle".
       </li>
       <li>
         1.3
+      </li>
+      <li style="list-style: none;">
         <ul><li>1.3.1</li></ul>
       </li>
       <li>1.4</li>
       <li>
         1.5
+      </li>
+      <li style="list-style: none;">
         <ul><li>1.5.1</li></ul>
       </li>
     </ul>
