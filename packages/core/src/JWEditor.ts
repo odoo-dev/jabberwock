@@ -12,8 +12,9 @@ import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { StageError } from '../../utils/errors';
 
-enum Mode {
+export enum Stage {
     CONFIGURATION = 'configuration',
     EDITION = 'edition',
 }
@@ -38,7 +39,7 @@ export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
 }
 
 export class JWEditor {
-    private _mode: Mode = Mode.CONFIGURATION;
+    private _stage: Stage = Stage.CONFIGURATION;
     el: HTMLElement;
     _originalEditable: HTMLElement;
     editable: HTMLElement;
@@ -95,7 +96,7 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
-        this._mode = Mode.EDITION;
+        this._stage = Stage.EDITION;
         this._loadPlugins();
 
         // Load editor-level loadables.
@@ -173,8 +174,8 @@ export class JWEditor {
         config?: ConstructorParameters<P>[1],
     ): void {
         // Actual loading is deferred to `start`.
-        if (this._mode !== Mode.CONFIGURATION) {
-            throw new Error(`Load only allowed in ${Mode.CONFIGURATION} mode.`);
+        if (this._stage !== Stage.CONFIGURATION) {
+            throw new StageError(Stage.CONFIGURATION);
         } else if (isConstructor(PluginOrLoadables, JWPlugin)) {
             // Add the plugin to the configuration.
             const Plugin = PluginOrLoadables;
@@ -278,12 +279,10 @@ export class JWEditor {
         PluginOrEditorConfig: JWEditorConfig | T,
         pluginConfig?: ConstructorParameters<T>[1],
     ): void {
-        if (this._mode === Mode.EDITION) {
-            throw new Error(
-                "You can't change the configuration when the editor is already started",
-            );
-        }
-        if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
+        if (this._stage !== Stage.CONFIGURATION) {
+            throw new StageError(Stage.CONFIGURATION);
+        } else if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
+            // Configure the plugin.
             const Plugin = PluginOrEditorConfig;
             const conf = this.configuration.plugins.find(([P]) => P === Plugin);
             if (conf) {
@@ -294,6 +293,7 @@ export class JWEditor {
                 this.configuration.plugins.push([Plugin, pluginConfig]);
             }
         } else {
+            // Configure the editor.
             const preconf = this.configuration;
             const conf = PluginOrEditorConfig;
             this.configuration = { ...preconf, ...conf };
@@ -333,7 +333,7 @@ export class JWEditor {
         this._originalEditable.id = this.editable.id;
         this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
-        this._mode = Mode.CONFIGURATION;
+        this._stage = Stage.CONFIGURATION;
     }
 }
 

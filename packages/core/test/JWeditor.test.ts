@@ -1,7 +1,8 @@
 /* eslint-disable max-nested-callbacks */
-import JWEditor from '../src/JWEditor';
+import JWEditor, { Stage } from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
+import { StageError } from '../../utils/errors';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -12,7 +13,7 @@ describe('core', () => {
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {}
                 expect(() => {
                     editor.load(A);
-                }).to.throw();
+                }).to.throw(StageError, Stage.CONFIGURATION);
             });
             it('should load a plugin configuration', async () => {
                 const editor = new JWEditor();
@@ -55,7 +56,7 @@ describe('core', () => {
                 await editor.start();
                 expect(() => {
                     editor.configure({});
-                }).to.throw(/config.*already started/i);
+                }).to.throw(StageError, Stage.CONFIGURATION);
             });
             it('should update a plugin configuration', async () => {
                 const editor = new JWEditor();
