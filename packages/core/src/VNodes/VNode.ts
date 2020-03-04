@@ -731,7 +731,7 @@ export class VNode {
      *
      * @param child
      */
-    splitAt(child: VNode): VNode {
+    splitAt(child: VNode): this {
         if (child.parent !== this) {
             throw new Error('The given VNode is not a child of this VNode');
         }
