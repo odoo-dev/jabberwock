@@ -1,6 +1,7 @@
-import JWEditor from '../src/JWEditor';
+import JWEditor, { Mode } from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
+import { ModeError } from '../../utils/errors';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -11,7 +12,7 @@ describe('core', () => {
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {}
                 expect(() => {
                     editor.load(A);
-                }).to.throw();
+                }).to.throw(ModeError, Mode.CONFIGURATION);
             });
             it('should load a plugin configuration', async () => {
                 const editor = new JWEditor();
@@ -53,7 +54,7 @@ describe('core', () => {
                 await editor.start();
                 expect(() => {
                     editor.configure({});
-                }).to.throw(/config.*already started/i);
+                }).to.throw(ModeError, Mode.CONFIGURATION);
             });
             it('should update a plugin configuration', async () => {
                 const editor = new JWEditor();

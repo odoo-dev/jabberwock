@@ -12,8 +12,9 @@ import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { ModeError } from '../../utils/errors';
 
-enum Mode {
+export enum Mode {
     CONFIGURATION = 'configuration',
     EDITION = 'edition',
 }
@@ -133,7 +134,7 @@ export class JWEditor {
     ): void {
         // Actual loading is deferred to `start`.
         if (this._mode !== Mode.CONFIGURATION) {
-            throw new Error(`Load only allowed in ${Mode.CONFIGURATION} mode.`);
+            throw new ModeError(Mode.CONFIGURATION);
         } else if (isConstructor(PluginOrLoadables, JWPlugin)) {
             // Add the plugin to the configuration.
             const Plugin = PluginOrLoadables;
@@ -237,12 +238,10 @@ export class JWEditor {
         PluginOrEditorConfig: JWEditorConfig | T,
         pluginConfig?: ConstructorParameters<T>[1],
     ): void {
-        if (this._mode === Mode.EDITION) {
-            throw new Error(
-                "You can't change the configuration when the editor is already started",
-            );
-        }
-        if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
+        if (this._mode !== Mode.CONFIGURATION) {
+            throw new ModeError(Mode.CONFIGURATION);
+        } else if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
+            // Configure the plugin.
             const Plugin = PluginOrEditorConfig;
             const conf = this.configuration.plugins.find(([P]) => P === Plugin);
             if (conf) {
@@ -253,6 +252,7 @@ export class JWEditor {
                 this.configuration.plugins.push([Plugin, pluginConfig]);
             }
         } else {
+            // Configure the editor.
             const preconf = this.configuration;
             const conf = PluginOrEditorConfig;
             this.configuration = { ...preconf, ...conf };
