@@ -106,7 +106,9 @@ export interface KeymapConfig extends JWPluginConfig {
  * keymap.bindShortuct('CTRL+<KeyA>')
  * ```
  */
-export class Keymap<T extends KeymapConfig = KeymapConfig> extends JWPlugin<T> {
+// I find it akward that the Keymap logic is blended with the Keymap plugin
+// definition. It break the separation of concern.
+ export class Keymap<T extends KeymapConfig = KeymapConfig> extends JWPlugin<T> {
     readonly loaders = {
         shortcuts: this._loadShortcuts,
     };
@@ -248,6 +250,7 @@ export class Keymap<T extends KeymapConfig = KeymapConfig> extends JWPlugin<T> {
      * @param shortcuts The shortuct definitions.
      * @param source The source of the shortcuts.
      */
+    // if source is undefined, it means that it is automatically a JWEditorConfig?
     _loadShortcuts(shortcuts: Shortcut[], source?: JWPlugin | JWEditorConfig): void {
         for (const shortcut of shortcuts) {
             if (!shortcut.platform || shortcut.platform === this.config.platform) {

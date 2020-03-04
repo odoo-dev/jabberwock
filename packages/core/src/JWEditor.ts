@@ -31,6 +31,8 @@ export type Loadables<T extends JWPlugin = JWPlugin> = {
 export interface JWEditorConfig {
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
     createBaseContainer?: () => VNode;
+    // So I could add renderers in the config? Seems a bad practice. Two way to
+    // do the same thing.
     loadables?: Loadables;
 }
 
@@ -162,7 +164,7 @@ export class JWEditor {
     //--------------------------------------------------------------------------
 
     /**
-     * Load the given plugin with given configuration.
+     * Load the given loadables or plugins with given configuration.
      *
      * @param Plugin
      * @param config
