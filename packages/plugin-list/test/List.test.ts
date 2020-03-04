@@ -926,6 +926,134 @@ describePlugin(List, testEditor => {
                             contentAfter: '<ul><li><br></li><li>[]abc</li></ul>',
                         });
                     });
+                    it('should rejoin sibling lists', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<ul><li>a[]</li></ul><p>b</p><ul><li>c</li></ul>',
+                            stepFunction: deleteForward,
+                            contentAfter: '<ul><li>a[]b</li><li>c</li></ul>',
+                        });
+                    });
+                    it('should rejoin multi-level sibling lists', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                    <p>c</p>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                            stepFunction: deleteForward,
+                            contentAfter: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]c</li>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                        });
+                    });
+                    it('should only rejoin same-level lists', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                        <li>c[]</li>
+                                    </ol>
+                                    <p>d</p>
+                                    <ol>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>e</li>
+                                            </ol>
+                                        </li>
+                                        <li>f</li>
+                                    </ol>`),
+                            stepFunction: deleteForward,
+                            contentAfter: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                        <li>c[]d</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>e</li>
+                                            </ol>
+                                        </li>
+                                        <li>f</li>
+                                    </ol>`),
+                        });
+                    });
+                    it('should not convert mixed lists on rejoin', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<ol><li>a[]</li></ol><p>b</p><ul><li>c</li></ul>',
+                            stepFunction: deleteForward,
+                            contentAfter: '<ol><li>a[]b</li></ol><ul><li>c</li></ul>',
+                        });
+                    });
+                    it('should not convert mixed multi-level lists on rejoin', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                    <p>c</p>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                            stepFunction: deleteForward,
+                            contentAfter: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]c</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                        });
+                    });
                 });
                 describe('Indented', () => {
                     it('should merge an indented list item into a non-indented list item', async () => {
@@ -1385,6 +1513,134 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ol><li><br></li><li>[]abc</li></ol>',
                             });
                         });
+                        it('should rejoin sibling lists', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ol><li>a</li></ol><p>[]b</p><ol><li>c</li></ol>',
+                                stepFunction: deleteBackward,
+                                contentAfter: '<ol><li>a[]b</li><li>c</li></ol>',
+                            });
+                        });
+                        it('should rejoin multi-level sibling lists', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                    <p>[]c</p>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                                stepFunction: deleteBackward,
+                                contentAfter: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]c</li>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                            });
+                        });
+                        it('should only rejoin same-level lists', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                        <li>c</li>
+                                    </ol>
+                                    <p>[]d</p>
+                                    <ol>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>e</li>
+                                            </ol>
+                                        </li>
+                                        <li>f</li>
+                                    </ol>`),
+                                stepFunction: deleteBackward,
+                                contentAfter: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                        <li>c[]d</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>e</li>
+                                            </ol>
+                                        </li>
+                                        <li>f</li>
+                                    </ol>`),
+                            });
+                        });
+                        it('should not convert mixed lists on rejoin', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ol><li>a</li></ol><p>[]b</p><ul><li>c</li></ul>',
+                                stepFunction: deleteBackward,
+                                contentAfter: '<ol><li>a[]b</li></ol><ul><li>c</li></ul>',
+                            });
+                        });
+                        it('should not convert mixed multi-level lists on rejoin', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                    <p>[]c</p>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                                stepFunction: deleteBackward,
+                                contentAfter: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]c</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                            });
+                        });
                     });
                     describe('Indented', () => {
                         it('should merge an indented list item into a non-indented list item', async () => {
@@ -1626,6 +1882,134 @@ describePlugin(List, testEditor => {
                                 contentBefore: '<ul><li><br></li><li><br></li><li>[]abc</li></ul>',
                                 stepFunction: deleteBackward,
                                 contentAfter: '<ul><li><br></li><li>[]abc</li></ul>',
+                            });
+                        });
+                        it('should rejoin sibling lists', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ul><li>a</li></ul><p>[]b</p><ul><li>c</li></ul>',
+                                stepFunction: deleteBackward,
+                                contentAfter: '<ul><li>a[]b</li><li>c</li></ul>',
+                            });
+                        });
+                        it('should rejoin multi-level sibling lists', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                    <p>[]c</p>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                                stepFunction: deleteBackward,
+                                contentAfter: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b[]c</li>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ul>`),
+                            });
+                        });
+                        it('should only rejoin same-level lists', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b</li>
+                                            </ul>
+                                        </li>
+                                        <li>c</li>
+                                    </ul>
+                                    <p>[]d</p>
+                                    <ul>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>e</li>
+                                            </ul>
+                                        </li>
+                                        <li>f</li>
+                                    </ul>`),
+                                stepFunction: deleteBackward,
+                                contentAfter: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>b</li>
+                                            </ul>
+                                        </li>
+                                        <li>c[]d</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>e</li>
+                                            </ul>
+                                        </li>
+                                        <li>f</li>
+                                    </ul>`),
+                            });
+                        });
+                        it('should not convert mixed lists on rejoin', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: '<ul><li>a</li></ul><p>[]b</p><ol><li>c</li></ol>',
+                                stepFunction: deleteBackward,
+                                contentAfter: '<ul><li>a[]b</li></ul><ol><li>c</li></ol>',
+                            });
+                        });
+                        it('should not convert mixed multi-level lists on rejoin', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                    </ul>
+                                    <p>[]c</p>
+                                    <ol>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ol>`),
+                                stepFunction: deleteBackward,
+                                contentAfter: unformat(`
+                                    <ul>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b[]c</li>
+                                            </ol>
+                                        </li>
+                                    </ul>
+                                    <ol>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>d</li>
+                                            </ul>
+                                        </li>
+                                        <li>e</li>
+                                    </ol>`),
                             });
                         });
                     });

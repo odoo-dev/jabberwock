@@ -205,6 +205,37 @@ describePlugin(Indent, testEditor => {
                     </ul>`),
                     });
                 });
+                it('should rejoin after indent', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                    <ul>
+                        <li style="list-style: none;">
+                            <ol>
+                                <li>a</li>
+                            </ol>
+                        </li>
+                        <li>
+                            []b
+                        </li>
+                        <li style="list-style: none;">
+                            <ol>
+                                <li>c</li>
+                            </ol>
+                        </li>
+                    </ul>`),
+                        stepFunction: indent,
+                        contentAfter: unformat(`
+                    <ul>
+                        <li style="list-style: none;">
+                            <ol>
+                                <li>a</li>
+                                <li>[]b</li>
+                                <li>c</li>
+                            </ol>
+                        </li>
+                    </ul>`),
+                    });
+                });
             });
             describe('with selection', () => {
                 it('should indent the first element of a list', async () => {
