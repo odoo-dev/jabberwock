@@ -118,7 +118,8 @@ describe('core', () => {
             });
             it('should match the last command that match and has more predicate', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<ul><li><ul><li><p>a[]b</p></li></ul></li></ul><p>c</p>',
+                    contentBefore:
+                        '<ul><li style="list-style: none;"><ul><li><p>a[]b</p></li></ul></li></ul><p>c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
                         const check = (context: CheckingContext): boolean => !!context;
@@ -167,7 +168,8 @@ describe('core', () => {
             });
             it('should match the command with more lvl2 specificity', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<ul><li><ul><li><p>a[]b</p></li></ul></li></ul><p>c</p>',
+                    contentBefore:
+                        '<ul><li style="list-style: none;"><ul><li><p>a[]b</p></li></ul></li></ul><p>c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
                         const check = (context: CheckingContext): boolean => !!context;
@@ -202,7 +204,8 @@ describe('core', () => {
             });
             it('should match the command with specificity lvl1 in the proper order', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<ul><li><ol><li><p>a[]b</p></li></ol></li></ul><p>c</p>',
+                    contentBefore:
+                        '<ul><li style="list-style: none;"><ol><li><p>a[]b</p></li></ol></li></ul><p>c</p>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
                         const check = (context: CheckingContext): boolean => !!context;
@@ -279,7 +282,7 @@ describe('core', () => {
                 await testEditor(BasicEditor, {
                     contentBefore:
                         '<div><div><p>cd</p></div></div>' +
-                        '<ul><li></li><li><ul><li><p>c</p></li></ul></li><li><div>[]</div></li></ul>',
+                        '<ul><li></li><li style="list-style: none;"><ul><li><p>c</p></li></ul></li><li><div>[]</div></li></ul>',
                     stepFunction: (editor: BasicEditor) => {
                         const callback = (): void => {};
                         const check = (context: CheckingContext): boolean => !!context;

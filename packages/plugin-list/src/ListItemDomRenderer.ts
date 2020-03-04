@@ -11,18 +11,11 @@ export class ListItemDomRenderer extends AbstractRenderer<Node[]> {
     predicate = List.isListItem;
 
     async render(node: VNode): Promise<Node[]> {
-        // The ListNode has to handle the rendering of its direct children by
-        // itself since some of them are rendered inside "LI" nodes while others
-        // are rendered *as* "LI" nodes.
-        // Check if previous "LI" can be reused or create a new one.
-        let domListItem: Element;
-        if (node.is(ListNode) && node.previousSibling()) {
-            // Indented lists are rendered in the LI that precedes them.
-            // They do not trigger the creation of an additional LI.
-            // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
-            return this.super.render(node);
-        } else {
-            domListItem = document.createElement('li');
+        const domListItem = document.createElement('li');
+        if (node.is(ListNode)) {
+            if (!domListItem.style.listStyle) {
+                domListItem.style.listStyle = 'none';
+            }
         }
 
         // Direct ListNode's VElement children "P" are rendered as "LI"

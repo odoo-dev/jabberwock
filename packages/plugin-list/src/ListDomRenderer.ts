@@ -14,19 +14,8 @@ export class ListDomRenderer extends AbstractRenderer<Node[]> {
 
         for (const child of node.children) {
             const renderedChild = await this.engine.render(child);
-            let container: Node = domListNode;
-            const previousSibling = child.previousSibling();
-            // Indented lists are rendered in the LI that precedes them, if any.
-            // eg.: <ul><li>title: <ul><li>indented</li></ul></ul>
-            if (child.is(ListNode) && previousSibling) {
-                const rendering = await this.engine.render(previousSibling);
-                const domPreviousSibling = rendering[rendering.length - 1];
-                if (domPreviousSibling.nodeName === 'LI') {
-                    container = domPreviousSibling;
-                }
-            }
             for (const domChild of renderedChild) {
-                container.appendChild(domChild);
+                domListNode.appendChild(domChild);
             }
         }
 

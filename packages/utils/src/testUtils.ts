@@ -380,3 +380,14 @@ export async function keydown(el: Element, key: string, options = {}): Promise<v
     );
     await nextTickFrame();
 }
+
+/**
+ * Unformat the given html in order to use it with `innerHTML`.
+ *
+ * @param html
+ */
+export function unformat(html: string): string {
+    return html
+        .replace(/(^|[^ ])[\s\n]+([^<>]*?)</g, '$1$2<')
+        .replace(/>([^<>]*?)[\s\n]+([^ ]|$)/g, '>$1$2');
+}

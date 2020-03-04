@@ -158,33 +158,13 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const range = params.context.range;
         const items = range.targetedNodes(node => ListNode.test(node.parent));
 
-        // Filter out non-identable list items.
+        // Do not indent items of a targeted nested list, since they
+        // will automatically be indented with their list ancestor.
         const itemsToIndent = items.filter(item => {
-            const nodeIndex = item.parent.children().indexOf(item);
-            if (nodeIndex === 0) {
-                // Do not indent the first list item of a list.
-                return false;
-            } else if (nodeIndex === 1 && item.is(ListNode)) {
-                // Do not indent the second item of a list if it is a nested
-                // list following a non-list item.
-                return item.previousSibling().is(ListNode);
-            } else {
-                // Do not indent items of a targeted nested list, since they
-                // will automatically be indented with their list ancestor.
-                return !items.includes(item.ancestor(ListNode));
-            }
+            return !items.includes(item.ancestor(ListNode));
         });
 
         if (!itemsToIndent.length) return;
-
-        // Extend indenting to the next nested list sibling of a non-list item.
-        const lastItem = itemsToIndent[itemsToIndent.length - 1];
-        if (!lastItem.is(ListNode)) {
-            const nextSibling = lastItem.nextSibling();
-            if (nextSibling && nextSibling.is(ListNode)) {
-                itemsToIndent.push(nextSibling);
-            }
-        }
 
         for (const item of itemsToIndent) {
             const type = item.ancestor(ListNode).listType;
@@ -219,15 +199,6 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         });
 
         if (!itemsToOutdent.length) return;
-
-        // Extend outdenting to the next nested list sibling of a non-list item.
-        const lastItem = itemsToOutdent[itemsToOutdent.length - 1];
-        if (!lastItem.is(ListNode)) {
-            const nextSibling = lastItem.nextSibling();
-            if (nextSibling && nextSibling.is(ListNode)) {
-                itemsToOutdent.push(nextSibling);
-            }
-        }
 
         for (const item of itemsToOutdent) {
             const list = item.ancestor(ListNode);
