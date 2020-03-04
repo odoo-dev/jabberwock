@@ -66,10 +66,21 @@ export class EventManager {
      * @param action
      */
     _onNormalizedEvent(batch: EventBatch): void {
-        for (const action of batch.actions) {
-            const commandSpec = this._matchCommand(action);
-            if (commandSpec) {
-                this.editor.execCommand(...commandSpec);
+        let processed = false;
+        if (batch.inferredKeydownEvent) {
+            processed = !!this.editor.processEvent(
+                new KeyboardEvent('keydown', {
+                    ...batch.inferredKeydownEvent,
+                    key: batch.inferredKeydownEvent.code,
+                }),
+            );
+        }
+        if (!processed) {
+            for (const action of batch.actions) {
+                const commandSpec = this._matchCommand(action);
+                if (commandSpec) {
+                    this.editor.execCommand(...commandSpec);
+                }
             }
         }
     }

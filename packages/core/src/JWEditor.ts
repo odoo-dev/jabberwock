@@ -130,7 +130,7 @@ export class JWEditor {
         document.body.appendChild(this.el);
 
         // Attach the keymaps to the editable.
-        this.editable.addEventListener('keydown', this._onKeydown.bind(this));
+        this.editable.addEventListener('keydown', this.processEvent.bind(this));
 
         for (const plugin of this.plugins) {
             await plugin.start();
@@ -360,7 +360,7 @@ export class JWEditor {
      *
      * @param event
      */
-    _onKeydown(event: KeyboardEvent): void {
+    processEvent(event: KeyboardEvent): CommandIdentifier {
         let command: BoundCommand;
         let context: Context;
         const userCommands = this.keymaps.user.match(event);
@@ -375,6 +375,7 @@ export class JWEditor {
             event.stopPropagation();
             event.stopImmediatePropagation();
             this.execCommand(command.commandId, params);
+            return command.commandId;
         }
     }
 }
