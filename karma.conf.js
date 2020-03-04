@@ -3,6 +3,7 @@ const path = require('path');
 module.exports = function(config) {
     const coverageReporters = [];
     const coverageLoaders = [];
+    let tsConfigFile = 'tsconfig.json'
 
     if (config.coverage) {
         coverageReporters.push('coverage-istanbul');
@@ -18,6 +19,7 @@ module.exports = function(config) {
                 }
             ],
         });
+        tsConfigFile = 'tsconfig-coverage.json'
     }
 
     const webpackConfig = {
@@ -31,7 +33,7 @@ module.exports = function(config) {
                         {
                             loader: 'ts-loader',
                             options: {
-                                configFile: 'tsconfig.json',
+                                configFile: tsConfigFile,
                             },
                         },
                     ],
