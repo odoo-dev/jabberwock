@@ -19,9 +19,12 @@ enum Mode {
 }
 
 export type Loadable = {};
-export type Loader<L extends Loadable = Loadable> = (loadable: L[], source?: JWPlugin | {}) => void;
+export type Loader<L extends Loadable = Loadable> = (
+    loadables: L[],
+    source?: JWPlugin | {},
+) => void;
 export type Loadables<T extends JWPlugin = JWPlugin> = {
-    [key in keyof T['loaders']]?: T['loaders'][key] extends Loader<infer L> ? L[] : never;
+    [key in keyof T['loaders']]?: Parameters<T['loaders'][key]>[0];
 };
 
 export interface JWEditorConfig {
@@ -29,6 +32,7 @@ export interface JWEditorConfig {
     createBaseContainer?: () => VNode;
     loadables?: Loadables;
 }
+
 export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
 }
@@ -124,24 +128,27 @@ export class JWEditor {
     load(loadables: Loadables): void;
     load<P extends typeof JWPlugin>(Plugin: P, config?: ConstructorParameters<P>[1]): void;
     load<P extends typeof JWPlugin>(
-        Plugin: P | Loadables,
+        PluginOrLoadables: P | Loadables,
         config?: ConstructorParameters<P>[1],
     ): void {
         // Actual loading is deferred to `start`.
         if (this._mode !== Mode.CONFIGURATION) {
             throw new Error(`Load only allowed in ${Mode.CONFIGURATION} mode.`);
-        } else if (isConstructor(Plugin, JWPlugin)) {
+        } else if (isConstructor(PluginOrLoadables, JWPlugin)) {
+            // Add the plugin to the configuration.
+            const Plugin = PluginOrLoadables;
             const plugins = this.configuration.plugins;
             const index = plugins.findIndex(([p]) => p === Plugin);
             if (index !== -1) {
-                // Protect against loading the same plugin twice.
+                // Remove this module from the config to avoid loading it twice.
                 plugins.splice(index, 1);
             }
             plugins.push([Plugin, config || {}]);
         } else {
+            // Add the loadables to the configuration.
             const configuredLoadables = this.configuration.loadables;
-            for (const loadableIdentifier of Object.keys(Plugin)) {
-                const loadables = Plugin[loadableIdentifier];
+            for (const loadableIdentifier of Object.keys(PluginOrLoadables)) {
+                const loadables = PluginOrLoadables[loadableIdentifier];
                 if (configuredLoadables[loadableIdentifier]) {
                     configuredLoadables[loadableIdentifier].push(...loadables);
                 } else {
@@ -157,12 +164,12 @@ export class JWEditor {
      */
     private _loadPlugins(): void {
         // Resolve dependencies.
-        const Plugins = this.configuration.plugins.slice();
+        const Plugins = [...this.configuration.plugins];
         for (let offset = 1; offset <= Plugins.length; offset++) {
             const index = Plugins.length - offset;
             const [Plugin] = Plugins[index];
-            for (const Dependency of Plugin.dependencies.slice().reverse()) {
-                const depIndex = Plugins.findIndex(([p]) => p === Dependency);
+            for (const Dependency of [...Plugin.dependencies].reverse()) {
+                const depIndex = Plugins.findIndex(([P]) => P === Dependency);
                 if (depIndex === -1) {
                     // Load the missing dependency with no config parameters.
                     Plugins.splice(index, 0, [Dependency, {}]);
@@ -190,17 +197,15 @@ export class JWEditor {
             }
 
             // Load loaders.
-            for (const loadableIdentifier of Object.keys(plugin.loaders)) {
-                if (this.loaders[loadableIdentifier]) {
-                    throw new Error(
-                        `Another loader is already registered for loadable ${loadableIdentifier}.`,
-                    );
+            for (const loadableId of Object.keys(plugin.loaders)) {
+                if (this.loaders[loadableId]) {
+                    throw new Error(`Multiple loaders for '${loadableId}'.`);
                 } else {
                     // Bind loaders to the plugin itself. This preserves the
                     // typing of the loader parameters which would be lost if
                     // the binding was done in the plugin definition.
-                    const loader = plugin.loaders[loadableIdentifier];
-                    this.loaders[loadableIdentifier] = loader.bind(plugin);
+                    const loader = plugin.loaders[loadableId];
+                    this.loaders[loadableId] = loader.bind(plugin);
                 }
             }
         }
@@ -239,7 +244,7 @@ export class JWEditor {
         }
         if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
             const Plugin = PluginOrEditorConfig;
-            const conf = this.configuration.plugins.find(([p]) => p === Plugin);
+            const conf = this.configuration.plugins.find(([P]) => P === Plugin);
             if (conf) {
                 // Update the previous config if the plugin was already added.
                 conf[1] = { ...conf[1], ...pluginConfig };
@@ -255,7 +260,7 @@ export class JWEditor {
             if (conf.plugins) {
                 this.configuration.plugins = [...preconf.plugins];
                 for (const [Plugin, pluginConfiguration] of conf.plugins) {
-                    this.load(Plugin, pluginConfiguration);
+                    this.load(Plugin, pluginConfiguration || {});
                 }
             }
             // Handle special `loadables` configuration key through `load`.
