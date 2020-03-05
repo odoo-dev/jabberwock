@@ -14,7 +14,7 @@ export class DomRenderingEngine extends RenderingEngine<Node[]> {
         attributes: Record<string, string | Record<string, string>>,
         element: Element,
     ): void {
-        for (const name of Object.keys(attributes)) {
+        for (const name of Object.keys(attributes).sort()) {
             const value = attributes[name];
             if (typeof value === 'string') {
                 element.setAttribute(name, value);
