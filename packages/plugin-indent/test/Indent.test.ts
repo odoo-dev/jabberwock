@@ -176,7 +176,7 @@ describePlugin(Indent, testEditor => {
                     </ul>`),
                     });
                 });
-                it('should indent with mixed lists', async () => {
+                it('should convert mixed lists', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: unformat(`
                     <ul>
@@ -197,14 +197,8 @@ describePlugin(Indent, testEditor => {
                             a
                         </li>
                         <li style="list-style: none;">
-                            <ul>
-                                <li>
-                                    []b
-                                </li>
-                            </ul>
-                        </li>
-                        <li style="list-style: none;">
                             <ol>
+                                <li>[]b</li>
                                 <li>c</li>
                             </ol>
                         </li>
