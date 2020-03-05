@@ -18,7 +18,7 @@ export interface TestEditorSpec {
 }
 
 export type EditorTestSuite = (
-    tesEditor: (editor: typeof JWEditor | TestEditorSpec, spec?: TestEditorSpec) => Promise<void>,
+    testEditor: (editor: typeof JWEditor | TestEditorSpec, spec?: TestEditorSpec) => Promise<void>,
 ) => void;
 
 /**
