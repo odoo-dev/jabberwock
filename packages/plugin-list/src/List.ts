@@ -172,9 +172,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const next = item.nextSibling();
             // If possible, indent the item by putting it into a pre-existing
             // list sibling of the same type.
-            if (ListNode[type](prev)) {
+            if (ListNode.test(prev)) {
                 prev.append(item);
-            } else if (ListNode[type](next) && !itemsToIndent.includes(next)) {
+            } else if (ListNode.test(next) && !itemsToIndent.includes(next)) {
                 next.prepend(item);
             } else {
                 // If no other candidate exists then wrap it in a new ListNode.
