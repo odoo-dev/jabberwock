@@ -39,6 +39,12 @@ const blockTagNames = [
     'SECTION',
     'TABLE',
     'UL',
+    // The following elements are not in the W3C list, for some reason.
+    'TR',
+    'TD',
+    'TBODY',
+    'THEAD',
+    'TH',
 ];
 
 const computedStyles = new WeakMap<Node, CSSStyleDeclaration>();
