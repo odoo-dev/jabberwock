@@ -147,15 +147,15 @@ export class VRange {
     traversedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
     traversedNodes<T>(predicate?: Predicate<T>): VNode[];
     traversedNodes<T>(predicate?: Predicate<T>): VNode[] {
-        const retractedNodes = [];
+        const traversedNodes = [];
         let node = this.start;
         const bound = this.end.next();
         while ((node = node.next()) && node !== bound) {
             if (node.test(predicate)) {
-                retractedNodes.push(node);
+                traversedNodes.push(node);
             }
         }
-        return retractedNodes;
+        return traversedNodes;
     }
 
     //--------------------------------------------------------------------------
