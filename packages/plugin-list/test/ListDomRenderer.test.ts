@@ -2,11 +2,11 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { ListNode, ListType } from '../ListNode';
+import { ListNode, ListType } from '../src/ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { CharNode } from '../../plugin-char/CharNode';
-import { BoldFormat } from '../../plugin-bold/BoldFormat';
-import { Formats } from '../../plugin-inline/Formats';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
+import { Formats } from '../../plugin-inline/src/Formats';
 
 describe('ListDomRenderer', () => {
     describe('render', () => {

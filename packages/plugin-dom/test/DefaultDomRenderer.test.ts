@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { Dom } from '../Dom';
+import { Dom } from '../src/Dom';
 
 describe('DefaultDomRenderer', () => {
     describe('render', () => {

@@ -1,10 +1,10 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { describePlugin } from '../../utils/src/testUtils';
-import { Youtube } from '../Youtube';
-import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
+import { Youtube } from '../src/Youtube';
+import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import JWEditor from '../../core/src/JWEditor';
-import { YoutubeDomParser } from '../YoutubeDomParser';
+import { YoutubeDomParser } from '../src/YoutubeDomParser';
 
 describePlugin(Youtube, () => {
     describe('parser', () => {

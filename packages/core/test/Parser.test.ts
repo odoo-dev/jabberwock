@@ -1,22 +1,22 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import { CharNode } from '../../plugin-char/CharNode';
-import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { VElement } from '../src/VNodes/VElement';
 import { testEditor, renderTextualSelection } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { CharDomParser } from '../../plugin-char/CharDomParser';
-import { HeadingDomParser } from '../../plugin-heading/HeadingDomParser';
-import { LineBreakDomParser } from '../../plugin-linebreak/LineBreakDomParser';
-import { ParagraphDomParser } from '../../plugin-paragraph/ParagraphDomParser';
-import { ListDomParser } from '../../plugin-list/ListDomParser';
-import { ListItemDomParser } from '../../plugin-list/ListItemDomParser';
-import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
+import { CharDomParser } from '../../plugin-char/src/CharDomParser';
+import { HeadingDomParser } from '../../plugin-heading/src/HeadingDomParser';
+import { LineBreakDomParser } from '../../plugin-linebreak/src/LineBreakDomParser';
+import { ParagraphDomParser } from '../../plugin-paragraph/src/ParagraphDomParser';
+import { ListDomParser } from '../../plugin-list/src/ListDomParser';
+import { ListItemDomParser } from '../../plugin-list/src/ListItemDomParser';
+import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import JWEditor from '../src/JWEditor';
-import { ItalicDomParser } from '../../plugin-italic/ItalicDomParser';
-import { BoldDomParser } from '../../plugin-bold/BoldDomParser';
-import { UnderlineDomParser } from '../../plugin-underline/UnderlineDomParser';
-import { SpanDomParser } from '../../plugin-span/SpanDomParser';
+import { ItalicDomParser } from '../../plugin-italic/src/ItalicDomParser';
+import { BoldDomParser } from '../../plugin-bold/src/BoldDomParser';
+import { UnderlineDomParser } from '../../plugin-underline/src/UnderlineDomParser';
+import { SpanDomParser } from '../../plugin-span/src/SpanDomParser';
 
 describe('utils', () => {
     describe('Parser', () => {

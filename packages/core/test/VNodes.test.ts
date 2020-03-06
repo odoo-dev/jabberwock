@@ -1,9 +1,9 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
-import { CharNode } from '../../plugin-char/CharNode';
-import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
-import { HeadingNode } from '../../plugin-heading/HeadingNode';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
+import { HeadingNode } from '../../plugin-heading/src/HeadingNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
 import { VElement } from '../src/VNodes/VElement';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
@@ -11,7 +11,7 @@ import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { Dom } from '../../plugin-dom/Dom';
+import { Dom } from '../../plugin-dom/src/Dom';
 import { AbstractParser } from '../src/AbstractParser';
 
 describe('core', () => {

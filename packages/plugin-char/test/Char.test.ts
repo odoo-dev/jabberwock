@@ -2,18 +2,18 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { InsertTextParams, Char } from '../Char';
-import { CharNode } from '../CharNode';
+import { InsertTextParams, Char } from '../src/Char';
+import { CharNode } from '../src/CharNode';
 import { describePlugin } from '../../utils/src/testUtils';
-import { CharDomParser } from '../CharDomParser';
-import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
-import { BoldFormat } from '../../plugin-bold/BoldFormat';
-import { ItalicFormat } from '../../plugin-italic/ItalicFormat';
-import { FormatParams } from '../../plugin-inline/Inline';
+import { CharDomParser } from '../src/CharDomParser';
+import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
+import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
+import { FormatParams } from '../../plugin-inline/src/Inline';
 import { Constructor } from '../../utils/src/utils';
-import { Format } from '../../plugin-inline/Format';
-import { UnderlineFormat } from '../../plugin-underline/UnderlineFormat';
-import { Formats } from '../../plugin-inline/Formats';
+import { Format } from '../../plugin-inline/src/Format';
+import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
+import { Formats } from '../../plugin-inline/src/Formats';
 
 const insertText = async function(editor, text: string): Promise<void> {
     const params: InsertTextParams = {

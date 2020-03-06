@@ -1,7 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { InsertTextParams } from '../../plugin-char/Char';
+import { InsertTextParams } from '../../plugin-char/src/Char';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';

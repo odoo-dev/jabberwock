@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { HeadingNode } from '../HeadingNode';
+import { HeadingNode } from '../src/HeadingNode';
 
 describe('plugin-heading', () => {
     describe('HeadingNode', () => {

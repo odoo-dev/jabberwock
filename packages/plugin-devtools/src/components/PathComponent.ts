@@ -1,6 +1,6 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { InlineNode } from '../../../plugin-inline/InlineNode'; // todo: remove dependency
+import { InlineNode } from '../../../plugin-inline/src/InlineNode'; // todo: remove dependency
 
 export class PathComponent extends OwlUIComponent<{}> {
     getNodeRepr(vNode: VNode): string {

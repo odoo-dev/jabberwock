@@ -2,14 +2,14 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { LineBreakNode } from '../LineBreakNode';
+import { LineBreakNode } from '../src/LineBreakNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { CharNode } from '../../plugin-char/CharNode';
-import { LineBreak } from '../LineBreak';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { LineBreak } from '../src/LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { LineBreakDomParser } from '../LineBreakDomParser';
-import { DomParsingEngine } from '../../plugin-dom/DomParsingEngine';
+import { LineBreakDomParser } from '../src/LineBreakDomParser';
+import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('insertLineBreak');
