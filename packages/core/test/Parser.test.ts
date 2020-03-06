@@ -17,6 +17,7 @@ import { ItalicDomParser } from '../../plugin-italic/src/ItalicDomParser';
 import { BoldDomParser } from '../../plugin-bold/src/BoldDomParser';
 import { UnderlineDomParser } from '../../plugin-underline/src/UnderlineDomParser';
 import { SpanDomParser } from '../../plugin-span/src/SpanDomParser';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 describe('utils', () => {
     describe('Parser', () => {
@@ -314,11 +315,13 @@ describe('utils', () => {
                     domSelection.addRange(domRange);
 
                     // apply editor on the second div
-                    const editor = new BasicEditor(container.children[1] as HTMLElement);
+                    const editor = new BasicEditor();
+                    editor.configure(Dom, { target: container.children[1] as HTMLElement });
                     await editor.start();
 
                     renderTextualSelection();
-                    const value = editor.editable.innerHTML;
+                    const domPlugin = editor.plugins.get(Dom);
+                    const value = domPlugin.editable.innerHTML;
                     document.body.removeChild(container);
 
                     expect(value).to.deep.equal('cde');

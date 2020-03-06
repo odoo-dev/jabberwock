@@ -41,8 +41,6 @@ interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
     el: HTMLElement;
-    _originalEditable: HTMLElement;
-    editable: HTMLElement;
     dispatcher: Dispatcher;
     eventManager: EventManager;
     contextManager: ContextManager;
@@ -61,28 +59,11 @@ export class JWEditor {
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
 
-    constructor(editable?: HTMLElement) {
+    constructor() {
         this.el = document.createElement('jw-editor');
-        // Semantic elements are inline by default.
-        // We need to guarantee it's a block so it can contain other blocks.
-        this.el.style.display = 'block';
         this.dispatcher = new Dispatcher(this);
         this.plugins = new Map();
-
         this.contextManager = new ContextManager(this);
-
-        if (!editable) {
-            editable = document.createElement('jw-editable');
-            // Semantic elements are inline by default.
-            // We need to guarantee it's a block so it can contain other blocks.
-            editable.style.display = 'block';
-        }
-        this._originalEditable = editable;
-
-        // The editable property of the editor is the original editable element
-        // before start is called, and becomes the clone after start is called.
-        this.editable = editable;
-
         // CorePlugin is a special mandatory plugin that handles the matching
         // between the core commands and the VDocument.
         this.loadPlugin(CorePlugin);
@@ -109,49 +90,21 @@ export class JWEditor {
             }
         }
 
-        const root = new FragmentNode();
-        if (this._originalEditable.innerHTML !== '') {
-            if (!this.parsers.dom) {
-                // TODO: remove this when the editor can be instantiated on
-                // something else than DOM.
-                throw new Error(`No DOM parser installed.`);
-            }
-            const parsedEditable = await this.parsers.dom.parse(this._originalEditable);
-            for (const parsedNode of parsedEditable) {
-                for (const child of parsedNode.children.slice()) {
-                    root.append(child);
-                }
-            }
-        }
-        this.vDocument = new VDocument(root);
+        this.vDocument = new VDocument(new FragmentNode());
 
-        // Deep clone the given editable node in order to break free of any
-        // handler that might have been previously registered.
-        this.editable = this._originalEditable.cloneNode(true) as HTMLElement;
-
-        // The original editable node is hidden until the editor stops.
-        this._originalEditable.style.display = 'none';
-        // Cloning the editable node might lead to duplicated id.
-        this.editable.id = this._originalEditable.id;
-        this._originalEditable.removeAttribute('id');
-
-        // The cloned editable element is then added to the main editor element
-        // which is itself added to the DOM.
-        this.editable.classList.add('jw-editable');
-        this.editable.setAttribute('contenteditable', 'true');
-        this.el.appendChild(this.editable);
-        document.body.appendChild(this.el);
-
-        // Attach the keymaps to the editable.
-        this.editable.addEventListener('keydown', this._onKeydown.bind(this));
+        document.body.prepend(this.el);
 
         for (const plugin of this.plugins.values()) {
             await plugin.start();
         }
 
         // Init the event manager now that the cloned editable is in the DOM.
-        const domPlugin = this.plugins.get(Dom) as Dom;
-        this.eventManager = new EventManager(this, domPlugin);
+        const domPlugin = this.plugins.get(Dom);
+        if (domPlugin) {
+            // Attach the keymaps to the editable.
+            domPlugin.editable.addEventListener('keydown', this._onKeydown.bind(this));
+            this.eventManager = new EventManager(this, domPlugin);
+        }
     }
 
     async render<T>(renderingId: string, node: VNode): Promise<T | void> {
@@ -332,8 +285,6 @@ export class JWEditor {
             await plugin.stop();
         }
         this.eventManager.stop();
-        this._originalEditable.id = this.editable.id;
-        this._originalEditable.style.display = this.editable.style.display;
         this.el.remove();
         this._mode = Mode.CONFIGURATION;
     }

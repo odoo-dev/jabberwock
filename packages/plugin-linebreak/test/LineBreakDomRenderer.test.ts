@@ -11,8 +11,8 @@ describe('LineBreakDomRenderer', () => {
         let editor: JWEditor;
         let root: FragmentNode;
         beforeEach(async () => {
-            editor = new JWEditor(document.createElement('div'));
-            editor.loadPlugin(Dom);
+            editor = new JWEditor();
+            editor.loadPlugin(Dom, { target: document.createElement('div') });
             editor.loadPlugin(LineBreak);
             await editor.start();
             root = editor.vDocument.root;

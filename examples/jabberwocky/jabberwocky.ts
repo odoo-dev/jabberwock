@@ -4,15 +4,15 @@ import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 import { Dom } from '../../packages/plugin-dom/src/Dom';
 import './jabberwocky.css';
 
+const target = document.createElement('div');
+target.style.textAlign = 'center';
+jabberwocky.init(target);
+
 const editor = new BasicEditor();
-jabberwocky.init(editor.editable);
-
-editor.editable.style.textAlign = 'center';
-
 editor.loadPlugin(DevTools);
-
 editor.configure(Dom, {
     autoFocus: true,
+    target: target,
 });
 
 editor.start();

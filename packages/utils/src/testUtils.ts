@@ -6,6 +6,7 @@ import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -120,8 +121,12 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
     document.body.appendChild(container);
     if (selection) {
         _setSelection(selection);
+    } else {
+        document.getSelection().removeAllRanges();
     }
-    return new Editor(container);
+    const editor = new Editor();
+    editor.configure(Dom, { target: container });
+    return editor;
 }
 
 /**
@@ -142,6 +147,7 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
 
     // Start the editor and execute the step code.
     await editor.start();
+
     if (spec.stepFunction) {
         await spec.stepFunction(editor);
     }
@@ -149,9 +155,10 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     // Render the selection in the test container and test the result.
     renderTextualSelection();
     if (spec.contentAfter) {
-        expect(editor.editable.innerHTML).to.deep.equal(spec.contentAfter);
+        const domPlugin = editor.plugins.get(Dom);
+        expect(domPlugin.editable.innerHTML).to.deep.equal(spec.contentAfter);
     }
-    editor.stop();
+    await editor.stop();
 }
 
 /**

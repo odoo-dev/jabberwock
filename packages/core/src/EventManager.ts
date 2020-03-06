@@ -16,7 +16,7 @@ export class EventManager {
         this.editor = editor;
         this.domPlugin = domPlugin;
         this.eventNormalizer = new EventNormalizer(
-            editor.editable,
+            domPlugin.editable,
             this._onNormalizedEvent.bind(this),
         );
     }

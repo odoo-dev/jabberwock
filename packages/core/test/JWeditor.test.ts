@@ -8,6 +8,8 @@ import { spy } from 'sinon';
 import { AbstractRenderer } from '../src/AbstractRenderer';
 import { VNode } from '../src/VNodes/VNode';
 import { RenderingEngine } from '../src/RenderingEngine';
+import { Dom } from '../../plugin-dom/src/Dom';
+
 describe('core', () => {
     describe('JWEditor', () => {
         describe('loadPlugin', () => {
@@ -237,8 +239,9 @@ describe('core', () => {
                                 editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
-                                await keydown(editor.editable, 'a', { ctrlKey: true });
-                                await keydown(editor.editable, 'b', { ctrlKey: true });
+                                const domPlugin = editor.plugins.get(Dom);
+                                await keydown(domPlugin.editable, 'a', { ctrlKey: true });
+                                await keydown(domPlugin.editable, 'b', { ctrlKey: true });
                                 const params = {
                                     context: editor.contextManager.defaultContext,
                                 };
@@ -276,8 +279,9 @@ describe('core', () => {
                                 editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
-                                await keydown(editor.editable, 'a', { ctrlKey: true });
-                                await keydown(editor.editable, 'b', { ctrlKey: true });
+                                const domPlugin = editor.plugins.get(Dom);
+                                await keydown(domPlugin.editable, 'a', { ctrlKey: true });
+                                await keydown(domPlugin.editable, 'b', { ctrlKey: true });
                                 const params = {
                                     context: editor.contextManager.defaultContext,
                                 };
@@ -315,8 +319,9 @@ describe('core', () => {
                                 editor.eventManager.eventNormalizer._triggerEvent = (): void => {};
                                 editor.execCommand = (): Promise<void> => Promise.resolve();
                                 const execSpy = spy(editor, 'execCommand');
-                                await keydown(editor.editable, 'a', { ctrlKey: true });
-                                await keydown(editor.editable, 'b', { ctrlKey: true });
+                                const domPlugin = editor.plugins.get(Dom);
+                                await keydown(domPlugin.editable, 'a', { ctrlKey: true });
+                                await keydown(domPlugin.editable, 'b', { ctrlKey: true });
                                 expect(execSpy.args).to.eql([]);
                             },
                         });
@@ -389,7 +394,8 @@ describe('core', () => {
                     stepFunction: async editor => {
                         editor.execCommand = (): Promise<void> => Promise.resolve();
                         const execSpy = spy(editor, 'execCommand');
-                        await keydown(editor.editable, 'a', { ctrlKey: true });
+                        const domPlugin = editor.plugins.get(Dom);
+                        await keydown(domPlugin.editable, 'a', { ctrlKey: true });
                         const params = {
                             context: editor.contextManager.defaultContext,
                         };
@@ -520,7 +526,8 @@ describe('core', () => {
                 class VNodePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     renderingEngines = [VNodeRenderingEngine];
                 }
-                const editor = new JWEditor(document.createElement('p'));
+                const editor = new JWEditor();
+                editor.loadPlugin(Dom, { target: document.createElement('p') });
                 editor.loadPlugin(VNodePlugin);
                 await editor.start();
                 const node = new VNode();

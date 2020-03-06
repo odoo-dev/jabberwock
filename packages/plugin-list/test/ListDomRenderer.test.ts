@@ -13,7 +13,7 @@ describe('ListDomRenderer', () => {
         let editor: JWEditor;
         let root: FragmentNode;
         beforeEach(async () => {
-            editor = new BasicEditor(document.createElement('div'));
+            editor = new BasicEditor();
             await editor.start();
             root = editor.vDocument.root;
         });

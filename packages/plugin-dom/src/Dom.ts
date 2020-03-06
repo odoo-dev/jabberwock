@@ -11,6 +11,7 @@ import { RenderingEngine } from '../../core/src/RenderingEngine';
 
 interface DomConfig extends JWPluginConfig {
     autoFocus?: boolean;
+    target?: HTMLElement;
 }
 
 export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
@@ -24,12 +25,35 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     };
 
     domMap = new DomMap();
+    editable: HTMLElement;
 
     async start(): Promise<void> {
-        const editable = this.editor._originalEditable;
+        const target = this.configuration.target;
+        if (target) {
+            this.domMap.set(this.editor.vDocument.root, target);
+            // Deep clone the given editable node in order to break free of any
+            // handler that might have been previously registered.
+            this.editable = target.cloneNode(true) as HTMLElement;
+
+            if (target.innerHTML !== '') {
+                const parsedEditable = await this.editor.parsers.dom.parse(target);
+                for (const parsedNode of parsedEditable) {
+                    for (const child of parsedNode.children.slice()) {
+                        this.editor.vDocument.root.append(child);
+                    }
+                }
+            }
+        } else {
+            this.editable = document.createElement('jw-editable');
+            // Semantic elements are inline by default.
+            // We need to guarantee it's a block so it can contain other blocks.
+            this.editable.style.display = 'block';
+            this.domMap.set(this.editor.vDocument.root, this.editable);
+        }
+
+        this.editable.setAttribute('contenteditable', 'true');
 
         // Construct DOM map from the parsing in order to parse the selection.
-        this.domMap.set(this.editor.vDocument.root, editable);
         const engine = this.editor.parsers.dom as ParsingEngine<Node>;
         for (const [domNode, nodes] of engine.parsingMap) {
             for (const node of nodes) {
@@ -37,18 +61,30 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
             }
         }
 
-        // Parse the selection.
-        const selection = editable.ownerDocument.getSelection();
-        const anchorNode = selection.anchorNode;
-        const focusNode = selection.focusNode;
+        if (target) {
+            // Parse the selection.
+            const selection = target.ownerDocument.getSelection();
+            const anchorNode = selection.anchorNode;
+            const focusNode = selection.focusNode;
+            if (
+                (target === anchorNode || target.contains(anchorNode)) &&
+                (target === focusNode || target.contains(focusNode))
+            ) {
+                this.editor.selection.set(this.parseSelection(selection));
+            }
+
+            // remove the target node (todo: re-insert when stop the editor)
+            target.remove();
+        }
+
         if (
-            (editable === anchorNode || editable.contains(anchorNode)) &&
-            (editable === focusNode || editable.contains(focusNode))
+            this.configuration.autoFocus &&
+            (!this.editor.selection.range.start.parent || !this.editor.selection.range.end.parent)
         ) {
-            this.editor.selection.set(this.parseSelection(selection));
-        } else if (this.configuration.autoFocus) {
             this.editor.selection.setAt(this.editor.vDocument.root);
         }
+
+        this.editor.el.appendChild(this.editable);
 
         return this._renderInEditable();
     }
@@ -211,16 +247,16 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     }
 
     async _renderInEditable(): Promise<void> {
-        this.editor.editable.innerHTML = '';
+        this.editable.innerHTML = '';
 
-        this.domMap.set(this.editor.vDocument.root, this.editor.editable);
+        this.domMap.set(this.editor.vDocument.root, this.editable);
         const rendering = await this.editor.render<Node[]>('dom', this.editor.vDocument.root);
         if (rendering) {
             await this._generateDomMap();
             for (const renderedChild of rendering) {
-                this.editor.editable.appendChild(renderedChild);
+                this.editable.appendChild(renderedChild);
             }
-            this.renderSelection(this.editor.selection, this.editor.editable);
+            this.renderSelection(this.editor.selection, this.editable);
         }
     }
 

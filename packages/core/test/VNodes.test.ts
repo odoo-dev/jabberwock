@@ -1142,7 +1142,7 @@ describe('core', () => {
                     const root = document.createElement('ROOT-NODE');
                     const element = document.createElement('CUSTOM-NODE');
                     root.appendChild(element);
-                    const editor = new JWEditor(root);
+                    const editor = new JWEditor();
                     class MyCustomNode extends VNode {
                         customKey = 'yes';
                     }
@@ -1159,7 +1159,7 @@ describe('core', () => {
                     class MyCustomPlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                         readonly parsers = [MyCustomParser];
                     }
-                    editor.loadPlugin(Dom);
+                    editor.loadPlugin(Dom, { target: root });
                     editor.loadPlugin(MyCustomPlugin);
                     await editor.start();
                     const customVNode = editor.vDocument.root.firstChild();
