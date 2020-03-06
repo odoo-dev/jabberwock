@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { Char } from '../Char';
-import { CharNode } from '../CharNode';
+import { Char } from '../src/Char';
+import { CharNode } from '../src/CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
-import { Dom } from '../../plugin-dom/Dom';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 describe('CharDomRenderer', () => {
     describe('render', () => {

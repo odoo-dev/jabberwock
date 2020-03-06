@@ -3,7 +3,7 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
-import { InlineNode } from '../../../plugin-inline/InlineNode';
+import { InlineNode } from '../../../plugin-inline/src/InlineNode';
 
 interface NodeProps {
     isRoot: boolean;

@@ -2,10 +2,10 @@ import JWEditor from '../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { VNode, RelativePosition, Point } from '../../core/src/VNodes/VNode';
-import { Char, InsertTextParams } from '../../plugin-char/Char';
-import { CharNode } from '../../plugin-char/CharNode';
-import { LineBreak } from '../../plugin-linebreak/LineBreak';
-import { LineBreakNode } from '../../plugin-linebreak/LineBreakNode';
+import { Char, InsertTextParams } from '../../plugin-char/src/Char';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { withRange, VRange } from '../../core/src/VRange';
 
 export type IndentParams = CommandParams;

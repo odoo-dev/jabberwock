@@ -1,7 +1,7 @@
 import { EventNormalizer, DomSelectionDescription } from './EventNormalizer';
 import JWEditor from './JWEditor';
 import { VSelectionParams } from './CorePlugin';
-import { Dom } from '../../plugin-dom/Dom';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 interface SetSelectionParams {
     domSelection: DomSelectionDescription;

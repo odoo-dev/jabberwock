@@ -1,11 +1,11 @@
 /* eslint-disable max-nested-callbacks */
 import * as sinon from 'sinon';
-import { ListNode, ListType } from '../../plugin-list/ListNode';
+import { ListNode, ListType } from '../../plugin-list/src/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { CommandImplementation } from '../src/Dispatcher';
 import { expect } from 'chai';
-import { ParagraphNode } from '../../plugin-paragraph/ParagraphNode';
+import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 import { VNode } from '../src/VNodes/VNode';
 import { VSelection } from '../src/VSelection';
 import { Context, CheckingContext } from '../src/ContextManager';

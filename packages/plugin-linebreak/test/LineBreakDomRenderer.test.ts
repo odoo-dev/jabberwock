@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { LineBreak } from '../LineBreak';
+import { LineBreak } from '../src/LineBreak';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { LineBreakNode } from '../LineBreakNode';
-import { Dom } from '../../plugin-dom/Dom';
+import { LineBreakNode } from '../src/LineBreakNode';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 describe('LineBreakDomRenderer', () => {
     describe('render', () => {

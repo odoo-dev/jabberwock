@@ -8,7 +8,7 @@ import { VNode } from './VNodes/VNode';
 import { RenderingEngine, RenderingIdentifier } from './RenderingEngine';
 import { VElement } from './VNodes/VElement';
 import { ParsingIdentifier, ParsingEngine } from './ParsingEngine';
-import { Dom } from '../../plugin-dom/Dom';
+import { Dom } from '../../plugin-dom/src/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';

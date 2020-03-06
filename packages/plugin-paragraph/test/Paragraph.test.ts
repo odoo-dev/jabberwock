@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ParagraphNode } from '../ParagraphNode';
+import { ParagraphNode } from '../src/ParagraphNode';
 
 describe('plugin-paragraph', () => {
     describe('ParagraphNode', () => {
