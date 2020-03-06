@@ -64,7 +64,10 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         } else {
             // The first line of the selection is neither fully selected nor
             // traversed so its segment break was not in `range.traversedNodes`.
-            segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
+            const nextSegmentBreak = range.start.previous(this._isSegmentBreak);
+            if (nextSegmentBreak) {
+                segmentBreaks.unshift(nextSegmentBreak);
+            }
             for (const segmentBreak of segmentBreaks) {
                 // Insert 4 spaces at the start of next segment.
                 const [node, position] = this._nextSegmentStart(segmentBreak);
@@ -91,7 +94,10 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         const segmentBreaks = range.traversedNodes(this._isSegmentBreak);
         // The first line of the selection is neither fully selected nor
         // traversed so its segment break was not in `range.traversedNodes`.
-        segmentBreaks.unshift(range.start.previous(this._isSegmentBreak));
+        const previousSegmentBreak = range.start.previous(this._isSegmentBreak);
+        if (previousSegmentBreak) {
+            segmentBreaks.unshift(previousSegmentBreak);
+        }
         // Only outdent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
         if (segmentBreaks.length) {
