@@ -23,8 +23,8 @@ import { Table } from '../packages/plugin-table/src/Table';
 import { Metadata } from '../packages/plugin-metadata/src/Metadata';
 
 export class BasicEditor extends JWEditor {
-    constructor(editable?: HTMLElement) {
-        super(editable);
+    constructor() {
+        super();
 
         this.configure({
             createBaseContainer: () => new ParagraphNode(),

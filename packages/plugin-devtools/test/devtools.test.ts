@@ -4,6 +4,7 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
 import { DevTools } from '../src/DevTools';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 async function openDevTools(devtools: HTMLElement): Promise<void> {
     await click(devtools.querySelector('devtools-navbar'));
@@ -31,7 +32,8 @@ describe('Plugin: DevTools', () => {
             }
         });
 
-        editor = new BasicEditor(root);
+        editor = new BasicEditor();
+        editor.configure(Dom, { target: root });
         editor.loadPlugin(DevTools);
 
         await editor.start();

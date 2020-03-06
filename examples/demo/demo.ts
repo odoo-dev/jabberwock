@@ -4,14 +4,14 @@ import { Dom } from '../../packages/plugin-dom/src/Dom';
 import template from './demo.xml';
 import './demo.css';
 
+const target = document.createElement('div');
+target.innerHTML = template;
+
 const editor = new BasicEditor();
-
-editor.editable.innerHTML = template;
-
 editor.loadPlugin(DevTools);
-
 editor.configure(Dom, {
     autoFocus: true,
+    target: target,
 });
 
 editor.start();

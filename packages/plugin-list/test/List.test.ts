@@ -24,6 +24,7 @@ import { InsertTextParams } from '../../plugin-char/src/Char';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkDomParser } from '../../plugin-link/src/LinkDomParser';
 import { SuperscriptDomParser } from '../../plugin-superscript/src/SuperscriptDomParser';
+import { Dom } from '../../plugin-dom/src/Dom';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand('deleteForward');
@@ -50,7 +51,8 @@ const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand('toggleList', params);
 };
 const backspace = async (editor: JWEditor): Promise<void> => {
-    await keydown(editor.editable, 'Backspace');
+    const domPlugin = editor.plugins.get(Dom);
+    await keydown(domPlugin.editable, 'Backspace');
 };
 const insertText = async (editor: JWEditor, text: string): Promise<void> => {
     const params: InsertTextParams = {

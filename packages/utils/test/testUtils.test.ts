@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { testEditor } from '../src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
@@ -11,7 +12,18 @@ describe('core', () => {
         describe('testUtils', () => {
             describe('testEditor()', () => {
                 it('content should be the same (without range)', async () => {
-                    let content;
+                    let content: string;
+
+                    // This particular test is there to trigger the addition of
+                    // a range in the DOM before running the tests that are
+                    // supposed to run "without range". The point is to check
+                    // that the range is properly cleaned from the DOM.
+                    content = '<p>[a]</p>';
+                    await testEditor(BasicEditor, {
+                        contentBefore: content,
+                        contentAfter: content,
+                    });
+
                     content = 'a';
                     await testEditor(BasicEditor, {
                         contentBefore: content,
