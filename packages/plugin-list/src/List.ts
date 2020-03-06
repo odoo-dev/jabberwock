@@ -25,7 +25,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         return node.parent && node.parent.is(ListNode);
     }
     static isInList(type: ListType, node: VNode): boolean {
-        return node && !!node.closest(ListNode[type]);
+        return node?.ancestor(ListNode)?.listType === type;
     }
     commands = {
         toggleList: {

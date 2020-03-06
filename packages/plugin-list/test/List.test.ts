@@ -851,6 +851,66 @@ describePlugin(List, testEditor => {
                             </ul>`),
                     });
                 });
+                it('should convert within mixed lists', async () => {
+                    // TODO: this test should be changed if we follow docs
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                            <ul>
+                                <li>a</li>
+                                <li>b</li>
+                                <li style="list-style: none;">
+                                    <ol>
+                                        <li>c</li>
+                                        <li>d</li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>[]e</li>
+                                                <li>f</li>
+                                                <li style="list-style: none;">
+                                                    <ul>
+                                                        <li>g</li>
+                                                    </ul>
+                                                </li>
+                                                <li>h</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>q]r</li>
+                                <li>st</li>
+                            </ul>`),
+                        stepFunction: toggleOrderedList,
+                        contentAfter: unformat(`
+                            <ul>
+                                <li>a</li>
+                                <li>b</li>
+                                <li style="list-style: none;">
+                                    <ol>
+                                        <li>c</li>
+                                        <li>d</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>[]e</li>
+                                            </ol>
+                                        </li>
+                                        <li style="list-style: none;">
+                                            <ul>
+                                                <li>f</li>
+                                                <li style="list-style: none;">
+                                                    <ul>
+                                                        <li>g</li>
+                                                    </ul>
+                                                </li>
+                                                <li>h</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>q]r</li>
+                                <li>st</li>
+                            </ul>`),
+                    });
+                });
             });
         });
     });
