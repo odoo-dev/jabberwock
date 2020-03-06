@@ -1,4 +1,5 @@
 import { EventBatch, EventNormalizer } from '../src/EventNormalizer';
+import { AnyFunction } from '../src/JWEditor';
 
 /**
  * This mapping exist to ease the tests of the normalizer.
@@ -274,6 +275,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
     const editableElement = document.getElementById('editable');
     const nodeIndexGenerator = new NodeIndexGenerator(editableElement);
     for (const eventStack of eventStackList) {
+        let keyEventPrevented = false;
         for (const testEvent of eventStack) {
             if (testEvent.type === 'mutation') {
                 const mutationEvent = testEvent;
@@ -341,7 +343,14 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                 }
             } else {
                 const { type, ...options } = testEvent;
-                triggerEvent(editableElement, type, options as TriggerNativeEventsOption);
+                if (!(keyEventPrevented && ['keydown', 'keypress', 'keyup'].includes(type))) {
+                    const event = triggerEvent(
+                        editableElement,
+                        type,
+                        options as TriggerNativeEventsOption,
+                    );
+                    keyEventPrevented = event.defaultPrevented;
+                }
             }
         }
         await nextTick();
@@ -377,7 +386,10 @@ export function testCallbackBefore(): TestContext {
     container.appendChild(div);
     document.body.appendChild(container);
     const eventBatchs = [];
-    const normalizer = new EventNormalizer(editable, (res: EventBatch): void => {
+    async function nextMutex(fn: AnyFunction): Promise<void> {
+        fn();
+    }
+    const normalizer = new EventNormalizer(editable, nextMutex, (res: EventBatch): void => {
         eventBatchs.push(res);
     });
     return {

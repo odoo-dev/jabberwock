@@ -37,21 +37,21 @@ describe('utils', () => {
                     ctx.normalizer._inferKeydownEvent({
                         inputType: 'insertParagraph',
                     } as InputEvent),
-                ).to.deep.equal({ ...defaultModifierKeys, code: 'Enter' });
+                ).to.deep.equal({ ...defaultModifierKeys, key: 'Enter', code: 'Enter' });
             });
             it('should infer Backspace from deleteContentBackward', () => {
                 expect(
                     ctx.normalizer._inferKeydownEvent({
                         inputType: 'deleteContentBackward',
                     } as InputEvent),
-                ).to.deep.equal({ ...defaultModifierKeys, code: 'Backspace' });
+                ).to.deep.equal({ ...defaultModifierKeys, key: 'Backspace', code: 'Backspace' });
             });
             it('should infer Delete from deleteContentForward', () => {
                 expect(
                     ctx.normalizer._inferKeydownEvent({
                         inputType: 'deleteContentForward',
                     } as InputEvent),
-                ).to.deep.equal({ ...defaultModifierKeys, code: 'Delete' });
+                ).to.deep.equal({ ...defaultModifierKeys, key: 'Delete', code: 'Delete' });
             });
             it('should not infer anything', () => {
                 expect(ctx.normalizer._inferKeydownEvent({ inputType: '' } as InputEvent)).to.be

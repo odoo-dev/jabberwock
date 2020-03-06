@@ -15,6 +15,7 @@ export class EventManager {
         this.domPlugin = domPlugin;
         this.eventNormalizer = new EventNormalizer(
             editor.editable,
+            this.editor.nextEventMutex,
             this._onNormalizedEvent.bind(this),
         );
     }
@@ -65,15 +66,16 @@ export class EventManager {
      *
      * @param action
      */
-    _onNormalizedEvent(batch: EventBatch): void {
+    async _onNormalizedEvent(batch: EventBatch): Promise<void> {
         let processed = false;
         if (batch.inferredKeydownEvent) {
-            processed = !!this.editor.processEvent(
+            processed = !!(await this.editor.processEvent(
                 new KeyboardEvent('keydown', {
                     ...batch.inferredKeydownEvent,
-                    key: batch.inferredKeydownEvent.code,
+                    key: batch.inferredKeydownEvent.key,
+                    code: batch.inferredKeydownEvent.code,
                 }),
-            );
+            ));
         }
         if (!processed) {
             for (const action of batch.actions) {

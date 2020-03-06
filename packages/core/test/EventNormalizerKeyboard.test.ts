@@ -1266,6 +1266,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'input', { inputType: 'deleteContentBackward' });
                     setSelection(text, 5, text, 5);
                     await nextTick();
+                    await nextTick();
 
                     const keyboardActions: NormalizedAction[] = [
                         {
@@ -1797,6 +1798,7 @@ describe('utils', () => {
                                     mutatedElements: new Set([text]),
                                     inferredKeydownEvent: {
                                         ...defaultModifierKeys,
+                                        key: 'Backspace',
                                         code: 'Backspace',
                                     },
                                 },
@@ -2282,6 +2284,7 @@ describe('utils', () => {
                                     mutatedElements: new Set([text]),
                                     inferredKeydownEvent: {
                                         ...defaultModifierKeys,
+                                        key: 'Backspace',
                                         code: 'Backspace',
                                     },
                                 },
@@ -2734,6 +2737,7 @@ describe('utils', () => {
                                     mutatedElements: new Set([text]),
                                     inferredKeydownEvent: {
                                         ...defaultModifierKeys,
+                                        key: 'Backspace',
                                         code: 'Backspace',
                                     },
                                 },
@@ -3203,6 +3207,7 @@ describe('utils', () => {
                                     mutatedElements: new Set([b, lastText]),
                                     inferredKeydownEvent: {
                                         ...defaultModifierKeys,
+                                        key: 'Backspace',
                                         code: 'Backspace',
                                     },
                                 },
@@ -3706,6 +3711,7 @@ describe('utils', () => {
                                     mutatedElements: new Set([b, lastText]),
                                     inferredKeydownEvent: {
                                         ...defaultModifierKeys,
+                                        key: 'Backspace',
                                         code: 'Backspace',
                                     },
                                 },

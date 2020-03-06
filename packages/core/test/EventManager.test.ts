@@ -20,15 +20,16 @@ describe('core', () => {
                             },
                         );
                     },
-                    stepFunction: (editor: BasicEditor) => {
+                    stepFunction: async (editor: BasicEditor) => {
                         editor.execCommand = (): Promise<void> => Promise.resolve();
                         const execSpy = spy(editor, 'execCommand');
                         const params = {
                             context: editor.contextManager.defaultContext,
                         };
-                        editor.eventManager._onNormalizedEvent({
+                        await editor.eventManager._onNormalizedEvent({
                             actions: [],
                             inferredKeydownEvent: {
+                                key: 'Backspace',
                                 code: 'Backspace',
                                 ctrlKey: false,
                                 altKey: false,

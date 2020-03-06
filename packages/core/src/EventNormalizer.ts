@@ -2,6 +2,7 @@ import { Direction } from '../../core/src/VSelection';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint } from '../../utils/polyfill';
 import { targetDeepest } from '../../utils/src/Dom';
+import { EventMutexFunction } from './JWEditor';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -183,6 +184,7 @@ type InferredCodeValue = 'Enter' | 'Backspace' | 'Delete';
  * The infered keydown event for virtual keboard.
  */
 export interface InferredKeydownEvent extends ModifierKeys {
+    key: InferredCodeValue;
     code: InferredCodeValue;
 }
 
@@ -300,27 +302,12 @@ type TriggerEventBatchCallback = (batch: EventBatch) => void;
  *   - Firefox
  */
 
-export class EventNormalizer {
-    /**
-     * HTML element that represents the editable zone. Only events happening
-     * inside the editable zone are subject to normalization.
-     */
-    editable: HTMLElement;
-    /**
-     * Event listeners that are bound in the DOM by the normalizer on creation
-     * and unbound on destroy.
-     */
-    _eventListeners: EventListenerDeclaration[] = [];
-    /**
-     * The MutationNormalizer used by the normalizer to watch the nodes that are
-     * being modified since the normalizer creation until it is drestroyed.
-     */
-    _mutationNormalizer: MutationNormalizer;
+interface CurrentStackObservation {
     /**
      * Events fired during the current tick.
      * _events with value null mean that we are not currently observing changes.
      */
-    _events: EventToProcess[] = null;
+    _events: EventToProcess[];
     /**
      * Map is used to gather informations when multiples keys are found in the
      * same stack.
@@ -329,7 +316,7 @@ export class EventNormalizer {
         keydown?: KeyboardEvent;
         keypress?: KeyboardEvent;
         input?: InputEvent;
-    }[] = [];
+    }[];
     /**
      * Map used to collect information about the last events of a type that
      * happened in one or two ticks.
@@ -346,7 +333,27 @@ export class EventNormalizer {
         drop?: DataTransferDetails;
         paste?: DataTransferDetails;
         customSelectAll?: CustomEvent;
-    } = {};
+    };
+}
+
+export class EventNormalizer {
+    /**
+     * HTML element that represents the editable zone. Only events happening
+     * inside the editable zone are subject to normalization.
+     */
+    editable: HTMLElement;
+    /**
+     * Event listeners that are bound in the DOM by the normalizer on creation
+     * and unbound on destroy.
+     */
+    _eventListeners: EventListenerDeclaration[] = [];
+    /**
+     * The MutationNormalizer used by the normalizer to watch the nodes that are
+     * being modified since the normalizer creation until it is drestroyed.
+     */
+    _mutationNormalizer: MutationNormalizer;
+
+    currentStackObservation: CurrentStackObservation;
 
     /**
      * Used in `_onSelectionChange` for the heurisic that check if we might
@@ -396,9 +403,15 @@ export class EventNormalizer {
         metaKey: false,
         shiftKey: false,
     };
-    constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
+    constructor(
+        editable: HTMLElement,
+        public nextMutex: EventMutexFunction,
+        callback: TriggerEventBatchCallback,
+    ) {
         this.editable = editable;
         this._triggerEventBatch = callback;
+
+        this.initNextObservation();
 
         const document = this.editable.ownerDocument;
         this._bindEvent(editable, 'compositionstart', this._registerEvent);
@@ -470,7 +483,7 @@ export class EventNormalizer {
         });
     }
     /**
-     * Register given event on the this._events queue. If the queue is not yet
+     * Register given event on the this.currentStackObservation._events queue. If the queue is not yet
      * initialized or has been cleared prior to this call, re-initialize it.
      * After a tick (setTimeout 0ms) the '_processEvents' method is called. All
      * events that happened during the tick are read from the queue and the
@@ -480,15 +493,24 @@ export class EventNormalizer {
      * @see _processEvents
      */
     _registerEvent(ev: EventToProcess): void {
-        if (this._events === null) {
+        if (this.currentStackObservation._events.length === 0) {
             // The queue is not initialized or has been reset, so this is a new
             // user action. Re-initialize the queue such that the analysis is
             // not polluted by previous observations.
-            this._events = [];
+            this.initNextObservation();
+            const stack = this.currentStackObservation;
+
             // Start observing mutations.
             this._mutationNormalizer.start();
             // All events during this tick will be processed in the next one.
-            setTimeout(this._processEvents.bind(this));
+            this.nextMutex(() => {
+                return new Promise((resolve): void => {
+                    setTimeout((): void => {
+                        this._processEvents(stack);
+                        resolve();
+                    });
+                });
+            });
         }
 
         // It is possible to have multiples keys that must trigger multiples
@@ -500,21 +522,23 @@ export class EventNormalizer {
             // triggered between the three (keydown, keypress, input).  So we
             // create a new map each time a 'keydown' is registred.
             if (ev.type === 'keydown') {
-                this._multiKeyStack.push({});
+                this.currentStackObservation._multiKeyStack.push({});
             }
-            const lastMultiKeys = this._multiKeyStack[this._multiKeyStack.length - 1];
+            const lastMultiKeys = this.currentStackObservation._multiKeyStack[
+                this.currentStackObservation._multiKeyStack.length - 1
+            ];
             if (lastMultiKeys) {
                 lastMultiKeys[ev.type] = ev;
             }
         }
 
-        this._eventsMap[ev.type] = ev;
+        this.currentStackObservation._eventsMap[ev.type] = ev;
         if (ev.type.startsWith('composition')) {
             // In most cases we only need the last composition of the
             // registred events
-            this._eventsMap.lastComposition = ev as CompositionEvent;
+            this.currentStackObservation._eventsMap.lastComposition = ev as CompositionEvent;
         }
-        this._events.push(ev);
+        this.currentStackObservation._events.push(ev);
     }
     /**
      * This function is the root of the normalization for most events.
@@ -533,29 +557,32 @@ export class EventNormalizer {
      * cases, this control variable will be set to true such that the analysis
      * process knows the current event queue processing has been delayed.
      */
-    _processEvents(secondTickObservation = false): void {
+    _processEvents(
+        currentStackObservation: CurrentStackObservation,
+        secondTickObservation = false,
+    ): EventBatch {
         // In some cases, for example cutting with Cmd+X on Safari, the browser
         // triggers events in two different stacks. In such cases, observing
         // events occuring during one tick is not enough so we need to delay the
         // analysis after we observe events during two ticks instead.
-        const needSecondTickObservation = this._events.every(ev => {
+        const needSecondTickObservation = currentStackObservation._events.every(ev => {
             return !MultiStackEventTypes.includes(ev.type);
         });
         if (needSecondTickObservation && !secondTickObservation) {
-            setTimeout(this._processEvents.bind(this, true));
+            setTimeout(this._processEvents.bind(this, currentStackObservation, true));
             return;
         }
 
         let normalizedActions: NormalizedAction[] = [];
 
-        const keydownEvent = this._eventsMap.keydown;
-        const keypressEvent = this._eventsMap.keypress;
-        const inputEvent = this._eventsMap.input;
-        const customSelectAllEvent = this._eventsMap.customSelectAll;
-        const compositionEvent = this._eventsMap.lastComposition;
-        const cutEvent = this._eventsMap.cut;
-        const dropEvent = this._eventsMap.drop;
-        const pasteEvent = this._eventsMap.paste;
+        const keydownEvent = currentStackObservation._eventsMap.keydown;
+        const keypressEvent = currentStackObservation._eventsMap.keypress;
+        const inputEvent = currentStackObservation._eventsMap.input;
+        const customSelectAllEvent = currentStackObservation._eventsMap.customSelectAll;
+        const compositionEvent = currentStackObservation._eventsMap.lastComposition;
+        const cutEvent = currentStackObservation._eventsMap.cut;
+        const dropEvent = currentStackObservation._eventsMap.drop;
+        const pasteEvent = currentStackObservation._eventsMap.paste;
 
         const compositionData = this._getCompositionData(compositionEvent, inputEvent);
 
@@ -623,16 +650,21 @@ export class EventNormalizer {
 
         // When the browser trigger multiples keydown at once, for each keydown
         // there is always also a keypress and an input that must be present.
-        const possibleMultiKeydown = this._multiKeyStack.every(
-            keydownMap => keydownMap.keydown && keydownMap.keypress && keydownMap.input,
+        const possibleMultiKeydown = currentStackObservation._multiKeyStack.every(
+            keydownMap =>
+                (keydownMap.keydown && keydownMap.keypress && keydownMap.input) ||
+                (!keydownMap.keypress &&
+                    !keydownMap.input &&
+                    keydownMap.keydown.key.length > 1 &&
+                    keydownMap.keydown.key !== 'Unidentified'),
         );
         // if there is only one _multiKeyMap, it means that there is no
         // multiples keys pushed.
-        if (this._multiKeyStack.length > 1 && possibleMultiKeydown) {
-            this._multiKeyStack.map(keydownMap => {
+        if (currentStackObservation._multiKeyStack.length > 1 && possibleMultiKeydown) {
+            currentStackObservation._multiKeyStack.map(keydownMap => {
                 const keyboardAction = this._getKeyboardAction(
                     keydownMap.keydown.key,
-                    keydownMap.input.inputType,
+                    (keydownMap.input && keydownMap.input.inputType) || '',
                     !!mutatedElements.size,
                 );
                 if (keyboardAction) {
@@ -688,6 +720,8 @@ export class EventNormalizer {
             normalizedActions.push(historyAction);
         }
 
+        this.initNextObservation();
+
         if (normalizedActions.length > 0) {
             const batch: EventBatch = {
                 actions: normalizedActions,
@@ -698,11 +732,18 @@ export class EventNormalizer {
             }
             this._triggerEventBatch(batch);
         }
+    }
 
-        this._eventsMap = {};
+    /**
+     * Set the next observation.
+     */
+    initNextObservation(): void {
         this._followsPointerAction = false;
-        this._multiKeyStack = [];
-        this._events = null;
+        this.currentStackObservation = {
+            _events: [],
+            _multiKeyStack: [],
+            _eventsMap: {},
+        };
     }
     _getCompositionData(
         compositionEvent: CompositionEvent | undefined,
@@ -746,6 +787,7 @@ export class EventNormalizer {
         if (code) {
             return {
                 ...this._modifierKeys,
+                key: code,
                 code: code,
             };
         }
@@ -1358,9 +1400,11 @@ export class EventNormalizer {
                 type: 'setSelection',
                 domSelection: this._getSelection(ev),
             };
-            this._triggerEventBatch({
-                actions: [setSelectionAction],
-                mutatedElements: new Set([]),
+            this.nextMutex(() => {
+                this._triggerEventBatch({
+                    actions: [setSelectionAction],
+                    mutatedElements: new Set([]),
+                });
             });
             this._selectionHasChanged = false;
         }, 0);
@@ -1398,7 +1442,6 @@ export class EventNormalizer {
             this._selectionHasChanged = false;
 
             this._followsPointerAction = true;
-            this._eventsMap[ev.type] = ev;
         }
     }
     /**
@@ -1432,9 +1475,11 @@ export class EventNormalizer {
             type: 'setSelection',
             domSelection: this._getSelection(ev),
         };
-        this._triggerEventBatch({
-            actions: [setSelectionAction],
-            mutatedElements: new Set([]),
+        this.nextMutex(() => {
+            this._triggerEventBatch({
+                actions: [setSelectionAction],
+                mutatedElements: new Set([]),
+            });
         });
     }
     /**
@@ -1561,8 +1606,8 @@ export class EventNormalizer {
         // costly check.
         // 1. Following a modified key being pressed. (e.g. Ctrl+A)
         // const modifiedKeyEvent =
-        //     this._eventsMap.keydown &&
-        //     (this._eventsMap.keydown.ctrlKey || this._eventsMap.keydown.metaKey);
+        //     this.currentStackObservation._eventsMap.keydown &&
+        //     (this.currentStackObservation._eventsMap.keydown.ctrlKey || this.currentStackObservation._eventsMap.keydown.metaKey);
         const modifiedKeyEvent = this._modifierKeys.ctrlKey || this._modifierKeys.metaKey;
 
         // This heuristic protects against a costly `_isSelectAll` call.
@@ -1587,9 +1632,11 @@ export class EventNormalizer {
                 // normalizer is not listnening in this case. If it happens to
                 // be insufficient later on, the mutated elements will need to
                 // be retrieved from the mutation normalizer.
-                this._triggerEventBatch({
-                    actions: [selectAllAction],
-                    mutatedElements: new Set(),
+                this.nextMutex(() => {
+                    this._triggerEventBatch({
+                        actions: [selectAllAction],
+                        mutatedElements: new Set(),
+                    });
                 });
             }
         }

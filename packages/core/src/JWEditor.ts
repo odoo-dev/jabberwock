@@ -39,6 +39,9 @@ export interface JWEditorConfig {
 
 export type CommandExec = (id: CommandIdentifier, params?: CommandParams) => void;
 
+export type AnyFunction = (...args) => any;
+export type EventMutexFunction = (next: AnyFunction) => Promise<any>;
+
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
     el: HTMLElement;
@@ -58,6 +61,7 @@ export class JWEditor {
     _platform = navigator.platform.match(/Mac/) ? Platform.MAC : Platform.PC;
     renderers: Record<RenderingIdentifier, RenderingEngine> = {};
     parsers: Record<ParsingIdentifier, ParsingEngine> = {};
+    private mutex = Promise.resolve();
     createBaseContainer: () => VNode = () => new VElement('P');
 
     constructor(editable?: HTMLElement) {
@@ -78,6 +82,9 @@ export class JWEditor {
         }
         this._originalEditable = editable;
 
+        // Between
+        this.nextEventMutex = this.nextEventMutex.bind(this);
+
         // The editable property of the editor is the original editable element
         // before start is called, and becomes the clone after start is called.
         this.editable = editable;
@@ -87,6 +94,9 @@ export class JWEditor {
         this.addPlugin(CorePlugin);
     }
 
+    async nextEventMutex<T extends AnyFunction>(next: T): Promise<ReturnType<T>> {
+        return (this.mutex = this.mutex.then(next));
+    }
     /**
      * Start the editor on the editable DOM node set on this editor instance.
      */
@@ -360,7 +370,7 @@ export class JWEditor {
      *
      * @param event
      */
-    processEvent(event: KeyboardEvent): CommandIdentifier {
+    async processEvent(event: KeyboardEvent): Promise<CommandIdentifier> {
         let command: BoundCommand;
         let context: Context;
         const userCommands = this.keymaps.user.match(event);
@@ -374,7 +384,10 @@ export class JWEditor {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            this.execCommand(command.commandId, params);
+            this.eventManager.eventNormalizer.initNextObservation();
+            await this.nextEventMutex(() => {
+                return this.execCommand(command.commandId, params);
+            });
             return command.commandId;
         }
     }
