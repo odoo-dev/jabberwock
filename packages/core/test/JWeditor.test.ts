@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import JWEditor from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';

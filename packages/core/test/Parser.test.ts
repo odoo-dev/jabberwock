@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
