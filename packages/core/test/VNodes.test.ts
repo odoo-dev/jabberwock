@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { VNode, VNodeType } from '../src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/src/CharNode';

@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { InsertTextParams } from '../../plugin-char/src/Char';

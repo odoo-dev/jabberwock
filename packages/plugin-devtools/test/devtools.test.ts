@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { VNode, VNodeType } from '../../core/src/VNodes/VNode';

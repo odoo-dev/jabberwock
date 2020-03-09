@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { describePlugin } from '../../utils/src/testUtils';
 import { Youtube } from '../src/Youtube';

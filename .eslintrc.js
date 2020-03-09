@@ -16,6 +16,15 @@ module.exports = {
         "dot-notation": "error",
         "@typescript-eslint/no-use-before-define": ["error", { "functions": false }],
     },
+    "overrides": [{
+        "files": ["*.test.ts"],
+        "rules": {
+            "max-nested-callbacks": "off",
+            "@typescript-eslint/no-empty-function": "off",
+            "no-unused-expressions": "off",
+            "@typescript-eslint/no-unused-expressions": "off",
+        }
+    }],
     "env": {
         "commonjs": true,
         "es6": true,

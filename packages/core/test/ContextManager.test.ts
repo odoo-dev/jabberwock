@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks */
 import * as sinon from 'sinon';
 import { ListNode, ListType } from '../../plugin-list/src/ListNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
