@@ -2,19 +2,19 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreakNode } from './LineBreakNode';
 import { LineBreakDomParser } from './LineBreakDomParser';
 import { LineBreakDomRenderer } from './LineBreakDomRenderer';
-import { InsertParams } from '../../core/src/Core';
+import { Core } from '../../core/src/Core';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 
-export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> {
+export class LineBreak<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [LineBreakDomParser],
         renderers: [LineBreakDomRenderer],
     };
     commands = {
         insertLineBreak: {
-            handler: this.insertLineBreak.bind(this),
+            handler: this.insertLineBreak,
         },
     };
 
@@ -26,9 +26,8 @@ export class LineBreak<T extends JWPluginConfig> extends JWPlugin<T> {
      * Insert a line break node at range.
      */
     insertLineBreak(): void {
-        const params: InsertParams = {
+        this.editor.execCommand<Core>('insert', {
             node: new LineBreakNode(),
-        };
-        this.editor.execCommand('insert', params);
+        });
     }
 }

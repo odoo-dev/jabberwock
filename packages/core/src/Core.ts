@@ -1,7 +1,7 @@
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
-import { VSelectionDescription } from './VSelection';
+import { VSelectionDescription, Direction } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 
 export type InsertParagraphBreakParams = CommandParams;
@@ -16,26 +16,26 @@ export interface VSelectionParams {
     vSelection: VSelectionDescription;
 }
 
-export class Core<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     editor: JWEditor;
     commands = {
         insert: {
-            handler: this.insert.bind(this),
+            handler: this.insert,
         },
         insertParagraphBreak: {
-            handler: this.insertParagraphBreak.bind(this),
+            handler: this.insertParagraphBreak,
         },
         setSelection: {
-            handler: this.setSelection.bind(this),
+            handler: this.setSelection,
         },
         deleteBackward: {
-            handler: this.deleteBackward.bind(this),
+            handler: this.deleteBackward,
         },
         deleteForward: {
-            handler: this.deleteForward.bind(this),
+            handler: this.deleteForward,
         },
         selectAll: {
-            handler: this.selectAll.bind(this),
+            handler: this.selectAll,
         },
     };
 
@@ -116,13 +116,13 @@ export class Core<T extends JWPluginConfig> extends JWPlugin<T> {
      *
      * @param params
      */
-    selectAll(params: VSelectionParams): void {
+    selectAll(): void {
         this.editor.selection.set({
             anchorNode: this.editor.vDocument.root.firstLeaf(),
             anchorPosition: RelativePosition.BEFORE,
             focusNode: this.editor.vDocument.root.lastLeaf(),
             focusPosition: RelativePosition.AFTER,
-            direction: params.vSelection.direction,
+            direction: Direction.FORWARD,
         });
     }
 }

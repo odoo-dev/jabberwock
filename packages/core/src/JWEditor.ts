@@ -1,4 +1,4 @@
-import { Dispatcher, CommandIdentifier, CommandParams } from './Dispatcher';
+import { Dispatcher, CommandIdentifier } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
@@ -28,6 +28,11 @@ export type Loadables<T extends JWPlugin = JWPlugin> = {
     [key in keyof T['loaders']]?: Parameters<T['loaders'][key]>[0];
 };
 
+type Commands<T extends JWPlugin> = Extract<keyof T['commands'], string>;
+type CommandParams<T extends JWPlugin, K extends string> = K extends Commands<T>
+    ? Parameters<T['commands'][K]['handler']>[0]
+    : never;
+
 export interface JWEditorConfig {
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
     createBaseContainer?: () => VNode;
@@ -37,8 +42,6 @@ export interface JWEditorConfig {
 export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
     get<T extends typeof JWPlugin>(constructor: T): InstanceType<T>;
 }
-
-export type CommandExec = (id: CommandIdentifier, params?: CommandParams) => void;
 
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
@@ -190,11 +193,16 @@ export class JWEditor {
 
             // Register the commands of this plugin.
             Object.keys(plugin.commands).forEach(key => {
-                this.dispatcher.registerCommand(key, plugin.commands[key]);
+                const implementation = { ...plugin.commands[key] };
+                // Bind handlers to the plugin itself. This preserves the
+                // typing of the handler parameters which would be lost if
+                // the binding was done in the plugin definition.
+                implementation.handler = implementation.handler.bind(plugin);
+                this.dispatcher.registerCommand(key, implementation);
             });
             // Register the hooks of this plugin.
             for (const [id, hook] of Object.entries(plugin.commandHooks)) {
-                this.dispatcher.registerCommandHook(id, hook);
+                this.dispatcher.registerCommandHook(id, hook.bind(plugin));
             }
 
             // Load loaders.
@@ -277,8 +285,11 @@ export class JWEditor {
      * @param id name identifier of the command to execute
      * @param params arguments object of the command to execute
      */
-    async execCommand(id: CommandIdentifier, params = {}): Promise<void> {
-        await this.dispatcher.dispatch(id, params);
+    async execCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        commandName: C,
+        params?: CommandParams<P, C>,
+    ): Promise<void> {
+        await this.dispatcher.dispatch(commandName, params);
     }
 
     /**

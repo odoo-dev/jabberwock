@@ -1,9 +1,10 @@
 import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
 import JWEditor from './JWEditor';
 import { CommandIdentifier } from './Dispatcher';
-import { VSelectionParams } from './Core';
+import { VSelectionParams } from '../../core/src/Core';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { Direction } from './VSelection';
+import { InsertTextParams } from '../../plugin-char/src/Char';
 
 export class EventManager {
     editor: JWEditor;
@@ -33,7 +34,8 @@ export class EventManager {
                 if (action.text === '\n') {
                     return ['insertLineBreak', {}];
                 } else {
-                    return ['insertText', { text: action.text }];
+                    const params: InsertTextParams = { text: action.text };
+                    return ['insertText', params];
                 }
             case 'selectAll':
                 return ['selectAll', {}];
@@ -53,8 +55,6 @@ export class EventManager {
                     return ['deleteBackward', {}];
                 }
             }
-            case 'applyFormat':
-                return ['applyFormat', { format: action.format }];
             default:
                 break;
         }

@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { InsertParams } from '../../core/src/Core';
+import { Core } from '../../core/src/Core';
 import { ListType, ListNode } from '../src/ListNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { describePlugin, keydown } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
-import { ListParams, List } from '../src/List';
+import { List } from '../src/List';
 import { ListDomParser } from '../src/ListDomParser';
 import { ListItemDomParser } from '../src/ListItemDomParser';
 import { CharDomParser } from '../../plugin-char/src/CharDomParser';
@@ -19,45 +19,41 @@ import { ItalicDomParser } from '../../plugin-italic/src/ItalicDomParser';
 import { BoldDomParser } from '../../plugin-bold/src/BoldDomParser';
 import { UnderlineDomParser } from '../../plugin-underline/src/UnderlineDomParser';
 import { SpanDomParser } from '../../plugin-span/src/SpanDomParser';
-import { InsertTextParams } from '../../plugin-char/src/Char';
+import { Char } from '../../plugin-char/src/Char';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkDomParser } from '../../plugin-link/src/LinkDomParser';
 import { SuperscriptDomParser } from '../../plugin-superscript/src/SuperscriptDomParser';
 import { Dom } from '../../plugin-dom/src/Dom';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('deleteForward');
+    await editor.execCommand<Core>('deleteForward');
 const deleteBackward = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('deleteBackward');
+    await editor.execCommand<Core>('deleteBackward');
 const insertParagraphBreak = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('insertParagraphBreak');
+    await editor.execCommand<Core>('insertParagraphBreak');
 const insertLineBreak = async (editor: JWEditor): Promise<void> => {
-    const params: InsertParams = {
+    await editor.execCommand<Core>('insert', {
         node: new LineBreakNode(),
-    };
-    await editor.execCommand('insert', params);
+    });
 };
 const toggleOrderedList = async (editor: JWEditor): Promise<void> => {
-    const params: ListParams = {
+    await editor.execCommand<List>('toggleList', {
         type: ListType.ORDERED,
-    };
-    await editor.execCommand('toggleList', params);
+    });
 };
 const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
-    const params: ListParams = {
+    await editor.execCommand<List>('toggleList', {
         type: ListType.UNORDERED,
-    };
-    await editor.execCommand('toggleList', params);
+    });
 };
 const backspace = async (editor: JWEditor): Promise<void> => {
     const domPlugin = editor.plugins.get(Dom);
     await keydown(domPlugin.editable, 'Backspace');
 };
 const insertText = async (editor: JWEditor, text: string): Promise<void> => {
-    const params: InsertTextParams = {
+    await editor.execCommand<Char>('insertText', {
         text: text,
-    };
-    await editor.execCommand('insertText', params);
+    });
 };
 
 describePlugin(List, testEditor => {
