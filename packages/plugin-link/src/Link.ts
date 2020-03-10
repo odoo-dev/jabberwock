@@ -4,7 +4,7 @@ import { LinkDomParser } from './LinkDomParser';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from './LinkFormat';
-import { InsertTextParams } from '../../plugin-char/src/Char';
+import { Char } from '../../plugin-char/src/Char';
 import { Formats } from '../../plugin-inline/src/Formats';
 import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
 import { Loadables } from '../../core/src/JWEditor';
@@ -16,7 +16,7 @@ export interface LinkParams extends CommandParams {
     url?: string;
 }
 
-export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static isLink(node: VNode): node is InlineNode;
     static isLink(link: LinkFormat, node: VNode): node is InlineNode;
     static isLink(link: LinkFormat | VNode, node?: VNode): node is InlineNode {
@@ -29,10 +29,10 @@ export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
     commands = {
         link: {
-            handler: this.link.bind(this),
+            handler: this.link,
         },
         unlink: {
-            handler: this.unlink.bind(this),
+            handler: this.unlink,
         },
     };
     readonly loadables: Loadables<Parser & Keymap> = {
@@ -77,11 +77,10 @@ export class Link<T extends JWPluginConfig> extends JWPlugin<T> {
         if (!link) return;
 
         if (range.isCollapsed()) {
-            const insertParams: InsertTextParams = {
+            this.editor.execCommand<Char>('insertText', {
                 text: params.label || link.url,
                 formats: new Formats(link),
-            };
-            this.editor.execCommand('insertText', insertParams);
+            });
         } else {
             for (const inline of selectedInlines) {
                 inline.formats.replace(LinkFormat, link);

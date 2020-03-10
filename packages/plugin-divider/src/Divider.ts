@@ -3,7 +3,7 @@ import { DividerDomParser } from './DividerDomParser';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export class Divider<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Divider<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser> = {
         parsers: [DividerDomParser],
     };

@@ -27,7 +27,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
         autoFocus: false,
     };
     commandHooks = {
-        '*': this._renderInEditable.bind(this),
+        '*': this._renderInEditable,
     };
 
     domMap = new DomMap();

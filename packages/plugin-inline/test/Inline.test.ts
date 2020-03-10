@@ -1,5 +1,5 @@
 import { describePlugin } from '../../utils/src/testUtils';
-import { Inline, FormatParams } from '../src/Inline';
+import { Inline } from '../src/Inline';
 import JWEditor from '../../core/src/JWEditor';
 import { Constructor } from '../../utils/src/utils';
 import { Format } from '../src/Format';
@@ -7,10 +7,9 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 
 const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
-    const formatParams: FormatParams = {
+    await editor.execCommand<Inline>('toggleFormat', {
         FormatClass: FormatClass,
-    };
-    await editor.execCommand('toggleFormat', formatParams);
+    });
 };
 
 describePlugin(Inline, testEditor => {

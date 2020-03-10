@@ -1,11 +1,13 @@
 import { describePlugin } from '../../utils/src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
-import { Indent, IndentParams } from '../src/Indent';
+import { Indent } from '../src/Indent';
 import { withRange, VRange } from '../../core/src/VRange';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 
-const indent = async (editor: JWEditor): Promise<void> => await editor.execCommand('indent');
-const outdent = async (editor: JWEditor): Promise<void> => await editor.execCommand('outdent');
+const indent = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand<Indent>('indent');
+const outdent = async (editor: JWEditor): Promise<void> =>
+    await editor.execCommand<Indent>('outdent');
 
 describePlugin(Indent, testEditor => {
     describe('List', () => {
@@ -771,12 +773,11 @@ describePlugin(Indent, testEditor => {
                     const bNode = editor.vDocument.root.next(node => node.name === 'b');
                     const dNode = editor.vDocument.root.next(node => node.name === 'd');
                     await withRange(VRange.selecting(bNode, dNode), async range => {
-                        const indentParams: IndentParams = {
+                        await editor.execCommand<Indent>('indent', {
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('indent', indentParams);
+                        });
                     });
                 },
                 contentAfter: '&nbsp;&nbsp; &nbsp;ab<br>&nbsp;&nbsp; &nbsp;cd[]',
@@ -857,12 +858,11 @@ describePlugin(Indent, testEditor => {
                     const bNode = editor.vDocument.root.next(node => node.name === 'b');
                     const dNode = editor.vDocument.root.next(node => node.name === 'd');
                     await withRange(VRange.selecting(bNode, dNode), async range => {
-                        const indentParams: IndentParams = {
+                        await editor.execCommand<Indent>('outdent', {
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('outdent', indentParams);
+                        });
                     });
                 },
                 contentAfter: 'ab<br>cd[]',

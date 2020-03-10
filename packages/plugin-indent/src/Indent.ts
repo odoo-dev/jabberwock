@@ -2,7 +2,7 @@ import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { VNode, RelativePosition, Point } from '../../core/src/VNodes/VNode';
-import { Char, InsertTextParams } from '../../plugin-char/src/Char';
+import { Char } from '../../plugin-char/src/Char';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
@@ -12,17 +12,17 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
 
-export class Indent<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Char, LineBreak];
     editor: JWEditor;
     commands = {
         indent: {
             title: 'Indent chars',
-            handler: this.indent.bind(this),
+            handler: this.indent,
         },
         outdent: {
             title: 'Outdent chars',
-            handler: this.outdent.bind(this),
+            handler: this.outdent,
         },
     };
     loadables: Loadables<Keymap> = {
@@ -55,13 +55,12 @@ export class Indent<T extends JWPluginConfig> extends JWPlugin<T> {
         // Only indent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
         if (range.isCollapsed() || !segmentBreaks.length) {
-            const params: InsertTextParams = {
+            await this.editor.execCommand<Char>('insertText', {
                 text: this.tab,
                 context: {
                     range: range,
                 },
-            };
-            await this.editor.execCommand('insertText', params);
+            });
         } else {
             // The first line of the selection is neither fully selected nor
             // traversed so its segment break was not in `range.traversedNodes`.
@@ -70,13 +69,12 @@ export class Indent<T extends JWPluginConfig> extends JWPlugin<T> {
                 // Insert 4 spaces at the start of next segment.
                 const [node, position] = this._nextSegmentStart(segmentBreak);
                 await withRange(VRange.at(node, position), async range => {
-                    const params: InsertTextParams = {
+                    await this.editor.execCommand<Char>('insertText', {
                         text: this.tab,
                         context: {
                             range: range,
                         },
-                    };
-                    await this.editor.execCommand('insertText', params);
+                    });
                 });
             }
         }

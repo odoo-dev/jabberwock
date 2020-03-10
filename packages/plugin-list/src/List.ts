@@ -19,7 +19,7 @@ export interface ListParams extends CommandParams {
     type: ListType;
 }
 
-export class List<T extends JWPluginConfig> extends JWPlugin<T> {
+export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static isListItem(node: VNode): boolean {
         return node.parent && node.parent.is(ListNode);
     }
@@ -29,17 +29,17 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> {
     commands = {
         toggleList: {
             title: 'Toggle list',
-            handler: this.toggleList.bind(this),
+            handler: this.toggleList,
         },
         indent: {
             title: 'Indent list items',
             selector: [ListNode],
-            handler: this.indent.bind(this),
+            handler: this.indent,
         },
         outdent: {
             title: 'Outdent list items',
             selector: [ListNode],
-            handler: this.outdent.bind(this),
+            handler: this.outdent,
         },
         insertParagraphBreak: {
             selector: [ListNode, List.isListItem],
@@ -47,7 +47,7 @@ export class List<T extends JWPluginConfig> extends JWPlugin<T> {
                 const [list, listItem] = context.selector;
                 return !listItem.hasChildren() && listItem === list.lastChild();
             },
-            handler: this.insertParagraphBreak.bind(this),
+            handler: this.insertParagraphBreak,
         },
     };
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {

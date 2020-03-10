@@ -12,10 +12,10 @@ export interface HeadingParams extends CommandParams {
     level: number;
 }
 
-export class Heading<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
         applyHeadingStyle: {
-            handler: this.applyHeadingStyle.bind(this),
+            handler: this.applyHeadingStyle,
         },
     };
     readonly loadables: Loadables<Parser & Keymap> = {

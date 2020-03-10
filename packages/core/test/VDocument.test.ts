@@ -1,16 +1,17 @@
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { InsertTextParams } from '../../plugin-char/src/Char';
+import { Char } from '../../plugin-char/src/Char';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
 import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Core } from '../../core/src/Core';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('deleteForward');
+    await editor.execCommand<Core>('deleteForward');
 const deleteBackward = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('deleteBackward');
+    await editor.execCommand<Core>('deleteBackward');
 const insertParagraphBreak = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('insertParagraphBreak');
+    await editor.execCommand<Core>('insertParagraphBreak');
 
 describe('VDocument', () => {
     // Note: implementing a test for deleteForward, make sure to implement
@@ -1460,13 +1461,12 @@ describe('VDocument', () => {
                 stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     await withRange(VRange.at(aNode), async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'cab[]',
@@ -1478,13 +1478,12 @@ describe('VDocument', () => {
                 stepFunction: async (editor: JWEditor) => {
                     const aNode = editor.vDocument.root.next(node => node.name === 'a');
                     await withRange(VRange.selecting(aNode, aNode), async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1500,13 +1499,12 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.BEFORE],
                     ];
                     await withRange(rangeParams, async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'cab[]',
@@ -1522,13 +1520,12 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                     ];
                     await withRange(rangeParams, async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1544,13 +1541,12 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                     ];
                     await withRange(rangeParams, async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'acb[]',
@@ -1567,13 +1563,12 @@ describe('VDocument', () => {
                         [bNode, RelativePosition.BEFORE],
                     ];
                     await withRange(rangeParams, async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'acb[]',
@@ -1590,13 +1585,12 @@ describe('VDocument', () => {
                         [bNode, RelativePosition.AFTER],
                     ];
                     await withRange(rangeParams, async range => {
-                        const insertParams: InsertTextParams = {
+                        await editor.execCommand<Char>('insertText', {
                             text: 'c',
                             context: {
                                 range: range,
                             },
-                        };
-                        await editor.execCommand('insertText', insertParams);
+                        });
                     });
                 },
                 contentAfter: 'ac[]',

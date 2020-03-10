@@ -11,7 +11,7 @@ import { LineBreakDomParser } from '../src/LineBreakDomParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
-    await editor.execCommand('insertLineBreak');
+    await editor.execCommand<LineBreak>('insertLineBreak');
 
 describePlugin(LineBreak, testEditor => {
     describe('parse', () => {

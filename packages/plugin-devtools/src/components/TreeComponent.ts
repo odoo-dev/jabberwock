@@ -4,6 +4,7 @@ import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode';
+import { Core } from '../../../core/src/Core';
 
 interface NodeProps {
     isRoot: boolean;
@@ -77,7 +78,7 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
             focusNode: this.props.vNode,
             direction: Direction.FORWARD,
         };
-        this.env.editor.execCommand('setSelection', { vSelection: location });
+        this.env.editor.execCommand<Core>('setSelection', { vSelection: location });
     }
     /**
      * Handle folding/unfolding on press Enter

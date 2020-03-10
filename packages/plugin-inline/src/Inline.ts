@@ -10,10 +10,10 @@ export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 
-export class Inline<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
         toggleFormat: {
-            handler: this.toggleFormat.bind(this),
+            handler: this.toggleFormat,
         },
     };
     commandHooks = {
