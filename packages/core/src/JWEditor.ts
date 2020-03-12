@@ -2,7 +2,7 @@ import { Dispatcher, CommandIdentifier, CommandParams } from './Dispatcher';
 import { EventManager } from './EventManager';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
-import { CorePlugin } from './CorePlugin';
+import { Core } from './Core';
 import { VNode } from './VNodes/VNode';
 import { VElement } from './VNodes/VElement';
 import { Dom } from '../../plugin-dom/src/Dom';
@@ -65,9 +65,9 @@ export class JWEditor {
 
         this.nextEventMutex = this.nextEventMutex.bind(this);
 
-        // CorePlugin is a special mandatory plugin that handles the matching
-        // between the core commands and the VDocument.
-        this.load(CorePlugin);
+        // Core is a special mandatory plugin that handles the matching between
+        // the commands supported in the core of the editor and the VDocument.
+        this.load(Core);
         this.load(Parser);
         this.load(Keymap);
     }

@@ -114,7 +114,7 @@ describe('core', () => {
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
-                        'CorePlugin',
+                        'Core',
                         'Parser',
                         'Keymap',
                         'A',
@@ -131,7 +131,7 @@ describe('core', () => {
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
-                        'CorePlugin',
+                        'Core',
                         'Parser',
                         'Keymap',
                         'A',
@@ -150,7 +150,7 @@ describe('core', () => {
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
-                        'CorePlugin',
+                        'Core',
                         'Parser',
                         'Keymap',
                         'A',
@@ -171,7 +171,7 @@ describe('core', () => {
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
-                        'CorePlugin',
+                        'Core',
                         'Parser',
                         'Keymap',
                         'A',
@@ -193,7 +193,7 @@ describe('core', () => {
                     await editor.start();
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
-                        'CorePlugin',
+                        'Core',
                         'Parser',
                         'Keymap',
                         'A',

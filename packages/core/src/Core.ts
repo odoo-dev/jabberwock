@@ -16,7 +16,7 @@ export interface VSelectionParams {
     vSelection: VSelectionDescription;
 }
 
-export class CorePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
+export class Core<T extends JWPluginConfig> extends JWPlugin<T> {
     editor: JWEditor;
     commands = {
         insert: {

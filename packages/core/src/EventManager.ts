@@ -1,7 +1,7 @@
 import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
 import JWEditor from './JWEditor';
 import { CommandIdentifier } from './Dispatcher';
-import { VSelectionParams } from './CorePlugin';
+import { VSelectionParams } from './Core';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { Direction } from './VSelection';
 

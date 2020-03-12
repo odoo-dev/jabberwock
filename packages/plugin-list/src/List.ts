@@ -9,7 +9,7 @@ import { ListItemDomParser } from './ListItemDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
 import { IndentParams, OutdentParams } from '../../plugin-indent/src/Indent';
 import { CheckingContext } from '../../core/src/ContextManager';
-import { InsertParagraphBreakParams } from '../../core/src/CorePlugin';
+import { InsertParagraphBreakParams } from '../../core/src/Core';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
