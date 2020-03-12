@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { InsertParams } from '../../core/src/CorePlugin';
+import { InsertParams } from '../../core/src/Core';
 import { ListType, ListNode } from '../src/ListNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { describePlugin, keydown } from '../../utils/src/testUtils';

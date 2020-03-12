@@ -2,7 +2,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreakNode } from './LineBreakNode';
 import { LineBreakDomParser } from './LineBreakDomParser';
 import { LineBreakDomRenderer } from './LineBreakDomRenderer';
-import { InsertParams } from '../../core/src/CorePlugin';
+import { InsertParams } from '../../core/src/Core';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
