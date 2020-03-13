@@ -1479,7 +1479,7 @@ export class EventNormalizer {
         this._pointerSelectionTimeout = new Timeout(
             (): EventBatch => {
                 if (!this._selectionHasChanged || this._currentlySelectingAll) {
-                    return;
+                    return { actions: [] };
                 }
                 this._initialCaretPosition = this._getEventCaretPosition(ev);
                 const setSelectionAction: SetSelectionAction = {
@@ -1539,6 +1539,11 @@ export class EventNormalizer {
             // TODO: no rendering in editable can happen before the analysis of
             // the selection. There should be a mechanism here that can be used
             // by the normalizer to block the rendering until this resolves.
+            // If the node which is the target of the mousedown event ends up
+            // being removed from the DOM because of a redraw, the subsequent
+            // click event will not be fired. Thus, mousedown must trigger the
+            // analysis of a change of the selection in case click is never
+            // triggered. If it is, it will nullify this observation.
             this._pointerSelectionTimeout = new Timeout<EventBatch>(
                 this._analyzeSelectionChange.bind(this, ev),
             );
@@ -1562,6 +1567,16 @@ export class EventNormalizer {
             // to the next tick as well. Store the data we have now before it
             // gets invalidated by the redrawing of the DOM.
             this._initialCaretPosition = this._getEventCaretPosition(ev);
+
+            if (this._pointerSelectionTimeout?.pending) {
+                // Nullify the mousedown observation, see `_onPointerDown`.
+                this._pointerSelectionTimeout.fire({ actions: [] });
+
+                this._pointerSelectionTimeout = new Timeout<EventBatch>(
+                    this._analyzeSelectionChange.bind(this, ev),
+                );
+                this._triggerEventBatch(this._pointerSelectionTimeout.promise);
+            }
         }
     }
     /**
@@ -1570,16 +1585,18 @@ export class EventNormalizer {
      * @param ev
      */
     _analyzeSelectionChange(ev: MouseEvent | TouchEvent): EventBatch {
-        if (!this._selectionHasChanged) return;
-
-        const setSelectionAction: SetSelectionAction = {
-            type: 'setSelection',
-            domSelection: this._getSelection(ev),
-        };
-        return {
-            actions: [setSelectionAction],
+        const eventBatch = {
+            actions: [],
             mutatedElements: new Set([]),
         };
+        if (this._selectionHasChanged) {
+            const setSelectionAction: SetSelectionAction = {
+                type: 'setSelection',
+                domSelection: this._getSelection(ev),
+            };
+            eventBatch.actions.push(setSelectionAction);
+        }
+        return eventBatch;
     }
     /**
      * If the drag start event is observed by the normalizer, it means the
