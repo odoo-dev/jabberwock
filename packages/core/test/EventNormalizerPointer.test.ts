@@ -265,6 +265,7 @@ describe('utils', () => {
                         clientX: 18,
                         clientY: 10,
                     });
+                    triggerEvent(p, 'mouseup', { button: 1, detail: 1, clientX: 45, clientY: 10 });
                     triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 45, clientY: 10 });
                     setSelection(text, 4, text, 4);
                     await nextTick();
@@ -334,6 +335,7 @@ describe('utils', () => {
                         clientX: 24,
                         clientY: 10,
                     });
+                    triggerEvent(p, 'mouseup', { button: 1, detail: 1, clientX: 24, clientY: 10 });
                     triggerEvent(p, 'click', { button: 1, detail: 1, clientX: 24, clientY: 10 });
                     setSelection(text, 2, text, 2);
                     await nextTick();
