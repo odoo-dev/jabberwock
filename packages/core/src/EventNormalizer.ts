@@ -269,31 +269,37 @@ interface CurrentStackObservations {
 }
 
 /**
- * Create a promise that resolve once a timeout finish or when calling
- * `executeAndClear`.
+ * A delayed observation is a promise of an observation that must be triggered
+ * in the future. Usually this takes the form of a `setTimeout` but the delayed
+ * observation can also be triggered manually.
  */
-class Timeout<T = void> {
-    id: number;
+class DelayedObservation<T = void> {
+    timeoutId: number;
     pending = true;
     promise: Promise<T>;
     private _resolve: Function;
 
-    constructor(public fn: () => T | Promise<T>, interval = 0) {
+    constructor(
+        private observationCallback: () => T | Promise<T>,
+        interval: number | 'manual' = 0,
+    ) {
         this.promise = new Promise((resolve): void => {
             this._resolve = resolve;
-            this.id = window.setTimeout(() => {
-                this.pending = false;
-                resolve(fn());
-            }, interval);
+            if (interval !== 'manual') {
+                this.timeoutId = window.setTimeout(() => {
+                    this.pending = false;
+                    resolve(observationCallback());
+                }, interval);
+            }
         });
     }
     fire(result?: T): void {
-        clearTimeout(this.id);
+        clearTimeout(this.timeoutId);
         this.pending = false;
         if (result) {
             this._resolve(result);
         } else {
-            this._resolve(this.fn());
+            this._resolve(this.observationCallback());
         }
     }
 }
@@ -438,7 +444,7 @@ export class EventNormalizer {
      * variable in order to manually fire its execution when an event that might
      * change the selection is triggered before the browser executed the timer.
      */
-    _pointerSelectionTimeout: Timeout<EventBatch>;
+    _pointerSelectionTimeout: DelayedObservation<EventBatch>;
     /**
      * The current selection has to be observed as a result of a nagivation key
      * being pressed. However, this cannot be done at the time of the keydown
@@ -450,7 +456,7 @@ export class EventNormalizer {
      * variable in order to manually fire its execution when an event that might
      * change the selection is triggered before the browser executed the timer.
      */
-    _keyboardSelectionTimeout: Timeout<EventBatch>;
+    _keyboardSelectionTimeout: DelayedObservation<EventBatch>;
     /**
      * The current selection has to be observed as a result of a nagivation key
      * being pressed. However, this cannot be done at the time of the keydown
@@ -464,7 +470,7 @@ export class EventNormalizer {
      * The previous stack timeout is stored in this variable in order to
      * manually fire its execution when a navigation key is pressed.
      */
-    _stackTimeout: Timeout<EventBatch>;
+    _stackTimeout: DelayedObservation<EventBatch>;
 
     constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
         this.editable = editable;
@@ -573,7 +579,7 @@ export class EventNormalizer {
             // TODO: no rendering in editable can happen before the analysis of
             // the selection. There should be a mechanism here that can be used
             // by the normalizer to block the rendering until this resolves.
-            this._keyboardSelectionTimeout = new Timeout<EventBatch>(
+            this._keyboardSelectionTimeout = new DelayedObservation<EventBatch>(
                 async (): Promise<EventBatch> => {
                     const setSelectionAction: SetSelectionAction = {
                         type: 'setSelection',
@@ -597,7 +603,7 @@ export class EventNormalizer {
                 this._mutationNormalizer.start();
 
                 // All events of this tick will be processed in the next one.
-                this._stackTimeout = new Timeout<EventBatch>(
+                this._stackTimeout = new DelayedObservation<EventBatch>(
                     (): Promise<EventBatch> => {
                         return this._processEvents(stack);
                     },
@@ -1476,7 +1482,7 @@ export class EventNormalizer {
      */
     _onContextMenu(ev: MouseEvent): void {
         this._pointerSelectionTimeout.fire({ actions: [] });
-        this._pointerSelectionTimeout = new Timeout(() => {
+        this._pointerSelectionTimeout = new DelayedObservation(() => {
             if (!this._selectionHasChanged || this._currentlySelectingAll) {
                 return { actions: [] };
             }
@@ -1524,6 +1530,27 @@ export class EventNormalizer {
             this._initialCaretPosition = this._getEventCaretPosition(ev);
             this._selectionHasChanged = false;
             this._followsPointerAction = true;
+
+            // Manually triggering the processing of the current stack at this
+            // point forces the rendering in the DOM of the result of the
+            // observed events. This ensures that the new selection that is
+            // eventually going to be set by the browser actually targets nodes
+            // that are properly recognized in our abstration, which would not
+            // be the case otherwise. See comment on `_stackTimeout`.
+            if (this._stackTimeout?.pending) {
+                this._stackTimeout.fire();
+            }
+
+            // TODO: no rendering in editable can happen before the analysis of
+            // the selection. There should be a mechanism here that can be used
+            // by the normalizer to block the rendering until this resolves.
+            if (this._pointerSelectionTimeout?.pending) {
+                this._pointerSelectionTimeout.fire({ actions: [] });
+            }
+            this._pointerSelectionTimeout = new DelayedObservation<EventBatch>(() => {
+                return this._analyzeSelectionChange(ev);
+            }, 'manual');
+            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         } else {
             this._mousedownInEditable = false;
             this._initialCaretPosition = undefined;
@@ -1537,6 +1564,7 @@ export class EventNormalizer {
     _onPointerUp(ev: MouseEvent): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
+        console.log('mouseup');
         if (this._mousedownInEditable && ev.target instanceof Element) {
             // When the users clicks in the DOM, the range is set in the next
             // tick. The observation of the resulting range must thus be delayed
@@ -1544,7 +1572,18 @@ export class EventNormalizer {
             // gets invalidated by the redrawing of the DOM.
             this._initialCaretPosition = this._getEventCaretPosition(ev);
 
-            this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+            // If a key is pressed between the mousedown and the mouseup then
+            // the selection would not have been properly updated. Because of
+            // that, the mousedown must prepare for an analysis of a selection
+            // change in case mouseup is never triggered. The keypress handler
+            // will manually trigger the observation. In the case of the
+            // particular function here however, mouseup was triggered, so the
+            // observation prepared by the mousedown must not trigger an action.
+            if (this._pointerSelectionTimeout?.pending) {
+                this._pointerSelectionTimeout.fire({ actions: [] });
+            }
+            console.log('timeout analysis');
+            this._pointerSelectionTimeout = new DelayedObservation<EventBatch>(() => {
                 return this._analyzeSelectionChange(ev);
             });
             this._triggerEventBatch(this._pointerSelectionTimeout.promise);
@@ -1560,6 +1599,7 @@ export class EventNormalizer {
             actions: [],
             mutatedElements: new Set([]),
         };
+        console.log(this._selectionHasChanged);
         if (this._selectionHasChanged) {
             const setSelectionAction: SetSelectionAction = {
                 type: 'setSelection',
@@ -1679,6 +1719,8 @@ export class EventNormalizer {
      * - Programmatically
      */
     _onSelectionChange(): void {
+        console.log('selectionchange');
+        this._selectionHasChanged = true;
         if (!this._initialCaretPosition) {
             // TODO: Remove this once the renderer only re-renders what has
             // changed rather than re-rendering everything. Right now it is
@@ -1686,26 +1728,36 @@ export class EventNormalizer {
             // setRange, which triggers a new selection, which loops infinitely.
             return;
         }
+
         const keydownEvent = this.currentStackObservation._eventsMap.keydown;
         const isNavEvent =
             keydownEvent instanceof KeyboardEvent &&
             keydownEvent.type === 'keydown' &&
             navigationKey.has(keydownEvent.key);
         if (isNavEvent) {
-            const setSelectionAction: SetSelectionAction = {
-                type: 'setSelection',
-                domSelection: this._getSelection(),
-            };
             this.initNextObservation();
-            this._triggerEventBatch(
-                new Promise((resolve): void => {
-                    setTimeout(() => {
-                        resolve({ actions: [setSelectionAction] });
-                    });
-                }),
-            );
+            this._keyboardSelectionTimeout = new DelayedObservation<EventBatch>(() => {
+                const setSelectionAction: SetSelectionAction = {
+                    type: 'setSelection',
+                    domSelection: this._getSelection(),
+                };
+                return { actions: [setSelectionAction], mutatedElements: new Set([]) };
+            }, 'manual');
+            this._triggerEventBatch(this._keyboardSelectionTimeout.promise);
+        } else if (this._mousedownInEditable) {
+            console.log('yup');
+            if (this._pointerSelectionTimeout?.pending) {
+                this._pointerSelectionTimeout.fire({ actions: [] });
+            }
+            this._pointerSelectionTimeout = new DelayedObservation<EventBatch>(() => {
+                const setSelectionAction: SetSelectionAction = {
+                    type: 'setSelection',
+                    domSelection: this._getSelection(),
+                };
+                return { actions: [setSelectionAction], mutatedElements: new Set([]) };
+            }, 'manual');
+            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         } else {
-            this._selectionHasChanged = true;
             // This heuristic protects against a costly `_isSelectAll` call.
             const modifiedKeyEvent = this._modifierKeys.ctrlKey || this._modifierKeys.metaKey;
             const heuristic = modifiedKeyEvent || this._followsPointerAction;
