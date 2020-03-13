@@ -403,7 +403,7 @@ export class EventNormalizer {
     /**
      * Original mousedown event from which the current selection was made.
      */
-    _clickedInEditable: boolean;
+    _mousedownInEditable: boolean;
     /**
      * Original selection target before the current selection is updated.
      */
@@ -480,11 +480,11 @@ export class EventNormalizer {
         this._bindEvent(editable, 'input', this._registerEvent);
 
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
-        this._bindEvent(document, 'click', this._onClick);
-        this._bindEvent(document, 'touchend', this._onClick);
         this._bindEvent(editable, 'contextmenu', this._onContextMenu);
         this._bindEvent(document, 'mousedown', this._onPointerDown);
         this._bindEvent(document, 'touchstart', this._onPointerDown);
+        this._bindEvent(document, 'mouseup', this._onPointerUp);
+        this._bindEvent(document, 'touchend', this._onPointerUp);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
         this._bindEvent(document, 'onkeyup', this._updateModifiersKeys);
@@ -1476,28 +1476,26 @@ export class EventNormalizer {
      */
     _onContextMenu(ev: MouseEvent): void {
         this._pointerSelectionTimeout.fire({ actions: [] });
-        this._pointerSelectionTimeout = new Timeout(
-            (): EventBatch => {
-                if (!this._selectionHasChanged || this._currentlySelectingAll) {
-                    return { actions: [] };
-                }
-                this._initialCaretPosition = this._getEventCaretPosition(ev);
-                const setSelectionAction: SetSelectionAction = {
-                    type: 'setSelection',
-                    domSelection: this._getSelection(ev),
-                };
-                this._selectionHasChanged = false;
-                return {
-                    actions: [setSelectionAction],
-                    mutatedElements: new Set([]),
-                };
-            },
-        );
+        this._pointerSelectionTimeout = new Timeout(() => {
+            if (!this._selectionHasChanged || this._currentlySelectingAll) {
+                return { actions: [] };
+            }
+            this._initialCaretPosition = this._getEventCaretPosition(ev);
+            const setSelectionAction: SetSelectionAction = {
+                type: 'setSelection',
+                domSelection: this._getSelection(ev),
+            };
+            this._selectionHasChanged = false;
+            return {
+                actions: [setSelectionAction],
+                mutatedElements: new Set([]),
+            };
+        });
         this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         // The _clickedInEditable property is used to assess whether the user is
         // currently changing the selection by using the mouse. If the context
         // menu ends up opening, the user is definitely not selecting.
-        this._clickedInEditable = false;
+        this._mousedownInEditable = false;
     }
     /**
      * Catch Enter, Backspace, Delete and insert actions
@@ -1522,34 +1520,12 @@ export class EventNormalizer {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
         if (ev.target instanceof Element && this.editable.contains(ev.target)) {
-            this._clickedInEditable = true;
+            this._mousedownInEditable = true;
             this._initialCaretPosition = this._getEventCaretPosition(ev);
             this._selectionHasChanged = false;
             this._followsPointerAction = true;
-            // Manually triggering the processing of the current stack at this
-            // point forces the rendering in the DOM of the result of the
-            // observed events. This ensures that the new selection that is
-            // eventually going to be set by the browser actually targets nodes
-            // that are properly recognized in our abstration, which would not
-            // be the case otherwise. See comment on `_stackTimeout`.
-            if (this._stackTimeout?.pending) {
-                this._stackTimeout.fire();
-            }
-
-            // TODO: no rendering in editable can happen before the analysis of
-            // the selection. There should be a mechanism here that can be used
-            // by the normalizer to block the rendering until this resolves.
-            // If the node which is the target of the mousedown event ends up
-            // being removed from the DOM because of a redraw, the subsequent
-            // click event will not be fired. Thus, mousedown must trigger the
-            // analysis of a change of the selection in case click is never
-            // triggered. If it is, it will nullify this observation.
-            this._pointerSelectionTimeout = new Timeout<EventBatch>(
-                this._analyzeSelectionChange.bind(this, ev),
-            );
-            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         } else {
-            this._clickedInEditable = false;
+            this._mousedownInEditable = false;
             this._initialCaretPosition = undefined;
         }
     }
@@ -1558,25 +1534,20 @@ export class EventNormalizer {
      *
      * @param ev
      */
-    _onClick(ev: MouseEvent): void {
+    _onPointerUp(ev: MouseEvent): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        if (this._clickedInEditable && ev.target instanceof Element) {
+        if (this._mousedownInEditable && ev.target instanceof Element) {
             // When the users clicks in the DOM, the range is set in the next
             // tick. The observation of the resulting range must thus be delayed
             // to the next tick as well. Store the data we have now before it
             // gets invalidated by the redrawing of the DOM.
             this._initialCaretPosition = this._getEventCaretPosition(ev);
 
-            if (this._pointerSelectionTimeout?.pending) {
-                // Nullify the mousedown observation, see `_onPointerDown`.
-                this._pointerSelectionTimeout.fire({ actions: [] });
-
-                this._pointerSelectionTimeout = new Timeout<EventBatch>(
-                    this._analyzeSelectionChange.bind(this, ev),
-                );
-                this._triggerEventBatch(this._pointerSelectionTimeout.promise);
-            }
+            this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+                return this._analyzeSelectionChange(ev);
+            });
+            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         }
     }
     /**
