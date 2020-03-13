@@ -203,6 +203,7 @@ describe('utils', () => {
                     });
                     setSelection(text, 3, text, 3);
                     triggerEvent(i, 'click', { button: 2, detail: 0, clientX: 50, clientY: 5 });
+                    setSelection(text, 3, i.firstChild, 2);
                     triggerEvent(i, 'mouseup', { button: 2, detail: 0, clientX: 50, clientY: 5 });
                     await nextTick();
                     await nextTick();
@@ -211,8 +212,8 @@ describe('utils', () => {
                         {
                             type: 'setSelection',
                             domSelection: {
-                                anchorNode: i.firstChild,
-                                anchorOffset: 2,
+                                anchorNode: text,
+                                anchorOffset: 3,
                                 focusNode: i.firstChild,
                                 focusOffset: 2,
                                 direction: Direction.FORWARD,
