@@ -274,23 +274,27 @@ interface CurrentStackObservations {
  */
 class Timeout<T = void> {
     id: number;
-    fired = false;
+    pending = true;
     promise: Promise<T>;
     private _resolve: Function;
 
-    constructor(public fn: () => Promise<T>, interval = 0) {
+    constructor(public fn: () => T | Promise<T>, interval = 0) {
         this.promise = new Promise((resolve): void => {
             this._resolve = resolve;
             this.id = window.setTimeout(() => {
-                this.fired = true;
+                this.pending = false;
                 resolve(fn());
             }, interval);
         });
     }
-    fire(): void {
+    fire(result?: T): void {
         clearTimeout(this.id);
-        this.fired = true;
-        this._resolve(this.fn());
+        this.pending = false;
+        if (result) {
+            this._resolve(result);
+        } else {
+            this._resolve(this.fn());
+        }
     }
 }
 
@@ -415,13 +419,6 @@ export class EventNormalizer {
      */
     _draggingFromEditable: boolean;
     /**
-     * When the users clicks in the DOM, the range is set in the next tick.
-     * The observation of the resulting range must thus be delayed to the next
-     * tick as well. This variable stores the return value of the `setTimeout`
-     * call in order to `clearTimeout` it later on.
-     */
-    _clickTimeout: number;
-    /**
      * Cache the state of modifiers keys on each keystrokes.
      */
     _modifierKeys: ModifierKeys = {
@@ -430,6 +427,18 @@ export class EventNormalizer {
         metaKey: false,
         shiftKey: false,
     };
+    /**
+     * The current selection has to be observed as a result of a mousedown being
+     * triggered. However, this cannot be done at the time of the mousedown
+     * itself since the browser hasn't updated the selection in the DOM yet.
+     * This observation is thus deferred inside a `setTimeout`. If the browser
+     * gets overloaded, it might fire the timeout after other events have
+     * happened, thus rendering the observation meaningless since the selection
+     * would have changed yet again. The observation timeout is stored in this
+     * variable in order to manually fire its execution when an event that might
+     * change the selection is triggered before the browser executed the timer.
+     */
+    _pointerSelectionTimeout: Timeout<EventBatch>;
     /**
      * The current selection has to be observed as a result of a nagivation key
      * being pressed. However, this cannot be done at the time of the keydown
@@ -441,7 +450,7 @@ export class EventNormalizer {
      * variable in order to manually fire its execution when an event that might
      * change the selection is triggered before the browser executed the timer.
      */
-    _selectionTimeout: Timeout<EventBatch>;
+    _keyboardSelectionTimeout: Timeout<EventBatch>;
     /**
      * The current selection has to be observed as a result of a nagivation key
      * being pressed. However, this cannot be done at the time of the keydown
@@ -539,9 +548,13 @@ export class EventNormalizer {
      * @see _processEvents
      */
     _registerEvent(ev: EventToProcess): void {
-        // See comment on `_selectionTimeout`.
-        if (this._selectionTimeout && !this._selectionTimeout.fired) {
-            this._selectionTimeout.fire();
+        // See comment on `_keyboardSelectionTimeout`.
+        if (this._keyboardSelectionTimeout?.pending) {
+            this._keyboardSelectionTimeout.fire();
+        }
+        // See comment on `_pointerSelectionTimeout`.
+        if (this._pointerSelectionTimeout?.pending) {
+            this._pointerSelectionTimeout.fire();
         }
 
         const isNavigationEvent =
@@ -554,13 +567,13 @@ export class EventNormalizer {
             // eventually going to be set by the browser actually targets nodes
             // that are properly recognized in our abstration, which would not
             // be the case otherwise. See comment on `_stackTimeout`.
-            if (this._stackTimeout && !this._stackTimeout.fired) {
+            if (this._stackTimeout?.pending) {
                 this._stackTimeout.fire();
             }
             // TODO: no rendering in editable can happen before the analysis of
             // the selection. There should be a mechanism here that can be used
             // by the normalizer to block the rendering until this resolves.
-            this._selectionTimeout = new Timeout<EventBatch>(
+            this._keyboardSelectionTimeout = new Timeout<EventBatch>(
                 async (): Promise<EventBatch> => {
                     const setSelectionAction: SetSelectionAction = {
                         type: 'setSelection',
@@ -569,7 +582,7 @@ export class EventNormalizer {
                     return { actions: [setSelectionAction], mutatedElements: new Set([]) };
                 },
             );
-            this._triggerEventBatch(this._selectionTimeout.promise);
+            this._triggerEventBatch(this._keyboardSelectionTimeout.promise);
             this.initNextObservation();
         } else {
             if (this.currentStackObservation._events.length === 0) {
@@ -1462,24 +1475,25 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
-        window.clearTimeout(this._clickTimeout);
-        this._clickTimeout = window.setTimeout(() => {
-            if (!this._selectionHasChanged || this._currentlySelectingAll) {
-                return;
-            }
-            this._initialCaretPosition = this._getEventCaretPosition(ev);
-            const setSelectionAction: SetSelectionAction = {
-                type: 'setSelection',
-                domSelection: this._getSelection(ev),
-            };
-            this._triggerEventBatch(
-                Promise.resolve({
+        this._pointerSelectionTimeout.fire({ actions: [] });
+        this._pointerSelectionTimeout = new Timeout(
+            (): EventBatch => {
+                if (!this._selectionHasChanged || this._currentlySelectingAll) {
+                    return;
+                }
+                this._initialCaretPosition = this._getEventCaretPosition(ev);
+                const setSelectionAction: SetSelectionAction = {
+                    type: 'setSelection',
+                    domSelection: this._getSelection(ev),
+                };
+                this._selectionHasChanged = false;
+                return {
                     actions: [setSelectionAction],
                     mutatedElements: new Set([]),
-                }),
-            );
-            this._selectionHasChanged = false;
-        }, 0);
+                };
+            },
+        );
+        this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         // The _clickedInEditable property is used to assess whether the user is
         // currently changing the selection by using the mouse. If the context
         // menu ends up opening, the user is definitely not selecting.
@@ -1505,15 +1519,33 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
-        if (!this.editable.contains(ev.target as Node)) {
-            this._clickedInEditable = false;
-            this._initialCaretPosition = undefined;
-        } else {
+        // Don't trigger events on the editable if the click was done outside of
+        // the editable itself or on something else than an element.
+        if (ev.target instanceof Element && this.editable.contains(ev.target)) {
             this._clickedInEditable = true;
             this._initialCaretPosition = this._getEventCaretPosition(ev);
             this._selectionHasChanged = false;
-
             this._followsPointerAction = true;
+            // Manually triggering the processing of the current stack at this
+            // point forces the rendering in the DOM of the result of the
+            // observed events. This ensures that the new selection that is
+            // eventually going to be set by the browser actually targets nodes
+            // that are properly recognized in our abstration, which would not
+            // be the case otherwise. See comment on `_stackTimeout`.
+            if (this._stackTimeout?.pending) {
+                this._stackTimeout.fire();
+            }
+
+            // TODO: no rendering in editable can happen before the analysis of
+            // the selection. There should be a mechanism here that can be used
+            // by the normalizer to block the rendering until this resolves.
+            this._pointerSelectionTimeout = new Timeout<EventBatch>(
+                this._analyzeSelectionChange.bind(this, ev),
+            );
+            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
+        } else {
+            this._clickedInEditable = false;
+            this._initialCaretPosition = undefined;
         }
     }
     /**
@@ -1522,37 +1554,32 @@ export class EventNormalizer {
      * @param ev
      */
     _onClick(ev: MouseEvent): void {
-        this._followsPointerAction = true;
-
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        if (!(this._clickedInEditable && ev.target instanceof Element)) return;
-
-        // When the users clicks in the DOM, the range is set in the next tick.
-        // The observation of the resulting range must thus be delayed to the
-        // next tick as well. Store the data we have now before it gets invalid.
-        this._initialCaretPosition = this._getEventCaretPosition(ev);
-
-        this._clickTimeout = window.setTimeout(() => this._analyzeSelectionChange(ev), 0);
+        if (this._clickedInEditable && ev.target instanceof Element) {
+            // When the users clicks in the DOM, the range is set in the next
+            // tick. The observation of the resulting range must thus be delayed
+            // to the next tick as well. Store the data we have now before it
+            // gets invalidated by the redrawing of the DOM.
+            this._initialCaretPosition = this._getEventCaretPosition(ev);
+        }
     }
     /**
      * Analyze a change of selection to trigger a pointer event for it.
      *
      * @param ev
      */
-    _analyzeSelectionChange(ev: MouseEvent): void {
+    _analyzeSelectionChange(ev: MouseEvent | TouchEvent): EventBatch {
         if (!this._selectionHasChanged) return;
 
         const setSelectionAction: SetSelectionAction = {
             type: 'setSelection',
             domSelection: this._getSelection(ev),
         };
-        this._triggerEventBatch(
-            Promise.resolve({
-                actions: [setSelectionAction],
-                mutatedElements: new Set([]),
-            }),
-        );
+        return {
+            actions: [setSelectionAction],
+            mutatedElements: new Set([]),
+        };
     }
     /**
      * If the drag start event is observed by the normalizer, it means the
