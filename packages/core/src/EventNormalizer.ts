@@ -484,6 +484,8 @@ export class EventNormalizer {
         this._bindEvent(document, 'touchend', this._onClick);
         this._bindEvent(editable, 'contextmenu', this._onContextMenu);
         this._bindEvent(document, 'mousedown', this._onPointerDown);
+        this._bindEvent(document, 'mouseup', this._onPointerUp);
+
         this._bindEvent(document, 'touchstart', this._onPointerDown);
         this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
@@ -1511,6 +1513,7 @@ export class EventNormalizer {
         const [offsetNode, offset] = targetDeepest(selection.anchorNode, selection.anchorOffset);
         this._initialCaretPosition = { offsetNode, offset };
     }
+
     /**
      * Set internal properties of the pointer down event to retrieve them later
      * on when the user stops dragging its selection and the selection has
@@ -1553,6 +1556,24 @@ export class EventNormalizer {
             this._initialCaretPosition = undefined;
         }
     }
+
+    /**
+     * Trigger a selection change for the previous selection.
+     */
+    _onPointerUp(ev: MouseEvent | TouchEvent): void {
+        if (this._clickedInEditable) {
+            const setSelectionAction: SetSelectionAction = {
+                type: 'setSelection',
+                domSelection: this._getSelection(ev),
+            };
+            return this._triggerEventBatch(
+                Promise.resolve({
+                    actions: [setSelectionAction],
+                    mutatedElements: new Set([]),
+                }),
+            );
+        }
+    }
     /**
      * Catch setSelection actions coming from clicks.
      *
@@ -1567,16 +1588,6 @@ export class EventNormalizer {
             // to the next tick as well. Store the data we have now before it
             // gets invalidated by the redrawing of the DOM.
             this._initialCaretPosition = this._getEventCaretPosition(ev);
-
-            if (this._pointerSelectionTimeout?.pending) {
-                // Nullify the mousedown observation, see `_onPointerDown`.
-                this._pointerSelectionTimeout.fire({ actions: [] });
-
-                this._pointerSelectionTimeout = new Timeout<EventBatch>(
-                    this._analyzeSelectionChange.bind(this, ev),
-                );
-                this._triggerEventBatch(this._pointerSelectionTimeout.promise);
-            }
         }
     }
     /**
