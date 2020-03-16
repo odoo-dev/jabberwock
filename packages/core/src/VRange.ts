@@ -23,7 +23,10 @@ export class VRange {
      * @param range
      */
     static clone(range: VRange): [Point, Point] {
-        return [[range.start, RelativePosition.BEFORE], [range.end, RelativePosition.AFTER]];
+        return [
+            [range.start, RelativePosition.BEFORE],
+            [range.end, RelativePosition.AFTER],
+        ];
     }
     /**
      * Return the context of a range selecting the given nodes.
@@ -57,7 +60,10 @@ export class VRange {
             endNode = startPosition;
             startPosition = RelativePosition.BEFORE;
         }
-        return [[startNode, startPosition], [endNode, endPosition]];
+        return [
+            [startNode, startPosition],
+            [endNode, endPosition],
+        ];
     }
 
     constructor(boundaryPoints?: [Point, Point]) {
