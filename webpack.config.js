@@ -1,16 +1,23 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const glob = require('glob');
+
+/**
+ * Create an entry for each typescript file contained in the `examples` folder.
+ */
+const entries = glob.sync(__dirname + '/examples/**/*.ts').reduce((acc, file) => {
+    const fileKey = file.slice((__dirname + '/examples/').length, -3);
+    acc[fileKey] = file;
+    return acc;
+}, {});
 
 module.exports = {
     mode: 'development',
-    entry: {
-        'jabberwocky': './examples/jabberwocky/jabberwocky.ts',
-        'jabberwockipedia': './examples/jabberwockipedia/jabberwockipedia.ts',
-        'demo': './examples/demo/demo.ts',
-    },
+    entry: entries,
     devtool: 'inline-source-map',
     output: {
-        path: path.resolve(__dirname, 'build/webpack'),
+        path: path.resolve(__dirname, 'build/examples'),
         filename: '[name].js',
     },
     module: {

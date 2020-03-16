@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "webpack-dev-server",
-    "build": "webpack",
+    "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack",
     "perf": "karma start --include-files test/**/*.perf.ts",
     "coverage": "karma start --coverage",
     "debug": "karma start --no-browsers --debug",
@@ -37,6 +37,7 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
     "finalhandler": "^1.1.2",
+    "glob": "^7.1.6",
     "istanbul-instrumenter-loader": "^3.0.1",
     "karma": "^4.4.1",
     "karma-chai": "^0.1.0",

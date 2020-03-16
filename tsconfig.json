@@ -5,4 +5,5 @@
         "moduleResolution": "node",
         "sourceMap": true
     },
+    "exclude": ["build/**"]
 }
