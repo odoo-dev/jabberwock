@@ -112,17 +112,19 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 targetedLists.length === targetedNodes.length &&
                 targetedLists.every(list => list.listType === type)
             ) {
-                // Unlist the targeted nodes.
-                const nodesToUnlist = range.split(ListNode);
-                for (const list of nodesToUnlist) {
-                    for (const nestedList of list.descendants(ListNode)) {
-                        // TODO: automatically invalidate `li-attributes`.
-                        for (const child of nestedList.children) {
-                            delete child.attributes['li-attributes'];
+                // Unlist the targeted nodes from all its list ancestors.
+                while (range.start.ancestor(ListNode)) {
+                    const nodesToUnlist = range.split(ListNode);
+                    for (const list of nodesToUnlist) {
+                        for (const nestedList of list.descendants(ListNode)) {
+                            // TODO: automatically invalidate `li-attributes`.
+                            for (const child of nestedList.children) {
+                                delete child.attributes['li-attributes'];
+                            }
+                            nestedList.unwrap();
                         }
-                        nestedList.unwrap();
+                        list.unwrap();
                     }
-                    list.unwrap();
                 }
             } else if (targetedLists.length === targetedNodes.length) {
                 // If all nodes are in lists, convert the targeted list
