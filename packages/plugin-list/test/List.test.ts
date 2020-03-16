@@ -402,6 +402,45 @@ describePlugin(List, testEditor => {
                                 '<p><span><b>ab</b></span> <span><i>cd</i></span> ef[]gh</p>',
                         });
                     });
+                    it('should turn nested list items into paragraphs', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: unformat(`
+                                <ul>
+                                    <li>a</li>
+                                    <li style="list-style: none;">
+                                        <ul>
+                                            <li>[]b</li>
+                                        </ul>
+                                    </li>
+                                    <li style="list-style: none;">
+                                        <ul>
+                                            <li style="list-style: none;">
+                                                <ul>
+                                                    <li>c</li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>`),
+                            stepFunction: toggleUnorderedList,
+                            contentAfter: unformat(`
+                                <ul>
+                                    <li>a</li>
+                                </ul>
+                                <p>[]b</p>
+                                <ul>
+                                    <li style="list-style: none;">
+                                        <ul>
+                                            <li style="list-style: none;">
+                                                <ul>
+                                                    <li>c</li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>`),
+                        });
+                    });
                 });
             });
             describe('Ordered', () => {
