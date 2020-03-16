@@ -15,6 +15,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Loadables } from '../../core/src/JWEditor';
+import { distinct } from '../../utils/src/utils';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -102,10 +103,15 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             if (range.endContainer.hasChildren()) {
                 range.setEnd(range.endContainer.lastChild());
             }
-
             // If all targeted nodes are within a list of given type then unlist
             // them. Otherwise, convert them to the given list type.
-            if (range.targetedNodes().every(List.isInList.bind(List, type))) {
+            const targetedNodes = range.targetedNodes();
+            const ancestors = targetedNodes.map(node => node.closest(ListNode));
+            const targetedLists = ancestors.filter(list => !!list);
+            if (
+                targetedLists.length === targetedNodes.length &&
+                targetedLists.every(list => list.listType === type)
+            ) {
                 // Unlist the targeted nodes.
                 const nodesToUnlist = range.split(ListNode);
                 for (const list of nodesToUnlist) {
@@ -118,18 +124,38 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     }
                     list.unwrap();
                 }
+            } else if (targetedLists.length === targetedNodes.length) {
+                // If all nodes are in lists, convert the targeted list
+                // nodes to the given list type.
+                const lists = distinct(targetedLists);
+                const listsToConvert = lists.filter(l => l.listType !== type);
+                for (const list of listsToConvert) {
+                    let newList = new ListNode(type);
+                    list.before(newList);
+                    list.mergeWith(newList);
+
+                    // If the new list is after or before a list of the same
+                    // type, merge them. Example:
+                    // <ol><li>a</li></ol><ol><li>b</li></ol>
+                    // => <ol><li>a</li><li>b</li></ol>).
+                    const previousSibling = newList.previousSibling();
+                    if (previousSibling && previousSibling.is(ListNode[type])) {
+                        newList.mergeWith(previousSibling);
+                        newList = previousSibling;
+                    }
+
+                    const nextSibling = newList.nextSibling();
+                    if (nextSibling && nextSibling.is(ListNode[type])) {
+                        nextSibling.mergeWith(newList);
+                    }
+                }
             } else {
-                // Convert the targeted nodes to the given list type.
+                // If only some nodes are in lists and other aren't then only
+                // wrap the ones that were not already in a list into a list of
+                // the given type.
                 let newList = new ListNode(type);
                 const nodesToConvert = range.split(ListNode);
                 for (const node of nodesToConvert) {
-                    // Convert nested lists into the new type.
-                    for (const nestedList of node.descendants(ListNode)) {
-                        const newNestedList = new ListNode(type);
-                        nestedList.before(newNestedList);
-                        nestedList.mergeWith(newNestedList);
-                    }
-
                     node.wrap(newList);
                     // Merge top-level lists instead of nesting them.
                     if (node.is(ListNode)) {
