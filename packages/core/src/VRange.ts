@@ -132,7 +132,7 @@ export class VRange {
     targetedNodes<T>(predicate?: Predicate<T>): VNode[] {
         const targetedNodes: VNode[] = [];
 
-        const closestStartAncestor = this.start.closest(predicate);
+        const closestStartAncestor = this.start.ancestor(predicate);
         if (closestStartAncestor) {
             targetedNodes.push(closestStartAncestor);
         }
