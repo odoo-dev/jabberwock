@@ -727,9 +727,9 @@ describePlugin(List, testEditor => {
                                 <li>a[b</li>
                                 <li>cd</li>
                                 <li style="list-style: none;">
-                                    <ol>
+                                    <ul>
                                         <li>ef</li>
-                                    </ol>
+                                    </ul>
                                 </li>
                                 <li>gh</li>
                                 <li>i]j</li>
@@ -845,14 +845,11 @@ describePlugin(List, testEditor => {
                                     </ol>
                                 </li>
                                 <li>q]r</li>
-                            </ol>
-                            <ul>
                                 <li>st</li>
-                            </ul>`),
+                            </ol>`),
                     });
                 });
                 it('should convert within mixed lists', async () => {
-                    // TODO: this test should be changed if we follow docs
                     await testEditor(BasicEditor, {
                         contentBefore: unformat(`
                             <ul>
@@ -891,10 +888,6 @@ describePlugin(List, testEditor => {
                                         <li style="list-style: none;">
                                             <ol>
                                                 <li>[]e</li>
-                                            </ol>
-                                        </li>
-                                        <li style="list-style: none;">
-                                            <ul>
                                                 <li>f</li>
                                                 <li style="list-style: none;">
                                                     <ul>
@@ -902,7 +895,7 @@ describePlugin(List, testEditor => {
                                                     </ul>
                                                 </li>
                                                 <li>h</li>
-                                            </ul>
+                                            </ol>
                                         </li>
                                     </ol>
                                 </li>
