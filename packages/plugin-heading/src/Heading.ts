@@ -7,6 +7,8 @@ import { VNode, isLeaf } from '../../core/src/VNodes/VNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { CheckingContext } from '../../core/src/ContextManager';
+import { InsertParagraphBreakParams } from '../../core/src/Core';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -16,6 +18,14 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
     commands = {
         applyHeadingStyle: {
             handler: this.applyHeadingStyle,
+        },
+        insertParagraphBreak: {
+            selector: [HeadingNode],
+            check: (context: CheckingContext): boolean => {
+                const range = context.range;
+                return range.isCollapsed() && !range.start.nextSibling();
+            },
+            handler: this.insertParagraphBreak,
         },
     };
     readonly loadables: Loadables<Parser & Keymap> = {
@@ -55,6 +65,20 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             node.before(heading);
             node.mergeWith(heading);
         }
+    }
+
+    /**
+     * Inserting a paragraph break at the end of a heading exits the heading.
+     *
+     * @param params
+     */
+    insertParagraphBreak(params: InsertParagraphBreakParams): void {
+        const range = params.context.range;
+        const heading = range.targetedNodes(HeadingNode)[0];
+        const duplicate = heading.splitAt(range.start);
+        const newContainer = this.editor.createBaseContainer();
+        duplicate.before(newContainer);
+        duplicate.mergeWith(newContainer);
     }
 
     //--------------------------------------------------------------------------
