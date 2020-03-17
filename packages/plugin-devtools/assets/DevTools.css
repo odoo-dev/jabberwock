@@ -19,6 +19,35 @@ jw-devtools {
     overflow-y: hidden;
 }
 
+devtools-table {
+    display: table;
+}
+devtools-tbody {
+    display: table-row-group;
+}
+devtools-tr {
+    display: table-row;
+}
+devtools-td {
+    display: table-cell;
+    padding-right: 25px;
+}
+devtools-button {
+    display: inline;
+    text-align: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+    line-height: 2em;
+    font-family: initial;
+}
+devtools-list {
+    display: block;
+    list-style: none;
+}
+devtools-listitem {
+    display: list-item;
+}
+
 jw-devtools.closed {
     max-height: 31px;
 }
@@ -70,7 +99,7 @@ devtools-panel .selectable-line.selected {
     background-color: rgba(118, 82, 108, 0.3);
 }
 
-devtools-panel button.logger {
+devtools-panel devtools-button.logger {
     float: right;
     border: none;
     background-color: transparent;
@@ -78,14 +107,15 @@ devtools-panel button.logger {
     padding: 0;
     margin: 0;
     display: none;
+    line-height: 0.7em;
 }
 
-devtools-panel .about > button.logger {
+devtools-panel devtools-about > devtools-button.logger {
     display: inline;
     margin-left: 1em;
 }
 
-devtools-panel .selectable-line:hover button.logger, devtools-panel .selected button.logger {
+devtools-panel .selectable-line:hover devtools-button.logger, devtools-panel .selected devtools-button.logger {
     display: inline;
 }
 
@@ -111,20 +141,21 @@ devtools-navbar {
     vertical-align: baseline;
 }
 
-devtools-navbar > button {
+devtools-navbar > devtools-button {
     padding: 0 10px 0 10px;
     background: none;
     border: 0;
     height: 100%;
     vertical-align: middle;
     outline: none;
+    cursor: auto;
 }
 
-devtools-navbar > button:hover {
+devtools-navbar > devtools-button:hover {
     background-color: #d6d6d6;
 }
 
-devtools-navbar > button.selected {
+devtools-navbar > devtools-button.selected {
     border-bottom: solid 2px #76526c;
 }
 
@@ -152,8 +183,12 @@ mainpane-contents {
     padding: 1em;
 }
 
-mainpane-contents > table td:nth-child(1)  {
+mainpane-contents > devtools-table devtools-td:nth-child(1)  {
     width: 100px;
+}
+
+devtools-command {
+    display: block;
 }
 
 /* tree */
@@ -164,7 +199,8 @@ devtools-tree {
     width: 100%;
 }
 
-devtools-tree div.children {
+devtools-tree devtools-children {
+    display: block;
     position: relative;
     box-sizing: border-box;
     padding: 1px 0 1px 1.5em;
@@ -175,23 +211,24 @@ devtools-tree div {
     width: 100%;
 }
 
-devtools-tree > devtools-node.root > span.element-name {
+devtools-tree > devtools-node.root > devtools-nodename {
     background-color: #76526c;
     color: white;
     padding-left: 5px;
     box-sizing: border-box;
 }
 
-devtools-tree span.element-name {
-    color: #76526c;
+jw-devtools devtools-nodename.inline {
+    display: inline;
 }
 
-devtools-tree span.element-name:not(.line-break) {
+devtools-tree devtools-nodename.block {
+    color: #76526c;
     width: 100%;
     display: inline-block;
 }
 
-devtools-tree span.element-name.line-break:after {
+devtools-tree devtools-nodename.line-break:after {
     content: '\A';
     white-space: pre;
 }
@@ -200,23 +237,15 @@ devtools-node {
     outline: none;
 }
 
-devtools-node:not(.element) {
-    display: inline;
-}
-
-devtools-node.element {
-    display: block;
-}
-
-devtools-node:not(.folded):not(.self-closing):not(.root) > span.element-name:before {
+devtools-node:not(.folded):not(.self-closing):not(.root) > devtools-nodename.block:before {
     content: '⌄ ';
 }
 
-devtools-node.folded:not(.self-closing) > span.element-name:before {
+devtools-node.folded:not(.self-closing) > devtools-nodename.block:before {
     content: '› ';
 }
 
-devtools-node.folded .children {
+devtools-node.folded devtools-children {
     display: none;
 }
 
@@ -259,12 +288,12 @@ devtools-sidepane {
     height: 100%;
 }
 
-devtools-sidepane .about {
+devtools-sidepane devtools-about {
     border-bottom: 1px solid #d0d0d0;
     padding: 10px;
 }
 
-devtools-sidepane .about .type {
+devtools-sidepane devtools-about devtools-type {
     font-family: initial;
     font-style: italic;
     font-size: smaller;
@@ -272,7 +301,7 @@ devtools-sidepane .about .type {
     padding-right: .5em;
 }
 
-devtools-sidepane .properties {
+devtools-sidepane devtools-properties {
     font-size: 12px;
     padding: 10px;
     height: 100%;
@@ -280,41 +309,45 @@ devtools-sidepane .properties {
     margin-bottom: 30px;
 }
 
-devtools-sidepane .properties .divider {
+devtools-infotitle {
+    display: block;
+}
+
+devtools-sidepane devtools-properties devtools-infotitle {
     padding: 1em;
     font-family: initial;
     font-size: larger;
     color: #382034;
 }
 
-devtools-sidepane .properties .divider:first-child {
+devtools-sidepane devtools-properties devtools-infotitle:first-child {
     padding-top: 0em;
 }
 
-devtools-sidepane .properties table {
+devtools-sidepane devtools-properties devtools-table {
     width: 100%;
     font-size: inherit;
 }
 
-devtools-sidepane .properties table tbody{
+devtools-sidepane devtools-properties devtools-table devtools-tbody{
     vertical-align: top;
 }
 
-devtools-sidepane .properties table td {
+devtools-sidepane devtools-properties devtools-table devtools-td {
     padding: 0.3em;
 }
 
-devtools-sidepane .properties table td:nth-child(1) {
+devtools-sidepane devtools-properties devtools-table devtools-td:nth-child(1) {
     width: 100px;
 }
 
-devtools-sidepane .properties table ol {
+devtools-sidepane devtools-properties devtools-table devtools-list {
     list-style-position: inside;
     padding-left: 0;
     margin: 0;
 }
 
-devtools-sidepane .properties > table > tbody > tr:nth-child(even) {
+devtools-sidepane devtools-properties > devtools-table > devtools-tbody > devtools-tr:nth-child(even) {
     background-color: #f4f4f4;
 }
 
@@ -324,7 +357,7 @@ devtools-info {
     height: 100%;
 }
 
-devtools-info .about .id {
+devtools-info devtools-about devtools-id {
     float: right;
     color: #76526c;
     font-size: smaller;
