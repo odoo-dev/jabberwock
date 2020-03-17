@@ -41,8 +41,12 @@ export abstract class AbstractRenderer<T> implements Renderer<T> {
      */
     async renderChildren(node: VNode): Promise<T[]> {
         const renderedChildren: Array<Promise<T>> = [];
-        for (const child of node.children) {
-            renderedChildren.push(this.engine.render(child));
+        if (node.hasChildren()) {
+            for (const child of node.children) {
+                renderedChildren.push(this.engine.render(child));
+            }
+        } else if (this.engine.renderEmpty) {
+            renderedChildren.push(this.engine.renderEmpty(node));
         }
         return Promise.all(renderedChildren);
     }

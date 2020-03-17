@@ -21,10 +21,6 @@ export class ListItemDomRenderer extends AbstractRenderer<Node[]> {
         // Direct ListNode's VElement children "P" are rendered as "LI"
         // while other nodes will be rendered inside the "LI".
         if (node.is(VElement) && node.htmlTag === 'P') {
-            if (!node.hasChildren()) {
-                const br = document.createElement('BR');
-                domListItem.appendChild(br);
-            }
             const renderedChildren = await this.renderChildren(node);
             for (const renderedChild of renderedChildren) {
                 for (const domChild of renderedChild) {
