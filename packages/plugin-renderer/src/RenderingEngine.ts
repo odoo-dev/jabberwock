@@ -70,6 +70,13 @@ export class RenderingEngine<T = {}> {
     }
 
     /**
+     * Render the contents of a node that has no children.
+     *
+     * @param node
+     */
+    async renderEmpty?(node: VNode): Promise<T>;
+
+    /**
      * Return the rendering of several nodes, so as to skip rendering them again
      * later in the process.
      *

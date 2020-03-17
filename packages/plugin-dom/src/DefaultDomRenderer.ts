@@ -26,12 +26,6 @@ export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
             this.engine.renderAttributes(node.attributes, element);
             domNode = element;
         }
-        // If a node is empty but could accomodate children,
-        // fill it to make it visible.
-        if (!node.hasChildren() && !node.atomic) {
-            const placeholderBr = document.createElement('BR');
-            domNode.appendChild(placeholderBr);
-        }
 
         const renderedChildren = await this.renderChildren(node);
         for (const renderedChild of renderedChildren) {
