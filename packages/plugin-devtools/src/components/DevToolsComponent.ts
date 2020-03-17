@@ -95,7 +95,7 @@ export class DevToolsComponent extends OwlUIComponent<{}> {
      */
     toggleClosed(event: MouseEvent): void {
         const didJustResize = this._heightOnLastMousedown !== this.state.height;
-        const isOnButton = (event.target as HTMLElement).tagName === 'BUTTON';
+        const isOnButton = (event.target as HTMLElement).tagName === 'DEVTOOLS-BUTTON';
         if (!didJustResize && !(isOnButton && !this.state.closed)) {
             this.state.closed = !this.state.closed;
         }
