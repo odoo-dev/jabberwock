@@ -18,6 +18,7 @@ import { OrderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
+import { AlignLeftButton, AlignCenterButton, AlignRightButton, AlignJustifyButton } from '../../packages/plugin-align/src/AlignButtons';
 
 const target = document.createElement('div');
 target.style.paddingTop = '40px';
@@ -44,6 +45,7 @@ editor.configure(Toolbar, {
             ],
         ],
         [BoldButton, ItalicButton, UnderlineButton],
+        [AlignLeftButton, AlignCenterButton, AlignRightButton, AlignJustifyButton],
         [OrderedListButton, UnorderedListButton],
         [IndentButton, OutdentButton],
     ],
