@@ -719,6 +719,7 @@ describe('Plugin: DevTools', () => {
                 'outdent',
                 'link',
                 'unlink',
+                'align',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {

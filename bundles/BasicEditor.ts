@@ -24,6 +24,7 @@ import { Table } from '../packages/plugin-table/src/Table';
 import { Metadata } from '../packages/plugin-metadata/src/Metadata';
 import { Renderer } from '../packages/plugin-renderer/src/Renderer';
 import { Keymap } from '../packages/plugin-keymap/src/Keymap';
+import { Align } from '../packages/plugin-align/src/Align';
 
 export class BasicEditor extends JWEditor {
     constructor() {
@@ -56,6 +57,7 @@ export class BasicEditor extends JWEditor {
                 [Youtube],
                 [Table],
                 [Metadata],
+                [Align],
             ],
         });
     }
