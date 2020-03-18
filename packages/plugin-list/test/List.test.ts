@@ -2304,28 +2304,28 @@ describePlugin(List, testEditor => {
                                     '<ol><li class="a">abc</li><li class="a">b</li><li class="a">[]<br></li></ol>',
                             });
                         });
-                        it('should add two list items with a class and a heading at the end of a list', async () => {
+                        it('should add two list items with a class and a div at the end of a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li class="a"><h1>abc[]</h1></li></ol>',
+                                contentBefore: '<ol><li class="a"><div>abc[]</div></li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li class="a"><h1>abc</h1></li><li class="a"><h1>b</h1></li><li class="a"><h1>[]<br></h1></li></ol>',
+                                    '<ol><li class="a"><div>abc</div></li><li class="a"><div>b</div></li><li class="a"><div>[]<br></div></li></ol>',
                             });
                         });
-                        it('should add two list items with a heading with a class at the end of a list', async () => {
+                        it('should add two list items with a div with a class at the end of a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><h1 class="a">abc[]</h1></li></ol>',
+                                contentBefore: '<ol><li><div class="a">abc[]</div></li></ol>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li><h1 class="a">abc</h1></li><li><h1 class="a">b</h1></li><li><h1 class="a">[]<br></h1></li></ol>',
+                                    '<ol><li><div class="a">abc</div></li><li><div class="a">b</div></li><li><div class="a">[]<br></div></li></ol>',
                             });
                         });
                         it('should add two list items with a font at the end of a list within a list', async () => {
@@ -2430,28 +2430,28 @@ describePlugin(List, testEditor => {
                                     '<ul><li class="a">abc</li><li class="a">b</li><li class="a">[]<br></li></ul>',
                             });
                         });
-                        it('should add two list items with a class and a heading at the end of a list', async () => {
+                        it('should add two list items with a class and a div at the end of a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li class="a"><h1>abc[]</h1></li></ul>',
+                                contentBefore: '<ul><li class="a"><div>abc[]</div></li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li class="a"><h1>abc</h1></li><li class="a"><h1>b</h1></li><li class="a"><h1>[]<br></h1></li></ul>',
+                                    '<ul><li class="a"><div>abc</div></li><li class="a"><div>b</div></li><li class="a"><div>[]<br></div></li></ul>',
                             });
                         });
-                        it('should add two list items with a heading with a class at the end of a list', async () => {
+                        it('should add two list items with a div with a class at the end of a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><h1 class="a">abc[]</h1></li></ul>',
+                                contentBefore: '<ul><li><div class="a">abc[]</div></li></ul>',
                                 stepFunction: async (editor: JWEditor) => {
                                     await insertParagraphBreak(editor);
                                     await insertText(editor, 'b');
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ul><li><h1 class="a">abc</h1></li><li><h1 class="a">b</h1></li><li><h1 class="a">[]<br></h1></li></ul>',
+                                    '<ul><li><div class="a">abc</div></li><li><div class="a">b</div></li><li><div class="a">[]<br></div></li></ul>',
                             });
                         });
                     });
