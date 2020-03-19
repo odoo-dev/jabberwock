@@ -11,7 +11,7 @@ function headingButton(level): Button {
         commandArgs: { level: level } as HeadingParams,
         selected: (editor: JWEditor): boolean => {
             return editor.selection.range.targetedNodes().every(node => {
-                return node.ancestor(ancestor => {
+                return node.closest(ancestor => {
                     return ancestor.is(HeadingNode) && ancestor.level === level;
                 });
             });
@@ -25,7 +25,7 @@ export const ParagraphButton = {
     commandArgs: { level: 0 } as HeadingParams,
     selected: (editor: JWEditor): boolean => {
         return editor.selection.range.targetedNodes().every(node => {
-            return node.ancestor(ancestor => {
+            return node.closest(ancestor => {
                 return ancestor.is(editor.createBaseContainer().constructor);
             });
         });
