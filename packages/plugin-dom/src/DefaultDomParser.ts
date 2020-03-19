@@ -2,13 +2,14 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { DomParsingEngine } from './DomParsingEngine';
+import { nodeName } from '../../utils/src/utils';
 
 export class DefaultDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     async parse(item: Node): Promise<VNode[]> {
-        const element = new VElement(item.nodeName);
+        const element = new VElement(nodeName(item));
         if (item instanceof Element) {
             element.attributes = this.engine.parseAttributes(item);
         }

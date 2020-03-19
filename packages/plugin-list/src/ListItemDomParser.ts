@@ -1,5 +1,6 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { isBlock } from '../../utils/src/isBlock';
+import { nodeName } from '../../utils/src/utils';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 
@@ -64,6 +65,6 @@ export class ListItemDomParser extends AbstractParser<Node> {
      * @param item
      */
     _isInlineListItem(item: Node): boolean {
-        return item && (!isBlock(item) || item.nodeName === 'BR');
+        return item && (!isBlock(item) || nodeName(item) === 'BR');
     }
 }

@@ -12,6 +12,7 @@ import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
+import { nodeName } from '../../utils/src/utils';
 
 describe('core', () => {
     describe('src', () => {
@@ -1148,7 +1149,7 @@ describe('core', () => {
                     class MyCustomParser extends AbstractParser<Node> {
                         static id = 'dom';
                         predicate = (node: Node): boolean => {
-                            return node.nodeName === 'CUSTOM-NODE';
+                            return nodeName(node) === 'CUSTOM-NODE';
                         };
                         async parse(): Promise<MyCustomNode[]> {
                             return [new MyCustomNode()];

@@ -1,3 +1,5 @@
+import { nodeName } from "../../utils/src/utils";
+
 interface CharMutation {
     old?: string;
     current?: string;
@@ -65,7 +67,7 @@ export class MutationNormalizer {
             return texts;
         }
         function isTextNode(target: Node): boolean {
-            return target.nodeType === Node.TEXT_NODE || target.nodeName === 'BR';
+            return target.nodeType === Node.TEXT_NODE || nodeName(target) === 'BR';
         }
         this._mutations.forEach(record => {
             const targetMutation = record.target;

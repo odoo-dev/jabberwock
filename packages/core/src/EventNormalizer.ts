@@ -2,6 +2,7 @@ import { Direction } from '../../core/src/VSelection';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint } from '../../utils/polyfill';
 import { targetDeepest } from '../../utils/src/Dom';
+import { nodeName } from '../../utils/src/utils';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -993,7 +994,7 @@ export class EventNormalizer {
             if (element) {
                 if (
                     !dataTransfer.draggingFromEditable &&
-                    element.nodeName === 'A' &&
+                    nodeName(element) === 'A' &&
                     element.innerHTML === ''
                 ) {
                     // add default content if it's external link
@@ -1279,7 +1280,7 @@ export class EventNormalizer {
      * @param node
      */
     _isTextualNode(node: Node): boolean {
-        return node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR';
+        return node.nodeType === Node.TEXT_NODE || nodeName(node) === 'BR';
     }
     /**
      * Get the current selection from the DOM. If there is no selection in the
@@ -1445,7 +1446,7 @@ export class EventNormalizer {
             return true;
         }
         // A <br> element with no next sibling is never visible.
-        if (el.nodeName === 'BR' && !el.nextSibling) {
+        if (nodeName(el) === 'BR' && !el.nextSibling) {
             return false;
         }
         const element = el.nodeType === Node.TEXT_NODE ? el.parentElement : el;
