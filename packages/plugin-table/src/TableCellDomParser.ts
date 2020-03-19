@@ -1,13 +1,14 @@
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { TableCellNode } from './TableCellNode';
+import { nodeName } from '../../utils/src/utils';
 
 export class TableCellDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): item is HTMLTableCellElement => {
-        return item.nodeName === 'TD' || item.nodeName === 'TH';
+        return nodeName(item) === 'TD' || nodeName(item) === 'TH';
     };
 
     /**
@@ -16,7 +17,7 @@ export class TableCellDomParser extends AbstractParser<Node> {
      * @param item
      */
     async parse(item: HTMLTableCellElement): Promise<TableCellNode[]> {
-        const cell = new TableCellNode(item.nodeName === 'TH');
+        const cell = new TableCellNode(nodeName(item) === 'TH');
         cell.attributes = this.engine.parseAttributes(item);
 
         const children = await this.engine.parse(...item.childNodes);

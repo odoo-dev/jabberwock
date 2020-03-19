@@ -1,13 +1,14 @@
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { TableRowNode } from './TableRowNode';
+import { nodeName } from '../../utils/src/utils';
 
 export class TableRowDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): item is Element => {
-        return item.nodeName === 'THEAD' || item.nodeName === 'TBODY' || item.nodeName === 'TR';
+        return nodeName(item) === 'THEAD' || nodeName(item) === 'TBODY' || nodeName(item) === 'TR';
     };
 
     /**
@@ -18,7 +19,7 @@ export class TableRowDomParser extends AbstractParser<Node> {
     async parse(item: Element): Promise<TableRowNode[]> {
         if (this._isTableSection(item)) {
             return this.parseTableSection(item);
-        } else if (item.nodeName === 'TR') {
+        } else if (nodeName(item) === 'TR') {
             const row = new TableRowNode();
             row.attributes = this.engine.parseAttributes(item);
             const cells = await this.engine.parse(...item.childNodes);
@@ -49,7 +50,7 @@ export class TableRowDomParser extends AbstractParser<Node> {
         // row.
         for (const parsedNode of parsedNodes) {
             if (parsedNode.is(TableRowNode)) {
-                parsedNode.header = tableSection.nodeName === 'THEAD';
+                parsedNode.header = nodeName(tableSection) === 'THEAD';
                 parsedNode.attributes['table-section-attributes'] = containerAttributes;
             }
         }
@@ -66,6 +67,6 @@ export class TableRowDomParser extends AbstractParser<Node> {
      * @param item
      */
     _isTableSection(item: Node): item is HTMLTableSectionElement {
-        return item.nodeName === 'THEAD' || item.nodeName === 'TBODY';
+        return nodeName(item) === 'THEAD' || nodeName(item) === 'TBODY';
     }
 }

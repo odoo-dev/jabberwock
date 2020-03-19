@@ -61,3 +61,12 @@ export function nodeLength(node: Node): number {
 export function distinct<T>(array: Array<T>): Array<T> {
     return Array.from(new Set(array));
 }
+
+/**
+ * Return the uppercase name of the given DOM node.
+ *
+ * @param node
+ */
+export function nodeName(node: Node): string {
+    return node.nodeName.toUpperCase();
+}

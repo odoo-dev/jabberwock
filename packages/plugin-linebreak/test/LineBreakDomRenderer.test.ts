@@ -6,6 +6,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { LineBreakNode } from '../src/LineBreakNode';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { nodeName } from '../../utils/src/utils';
 
 describe('LineBreakDomRenderer', () => {
     describe('render', () => {
@@ -33,8 +34,8 @@ describe('LineBreakDomRenderer', () => {
                 expect(domElement.childNodes.length).to.equal(1);
                 const domP = domElement.firstChild;
                 expect(domP.childNodes.length).to.equal(2);
-                expect(domP.firstChild.nodeName).to.equal('BR');
-                expect(domP.lastChild.nodeName).to.equal('BR');
+                expect(nodeName(domP.firstChild)).to.equal('BR');
+                expect(nodeName(domP.lastChild)).to.equal('BR');
             }
         });
         it('should render a lineBreak with node after', async () => {
@@ -50,10 +51,10 @@ describe('LineBreakDomRenderer', () => {
                 const domElement = element[0];
                 expect(domElement.childNodes.length).to.equal(1);
                 const domP = domElement.firstChild;
-                expect(domP.nodeName).to.equal('FAKE-P');
+                expect(nodeName(domP)).to.equal('FAKE-P');
                 expect(domP.childNodes.length).to.equal(2);
-                expect(domP.firstChild.nodeName).to.equal('BR');
-                expect(domP.childNodes[1].nodeName).to.equal('FAKE-CHAR');
+                expect(nodeName(domP.firstChild)).to.equal('BR');
+                expect(nodeName(domP.childNodes[1])).to.equal('FAKE-CHAR');
             }
         });
     });
