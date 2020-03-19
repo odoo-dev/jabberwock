@@ -1602,7 +1602,6 @@ describe('utils', () => {
                     await nextTick();
                     ctx.eventBatches.splice(0);
                     triggerEvent(p, 'mousedown', { button: 2, detail: 1 });
-                    setSelection(text, 1, text, 1);
                     triggerEvent(p, 'contextmenu', { button: 2, detail: 0 });
                     await nextTick();
                     await nextTick();
@@ -1622,21 +1621,6 @@ describe('utils', () => {
                     ];
 
                     const batchEvents: EventBatch[] = [
-                        {
-                            actions: [
-                                {
-                                    type: 'setSelection',
-                                    domSelection: {
-                                        anchorNode: text,
-                                        anchorOffset: 1,
-                                        focusNode: text,
-                                        focusOffset: 1,
-                                        direction: Direction.FORWARD,
-                                    },
-                                },
-                            ],
-                            mutatedElements: new Set([]),
-                        },
                         {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),

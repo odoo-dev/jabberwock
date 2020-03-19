@@ -1475,7 +1475,9 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
-        this._pointerSelectionTimeout.fire({ actions: [] });
+        if (this._pointerSelectionTimeout?.pending) {
+            this._pointerSelectionTimeout.fire();
+        }
         this._pointerSelectionTimeout = new Timeout(() => {
             if (!this._selectionHasChanged || this._currentlySelectingAll) {
                 return { actions: [] };
