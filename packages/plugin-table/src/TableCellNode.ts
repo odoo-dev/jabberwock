@@ -1,6 +1,7 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode'; // TODO: remove dependency
 
 export interface TableCellAttributes extends Record<string, string | Record<string, string>> {
     colspan?: string;
@@ -61,37 +62,6 @@ export class TableCellNode extends VNode {
         return this.__managerCell;
     }
     /**
-     * Set the given cell as manager of this cell. If null is passed, this cell
-     * will have no manager.
-     */
-    set managerCell(newManager: TableCellNode | null) {
-        const oldManager = this.__managerCell;
-        this.__managerCell = newManager;
-
-        if (newManager) {
-            // If we just set a new manager for this cell, also add this cell to
-            // the new manager's managed cells.
-            newManager.__managedCells.add(this);
-
-            // Copy the manager's attributes and properties.
-            this.attributes = { ...newManager.attributes };
-            this.header = newManager.header;
-
-            // Move the children to the manager.
-            newManager.append(...this.children);
-
-            // Hand the managed cells over to the manager.
-            for (const managedCell of this.managedCells) {
-                managedCell.managerCell = newManager;
-                this.__managedCells.delete(managedCell);
-            }
-        } else if (oldManager) {
-            // If we just removed this cell's manager, also remove this cell
-            // from the old manager's managed cells.
-            oldManager.__managedCells.delete(this);
-        }
-    }
-    /**
      * Return the set of cells that this cell manages.
      */
     get managedCells(): Set<TableCellNode> {
@@ -149,5 +119,88 @@ export class TableCellNode extends VNode {
      */
     isActive(): boolean {
         return !this.managerCell;
+    }
+    /**
+     * Set the given cell as manager of this cell.
+     * Note: A cell managed by another cell also copies its manager's attributes
+     * and properties and hands over its children to its manager.
+     *
+     * @override
+     */
+    mergeWith(newManager: VNode): void {
+        const thisTable = this.ancestor(TableNode);
+        const otherTable = newManager.ancestor(TableNode);
+        if (!newManager.is(TableCellNode) || thisTable !== otherTable) return;
+
+        this.__managerCell = newManager;
+        newManager.manage(this);
+    }
+    /**
+     * Unmerge this cell from its manager.
+     */
+    unmerge(): void {
+        const manager = this.__managerCell;
+        if (manager) {
+            this.__managerCell = null;
+            // If we just removed this cell's manager, also remove this cell
+            // from the old manager's managed cells.
+            manager.unmanage(this);
+        }
+    }
+    /**
+     * Set the given cell as managed by this cell.
+     * Note: A cell managed by another cell also copies its manager's attributes
+     * and properties and hands over its children to its manager.
+     *
+     * @param cell
+     */
+    manage(cell: TableCellNode): void {
+        this.__managedCells.add(cell);
+
+        // Copy the manager's attributes and properties.
+        cell.attributes = { ...this.attributes };
+        cell.header = this.header;
+
+        // Move the children to the manager.
+        if (cell.hasChildren()) {
+            this.append(new LineBreakNode());
+        }
+        this.append(...cell.children);
+
+        // Hand the managed cells over to the manager.
+        for (const managedCell of cell.managedCells) {
+            managedCell.mergeWith(this);
+            cell.unmanage(managedCell);
+        }
+
+        // Copy the manager's row if an entire row was merged
+        const row = cell.ancestor(TableRowNode);
+        if (row) {
+            const cells = row.children(TableCellNode);
+            const rowIsMerged = cells.every(rowCell => rowCell.managerCell === this);
+            if (rowIsMerged) {
+                const managerRow = cell.managerCell.ancestor(TableRowNode);
+                row.header = managerRow.header;
+                row.attributes = { ...managerRow.attributes };
+            }
+        }
+
+        // Ensure reciprocity.
+        if (cell.managerCell !== this) {
+            cell.mergeWith(this);
+        }
+    }
+    /**
+     * Restore the independence of the given cell.
+     *
+     * @param cell
+     */
+    unmanage(cell: TableCellNode): void {
+        this.__managedCells.delete(cell);
+
+        // Ensure reciprocity.
+        if (cell.managerCell === this) {
+            cell.unmerge();
+        }
     }
 }
