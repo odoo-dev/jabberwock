@@ -125,7 +125,7 @@ export class TableDomParser extends AbstractParser<Node> {
                         } else {
                             // Add a placeholder cell to the grid.
                             const placeholderCell = new TableCellNode();
-                            placeholderCell.managerCell = cell;
+                            placeholderCell.mergeWith(cell);
                             grid[i][j] = placeholderCell;
                         }
                     }

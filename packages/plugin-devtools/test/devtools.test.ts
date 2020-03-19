@@ -719,6 +719,15 @@ describe('Plugin: DevTools', () => {
                 'outdent',
                 'link',
                 'unlink',
+                'addRowAbove',
+                'addRowBelow',
+                'addColumnBefore',
+                'addColumnAfter',
+                'deleteRow',
+                'deleteColumn',
+                'deleteTable',
+                'mergeCells',
+                'unmergeCells',
                 'align',
             ]);
         });
