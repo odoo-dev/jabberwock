@@ -2,6 +2,7 @@ import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
+import { nodeName } from '../../../utils/src/utils';
 
 interface CommandsState {
     currentTab: string;
@@ -36,8 +37,8 @@ export class CommandsComponent extends OwlUIComponent<CommandsProps> {
      * @param value
      */
     formatPayloadValue(value: Node | string | boolean | number | object): string {
-        if (value && value instanceof Node && value.nodeName) {
-            return '<' + value.nodeName.toLowerCase() + '>';
+        if (value && value instanceof Node && nodeName(value)) {
+            return '<' + nodeName(value).toLowerCase() + '>';
         }
         return '' + value;
     }

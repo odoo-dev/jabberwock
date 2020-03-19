@@ -2,6 +2,7 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
+import { nodeName } from '../../utils/src/utils';
 
 export class TableDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
@@ -50,6 +51,6 @@ export class TableDomRenderer extends AbstractRenderer<Node[]> {
      * @param item
      */
     _isTableSection(item: Node): item is HTMLTableSectionElement {
-        return item.nodeName === 'THEAD' || item.nodeName === 'TBODY';
+        return nodeName(item) === 'THEAD' || nodeName(item) === 'TBODY';
     }
 }

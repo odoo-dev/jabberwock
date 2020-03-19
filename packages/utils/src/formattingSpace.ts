@@ -1,4 +1,5 @@
 import { isBlock } from './isBlock';
+import { nodeName } from './utils';
 
 /**
  * Return a string with the value of a text node stripped of its formatting
@@ -82,7 +83,7 @@ function _isAtSegmentBreak(node: Node, side: 'start' | 'end'): boolean {
     const isAgainstAnotherSegment = sibling && _isSegment(sibling);
     const isAtEdgeOfOwnSegment = _isBlockEdge(node, side);
     // In the DOM, a space before a BR is rendered but a space after a BR isn't.
-    const isBeforeBR = side === 'end' && sibling && sibling.nodeName === 'BR';
+    const isBeforeBR = side === 'end' && sibling && nodeName(sibling) === 'BR';
     return (isAgainstAnotherSegment && !isBeforeBR) || isAtEdgeOfOwnSegment;
 }
 /**
@@ -94,7 +95,7 @@ function _isSegment(node: Node): boolean {
     if (node.nodeType !== Node.ELEMENT_NODE) {
         // Only proper elements can be a segment.
         return false;
-    } else if (node.nodeName === 'BR') {
+    } else if (nodeName(node) === 'BR') {
         // Break (BR) tags end a segment.
         return true;
     } else {

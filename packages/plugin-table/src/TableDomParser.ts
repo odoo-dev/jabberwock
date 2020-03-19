@@ -3,13 +3,14 @@ import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { TableCellNode } from './TableCellNode';
+import { nodeName } from '../../utils/src/utils';
 
 export class TableDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): item is HTMLTableElement => {
-        return item.nodeName === 'TABLE';
+        return nodeName(item) === 'TABLE';
     };
 
     /**
