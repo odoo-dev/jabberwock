@@ -1118,13 +1118,15 @@ describe('core', () => {
                         expect(p.children.slice()).to.deep.equal([a, marker1]);
                         expect(p.nextSibling().children.slice()).to.deep.equal([b, marker2, c]);
                     });
-                    it('should throw if no parent', async () => {
+                    it('should not break fragment', async () => {
                         const root = new FragmentNode();
                         const p = new VElement('P');
                         root.append(p);
-                        expect(() => {
-                            root.splitAt(p);
-                        }).to.throw();
+                        expect(root.children.slice()).to.deep.equal([p]);
+                        expect(root.parent).to.be.undefined;
+                        root.splitAt(p);
+                        expect(root.children.slice()).to.deep.equal([p]);
+                        expect(root.parent).to.be.undefined;
                     });
                 });
             });

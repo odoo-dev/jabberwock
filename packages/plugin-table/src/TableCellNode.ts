@@ -9,6 +9,7 @@ export interface TableCellAttributes extends Record<string, string | Record<stri
 }
 
 export class TableCellNode extends VNode {
+    breakable = false;
     attributes: TableCellAttributes;
     // Only the `managerCell` setter should modify the following private keys.
     __managerCell: TableCellNode;

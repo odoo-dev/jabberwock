@@ -313,7 +313,8 @@ export class VRange {
      */
     empty(): void {
         // Remove selected nodes.
-        for (const node of this.selectedNodes()) {
+        for (const node of this.selectedNodes(node => node.breakable)) {
+            // TODO: Replace the `breakable` check with complex table selection.
             node.remove();
         }
         // Collapse the range by merging nodes between start and end.
@@ -324,10 +325,14 @@ export class VRange {
                 if (ancestor.children().length > 1) {
                     ancestor.splitAt(this.endContainer);
                 }
-                this.endContainer.mergeWith(ancestor);
-                ancestor = this.endContainer.parent;
+                if (this.endContainer.breakable) {
+                    this.endContainer.mergeWith(ancestor);
+                }
+                ancestor = ancestor.parent;
             }
-            this.endContainer.mergeWith(this.startContainer);
+            if (this.endContainer.breakable) {
+                this.endContainer.mergeWith(this.startContainer);
+            }
         }
     }
     /**
