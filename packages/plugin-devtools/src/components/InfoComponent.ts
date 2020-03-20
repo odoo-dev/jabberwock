@@ -5,7 +5,7 @@ interface InfoState {
     currentTab: string;
 }
 export class InfoComponent extends OwlUIComponent<{}> {
-    aboutMeProps = ['id', 'name', 'type', 'length', 'atomic', 'text'];
+    aboutMeProps = ['id', 'name', 'length', 'atomic', 'text'];
     familyProps = ['parent', 'children', 'siblings'];
     customPropsBlacklist = this.aboutMeProps.concat(this.familyProps).concat(['renderingEngines']);
     state: InfoState = {
