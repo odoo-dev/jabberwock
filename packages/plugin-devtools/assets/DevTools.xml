@@ -44,7 +44,7 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <devtools-nodename t-if="props.vNode.type == 'markerNode'"
+            <devtools-nodename t-if="!props.vNode.tangible"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line inline marker-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,
@@ -124,7 +124,7 @@
     <!-- INSPECTOR.Info.vNode -->
     <t t-name="infoVNode">
         <devtools-about>
-            <devtools-type><t t-esc="className(props.vNode)"/></devtools-type> <t t-esc="props.vNode.type or &quot;?&quot;"/>
+            <devtools-type><t t-esc="className(props.vNode)"/></devtools-type> <t t-esc="props.vNode.name"/>
             <t t-if="props.vNode.char">:
                 "<t t-esc="props.vNode.char"/>"
             </t>
@@ -167,12 +167,12 @@
                             <devtools-list>
                                 <devtools-listitem t-if="props.vNode.previousSibling()"
                                     t-on-click="selectNode(props.vNode.previousSibling())">
-                                    previous: <t t-esc="props.vNode.previousSibling().type or &quot;?&quot;"/>
+                                    previous: <t t-esc="props.vNode.previousSibling().name"/>
                                 </devtools-listitem>
                                 <devtools-listitem t-else="">previous: none</devtools-listitem>
                                 <devtools-listitem t-if="props.vNode.nextSibling()"
                                     t-on-click="selectNode(props.vNode.nextSibling())">
-                                    next: <t t-esc="props.vNode.nextSibling().type or &quot;?&quot;"/>
+                                    next: <t t-esc="props.vNode.nextSibling().name"/>
                                 </devtools-listitem>
                                 <devtools-listitem t-else="">next: none</devtools-listitem>
                             </devtools-list>
@@ -182,7 +182,7 @@
                                 <devtools-listitem t-foreach="props.vNode.children()"
                                     t-as="child" t-key="child.id"
                                     t-on-click="selectNode(child)">
-                                    <t t-esc="child.type or &quot;?&quot;"/>
+                                    <t t-esc="child.name"/>
                                 </devtools-listitem>
                             </devtools-list>
                             <t t-else="">none</t>

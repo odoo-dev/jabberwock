@@ -1,6 +1,6 @@
 import { toUnicode } from '../../../utils/src/utils';
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
-import { VNode, VNodeType } from '../../../core/src/VNodes/VNode';
+import { VNode } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode';
@@ -93,13 +93,13 @@ export class TreeComponent extends OwlUIComponent<NodeProps> {
         }
     }
     repr(): string {
-        if (this.props.vNode.type === VNodeType.MARKER) {
-            // Representation of marker nodes might change depending on the
-            // context in which they are referenced, even though they did not
-            // actually change per se.
-            return this._getNodeRepr(this.props.vNode);
-        } else {
+        if (this.props.vNode.tangible) {
             return this._repr;
+        } else {
+            // Representation of intangible nodes (e.g. markers) might change
+            // depending on the context in which they are referenced, even
+            // though they did not actually change per se.
+            return this._getNodeRepr(this.props.vNode);
         }
     }
     /**
