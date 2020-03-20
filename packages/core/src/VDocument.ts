@@ -1,5 +1,6 @@
 import { VNode } from './VNodes/VNode';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 export class VDocument {
     root: VNode;
@@ -20,7 +21,12 @@ export class VDocument {
         if (!range.isCollapsed()) {
             range.empty();
         }
-        range.startContainer.splitAt(range.start);
+        if (range.startContainer.breakable) {
+            range.startContainer.splitAt(range.start);
+        } else {
+            // TODO
+            range.start.before(new LineBreakNode());
+        }
     }
     /**
      * Insert something at range.

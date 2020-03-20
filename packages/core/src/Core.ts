@@ -2,7 +2,7 @@ import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
 import { VSelectionDescription, Direction } from './VSelection';
-import { VNode, RelativePosition } from './VNodes/VNode';
+import { VNode, RelativePosition, isLeaf } from './VNodes/VNode';
 
 export type InsertParagraphBreakParams = CommandParams;
 export type DeleteBackwardParams = CommandParams;
@@ -67,13 +67,22 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const previousSibling = range.start.previousSibling();
             if (previousSibling) {
                 previousSibling.removeBackward();
-            } else {
-                // Otherwise delete nodes between range and previous leaf.
-                const previousLeaf = range.start.previousLeaf(node => {
-                    return node !== range.start.parent;
-                });
-                if (previousLeaf) {
-                    range.setStart(previousLeaf, RelativePosition.AFTER);
+            } else if (range.startContainer.breakable) {
+                // Otherwise set range start at previous valid leaf.
+                let previous = range.startContainer.previous();
+                while (previous && !isLeaf(previous)) {
+                    const sibling = previous.previousSibling();
+                    if (sibling) {
+                        previous = sibling.lastLeaf();
+                    } else if (previous.parent?.breakable) {
+                        previous = previous.parent;
+                    } else {
+                        // Stop browsing at the first child of an unbreakable.
+                        previous = undefined;
+                    }
+                }
+                if (previous) {
+                    range.setStart(previous, RelativePosition.AFTER);
                     range.empty();
                 }
             }
@@ -91,11 +100,14 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const nextSibling = range.end.nextSibling();
             if (nextSibling) {
                 nextSibling.removeForward();
-            } else {
-                // Otherwise delete nodes between range and next leaf.
-                const nextLeaf = range.end.nextLeaf();
-                if (nextLeaf) {
-                    range.setEnd(nextLeaf, RelativePosition.BEFORE);
+            } else if (range.endContainer.breakable) {
+                // Otherwise set range end at next valid leaf.
+                let next = range.end.next();
+                while (next && !isLeaf(next)) {
+                    next = next.firstChild();
+                }
+                if (next) {
+                    range.setEnd(next, RelativePosition.BEFORE);
                     range.empty();
                 }
             }

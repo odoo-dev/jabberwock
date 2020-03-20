@@ -3,6 +3,7 @@ import { TableRowNode } from './TableRowNode';
 import { TableCellNode } from './TableCellNode';
 
 export class TableNode extends VElement {
+    breakable = false;
     constructor() {
         super('TABLE');
     }

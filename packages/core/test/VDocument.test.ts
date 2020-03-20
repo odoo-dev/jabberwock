@@ -76,6 +76,15 @@ describe('VDocument', () => {
                         contentAfter: '<p>[]abc</p>',
                     });
                 });
+                it('should not break unbreakables', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<table><tbody><tr><td>[]<br></td><td>abc</td></tr></tbody></table>',
+                        stepFunction: deleteForward,
+                        contentAfter:
+                            '<table><tbody><tr><td>[]<br></td><td>abc</td></tr></tbody></table>',
+                    });
+                });
             });
             describe('Line breaks', () => {
                 describe('Single', () => {
@@ -934,6 +943,15 @@ describe('VDocument', () => {
                             '<jw-block-a><jw-block-b>ab</jw-block-b></jw-block-a><jw-block-c><jw-block-d>[<br>]</jw-block-d></jw-block-c>',
                         stepFunction: deleteBackward,
                         contentAfter: '<jw-block-a><jw-block-b>ab[]</jw-block-b></jw-block-a>',
+                    });
+                });
+                it('should not break unbreakables', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore:
+                            '<table><tbody><tr><td><br></td><td>[]abc</td></tr></tbody></table>',
+                        stepFunction: deleteBackward,
+                        contentAfter:
+                            '<table><tbody><tr><td><br></td><td>[]abc</td></tr></tbody></table>',
                     });
                 });
             });
