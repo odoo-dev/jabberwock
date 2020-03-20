@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { VNode, VNodeType } from '../src/VNodes/VNode';
+import { VNode } from '../src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { HeadingNode } from '../../plugin-heading/src/HeadingNode';
@@ -36,19 +36,11 @@ describe('core', () => {
                     });
                 });
             });
-            describe('FragmentNode', () => {
-                describe('constructor', () => {
-                    it('should create a fragment node', async () => {
-                        const vNode = new FragmentNode();
-                        expect(vNode.type).to.equal(VNodeType.FRAGMENT);
-                    });
-                });
-            });
             describe('MarkerNode', () => {
                 describe('constructor', () => {
                     it('should create a marker node', async () => {
                         const markerNode = new MarkerNode();
-                        expect(markerNode.type).to.equal(VNodeType.MARKER);
+                        expect(markerNode.tangible).to.equal(false);
                         expect(markerNode.atomic).to.equal(true);
                     });
                 });
@@ -162,7 +154,7 @@ describe('core', () => {
                         const vNode = new VNode();
                         const copy = vNode.clone();
                         expect(copy).to.not.equal(vNode);
-                        expect(vNode.type).to.equal(VNodeType.NODE);
+                        expect(vNode.tangible).to.equal(true);
                     });
                 });
                 describe('text', () => {

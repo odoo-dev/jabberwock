@@ -7,12 +7,6 @@ export enum RelativePosition {
     INSIDE = 'INSIDE',
 }
 
-export enum VNodeType {
-    NODE = 'node',
-    MARKER = 'markerNode',
-    FRAGMENT = 'fragmentNode',
-}
-
 export type Typeguard<T extends VNode> = (node: VNode) => node is T;
 export type Predicate<T = boolean> = T extends VNode
     ? Constructor<T> | Typeguard<T>
@@ -33,8 +27,8 @@ export class VNode {
         return node && node.test(this);
     }
     static readonly atomic: boolean = false;
-    readonly type: VNodeType;
     readonly id = id;
+    tangible = true;
     parent: VNode;
     attributes: Record<string, string | Record<string, string>> = {};
     children: Array<VNode> & {
@@ -43,7 +37,6 @@ export class VNode {
         <T>(predicate?: Predicate<T>): VNode[];
     } = new Children([]);
     constructor() {
-        this.type = VNodeType.NODE;
         id++;
     }
     /**
@@ -296,7 +289,7 @@ export class VNode {
     firstChild<T>(predicate?: Predicate<T>): VNode;
     firstChild<T>(predicate?: Predicate<T>): VNode {
         let firstChild = this.children[0];
-        while (firstChild && (isMarker(firstChild) || !firstChild.test(predicate))) {
+        while (firstChild && (!isTangible(firstChild) || !firstChild.test(predicate))) {
             firstChild = firstChild.nextSibling();
         }
         return firstChild;
@@ -311,7 +304,7 @@ export class VNode {
     lastChild<T>(predicate?: Predicate<T>): VNode;
     lastChild<T>(predicate?: Predicate<T>): VNode {
         let lastChild = this.children[this.children.length - 1];
-        while (lastChild && (isMarker(lastChild) || !lastChild.test(predicate))) {
+        while (lastChild && (!isTangible(lastChild) || !lastChild.test(predicate))) {
             lastChild = lastChild.previousSibling();
         }
         return lastChild;
@@ -398,7 +391,7 @@ export class VNode {
         const index = this.parent.children.indexOf(this);
         let sibling = this.parent.children[index - 1];
         // Skip ignored siblings and those failing the predicate test.
-        while (sibling && (isMarker(sibling) || !sibling.test(predicate))) {
+        while (sibling && (!isTangible(sibling) || !sibling.test(predicate))) {
             sibling = sibling.previousSibling();
         }
         return sibling;
@@ -416,7 +409,7 @@ export class VNode {
         const index = this.parent.children.indexOf(this);
         let sibling = this.parent.children[index + 1];
         // Skip ignored siblings and those failing the predicate test.
-        while (sibling && (isMarker(sibling) || !sibling.test(predicate))) {
+        while (sibling && (!isTangible(sibling) || !sibling.test(predicate))) {
             sibling = sibling.nextSibling();
         }
         return sibling;
@@ -879,12 +872,12 @@ export class VNode {
 }
 
 /**
- * Return true if the given node is ignored from traversal.
+ * Return true if the given node is tangible.
  *
  * @param node node to check
  */
-export function isMarker(node: VNode): boolean {
-    return node.type === VNodeType.MARKER;
+export function isTangible(node: VNode): boolean {
+    return node.tangible;
 }
 
 /**

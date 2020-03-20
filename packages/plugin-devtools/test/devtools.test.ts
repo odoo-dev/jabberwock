@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 import { DevTools } from '../src/DevTools';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
 import { Dom } from '../../plugin-dom/src/Dom';
@@ -97,7 +97,9 @@ describe('Plugin: DevTools', () => {
     describe('InspectorComponent', () => {
         it('should change panel to "Inspector" with top button', async () => {
             await openDevTools(devtools);
-            const buttonCommand = devtools.querySelector('devtools-navbar devtools-button:nth-child(2)');
+            const buttonCommand = devtools.querySelector(
+                'devtools-navbar devtools-button:nth-child(2)',
+            );
             await click(buttonCommand);
 
             const button = devtools.querySelector('devtools-navbar devtools-button');
@@ -123,7 +125,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-type>' +
                 editor.vDocument.root.constructor.name +
                 '</devtools-type> ' +
-                editor.vDocument.root.type +
+                editor.vDocument.root.name +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
                 editor.vDocument.root.id +
@@ -143,9 +145,6 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>name</devtools-td><devtools-td>"' +
                 editor.vDocument.root.name +
                 '"</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>type</devtools-td><devtools-td>"' +
-                editor.vDocument.root.type +
-                '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text</devtools-td><devtools-td>"Titleabcdefghiudiv"</devtools-td></devtools-tr>' +
@@ -153,19 +152,24 @@ describe('Plugin: DevTools', () => {
                 '</devtools-tbody>' +
                 '</devtools-table>' +
                 '<devtools-infotitle>📖 My Properties</devtools-infotitle>' +
-                '<devtools-table><devtools-tbody><devtools-tr><devtools-td>attributes</devtools-td><devtools-td>{}</devtools-td></devtools-tr></devtools-tbody></devtools-table>' +
+                '<devtools-table>' +
+                '<devtools-tbody>' +
+                '<devtools-tr><devtools-td>attributes</devtools-td><devtools-td>{}</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
+                '</devtools-tbody>' +
+                '</devtools-table>' +
                 '<devtools-infotitle>👪 My Family</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
                 '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>undefined</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td><devtools-list><devtools-listitem>' +
-                editor.vDocument.root.children()[0].type +
+                editor.vDocument.root.children()[0].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[1].type +
+                editor.vDocument.root.children()[1].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[2].type +
+                editor.vDocument.root.children()[2].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[3].type +
+                editor.vDocument.root.children()[3].name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '<devtools-tr>' +
                 '<devtools-td>siblings</devtools-td>' +
@@ -205,7 +209,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-type>' +
                 editor.vDocument.root.children()[1].constructor.name +
                 '</devtools-type> ' +
-                editor.vDocument.root.children()[1].type +
+                editor.vDocument.root.children()[1].name +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
                 editor.vDocument.root.children()[1].id +
@@ -213,7 +217,9 @@ describe('Plugin: DevTools', () => {
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const aboutMe = devtools.querySelector('devtools-info devtools-properties devtools-table');
+            const aboutMe = devtools.querySelector(
+                'devtools-info devtools-properties devtools-table',
+            );
             const aboutMeResult =
                 '<devtools-table>' +
                 '<devtools-tbody>' +
@@ -223,9 +229,6 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>name</devtools-td><devtools-td>"' +
                 editor.vDocument.root.children()[1].name +
                 '"</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>type</devtools-td><devtools-td>"' +
-                editor.vDocument.root.children()[1].type +
-                '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text</devtools-td><devtools-td>"abc"</devtools-td></devtools-tr>' +
@@ -234,7 +237,9 @@ describe('Plugin: DevTools', () => {
                 '</devtools-table>';
             expect(aboutMe.outerHTML).to.equal(aboutMeResult);
 
-            const family = devtools.querySelector('devtools-info devtools-properties devtools-table:last-child');
+            const family = devtools.querySelector(
+                'devtools-info devtools-properties devtools-table:last-child',
+            );
             const familyResult =
                 '<devtools-table>' +
                 '<devtools-tbody>' +
@@ -242,16 +247,16 @@ describe('Plugin: DevTools', () => {
                 editor.vDocument.root.name +
                 '</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td><devtools-list><devtools-listitem>' +
-                editor.vDocument.root.children()[0].type +
+                editor.vDocument.root.children()[1].children()[0].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[1].type +
+                editor.vDocument.root.children()[1].children()[1].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[2].type +
+                editor.vDocument.root.children()[1].children()[2].name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>siblings</devtools-td><devtools-td><devtools-list><devtools-listitem> previous: ' +
-                editor.vDocument.root.children()[0].type +
+                editor.vDocument.root.children()[0].name +
                 '</devtools-listitem><devtools-listitem> next: ' +
-                editor.vDocument.root.children()[2].type +
+                editor.vDocument.root.children()[2].name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
@@ -434,16 +439,18 @@ describe('Plugin: DevTools', () => {
                 '<devtools-type>' +
                 vNodeChar.constructor.name +
                 '</devtools-type> ' +
-                vNodeChar.type +
+                vNodeChar.name +
                 ': "b" ' +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
-                + vNodeChar.id +
+                vNodeChar.id +
                 '</devtools-id>' +
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const aboutMe = devtools.querySelector('devtools-info devtools-properties devtools-table');
+            const aboutMe = devtools.querySelector(
+                'devtools-info devtools-properties devtools-table',
+            );
             const aboutMeResult =
                 '<devtools-table>' +
                 '<devtools-tbody>' +
@@ -453,9 +460,6 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>name</devtools-td><devtools-td>"' +
                 vNodeChar.name +
                 '"</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>type</devtools-td><devtools-td>"' +
-                vNodeChar.type +
-                '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text</devtools-td><devtools-td>"b"</devtools-td></devtools-tr>' +
@@ -464,7 +468,9 @@ describe('Plugin: DevTools', () => {
                 '</devtools-table>';
             expect(aboutMe.outerHTML).to.equal(aboutMeResult);
 
-            const family = devtools.querySelector('devtools-info devtools-properties devtools-table:last-child');
+            const family = devtools.querySelector(
+                'devtools-info devtools-properties devtools-table:last-child',
+            );
             const familyResult =
                 '<devtools-table>' +
                 '<devtools-tbody>' +
@@ -473,9 +479,9 @@ describe('Plugin: DevTools', () => {
                 '</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td>none</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>siblings</devtools-td><devtools-td><devtools-list><devtools-listitem> previous: ' +
-                vNodeChar.previousSibling().type +
+                vNodeChar.previousSibling().name +
                 '</devtools-listitem><devtools-listitem> next: ' +
-                vNodeChar.previousSibling().type +
+                vNodeChar.nextSibling().name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
@@ -635,7 +641,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-type>' +
                 vNode.constructor.name +
                 '</devtools-type> ' +
-                vNode.type +
+                vNode.name +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
                 vNode.id +
@@ -643,11 +649,12 @@ describe('Plugin: DevTools', () => {
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const tr = Array.from(devtools.querySelectorAll('devtools-info devtools-properties devtools-tr'))
+            const tr = Array.from(
+                devtools.querySelectorAll('devtools-info devtools-properties devtools-tr'),
+            )
                 .filter(tr => tr.firstElementChild.textContent === 'children')
                 .pop();
             const li = tr.querySelector('devtools-listitem:last-child');
-            expect(li.textContent).to.equal(VNodeType.NODE);
             await click(li);
 
             about = devtools.querySelector('devtools-info devtools-about');
@@ -656,7 +663,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-type>' +
                 vNode.children()[2].constructor.name +
                 '</devtools-type> ' +
-                vNode.children()[2].type +
+                vNode.children()[2].name +
                 ': "c" ' +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
@@ -900,7 +907,9 @@ describe('Plugin: DevTools', () => {
                 await nextTickFrame();
                 await nextTickFrame();
 
-                const button = devtools.querySelector('devtools-navbar devtools-button:not(.selected)');
+                const button = devtools.querySelector(
+                    'devtools-navbar devtools-button:not(.selected)',
+                );
                 await click(button);
             });
             it('should select "insertText"', async () => {
@@ -925,7 +934,9 @@ describe('Plugin: DevTools', () => {
                     '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
                 expect(about.outerHTML).to.equal(aResult);
 
-                const properties = devtools.querySelector('devtools-info devtools-properties devtools-table');
+                const properties = devtools.querySelector(
+                    'devtools-info devtools-properties devtools-table',
+                );
                 const pResult =
                     '<devtools-table>' +
                     '<devtools-tbody>' +
@@ -955,7 +966,9 @@ describe('Plugin: DevTools', () => {
                     '<devtools-about><devtools-type>Command</devtools-type> insertText</devtools-about>';
                 expect(about.outerHTML).to.equal(aResult);
 
-                const properties = devtools.querySelector('devtools-info devtools-properties devtools-table');
+                const properties = devtools.querySelector(
+                    'devtools-info devtools-properties devtools-table',
+                );
                 const pResult =
                     '<devtools-table>' +
                     '<devtools-tbody>' +
