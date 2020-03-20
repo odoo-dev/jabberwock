@@ -68,14 +68,17 @@ export class TableDomParser extends AbstractParser<Node> {
      * @param domTable
      */
     _getTableDimensions(domTable: HTMLTableElement): [number, number] {
-        const domRows = Array.from(domTable.querySelectorAll('tr'));
+        const domRows = Array.from(domTable.querySelectorAll('tr'))
+        const domTableRows = domRows.filter(row => row.closest('table') === domTable);
         let columnCount = 0;
-        if (domRows.length) {
-            for (const domChild of domRows[0].querySelectorAll('td, th')) {
+        if (domTableRows.length) {
+            const domCells = Array.from(domTableRows[0].querySelectorAll('td, th'));
+            const domTableCells = domCells.filter(cell => cell.closest('table') === domTable);
+            for (const domChild of domTableCells) {
                 columnCount += (domChild as HTMLTableCellElement).colSpan;
             }
         }
-        return [domRows.length, columnCount];
+        return [domTableRows.length, columnCount];
     }
     /**
      * Build and return the grid (2D array: rows of cells) that will be used to
