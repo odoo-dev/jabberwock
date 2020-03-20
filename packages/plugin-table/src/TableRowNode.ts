@@ -2,6 +2,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { TableNode } from './TableNode';
 
 export class TableRowNode extends VElement {
+    breakable = false;
     header: boolean;
     constructor(header = false) {
         super('TR');

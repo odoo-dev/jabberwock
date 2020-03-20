@@ -323,9 +323,13 @@ export class VRange {
      * nodes between start and end.
      */
     empty(): void {
+        const removableNodes = this.selectedNodes(node => {
+            // TODO: Replace this check by complex table selection support.
+            return node.breakable || node.parent?.breakable || node.parent?.is(FragmentNode);
+        });
         // Remove selected nodes without touching the start range's ancestors.
         const startAncestors = this.start.ancestors();
-        for (const node of this.selectedNodes(node => !startAncestors.includes(node))) {
+        for (const node of removableNodes.filter(node => !startAncestors.includes(node))) {
             node.remove();
         }
         // Collapse the range by merging nodes between start and end.
@@ -336,10 +340,14 @@ export class VRange {
                 if (ancestor.children().length > 1) {
                     ancestor.splitAt(this.endContainer);
                 }
-                this.endContainer.mergeWith(ancestor);
-                ancestor = this.endContainer.parent;
+                if (this.endContainer.breakable) {
+                    this.endContainer.mergeWith(ancestor);
+                }
+                ancestor = ancestor.parent;
             }
-            this.endContainer.mergeWith(this.startContainer);
+            if (this.endContainer.breakable) {
+                this.endContainer.mergeWith(this.startContainer);
+            }
         }
     }
     /**

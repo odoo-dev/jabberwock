@@ -29,6 +29,7 @@ export class VNode {
     static readonly atomic: boolean = false;
     readonly id = id;
     tangible = true;
+    breakable = true;
     parent: VNode;
     attributes: Record<string, string | Record<string, string>> = {};
     children: Array<VNode> & {
@@ -727,6 +728,9 @@ export class VNode {
     splitAt(child: VNode): this {
         if (child.parent !== this) {
             throw new Error('The given VNode is not a child of this VNode');
+        } else if (!this.breakable) {
+            // Unbreakable nodes do not split.
+            return this;
         }
         const duplicate = this.clone();
         const index = child.parent.children.indexOf(child);
