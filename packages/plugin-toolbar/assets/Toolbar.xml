@@ -1,7 +1,6 @@
 <templates>
     <!-- MAIN -->
     <jw-toolbar t-name="toolbar">
-        <script src="https://kit.fontawesome.com/03b8b96820.js" crossorigin="anonymous"></script>
         <t t-foreach="config" t-as="group"
             t-key="group_index">
             <t t-if="group === '|'">
