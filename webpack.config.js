@@ -39,6 +39,10 @@ module.exports = {
                 test: /\.xml$/i,
                 use: ['text-loader'],
             },
+            {
+                test: /\.(eot|svg|ttf|woff|woff2)$/,
+                loader: 'file-loader?name=/fonts/[name].[ext]',
+            }
         ],
     },
     resolve: {
