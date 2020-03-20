@@ -6,9 +6,10 @@ import { Core } from '../../core/src/Core';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 export class LineBreak<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    readonly loadables: Loadables<Parser & Renderer> = {
+    readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [LineBreakDomParser],
         renderers: [LineBreakDomRenderer],
     };
