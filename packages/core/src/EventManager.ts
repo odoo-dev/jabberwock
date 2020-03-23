@@ -29,14 +29,13 @@ export class EventManager {
 
     _matchCommand(action: NormalizedAction): [CommandIdentifier, object] {
         switch (action.type) {
+            case 'insertLineBreak':
+                return ['insertLineBreak', {}];
             case 'insertText':
-            case 'insertHtml':
-                if (action.text === '\n') {
-                    return ['insertLineBreak', {}];
-                } else {
-                    const params: InsertTextParams = { text: action.text };
-                    return ['insertText', params];
-                }
+            case 'insertHtml': {
+                const params: InsertTextParams = { text: action.text };
+                return ['insertText', params];
+            }
             case 'selectAll':
                 return ['selectAll', {}];
             case 'setSelection': {
