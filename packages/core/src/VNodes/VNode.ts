@@ -288,11 +288,11 @@ export class VNode {
     firstChild<T extends VNode>(predicate?: Predicate<T>): T;
     firstChild<T>(predicate?: Predicate<T>): VNode;
     firstChild<T>(predicate?: Predicate<T>): VNode {
-        let firstChild = this.children[0];
-        while (firstChild && (!isTangible(firstChild) || !firstChild.test(predicate))) {
-            firstChild = firstChild.nextSibling();
+        let child = this.children[0];
+        while (child && !(child.tangible && child.test(predicate))) {
+            child = child.nextSibling();
         }
-        return firstChild;
+        return child;
     }
     /**
      * Return the last child of this VNode that satisfies the given predicate.
@@ -303,11 +303,11 @@ export class VNode {
     lastChild<T extends VNode>(predicate?: Predicate<T>): T;
     lastChild<T>(predicate?: Predicate<T>): VNode;
     lastChild<T>(predicate?: Predicate<T>): VNode {
-        let lastChild = this.children[this.children.length - 1];
-        while (lastChild && (!isTangible(lastChild) || !lastChild.test(predicate))) {
-            lastChild = lastChild.previousSibling();
+        let child = this.children[this.children.length - 1];
+        while (child && !(child.tangible && child.test(predicate))) {
+            child = child.previousSibling();
         }
-        return lastChild;
+        return child;
     }
     /**
      * Return the first leaf of this VNode that satisfies the given predicate.
@@ -391,7 +391,7 @@ export class VNode {
         const index = this.parent.children.indexOf(this);
         let sibling = this.parent.children[index - 1];
         // Skip ignored siblings and those failing the predicate test.
-        while (sibling && (!isTangible(sibling) || !sibling.test(predicate))) {
+        while (sibling && !(sibling.tangible && sibling.test(predicate))) {
             sibling = sibling.previousSibling();
         }
         return sibling;
@@ -409,7 +409,7 @@ export class VNode {
         const index = this.parent.children.indexOf(this);
         let sibling = this.parent.children[index + 1];
         // Skip ignored siblings and those failing the predicate test.
-        while (sibling && (!isTangible(sibling) || !sibling.test(predicate))) {
+        while (sibling && !(sibling.tangible && sibling.test(predicate))) {
             sibling = sibling.nextSibling();
         }
         return sibling;
@@ -869,15 +869,6 @@ export class VNode {
         });
         return __repr;
     }
-}
-
-/**
- * Return true if the given node is tangible.
- *
- * @param node node to check
- */
-export function isTangible(node: VNode): boolean {
-    return node.tangible;
 }
 
 /**
