@@ -1,4 +1,4 @@
-import { VNode, Predicate, isTangible } from './VNode';
+import { VNode, Predicate } from './VNode';
 import { Constructor } from '../../../utils/src/utils';
 
 const source: unique symbol = Symbol('source');
@@ -89,5 +89,5 @@ export class Children extends CallableArray<VNode, VNode[]> {
     }
 }
 function children<T>(children: VNode[], predicate?: Predicate<T>): VNode[] {
-    return children.filter(child => child.test(predicate) && isTangible(child));
+    return children.filter(child => child.tangible && child.test(predicate));
 }

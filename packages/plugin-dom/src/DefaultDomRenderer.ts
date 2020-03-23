@@ -1,5 +1,5 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
-import { VNode, isTangible } from '../../core/src/VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { DomRenderingEngine } from './DomRenderingEngine';
@@ -10,7 +10,7 @@ export class DefaultDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: VNode): Promise<Node[]> {
         let domNode: Node;
-        if (isTangible(node)) {
+        if (node.tangible) {
             if (node.test(FragmentNode)) {
                 domNode = document.createDocumentFragment();
             } else {
