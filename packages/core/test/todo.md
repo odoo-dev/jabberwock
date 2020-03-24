@@ -9,9 +9,8 @@ When implementing the tests for the delete, backspace and enter keys, certain te
         1. [Unbreakable](#f-t-unbreakable)
         2. [PRE](#f-t-pre)
         3. [Tables](#f-t-tables)
-        4. [Pictograms](#f-t-pictograms)
-        5. [HR](#f-t-hr)
-        6. [Integration](#f-t-integration)
+        4. [HR](#f-t-hr)
+        5. [Integration](#f-t-integration)
 2. [Backspace (`deleteBackward`)](#backward)
     1. [Skipped](#b-skipped)
         1. [Two function calls -> redundant](#b-s-tfc)
@@ -21,9 +20,8 @@ When implementing the tests for the delete, backspace and enter keys, certain te
     2. [To convert later](#b-todo)
         1. [PRE](#b-t-pre)
         2. [Tables](#b-t-tables)
-        3. [Pictograms](#b-t-pictograms)
-        4. [HR](#b-t-hr)
-        5. [Integration](#b-t-integration)
+        3. [HR](#b-t-hr)
+        4. [Integration](#b-t-integration)
 3. [Enter (`insertParagraphBreak`)](#enter)
     1. [To convert later](#e-todo)
         1. [Buttons](#e-t-buttons)
@@ -181,18 +179,6 @@ Note: These were tests for the delete key in we3. When implementing one, always 
         key: 'DELETE',
     }],
     test: '<table class="table table-bordered"><tbody><tr><td><p>dom ◆o edit</p></td></tr></tbody></table>',
-},
-```
-
-#### Pictograms<a name="f-t-pictograms"></a>
-```javascript
-{
-    name: "in p (span.fa after): DELETE",
-    content: '<p>aaa◆<span class="fa fa-star"></span>bbb</p>',
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: '<p>aaa◆bbb</p>',
 },
 ```
 
@@ -522,32 +508,6 @@ always make sure to also implement its inverse in forward tests.
         key: 'a',
     }],
     test: '<h1>a◆</h1>',
-},
-```
-
-#### Pictograms<a name="b-t-pictograms"></a>
-```javascript
-{
-    name: "in p: BACKSPACE after i.fa (voidoid)",
-    content: '<p>aaa<i class="fa fa-star"></i>◆bbb</p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: '<p>aaa◆bbb</p>',
-}, {
-    name: "in p: BACKSPACE on selected i.fa (voidoid)",
-    content: '<p>aaa▶<i class="fa fa-star"></i>◀bbb</p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: '<p>aaa◆bbb</p>',
-}, {
-    name: "in p: BACKSPACE before i.fa (voidoid)",
-    content: '<p>aaa◆<i class="fa fa-star"></i>bbb</p>',
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: '<p>aa◆<i class="fa fa-star"></i>bbb</p>',
 },
 ```
 
