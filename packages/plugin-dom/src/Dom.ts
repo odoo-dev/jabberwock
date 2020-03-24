@@ -222,7 +222,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
         if (forceAfter) {
             return [reference, RelativePosition.AFTER];
         }
-        if (forcePrepend) {
+        if (forcePrepend && !reference.atomic) {
             return [reference, RelativePosition.INSIDE];
         }
         return reference.locate(container, offset);
@@ -252,7 +252,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
             position = RelativePosition.INSIDE;
         }
         // The location is a tuple [reference, offset] implemented by an array.
-        const location = this.domMap.toDomLocation(reference);
+        const location = this.domMap.toDomLocation(reference, position);
         if (position === RelativePosition.AFTER) {
             // Increment the offset to be positioned after the reference node.
             location[1] += 1;

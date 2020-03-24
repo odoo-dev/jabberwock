@@ -1,8 +1,8 @@
-import { VNode } from '../../core/src/VNodes/VNode';
+import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 
 export class DomMap {
     _fromDom = new Map<Node, VNode[]>();
-    _toDom = new Map<VNode, [Node, number]>();
+    _toDom = new Map<VNode, [Node, number][]>();
 
     /**
      * Clear the map of all correspondances.
@@ -24,19 +24,25 @@ export class DomMap {
      *
      * @param node
      */
-    toDom(node: VNode): Node {
-        const nodes = this._toDom.get(node);
-        return nodes && nodes[0];
+    toDom(node: VNode): [Node, number][] {
+        return this._toDom.get(node);
     }
     /**
      * Return the DOM location corresponding to the given VNode as a tuple
      * containing a reference DOM Node and the offset of the DOM Node
      * corresponding to the given VNode within the reference DOM Node.
+     * If the given position is "before", the reference DOM Node is the first
+     * DOM node matching the given VNode.
+     * If the given position is "after", the reference DOM Node is the last DOM
+     * node matching the given VNode.
      *
      * @param node
+     * @param position
      */
-    toDomLocation(node: VNode): [Node, number] {
-        let [domNode, offset] = this._toDom.get(node);
+    toDomLocation(node: VNode, position: RelativePosition): [Node, number] {
+        const locations = this._toDom.get(node);
+        const locationIndex = position === RelativePosition.BEFORE ? 0 : locations.length - 1;
+        let [domNode, offset] = locations[locationIndex];
         if (domNode.nodeType === Node.TEXT_NODE && offset === -1) {
             // This -1 is a hack to accomodate the VDocumentMap to the new
             // rendering process without altering it for the parser.
@@ -67,12 +73,9 @@ export class DomMap {
         } else {
             this._fromDom.set(domNode, [node]);
         }
-        // Only if element is not already in the map to prevent overriding a
-        // VNode if it is represented by multiple Nodes. Only the first Node is
-        // mapped to the VNode.
-        if (!this._toDom.has(node)) {
-            this._toDom.set(node, [domNode, offset]);
-        }
+        const locations = this._toDom.get(node) || [];
+        locations.push([domNode, offset]);
+        this._toDom.set(node, locations);
     }
     /**
      * Log the content of the internal maps for debugging purposes.
