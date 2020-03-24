@@ -1,4 +1,5 @@
 import { BasicEditor } from '../../bundles/BasicEditor';
+import { Fontawesome } from '../../packages/plugin-fontawesome/src/Fontawesome';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 import { Dom } from '../../packages/plugin-dom/src/Dom';
 import template from './demo.xml';
@@ -36,6 +37,7 @@ target.style.paddingLeft = '8px';
 target.innerHTML = template;
 
 const editor = new BasicEditor();
+editor.load(Fontawesome);
 editor.load(DevTools);
 editor.configure(Dom, {
     autoFocus: true,
