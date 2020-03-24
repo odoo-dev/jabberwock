@@ -1,8 +1,8 @@
-import { VNode } from './VNode';
+import { ContainerNode } from './ContainerNode';
 
-export class FragmentNode extends VNode {
-    breakable = false;
-    set parent(parent: VNode) {
+export class FragmentNode extends ContainerNode {
+    readonly breakable = false;
+    set parent(parent: ContainerNode) {
         this.mergeWith(parent);
     }
 }

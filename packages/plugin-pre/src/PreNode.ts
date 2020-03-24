@@ -1,3 +1,3 @@
-import { VNode } from '../../core/src/VNodes/VNode';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
-export class PreNode extends VNode {}
+export class PreNode extends ContainerNode {}

@@ -1,6 +1,6 @@
-import { VNode } from './VNode';
+import { ContainerNode } from './ContainerNode';
 
-export class VElement extends VNode {
+export class VElement extends ContainerNode {
     htmlTag: string;
     constructor(tagName: string) {
         super();

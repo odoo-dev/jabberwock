@@ -118,7 +118,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     for (const list of nodesToUnlist) {
                         for (const nestedList of list.descendants(ListNode)) {
                             // TODO: automatically invalidate `li-attributes`.
-                            for (const child of nestedList.children) {
+                            for (const child of nestedList.childVNodes) {
                                 delete child.attributes['li-attributes'];
                             }
                             nestedList.unwrap();

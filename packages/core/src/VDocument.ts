@@ -3,7 +3,7 @@ import { FragmentNode } from './VNodes/FragmentNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 export class VDocument {
-    root: VNode;
+    root: FragmentNode;
 
     constructor(root: FragmentNode) {
         this.root = root;

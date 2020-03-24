@@ -108,11 +108,11 @@ describePlugin(List, testEditor => {
             ].join('\n');
             const node = (await engine.parse(element))[0];
 
-            expect(node.children.length).to.equal(1);
+            expect(node.childVNodes.length).to.equal(1);
             const list = node.firstChild() as ListNode;
             expect(list.toString()).to.equal('ListNode: ' + ListType.UNORDERED);
             expect(list.listType).to.equal(ListType.UNORDERED);
-            expect(list.children.length).to.equal(4); // li0, li1, li2, li3
+            expect(list.childVNodes.length).to.equal(4); // li0, li1, li2, li3
 
             const li0 = list.children()[0];
             expect(li0.toString()).to.equal('ParagraphNode');
