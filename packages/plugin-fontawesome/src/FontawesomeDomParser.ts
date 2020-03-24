@@ -7,7 +7,7 @@ export class FontawesomeDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return this._isFontawesome(item);
+        return FontawesomeDomParser.isFontawesome(item);
     };
 
     async parse(item: Element): Promise<FontawesomeNode[]> {
@@ -16,16 +16,12 @@ export class FontawesomeDomParser extends AbstractParser<Node> {
         return [fontawesome];
     }
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
     /**
      * Return true if the given DOM node is a fontawesome.
      *
      * @param item
      */
-    _isFontawesome(item: Node): item is Element {
+    static isFontawesome(item: Node): item is Element {
         return (
             item instanceof Element &&
             /(^|[\s*\n*])fa[bdlrs]?[\s*\n*$]/.test(item.className)
