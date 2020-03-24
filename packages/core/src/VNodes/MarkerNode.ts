@@ -1,6 +1,6 @@
-import { VNode } from './VNode';
+import { AtomicNode } from './AtomicNode';
 
-export class MarkerNode extends VNode {
+export class MarkerNode extends AtomicNode {
     static readonly atomic = true;
     tangible = false;
 }

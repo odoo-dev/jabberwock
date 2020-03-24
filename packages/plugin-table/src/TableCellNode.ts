@@ -2,13 +2,14 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode'; // TODO: remove dependency
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export interface TableCellAttributes extends Record<string, string | Record<string, string>> {
     colspan?: string;
     rowspan?: string;
 }
 
-export class TableCellNode extends VNode {
+export class TableCellNode extends ContainerNode {
     breakable = false;
     attributes: TableCellAttributes;
     // Only the `managerCell` setter should modify the following private keys.
@@ -166,7 +167,7 @@ export class TableCellNode extends VNode {
         if (cell.hasChildren()) {
             this.append(new LineBreakNode());
         }
-        this.append(...cell.children);
+        this.append(...cell.childVNodes);
 
         // Hand the managed cells over to the manager.
         for (const managedCell of cell.managedCells) {

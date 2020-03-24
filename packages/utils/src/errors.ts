@@ -1,4 +1,5 @@
 import { Mode } from '../../core/src/JWEditor';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 /**
  * Creates an instance representing a custom error adapting to the constructor
@@ -28,5 +29,27 @@ export class ModeError extends CustomError {
     constructor(mode: Mode, ...params) {
         super(...params);
         this.message = `This operation is only allowed in ${mode} mode.`;
+    }
+}
+
+/**
+ * Creates an instance representing an error that occurs when a VNode given as
+ * child function parameter is actually not a child of the current VNode.
+ */
+export class ChildError extends CustomError {
+    constructor(thisNode: VNode, node: VNode, ...params) {
+        super(...params);
+        this.message = `${node.name} is not a child of ${thisNode.name}`;
+    }
+}
+
+/**
+ * Creates an instance representing an error that occurs when an action would
+ * violate the atomicity of a VNode.
+ */
+export class AtomicityError extends CustomError {
+    constructor(node: VNode, ...params) {
+        super(...params);
+        this.message = `${node.name} is atomic.`;
     }
 }

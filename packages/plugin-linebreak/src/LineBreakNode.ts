@@ -1,11 +1,8 @@
-import { VElement } from '../../core/src/VNodes/VElement';
 import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
-export class LineBreakNode extends VElement {
+export class LineBreakNode extends AtomicNode {
     static readonly atomic = true;
-    constructor() {
-        super('BR');
-    }
     get name(): string {
         return '↲';
     }

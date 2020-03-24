@@ -42,7 +42,7 @@ export abstract class AbstractRenderer<T> implements Renderer<T> {
     async renderChildren(node: VNode): Promise<T[]> {
         const renderedChildren: Array<Promise<T>> = [];
         if (node.hasChildren()) {
-            for (const child of node.children) {
+            for (const child of node.childVNodes) {
                 renderedChildren.push(this.engine.render(child));
             }
         } else if (this.engine.renderEmpty) {

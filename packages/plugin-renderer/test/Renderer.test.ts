@@ -8,6 +8,7 @@ import { RenderingEngine } from '../src/RenderingEngine';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Dom } from '../../plugin-dom/src/Dom';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 describe('Renderer', () => {
     describe('render', () => {
@@ -31,7 +32,7 @@ describe('Renderer', () => {
             editor.load(VNodePlugin);
             editor.load(Renderer);
             await editor.start();
-            const node = new VNode();
+            const node = new ContainerNode();
             editor.vDocument.root.append(node);
             const renderer = editor.plugins.get(Renderer);
             const rendering = await renderer.render<VNode>('VNode', editor.vDocument.root);

@@ -147,7 +147,6 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>text</devtools-td><devtools-td>"Titleabcdefghiudiv"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>23</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
@@ -232,7 +231,6 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>text</devtools-td><devtools-td>"abc"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
@@ -401,6 +399,7 @@ describe('Plugin: DevTools', () => {
             );
             await nextTickFrame();
 
+            debugger;
             expect(pchildren.childNodes.length).to.equal(5);
             expect(pchildren.firstElementChild.classList.contains('self-closing')).to.equal(
                 true,
@@ -463,7 +462,6 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>text</devtools-td><devtools-td>"b"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';

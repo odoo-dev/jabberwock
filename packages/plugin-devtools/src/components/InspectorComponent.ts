@@ -9,7 +9,7 @@ export class InspectorComponent extends OwlUIComponent<{}> {
     state = {
         selectedNodeID: 0,
     };
-    selectedNode = this.env.editor.vDocument.root;
+    selectedNode: VNode = this.env.editor.vDocument.root;
 
     /**
      * Handle keyboard navigation in DevTools (arrows to move in the tree)
