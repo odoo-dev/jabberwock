@@ -113,17 +113,6 @@ describePlugin(Char, testEditor => {
                 expect(c.formats.length).to.equal(0, 'original char is not italic');
             });
         });
-        describe('text', () => {
-            it('should concat the CharNodes value', async () => {
-                const a = new CharNode('a');
-                const b = new CharNode('b');
-                const c = new CharNode('c');
-                let text = a.text();
-                text = b.text(text);
-                text = c.text(text);
-                expect(text).to.equal('abc');
-            });
-        });
     });
     describe('VDocument', () => {
         describe('insertText', () => {

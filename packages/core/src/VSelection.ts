@@ -1,5 +1,6 @@
 import { VRange } from './VRange';
 import { VNode, RelativePosition } from './VNodes/VNode';
+import { MarkerNode } from './VNodes/MarkerNode';
 
 export const ANCHOR_CHAR = '[';
 export const FOCUS_CHAR = ']';
@@ -21,11 +22,11 @@ export class VSelection {
     readonly range: VRange = new VRange();
     _direction: Direction = Direction.FORWARD;
 
-    get anchor(): VNode {
+    get anchor(): MarkerNode {
         return this.direction === Direction.FORWARD ? this.range.start : this.range.end;
     }
 
-    get focus(): VNode {
+    get focus(): MarkerNode {
         return this.direction === Direction.FORWARD ? this.range.end : this.range.start;
     }
 

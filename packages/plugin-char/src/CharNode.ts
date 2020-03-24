@@ -42,22 +42,6 @@ export class CharNode extends InlineNode {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the length of this VNode.
-     */
-    get length(): number {
-        return 1;
-    }
-    /**
-     * Return this VNode's inner text (concatenation of all descendent
-     * char nodes values).
-     *
-     * @param __current
-     */
-    text(__current = ''): string {
-        __current += this.char;
-        return __current;
-    }
-    /**
      * Return true if `a` has the same format properties as `b`.
      *
      * @param a

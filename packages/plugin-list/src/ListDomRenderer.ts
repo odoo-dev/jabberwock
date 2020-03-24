@@ -12,7 +12,7 @@ export class ListDomRenderer extends AbstractRenderer<Node[]> {
         const domListNode = document.createElement(tag);
         this.engine.renderAttributes(node.attributes, domListNode);
 
-        for (const child of node.children) {
+        for (const child of node.childVNodes) {
             const renderedChild = await this.engine.render(child);
             for (const domChild of renderedChild) {
                 domListNode.appendChild(domChild);

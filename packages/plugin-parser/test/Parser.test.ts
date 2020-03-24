@@ -40,8 +40,8 @@ describe('utils', () => {
                 element.innerHTML = '<p>a</p>';
                 const nodes = await parser.parse(element);
                 expect(nodes.length).to.equal(1);
-                expect(nodes[0].children.length).to.equal(1);
-                const p = nodes[0].children[0] as VElement;
+                expect(nodes[0].childVNodes.length).to.equal(1);
+                const p = nodes[0].childVNodes[0] as VElement;
                 expect(p.htmlTag).to.equal('P');
                 expect(p.children().length).to.equal(1);
                 expect(p.children()[0] instanceof CharNode).to.be.true;
@@ -69,8 +69,8 @@ describe('utils', () => {
                 const element = document.createElement('div');
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
                 const [node] = await parser.parse(element);
-                expect(node.children.length).to.equal(1);
-                const p = node.children[0] as VElement;
+                expect(node.childVNodes.length).to.equal(1);
+                const p = node.childVNodes[0] as VElement;
                 expect(p.htmlTag).to.equal('P');
                 expect(p.children().length).to.equal(4);
                 const a = p.children()[0] as CharNode;

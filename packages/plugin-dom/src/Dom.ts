@@ -51,7 +51,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
                 }
                 const parsedEditable = await domParser.parse(target);
                 for (const parsedNode of parsedEditable) {
-                    for (const child of parsedNode.children.slice()) {
+                    for (const child of parsedNode.childVNodes.slice()) {
                         this.editor.vDocument.root.append(child);
                     }
                 }

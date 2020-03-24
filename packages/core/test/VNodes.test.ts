@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { VNode } from '../src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { HeadingNode } from '../../plugin-heading/src/HeadingNode';
@@ -12,6 +11,9 @@ import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
+import { ContainerNode } from '../src/VNodes/ContainerNode';
+import { AtomicNode } from '../src/VNodes/AtomicNode';
+import { ChildError } from '../../utils/src/errors';
 
 describe('core', () => {
     describe('src', () => {
@@ -84,9 +86,13 @@ describe('core', () => {
                 pp.append(f);
 
                 describe('constructor', () => {
-                    it('should create a VNode', async () => {
-                        const fakeLineBreak = new VNode();
-                        expect(fakeLineBreak.atomic).to.equal(false);
+                    it('should create an AtomicNode', async () => {
+                        const atomic = new AtomicNode();
+                        expect(atomic.atomic).to.equal(true);
+                    });
+                    it('should create a ContainerNode', async () => {
+                        const container = new ContainerNode();
+                        expect(container.atomic).to.equal(false);
                     });
                 });
                 describe('toString', () => {
@@ -113,16 +119,16 @@ describe('core', () => {
                         expect(h1.children()).to.deep.equal([b]);
                     });
                     it('should return the children nodes with the markers', async () => {
-                        expect(root.children.slice()).to.deep.equal([a, h1, c, p]);
-                        expect(h1.children.slice()).to.deep.equal([marker1, b]);
+                        expect(root.childVNodes.slice()).to.deep.equal([a, h1, c, p]);
+                        expect(h1.childVNodes.slice()).to.deep.equal([marker1, b]);
                     });
                 });
                 describe('locate', () => {
                     it('should locate where to set the selection at end', async () => {
                         const p = new VElement('P');
-                        p.append(new VNode());
+                        p.append(new ContainerNode());
                         p.append(new LineBreakNode());
-                        p.append(new VNode());
+                        p.append(new ContainerNode());
                         const doc = document.createElement('p');
                         doc.innerHTML = '<span><span><br><span><span>';
                         expect(p.lastChild().locate(doc.lastChild, 0)).to.deep.equal([
@@ -138,7 +144,7 @@ describe('core', () => {
                         const p = new VElement('P');
                         const a = new CharNode('a');
                         p.append(a);
-                        const vNode = new VNode();
+                        const vNode = new ContainerNode();
                         p.append(vNode);
                         const b = new CharNode('b');
                         p.append(b);
@@ -150,33 +156,15 @@ describe('core', () => {
                 });
                 describe('clone', () => {
                     it('should duplicate a VNode', async () => {
-                        const vNode = new VNode();
+                        const vNode = new ContainerNode();
                         const copy = vNode.clone();
                         expect(copy).to.not.equal(vNode);
                         expect(vNode.tangible).to.equal(true);
                     });
                 });
-                describe('text', () => {
-                    it('should concat all children CharNodes value', async () => {
-                        const root = new VNode();
-                        const a = new CharNode('a');
-                        root.append(a);
-                        const b = new CharNode('b');
-                        root.append(b);
-                        const c = new CharNode('c');
-                        root.append(c);
-                        const p = new VElement('P');
-                        root.append(p);
-                        const d = new CharNode('d');
-                        p.append(d);
-                        const e = new CharNode('e');
-                        p.append(e);
-                        expect(root.text()).to.equal('abcde');
-                    });
-                });
                 describe('isBefore', () => {
                     it('should return if the is before (after in same parent)', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -235,7 +223,7 @@ describe('core', () => {
                 });
                 describe('isAfter', () => {
                     it('should return if the is after (after in same parent)', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -462,7 +450,7 @@ describe('core', () => {
                         expect(root.adjacents()).to.deep.equal([]);
                     });
                     it('should return the adjacent nodes', async () => {
-                        const container = new VNode();
+                        const container = new ContainerNode();
                         const a = new CharNode('a');
                         container.append(a);
                         const h2 = new HeadingNode(2);
@@ -971,7 +959,7 @@ describe('core', () => {
                 });
                 describe('before', () => {
                     it('should insert before node', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -981,7 +969,7 @@ describe('core', () => {
                         expect(a.siblings()).to.deep.equal([b, c]);
                     });
                     it('should throw if no parent', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         expect(() => {
                             root.before(a);
@@ -990,7 +978,7 @@ describe('core', () => {
                 });
                 describe('after', () => {
                     it('should insert after node', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -1000,7 +988,7 @@ describe('core', () => {
                         expect(a.siblings()).to.deep.equal([c, b]);
                     });
                     it('should move a node after another', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -1011,7 +999,7 @@ describe('core', () => {
                         expect(a.siblings()).to.deep.equal([b, c]);
                     });
                     it('should throw if no parent', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         expect(() => {
                             root.after(a);
@@ -1020,7 +1008,7 @@ describe('core', () => {
                 });
                 describe('insertBefore', () => {
                     it('should insert insert before node', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -1032,12 +1020,12 @@ describe('core', () => {
                     it('should throw when try to insert before unknown node', async () => {
                         expect(() => {
                             root.insertBefore(c, new CharNode('d'));
-                        }).to.throw('child');
+                        }).to.throw(ChildError);
                     });
                 });
                 describe('insertAfter', () => {
                     it('should insert insert after node', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -1049,12 +1037,12 @@ describe('core', () => {
                     it('should throw when try to insert after unknown node', async () => {
                         expect(() => {
                             root.insertAfter(c, new CharNode('d'));
-                        }).to.throw('child');
+                        }).to.throw(ChildError);
                     });
                 });
                 describe('remove', () => {
                     it('should remove node itself', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -1068,7 +1056,7 @@ describe('core', () => {
                 });
                 describe('removeChild', () => {
                     it('should remove a child', async () => {
-                        const root = new VNode();
+                        const root = new ContainerNode();
                         const a = new CharNode('a');
                         root.append(a);
                         const b = new CharNode('b');
@@ -1082,7 +1070,7 @@ describe('core', () => {
                     it('should throw when try to remove a unknown node', async () => {
                         expect(() => {
                             root.removeChild(new CharNode('d'));
-                        }).to.throw('child');
+                        }).to.throw(ChildError);
                     });
                 });
                 describe('splitAt', () => {
@@ -1115,17 +1103,17 @@ describe('core', () => {
                         const c = new CharNode('c');
                         p.append(c);
                         p.splitAt(b);
-                        expect(p.children.slice()).to.deep.equal([a, marker1]);
-                        expect(p.nextSibling().children.slice()).to.deep.equal([b, marker2, c]);
+                        expect(p.childVNodes.slice()).to.deep.equal([a, marker1]);
+                        expect(p.nextSibling().childVNodes.slice()).to.deep.equal([b, marker2, c]);
                     });
                     it('should not break fragment', async () => {
                         const root = new FragmentNode();
                         const p = new VElement('P');
                         root.append(p);
-                        expect(root.children.slice()).to.deep.equal([p]);
+                        expect(root.childVNodes.slice()).to.deep.equal([p]);
                         expect(root.parent).to.be.undefined;
                         root.splitAt(p);
-                        expect(root.children.slice()).to.deep.equal([p]);
+                        expect(root.childVNodes.slice()).to.deep.equal([p]);
                         expect(root.parent).to.be.undefined;
                     });
                 });
@@ -1136,7 +1124,7 @@ describe('core', () => {
                     const element = document.createElement('CUSTOM-NODE');
                     root.appendChild(element);
                     const editor = new JWEditor();
-                    class MyCustomNode extends VNode {
+                    class MyCustomNode extends ContainerNode {
                         customKey = 'yes';
                     }
                     class MyCustomParser extends AbstractParser<Node> {

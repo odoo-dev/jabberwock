@@ -99,8 +99,8 @@ export class VRange {
      */
     isCollapsed(): boolean {
         if (!this.startContainer || !this.endContainer) return;
-        const startIndex = this.start.parent.children.indexOf(this.start);
-        return this.startContainer.children[startIndex + 1] === this.end;
+        const startIndex = this.start.parent.childVNodes.indexOf(this.start);
+        return this.startContainer.childVNodes[startIndex + 1] === this.end;
     }
     /**
      * Return a list of all nodes that are fully selected by this range.
@@ -275,7 +275,7 @@ export class VRange {
         const container = closest ? closest.parent : ancestor;
 
         // Split the start ancestors.
-        let start = this.start;
+        let start: VNode = this.start;
         do {
             let startAncestor = start.parent;
             // Do not split at the start edge of a node.
@@ -286,7 +286,7 @@ export class VRange {
         } while (start.parent !== container);
 
         // Split the end ancestors.
-        let end = this.end;
+        let end: VNode = this.end;
         do {
             const endAncestor = end.parent;
             // Do not split at the end edge of a node.
