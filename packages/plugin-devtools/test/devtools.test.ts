@@ -729,6 +729,7 @@ describe('Plugin: DevTools', () => {
                 'mergeCells',
                 'unmergeCells',
                 'align',
+                'applyPreStyle',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {

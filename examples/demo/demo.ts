@@ -12,6 +12,7 @@ import { Heading3Button } from '../../packages/plugin-heading/src/HeadingButtons
 import { Heading4Button } from '../../packages/plugin-heading/src/HeadingButtons';
 import { Heading5Button } from '../../packages/plugin-heading/src/HeadingButtons';
 import { Heading6Button } from '../../packages/plugin-heading/src/HeadingButtons';
+import { PreButton } from '../../packages/plugin-pre/src/PreButtons';
 import { BoldButton } from '../../packages/plugin-bold/src/BoldButtons';
 import { ItalicButton } from '../../packages/plugin-italic/src/ItalicButtons';
 import { UnderlineButton } from '../../packages/plugin-underline/src/UnderlineButtons';
@@ -47,6 +48,7 @@ editor.configure(Toolbar, {
                 Heading4Button,
                 Heading5Button,
                 Heading6Button,
+                PreButton,
             ],
         ],
         [BoldButton, ItalicButton, UnderlineButton],
