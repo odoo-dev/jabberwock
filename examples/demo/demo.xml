@@ -1,4 +1,5 @@
-<h1 style="text-align: center;">Jabberwock Demo</h1>
+<h1 style="text-align: center;"><i class="fab fa-opera"></i>doo
+  Jabberw<i class="fab fa-opera"></i>ck Dem<i class="fab fa-opera"></i></h1>
 
 <p>
 "<b>Jabberwocky</b>" is a nonsense poem written by Lewis Carroll about the
@@ -11,14 +12,14 @@ within the back-to-front world of Looking-Glass Land.
 <p>
 "Jabberwocky" is considered one of the greatest nonsense poems written in
 English. Its playful, whimsical language has given English nonsense words and
-neologisms such as " galumphing" and "chortle".
+neologisms such as "galumphing" and "chortle".
 </p>
 
 
 <h1>Table examples</h1>
 
 <p style="color: red;"><u><b>Disclaimer:</b></u> Tables will only be fully
-implemented once <i>unbreakables nodes</i> are implemented.<br/>In the meantime
+implemented once <i>unbreakable nodes</i> are implemented.<br/>In the meantime
 <b style="font-size: 1.2em;">backspace, delete and enter are not supported in
 tables</b> and will<br/>behave unexpectedly.</p>
 
