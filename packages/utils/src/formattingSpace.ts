@@ -13,6 +13,9 @@ import { nodeName } from './utils';
 export function removeFormattingSpace(node: Node): string {
     // TODO: check the value of the `white-space` property
     const text: string = node.textContent;
+    if (node.parentElement?.closest('PRE')) {
+        return text;
+    }
     const spaceBeforeNewline = /([ \t])*(\n)/g;
     const spaceAfterNewline = /(\n)([ \t])*/g;
     const tabs = /\t/g;
