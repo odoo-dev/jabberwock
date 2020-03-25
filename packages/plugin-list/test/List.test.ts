@@ -62,7 +62,11 @@ describePlugin(List, testEditor => {
         let engine: DomParsingEngine;
         beforeEach(async () => {
             editor = new JWEditor();
-            editor.configure({ createBaseContainer: () => new ParagraphNode() });
+            editor.configure({
+                defaults: {
+                    Container: ParagraphNode,
+                },
+            });
             engine = new DomParsingEngine(editor);
             engine.register(CharDomParser);
             engine.register(HeadingDomParser);

@@ -26,7 +26,7 @@ export const ParagraphButton = {
     selected: (editor: JWEditor): boolean => {
         return editor.selection.range.targetedNodes().every(node => {
             return node.closest(ancestor => {
-                return ancestor.is(editor.createBaseContainer().constructor);
+                return ancestor.is(editor.configuration.defaults.Container);
             });
         });
     },

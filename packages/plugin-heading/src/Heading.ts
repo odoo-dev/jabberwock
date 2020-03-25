@@ -76,7 +76,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         const range = params.context.range;
         const heading = range.targetedNodes(HeadingNode)[0];
         const duplicate = heading.splitAt(range.start);
-        const newContainer = this.editor.createBaseContainer();
+        const newContainer = new this.editor.configuration.defaults.Container();
         duplicate.before(newContainer);
         duplicate.mergeWith(newContainer);
     }
@@ -92,7 +92,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
      */
     _createHeadingContainer(level: number): VNode {
         if (level === 0) {
-            return this.editor.createBaseContainer();
+            return new this.editor.configuration.defaults.Container();
         } else {
             return new HeadingNode(level);
         }
