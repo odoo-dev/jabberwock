@@ -7,10 +7,9 @@ When implementing the tests for the delete, backspace and enter keys, certain te
         2. [Multiple block contexts within a list item](#f-s-li)
     2. [To convert later](#f-todo)
         1. [Unbreakable](#f-t-unbreakable)
-        2. [PRE](#f-t-pre)
-        3. [Tables](#f-t-tables)
-        4. [HR](#f-t-hr)
-        5. [Integration](#f-t-integration)
+        2. [Tables](#f-t-tables)
+        3. [HR](#f-t-hr)
+        4. [Integration](#f-t-integration)
 2. [Backspace (`deleteBackward`)](#backward)
     1. [Skipped](#b-skipped)
         1. [Two function calls -> redundant](#b-s-tfc)
@@ -18,10 +17,9 @@ When implementing the tests for the delete, backspace and enter keys, certain te
         3. [Whitespace, format](#b-s-wsf)
         4. [Different spec?](#b-s-spec)
     2. [To convert later](#b-todo)
-        1. [PRE](#b-t-pre)
-        2. [Tables](#b-t-tables)
-        3. [HR](#b-t-hr)
-        4. [Integration](#b-t-integration)
+        1. [Tables](#b-t-tables)
+        2. [HR](#b-t-hr)
+        3. [Integration](#b-t-integration)
 3. [Enter (`insertParagraphBreak`)](#enter)
     1. [To convert later](#e-todo)
         1. [Buttons](#e-t-buttons)
@@ -93,58 +91,6 @@ Note: These were tests for the delete key in we3. When implementing one, always 
         key: 'DELETE',
     }],
     test: '<p><span class="a">dom to◆</span></p><div><span class="a">edit</span></div>',
-},
-```
-
-#### PRE<a name="f-t-pre"></a>
-```javascript
-{
-    name: "in pre: DELETE within text, with space at beginning",
-    content: "<pre>     dom t◆o edit</pre>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<pre>     dom t◆ edit</pre>",
-},
-{
-    name: "in pre: DELETE within text, with one space at beginning",
-    content: "<pre> dom t◆o edit</pre>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<pre> dom t◆ edit</pre>",
-},
-{
-    name: "in pre: DELETE within text, with space at end",
-    content: "<pre>dom t◆o edit     </pre>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<pre>dom t◆ edit     </pre>",
-},
-{
-    name: "in pre: DELETE within text, with one space at end",
-    content: "<pre>dom t◆o edit </pre>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<pre>dom t◆ edit </pre>",
-},
-{
-    name: "in pre: DELETE within text, with space at beginning and end",
-    content: "<pre>     dom t◆o edit     </pre>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<pre>     dom t◆ edit     </pre>",
-},
-{
-    name: "in pre: DELETE within text, with one space at beginning and one at end",
-    content: "<pre> dom t◆o edit </pre>",
-    steps: [{
-        key: 'DELETE',
-    }],
-    test: "<pre> dom t◆ edit </pre>",
 },
 ```
 
@@ -376,58 +322,6 @@ always make sure to also implement its inverse in forward tests.
 ```
 
 ### To convert later
-
-#### PRE<a name="b-t-pre"></a>
-```javascript
-{
-    name: "in pre: BACKSPACE within text, with space at beginning",
-    content: "<pre>     dom t◆o edit</pre>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<pre>     dom ◆o edit</pre>",
-},
-{
-    name: "in pre: BACKSPACE within text, with one space at beginning",
-    content: "<pre> dom t◆o edit</pre>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<pre> dom ◆o edit</pre>",
-},
-{
-    name: "in pre: BACKSPACE within text, with space at end",
-    content: "<pre>dom t◆o edit     </pre>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<pre>dom ◆o edit     </pre>",
-},
-{
-    name: "in pre: BACKSPACE within text, with one space at end",
-    content: "<pre>dom t◆o edit </pre>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<pre>dom ◆o edit </pre>",
-},
-{
-    name: "in pre: BACKSPACE within text, with space at beginning and end",
-    content: "<pre>     dom t◆o edit     </pre>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<pre>     dom ◆o edit     </pre>",
-},
-{
-    name: "in pre: BACKSPACE within text, with one space at beginning and one at end",
-    content: "<pre> dom t◆o edit </pre>",
-    steps: [{
-        key: 'BACKSPACE',
-    }],
-    test: "<pre> dom ◆o edit </pre>",
-},
-```
 
 #### Tables<a name="b-t-tables"></a>
 ```javascript
