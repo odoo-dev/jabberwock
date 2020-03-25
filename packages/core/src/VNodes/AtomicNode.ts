@@ -8,11 +8,11 @@ import { AtomicityError } from '../../../utils/src/errors';
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class AtomicNode extends ChildNode {
-    static readonly atomic: true = true;
     static test(node: VNode): boolean {
         return node && node.test(this);
     }
 
+    readonly atomic: true = true;
     get childVNodes(): [] {
         return [];
     }

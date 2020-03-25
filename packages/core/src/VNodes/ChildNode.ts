@@ -16,15 +16,6 @@ export abstract class ChildNode extends VNode {
     toString(): string {
         return this.name;
     }
-    /**
-     * A node is atomic when it is not allowed to have children in the
-     * abstraction. Its real-life children should be ignored in the abstraction.
-     * This getter allows us to call `this.atomic` on the extensions of `VNode`
-     * while declaring the `atomic` property in a static way.
-     */
-    get atomic(): boolean {
-        return this.constructor.atomic;
-    }
 
     //--------------------------------------------------------------------------
     // Lifecycle

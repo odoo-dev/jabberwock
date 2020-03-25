@@ -22,7 +22,6 @@ export interface VNode {
     constructor: VNodeConstructor & this;
 }
 export abstract class VNode {
-    static readonly atomic: boolean = false;
     readonly id = id;
     tangible: boolean;
     breakable: boolean;

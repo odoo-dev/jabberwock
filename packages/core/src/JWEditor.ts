@@ -4,7 +4,6 @@ import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
 import { Core } from './Core';
 import { VNode } from './VNodes/VNode';
-import { VElement } from './VNodes/VElement';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager } from './ContextManager';
@@ -13,6 +12,9 @@ import { isConstructor } from '../../utils/src/utils';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { ModeError } from '../../utils/src/errors';
+import { ContainerNode } from './VNodes/ContainerNode';
+import { AtomicNode } from './VNodes/AtomicNode';
+import { SeparatorNode } from './VNodes/SeparatorNode';
 
 export enum Mode {
     CONFIGURATION = 'configuration',
@@ -34,8 +36,12 @@ type CommandParams<T extends JWPlugin, K extends string> = K extends Commands<T>
     : never;
 
 export interface JWEditorConfig {
+    defaults?: {
+        Container?: new () => VNode & { atomic: false };
+        Atomic?: new () => VNode & { atomic: true };
+        Separator?: new () => VNode;
+    };
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
-    createBaseContainer?: () => VNode;
     loadables?: Loadables;
 }
 
@@ -51,8 +57,12 @@ export class JWEditor {
     contextManager: ContextManager;
     plugins: PluginMap = new Map();
     configuration: JWEditorConfig = {
+        defaults: {
+            Container: ContainerNode,
+            Atomic: AtomicNode,
+            Separator: SeparatorNode,
+        },
         plugins: [],
-        createBaseContainer: () => new VElement('P'),
         loadables: {},
     };
     vDocument: VDocument;
@@ -73,13 +83,6 @@ export class JWEditor {
         this.load(Core);
         this.load(Parser);
         this.load(Keymap);
-    }
-
-    /**
-     * Create the most basic VNode container for the current configuration.
-     */
-    get createBaseContainer(): () => VNode {
-        return this.configuration.createBaseContainer;
     }
 
     async nextEventMutex(next: (...args) => void): Promise<void> {
@@ -264,6 +267,13 @@ export class JWEditor {
             const preconf = this.configuration;
             const conf = PluginOrEditorConfig;
             this.configuration = { ...preconf, ...conf };
+            // Merge special `defaults` configuration key.
+            if (conf.defaults) {
+                this.configuration.defaults = {
+                    ...preconf.defaults,
+                    ...conf.defaults,
+                };
+            }
             // Handle special `plugins` configuration key through `load`.
             if (conf.plugins) {
                 this.configuration.plugins = [...preconf.plugins];
