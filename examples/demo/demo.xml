@@ -17,11 +17,6 @@ neologisms such as " galumphing" and "chortle".
 
 <h1>Table examples</h1>
 
-<p style="color: red;"><u><b>Disclaimer:</b></u> Tables will only be fully
-implemented once <i>unbreakables nodes</i> are implemented.<br/>In the meantime
-<b style="font-size: 1.2em;">backspace, delete and enter are not supported in
-tables</b> and will<br/>behave unexpectedly.</p>
-
 <table class="mondrian" cellspacing=0>
   <tbody>
     <tr style="">
