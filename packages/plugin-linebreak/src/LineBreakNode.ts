@@ -1,8 +1,7 @@
 import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
-import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 
-export class LineBreakNode extends AtomicNode {
-    static readonly atomic = true;
+export class LineBreakNode extends SeparatorNode {
     get name(): string {
         return '↲';
     }
