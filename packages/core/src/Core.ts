@@ -47,7 +47,18 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      * Insert a paragraph break.
      */
     insertParagraphBreak(params: InsertParagraphBreakParams): void {
-        this.editor.vDocument.insertParagraphBreak(params.context.range);
+        const range = params.context.range;
+        // Remove the contents of the range if needed.
+        if (!range.isCollapsed()) {
+            range.empty();
+        }
+        if (range.startContainer.breakable) {
+            range.startContainer.splitAt(range.start);
+        } else {
+            // Use a separator to break paragraphs in an unbreakable.
+            const Separator = this.editor.configuration.defaults.Separator;
+            range.start.before(new Separator());
+        }
     }
     /**
      * Insert a VNode at the current position of the selection.
