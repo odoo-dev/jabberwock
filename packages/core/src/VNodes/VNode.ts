@@ -13,6 +13,8 @@ export type Predicate<T = boolean> = T extends VNode
 
 export type Point = [VNode, RelativePosition];
 
+export type TNode = VNode & { tangible: true };
+
 let id = 0;
 interface VNodeConstructor {
     new <T extends Constructor<VNode>>(...args: ConstructorParameters<T>): this;
@@ -120,104 +122,104 @@ export abstract class VNode {
     /**
      * Return the children of this VNode which satisfy the given predicate.
      */
-    abstract children<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract children(predicate?: Predicate): VNode[];
+    abstract children<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract children<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return the nth child of this node. The given `n` argument is the 1-based
      * index of the position of the child inside this node, excluding markers.
      *
      * Examples:
-     abstract * nthChild(abstract 1) returns the first (1st) child.
-     abstract * nthChild(abstract 2) returns the second (2nd) child.
-     abstract * nthChild(abstract 3) returns the second (3rd) child.
-     abstract * nthChild(abstract 4) returns the second (4th) child.
+     * nthChild(1) returns the first (1st) child.
+     * nthChild(2) returns the second (2nd) child.
+     * nthChild(3) returns the second (3rd) child.
+     * nthChild(4) returns the second (4th) child.
      * ...
      *
      * @param n
      */
-    abstract nthChild(n: number): VNode;
+    abstract nthChild(n: number): TNode;
     /**
      * Return the siblings of this VNode which satisfy the given predicate.
      */
-    abstract siblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract siblings<T>(predicate?: Predicate<T>): VNode[];
+    abstract siblings<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract siblings<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return the nodes adjacent to this VNode that satisfy the given predicate.
      */
-    abstract adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract adjacents<T>(predicate?: Predicate<T>): VNode[];
+    abstract adjacents<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract adjacents<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return the first ancestor of this VNode that satisfies the given
      * predicate.
      *
      * @param [predicate]
      */
-    abstract ancestor<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract ancestor<T>(predicate?: Predicate<T>): VNode;
+    abstract ancestor<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract ancestor<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the first child of this VNode that satisfies the given predicate.
      * If no predicate is given, return the first child of this VNode.
      *
      * @param [predicate]
      */
-    abstract firstChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstChild<T>(predicate?: Predicate<T>): VNode;
+    abstract firstChild<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract firstChild<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the last child of this VNode that satisfies the given predicate.
      * If no predicate is given, return the last child of this VNode.
      *
      * @param [predicate]
      */
-    abstract lastChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastChild<T>(predicate?: Predicate<T>): VNode;
+    abstract lastChild<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract lastChild<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the first leaf of this VNode that satisfies the given predicate.
      * If no predicate is given, return the first leaf of this VNode.
      *
      * @param [predicate]
      */
-    abstract firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstLeaf<T>(predicate?: Predicate<T>): VNode;
+    abstract firstLeaf<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract firstLeaf<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the last leaf of this VNode that satisfies the given predicate.
      * If no predicate is given, return the last leaf of this VNode.
      *
      * @param [predicate]
      */
-    abstract lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastLeaf<T>(predicate?: Predicate<T>): VNode;
+    abstract lastLeaf<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract lastLeaf<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the first descendant of this VNode that satisfies the predicate.
      * If no predicate is given, return the first descendant of this VNode.
      *
      * @param [predicate]
      */
-    abstract firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstDescendant<T>(predicate?: Predicate<T>): VNode;
+    abstract firstDescendant<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract firstDescendant<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the last descendant of this VNode that satisfies the predicate.
      * If no predicate is given, return the last descendant of this VNode.
      *
      * @param [predicate]
      */
-    abstract lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastDescendant<T>(predicate?: Predicate<T>): VNode;
+    abstract lastDescendant<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract lastDescendant<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the previous sibling of this VNode that satisfies the predicate.
      * If no predicate is given, return the previous sibling of this VNode.
      *
      * @param [predicate]
      */
-    abstract previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract previousSibling<T>(predicate?: Predicate<T>): VNode;
+    abstract previousSibling<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract previousSibling<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the next sibling of this VNode that satisfies the given predicate.
      * If no predicate is given, return the next sibling of this VNode.
      *
      * @param [predicate]
      */
-    abstract nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract nextSibling<T>(predicate?: Predicate<T>): VNode;
+    abstract nextSibling<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract nextSibling<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the previous node in a depth-first pre-order traversal of the
      * tree that satisfies the given predicate. If no predicate is given return
@@ -225,8 +227,8 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract previous<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract previous<T>(predicate?: Predicate<T>): VNode;
+    abstract previous<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract previous<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the next node in a depth-first pre-order traversal of the tree
      * that satisfies the given predicate. If no predicate is given return the
@@ -234,8 +236,8 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract next<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract next<T>(predicate?: Predicate<T>): VNode;
+    abstract next<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract next<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the previous leaf in a depth-first pre-order traversal of the
      * tree that satisfies the given predicate. If no predicate is given return
@@ -243,8 +245,8 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract previousLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract previousLeaf<T>(predicate?: Predicate<T>): VNode;
+    abstract previousLeaf<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract previousLeaf<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return the next leaf in a depth-first pre-order traversal of the tree
      * that satisfies the given predicate. If no predicate is given return the
@@ -252,8 +254,8 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract nextLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract nextLeaf<T>(predicate?: Predicate<T>): VNode;
+    abstract nextLeaf<T extends TNode>(predicate?: Predicate<T>): T;
+    abstract nextLeaf<T>(predicate?: Predicate<T>): TNode;
     /**
      * Return all previous siblings of the current node that satisfy the given
      * predicate. If no predicate is given return all the previous siblings of
@@ -261,8 +263,8 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract previousSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract previousSiblings<T>(predicate?: Predicate<T>): VNode[];
+    abstract previousSiblings<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract previousSiblings<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return all next siblings of the current node that satisfy the given
      * predicate. If no predicate is given return all the next siblings of the
@@ -270,16 +272,16 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract nextSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract nextSiblings<T>(predicate?: Predicate<T>): VNode[];
+    abstract nextSiblings<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract nextSiblings<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return the closest node from this node that matches the given predicate.
      * Start with this node then go up the ancestors tree until finding a match.
      *
      * @param predicate
      */
-    abstract closest<T extends VNode>(predicate: Predicate<T>): T;
-    abstract closest<T>(predicate: Predicate<T>): VNode;
+    abstract closest<T extends TNode>(predicate: Predicate<T>): T;
+    abstract closest<T>(predicate: Predicate<T>): TNode;
     /**
      * Return all ancestors of the current node that satisfy the given
      * predicate. If no predicate is given return all the ancestors of the
@@ -287,8 +289,8 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract ancestors<T>(predicate?: Predicate<T>): VNode[];
+    abstract ancestors<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract ancestors<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return all descendants of the current node that satisfy the given
      * predicate. If no predicate is given return all the ancestors of the
@@ -296,15 +298,15 @@ export abstract class VNode {
      *
      * @param [predicate]
      */
-    abstract descendants<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract descendants<T>(predicate?: Predicate<T>): VNode[];
+    abstract descendants<T extends TNode>(predicate?: Predicate<T>): T[];
+    abstract descendants<T>(predicate?: Predicate<T>): TNode[];
     /**
      * Return the lowest common ancestor between this VNode and the given one.
      *
      * @param node
      */
-    abstract commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
-    abstract commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
+    abstract commonAncestor<T extends TNode>(node: VNode, predicate?: Predicate<T>): T;
+    abstract commonAncestor<T>(node: VNode, predicate?: Predicate<T>): TNode;
 
     //--------------------------------------------------------------------------
     // Updating
@@ -331,7 +333,7 @@ export abstract class VNode {
      */
     abstract append(...children: VNode[]): void;
     /**
-     abstract * Insert the given node before the given reference (which is a child of
+     * Insert the given node before the given reference (which is a child of
      * this VNode).
      *
      * @param node
@@ -339,7 +341,7 @@ export abstract class VNode {
      */
     abstract insertBefore(node: VNode, reference: VNode): void;
     /**
-     abstract * Insert the given node after the given reference (a child of this VNode).
+     * Insert the given node after the given reference (a child of this VNode).
      *
      * @param node
      * @param reference
@@ -360,11 +362,11 @@ export abstract class VNode {
      */
     abstract removeChild(child: VNode): void;
     /**
-     abstract * Remove this node in forward direction. (e.g. `Delete` key)
+     * Remove this node in forward direction. (e.g. `Delete` key)
      */
     abstract removeForward(): void;
     /**
-     abstract * Remove this node in backward direction. (e.g. `Backspace` key)
+     * Remove this node in backward direction. (e.g. `Backspace` key)
      */
     abstract removeBackward(): void;
     /**
@@ -399,6 +401,15 @@ export abstract class VNode {
      *
      */
     abstract repr(): string;
+}
+
+/**
+ * Return whether the given node is tangible.
+ *
+ * @param node node to check
+ */
+export function isTangible(node: VNode): node is TNode {
+    return node.tangible;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { VNode, Predicate } from './VNode';
+import { VNode, Predicate, TNode, isTangible } from './VNode';
 import { ChildNode } from './ChildNode';
 import { AtomicityError } from '../../../utils/src/errors';
 
@@ -80,20 +80,24 @@ export class AtomicNode extends ChildNode {
      *
      * @return Returns `this` since an atomic node cannot have children.
      */
-    firstLeaf<T extends VNode>(predicate?: Predicate<T>): this;
-    firstLeaf<T>(predicate?: Predicate<T>): this;
-    firstLeaf<T>(predicate?: Predicate<T>): this {
-        return this;
+    firstLeaf<T extends VNode>(predicate?: Predicate<T>): TNode;
+    firstLeaf<T>(predicate?: Predicate<T>): TNode;
+    firstLeaf<T>(predicate?: Predicate<T>): TNode {
+        if (isTangible(this)) {
+            return this;
+        }
     }
     /**
      * See {@link VNode.lastLeaf}.
      *
      * @return Returns `this` since an atomic node cannot have children.
      */
-    lastLeaf<T extends VNode>(predicate?: Predicate<T>): this;
-    lastLeaf<T>(predicate?: Predicate<T>): this;
-    lastLeaf<T>(predicate?: Predicate<T>): this {
-        return this;
+    lastLeaf<T extends VNode>(predicate?: Predicate<T>): TNode;
+    lastLeaf<T>(predicate?: Predicate<T>): TNode;
+    lastLeaf<T>(predicate?: Predicate<T>): TNode {
+        if (isTangible(this)) {
+            return this;
+        }
     }
     /**
      * See {@link VNode.firstDescendant}.

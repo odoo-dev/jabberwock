@@ -1,5 +1,5 @@
 import { Constructor, nodeLength } from '../../../utils/src/utils';
-import { VNode, RelativePosition, isLeaf, Predicate, Typeguard } from './VNode';
+import { VNode, RelativePosition, isLeaf, Predicate, Typeguard, TNode, isTangible } from './VNode';
 
 export abstract class ChildNode extends VNode {
     tangible = true;
@@ -133,11 +133,11 @@ export abstract class ChildNode extends VNode {
     /**
      * Return the siblings of this VNode which satisfy the given predicate.
      */
-    siblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    siblings<T>(predicate?: Predicate<T>): VNode[];
-    siblings<T>(predicate?: Predicate<T>): VNode[] {
-        const siblings: VNode[] = [];
-        let sibling: VNode = this.previousSibling();
+    siblings<T extends TNode>(predicate?: Predicate<T>): T[];
+    siblings<T>(predicate?: Predicate<T>): TNode[];
+    siblings<T>(predicate?: Predicate<T>): TNode[] {
+        const siblings: TNode[] = [];
+        let sibling: TNode = this.previousSibling();
         while (sibling) {
             if (sibling.test(predicate)) {
                 siblings.unshift(sibling);
@@ -156,11 +156,11 @@ export abstract class ChildNode extends VNode {
     /**
      * Return the nodes adjacent to this VNode that satisfy the given predicate.
      */
-    adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
-    adjacents<T>(predicate?: Predicate<T>): VNode[];
-    adjacents<T>(predicate?: Predicate<T>): VNode[] {
-        const adjacents: VNode[] = [];
-        let sibling: VNode = this.previousSibling();
+    adjacents<T extends TNode>(predicate?: Predicate<T>): T[];
+    adjacents<T>(predicate?: Predicate<T>): TNode[];
+    adjacents<T>(predicate?: Predicate<T>): TNode[] {
+        const adjacents: TNode[] = [];
+        let sibling: TNode = this.previousSibling();
         while (sibling && sibling.test(predicate)) {
             adjacents.unshift(sibling);
             sibling = sibling.previousSibling();
@@ -178,14 +178,14 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    ancestor<T extends VNode>(predicate?: Predicate<T>): T;
-    ancestor<T>(predicate?: Predicate<T>): VNode;
-    ancestor<T>(predicate?: Predicate<T>): VNode {
+    ancestor<T extends TNode>(predicate?: Predicate<T>): T;
+    ancestor<T>(predicate?: Predicate<T>): TNode;
+    ancestor<T>(predicate?: Predicate<T>): TNode {
         let ancestor = this.parent;
-        while (ancestor && !ancestor.test(predicate)) {
+        while (ancestor && !(ancestor.tangible && ancestor.test(predicate))) {
             ancestor = ancestor.parent;
         }
-        return ancestor;
+        return ancestor as TNode;
     }
     /**
      * Return the previous sibling of this VNode that satisfies the predicate.
@@ -193,9 +193,9 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    previousSibling<T>(predicate?: Predicate<T>): VNode;
-    previousSibling<T>(predicate?: Predicate<T>): VNode {
+    previousSibling<T extends TNode>(predicate?: Predicate<T>): T;
+    previousSibling<T>(predicate?: Predicate<T>): TNode;
+    previousSibling<T>(predicate?: Predicate<T>): TNode {
         if (!this.parent) return;
         const index = this.parent.childVNodes.indexOf(this);
         let sibling = this.parent.childVNodes[index - 1];
@@ -203,7 +203,7 @@ export abstract class ChildNode extends VNode {
         while (sibling && !(sibling.tangible && sibling.test(predicate))) {
             sibling = sibling.previousSibling();
         }
-        return sibling;
+        return sibling as TNode;
     }
     /**
      * Return the next sibling of this VNode that satisfies the given predicate.
@@ -211,9 +211,9 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    nextSibling<T>(predicate?: Predicate<T>): VNode;
-    nextSibling<T>(predicate?: Predicate<T>): VNode {
+    nextSibling<T extends TNode>(predicate?: Predicate<T>): T;
+    nextSibling<T>(predicate?: Predicate<T>): TNode;
+    nextSibling<T>(predicate?: Predicate<T>): TNode {
         if (!this.parent) return;
         const index = this.parent.childVNodes.indexOf(this);
         let sibling = this.parent.childVNodes[index + 1];
@@ -221,7 +221,7 @@ export abstract class ChildNode extends VNode {
         while (sibling && !(sibling.tangible && sibling.test(predicate))) {
             sibling = sibling.nextSibling();
         }
-        return sibling;
+        return sibling as TNode;
     }
     /**
      * Return the previous node in a depth-first pre-order traversal of the
@@ -230,16 +230,16 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    previous<T extends VNode>(predicate?: Predicate<T>): T;
-    previous<T>(predicate?: Predicate<T>): VNode;
-    previous<T>(predicate?: Predicate<T>): VNode {
+    previous<T extends TNode>(predicate?: Predicate<T>): T;
+    previous<T>(predicate?: Predicate<T>): TNode;
+    previous<T>(predicate?: Predicate<T>): TNode {
         let previous = this.previousSibling();
         if (previous) {
             // The previous node is the last leaf of the previous sibling.
             previous = previous.lastLeaf();
         } else {
             // If it has no previous sibling then climb up to the parent.
-            previous = this.parent;
+            previous = this.ancestor();
         }
         while (previous && !previous.test(predicate)) {
             previous = previous.previous();
@@ -253,9 +253,9 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    next<T extends VNode>(predicate?: Predicate<T>): T;
-    next<T>(predicate?: Predicate<T>): VNode;
-    next<T>(predicate?: Predicate<T>): VNode {
+    next<T extends TNode>(predicate?: Predicate<T>): T;
+    next<T>(predicate?: Predicate<T>): TNode;
+    next<T>(predicate?: Predicate<T>): TNode {
         // The node after node is its first child.
         let next = this.firstChild();
         if (!next) {
@@ -283,9 +283,9 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    previousLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    previousLeaf<T>(predicate?: Predicate<T>): VNode;
-    previousLeaf<T>(predicate?: Predicate<T>): VNode {
+    previousLeaf<T extends TNode>(predicate?: Predicate<T>): T;
+    previousLeaf<T>(predicate?: Predicate<T>): TNode;
+    previousLeaf<T>(predicate?: Predicate<T>): TNode {
         return this.previous((node: VNode): boolean => {
             return isLeaf(node) && node.test(predicate);
         });
@@ -297,9 +297,9 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    nextLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    nextLeaf<T>(predicate?: Predicate<T>): VNode;
-    nextLeaf<T>(predicate?: Predicate<T>): VNode {
+    nextLeaf<T extends TNode>(predicate?: Predicate<T>): T;
+    nextLeaf<T>(predicate?: Predicate<T>): TNode;
+    nextLeaf<T>(predicate?: Predicate<T>): TNode {
         return this.next((node: VNode): boolean => {
             return isLeaf(node) && node.test(predicate);
         });
@@ -311,10 +311,10 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    previousSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    previousSiblings<T>(predicate?: Predicate<T>): VNode[];
-    previousSiblings<T>(predicate?: Predicate<T>): VNode[] {
-        const previousSiblings: VNode[] = [];
+    previousSiblings<T extends TNode>(predicate?: Predicate<T>): T[];
+    previousSiblings<T>(predicate?: Predicate<T>): TNode[];
+    previousSiblings<T>(predicate?: Predicate<T>): TNode[] {
+        const previousSiblings: TNode[] = [];
         let sibling = this.previousSibling();
         while (sibling) {
             if (sibling.test(predicate)) {
@@ -331,10 +331,10 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    nextSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    nextSiblings<T>(predicate?: Predicate<T>): VNode[];
-    nextSiblings<T>(predicate?: Predicate<T>): VNode[] {
-        const nextSiblings: VNode[] = [];
+    nextSiblings<T extends TNode>(predicate?: Predicate<T>): T[];
+    nextSiblings<T>(predicate?: Predicate<T>): TNode[];
+    nextSiblings<T>(predicate?: Predicate<T>): TNode[] {
+        const nextSiblings: TNode[] = [];
         let sibling = this.nextSibling();
         while (sibling) {
             if (sibling.test(predicate)) {
@@ -350,10 +350,14 @@ export abstract class ChildNode extends VNode {
      *
      * @param predicate
      */
-    closest<T extends VNode>(predicate: Predicate<T>): T;
-    closest<T>(predicate: Predicate<T>): VNode;
-    closest<T>(predicate: Predicate<T>): VNode {
-        return this.test(predicate) ? this : this.ancestor(predicate);
+    closest<T extends TNode>(predicate: Predicate<T>): T;
+    closest<T>(predicate: Predicate<T>): TNode;
+    closest<T>(predicate: Predicate<T>): TNode {
+        if (isTangible(this) && this.test(predicate)) {
+            return this;
+        } else {
+            return this.ancestor(predicate);
+        }
     }
     /**
      * Return all ancestors of the current node that satisfy the given
@@ -362,13 +366,13 @@ export abstract class ChildNode extends VNode {
      *
      * @param [predicate]
      */
-    ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
-    ancestors<T>(predicate?: Predicate<T>): VNode[];
-    ancestors<T>(predicate?: Predicate<T>): VNode[] {
-        const ancestors: VNode[] = [];
-        let parent = this.parent;
+    ancestors<T extends TNode>(predicate?: Predicate<T>): T[];
+    ancestors<T>(predicate?: Predicate<T>): TNode[];
+    ancestors<T>(predicate?: Predicate<T>): TNode[] {
+        const ancestors: TNode[] = [];
+        let parent: VNode = this.ancestor();
         while (parent) {
-            if (parent.test(predicate)) {
+            if (isTangible(parent) && parent.test(predicate)) {
                 ancestors.push(parent);
             }
             parent = parent.parent;
@@ -380,17 +384,23 @@ export abstract class ChildNode extends VNode {
      *
      * @param node
      */
-    commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
-    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
-    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
+    commonAncestor<T extends TNode>(node: VNode, predicate?: Predicate<T>): T;
+    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): TNode;
+    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): TNode {
         if (!this.parent) {
             return;
         } else if (this.parent === node.parent && this.parent.test(predicate)) {
-            return this.parent;
+            return this.ancestor();
         }
-        const thisPath = [this, ...this.ancestors(predicate)];
-        const nodePath = [node, ...node.ancestors(predicate)];
-        let commonAncestor: VNode;
+        const thisPath = this.ancestors(predicate);
+        if (isTangible(this)) {
+            thisPath.unshift(this);
+        }
+        const nodePath = node.ancestors(predicate);
+        if (isTangible(node)) {
+            nodePath.unshift(node);
+        }
+        let commonAncestor: TNode;
         while (thisPath[thisPath.length - 1] === nodePath.pop()) {
             commonAncestor = thisPath.pop();
         }
