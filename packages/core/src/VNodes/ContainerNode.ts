@@ -3,12 +3,12 @@ import { ChildNode } from './ChildNode';
 import { ChildError } from '../../../utils/src/errors';
 
 export class ContainerNode extends ChildNode {
-    static readonly atomic: false = false;
     static test(node: VNode): boolean {
         return node && node.test(this);
     }
 
-    childVNodes = [];
+    readonly atomic: false = false;
+    readonly childVNodes = [];
 
     //--------------------------------------------------------------------------
     // Browsing

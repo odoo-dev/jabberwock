@@ -28,6 +28,7 @@ export class ListItemDomParser extends AbstractParser<Node> {
         // Parse the list item's attributes into a technical key of the node's
         // attributes, that will be read only by ListItemDomRenderer.
         const itemAttributes = { 'li-attributes': this.engine.parseAttributes(item) };
+        const Container = this.engine.editor.configuration.defaults.Container;
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];
             const parsedChild = await this.engine.parse(domChild);
@@ -36,7 +37,7 @@ export class ListItemDomParser extends AbstractParser<Node> {
                     // Contiguous inline elements in a list item should be
                     // wrapped together in a base container.
                     if (!inlinesContainer) {
-                        inlinesContainer = this.engine.editor.createBaseContainer();
+                        inlinesContainer = new Container();
                         inlinesContainer.attributes = itemAttributes;
                         nodes.push(inlinesContainer);
                     }
@@ -56,7 +57,7 @@ export class ListItemDomParser extends AbstractParser<Node> {
         // br will parse to nothing because it's a placeholder br, not a real
         // line break. We cannot ignore that li because it does in fact exist so
         // we parse it as an empty base container.
-        return nodes.length ? nodes : [this.engine.editor.createBaseContainer()];
+        return nodes.length ? nodes : [new Container()];
     }
 
     /**

@@ -8,6 +8,7 @@ import { Paragraph } from '../packages/plugin-paragraph/src/Paragraph';
 import { List } from '../packages/plugin-list/src/List';
 import { Indent } from '../packages/plugin-indent/src/Indent';
 import { ParagraphNode } from '../packages/plugin-paragraph/src/ParagraphNode';
+import { LineBreakNode } from '../packages/plugin-linebreak/src/LineBreakNode';
 import { Span } from '../packages/plugin-span/src/Span';
 import { Bold } from '../packages/plugin-bold/src/Bold';
 import { Italic } from '../packages/plugin-italic/src/Italic';
@@ -34,7 +35,10 @@ export class BasicEditor extends JWEditor {
         super();
 
         this.configure({
-            createBaseContainer: () => new ParagraphNode(),
+            defaults: {
+                Container: ParagraphNode,
+                Separator: LineBreakNode,
+            },
             plugins: [
                 [Parser],
                 [Renderer],
