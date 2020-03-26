@@ -2,8 +2,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { HeadingDomParser } from './HeadingDomParser';
 import { HeadingNode } from './HeadingNode';
 import { CommandParams } from '../../core/src/Dispatcher';
-import { distinct } from '../../utils/src/utils';
-import { VNode, isLeaf } from '../../core/src/VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
@@ -49,17 +48,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
      * @param params
      */
     applyHeadingStyle(params: HeadingParams): void {
-        const range = params.context.range;
-        let nodesToConvert: VNode[];
-        if (range.isCollapsed()) {
-            nodesToConvert = [range.start.parent];
-        } else {
-            const selectedLeaves = range.selectedNodes(isLeaf);
-            nodesToConvert = distinct(
-                selectedLeaves.map(leaf => (leaf.atomic ? leaf.parent : leaf)),
-            );
-        }
-        for (const node of nodesToConvert) {
+        for (const node of params.context.range.targetedNodes(node => !node.atomic)) {
             const heading = this._createHeadingContainer(params.level);
             heading.attributes = { ...node.attributes };
             node.before(heading);
