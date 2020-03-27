@@ -190,7 +190,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     indent(params: IndentParams): void {
         const range = params.context.range;
-        const items = range.targetedNodes(node => ListNode.test(node.parent));
+        const items = range.targetedNodes(node => node.parent?.test(ListNode));
 
         // Do not indent items of a targeted nested list, since they
         // will automatically be indented with their list ancestor.
@@ -212,7 +212,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 if (ListNode[listType](next) && !itemsToIndent.includes(next)) {
                     next.mergeWith(prev);
                 }
-            } else if (ListNode.test(next) && !itemsToIndent.includes(next)) {
+            } else if (next?.is(ListNode) && !itemsToIndent.includes(next)) {
                 next.prepend(item);
             } else {
                 // If no other candidate exists then wrap it in a new ListNode.
@@ -229,7 +229,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     outdent(params: OutdentParams): void {
         const range = params.context.range;
-        const items = range.targetedNodes(node => ListNode.test(node.parent));
+        const items = range.targetedNodes(node => node.parent?.is(ListNode));
 
         // Do not outdent items of a targeted nested list, since they
         // will automatically be outdented with their list ancestor.
