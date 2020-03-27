@@ -42,6 +42,12 @@ export class CharNode extends InlineNode {
     //--------------------------------------------------------------------------
 
     /**
+     * Return the length of this VNode.
+     */
+    get length(): number {
+        return 1;
+    }
+    /**
      * Return true if `a` has the same format properties as `b`.
      *
      * @param a
