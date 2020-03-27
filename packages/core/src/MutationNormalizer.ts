@@ -1,4 +1,4 @@
-import { nodeName } from "../../utils/src/utils";
+import { nodeName } from '../../utils/src/utils';
 
 interface CharMutation {
     old?: string;

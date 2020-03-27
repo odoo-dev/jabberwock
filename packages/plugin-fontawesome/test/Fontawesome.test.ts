@@ -1,8 +1,8 @@
-import { describePlugin } from "../../utils/src/testUtils";
-import { Fontawesome } from "../src/Fontawesome";
-import { BasicEditor } from "../../../bundles/BasicEditor";
-import JWEditor from "../../core/src/JWEditor";
-import { Core } from "../../core/src/Core";
+import { describePlugin } from '../../utils/src/testUtils';
+import { Fontawesome } from '../src/Fontawesome';
+import { BasicEditor } from '../../../bundles/BasicEditor';
+import JWEditor from '../../core/src/JWEditor';
+import { Core } from '../../core/src/Core';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Core>('deleteForward');
@@ -62,7 +62,8 @@ describePlugin(Fontawesome, testEditor => {
         it('should parse a fontawesome with more classes', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p><i class="red fas bordered fa-pastafarianism big"></i></p>',
-                contentAfter: '<p>\u200b<i class="red fas bordered fa-pastafarianism big"></i>\u200b</p>',
+                contentAfter:
+                    '<p>\u200b<i class="red fas bordered fa-pastafarianism big"></i>\u200b</p>',
             });
         });
         it('should parse a fontawesome with multi-line classes', async () => {
@@ -114,7 +115,8 @@ describePlugin(Fontawesome, testEditor => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>ab<i class="fas fa-pastafarianism"></i>[]cd</p>',
                         stepFunction: deleteForward,
-                        contentAfter: '<p>ab\u200b<i class="fas fa-pastafarianism"></i>\u200b[]d</p>',
+                        contentAfter:
+                            '<p>ab\u200b<i class="fas fa-pastafarianism"></i>\u200b[]d</p>',
                     });
                 });
             });
@@ -152,7 +154,8 @@ describePlugin(Fontawesome, testEditor => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p>ab[]<i class="fas fa-pastafarianism"></i>cd</p>',
                         stepFunction: deleteBackward,
-                        contentAfter: '<p>a[]\u200b<i class="fas fa-pastafarianism"></i>\u200bcd</p>',
+                        contentAfter:
+                            '<p>a[]\u200b<i class="fas fa-pastafarianism"></i>\u200bcd</p>',
                     });
                 });
             });

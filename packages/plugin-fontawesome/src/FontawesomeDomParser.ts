@@ -2,6 +2,8 @@ import { FontawesomeNode } from './FontawesomeNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 
+export const FontawesomeRegex = /(^|[\s*\n*])fa[bdlrs]?[\s*\n*$]/;
+
 export class FontawesomeDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
@@ -22,9 +24,6 @@ export class FontawesomeDomParser extends AbstractParser<Node> {
      * @param item
      */
     static isFontawesome(item: Node): item is Element {
-        return (
-            item instanceof Element &&
-            /(^|[\s*\n*])fa[bdlrs]?[\s*\n*$]/.test(item.className)
-        );
+        return item instanceof Element && FontawesomeRegex.test(item.className);
     }
 }
