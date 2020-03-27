@@ -8,6 +8,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/Core';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -48,7 +49,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
      * @param params
      */
     applyHeadingStyle(params: HeadingParams): void {
-        for (const node of params.context.range.targetedNodes(node => !node.atomic)) {
+        for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const heading = this._createHeadingContainer(params.level);
             heading.attributes = { ...node.attributes };
             node.before(heading);

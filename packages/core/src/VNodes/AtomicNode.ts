@@ -11,7 +11,6 @@ export class AtomicNode extends VNode {
         return node && node.test(this);
     }
 
-    readonly atomic: true = true;
     get childVNodes(): [] {
         return [];
     }

@@ -1,6 +1,7 @@
 import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { DefaultDomRenderer } from './DefaultDomRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 export class DomRenderingEngine extends RenderingEngine<Node[]> {
     static readonly id = 'dom';
@@ -28,6 +29,6 @@ export class DomRenderingEngine extends RenderingEngine<Node[]> {
      * @param node
      */
     async renderEmpty(node: VNode): Promise<Node[]> {
-        return node.atomic ? [] : [document.createElement('br')];
+        return node.is(AtomicNode) ? [] : [document.createElement('br')];
     }
 }

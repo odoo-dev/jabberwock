@@ -11,6 +11,7 @@ import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 interface DomConfig extends JWPluginConfig {
     autoFocus?: boolean;
@@ -224,7 +225,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
         if (forceAfter) {
             return [reference, RelativePosition.AFTER];
         }
-        if (forcePrepend && !reference.atomic) {
+        if (forcePrepend && reference.is(ContainerNode)) {
             return [reference, RelativePosition.INSIDE];
         }
         return reference.locate(container, offset);

@@ -13,6 +13,7 @@ import { Constructor } from '../../utils/src/utils';
 import { Format } from '../../plugin-inline/src/Format';
 import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
 import { Formats } from '../../plugin-inline/src/Formats';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 const insertText = async function(editor: JWEditor, text: string): Promise<void> {
     await editor.execCommand<Char>('insertText', {
@@ -56,14 +57,14 @@ describePlugin(Char, testEditor => {
             it('should create a CharNode', async () => {
                 const c = new CharNode(' ');
                 expect(c.char).to.equal(' ');
-                expect(c.atomic).to.equal(true);
+                expect(c.is(AtomicNode)).to.equal(true);
                 expect(c.formats.length).to.equal(0);
                 expect(c.length).to.equal(1);
             });
             it('should create a CharNode with format', async () => {
                 const c = new CharNode(' ', new Formats(BoldFormat));
                 expect(c.char).to.equal(' ');
-                expect(c.atomic).to.equal(true);
+                expect(c.is(AtomicNode)).to.equal(true);
                 expect(c.formats.length).to.equal(1);
                 expect(c.formats[0].htmlTag).to.equal('B');
             });

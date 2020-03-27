@@ -3,6 +3,7 @@ import { Predicate } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
 import { Constructor } from '../../utils/src/utils';
 import { FragmentNode } from './VNodes/FragmentNode';
+import { ContainerNode } from './VNodes/ContainerNode';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -199,7 +200,7 @@ export class VRange {
         } else {
             reference = reference.lastLeaf();
         }
-        if (!reference.hasChildren() && !reference.atomic) {
+        if (reference.is(ContainerNode) && !reference.hasChildren()) {
             reference.prepend(this.start);
         } else if (position === RelativePosition.AFTER && reference !== this.end) {
             // We check that `reference` isn't `this.end` to avoid a backward
@@ -225,7 +226,7 @@ export class VRange {
         } else {
             reference = reference.lastLeaf();
         }
-        if (!reference.hasChildren() && !reference.atomic) {
+        if (reference.is(ContainerNode) && !reference.hasChildren()) {
             reference.append(this.end);
         } else if (position === RelativePosition.BEFORE && reference !== this.start) {
             // We check that `reference` isn't `this.start` to avoid a backward
