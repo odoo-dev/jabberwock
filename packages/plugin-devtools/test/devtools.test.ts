@@ -399,7 +399,6 @@ describe('Plugin: DevTools', () => {
             );
             await nextTickFrame();
 
-            debugger;
             expect(pchildren.childNodes.length).to.equal(5);
             expect(pchildren.firstElementChild.classList.contains('self-closing')).to.equal(
                 true,

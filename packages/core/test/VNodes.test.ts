@@ -24,7 +24,7 @@ describe('core', () => {
                     it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new VElement('UNKNOWN-ELEMENT');
-                            expect(vNode.atomic).to.equal(false);
+                            expect(vNode.is(AtomicNode)).to.equal(false);
                             expect(vNode.htmlTag).to.equal('UNKNOWN-ELEMENT');
                         }
                     });
@@ -43,7 +43,7 @@ describe('core', () => {
                     it('should create a marker node', async () => {
                         const markerNode = new MarkerNode();
                         expect(markerNode.tangible).to.equal(false);
-                        expect(markerNode.atomic).to.equal(true);
+                        expect(markerNode.is(AtomicNode)).to.equal(true);
                     });
                 });
             });
@@ -89,11 +89,11 @@ describe('core', () => {
                 describe('constructor', () => {
                     it('should create an AtomicNode', async () => {
                         const atomic = new AtomicNode();
-                        expect(atomic.atomic).to.equal(true);
+                        expect(atomic.is(AtomicNode)).to.equal(true);
                     });
                     it('should create a ContainerNode', async () => {
                         const container = new ContainerNode();
-                        expect(container.atomic).to.equal(false);
+                        expect(container.is(AtomicNode)).to.equal(false);
                     });
                 });
                 describe('toString', () => {

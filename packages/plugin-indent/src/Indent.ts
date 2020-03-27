@@ -8,6 +8,8 @@ import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { withRange, VRange } from '../../core/src/VRange';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
@@ -122,7 +124,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      * @param params
      */
     _isSegmentBreak(node: VNode): boolean {
-        return !node.atomic || node.is(LineBreakNode);
+        return node.is(ContainerNode) || node.is(LineBreakNode);
     }
     /**
      * Return the next segment start point after the given segment break.
@@ -132,7 +134,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     _nextSegmentStart(segmentBreak: VNode): Point {
         let reference = segmentBreak;
         let position = RelativePosition.BEFORE;
-        if (segmentBreak.atomic) {
+        if (segmentBreak.is(AtomicNode)) {
             reference = segmentBreak.nextSibling();
         } else if (segmentBreak.hasChildren()) {
             reference = segmentBreak.firstChild();
@@ -156,7 +158,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      */
     _nextIndentationSpace(segmentBreak: VNode): VNode {
         let space: VNode;
-        if (segmentBreak.atomic) {
+        if (segmentBreak.is(AtomicNode)) {
             space = segmentBreak.nextSibling();
         } else {
             space = segmentBreak.firstChild();

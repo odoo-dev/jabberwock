@@ -3,7 +3,6 @@ import { EventManager } from './EventManager';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { VDocument } from './VDocument';
 import { Core } from './Core';
-import { VNode } from './VNodes/VNode';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager } from './ContextManager';
@@ -37,9 +36,9 @@ type CommandParams<T extends JWPlugin, K extends string> = K extends Commands<T>
 
 export interface JWEditorConfig {
     defaults?: {
-        Container?: new () => VNode & { atomic: false };
-        Atomic?: new () => VNode & { atomic: true };
-        Separator?: new () => VNode;
+        Container?: new () => ContainerNode;
+        Atomic?: new () => AtomicNode;
+        Separator?: new () => SeparatorNode;
     };
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
     loadables?: Loadables;

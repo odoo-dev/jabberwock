@@ -1,5 +1,7 @@
 import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
+import { AtomicNode } from '../../../core/src/VNodes/AtomicNode';
+import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
 
 interface InfoState {
     currentTab: string;
@@ -47,10 +49,20 @@ export class InfoComponent extends OwlUIComponent<{}> {
      */
     propRepr(vNode: VNode, propName: string): string {
         let prop = vNode[propName];
-        if ({}.toString.call(prop) === '[object Function]') {
-            prop = vNode[propName]();
+        if (propName === 'atomic') {
+            if (vNode.is(AtomicNode)) {
+                return 'true';
+            } else if (vNode.is(ContainerNode)) {
+                return 'false';
+            } else {
+                return '?';
+            }
+        } else {
+            if ({}.toString.call(prop) === '[object Function]') {
+                prop = vNode[propName]();
+            }
+            return this._propRepr(prop);
         }
-        return this._propRepr(prop);
     }
     /**
      * Return an object representing the given VNode's public properties as

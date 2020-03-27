@@ -6,7 +6,6 @@ export class ContainerNode extends VNode {
         return node && node.test(this);
     }
 
-    readonly atomic: false = false;
     readonly childVNodes = [];
 
     //--------------------------------------------------------------------------

@@ -9,6 +9,7 @@ import { describePlugin } from '../../utils/src/testUtils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LineBreakDomParser } from '../src/LineBreakDomParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<LineBreak>('insertLineBreak');
@@ -42,7 +43,7 @@ describePlugin(LineBreak, testEditor => {
             const engine = new DomParsingEngine(new JWEditor());
             const lineBreak = (await new LineBreakDomParser(engine).parse(br1))[0] as LineBreakNode;
             expect(lineBreak instanceof VNode).to.be.true;
-            expect(lineBreak.atomic).to.equal(true);
+            expect(lineBreak.is(AtomicNode)).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {
             const engine = new DomParsingEngine(new JWEditor());
@@ -54,7 +55,7 @@ describePlugin(LineBreak, testEditor => {
         describe('constructor', () => {
             it('should create a LineBreakNode', async () => {
                 const lineBreak = new LineBreakNode();
-                expect(lineBreak.atomic).to.equal(true);
+                expect(lineBreak.is(AtomicNode)).to.equal(true);
             });
         });
         describe('clone', () => {

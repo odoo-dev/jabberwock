@@ -4,6 +4,7 @@ import { Heading } from '../src/Heading';
 import { describePlugin } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 const applyHeadingStyle = (level: number) => {
     return async (editor: JWEditor): Promise<void> =>
@@ -15,7 +16,7 @@ describePlugin(Heading, testEditor => {
         it('should create a heading', async () => {
             for (let i = 1; i <= 6; i++) {
                 const vNode = new HeadingNode(i);
-                expect(vNode.atomic).to.equal(false);
+                expect(vNode.is(ContainerNode)).to.equal(true);
                 expect(vNode.htmlTag).to.equal('H' + i);
                 expect(vNode.level).to.equal(i);
             }

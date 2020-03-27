@@ -6,6 +6,7 @@ import { PreDomParser } from './PreDomParser';
 import { PreDomRenderer } from './PreDomRenderer';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { PreNode } from './PreNode';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -28,7 +29,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
      * @param params
      */
     applyPreStyle(params: CommandParams): void {
-        for (const node of params.context.range.targetedNodes(node => !node.atomic)) {
+        for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const pre = new PreNode();
             pre.attributes = { ...node.attributes };
             node.before(pre);

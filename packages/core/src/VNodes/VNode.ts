@@ -29,14 +29,6 @@ export abstract class VNode {
     attributes: Record<string, string | Record<string, string>> = {};
     childVNodes: VNode[];
     /**
-     * A node is atomic when it is not allowed to have children in the
-     * abstraction. Its real-life children should be ignored in the abstraction.
-     * This getter allows us to call `this.atomic` on the extensions of `VNode`
-     * while declaring the `atomic` property in a static way.
-     */
-    readonly atomic: boolean;
-
-    /**
      * Return whether the given predicate is a constructor of a VNode class.
      *
      * @param predicate The predicate to check.

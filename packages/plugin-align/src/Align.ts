@@ -3,6 +3,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export enum AlignType {
     LEFT = 'left',
@@ -71,7 +72,7 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      * Align text.
      */
     align(params: AlignParams): void {
-        const nodes = params.context.range.targetedNodes(node => !node.atomic);
+        const nodes = params.context.range.targetedNodes(node => node.is(ContainerNode));
         const type = params.type;
         for (const node of nodes) {
             const alignedAncestor = node.ancestor(Align.isAligned);

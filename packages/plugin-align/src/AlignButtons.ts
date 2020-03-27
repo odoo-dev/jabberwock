@@ -2,6 +2,7 @@ import { Button } from '../../plugin-toolbar/src/Toolbar';
 import { AlignType, AlignParams, Align } from './Align';
 import JWEditor from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 function isAligned(node: VNode, type: AlignType): boolean {
     const alignedAncestor = node.ancestor(Align.isAligned);
@@ -15,7 +16,7 @@ export const AlignLeftButton: Button = {
     commandArgs: { type: AlignType.LEFT } as AlignParams,
     selected: (editor: JWEditor): boolean => {
         return editor.selection.range
-            .targetedNodes(node => !node.atomic)
+            .targetedNodes(node => node.is(ContainerNode))
             .every(node => isAligned(node, AlignType.LEFT));
     },
 };
@@ -26,7 +27,7 @@ export const AlignCenterButton: Button = {
     commandArgs: { type: AlignType.CENTER } as AlignParams,
     selected: (editor: JWEditor): boolean => {
         return editor.selection.range
-            .targetedNodes(node => !node.atomic)
+            .targetedNodes(node => node.is(ContainerNode))
             .every(node => isAligned(node, AlignType.CENTER));
     },
 };
@@ -37,7 +38,7 @@ export const AlignRightButton: Button = {
     commandArgs: { type: AlignType.RIGHT } as AlignParams,
     selected: (editor: JWEditor): boolean => {
         return editor.selection.range
-            .targetedNodes(node => !node.atomic)
+            .targetedNodes(node => node.is(ContainerNode))
             .every(node => isAligned(node, AlignType.RIGHT));
     },
 };
@@ -48,7 +49,7 @@ export const AlignJustifyButton: Button = {
     commandArgs: { type: AlignType.JUSTIFY } as AlignParams,
     selected: (editor: JWEditor): boolean => {
         return editor.selection.range
-            .targetedNodes(node => !node.atomic)
+            .targetedNodes(node => node.is(ContainerNode))
             .every(node => isAligned(node, AlignType.JUSTIFY));
     },
 };
