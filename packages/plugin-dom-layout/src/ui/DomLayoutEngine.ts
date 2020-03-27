@@ -23,6 +23,7 @@ export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
 
 export class DomLayoutEngine extends LayoutEngine {
+    static readonly id = 'dom';
     readonly id = 'dom';
     readonly _domReconciliationEngine = new DomReconciliationEngine();
 
@@ -33,6 +34,8 @@ export class DomLayoutEngine extends LayoutEngine {
     private _markedForRedraw = new Set<Node>();
     location: [Node, DomZonePosition];
     locations: Record<ComponentId, DomLayoutLocation> = {};
+
+    beforeRenderInEditable: Function[] = [];
 
     defaultRootComponent: ComponentDefinition = {
         id: 'editor',

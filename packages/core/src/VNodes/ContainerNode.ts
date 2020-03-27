@@ -1,9 +1,22 @@
 import { AbstractNode } from './AbstractNode';
 import { VNode, Predicate, isLeaf } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
+import { MarkerNode } from './MarkerNode';
+import { EventMixin } from '../../../utils/src/EventMixin';
 
 export class ContainerNode extends AbstractNode {
     readonly childVNodes: VNode[] = [];
+    vevent = new EventMixin();
+
+    constructor() {
+        super();
+
+        this.vevent.parent = () => {
+            return this.parent && this.parent instanceof ContainerNode
+                ? this.parent.vevent
+                : undefined;
+        };
+    }
 
     //--------------------------------------------------------------------------
     // Browsing children.
@@ -155,6 +168,9 @@ export class ContainerNode extends AbstractNode {
         for (const child of children) {
             this._insertAtIndex(child, 0);
         }
+        if (!children.every(child => child instanceof MarkerNode)) {
+            this.vevent.fire('childList');
+        }
     }
     /**
      * See {@link AbstractNode.append}.
@@ -162,6 +178,9 @@ export class ContainerNode extends AbstractNode {
     append(...children: VNode[]): void {
         for (const child of children) {
             this._insertAtIndex(child, this.childVNodes.length);
+        }
+        if (!children.every(child => child instanceof MarkerNode)) {
+            this.vevent.fire('childList');
         }
     }
     /**
@@ -173,6 +192,9 @@ export class ContainerNode extends AbstractNode {
             throw new ChildError(this, node);
         }
         this._insertAtIndex(node, index);
+        if (!(node instanceof MarkerNode)) {
+            this.vevent.fire('childList');
+        }
     }
     /**
      * See {@link AbstractNode.insertAfter}.
@@ -183,6 +205,9 @@ export class ContainerNode extends AbstractNode {
             throw new ChildError(this, node);
         }
         this._insertAtIndex(node, index + 1);
+        if (!(node instanceof MarkerNode)) {
+            this.vevent.fire('childList');
+        }
     }
     /**
      * See {@link AbstractNode.empty}.
@@ -319,6 +344,9 @@ export class ContainerNode extends AbstractNode {
      */
     _removeAtIndex(index: number): void {
         const child = this.childVNodes.splice(index, 1)[0];
+        if (!(child instanceof MarkerNode)) {
+            this.vevent.fire('childList');
+        }
         child.parent = undefined;
     }
 }

@@ -1,8 +1,11 @@
 import { ContainerNode } from './ContainerNode';
 
+export interface VElementParams {
+    htmlTag: string;
+}
 export class VElement extends ContainerNode {
     htmlTag: string;
-    constructor(params: { htmlTag: string }) {
+    constructor(params: VElementParams) {
         super();
         this.htmlTag = params.htmlTag;
     }
