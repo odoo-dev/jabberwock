@@ -1,0 +1,44 @@
+body {
+    margin:0;
+    height:100vh;
+}
+
+p {
+    margin: 1px;
+}
+h3 {
+    margin: 5px 0;
+}
+section {
+    border-bottom: 1px black solid;
+}
+
+jw-editor {
+    display: block;
+    height: 100vh;
+}
+jw-editable {
+    display: block;
+    padding: 10px;
+    height: 100vh;
+}
+
+.jw-odoo-field:hover {
+    outline: 1px #875A7B solid;
+}
+.jw-odoo-field.jw-focus, .js-odoo-field-parent-selected {
+    outline: 1px #875A7B solid;
+}
+.jw-odoo-field-invalid {
+    outline: 1px red solid !important;
+}
+
+.supported {
+    color: green;
+}
+.dependent {
+    color: darkorange;
+}
+.not-supported {
+    color: red;
+}

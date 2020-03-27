@@ -164,6 +164,22 @@ describe('core', () => {
                         expect(vNode.type).to.equal(VNodeType.NODE);
                     });
                 });
+                describe('cloneChildrenDeep', () => {
+                    it('should duplicate a VNode', async () => {
+                        const vNode = new VNode();
+                        const vNodeChild = new VNode();
+                        vNode.append(vNodeChild);
+                        const vNodeChildChild = new VNode();
+                        vNodeChild.append(vNodeChildChild);
+                        const nodes = vNode.cloneChildrenDeep();
+                        expect(nodes.length).to.equal(1);
+                        expect(nodes[0]).to.not.equal(vNodeChild);
+                        expect(nodes[0].type).to.equal(VNodeType.NODE);
+                        expect(nodes[0].children.length).to.equal(1);
+                        expect(nodes[0].children[0]).to.not.equal(vNodeChildChild);
+                        expect(nodes[0].children[0].type).to.equal(VNodeType.NODE);
+                    });
+                });
                 describe('text', () => {
                     it('should concat all children CharNodes value', async () => {
                         const root = new VNode();
