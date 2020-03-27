@@ -1,0 +1,216 @@
+<div>
+   <section>
+      <h3>text</h3>
+      <div class="note supported">text is supported.</div>
+      <p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
+      <p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
+      <p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
+   </section>
+   <section>
+      <h3>html</h3>
+      <div class="note supported">html is supported.</div>
+      <div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><div>Content!</div></div>
+      <div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><div>Content!</div></div>
+      <div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><div>Content!</div></div>
+   </section>
+   <section>
+      <h3>integer</h3>
+      <div class="note supported">integer is supported.</div>
+      <p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10</span></p>
+      <p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10</span></p>
+      <p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10</span></p>
+      <h3>float</h3>
+      <div class="note supported">float is supported.</div>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,000.0</span></p>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,000.0</span></p>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,000.0</span></p>
+      <h3>float (with widget: 'duration' and options)</h3>
+      <div class="note not-supported">float fields with widget 'duration' is not supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="duration" data-oe-original="1000.0">1 month 1 week 4 days 16 hours</span></p>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="duration" data-oe-original="1000.0">1 month 1 week 4 days 16 hours</span></p>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="duration" data-oe-original="1000.0">1 month 1 week 4 days 16 hours</span></p>
+      <h3>float (with widget: duration and options)</h3>
+      <div class="note not-supported">float fields with widget 'duration' is not supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="duration" data-oe-original="1000.0">16 minutes 40 seconds</span></p>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="duration" data-oe-original="1000.0">16 minutes 40 seconds</span></p>
+      <p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="duration" data-oe-original="1000.0">16 minutes 40 seconds</span></p>
+      <h3>float (with widget: float_time)</h3>
+      <div class="note not-supported">float fields with widget float_time are not currently supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.completion_time" data-oe-field="completion_time" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float_time">01:00</span></p>
+      <p><span data-oe-expression="odoo_model.completion_time" data-oe-field="completion_time" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float_time">01:00</span></p>
+      <p><span data-oe-expression="odoo_model.completion_time" data-oe-field="completion_time" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float_time">01:00</span></p>
+   </section>
+   <section>
+      <h3>monetary</h3>
+      <div class="note supported">monetary (current currency in €) is supported.</div>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-field="monetary_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="monetary"><span class="oe_currency_value">1,200,000.00</span>&nbsp;€</span></p>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-field="monetary_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="monetary"><span class="oe_currency_value">1,200,000.00</span>&nbsp;€</span></p>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-field="monetary_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="monetary"><span class="oe_currency_value">1,200,000.00</span>&nbsp;€</span></p>
+      <div class="note supported">monetary (current currency in $) is supported.</div>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-field="monetary_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="monetary">$&nbsp;<span class="oe_currency_value">1,200,000.00</span></span></p>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-field="monetary_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="monetary">$&nbsp;<span class="oe_currency_value">1,200,000.00</span></span></p>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-field="monetary_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="monetary">$&nbsp;<span class="oe_currency_value">1,200,000.00</span></span></p>
+      <h3>monetary with special currency</h3>
+      <div class="note not-supported">monetary with special currency are not currently supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-type="monetary" style="white-space: nowrap;">$&nbsp;<span class="oe_currency_value">1,540,080.00</span></span></p>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-type="monetary" style="white-space: nowrap;">$&nbsp;<span class="oe_currency_value">1,540,080.00</span></span></p>
+      <p><span data-oe-expression="odoo_model.monetary_field" data-oe-type="monetary" style="white-space: nowrap;">$&nbsp;<span class="oe_currency_value">1,540,080.00</span></span></p>
+   </section>
+   <section>
+      <h3>many2one</h3>
+      <div class="note dependent">many2one fields depend on layout + integration to be supported.</div>
+      <p><span data-oe-expression="odoo_model.many_one_field" data-oe-field="many_one_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="many2one" data-oe-many2one-id="27" data-oe-many2one-model="res.partner">Azure Interior, Nicole Ford</span></p>
+      <p><span data-oe-expression="odoo_model.many_one_field" data-oe-field="many_one_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="many2one" data-oe-many2one-id="27" data-oe-many2one-model="res.partner">Azure Interior, Nicole Ford</span></p>
+      <p><span data-oe-expression="odoo_model.many_one_field" data-oe-field="many_one_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="many2one" data-oe-many2one-id="27" data-oe-many2one-model="res.partner">Azure Interior, Nicole Ford</span></p>
+      <h3>one2many</h3>
+      <div class="note not-supported">one2many fields fields are not currently supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.on_many_field" data-oe-field="on_many_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="one2many">odoo_module.bar(1, 2)</span></p>
+      <p><span data-oe-expression="odoo_model.on_many_field" data-oe-field="on_many_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="one2many">odoo_module.bar(1, 2)</span></p>
+      <p><span data-oe-expression="odoo_model.on_many_field" data-oe-field="on_many_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="one2many">odoo_module.bar(1, 2)</span></p>
+   <section>
+   </section>
+      <h3>date</h3>
+      <div class="note dependent">All date and datetime fields depend on layout + integration + datepicker widget to be supported.</div>
+      <p><span data-oe-expression="odoo_model.date_field" data-oe-field="date_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="date" data-oe-original="2020-03-24">03/24/2020</span></p>
+      <p><span data-oe-expression="odoo_model.date_field" data-oe-field="date_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="date" data-oe-original="2020-03-24">03/24/2020</span></p>
+      <p><span data-oe-expression="odoo_model.date_field" data-oe-field="date_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="date" data-oe-original="2020-03-24">03/24/2020</span></p>
+      <h3>datetime</h3>
+      <div class="note dependent">All date and datetime fields depend on layout + integration + datepicker widget to be supported.</div>
+      <p><span data-oe-expression="odoo_model.datetime_field" data-oe-field="datetime_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="datetime" data-oe-original="2020-04-01 16:19:12">04/01/2020 16:19:12</span></p>
+      <p><span data-oe-expression="odoo_model.datetime_field" data-oe-field="datetime_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="datetime" data-oe-original="2020-04-01 16:19:12">04/01/2020 16:19:12</span></p>
+      <p><span data-oe-expression="odoo_model.datetime_field" data-oe-field="datetime_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="datetime" data-oe-original="2020-04-01 16:19:12">04/01/2020 16:19:12</span></p>
+      <h3>datetime (with option date_only: 'true', 'format': 'EEEE')</h3>
+      <div class="note dependent">All date and datetime fields depend on layout + integration + datepicker widget to be supported.</div>
+      <p><span data-oe-expression="odoo_model.datetime_field" data-oe-field="datetime_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="datetime" data-oe-original="2020-04-01 16:19:12">Wednesday</span></p>
+      <p><span data-oe-expression="odoo_model.datetime_field" data-oe-field="datetime_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="datetime" data-oe-original="2020-04-01 16:19:12">Wednesday</span></p>
+      <p><span data-oe-expression="odoo_model.datetime_field" data-oe-field="datetime_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="datetime" data-oe-original="2020-04-01 16:19:12">Wednesday</span></p>
+      <h3>datetime (with option: 'time_only': 'true')</h3>
+      <div class="note dependent">All date and datetime fields depend on layout + integration + datepicker widget to be supported.</div>
+      <p><span data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="datetime_field" data-oe-type="datetime" data-oe-expression="odoo_model.datetime_field" data-oe-original="2020-04-01 16:19:12">16:19:12</span></p>
+      <p><span data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="datetime_field" data-oe-type="datetime" data-oe-expression="odoo_model.datetime_field" data-oe-original="2020-04-01 16:19:12">16:19:12</span></p>
+      <p><span data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="datetime_field" data-oe-type="datetime" data-oe-expression="odoo_model.datetime_field" data-oe-original="2020-04-01 16:19:12">16:19:12</span></p>
+   </section>
+   <section>
+      <h3>image</h3>
+      <div class="note dependent">Image fields depend on layout + integration.</div>
+      <p><span data-oe-expression="odoo_model.image_1920" data-oe-field="image_1920" data-oe-model="odoo_module.odoo_model" data-oe-type="image"><img src="http://localhost:8069/web/image/odoo_module.odoo_model/1/image_1920/supername?unique=9cbf122" class="img img-fluid" style="max-width: 60px;                             display: inline-block" alt="supername"></span></p>
+      <p><span data-oe-expression="odoo_model.image_1920" data-oe-field="image_1920" data-oe-model="odoo_module.odoo_model" data-oe-type="image"><img src="http://localhost:8069/web/image/odoo_module.odoo_model/1/image_1920/supername?unique=9cbf122" class="img img-fluid" style="max-width: 60px;                             display: inline-block" alt="supername"></span></p>
+      <p><span data-oe-expression="odoo_model.image_1920" data-oe-field="image_1920" data-oe-model="odoo_module.odoo_model" data-oe-type="image"><img src="http://localhost:8069/web/image/odoo_module.odoo_model/1/image_1920/supername?unique=9cbf122" class="img img-fluid" style="max-width: 60px;                             display: inline-block" alt="supername"></span></p>
+   </section>
+   <section>
+      <h3>contact</h3>
+      <div class="note dependent">Contact fields depend on layout + integration.</div>
+      <div style="border:1px red solid;">
+         <p>
+            partner_field
+            <span data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="many2one" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner">YourCompany</span>
+         </p>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;name&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div>
+                  <span itemprop="name">YourCompany</span>
+               </div>
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+               </div>
+            </address>
+         </h4>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+                  <div class="d-flex align-items-baseline">
+                     <i class="fa fa-map-marker fa-fw" role="img" aria-label="Address" title="Address"></i>
+                     <span class="w-100 o_force_ltr" itemprop="streetAddress">250 Executive Park Blvd, Suite 3400<b>San Francisco CA 94134</b>United States</span>
+                  </div>
+               </div>
+            </address>
+         </h4>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;phone&quot;, &quot;mobile&quot;, &quot;email&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+                  <div><i class="fa fa-phone fa-fw" role="img" aria-label="Phone" title="Phone"></i> <span class="o_force_ltr" itemprop="telephone">+1 (650) 691-3277 </span></div>
+                  <div><i class="fa fa-envelope fa-fw" role="img" aria-label="Email" title="Email"></i> <span itemprop="email">info@yourcompany.example.com</span></div>
+               </div>
+            </address>
+         </h4>
+      </div>
+      <div style="border:1px red solid;">
+         <p>
+            partner_field
+            <span data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="many2one" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner">YourCompany</span>
+         </p>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;name&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div>
+                  <span itemprop="name">YourCompany</span>
+               </div>
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+               </div>
+            </address>
+         </h4>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+                  <div class="d-flex align-items-baseline">
+                     <i class="fa fa-map-marker fa-fw" role="img" aria-label="Address" title="Address"></i>
+                     <span class="w-100 o_force_ltr" itemprop="streetAddress">250 Executive Park Blvd, Suite 3400<b>San Francisco CA 94134</b>United States</span>
+                  </div>
+               </div>
+            </address>
+         </h4>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;phone&quot;, &quot;mobile&quot;, &quot;email&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+                  <div><i class="fa fa-phone fa-fw" role="img" aria-label="Phone" title="Phone"></i> <span class="o_force_ltr" itemprop="telephone">+1 (650) 691-3277 </span></div>
+                  <div><i class="fa fa-envelope fa-fw" role="img" aria-label="Email" title="Email"></i> <span itemprop="email">info@yourcompany.example.com</span></div>
+               </div>
+            </address>
+         </h4>
+      </div>
+      <div style="border:1px red solid;">
+         <p>
+            partner_field
+            <span data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="many2one" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner">YourCompany</span>
+         </p>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;name&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div>
+                  <span itemprop="name">YourCompany</span>
+               </div>
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+               </div>
+            </address>
+         </h4>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+                  <div class="d-flex align-items-baseline">
+                     <i class="fa fa-map-marker fa-fw" role="img" aria-label="Address" title="Address"></i>
+                     <span class="w-100 o_force_ltr" itemprop="streetAddress">250 Executive Park Blvd, Suite 3400<b>San Francisco CA 94134</b>United States</span>
+                  </div>
+               </div>
+            </address>
+         </h4>
+         <h4 data-oe-model="odoo_module.odoo_model" data-oe-id="1" data-oe-field="partner_id" data-oe-type="contact" data-oe-expression="odoo_model.partner_id" data-oe-many2one-id="1" data-oe-many2one-model="res.partner" data-oe-contact-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;phone&quot;, &quot;mobile&quot;, &quot;email&quot;], &quot;tagName&quot;: &quot;h4&quot;, &quot;expression&quot;: &quot;odoo_model.partner_id&quot;, &quot;type&quot;: &quot;contact&quot;, &quot;inherit_branding&quot;: true, &quot;translate&quot;: false}" class="">
+            <address class="mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+               <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+                  <div><i class="fa fa-phone fa-fw" role="img" aria-label="Phone" title="Phone"></i> <span class="o_force_ltr" itemprop="telephone">+1 (650) 691-3277 </span></div>
+                  <div><i class="fa fa-envelope fa-fw" role="img" aria-label="Email" title="Email"></i> <span itemprop="email">info@yourcompany.example.com</span></div>
+               </div>
+            </address>
+         </h4>
+      </div>
+   </section>
+   <section>
+   <h3>state_selection</h3>
+      <div class="note not-supported">selection are not currently supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.state" data-oe-field="state" data-oe-model="odoo_module.odoo_model" data-oe-type="selection">New</span></p>
+      <p><span data-oe-expression="odoo_model.state" data-oe-field="state" data-oe-model="odoo_module.odoo_model" data-oe-type="selection">New</span></p>
+      <p><span data-oe-expression="odoo_model.state" data-oe-field="state" data-oe-model="odoo_module.odoo_model" data-oe-type="selection">New</span></p>
+      <h3>active</h3>
+      <div class="note not-supported">boolean are not currently supported in Odoo.</div>
+      <p><span data-oe-expression="odoo_model.active" data-oe-field="active" data-oe-model="odoo_module.odoo_model" data-oe-type="boolean">True</span></p>
+      <p><span data-oe-expression="odoo_model.active" data-oe-field="active" data-oe-model="odoo_module.odoo_model" data-oe-type="boolean">True</span></p>
+      <p><span data-oe-expression="odoo_model.active" data-oe-field="active" data-oe-model="odoo_module.odoo_model" data-oe-type="boolean">True</span></p>
+   </section>
+</div>
+

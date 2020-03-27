@@ -38,6 +38,7 @@ import { Dialog } from '../packages/plugin-dialog/src/Dialog';
 
 import template from './basicLayout.xml';
 import './basicLayout.css';
+import { OdooField } from '../packages/plugin-odoo-field/src/OdooField';
 
 export class BasicEditor extends JWEditor {
     constructor() {
@@ -82,6 +83,7 @@ export class BasicEditor extends JWEditor {
                 [BackgroundColor],
                 [Input],
                 [Dialog],
+                [OdooField],
             ],
         });
         this.configure(DomLayout, {
