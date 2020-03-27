@@ -69,7 +69,7 @@ export class TableDomParser extends AbstractParser<Node> {
      * @param domTable
      */
     _getTableDimensions(domTable: HTMLTableElement): [number, number] {
-        const domRows = Array.from(domTable.querySelectorAll('tr'))
+        const domRows = Array.from(domTable.querySelectorAll('tr'));
         const domTableRows = domRows.filter(row => row.closest('table') === domTable);
         let columnCount = 0;
         if (domTableRows.length) {
