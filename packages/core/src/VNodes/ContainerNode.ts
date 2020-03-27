@@ -10,7 +10,7 @@ export class ContainerNode extends VNode {
     readonly childVNodes = [];
 
     //--------------------------------------------------------------------------
-    // Browsing
+    // Browsing children.
     //--------------------------------------------------------------------------
 
     /**
@@ -24,22 +24,16 @@ export class ContainerNode extends VNode {
         });
     }
     /**
-     * See {@link VNode.nthChild}.
-     */
-    nthChild(n: number): VNode {
-        return this.children()[n - 1];
-    }
-    /**
-     * See {@link VNode.length}.
-     */
-    get length(): number {
-        return this.children().length;
-    }
-    /**
      * See {@link VNode.hasChildren}.
      */
     hasChildren(): boolean {
         return this.children().length > 0;
+    }
+    /**
+     * See {@link VNode.nthChild}.
+     */
+    nthChild(n: number): VNode {
+        return this.children()[n - 1];
     }
     /**
      * See {@link VNode.firstChild}.

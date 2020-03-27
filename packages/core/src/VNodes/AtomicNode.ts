@@ -17,7 +17,7 @@ export class AtomicNode extends VNode {
     }
 
     //--------------------------------------------------------------------------
-    // Browsing
+    // Browsing children.
     //--------------------------------------------------------------------------
 
     /**
@@ -45,14 +45,6 @@ export class AtomicNode extends VNode {
      */
     nthChild(n: number): undefined {
         return undefined;
-    }
-    /**
-     * See {@link VNode.length}.
-     *
-     * @return Returns 1 since an atomic node cannot have children.
-     */
-    get length(): 1 {
-        return 1;
     }
     /**
      * See {@link VNode.firstChild}.
@@ -126,7 +118,7 @@ export class AtomicNode extends VNode {
     }
 
     //--------------------------------------------------------------------------
-    // Updating
+    // Updating children.
     //--------------------------------------------------------------------------
 
     /**

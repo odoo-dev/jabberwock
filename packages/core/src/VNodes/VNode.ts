@@ -97,11 +97,41 @@ export abstract class VNode {
     /**
      * Return the length of this VNode.
      */
-    length: number;
+    get length(): number {
+        return this.children().length;
+    }
     /**
-     * Return true if this VNode has children.
+     * Return whether this node is an instance of the given VNode class.
+     *
+     * @param predicate The subclass of VNode to test this node against.
      */
-    abstract hasChildren(): boolean;
+    is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T {
+        if (VNode.isConstructor(predicate)) {
+            return this instanceof predicate;
+        } else {
+            return predicate(this);
+        }
+    }
+    /**
+     * Test this node against the given predicate.
+     *
+     * If the predicate is falsy, return true. If the predicate is a constructor
+     * of a VNode class, return whether this node is an instance of that class.
+     * If the predicate is a standard function, return the result of this
+     * function when called with the node as parameter.
+     *
+     *
+     * @param predicate The predicate to test this node against.
+     */
+    test<T extends VNode>(predicate?: Constructor<T> | Predicate): boolean {
+        if (!predicate) {
+            return true;
+        } else if (VNode.isConstructor(predicate)) {
+            return this.is(predicate);
+        } else {
+            return predicate(this);
+        }
+    }
     /**
      * Return true if this VNode comes before the given VNode in the pre-order
      * traversal.
@@ -146,64 +176,82 @@ export abstract class VNode {
     isAfter(vNode: VNode): boolean {
         return vNode.isBefore(this);
     }
-    /**
-     * Return whether this node is an instance of the given VNode class.
-     *
-     * @param predicate The subclass of VNode to test this node against.
-     */
-    is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T {
-        if (VNode.isConstructor(predicate)) {
-            return this instanceof predicate;
-        } else {
-            return predicate(this);
-        }
-    }
-    /**
-     * Test this node against the given predicate.
-     *
-     * If the predicate is falsy, return true. If the predicate is a constructor
-     * of a VNode class, return whether this node is an instance of that class.
-     * If the predicate is a standard function, return the result of this
-     * function when called with the node as parameter.
-     *
-     *
-     * @param predicate The predicate to test this node against.
-     */
-    test<T extends VNode>(predicate?: Constructor<T> | Predicate): boolean {
-        if (!predicate) {
-            return true;
-        } else if (VNode.isConstructor(predicate)) {
-            return this.is(predicate);
-        } else {
-            return predicate(this);
-        }
-    }
 
     //--------------------------------------------------------------------------
-    // Browsing
+    // Browsing ancestors and siblings.
     //--------------------------------------------------------------------------
 
     /**
-     * Return the children of this VNode which satisfy the given predicate.
+     * Return the closest node from this node that matches the given predicate.
+     * Start with this node then go up the ancestors tree until finding a match.
+     *
+     * @param predicate
      */
-    abstract children<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract children(predicate?: Predicate): VNode[];
+    closest<T extends VNode>(predicate: Predicate<T>): T;
+    closest<T>(predicate: Predicate<T>): VNode;
+    closest<T>(predicate: Predicate<T>): VNode {
+        return this.test(predicate) ? this : this.ancestor(predicate);
+    }
     /**
-     * Return the nth child of this node. The given `n` argument is the 1-based
-     * index of the position of the child inside this node, excluding markers.
+     * Return the first ancestor of this VNode that satisfies the given
+     * predicate.
      *
-     * Examples:
-     * nthChild(1) returns the first (1st) child.
-     * nthChild(2) returns the second (2nd) child.
-     * nthChild(3) returns the second (3rd) child.
-     * nthChild(4) returns the second (4th) child.
-     * ...
-     *
-     * @param n
+     * @param [predicate]
      */
-    abstract nthChild(n: number): VNode;
+    ancestor<T extends VNode>(predicate?: Predicate<T>): T;
+    ancestor<T>(predicate?: Predicate<T>): VNode;
+    ancestor<T>(predicate?: Predicate<T>): VNode {
+        let ancestor = this.parent;
+        while (ancestor && !ancestor.test(predicate)) {
+            ancestor = ancestor.parent;
+        }
+        return ancestor;
+    }
+    /**
+     * Return all ancestors of the current node that satisfy the given
+     * predicate. If no predicate is given return all the ancestors of the
+     * current node.
+     *
+     * @param [predicate]
+     */
+    ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
+    ancestors<T>(predicate?: Predicate<T>): VNode[];
+    ancestors<T>(predicate?: Predicate<T>): VNode[] {
+        const ancestors: VNode[] = [];
+        let parent = this.parent;
+        while (parent) {
+            if (parent.test(predicate)) {
+                ancestors.push(parent);
+            }
+            parent = parent.parent;
+        }
+        return ancestors;
+    }
+    /**
+     * Return the lowest common ancestor between this VNode and the given one.
+     *
+     * @param node
+     */
+    commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
+    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
+    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
+        if (!this.parent) {
+            return;
+        } else if (this.parent === node.parent && this.parent.test(predicate)) {
+            return this.parent;
+        }
+        const thisPath = [this, ...this.ancestors(predicate)];
+        const nodePath = [node, ...node.ancestors(predicate)];
+        let commonAncestor: VNode;
+        while (thisPath[thisPath.length - 1] === nodePath.pop()) {
+            commonAncestor = thisPath.pop();
+        }
+        return commonAncestor;
+    }
     /**
      * Return the siblings of this VNode which satisfy the given predicate.
+     *
+     * @param [predicate]
      */
     siblings<T extends VNode>(predicate?: Predicate<T>): T[];
     siblings<T>(predicate?: Predicate<T>): VNode[];
@@ -244,69 +292,6 @@ export abstract class VNode {
         }
         return adjacents;
     }
-    /**
-     * Return the first ancestor of this VNode that satisfies the given
-     * predicate.
-     *
-     * @param [predicate]
-     */
-    ancestor<T extends VNode>(predicate?: Predicate<T>): T;
-    ancestor<T>(predicate?: Predicate<T>): VNode;
-    ancestor<T>(predicate?: Predicate<T>): VNode {
-        let ancestor = this.parent;
-        while (ancestor && !ancestor.test(predicate)) {
-            ancestor = ancestor.parent;
-        }
-        return ancestor;
-    }
-    /**
-     * Return the first child of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the first child of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract firstChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstChild<T>(predicate?: Predicate<T>): VNode;
-    /**
-     * Return the last child of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the last child of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract lastChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastChild<T>(predicate?: Predicate<T>): VNode;
-    /**
-     * Return the first leaf of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the first leaf of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstLeaf<T>(predicate?: Predicate<T>): VNode;
-    /**
-     * Return the last leaf of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the last leaf of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastLeaf<T>(predicate?: Predicate<T>): VNode;
-    /**
-     * Return the first descendant of this VNode that satisfies the predicate.
-     * If no predicate is given, return the first descendant of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstDescendant<T>(predicate?: Predicate<T>): VNode;
-    /**
-     * Return the last descendant of this VNode that satisfies the predicate.
-     * If no predicate is given, return the last descendant of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastDescendant<T>(predicate?: Predicate<T>): VNode;
     /**
      * Return the previous sibling of this VNode that satisfies the predicate.
      * If no predicate is given, return the previous sibling of this VNode.
@@ -464,67 +449,6 @@ export abstract class VNode {
         }
         return nextSiblings;
     }
-    /**
-     * Return the closest node from this node that matches the given predicate.
-     * Start with this node then go up the ancestors tree until finding a match.
-     *
-     * @param predicate
-     */
-    closest<T extends VNode>(predicate: Predicate<T>): T;
-    closest<T>(predicate: Predicate<T>): VNode;
-    closest<T>(predicate: Predicate<T>): VNode {
-        return this.test(predicate) ? this : this.ancestor(predicate);
-    }
-    /**
-     * Return all ancestors of the current node that satisfy the given
-     * predicate. If no predicate is given return all the ancestors of the
-     * current node.
-     *
-     * @param [predicate]
-     */
-    ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
-    ancestors<T>(predicate?: Predicate<T>): VNode[];
-    ancestors<T>(predicate?: Predicate<T>): VNode[] {
-        const ancestors: VNode[] = [];
-        let parent = this.parent;
-        while (parent) {
-            if (parent.test(predicate)) {
-                ancestors.push(parent);
-            }
-            parent = parent.parent;
-        }
-        return ancestors;
-    }
-    /**
-     * Return all descendants of the current node that satisfy the given
-     * predicate. If no predicate is given return all the ancestors of the
-     * current node.
-     *
-     * @param [predicate]
-     */
-    abstract descendants<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract descendants<T>(predicate?: Predicate<T>): VNode[];
-    /**
-     * Return the lowest common ancestor between this VNode and the given one.
-     *
-     * @param node
-     */
-    commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
-    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
-    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
-        if (!this.parent) {
-            return;
-        } else if (this.parent === node.parent && this.parent.test(predicate)) {
-            return this.parent;
-        }
-        const thisPath = [this, ...this.ancestors(predicate)];
-        const nodePath = [node, ...node.ancestors(predicate)];
-        let commonAncestor: VNode;
-        while (thisPath[thisPath.length - 1] === nodePath.pop()) {
-            commonAncestor = thisPath.pop();
-        }
-        return commonAncestor;
-    }
 
     //--------------------------------------------------------------------------
     // Updating
@@ -553,6 +477,126 @@ export abstract class VNode {
         this.parent.insertAfter(node, this);
     }
     /**
+     * Wrap this node in the given node by inserting the given node at this
+     * node's position in its parent and appending this node to the given node.
+     *
+     * @param node
+     */
+    wrap(node: VNode): void {
+        this.before(node);
+        node.append(this);
+    }
+    /**
+     * Remove this node.
+     */
+    remove(): void {
+        if (this.parent) {
+            this.parent.removeChild(this);
+        }
+    }
+    /**
+     * Remove this node in forward direction. (e.g. `Delete` key)
+     */
+    removeForward(): void {
+        this.remove();
+    }
+    /**
+     * Remove this node in backward direction. (e.g. `Backspace` key)
+     */
+    removeBackward(): void {
+        this.remove();
+    }
+
+    //--------------------------------------------------------------------------
+    // Browsing children. To be implemented by the concrete subclass.
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return the children of this VNode which satisfy the given predicate.
+     */
+    abstract children<T extends VNode>(predicate?: Predicate<T>): T[];
+    abstract children(predicate?: Predicate): VNode[];
+    /**
+     * Return true if this VNode has children.
+     */
+    abstract hasChildren(): boolean;
+    /**
+     * Return the nth child of this node. The given `n` argument is the 1-based
+     * index of the position of the child inside this node, excluding markers.
+     *
+     * Examples:
+     * nthChild(1) returns the first (1st) child.
+     * nthChild(2) returns the second (2nd) child.
+     * nthChild(3) returns the second (3rd) child.
+     * nthChild(4) returns the second (4th) child.
+     * ...
+     *
+     * @param n
+     */
+    abstract nthChild(n: number): VNode;
+    /**
+     * Return the first child of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the first child of this VNode.
+     *
+     * @param [predicate]
+     */
+    abstract firstChild<T extends VNode>(predicate?: Predicate<T>): T;
+    abstract firstChild<T>(predicate?: Predicate<T>): VNode;
+    /**
+     * Return the last child of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the last child of this VNode.
+     *
+     * @param [predicate]
+     */
+    abstract lastChild<T extends VNode>(predicate?: Predicate<T>): T;
+    abstract lastChild<T>(predicate?: Predicate<T>): VNode;
+    /**
+     * Return the first leaf of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the first leaf of this VNode.
+     *
+     * @param [predicate]
+     */
+    abstract firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
+    abstract firstLeaf<T>(predicate?: Predicate<T>): VNode;
+    /**
+     * Return the last leaf of this VNode that satisfies the given predicate.
+     * If no predicate is given, return the last leaf of this VNode.
+     *
+     * @param [predicate]
+     */
+    abstract lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
+    abstract lastLeaf<T>(predicate?: Predicate<T>): VNode;
+    /**
+     * Return all descendants of the current node that satisfy the given
+     * predicate. If no predicate is given return all the ancestors of the
+     * current node.
+     *
+     * @param [predicate]
+     */
+    abstract descendants<T extends VNode>(predicate?: Predicate<T>): T[];
+    abstract descendants<T>(predicate?: Predicate<T>): VNode[];
+    /**
+     * Return the first descendant of this VNode that satisfies the predicate.
+     * If no predicate is given, return the first descendant of this VNode.
+     *
+     * @param [predicate]
+     */
+    abstract firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
+    abstract firstDescendant<T>(predicate?: Predicate<T>): VNode;
+    /**
+     * Return the last descendant of this VNode that satisfies the predicate.
+     * If no predicate is given, return the last descendant of this VNode.
+     *
+     * @param [predicate]
+     */
+    abstract lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
+    abstract lastDescendant<T>(predicate?: Predicate<T>): VNode;
+
+    //--------------------------------------------------------------------------
+    // Updating children. To be implemented by the concrete subclass.
+    //--------------------------------------------------------------------------
+
+    /**
      * Prepend a child to this node.
      */
     abstract prepend(...children: VNode[]): void;
@@ -576,35 +620,19 @@ export abstract class VNode {
      */
     abstract insertAfter(node: VNode, reference: VNode): void;
     /**
-     * Remove all children of this VNode.
-     */
-    abstract empty(): void;
-    /**
-     * Remove this node.
-     */
-    remove(): void {
-        if (this.parent) {
-            this.parent.removeChild(this);
-        }
-    }
-    /**
      * Remove the given child from this VNode.
      *
      * @param child
      */
     abstract removeChild(child: VNode): void;
     /**
-     * Remove this node in forward direction. (e.g. `Delete` key)
+     * Remove all children of this VNode.
      */
-    removeForward(): void {
-        this.remove();
-    }
+    abstract empty(): void;
     /**
-     * Remove this node in backward direction. (e.g. `Backspace` key)
+     * Unwrap this node by moving its children before it then removing it.
      */
-    removeBackward(): void {
-        this.remove();
-    }
+    abstract unwrap(): void;
     /**
      * Split this node at the given child, moving it and its next siblings into
      * a duplicate of this VNode that is inserted after the original. Return the
@@ -619,20 +647,10 @@ export abstract class VNode {
      * @param newContainer the new container for this node's children
      */
     abstract mergeWith(newContainer: VNode): void;
-    /**
-     * Wrap this node in the given node by inserting the given node at this
-     * node's position in its parent and appending this node to the given node.
-     *
-     * @param node
-     */
-    wrap(node: VNode): void {
-        this.before(node);
-        node.append(this);
-    }
-    /**
-     * Unwrap this node by moving its children before it then removing it.
-     */
-    abstract unwrap(): void;
+
+    //--------------------------------------------------------------------------
+    // Private.
+    //--------------------------------------------------------------------------
 
     /**
      * Return a convenient string representation of this node and its
