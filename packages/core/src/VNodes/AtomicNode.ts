@@ -7,10 +7,6 @@ import { AtomicityError } from '../../../utils/src/errors';
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class AtomicNode extends VNode {
-    static test(node: VNode): boolean {
-        return node && node.test(this);
-    }
-
     get childVNodes(): [] {
         return [];
     }
