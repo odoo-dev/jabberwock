@@ -32,6 +32,7 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
 
     domMap = new DomMap();
     editable: HTMLElement;
+    beforeRenderInEditable: Function[] = [];
 
     async start(): Promise<void> {
         const target = this.configuration.target;
@@ -261,6 +262,10 @@ export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     }
 
     async _renderInEditable(): Promise<void> {
+        for (const callback of this.beforeRenderInEditable) {
+            await callback();
+        }
+
         this.editable.innerHTML = '';
 
         this.domMap.set(this.editor.vDocument.root, this.editable);

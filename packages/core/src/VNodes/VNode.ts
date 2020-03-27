@@ -1,4 +1,5 @@
 import { Constructor, nodeLength } from '../../../utils/src/utils';
+import { VEvent } from '../../../utils/src/VEvent';
 import { Children } from './Children';
 
 export enum RelativePosition {
@@ -28,7 +29,15 @@ interface VNodeConstructor {
 export interface VNode {
     constructor: VNodeConstructor & this;
 }
-export class VNode {
+
+/**
+ * The base class for all custom nodes.
+ *
+ * VNode temporarily extends VEvent to retrieve informations about the change
+ * made in its tree. This will be unnecessary when the memory branch will be
+ * merged. Hence, this extends will disappear.
+ */
+export class VNode extends VEvent<VNode> {
     static test(node: VNode): boolean {
         return node && node.test(this);
     }
@@ -43,6 +52,7 @@ export class VNode {
         <T>(predicate?: Predicate<T>): VNode[];
     } = new Children([]);
     constructor() {
+        super();
         this.type = VNodeType.NODE;
         id++;
     }
@@ -102,6 +112,21 @@ export class VNode {
         const clone = new this.constructor();
         clone.attributes = { ...this.attributes };
         return clone;
+    }
+
+    /**
+     * Clone all the children recursively.
+     */
+    cloneChildrenDeep(): VNode[] {
+        return this.children
+            .filter(node => node.type !== VNodeType.MARKER)
+            .map(child => {
+                const clonedNode = child.clone();
+                const clonedChildren = child.cloneChildrenDeep();
+                clonedNode.empty();
+                clonedNode.append(...clonedChildren);
+                return clonedNode;
+            });
     }
 
     //--------------------------------------------------------------------------
@@ -648,6 +673,9 @@ export class VNode {
         for (const child of children) {
             this._insertAtIndex(child, 0);
         }
+        if (!children.every(child => child.type === 'markerNode')) {
+            this.fire('childList', { children });
+        }
     }
     /**
      * Append a child to this VNode.
@@ -655,6 +683,9 @@ export class VNode {
     append(...children: VNode[]): void {
         for (const child of children) {
             this._insertAtIndex(child, this.children.length);
+        }
+        if (!children.every(child => child.type === VNodeType.MARKER)) {
+            this.fire('childList', { children });
         }
     }
     /**
@@ -670,6 +701,9 @@ export class VNode {
             throw new Error('The given VNode is not a child of this VNode');
         }
         this._insertAtIndex(node, index);
+        if (!(node.type === VNodeType.MARKER)) {
+            this.fire('childList', { children: [node] });
+        }
     }
     /**
      * Insert the given node after the given reference (a child of this VNode).
@@ -683,13 +717,16 @@ export class VNode {
             throw new Error('The given VNode is not a child of this VNode');
         }
         this._insertAtIndex(node, index + 1);
+        if (!(node.type === VNodeType.MARKER)) {
+            this.fire('childList', { children: [node] });
+        }
     }
     /**
      * Remove all children of this VNode.
      */
     empty(): void {
-        for (const child of this.children) {
-            child.remove();
+        while (this.children.length) {
+            this.children[0].remove();
         }
     }
     /**
@@ -860,6 +897,9 @@ export class VNode {
      */
     _removeAtIndex(index: number): void {
         const child = this.children.splice(index, 1)[0];
+        if (!(child.type === VNodeType.MARKER)) {
+            this.fire('childList');
+        }
         child.parent = undefined;
     }
     /**

@@ -25,6 +25,8 @@ import { Metadata } from '../packages/plugin-metadata/src/Metadata';
 import { Renderer } from '../packages/plugin-renderer/src/Renderer';
 import { Keymap } from '../packages/plugin-keymap/src/Keymap';
 import { Align } from '../packages/plugin-align/src/Align';
+import { OdooField } from '../packages/plugin-odoo-field/src/OdooField';
+import { OdooReactiveRegistry } from '../packages/plugin-odoo-reactive-registry/src/OdooReactiveRegistry';
 
 export class BasicEditor extends JWEditor {
     constructor() {
@@ -58,6 +60,8 @@ export class BasicEditor extends JWEditor {
                 [Table],
                 [Metadata],
                 [Align],
+                [OdooReactiveRegistry],
+                [OdooField],
             ],
         });
     }
