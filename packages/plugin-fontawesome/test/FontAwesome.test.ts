@@ -1,5 +1,5 @@
 import { describePlugin } from '../../utils/src/testUtils';
-import { Fontawesome } from '../src/Fontawesome';
+import { FontAwesome } from '../src/FontAwesome';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
@@ -9,7 +9,7 @@ const deleteForward = async (editor: JWEditor): Promise<void> =>
 const deleteBackward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Core>('deleteBackward');
 
-describePlugin(Fontawesome, testEditor => {
+describePlugin(FontAwesome, testEditor => {
     describe('parse/render', () => {
         it('should parse an old-school fontawesome', async () => {
             await testEditor(BasicEditor, {

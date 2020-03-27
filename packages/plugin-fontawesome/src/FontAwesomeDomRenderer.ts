@@ -1,15 +1,15 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
-import { FontawesomeNode } from './FontawesomeNode';
+import { FontAwesomeNode } from './FontAwesomeNode';
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
 
 const zeroWidthSpace = '\u200b';
 
-export class FontawesomeDomRenderer extends AbstractRenderer<Node[]> {
+export class FontAwesomeDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
     engine: DomRenderingEngine;
-    predicate = FontawesomeNode;
+    predicate = FontAwesomeNode;
 
-    async render(node: FontawesomeNode): Promise<Node[]> {
+    async render(node: FontAwesomeNode): Promise<Node[]> {
         const fontawesome = document.createElement(node.htmlTag);
         this.engine.renderAttributes(node.attributes, fontawesome);
         // Surround the fontawesome with two invisible characters so the
