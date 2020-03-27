@@ -15,6 +15,7 @@ export interface TestEditorSpec {
     beforeStart?: (editor: JWEditor) => void | Promise<void>;
     stepFunction?: (editor: JWEditor) => void | Promise<void>;
     debug?: boolean;
+    noStop?: boolean;
 }
 
 export type EditorTestSuite = (
@@ -79,7 +80,9 @@ export async function testEditor(
     const container = document.createElement('jw-container-test');
     const editor = initSpec(Editor, spec, container);
     await testSpec(editor, spec);
-    container.remove();
+    if (!spec.noStop) {
+        container.remove();
+    }
 }
 
 /**
@@ -107,7 +110,9 @@ async function testPlugin(
     const editor = initSpec(Editor, spec, container);
     editor.load(Plugin);
     await testSpec(editor, spec);
-    container.remove();
+    if (!spec.noStop) {
+        container.remove();
+    }
 }
 
 /**
@@ -159,7 +164,9 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
         const domPlugin = editor.plugins.get(Dom);
         expect(domPlugin.editable.innerHTML).to.deep.equal(spec.contentAfter);
     }
-    await editor.stop();
+    if (!spec.noStop) {
+        await editor.stop();
+    }
 }
 
 /**
