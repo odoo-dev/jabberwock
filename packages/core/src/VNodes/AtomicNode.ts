@@ -1,5 +1,4 @@
 import { VNode, Predicate } from './VNode';
-import { ChildNode } from './ChildNode';
 import { AtomicityError } from '../../../utils/src/errors';
 
 /**
@@ -7,7 +6,7 @@ import { AtomicityError } from '../../../utils/src/errors';
  * supposed to take parameters but that are unused in the case of atomic nodes.
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-export class AtomicNode extends ChildNode {
+export class AtomicNode extends VNode {
     static test(node: VNode): boolean {
         return node && node.test(this);
     }

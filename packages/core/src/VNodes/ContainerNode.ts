@@ -1,8 +1,7 @@
 import { VNode, Predicate, isLeaf } from './VNode';
-import { ChildNode } from './ChildNode';
 import { ChildError } from '../../../utils/src/errors';
 
-export class ContainerNode extends ChildNode {
+export class ContainerNode extends VNode {
     static test(node: VNode): boolean {
         return node && node.test(this);
     }
