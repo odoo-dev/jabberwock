@@ -5,7 +5,7 @@ import JWEditor from '../../core/src/JWEditor';
 export type RenderingIdentifier = string;
 
 export interface Renderer<T = {}> {
-    predicate?: Predicate<boolean | VNode>;
+    predicate?: Predicate;
     render: (node: VNode) => Promise<T>;
 }
 

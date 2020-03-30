@@ -12,7 +12,7 @@ export interface CheckingContext extends Context {
 
 export interface Contextual {
     context?: Context;
-    selector?: Predicate<VNode | boolean>[];
+    selector?: Predicate[];
     check?: (context: CheckingContext) => boolean;
 }
 

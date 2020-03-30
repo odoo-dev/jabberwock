@@ -108,10 +108,9 @@ export class VRange {
     /**
      * Return a list of all nodes that are fully selected by this range.
      */
-    selectedNodes(predicate?: Predicate): VNode[];
     selectedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
-    selectedNodes<T>(predicate?: Predicate<T>): VNode[];
-    selectedNodes<T>(predicate?: Predicate<T>): VNode[] {
+    selectedNodes(predicate?: Predicate): VNode[];
+    selectedNodes(predicate?: Predicate): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
         const bound = this.end.next();
@@ -139,10 +138,9 @@ export class VRange {
      * Otherwise, the targeted nodes are the ones encountered by traversing the
      * tree from the start to end of this range.
      */
-    targetedNodes(predicate?: Predicate): VNode[];
     targetedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
-    targetedNodes<T>(predicate?: Predicate<T>): VNode[];
-    targetedNodes<T>(predicate?: Predicate<T>): VNode[] {
+    targetedNodes(predicate?: Predicate): VNode[];
+    targetedNodes(predicate?: Predicate): VNode[] {
         const targetedNodes: VNode[] = [];
 
         const closestStartAncestor = this.start.ancestor(predicate);
@@ -156,10 +154,9 @@ export class VRange {
     /**
      * Return a list of all the nodes traversed from start to end of this range.
      */
-    traversedNodes(predicate?: Predicate): VNode[];
     traversedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
-    traversedNodes<T>(predicate?: Predicate<T>): VNode[];
-    traversedNodes<T>(predicate?: Predicate<T>): VNode[] {
+    traversedNodes(predicate?: Predicate): VNode[];
+    traversedNodes(predicate?: Predicate): VNode[] {
         const traversedNodes = [];
         let node = this.start;
         const bound = this.end.next();
@@ -282,7 +279,7 @@ export class VRange {
      *
      * @param predicate
      */
-    split<T>(predicate?: Predicate<T>): VNode[] {
+    split(predicate?: Predicate): VNode[] {
         const ancestor = this.startContainer.commonAncestor(this.endContainer);
         const closest = ancestor.closest(predicate);
         const container = closest ? closest.parent : ancestor;
