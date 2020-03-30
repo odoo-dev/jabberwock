@@ -730,6 +730,10 @@ describe('Plugin: DevTools', () => {
                 'unmergeCells',
                 'align',
                 'applyPreStyle',
+                'colorText',
+                'uncolorText',
+                'colorBackground',
+                'uncolorBackground',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {
