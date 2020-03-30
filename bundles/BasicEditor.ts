@@ -26,6 +26,8 @@ import { Renderer } from '../packages/plugin-renderer/src/Renderer';
 import { Keymap } from '../packages/plugin-keymap/src/Keymap';
 import { Align } from '../packages/plugin-align/src/Align';
 import { Pre } from '../packages/plugin-pre/src/Pre';
+import { TextColor } from '../packages/plugin-textcolor/src/TextColor';
+import { BackgroundColor } from '../packages/plugin-backgroundcolor/src/BackgroundColor';
 
 export class BasicEditor extends JWEditor {
     constructor() {
@@ -60,6 +62,8 @@ export class BasicEditor extends JWEditor {
                 [Metadata],
                 [Align],
                 [Pre],
+                [TextColor],
+                [BackgroundColor],
             ],
         });
     }
