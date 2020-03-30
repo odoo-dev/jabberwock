@@ -1,10 +1,10 @@
-import { describePlugin } from "../../utils/src/testUtils";
-import { Pre } from "../src/Pre";
-import { BasicEditor } from "../../../bundles/BasicEditor";
-import JWEditor from "../../core/src/JWEditor";
-import { Core } from "../../core/src/Core";
-import { LineBreak } from "../../plugin-linebreak/src/LineBreak";
-import { Heading } from "../../plugin-heading/src/Heading";
+import { describePlugin } from '../../utils/src/testUtils';
+import { Pre } from '../src/Pre';
+import { BasicEditor } from '../../../bundles/BasicEditor';
+import JWEditor from '../../core/src/JWEditor';
+import { Core } from '../../core/src/Core';
+import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
+import { Heading } from '../../plugin-heading/src/Heading';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Core>('deleteForward');
@@ -13,11 +13,11 @@ const deleteBackward = async (editor: JWEditor): Promise<void> =>
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<LineBreak>('insertLineBreak');
 const applyPreStyle = async (editor: JWEditor): Promise<void> =>
-        await editor.execCommand<Pre>('applyPreStyle');
+    await editor.execCommand<Pre>('applyPreStyle');
 const applyHeadingStyle = (level: number) => {
     return async (editor: JWEditor): Promise<void> =>
         await editor.execCommand<Heading>('applyHeadingStyle', { level: level });
-}
+};
 
 describePlugin(Pre, testEditor => {
     describe('parse/render', () => {
@@ -282,7 +282,8 @@ describePlugin(Pre, testEditor => {
                     stepFunction: applyHeadingStyle(0),
                     // TODO: the space needs not be rendered as non-breakable
                     // space. The \n should turn into a <br> when in a <p>.
-                    contentAfter: '<p>&nbsp;&nbsp; &nbsp; a\nb[]c\n &nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p>',
+                    contentAfter:
+                        '<p>&nbsp;&nbsp; &nbsp; a\nb[]c\n &nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p>',
                 });
             });
             it('should turn a pre with space and newlines into a paragraph (character selected)', async () => {
@@ -291,7 +292,8 @@ describePlugin(Pre, testEditor => {
                     stepFunction: applyHeadingStyle(0),
                     // TODO: the space needs not be rendered as non-breakable
                     // space. The \n should turn into a <br> when in a <p>.
-                    contentAfter: '<p>&nbsp;&nbsp; &nbsp; a\n[b]\n &nbsp; &nbsp; c &nbsp; &nbsp;&nbsp;</p>',
+                    contentAfter:
+                        '<p>&nbsp;&nbsp; &nbsp; a\n[b]\n &nbsp; &nbsp; c &nbsp; &nbsp;&nbsp;</p>',
                 });
             });
             it('should turn a heading 1, a pre with space and newlines, and a heading 2 into three paragraphs', async () => {
@@ -300,7 +302,8 @@ describePlugin(Pre, testEditor => {
                     stepFunction: applyHeadingStyle(0),
                     // TODO: the space needs not be rendered as non-breakable
                     // space. The \n should turn into a <br> when in a <p>.
-                    contentAfter: '<p>a[b</p><p>&nbsp;&nbsp; &nbsp; c\n &nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p><p>e]f</p>',
+                    contentAfter:
+                        '<p>a[b</p><p>&nbsp;&nbsp; &nbsp; c\n &nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p><p>e]f</p>',
                 });
             });
         });
