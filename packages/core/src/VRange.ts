@@ -1,4 +1,4 @@
-import { VNode, RelativePosition, Point, isLeaf } from './VNodes/VNode';
+import { VNode, RelativePosition, Point, AbstractNode } from './VNodes/VNode';
 import { Predicate } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
 import { Constructor } from '../../utils/src/utils';
@@ -58,7 +58,7 @@ export class VRange {
         endNode: VNode = startNode,
         endPosition: RelativePosition = RelativePosition.AFTER,
     ): [Point, Point] {
-        if (startPosition instanceof VNode) {
+        if (startPosition instanceof AbstractNode) {
             endNode = startPosition;
             startPosition = RelativePosition.BEFORE;
         }

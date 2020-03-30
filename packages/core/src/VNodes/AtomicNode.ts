@@ -1,4 +1,4 @@
-import { VNode, Predicate } from './VNode';
+import { VNode, Predicate, AbstractNode } from './VNode';
 import { AtomicityError } from '../../../utils/src/errors';
 
 /**
@@ -6,8 +6,8 @@ import { AtomicityError } from '../../../utils/src/errors';
  * supposed to take parameters but that are unused in the case of atomic nodes.
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-export class AtomicNode extends VNode {
-    get childVNodes(): [] {
+export class AtomicNode extends AbstractNode {
+    get childVNodes(): VNode[] {
         return [];
     }
 
@@ -16,17 +16,17 @@ export class AtomicNode extends VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * See {@link VNode.children}.
+     * See {@link AbstractNode.children}.
      *
      * @return Returns an empty array since an atomic node cannot have children.
      */
-    children<T extends VNode>(predicate?: Predicate<T>): [];
-    children(predicate?: Predicate): [];
-    children<T>(predicate?: Predicate<T>): [] {
+    children<T extends VNode>(predicate?: Predicate<T>): VNode[];
+    children(predicate?: Predicate): VNode[];
+    children<T>(predicate?: Predicate<T>): VNode[] {
         return [];
     }
     /**
-     * See {@link VNode.hasChildren}.
+     * See {@link AbstractNode.hasChildren}.
      *
      * @return Returns `false` since an atomic node cannot have children.
      */
@@ -34,7 +34,7 @@ export class AtomicNode extends VNode {
         return false;
     }
     /**
-     * See {@link VNode.nthChild}.
+     * See {@link AbstractNode.nthChild}.
      *
      * @return Returns `undefined` since an atomic node cannot have children.
      */
@@ -42,7 +42,7 @@ export class AtomicNode extends VNode {
         return undefined;
     }
     /**
-     * See {@link VNode.firstChild}.
+     * See {@link AbstractNode.firstChild}.
      *
      * @return Returns `undefined` since an atomic node cannot have children.
      */
@@ -52,7 +52,7 @@ export class AtomicNode extends VNode {
         return undefined;
     }
     /**
-     * See {@link VNode.lastChild}.
+     * See {@link AbstractNode.lastChild}.
      *
      * @return Returns `undefined` since an atomic node cannot have children.
      */
@@ -62,7 +62,7 @@ export class AtomicNode extends VNode {
         return undefined;
     }
     /**
-     * See {@link VNode.firstLeaf}.
+     * See {@link AbstractNode.firstLeaf}.
      *
      * @return Returns `this` since an atomic node cannot have children.
      */
@@ -72,7 +72,7 @@ export class AtomicNode extends VNode {
         return this;
     }
     /**
-     * See {@link VNode.lastLeaf}.
+     * See {@link AbstractNode.lastLeaf}.
      *
      * @return Returns `this` since an atomic node cannot have children.
      */
@@ -82,7 +82,7 @@ export class AtomicNode extends VNode {
         return this;
     }
     /**
-     * See {@link VNode.firstDescendant}.
+     * See {@link AbstractNode.firstDescendant}.
      *
      * @return Returns `undefined` since an atomic node cannot have children.
      */
@@ -92,7 +92,7 @@ export class AtomicNode extends VNode {
         return undefined;
     }
     /**
-     * See {@link VNode.lastDescendant}.
+     * See {@link AbstractNode.lastDescendant}.
      *
      * @return Returns `undefined` since an atomic node cannot have children.
      */
@@ -102,13 +102,13 @@ export class AtomicNode extends VNode {
         return undefined;
     }
     /**
-     * See {@link VNode.descendants}.
+     * See {@link AbstractNode.descendants}.
      *
      * @return Returns an empty array since an atomic node cannot have children.
      */
-    descendants<T extends VNode>(predicate?: Predicate<T>): [];
-    descendants<T>(predicate?: Predicate<T>): [];
-    descendants<T>(predicate?: Predicate<T>): [] {
+    descendants<T extends VNode>(predicate?: Predicate<T>): VNode[];
+    descendants<T>(predicate?: Predicate<T>): VNode[];
+    descendants<T>(predicate?: Predicate<T>): VNode[] {
         return [];
     }
 
@@ -117,7 +117,7 @@ export class AtomicNode extends VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * See {@link VNode.prepend}.
+     * See {@link AbstractNode.prepend}.
      *
      * @throws AtomicityError An atomic node cannot have children.
      */
@@ -125,7 +125,7 @@ export class AtomicNode extends VNode {
         throw new AtomicityError(this);
     }
     /**
-     * See {@link VNode.prepend}.
+     * See {@link AbstractNode.prepend}.
      *
      * @throws AtomicityError An atomic node cannot have children.
      */
@@ -134,7 +134,7 @@ export class AtomicNode extends VNode {
     }
     /**
    /**
-     * See {@link VNode.insertBefore}.
+     * See {@link AbstractNode.insertBefore}.
      *
      * @throws AtomicityError An atomic node cannot have children.
      */
@@ -142,7 +142,7 @@ export class AtomicNode extends VNode {
         throw new AtomicityError(this);
     }
     /**
-     * See {@link VNode.insertAfter}.
+     * See {@link AbstractNode.insertAfter}.
      *
      * @throws AtomicityError An atomic node cannot have children.
      */
@@ -150,13 +150,13 @@ export class AtomicNode extends VNode {
         throw new AtomicityError(this);
     }
     /**
-     * See {@link VNode.empty}.
+     * See {@link AbstractNode.empty}.
      */
     empty(): void {
         return;
     }
     /**
-     * See {@link VNode.removeChild}.
+     * See {@link AbstractNode.removeChild}.
      *
      * @throws AtomicityError An atomic node cannot have children.
      */
@@ -164,7 +164,7 @@ export class AtomicNode extends VNode {
         throw new AtomicityError(this);
     }
     /**
-     * See {@link VNode.splitAt}.
+     * See {@link AbstractNode.splitAt}.
      *
      * @throws AtomicityError An atomic node cannot be split.
      */
@@ -172,13 +172,13 @@ export class AtomicNode extends VNode {
         throw new AtomicityError(this);
     }
     /**
-     * See {@link VNode.mergeWith}.
+     * See {@link AbstractNode.mergeWith}.
      */
     mergeWith(newContainer: VNode): void {
         return;
     }
     /**
-     * See {@link VNode.unwrap}.
+     * See {@link AbstractNode.unwrap}.
      */
     unwrap(): void {
         return;

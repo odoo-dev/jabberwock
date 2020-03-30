@@ -1,5 +1,5 @@
 import { VRange } from './VRange';
-import { VNode, RelativePosition } from './VNodes/VNode';
+import { VNode, RelativePosition, AbstractNode } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
 
 export const ANCHOR_CHAR = '[';
@@ -91,7 +91,7 @@ export class VSelection {
         focusNode: VNode = anchorNode,
         focusPosition: RelativePosition = RelativePosition.AFTER,
     ): void {
-        if (anchorPosition instanceof VNode) {
+        if (anchorPosition instanceof AbstractNode) {
             focusNode = anchorPosition;
             anchorPosition = RelativePosition.BEFORE;
         }

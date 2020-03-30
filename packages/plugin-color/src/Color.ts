@@ -2,6 +2,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { getStyle, setStyle, removeStyle } from '../../utils/src/utils';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
@@ -31,11 +32,11 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
     hasColor(node: VNode): boolean;
     hasColor(color: string, node: VNode): boolean;
     hasColor(color: string | VNode, node?: VNode): boolean {
-        if (color instanceof VNode) {
+        if (color instanceof AbstractNode) {
             node = color;
         }
         const nodeBackgroundColor = getStyle(node, this.styleName);
-        if (color instanceof VNode) {
+        if (color instanceof AbstractNode) {
             return !!nodeBackgroundColor;
         } else {
             return nodeBackgroundColor === color;
