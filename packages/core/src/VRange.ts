@@ -1,7 +1,8 @@
-import { VNode, RelativePosition, Point } from './VNodes/VNode';
+import { VNode, RelativePosition, Point, isLeaf } from './VNodes/VNode';
 import { Predicate } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
 import { Constructor } from '../../utils/src/utils';
+import { FragmentNode } from './VNodes/FragmentNode';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -114,8 +115,18 @@ export class VRange {
         const bound = this.end.next();
         const endContainers = this.end.ancestors();
         while ((node = node.next()) && node !== bound) {
-            if (!endContainers.includes(node) && node.test(predicate)) {
-                selectedNodes.push(node);
+            if (!endContainers.includes(node)) {
+                let selectedNode = node;
+                while (!selectedNode?.test(FragmentNode) && selectedNode?.test(predicate)) {
+                    selectedNodes.push(selectedNode);
+                    // Find the next ancestor whose children are all selected
+                    // and add it to the list.
+                    selectedNode = selectedNode.ancestor(ancestor => {
+                        return ancestor.children().every(child => {
+                            return selectedNodes.includes(child);
+                        });
+                    });
+                }
             }
         }
         return selectedNodes;
@@ -312,8 +323,9 @@ export class VRange {
      * nodes between start and end.
      */
     empty(): void {
-        // Remove selected nodes.
-        for (const node of this.selectedNodes()) {
+        // Remove selected nodes without touching the start range's ancestors.
+        const startAncestors = this.start.ancestors();
+        for (const node of this.selectedNodes(node => !startAncestors.includes(node))) {
             node.remove();
         }
         // Collapse the range by merging nodes between start and end.
