@@ -12,7 +12,7 @@ export enum RelativePosition {
 export type VNode = AbstractNode & (ContainerNode | AtomicNode);
 
 export type Typeguard<T extends VNode> = (node: VNode) => node is T;
-export type Predicate<T = boolean> = T extends VNode
+export type Predicate<T = VNode | boolean> = T extends VNode
     ? Constructor<T> | Typeguard<T>
     : (node: VNode) => boolean;
 

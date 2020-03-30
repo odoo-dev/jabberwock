@@ -4,7 +4,7 @@ import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 
 export abstract class AbstractRenderer<T> implements Renderer<T> {
     static id: RenderingIdentifier;
-    predicate?: Predicate<boolean | VNode>;
+    predicate?: Predicate;
     engine: RenderingEngine<T>;
     super: Renderer<T>;
     _renderChildMutex: Map<VNode, Promise<T>> = new Map();

@@ -23,7 +23,7 @@ export class AtomicNode extends AbstractNode {
      */
     children<T extends VNode>(predicate?: Predicate<T>): VNode[];
     children(predicate?: Predicate): VNode[];
-    children<T>(predicate?: Predicate<T>): VNode[] {
+    children(predicate?: Predicate): VNode[] {
         return [];
     }
     /**
@@ -48,8 +48,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns `undefined` since an atomic node cannot have children.
      */
     firstChild<T extends VNode>(predicate?: Predicate<T>): undefined;
-    firstChild<T>(predicate?: Predicate<T>): undefined;
-    firstChild<T>(predicate?: Predicate<T>): undefined {
+    firstChild(predicate?: Predicate): undefined;
+    firstChild(predicate?: Predicate): undefined {
         return undefined;
     }
     /**
@@ -58,8 +58,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns `undefined` since an atomic node cannot have children.
      */
     lastChild<T extends VNode>(predicate?: Predicate<T>): undefined;
-    lastChild<T>(predicate?: Predicate<T>): undefined;
-    lastChild<T>(predicate?: Predicate<T>): undefined {
+    lastChild(predicate?: Predicate): undefined;
+    lastChild(predicate?: Predicate): undefined {
         return undefined;
     }
     /**
@@ -68,8 +68,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns `this` since an atomic node cannot have children.
      */
     firstLeaf<T extends VNode>(predicate?: Predicate<T>): this;
-    firstLeaf<T>(predicate?: Predicate<T>): this;
-    firstLeaf<T>(predicate?: Predicate<T>): this {
+    firstLeaf(predicate?: Predicate): this;
+    firstLeaf(predicate?: Predicate): this {
         return this;
     }
     /**
@@ -78,8 +78,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns `this` since an atomic node cannot have children.
      */
     lastLeaf<T extends VNode>(predicate?: Predicate<T>): this;
-    lastLeaf<T>(predicate?: Predicate<T>): this;
-    lastLeaf<T>(predicate?: Predicate<T>): this {
+    lastLeaf(predicate?: Predicate): this;
+    lastLeaf(predicate?: Predicate): this {
         return this;
     }
     /**
@@ -88,8 +88,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns `undefined` since an atomic node cannot have children.
      */
     firstDescendant<T extends VNode>(predicate?: Predicate<T>): undefined;
-    firstDescendant<T>(predicate?: Predicate<T>): undefined;
-    firstDescendant<T>(predicate?: Predicate<T>): undefined {
+    firstDescendant(predicate?: Predicate): undefined;
+    firstDescendant(predicate?: Predicate): undefined {
         return undefined;
     }
     /**
@@ -98,8 +98,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns `undefined` since an atomic node cannot have children.
      */
     lastDescendant<T extends VNode>(predicate?: Predicate<T>): undefined;
-    lastDescendant<T>(predicate?: Predicate<T>): undefined;
-    lastDescendant<T>(predicate?: Predicate<T>): undefined {
+    lastDescendant(predicate?: Predicate): undefined;
+    lastDescendant(predicate?: Predicate): undefined {
         return undefined;
     }
     /**
@@ -108,8 +108,8 @@ export class AtomicNode extends AbstractNode {
      * @return Returns an empty array since an atomic node cannot have children.
      */
     descendants<T extends VNode>(predicate?: Predicate<T>): VNode[];
-    descendants<T>(predicate?: Predicate<T>): VNode[];
-    descendants<T>(predicate?: Predicate<T>): VNode[] {
+    descendants(predicate?: Predicate): VNode[];
+    descendants(predicate?: Predicate): VNode[] {
         return [];
     }
 

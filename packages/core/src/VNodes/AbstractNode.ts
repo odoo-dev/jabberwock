@@ -1,5 +1,7 @@
 import { VNode, RelativePosition, Predicate, Typeguard, isLeaf } from './VNode';
 import { Constructor, nodeLength } from '../../../utils/src/utils';
+import { ContainerNode } from './ContainerNode';
+import { AtomicNode } from './AtomicNode';
 
 let id = 0;
 export abstract class AbstractNode {
@@ -14,9 +16,9 @@ export abstract class AbstractNode {
      *
      * @param predicate The predicate to check.
      */
-    static isConstructor<T extends VNode>(
-        predicate: Constructor<T> | Predicate,
-    ): predicate is Constructor<T> {
+    static isConstructor(
+        predicate: Predicate,
+    ): predicate is Constructor<ContainerNode> | Constructor<AtomicNode> {
         return predicate.prototype instanceof AbstractNode;
     }
 
@@ -78,7 +80,9 @@ export abstract class AbstractNode {
      *
      * @param predicate The subclass of VNode to test this node against.
      */
-    is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T {
+    is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T;
+    is(predicate: Predicate): false;
+    is(predicate: Predicate): boolean {
         if (AbstractNode.isConstructor(predicate)) {
             return this instanceof predicate;
         } else {
@@ -96,11 +100,11 @@ export abstract class AbstractNode {
      *
      * @param predicate The predicate to test this node against.
      */
-    test<T extends VNode>(predicate?: Constructor<T> | Predicate): boolean {
+    test(predicate?: Predicate): boolean {
         if (!predicate) {
             return true;
         } else if (AbstractNode.isConstructor(predicate)) {
-            return this.is(predicate);
+            return this instanceof predicate;
         } else {
             return predicate(this as VNode);
         }
@@ -161,8 +165,8 @@ export abstract class AbstractNode {
      * @param predicate
      */
     closest<T extends VNode>(predicate: Predicate<T>): T;
-    closest<T>(predicate: Predicate<T>): VNode;
-    closest<T>(predicate: Predicate<T>): VNode {
+    closest(predicate: Predicate): VNode;
+    closest(predicate: Predicate): VNode {
         if (this.test(predicate)) {
             return this as VNode;
         } else {
@@ -176,8 +180,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     ancestor<T extends VNode>(predicate?: Predicate<T>): T;
-    ancestor<T>(predicate?: Predicate<T>): VNode;
-    ancestor<T>(predicate?: Predicate<T>): VNode {
+    ancestor(predicate?: Predicate): VNode;
+    ancestor(predicate?: Predicate): VNode {
         let ancestor = this.parent;
         while (ancestor && !ancestor.test(predicate)) {
             ancestor = ancestor.parent;
@@ -192,8 +196,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
-    ancestors<T>(predicate?: Predicate<T>): VNode[];
-    ancestors<T>(predicate?: Predicate<T>): VNode[] {
+    ancestors(predicate?: Predicate): VNode[];
+    ancestors(predicate?: Predicate): VNode[] {
         const ancestors: VNode[] = [];
         let parent = this.parent;
         while (parent) {
@@ -210,8 +214,8 @@ export abstract class AbstractNode {
      * @param node
      */
     commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
-    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode;
-    commonAncestor<T>(node: VNode, predicate?: Predicate<T>): VNode {
+    commonAncestor(node: VNode, predicate?: Predicate): VNode;
+    commonAncestor(node: VNode, predicate?: Predicate): VNode {
         if (!this.parent) {
             return;
         } else if (this.parent === node.parent && this.parent.test(predicate)) {
@@ -231,8 +235,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     siblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    siblings<T>(predicate?: Predicate<T>): VNode[];
-    siblings<T>(predicate?: Predicate<T>): VNode[] {
+    siblings(predicate?: Predicate): VNode[];
+    siblings(predicate?: Predicate): VNode[] {
         const siblings: VNode[] = [];
         let sibling: VNode = this.previousSibling();
         while (sibling) {
@@ -254,8 +258,8 @@ export abstract class AbstractNode {
      * Return the nodes adjacent to this VNode that satisfy the given predicate.
      */
     adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
-    adjacents<T>(predicate?: Predicate<T>): VNode[];
-    adjacents<T>(predicate?: Predicate<T>): VNode[] {
+    adjacents(predicate?: Predicate): VNode[];
+    adjacents(predicate?: Predicate): VNode[] {
         const adjacents: VNode[] = [];
         let sibling: VNode = this.previousSibling();
         while (sibling && sibling.test(predicate)) {
@@ -276,8 +280,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    previousSibling<T>(predicate?: Predicate<T>): VNode;
-    previousSibling<T>(predicate?: Predicate<T>): VNode {
+    previousSibling(predicate?: Predicate): VNode;
+    previousSibling(predicate?: Predicate): VNode {
         if (!this.parent) return;
         const index = this.parent.childVNodes.indexOf(this as VNode);
         let sibling = this.parent.childVNodes[index - 1];
@@ -294,8 +298,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    nextSibling<T>(predicate?: Predicate<T>): VNode;
-    nextSibling<T>(predicate?: Predicate<T>): VNode {
+    nextSibling(predicate?: Predicate): VNode;
+    nextSibling(predicate?: Predicate): VNode {
         if (!this.parent) return;
         const index = this.parent.childVNodes.indexOf(this as VNode);
         let sibling = this.parent.childVNodes[index + 1];
@@ -313,8 +317,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     previous<T extends VNode>(predicate?: Predicate<T>): T;
-    previous<T>(predicate?: Predicate<T>): VNode;
-    previous<T>(predicate?: Predicate<T>): VNode {
+    previous(predicate?: Predicate): VNode;
+    previous(predicate?: Predicate): VNode {
         let previous = this.previousSibling();
         if (previous) {
             // The previous node is the last leaf of the previous sibling.
@@ -336,8 +340,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     next<T extends VNode>(predicate?: Predicate<T>): T;
-    next<T>(predicate?: Predicate<T>): VNode;
-    next<T>(predicate?: Predicate<T>): VNode {
+    next(predicate?: Predicate): VNode;
+    next(predicate?: Predicate): VNode {
         // The node after node is its first child.
         let next = this.firstChild();
         if (!next) {
@@ -366,8 +370,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     previousLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    previousLeaf<T>(predicate?: Predicate<T>): VNode;
-    previousLeaf<T>(predicate?: Predicate<T>): VNode {
+    previousLeaf(predicate?: Predicate): VNode;
+    previousLeaf(predicate?: Predicate): VNode {
         return this.previous((node: VNode): boolean => {
             return isLeaf(node) && node.test(predicate);
         });
@@ -380,8 +384,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     nextLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    nextLeaf<T>(predicate?: Predicate<T>): VNode;
-    nextLeaf<T>(predicate?: Predicate<T>): VNode {
+    nextLeaf(predicate?: Predicate): VNode;
+    nextLeaf(predicate?: Predicate): VNode {
         return this.next((node: VNode): boolean => {
             return isLeaf(node) && node.test(predicate);
         });
@@ -394,8 +398,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     previousSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    previousSiblings<T>(predicate?: Predicate<T>): VNode[];
-    previousSiblings<T>(predicate?: Predicate<T>): VNode[] {
+    previousSiblings(predicate?: Predicate): VNode[];
+    previousSiblings(predicate?: Predicate): VNode[] {
         const previousSiblings: VNode[] = [];
         let sibling = this.previousSibling();
         while (sibling) {
@@ -414,8 +418,8 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     nextSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    nextSiblings<T>(predicate?: Predicate<T>): VNode[];
-    nextSiblings<T>(predicate?: Predicate<T>): VNode[] {
+    nextSiblings(predicate?: Predicate): VNode[];
+    nextSiblings(predicate?: Predicate): VNode[] {
         const nextSiblings: VNode[] = [];
         let sibling = this.nextSibling();
         while (sibling) {
@@ -518,7 +522,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract firstChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstChild<T>(predicate?: Predicate<T>): VNode;
+    abstract firstChild(predicate?: Predicate): VNode;
     /**
      * Return the last child of this VNode that satisfies the given predicate.
      * If no predicate is given, return the last child of this VNode.
@@ -526,7 +530,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract lastChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastChild<T>(predicate?: Predicate<T>): VNode;
+    abstract lastChild(predicate?: Predicate): VNode;
     /**
      * Return the first leaf of this VNode that satisfies the given predicate.
      * If no predicate is given, return the first leaf of this VNode.
@@ -534,7 +538,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstLeaf<T>(predicate?: Predicate<T>): VNode;
+    abstract firstLeaf(predicate?: Predicate): VNode;
     /**
      * Return the last leaf of this VNode that satisfies the given predicate.
      * If no predicate is given, return the last leaf of this VNode.
@@ -542,7 +546,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastLeaf<T>(predicate?: Predicate<T>): VNode;
+    abstract lastLeaf(predicate?: Predicate): VNode;
     /**
      * Return all descendants of the current node that satisfy the given
      * predicate. If no predicate is given return all the ancestors of the
@@ -551,7 +555,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract descendants<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract descendants<T>(predicate?: Predicate<T>): VNode[];
+    abstract descendants(predicate?: Predicate): VNode[];
     /**
      * Return the first descendant of this VNode that satisfies the predicate.
      * If no predicate is given, return the first descendant of this VNode.
@@ -559,7 +563,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstDescendant<T>(predicate?: Predicate<T>): VNode;
+    abstract firstDescendant(predicate?: Predicate): VNode;
     /**
      * Return the last descendant of this VNode that satisfies the predicate.
      * If no predicate is given, return the last descendant of this VNode.
@@ -567,7 +571,7 @@ export abstract class AbstractNode {
      * @param [predicate]
      */
     abstract lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastDescendant<T>(predicate?: Predicate<T>): VNode;
+    abstract lastDescendant(predicate?: Predicate): VNode;
 
     //--------------------------------------------------------------------------
     // Updating children. To be implemented by the concrete subclass.
