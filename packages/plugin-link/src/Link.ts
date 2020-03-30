@@ -6,7 +6,7 @@ import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from './LinkFormat';
 import { Char } from '../../plugin-char/src/Char';
 import { Formats } from '../../plugin-inline/src/Formats';
-import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
+import { VNode, Typeguard, AbstractNode } from '../../core/src/VNodes/VNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
@@ -20,11 +20,11 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     static isLink(node: VNode): node is InlineNode;
     static isLink(link: LinkFormat, node: VNode): node is InlineNode;
     static isLink(link: LinkFormat | VNode, node?: VNode): node is InlineNode {
-        if (link instanceof VNode) {
+        if (link instanceof AbstractNode) {
             node = link;
         }
         const format = node.is(InlineNode) && node.formats.get(LinkFormat);
-        return link instanceof VNode ? !!format : format === link;
+        return link instanceof AbstractNode ? !!format : format === link;
     }
     static dependencies = [Inline];
     commands = {

@@ -1,7 +1,7 @@
-import { VNode, Predicate, isLeaf } from './VNode';
+import { VNode, Predicate, isLeaf, AbstractNode } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
 
-export class ContainerNode extends VNode {
+export class ContainerNode extends AbstractNode {
     readonly childVNodes = [];
 
     //--------------------------------------------------------------------------
@@ -9,7 +9,7 @@ export class ContainerNode extends VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * See {@link VNode.children}.
+     * See {@link AbstractNode.children}.
      */
     children<T extends VNode>(predicate?: Predicate<T>): T[];
     children(predicate?: Predicate): VNode[];
@@ -19,19 +19,19 @@ export class ContainerNode extends VNode {
         });
     }
     /**
-     * See {@link VNode.hasChildren}.
+     * See {@link AbstractNode.hasChildren}.
      */
     hasChildren(): boolean {
         return this.children().length > 0;
     }
     /**
-     * See {@link VNode.nthChild}.
+     * See {@link AbstractNode.nthChild}.
      */
     nthChild(n: number): VNode {
         return this.children()[n - 1];
     }
     /**
-     * See {@link VNode.firstChild}.
+     * See {@link AbstractNode.firstChild}.
      */
     firstChild<T extends VNode>(predicate?: Predicate<T>): T;
     firstChild<T>(predicate?: Predicate<T>): VNode;
@@ -43,7 +43,7 @@ export class ContainerNode extends VNode {
         return child;
     }
     /**
-     * See {@link VNode.lastChild}.
+     * See {@link AbstractNode.lastChild}.
      */
     lastChild<T extends VNode>(predicate?: Predicate<T>): T;
     lastChild<T>(predicate?: Predicate<T>): VNode;
@@ -55,7 +55,7 @@ export class ContainerNode extends VNode {
         return child;
     }
     /**
-     * See {@link VNode.firstLeaf}.
+     * See {@link AbstractNode.firstLeaf}.
      */
     firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     firstLeaf<T>(predicate?: Predicate<T>): VNode;
@@ -70,7 +70,7 @@ export class ContainerNode extends VNode {
         }
     }
     /**
-     * See {@link VNode.lastLeaf}.
+     * See {@link AbstractNode.lastLeaf}.
      */
     lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     lastLeaf<T>(predicate?: Predicate<T>): VNode;
@@ -85,7 +85,7 @@ export class ContainerNode extends VNode {
         }
     }
     /**
-     * See {@link VNode.firstDescendant}.
+     * See {@link AbstractNode.firstDescendant}.
      */
     firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
     firstDescendant<T>(predicate?: Predicate<T>): VNode;
@@ -97,7 +97,7 @@ export class ContainerNode extends VNode {
         return firstDescendant;
     }
     /**
-     * See {@link VNode.lastDescendant}.
+     * See {@link AbstractNode.lastDescendant}.
      */
     lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
     lastDescendant<T>(predicate?: Predicate<T>): VNode;
@@ -112,7 +112,7 @@ export class ContainerNode extends VNode {
         return lastDescendant;
     }
     /**
-     * See {@link VNode.descendants}.
+     * See {@link AbstractNode.descendants}.
      */
     descendants<T extends VNode>(predicate?: Predicate<T>): T[];
     descendants<T>(predicate?: Predicate<T>): VNode[];
@@ -133,7 +133,7 @@ export class ContainerNode extends VNode {
     //--------------------------------------------------------------------------
 
     /**
-     * See {@link VNode.prepend}.
+     * See {@link AbstractNode.prepend}.
      */
     prepend(...children: VNode[]): void {
         for (const child of children) {
@@ -141,7 +141,7 @@ export class ContainerNode extends VNode {
         }
     }
     /**
-     * See {@link VNode.append}.
+     * See {@link AbstractNode.append}.
      */
     append(...children: VNode[]): void {
         for (const child of children) {
@@ -149,7 +149,7 @@ export class ContainerNode extends VNode {
         }
     }
     /**
-     * See {@link VNode.insertBefore}.
+     * See {@link AbstractNode.insertBefore}.
      */
     insertBefore(node: VNode, reference: VNode): void {
         const index = this.childVNodes.indexOf(reference);
@@ -159,7 +159,7 @@ export class ContainerNode extends VNode {
         this._insertAtIndex(node, index);
     }
     /**
-     * See {@link VNode.insertAfter}.
+     * See {@link AbstractNode.insertAfter}.
      */
     insertAfter(node: VNode, reference: VNode): void {
         const index = this.childVNodes.indexOf(reference);
@@ -169,7 +169,7 @@ export class ContainerNode extends VNode {
         this._insertAtIndex(node, index + 1);
     }
     /**
-     * See {@link VNode.empty}.
+     * See {@link AbstractNode.empty}.
      */
     empty(): void {
         for (const child of this.childVNodes) {
@@ -177,7 +177,7 @@ export class ContainerNode extends VNode {
         }
     }
     /**
-     * See {@link VNode.removeChild}.
+     * See {@link AbstractNode.removeChild}.
      */
     removeChild(child: VNode): void {
         const index = this.childVNodes.indexOf(child);
@@ -187,7 +187,7 @@ export class ContainerNode extends VNode {
         this._removeAtIndex(index);
     }
     /**
-     * See {@link VNode.splitAt}.
+     * See {@link AbstractNode.splitAt}.
      */
     splitAt(child: VNode): this {
         if (child.parent !== this) {
@@ -205,7 +205,7 @@ export class ContainerNode extends VNode {
         return duplicate;
     }
     /**
-     * See {@link VNode.mergeWith}.
+     * See {@link AbstractNode.mergeWith}.
      */
     mergeWith(newContainer: VNode): void {
         if (newContainer !== this) {
@@ -214,7 +214,7 @@ export class ContainerNode extends VNode {
         }
     }
     /**
-     * See {@link VNode.unwrap}.
+     * See {@link AbstractNode.unwrap}.
      */
     unwrap(): void {
         for (const child of this.childVNodes.slice()) {

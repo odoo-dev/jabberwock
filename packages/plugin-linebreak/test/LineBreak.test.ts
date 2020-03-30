@@ -6,7 +6,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreak } from '../src/LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
-import { VNode } from '../../core/src/VNodes/VNode';
+import { VNode, AbstractNode } from '../../core/src/VNodes/VNode';
 import { LineBreakDomParser } from '../src/LineBreakDomParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
@@ -42,7 +42,7 @@ describePlugin(LineBreak, testEditor => {
             p.appendChild(br2);
             const engine = new DomParsingEngine(new JWEditor());
             const lineBreak = (await new LineBreakDomParser(engine).parse(br1))[0] as LineBreakNode;
-            expect(lineBreak instanceof VNode).to.be.true;
+            expect(lineBreak instanceof AbstractNode).to.be.true;
             expect(lineBreak.is(AtomicNode)).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {

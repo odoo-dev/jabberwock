@@ -1,10 +1,14 @@
 import { Constructor, nodeLength } from '../../../utils/src/utils';
+import { ContainerNode } from './ContainerNode';
+import { AtomicNode } from './AtomicNode';
 
 export enum RelativePosition {
     BEFORE = 'BEFORE',
     AFTER = 'AFTER',
     INSIDE = 'INSIDE',
 }
+
+export type VNode = AbstractNode & (ContainerNode | AtomicNode);
 
 export type Typeguard<T extends VNode> = (node: VNode) => node is T;
 export type Predicate<T = boolean> = T extends VNode
@@ -14,14 +18,7 @@ export type Predicate<T = boolean> = T extends VNode
 export type Point = [VNode, RelativePosition];
 
 let id = 0;
-interface VNodeConstructor {
-    new <T extends Constructor<VNode>>(...args: ConstructorParameters<T>): this;
-    atomic: boolean;
-}
-export interface VNode {
-    constructor: VNodeConstructor & this;
-}
-export abstract class VNode {
+export abstract class AbstractNode {
     readonly id = id;
     tangible = true;
     breakable = true;
@@ -34,9 +31,9 @@ export abstract class VNode {
      * @param predicate The predicate to check.
      */
     static isConstructor<T extends VNode>(
-        predicate: Constructor<T> | Predicate | typeof VNode,
+        predicate: Constructor<T> | Predicate | typeof AbstractNode,
     ): predicate is Constructor<T> {
-        return predicate.prototype instanceof VNode || predicate === VNode;
+        return predicate.prototype instanceof AbstractNode || predicate === AbstractNode;
     }
 
     constructor() {
@@ -63,7 +60,7 @@ export abstract class VNode {
      * @param domNode DOM node corresponding to this VNode
      * @param offset The offset of the location in the given domNode
      */
-    locate(domNode: Node, offset: number): [VNode, RelativePosition] {
+    locate(domNode: Node, offset: number): [this, RelativePosition] {
         // Position `BEFORE` is preferred over `AFTER`, unless the offset
         // overflows the children list, in which case `AFTER` is needed.
         let position = RelativePosition.BEFORE;
@@ -98,10 +95,10 @@ export abstract class VNode {
      * @param predicate The subclass of VNode to test this node against.
      */
     is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T {
-        if (VNode.isConstructor(predicate)) {
+        if (AbstractNode.isConstructor(predicate)) {
             return this instanceof predicate;
         } else {
-            return predicate(this);
+            return predicate(this as VNode);
         }
     }
     /**
@@ -118,10 +115,10 @@ export abstract class VNode {
     test<T extends VNode>(predicate?: Constructor<T> | Predicate): boolean {
         if (!predicate) {
             return true;
-        } else if (VNode.isConstructor(predicate)) {
+        } else if (AbstractNode.isConstructor(predicate)) {
             return this.is(predicate);
         } else {
-            return predicate(this);
+            return predicate(this as VNode);
         }
     }
     /**
@@ -131,7 +128,7 @@ export abstract class VNode {
      * @param vNode
      */
     isBefore(vNode: VNode): boolean {
-        const thisPath = [this, ...this.ancestors()];
+        const thisPath = [this as VNode, ...this.ancestors()];
         const nodePath = [vNode, ...vNode.ancestors()];
         // Find the last distinct ancestors in the path to the root.
         let thisAncestor: VNode;
@@ -166,7 +163,7 @@ export abstract class VNode {
      * @param vNode
      */
     isAfter(vNode: VNode): boolean {
-        return vNode.isBefore(this);
+        return vNode.isBefore(this as VNode);
     }
 
     //--------------------------------------------------------------------------
@@ -182,7 +179,7 @@ export abstract class VNode {
     closest<T extends VNode>(predicate: Predicate<T>): T;
     closest<T>(predicate: Predicate<T>): VNode;
     closest<T>(predicate: Predicate<T>): VNode {
-        return this.test(predicate) ? this : this.ancestor(predicate);
+        return this.test(predicate) ? (this as VNode) : this.ancestor(predicate);
     }
     /**
      * Return the first ancestor of this VNode that satisfies the given
@@ -232,7 +229,7 @@ export abstract class VNode {
         } else if (this.parent === node.parent && this.parent.test(predicate)) {
             return this.parent;
         }
-        const thisPath = [this, ...this.ancestors(predicate)];
+        const thisPath = [this as VNode, ...this.ancestors(predicate)];
         const nodePath = [node, ...node.ancestors(predicate)];
         let commonAncestor: VNode;
         while (thisPath[thisPath.length - 1] === nodePath.pop()) {
@@ -294,7 +291,7 @@ export abstract class VNode {
     previousSibling<T>(predicate?: Predicate<T>): VNode;
     previousSibling<T>(predicate?: Predicate<T>): VNode {
         if (!this.parent) return;
-        const index = this.parent.childVNodes.indexOf(this);
+        const index = this.parent.childVNodes.indexOf(this as VNode);
         let sibling = this.parent.childVNodes[index - 1];
         // Skip ignored siblings and those failing the predicate test.
         while (sibling && !(sibling.tangible && sibling.test(predicate))) {
@@ -312,7 +309,7 @@ export abstract class VNode {
     nextSibling<T>(predicate?: Predicate<T>): VNode;
     nextSibling<T>(predicate?: Predicate<T>): VNode {
         if (!this.parent) return;
-        const index = this.parent.childVNodes.indexOf(this);
+        const index = this.parent.childVNodes.indexOf(this as VNode);
         let sibling = this.parent.childVNodes[index + 1];
         // Skip ignored siblings and those failing the predicate test.
         while (sibling && !(sibling.tangible && sibling.test(predicate))) {
@@ -455,7 +452,7 @@ export abstract class VNode {
         if (!this.parent) {
             throw 'Cannot insert a VNode before a VNode with no parent.';
         }
-        this.parent.insertBefore(node, this);
+        this.parent.insertBefore(node, this as VNode);
     }
     /**
      * Insert the given VNode after this VNode.
@@ -466,7 +463,7 @@ export abstract class VNode {
         if (!this.parent) {
             throw 'Cannot insert a VNode after a VNode with no parent.';
         }
-        this.parent.insertAfter(node, this);
+        this.parent.insertAfter(node, this as VNode);
     }
     /**
      * Wrap this node in the given node by inserting the given node at this
@@ -476,14 +473,14 @@ export abstract class VNode {
      */
     wrap(node: VNode): void {
         this.before(node);
-        node.append(this);
+        node.append(this as VNode);
     }
     /**
      * Remove this node.
      */
     remove(): void {
         if (this.parent) {
-            this.parent.removeChild(this);
+            this.parent.removeChild(this as VNode);
         }
     }
     /**
@@ -658,6 +655,9 @@ export abstract class VNode {
         });
         return __repr;
     }
+}
+export interface AbstractNode {
+    constructor: new <T extends Constructor<VNode>>(...args: ConstructorParameters<T>) => this;
 }
 
 /**
