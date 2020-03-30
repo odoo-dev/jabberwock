@@ -1,4 +1,5 @@
-import { VNode, Predicate, AbstractNode } from './VNode';
+import { AbstractNode } from './AbstractNode';
+import { VNode, Predicate } from './VNode';
 import { AtomicityError } from '../../../utils/src/errors';
 
 /**

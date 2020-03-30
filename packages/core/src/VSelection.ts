@@ -1,6 +1,7 @@
 import { VRange } from './VRange';
-import { VNode, RelativePosition, AbstractNode } from './VNodes/VNode';
+import { VNode, RelativePosition } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
+import { AbstractNode } from './VNodes/AbstractNode';
 
 export const ANCHOR_CHAR = '[';
 export const FOCUS_CHAR = ']';

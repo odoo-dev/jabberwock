@@ -6,10 +6,10 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreak } from '../src/LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
-import { VNode, AbstractNode } from '../../core/src/VNodes/VNode';
 import { LineBreakDomParser } from '../src/LineBreakDomParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<LineBreak>('insertLineBreak');
