@@ -1,9 +1,10 @@
-import { VNode, RelativePosition, Point, AbstractNode } from './VNodes/VNode';
+import { VNode, RelativePosition, Point } from './VNodes/VNode';
 import { Predicate } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
 import { Constructor } from '../../utils/src/utils';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContainerNode } from './VNodes/ContainerNode';
+import { AbstractNode } from './VNodes/AbstractNode';
 
 export class VRange {
     readonly start = new MarkerNode();
