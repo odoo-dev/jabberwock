@@ -8,7 +8,7 @@ import JWEditor from '../../core/src/JWEditor';
 const applyHeadingStyle = (level: number) => {
     return async (editor: JWEditor): Promise<void> =>
         await editor.execCommand<Heading>('applyHeadingStyle', { level: level });
-}
+};
 
 describePlugin(Heading, testEditor => {
     describe('HeadingNode', () => {

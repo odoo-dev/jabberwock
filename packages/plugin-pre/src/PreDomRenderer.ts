@@ -14,7 +14,7 @@ export class PreDomRenderer extends AbstractRenderer<Node[]> {
         const pre = document.createElement('pre');
         this.engine.renderAttributes(node.attributes, pre);
         for (const child of node.children()) {
-            let domChildren = await this.renderChild(child);
+            const domChildren = await this.renderChild(child);
             // TODO: prevent CharNode from rendering spaces as nbsp.
             pre.append(...this._brToNewline(domChildren));
         }
