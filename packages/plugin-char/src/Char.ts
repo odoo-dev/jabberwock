@@ -9,6 +9,7 @@ import { Formats } from '../../plugin-inline/src/Formats';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { setStyles } from '../../utils/src/utils';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
@@ -47,6 +48,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const text = params.text;
         const inline = this.editor.plugins.get(Inline);
         const formats = inline.getCurrentFormats(range);
+        const styles = inline.getCurrentStyles(range);
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
@@ -55,8 +57,9 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const characters = text.split('');
         characters.forEach(char => {
             const vNode = new CharNode(char, formats.clone());
+            setStyles(vNode, styles);
             range.start.before(vNode);
         });
-        inline.resetFormatCache();
+        inline.resetCache();
     }
 }
