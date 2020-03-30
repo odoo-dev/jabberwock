@@ -17,15 +17,17 @@ interface DomConfig extends JWPluginConfig {
     target?: HTMLElement;
 }
 
+const defaultConfiguration = {
+    autoFocus: false,
+}
+
 export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     static dependencies = [Parser, Renderer];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsingEngines: [DomParsingEngine],
         renderingEngines: [DomRenderingEngine],
     };
-    configuration = this.configuration || {
-        autoFocus: false,
-    };
+    configuration = { ...defaultConfiguration, ...this.configuration };
     commandHooks = {
         '*': this._renderInEditable,
     };
