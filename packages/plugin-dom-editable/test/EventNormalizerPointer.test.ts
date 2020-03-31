@@ -24,6 +24,9 @@ describe('utils', () => {
 
         describe('pointer', () => {
             describe('set range', () => {
+                afterEach(() => {
+                    ctx.editable.style.padding = '';
+                });
                 it('click outside do nothing (ubuntu chrome)', async () => {
                     ctx.editable.innerHTML = '<div>abc</div>';
                     await nextTick();
@@ -63,8 +66,8 @@ describe('utils', () => {
                     expect(ctx.eventBatches).to.deep.equal([]);
                 });
                 it('click on border set range at the begin (ubuntu chrome)', async () => {
-                    ctx.editable.innerHTML =
-                        '<div style="position: absolute; left: 250px;">abc</div>';
+                    ctx.editable.style.padding = '50px';
+                    ctx.editable.innerHTML = '<div>abc</div>';
                     await nextTick();
                     ctx.eventBatches.splice(0);
                     triggerEvent(ctx.editable, 'mousedown', {
@@ -97,9 +100,9 @@ describe('utils', () => {
                         {
                             type: 'setSelection',
                             domSelection: {
-                                anchorNode: ctx.editable,
+                                anchorNode: ctx.editable.firstChild.firstChild,
                                 anchorOffset: 0,
-                                focusNode: ctx.editable,
+                                focusNode: ctx.editable.firstChild.firstChild,
                                 focusOffset: 0,
                                 direction: Direction.FORWARD,
                             },
@@ -191,20 +194,32 @@ describe('utils', () => {
                 it('mouse setRange contenteditable false', async () => {
                     ctx.editable.innerHTML = 'abc<i contentEditable="false">test</i>def';
                     const text = ctx.editable.firstChild;
-                    const i = ctx.editable.childNodes[1];
+                    const i = ctx.editable.childNodes[1] as HTMLElement;
+                    const pos = i.getBoundingClientRect();
+
                     await nextTick();
                     ctx.eventBatches.splice(0);
 
                     triggerEvent(i, 'mousedown', {
                         button: 2,
                         detail: 1,
-                        clientX: 40,
-                        clientY: 25,
+                        clientX: pos.x + 5,
+                        clientY: pos.y + 5,
                     });
                     setSelection(text, 3, text, 3);
-                    triggerEvent(i, 'click', { button: 2, detail: 0, clientX: 50, clientY: 5 });
+                    triggerEvent(i, 'click', {
+                        button: 2,
+                        detail: 0,
+                        clientX: pos.x + 5,
+                        clientY: pos.y + 5,
+                    });
                     setSelection(text, 3, i.firstChild, 2);
-                    triggerEvent(i, 'mouseup', { button: 2, detail: 0, clientX: 50, clientY: 5 });
+                    triggerEvent(i, 'mouseup', {
+                        button: 2,
+                        detail: 0,
+                        clientX: pos.x + 5,
+                        clientY: pos.y + 5,
+                    });
                     await nextTick();
                     await nextTick();
 
@@ -399,29 +414,30 @@ describe('utils', () => {
                 });
                 it('mouse setRange on input (ubuntu chrome)', async () => {
                     ctx.editable.innerHTML = '<div>ab<input/>cd</div>';
-                    const p = ctx.editable.firstChild;
-                    const text1 = p.firstChild;
-                    const input = p.childNodes[1];
+                    const div = ctx.editable.firstChild;
+                    const text1 = div.firstChild;
+                    const input = div.childNodes[1] as HTMLInputElement;
+                    const pos = input.getBoundingClientRect();
                     await nextTick();
                     ctx.eventBatches.splice(0);
                     triggerEvent(input, 'mousedown', {
                         button: 2,
                         detail: 1,
-                        clientX: 30,
-                        clientY: 10,
+                        clientX: pos.x + 5,
+                        clientY: pos.y + 5,
                     });
                     setSelection(text1, 1, text1, 1);
                     triggerEvent(input, 'click', {
                         button: 2,
                         detail: 0,
-                        clientX: 30,
-                        clientY: 10,
+                        clientX: pos.x + 5,
+                        clientY: pos.y + 5,
                     });
                     triggerEvent(input, 'mouseup', {
                         button: 2,
                         detail: 0,
-                        clientX: 30,
-                        clientY: 10,
+                        clientX: pos.x + 5,
+                        clientY: pos.y + 5,
                     });
                     await nextTick();
                     await nextTick();

@@ -392,7 +392,17 @@ export async function nextTickFrame(): Promise<void> {
  * @param options
  */
 export async function click(el: Element, options?: MouseEventInit): Promise<void> {
-    options = Object.assign({ bubbles: true }, options);
+    el.scrollIntoView();
+    await nextTickFrame();
+    const pos = el.getBoundingClientRect();
+    options = Object.assign(
+        {
+            bubbles: true,
+            clientX: pos.left + 1,
+            clientY: pos.top + 1,
+        },
+        options,
+    );
     el.dispatchEvent(new MouseEvent('mousedown', options));
     await nextTickFrame();
     el.dispatchEvent(new MouseEvent('mouseup', options));

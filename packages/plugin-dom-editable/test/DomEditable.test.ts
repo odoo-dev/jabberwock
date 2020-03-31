@@ -10,7 +10,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { renderTextualSelection } from '../../utils/src/testUtils';
 
-async function selectAll(container: HTMLElement): Promise<void> {
+async function selectAllWithKeyA(container: HTMLElement): Promise<void> {
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
         key: 'Control',
         code: 'ControlLeft',
@@ -44,7 +44,6 @@ describe('DomEditable', () => {
         document.body.appendChild(container);
         section = document.createElement('section');
         container.appendChild(section);
-        section.id = 'editable';
     });
     afterEach(() => {
         document.body.removeChild(container);
@@ -62,7 +61,7 @@ describe('DomEditable', () => {
                 '<jw-editor><jw-editable contenteditable="true" style="display: block;"><br></jw-editable></jw-editor>',
             );
             await editor.stop();
-            expect(container.innerHTML).to.equal('<section id="editable"></section>');
+            expect(container.innerHTML).to.equal('<section></section>');
         });
         it('should use the target of DomLayout as editable', async () => {
             const editor = new JWEditor();
@@ -71,10 +70,10 @@ describe('DomEditable', () => {
             editor.configure(DomLayout, { location: [section, 'replace'] });
             await editor.start();
             expect(container.innerHTML).to.equal(
-                '<jw-editor><section contenteditable="true" id="editable"><br></section></jw-editor>',
+                '<jw-editor><section contenteditable="true"><br></section></jw-editor>',
             );
             await editor.stop();
-            expect(container.innerHTML).to.equal('<section id="editable"></section>');
+            expect(container.innerHTML).to.equal('<section></section>');
         });
         it('should automatically set the range in the editable', async () => {
             const editor = new JWEditor();
@@ -156,7 +155,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('insertParagraphBreak');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>ab</div><div>cd</div>' +
                         '</section></jw-editor>',
                 );
@@ -201,7 +200,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('insertLineBreak,insert');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>ab<br>cd</div>' +
                         '</section></jw-editor>',
                 );
@@ -250,7 +249,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('insertText');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>abocd</div>' +
                         '</section></jw-editor>',
                 );
@@ -268,10 +267,10 @@ describe('DomEditable', () => {
                 });
             });
             it('select all: ctrl + a', async () => {
-                await selectAll(container);
+                await selectAllWithKeyA(container);
                 expect(commandNames.join(',')).to.equal('selectAll');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>abcd</div>' +
                         '</section></jw-editor>',
                 );
@@ -304,7 +303,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('setSelection');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>abcd</div>' +
                         '</section></jw-editor>',
                 );
@@ -323,7 +322,6 @@ describe('DomEditable', () => {
             });
             it.skip('deleteWordBackward', async () => {
                 // <CTRL>+<BACKSPACE>
-                container.querySelector('section').id = 'editable';
                 await triggerEvents([
                     [
                         {
@@ -388,7 +386,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('deleteBackward');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div><br></div>' +
                         '</section></jw-editor>',
                 );
@@ -407,7 +405,6 @@ describe('DomEditable', () => {
             });
             it.skip('deleteWordForward', async () => {
                 // <CTRL>+<BACKSPACE>
-                container.querySelector('section').id = 'editable';
                 await triggerEvents([
                     [
                         {
@@ -472,7 +469,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('deleteForward');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div><br></div>' +
                         '</section></jw-editor>',
                 );
@@ -491,7 +488,6 @@ describe('DomEditable', () => {
             });
             it('deleteContentBackward', async () => {
                 // <CTRL>+<BACKSPACE>
-                container.querySelector('section').id = 'editable';
                 await triggerEvents([
                     [
                         {
@@ -538,7 +534,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('deleteBackward');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>acd</div>' +
                         '</section></jw-editor>',
                 );
@@ -557,7 +553,6 @@ describe('DomEditable', () => {
             });
             it('deleteContentForward', async () => {
                 // <CTRL>+<BACKSPACE>
-                container.querySelector('section').id = 'editable';
                 await triggerEvents([
                     [
                         {
@@ -604,7 +599,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('deleteForward');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>abd</div>' +
                         '</section></jw-editor>',
                 );
@@ -623,7 +618,6 @@ describe('DomEditable', () => {
             });
             it('deleteContentBackward (SwiftKey)', async () => {
                 // key: o
-                container.querySelector('section').id = 'editable';
                 await triggerEvents([
                     [
                         { 'type': 'keydown', 'key': 'Unidentified', 'code': '' },
@@ -654,7 +648,7 @@ describe('DomEditable', () => {
 
                 expect(commandNames.join(',')).to.equal('deleteBackward');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section contenteditable="true" id="editable">' +
+                    '<jw-editor><section contenteditable="true">' +
                         '<div>acd</div>' +
                         '</section></jw-editor>',
                 );
@@ -693,7 +687,7 @@ describe('DomEditable', () => {
 
             editor.execCommand = (): Promise<void> => Promise.resolve();
             const execSpy = spy(editor, 'execCommand');
-            await selectAll(container);
+            await selectAllWithKeyA(container);
             const params = {
                 context: editor.contextManager.defaultContext,
             };
@@ -739,9 +733,8 @@ describe('DomEditable', () => {
 
             editor2.execCommand = (): Promise<void> => Promise.resolve();
             const execSpy2 = spy(editor2, 'execCommand');
-
-            await selectAll(container1);
-            await selectAll(container2);
+            await selectAllWithKeyA(container1);
+            await selectAllWithKeyA(container2);
 
             await editor.stop();
             await editor2.stop();
@@ -781,7 +774,6 @@ describe('DomEditable', () => {
             };
 
             // key: o
-            container.querySelector('section').id = 'editable';
             await triggerEvents([
                 [
                     { 'type': 'keydown', 'key': 'Unidentified', 'code': '' },
@@ -812,7 +804,7 @@ describe('DomEditable', () => {
 
             expect(commandNames.join(',')).to.equal('deleteForward');
             expect(container.innerHTML).to.equal(
-                '<jw-editor><section contenteditable="true" id="editable">' +
+                '<jw-editor><section contenteditable="true">' +
                     '<div>abd</div>' +
                     '</section></jw-editor>',
             );

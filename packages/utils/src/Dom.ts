@@ -7,13 +7,19 @@
  */
 export function targetDeepest(container: Node, offset: number): [Node, number] {
     while (container.hasChildNodes()) {
-        if (offset >= container.childNodes.length) {
+        let childNodes: NodeListOf<ChildNode>;
+        if (container instanceof Element && container.shadowRoot) {
+            childNodes = container.shadowRoot.childNodes;
+        } else {
+            childNodes = container.childNodes;
+        }
+        if (offset >= childNodes.length) {
             container = container.lastChild;
             // The new container might be a text node, so considering only
             // the `childNodes` property would be wrong.
             offset = nodeLength(container);
         } else {
-            container = container.childNodes[offset];
+            container = childNodes[offset];
             offset = 0;
         }
     }
@@ -26,7 +32,11 @@ export function targetDeepest(container: Node, offset: number): [Node, number] {
  * @param node
  */
 export function nodeLength(node: Node): number {
-    const isTextNode = node.nodeType === Node.TEXT_NODE;
-    const content = isTextNode ? node.nodeValue : node.childNodes;
-    return content.length;
+    if (node.nodeType === Node.TEXT_NODE) {
+        return node.nodeValue.length;
+    } else if (node instanceof Element && node.shadowRoot) {
+        return node.shadowRoot.childNodes.length;
+    } else {
+        return node.childNodes.length;
+    }
 }

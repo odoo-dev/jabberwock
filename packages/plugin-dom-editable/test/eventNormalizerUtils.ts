@@ -172,6 +172,7 @@ export function triggerEvent(
         {
             view: window,
             bubbles: true,
+            composed: true,
             cancelable: true,
         },
         options,
@@ -263,6 +264,20 @@ export class NodeIndexGenerator {
         return this.idNodeMap.get(id);
     }
 }
+
+/**
+ * Search in dom (including shadow element) the contenteditable=true.
+ */
+function getEditableElement(): Element {
+    let editableElement = document.querySelector('[contentEditable=true]');
+    if (!editableElement) {
+        const shadows = [...document.getElementsByTagName('jw-shadow')];
+        while (!editableElement && shadows.length) {
+            editableElement = shadows.pop().shadowRoot.querySelector('[contentEditable=true]');
+        }
+    }
+    return editableElement;
+}
 /**
  * Trigger events for of a list of stacks that where previously recorded with
  * the tool `getKeys`.
@@ -271,8 +286,7 @@ export class NodeIndexGenerator {
  */
 export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
     const addedNodes: Node[] = [];
-    const editableElement = document.getElementById('editable');
-    const nodeIndexGenerator = new NodeIndexGenerator(editableElement);
+    const nodeIndexGenerator = new NodeIndexGenerator(getEditableElement());
     for (const eventStack of eventStackList) {
         let keyEventPrevented = false;
         for (const testEvent of eventStack) {
@@ -344,7 +358,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                 const { type, ...options } = testEvent;
                 if (!(keyEventPrevented && ['keydown', 'keypress', 'keyup'].includes(type))) {
                     const event = triggerEvent(
-                        document.getElementById('editable'),
+                        getEditableElement(),
                         type,
                         options as TriggerNativeEventsOption,
                     );
@@ -377,7 +391,6 @@ export function testCallbackBefore(): TestContext {
     container.style.top = '0';
     container.style.left = '0';
     const editable = document.createElement('div');
-    editable.id = 'editable';
     editable.setAttribute('contentEditable', 'true');
     editable.style.display = 'block';
     container.appendChild(editable);
