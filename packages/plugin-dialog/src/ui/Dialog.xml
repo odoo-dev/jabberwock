@@ -1,0 +1,6 @@
+<jw-dialog>
+    <jw-backdrop class="jw-close"></jw-backdrop>
+    <jw-content>
+        <jw-button class="jw-close">❌</jw-button>
+    </jw-content>
+</jw-dialog>

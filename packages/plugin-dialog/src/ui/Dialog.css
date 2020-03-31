@@ -1,0 +1,38 @@
+jw-dialog-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+jw-dialog-container jw-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    background-color: #000000;
+}
+jw-dialog-container jw-dialog {
+    position: absolute;
+    display: flex;
+    max-width: 80%;
+}
+jw-dialog-container jw-dialog > jw-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #F7F7F7;
+    padding: 10px;
+    border-radius: 10px;
+}
+jw-dialog-container jw-dialog > jw-content > jw-button.close {
+    position: absolute;
+    right: 10px;
+    top: 4px;
+    cursor: pointer;
+}
