@@ -305,7 +305,7 @@ export class DomLayoutEngine extends LayoutEngine {
             return;
         }
 
-        const domRange = document.createRange();
+        const domRange = domNode.ownerDocument.createRange();
         if (selection.direction === Direction.FORWARD) {
             domRange.setStart(anchor[0], anchor[1]);
             domRange.collapse(true);

@@ -83,6 +83,18 @@ export function nodeName(node: Node): string {
     return node.nodeName.toUpperCase();
 }
 
+export function getDocument(node: Node): Document | ShadowRoot {
+    let root: Document | ShadowRoot;
+    while (node && !root) {
+        if (node instanceof Document || node instanceof ShadowRoot) {
+            root = node;
+        } else {
+            node = node.parentNode;
+        }
+    }
+    return root || document;
+}
+
 /**
  * Get the target VNode or Format's style attribute as a record of style name to
  * style value.

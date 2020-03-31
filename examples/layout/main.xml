@@ -3,7 +3,7 @@
 <table width="100%">
     <tr>
         <td width="10%">TD cell</td>
-        <td width="80%"><t t-zone="main"/></td>
+        <td width="80%" style="border: 1px solid red;"><t t-zone="main"/></td>
         <td width="10%">TD cell</td>
     </tr>
 </table>

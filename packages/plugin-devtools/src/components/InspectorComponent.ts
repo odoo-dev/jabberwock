@@ -5,7 +5,7 @@ import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { Layout } from '../../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../../plugin-dom-layout/src/ui/DomLayoutEngine';
-import { caretPositionFromPoint } from '../../../utils/polyfill';
+import { caretPositionFromPoint } from '../../../utils/src/polyfill';
 import { CharNode } from '../../../plugin-char/src/CharNode';
 
 const hoverStyle = 'box-shadow: inset 0 0 0 100vh rgba(95, 146, 204, 0.5); cursor: pointer;';

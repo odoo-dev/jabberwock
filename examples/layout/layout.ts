@@ -19,14 +19,18 @@ import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { VNode } from '../../packages/core/src/VNodes/VNode';
-import JWEditor from '../../packages/core/src/JWEditor';
+import JWEditor, { JWEditorConfig, Loadables } from '../../packages/core/src/JWEditor';
 import { Parser } from '../../packages/plugin-parser/src/Parser';
+import { Shadow } from '../../packages/plugin-shadow/src/Shadow';
 
 import '../utils/jabberwocky.css';
 import headerTemplate from './header.xml';
 import mainTemplate from './main.xml';
 import otherTemplate from './other.xml';
 import footerTemplate from './footer.xml';
+import { Layout } from '../../packages/plugin-layout/src/Layout';
+import { ShadowNode } from '../../packages/plugin-shadow/src/ShadowNode';
+import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
@@ -70,6 +74,31 @@ editor.configure(DomEditable, {
     autoFocus: true,
     source: target,
 });
+editor.load(Shadow);
+const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
+    loadables: {
+        components: [
+            {
+                id: 'editable',
+                async render(editor: JWEditor): Promise<VNode[]> {
+                    const shadow = new ShadowNode();
+                    const style = new MetadataNode('STYLE');
+                    style.contents = '* {border: 1px #aaa dotted;}';
+                    shadow.append(style);
+                    const domEditable = editor.plugins.get(DomEditable);
+                    const editableComponent = domEditable.loadables.components.find(
+                        component => component.id === 'editable',
+                    );
+                    const nodes = await editableComponent.render(editor);
+                    shadow.append(...nodes);
+                    return [shadow];
+                },
+            },
+        ],
+    },
+};
+editor.configure(config);
+
 editor.configure(Toolbar, {
     layout: [
         [

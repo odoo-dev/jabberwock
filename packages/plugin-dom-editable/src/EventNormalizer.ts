@@ -1,8 +1,8 @@
 import { Direction } from '../../core/src/VSelection';
 import { MutationNormalizer } from './MutationNormalizer';
-import { caretPositionFromPoint } from '../../utils/polyfill';
+import { caretPositionFromPoint, elementFromPoint } from '../../utils/src/polyfill';
 import { targetDeepest } from '../../utils/src/Dom';
-import { nodeName } from '../../utils/src/utils';
+import { nodeName, getDocument } from '../../utils/src/utils';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -221,7 +221,7 @@ interface DataTransferDetails {
 type EventToProcess = Event | DataTransferDetails;
 
 interface EventListenerDeclaration {
-    readonly target: EventTarget;
+    readonly target: Document | ShadowRoot;
     readonly type: string;
     readonly listener: EventListener;
 }
@@ -457,6 +457,12 @@ export class EventNormalizer {
      * manually fire its execution when a navigation key is pressed.
      */
     _stackTimeout: Timeout<EventBatch>;
+    /**
+     * Map of the shadow dom event normalizer.
+     * If an event is triggered inside a shadow dom, we instanciate a new
+     * EventNormalizer in the shadow dom.
+     */
+    private _shadowNormalizers = new Map<ShadowRoot, EventNormalizer>();
 
     /**
      *
@@ -466,32 +472,35 @@ export class EventNormalizer {
     constructor(
         private _isInEditable: (node: Node) => boolean,
         private _triggerEventBatch: TriggerEventBatchCallback,
+        root: Document | ShadowRoot = document,
     ) {
         this.initNextObservation();
 
         // const document = this.editable.ownerDocument;
-        this._bindEventInEditable(document, 'compositionstart', this._registerEvent);
-        this._bindEventInEditable(document, 'compositionupdate', this._registerEvent);
-        this._bindEventInEditable(document, 'compositionend', this._registerEvent);
-        this._bindEventInEditable(document, 'beforeinput', this._registerEvent);
-        this._bindEventInEditable(document, 'input', this._registerEvent);
+        this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
+        this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
+        this._bindEventInEditable(root, 'compositionend', this._registerEvent);
+        this._bindEventInEditable(root, 'beforeinput', this._registerEvent);
+        this._bindEventInEditable(root, 'input', this._registerEvent);
 
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
-        this._bindEventInEditable(document, 'contextmenu', this._onContextMenu);
-        this._bindEvent(document, 'mousedown', this._onPointerDown);
-        this._bindEvent(document, 'touchstart', this._onPointerDown);
-        this._bindEvent(document, 'mouseup', this._onPointerUp);
-        this._bindEvent(document, 'touchend', this._onPointerUp);
-        this._bindEventInEditable(document, 'keydown', this._onKeyDownOrKeyPress);
-        this._bindEventInEditable(document, 'keypress', this._onKeyDownOrKeyPress);
-        this._bindEvent(document, 'onkeyup', this._updateModifiersKeys);
+        this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
+        this._bindEvent(root, 'mousedown', this._onPointerDown);
+        this._bindEvent(root, 'touchstart', this._onPointerDown);
+        this._bindEvent(root, 'mouseup', this._onPointerUp);
+        this._bindEvent(root, 'touchend', this._onPointerUp);
+        this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
+        this._bindEventInEditable(root, 'keypress', this._onKeyDownOrKeyPress);
+        this._bindEvent(root, 'onkeyup', this._updateModifiersKeys);
 
-        this._bindEventInEditable(document, 'cut', this._onClipboard);
-        this._bindEventInEditable(document, 'paste', this._onClipboard);
-        this._bindEventInEditable(document, 'dragstart', this._onDragStart);
-        this._bindEventInEditable(document, 'drop', this._onDrop);
+        this._bindEventInEditable(root, 'cut', this._onClipboard);
+        this._bindEventInEditable(root, 'paste', this._onClipboard);
+        this._bindEventInEditable(root, 'dragstart', this._onDragStart);
+        this._bindEventInEditable(root, 'drop', this._onDrop);
 
-        this._mutationNormalizer = new MutationNormalizer();
+        this._mutationNormalizer = new MutationNormalizer(
+            root instanceof Document ? root.body : root.lastElementChild,
+        );
     }
     /**
      * Called when destroy the event normalizer.
@@ -501,6 +510,7 @@ export class EventNormalizer {
     destroy(): void {
         this._mutationNormalizer.destroy();
         this._unbindEvents();
+        this._shadowNormalizers.forEach(eventNormalizer => eventNormalizer.destroy());
     }
 
     //--------------------------------------------------------------------------
@@ -516,14 +526,14 @@ export class EventNormalizer {
      * @param type of the event to listen
      * @param listener to call when the even occurs on the target
      */
-    _bindEvent(target: EventTarget, type: string, listener: Function): void {
+    _bindEvent(target: Document | ShadowRoot, type: string, listener: Function): void {
         const boundListener = listener.bind(this);
         this._eventListeners.push({
             target: target,
             type: type,
             listener: boundListener,
         });
-        target.addEventListener(type, boundListener, false);
+        target.addEventListener(type, boundListener, true);
     }
     /**
      * Filter event from editable.
@@ -534,9 +544,20 @@ export class EventNormalizer {
      * @param type of the event to listen
      * @param listener to call when the even occurs on the target
      */
-    _bindEventInEditable(target: EventTarget, type: string, listener: Function): void {
+    _bindEventInEditable(target: Document | ShadowRoot, type: string, listener: Function): void {
         const boundListener = (ev: EventToProcess): void => {
-            if (!('target' in ev) || this._isInEditable(ev.target as Node)) {
+            const eventTarget = 'target' in ev && (ev.target as Element);
+            const shadowRoot = eventTarget instanceof Element && eventTarget.shadowRoot;
+            if (shadowRoot) {
+                if (!this._shadowNormalizers.get(shadowRoot)) {
+                    const eventNormalizer = new EventNormalizer(
+                        this._isInEditable,
+                        this._triggerEventBatch,
+                        shadowRoot,
+                    );
+                    this._shadowNormalizers.set(shadowRoot, eventNormalizer);
+                }
+            } else if (!eventTarget || this._isInEditable(eventTarget)) {
                 listener.call(this, ev);
             }
         };
@@ -1306,7 +1327,18 @@ export class EventNormalizer {
      */
     _getSelection(ev?: MouseEvent | TouchEvent): DomSelectionDescription {
         let selectionDescription: DomSelectionDescription;
-        const selection = document.getSelection();
+        let target: Node;
+        let root: Document | ShadowRoot;
+        if (ev) {
+            target = this._getEventTarget(ev);
+            root = getDocument(target);
+        } else if (this._initialCaretPosition?.offsetNode) {
+            root = getDocument(this._initialCaretPosition.offsetNode);
+        } else {
+            root = document;
+        }
+
+        const selection = root.getSelection();
 
         let forward: boolean;
         if (!selection || selection.rangeCount === 0) {
@@ -1339,8 +1371,7 @@ export class EventNormalizer {
         // contained in the target of the event, otherwise it means it took no
         // part in it. In this case, consider the caret position instead.
         // This can happen when target is an input or a contenteditable=false.
-        if (ev && ev.target instanceof Node) {
-            const target = ev.target;
+        if (target instanceof Node) {
             if (
                 !target.contains(selectionDescription.anchorNode) &&
                 !target.contains(selectionDescription.focusNode)
@@ -1369,14 +1400,35 @@ export class EventNormalizer {
         if (selection.direction === Direction.BACKWARD) {
             return false;
         }
+
         let startContainer = selection.anchorNode;
         let startOffset = selection.anchorOffset;
         let endContainer = selection.focusNode;
         let endOffset = selection.focusOffset;
-        const body = document.body;
+
         // The selection might still be on a node which has since been removed.
-        const invalidStart = !startContainer || !body.contains(startContainer);
-        const invalidEnd = !endContainer || !body.contains(endContainer);
+        let invalidStart = true;
+        let domNode = startContainer;
+        while (domNode && invalidStart) {
+            if (domNode instanceof ShadowRoot) {
+                domNode = domNode.host;
+            } else if (document.body.contains(domNode)) {
+                invalidStart = false;
+            } else {
+                domNode = domNode.parentNode;
+            }
+        }
+        let invalidEnd = true;
+        domNode = endContainer;
+        while (domNode && invalidEnd) {
+            if (domNode instanceof ShadowRoot) {
+                domNode = domNode.host;
+            } else if (document.body.contains(domNode)) {
+                invalidEnd = false;
+            } else {
+                domNode = domNode.parentNode;
+            }
+        }
         const invalidSelection = invalidStart || invalidEnd;
 
         // The selection might be collapsed in which case there is no selection.
@@ -1473,14 +1525,31 @@ export class EventNormalizer {
         }
         return this._isVisible(el.parentNode, editable);
     }
+    /**
+     * Return the node and offset targeted by a event, including if the target
+     * is inside a shadow element
+     *
+     * @param ev
+     */
     _getEventCaretPosition(ev: MouseEvent | TouchEvent): CaretPosition {
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);
-        if (!this._isInEditable(caretPosition.offsetNode)) {
+        if (!caretPosition || !this._isInEditable(caretPosition.offsetNode)) {
             caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
         return caretPosition;
+    }
+    /**
+     * Use the position to get the target from the event (including the target
+     * in shadow element)
+     *
+     * @param ev
+     */
+    _getEventTarget(ev: MouseEvent | TouchEvent): Node {
+        const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
+        const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
+        return elementFromPoint(x, y) || (ev.target as Node);
     }
 
     //--------------------------------------------------------------------------
@@ -1539,7 +1608,8 @@ export class EventNormalizer {
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        if (ev.target instanceof Element && this._isInEditable(ev.target)) {
+        const target = this._getEventTarget(ev);
+        if (target && this._isInEditable(target)) {
             this._mousedownInEditable = true;
             this._initialCaretPosition = this._getEventCaretPosition(ev);
             this._selectionHasChanged = false;
@@ -1563,7 +1633,6 @@ export class EventNormalizer {
             // to the next tick as well. Store the data we have now before it
             // gets invalidated by the redrawing of the DOM.
             this._initialCaretPosition = this._getEventCaretPosition(ev);
-
             this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
                 return this._analyzeSelectionChange(ev);
             });
@@ -1700,10 +1769,8 @@ export class EventNormalizer {
      */
     _onSelectionChange(): void {
         if (!this._initialCaretPosition) {
-            // TODO: Remove this once the renderer only re-renders what has
-            // changed rather than re-rendering everything. Right now it is
-            // needed to avoid an infinite loop when selectAll triggers a new
-            // setRange, which triggers a new selection, which loops infinitely.
+            // Filter the events because we can have some Shadow root and each
+            // normaliser bind event on document.
             return;
         }
         const keydownEvent = this.currentStackObservation._eventsMap.keydown;
@@ -1730,7 +1797,6 @@ export class EventNormalizer {
             const modifiedKeyEvent = this._modifierKeys.ctrlKey || this._modifierKeys.metaKey;
             const heuristic = modifiedKeyEvent || this._followsPointerAction;
             const isSelectAll = heuristic && this._isSelectAll(this._getSelection());
-
             if (isSelectAll && !this._currentlySelectingAll) {
                 if (modifiedKeyEvent) {
                     // This select all was triggered from the keyboard. Add a

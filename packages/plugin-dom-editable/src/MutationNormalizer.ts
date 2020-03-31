@@ -21,9 +21,9 @@ export class MutationNormalizer {
     _listen: boolean;
     _mutations: MutationRecord[];
 
-    constructor() {
+    constructor(el: Element = document.body) {
         this._observer = new MutationObserver(this._onMutation.bind(this));
-        this._observer.observe(document, {
+        this._observer.observe(el, {
             characterDataOldValue: true, // add old text value on changes
             characterData: true, // monitor text content changes
             childList: true, // monitor child nodes addition or removal
