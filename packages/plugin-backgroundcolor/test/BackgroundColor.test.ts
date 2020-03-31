@@ -1,8 +1,8 @@
-import { describePlugin } from "../../utils/src/testUtils";
-import { BackgroundColor } from "../src/BackgroundColor";
-import { Char } from "../../plugin-char/src/Char";
-import JWEditor from "../../core/src/JWEditor";
-import { BasicEditor } from "../../../bundles/BasicEditor";
+import { describePlugin } from '../../utils/src/testUtils';
+import { BackgroundColor } from '../src/BackgroundColor';
+import { Char } from '../../plugin-char/src/Char';
+import JWEditor from '../../core/src/JWEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor';
 
 const colorBackground = async function(editor: JWEditor, color: string): Promise<void> {
     await editor.execCommand<BackgroundColor>('colorBackground', {
@@ -58,7 +58,8 @@ describePlugin(BackgroundColor, testEditor => {
                     stepFunction: async editor => {
                         await colorBackground(editor, 'red');
                     },
-                    contentAfter: '<p style="background-color: yellow;">a[<span style="background-color: red;">bc]</span>d</p>',
+                    contentAfter:
+                        '<p style="background-color: yellow;">a[<span style="background-color: red;">bc]</span>d</p>',
                 });
             });
             it('should set the background color of a paragraph to red', async () => {
@@ -94,7 +95,8 @@ describePlugin(BackgroundColor, testEditor => {
                     stepFunction: async editor => {
                         await colorBackground(editor, 'yellow');
                     },
-                    contentAfter: '<p style="background-color: yellow;">a[bc</p><p><span style="background-color: yellow;">de]</span>f</p>',
+                    contentAfter:
+                        '<p style="background-color: yellow;">a[bc</p><p><span style="background-color: yellow;">de]</span>f</p>',
                 });
             });
             it('should not set the background color of characters that already have that background color through a format', async () => {
@@ -112,7 +114,8 @@ describePlugin(BackgroundColor, testEditor => {
                     stepFunction: async editor => {
                         await colorBackground(editor, 'yellow');
                     },
-                    contentAfter: '<p>a<i style="background-color: yellow;">b[cd</i><span style="background-color: yellow;">e]</span>f</p>',
+                    contentAfter:
+                        '<p>a<i style="background-color: yellow;">b[cd</i><span style="background-color: yellow;">e]</span>f</p>',
                 });
             });
         });
@@ -126,7 +129,8 @@ describePlugin(BackgroundColor, testEditor => {
                         await uncolorBackground(editor);
                         await insertText(editor, 'b');
                     },
-                    contentAfter: '<p style="background-color: red">a<span style="background-color: white;">b[]</span>c</p>',
+                    contentAfter:
+                        '<p style="background-color: red">a<span style="background-color: white;">b[]</span>c</p>',
                 });
             });
             it('should write two characters in white background', async () => {
@@ -137,7 +141,8 @@ describePlugin(BackgroundColor, testEditor => {
                         await insertText(editor, 'b');
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p style="background-color: red">a<span style="background-color: white;">bc[]</span>d</p>',
+                    contentAfter:
+                        '<p style="background-color: red">a<span style="background-color: white;">bc[]</span>d</p>',
                 });
             });
         });
@@ -167,7 +172,8 @@ describePlugin(BackgroundColor, testEditor => {
                     stepFunction: async editor => {
                         await uncolorBackground(editor);
                     },
-                    contentAfter: '<p style="background-color: yellow;">a[<span style="background-color: white;">bc]</span>d</p>',
+                    contentAfter:
+                        '<p style="background-color: yellow;">a[<span style="background-color: white;">bc]</span>d</p>',
                 });
             });
             it('should set the background color of two characters to red, then unset it, within a paragraph with yellow background', async () => {
@@ -177,7 +183,8 @@ describePlugin(BackgroundColor, testEditor => {
                         await colorBackground(editor, 'red');
                         await uncolorBackground(editor);
                     },
-                    contentAfter: '<p style="background-color: yellow;">a[<span style="background-color: white;">bc]</span>d</p>',
+                    contentAfter:
+                        '<p style="background-color: yellow;">a[<span style="background-color: white;">bc]</span>d</p>',
                 });
             });
             it('should unset the background color of a paragraph', async () => {
@@ -200,7 +207,8 @@ describePlugin(BackgroundColor, testEditor => {
             });
             it('should unset the background color of everything, including a few spans', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<p style="background-color: red;">[a<span style="background-color: white;">b</span>c<span style="background-color: yellow;">d</span>e]</p>',
+                    contentBefore:
+                        '<p style="background-color: red;">[a<span style="background-color: white;">b</span>c<span style="background-color: yellow;">d</span>e]</p>',
                     stepFunction: async editor => {
                         await uncolorBackground(editor);
                     },

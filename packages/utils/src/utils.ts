@@ -1,5 +1,5 @@
-import { VNode } from "../../core/src/VNodes/VNode";
-import { Format } from "../../plugin-inline/src/Format";
+import { VNode } from '../../core/src/VNodes/VNode';
+import { Format } from '../../plugin-inline/src/Format';
 
 export type Constructor<T> = new (...args) => T;
 
@@ -81,7 +81,7 @@ export function nodeName(node: Node): string {
  * @param target
  */
 export function getStyles(target: VNode | Format): Record<string, string> {
-    const stylesArray = (target.attributes.style as string || '')
+    const stylesArray = ((target.attributes.style as string) || '')
         .split(';')
         .map(style => style.trim())
         .filter(style => style.length);

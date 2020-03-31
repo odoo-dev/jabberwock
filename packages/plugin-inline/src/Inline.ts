@@ -11,8 +11,8 @@ export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 interface InlineCache {
-    format: Formats | null,
-    style: Record<string, string> | null,
+    format: Formats | null;
+    style: Record<string, string> | null;
 }
 
 export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -32,7 +32,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     cache: InlineCache = {
         format: null,
         style: null,
-    }
+    };
 
     //--------------------------------------------------------------------------
     // Public

@@ -1,12 +1,12 @@
-import { JWPlugin, JWPluginConfig } from "../../core/src/JWPlugin";
-import { CommandParams } from "../../core/src/Dispatcher";
-import { Inline } from "../../plugin-inline/src/Inline";
-import { VNode } from "../../core/src/VNodes/VNode";
-import { getStyle, setStyle, removeStyle } from "../../utils/src/utils";
-import { InlineNode } from "../../plugin-inline/src/InlineNode";
-import { FragmentNode } from "../../core/src/VNodes/FragmentNode";
-import { VRange } from "../../core/src/VRange";
-import { Format } from "../../plugin-inline/src/Format";
+import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
+import { CommandParams } from '../../core/src/Dispatcher';
+import { Inline } from '../../plugin-inline/src/Inline';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { getStyle, setStyle, removeStyle } from '../../utils/src/utils';
+import { InlineNode } from '../../plugin-inline/src/InlineNode';
+import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
+import { VRange } from '../../core/src/VRange';
+import { Format } from '../../plugin-inline/src/Format';
 
 export interface ColorParams extends CommandParams {
     color?: string; // css-valid color name
@@ -60,7 +60,9 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // Skip if the node already has the right color, through an
                 // ancestor or a format.
                 if (node.is(InlineNode)) {
-                    const colorFormat = node.formats.find(format => getStyle(format, this.styleName));
+                    const colorFormat = node.formats.find(format =>
+                        getStyle(format, this.styleName),
+                    );
                     if (colorFormat && getStyle(colorFormat, this.styleName) === color) continue;
                 }
                 const colorAncestor = node.ancestor(this.hasColor.bind(this));

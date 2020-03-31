@@ -19,7 +19,7 @@ interface DomConfig extends JWPluginConfig {
 
 const defaultConfiguration = {
     autoFocus: false,
-}
+};
 
 export class Dom<T extends DomConfig = DomConfig> extends JWPlugin<T> {
     static dependencies = [Parser, Renderer];
