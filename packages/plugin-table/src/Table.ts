@@ -280,7 +280,11 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             // Only merge the cells if they would not imply to merge
             // unrelated cells, ie. the selected cells form a rectangle.
             const managerCell = cells.shift();
+            const Separator = this.editor.configuration.defaults.Separator;
             for (const cell of cells) {
+                if (managerCell.hasChildren()) {
+                    managerCell.append(new Separator());
+                }
                 cell.mergeWith(managerCell);
             }
         }
