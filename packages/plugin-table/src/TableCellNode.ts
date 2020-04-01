@@ -1,7 +1,6 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
-import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode'; // TODO: remove dependency
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export interface TableCellAttributes extends Record<string, string | Record<string, string>> {
@@ -164,9 +163,6 @@ export class TableCellNode extends ContainerNode {
         cell.header = this.header;
 
         // Move the children to the manager.
-        if (cell.hasChildren()) {
-            this.append(new LineBreakNode());
-        }
         this.append(...cell.childVNodes);
 
         // Hand the managed cells over to the manager.
