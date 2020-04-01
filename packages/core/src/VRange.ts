@@ -195,7 +195,7 @@ export class VRange {
     setStart(reference: VNode, position = RelativePosition.BEFORE): void {
         if (position === RelativePosition.BEFORE) {
             reference = reference.firstLeaf();
-        } else {
+        } else if (position === RelativePosition.AFTER) {
             reference = reference.lastLeaf();
         }
         if (reference.is(ContainerNode) && !reference.hasChildren()) {
@@ -221,7 +221,7 @@ export class VRange {
     setEnd(reference: VNode, position = RelativePosition.AFTER): void {
         if (position === RelativePosition.BEFORE) {
             reference = reference.firstLeaf();
-        } else {
+        } else if (position === RelativePosition.AFTER) {
             reference = reference.lastLeaf();
         }
         if (reference.is(ContainerNode) && !reference.hasChildren()) {
