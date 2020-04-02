@@ -2796,8 +2796,6 @@ describePlugin(List, testEditor => {
                         });
                     });
                     describe('Removing items', () => {
-                        // TODO: MAKE IT PASS
-                        // TODO: determine whether this is the expected behavior
                         it('should add an empty list item at the end of a list, then remove it', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li>abc[]</li></ol>',
