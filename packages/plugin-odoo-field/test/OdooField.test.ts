@@ -1,10 +1,11 @@
 import { expect } from 'chai';
-import { describePlugin, testEditor, nextTick } from '../../utils/src/testUtils';
+import { describePlugin, testEditor, nextTick, nextTickFrame } from '../../utils/src/testUtils';
 import { OdooField } from '../../plugin-odoo-field/src/OdooField';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Char } from '../../plugin-char/src/Char';
 import JWEditor from '../../core/src/JWEditor';
-import { fieldValidators } from '../src/OdooFieldDomParser';
+import { fieldValidators, cloneChildrenDeep } from '../src/OdooFieldDomParser';
+import { VNode, VNodeType } from '../../core/src/VNodes/VNode';
 
 const insertText = async function(editor: JWEditor, text: string): Promise<void> {
     await editor.execCommand<Char>('insertText', {
@@ -121,6 +122,7 @@ describePlugin(OdooField, () => {
                 ].join(''),
                 stepFunction: async editor => {
                     await insertText(editor, 'a');
+                    await nextTickFrame();
                 },
                 contentAfter: [
                     '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field jw-odoo-field-invalid">10a[]</span></p>',
@@ -227,6 +229,23 @@ describePlugin(OdooField, () => {
                     ].join(''),
                 });
             });
+        });
+    });
+
+    describe('cloneChildrenDeep()', () => {
+        it('should duplicate a VNode', async () => {
+            const vNode = new VNode();
+            const vNodeChild = new VNode();
+            vNode.append(vNodeChild);
+            const vNodeChildChild = new VNode();
+            vNodeChild.append(vNodeChildChild);
+            const nodes = cloneChildrenDeep(vNode);
+            expect(nodes.length).to.equal(1);
+            expect(nodes[0]).to.not.equal(vNodeChild);
+            expect(nodes[0].type).to.equal(VNodeType.NODE);
+            expect(nodes[0].children.length).to.equal(1);
+            expect(nodes[0].children[0]).to.not.equal(vNodeChildChild);
+            expect(nodes[0].children[0].type).to.equal(VNodeType.NODE);
         });
     });
 });

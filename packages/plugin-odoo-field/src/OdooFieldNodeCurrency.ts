@@ -1,6 +1,5 @@
-import { VNode } from '../../core/src/VNodes/VNode';
-import { ReactiveValue } from '../../utils/src/ReactiveValue';
 import { OdooFieldNode } from './OdooFieldNode';
+import { OdooFieldInfo } from '../../plugin-odoo-reactive-registry/src/OdooReactiveRegistry';
 
 export enum OdooFieldNodeCurrencyPosition {
     BEFORE = 'BEFORE',
@@ -9,16 +8,14 @@ export enum OdooFieldNodeCurrencyPosition {
 
 export class OdooFieldNodeCurrency extends OdooFieldNode {
     constructor(
-        public originalTagName: string,
-        public value: ReactiveValue<any>,
-        public isValid: ReactiveValue<boolean>,
-        public currency: string,
-        public currencyPosition: OdooFieldNodeCurrencyPosition,
+        public htmlTag: string,
+        // todo: check name
+        public fieldInfo: OdooFieldInfo,
+        public options: {
+            currencyValue: string;
+            currencyPosition: OdooFieldNodeCurrencyPosition;
+        },
     ) {
-        super(originalTagName, value, isValid);
+        super(htmlTag, fieldInfo, options);
     }
-}
-
-export function isOdooFieldNodeCurrency(node: any): node is OdooFieldNodeCurrency {
-    return node instanceof OdooFieldNodeCurrency;
 }

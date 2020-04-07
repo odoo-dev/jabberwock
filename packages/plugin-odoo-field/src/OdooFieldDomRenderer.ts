@@ -1,56 +1,42 @@
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
-import {
-    OdooFieldNodeCurrency,
-    isOdooFieldNodeCurrency,
-    OdooFieldNodeCurrencyPosition,
-} from './OdooFieldNodeCurrency';
+import { OdooFieldNodeCurrency, OdooFieldNodeCurrencyPosition } from './OdooFieldNodeCurrency';
 
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
     engine: DomRenderingEngine;
-    predicate = (node): boolean =>
-        node instanceof OdooFieldNode || node instanceof OdooFieldNodeCurrency;
+    predicate = (node): boolean => node instanceof OdooFieldNode;
 
     async render(node: OdooFieldNode | OdooFieldNodeCurrency): Promise<Node[]> {
-        const container = document.createElement(node.originalTagName);
+        const container = document.createElement(node.htmlTag);
         let fieldContainer = container;
 
         // Special case 4/4 for monetary field.
-        if (isOdooFieldNodeCurrency(node)) {
+        if (node instanceof OdooFieldNodeCurrency) {
             fieldContainer = document.createElement('span');
             fieldContainer.classList.add('oe_currency_value');
             container.appendChild(fieldContainer);
-            const currencyNode = document.createTextNode(node.currency);
-            if (node.currencyPosition === OdooFieldNodeCurrencyPosition.BEFORE) {
-                container.prepend(currencyNode);
+            const currency = document.createTextNode(node.options.currencyValue);
+            if (node.options.currencyPosition === OdooFieldNodeCurrencyPosition.BEFORE) {
+                container.prepend(currency);
             } else {
-                container.appendChild(currencyNode);
+                container.append(currency);
             }
         }
         this.engine.renderAttributes(node.attributes, container);
-
-        const selectionAncestors = this.engine.editor.selection.range.start.ancestors();
-        if (
-            selectionAncestors.find(
-                ancestorNode =>
-                    ancestorNode instanceof OdooFieldNode && ancestorNode.value === node.value,
-            )
-        ) {
+        const selectionAncestor = this.engine.editor.selection.range.start.ancestor(
+            ancestor =>
+                ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,
+        );
+        if (selectionAncestor) {
             fieldContainer.classList.add('jw-focus');
         }
         fieldContainer.classList.add('jw-odoo-field');
 
-        const setValid = (): void => {
-            if (!node.isValid.get()) {
-                fieldContainer.classList.add('jw-odoo-field-invalid');
-            } else {
-                fieldContainer.classList.remove('jw-odoo-field-invalid');
-            }
-        };
-        node.isValid.on('set', setValid);
-        setValid();
+        if (!node.fieldInfo.isValid.get()) {
+            fieldContainer.classList.add('jw-odoo-field-invalid');
+        }
 
         const renderedChildren = await this.renderChildren(node);
         for (const renderedChild of renderedChildren) {

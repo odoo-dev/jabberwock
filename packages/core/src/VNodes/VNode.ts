@@ -114,21 +114,6 @@ export class VNode extends VEvent<VNode> {
         return clone;
     }
 
-    /**
-     * Clone all the children recursively.
-     */
-    cloneChildrenDeep(): VNode[] {
-        return this.children
-            .filter(node => node.type !== VNodeType.MARKER)
-            .map(child => {
-                const clonedNode = child.clone();
-                const clonedChildren = child.cloneChildrenDeep();
-                clonedNode.empty();
-                clonedNode.append(...clonedChildren);
-                return clonedNode;
-            });
-    }
-
     //--------------------------------------------------------------------------
     // Properties
     //--------------------------------------------------------------------------
@@ -673,9 +658,7 @@ export class VNode extends VEvent<VNode> {
         for (const child of children) {
             this._insertAtIndex(child, 0);
         }
-        if (!children.every(child => child.type === 'markerNode')) {
-            this.fire('childList', { children });
-        }
+        this.fire('childList', { children });
     }
     /**
      * Append a child to this VNode.
@@ -684,9 +667,7 @@ export class VNode extends VEvent<VNode> {
         for (const child of children) {
             this._insertAtIndex(child, this.children.length);
         }
-        if (!children.every(child => child.type === VNodeType.MARKER)) {
-            this.fire('childList', { children });
-        }
+        this.fire('childList', { children });
     }
     /**
      * Insert the given node before the given reference (which is a child of
@@ -701,9 +682,7 @@ export class VNode extends VEvent<VNode> {
             throw new Error('The given VNode is not a child of this VNode');
         }
         this._insertAtIndex(node, index);
-        if (!(node.type === VNodeType.MARKER)) {
-            this.fire('childList', { children: [node] });
-        }
+        this.fire('childList', { children: [node] });
     }
     /**
      * Insert the given node after the given reference (a child of this VNode).
@@ -717,9 +696,7 @@ export class VNode extends VEvent<VNode> {
             throw new Error('The given VNode is not a child of this VNode');
         }
         this._insertAtIndex(node, index + 1);
-        if (!(node.type === VNodeType.MARKER)) {
-            this.fire('childList', { children: [node] });
-        }
+        this.fire('childList', { children: [node] });
     }
     /**
      * Remove all children of this VNode.
