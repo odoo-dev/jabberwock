@@ -188,7 +188,7 @@ export class ContainerNode extends AbstractNode {
      * See {@link AbstractNode.empty}.
      */
     empty(): void {
-        for (const child of this.childVNodes) {
+        for (const child of [...this.childVNodes]) {
             child.remove();
         }
     }
