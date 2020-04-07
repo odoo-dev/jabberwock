@@ -1060,6 +1060,19 @@ describe('core', () => {
                         }).to.throw('child');
                     });
                 });
+                describe('empty', () => {
+                    it('should remove all the children nodes', () => {
+                        const root = new VNode();
+                        const child1 = new VNode();
+                        const child2 = new VNode();
+                        const child3 = new VNode();
+                        root.append(child1);
+                        root.append(child2);
+                        root.append(child3);
+                        root.empty();
+                        expect(root.children.length).to.equal(0);
+                    });
+                });
                 describe('remove', () => {
                     it('should remove node itself', async () => {
                         const root = new VNode();

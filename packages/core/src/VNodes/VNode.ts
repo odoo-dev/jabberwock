@@ -688,8 +688,8 @@ export class VNode {
      * Remove all children of this VNode.
      */
     empty(): void {
-        for (const child of this.children) {
-            child.remove();
+        while (this.children.length) {
+            this.children[0].remove();
         }
     }
     /**
