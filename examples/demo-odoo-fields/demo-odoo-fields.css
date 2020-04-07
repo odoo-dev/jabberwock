@@ -23,14 +23,15 @@ jw-editable {
     height: 100vh;
 }
 
-.jw-odoo-field:hover {
-    outline: 1px #875A7B solid;
+.jw-odoo-field {
+    border: 0;
+    outline: none;
 }
-.jw-odoo-field.jw-focus, .js-odoo-field-parent-selected {
-    outline: 1px #875A7B solid;
+.jw-odoo-field:hover, .jw-odoo-field.jw-focus {
+    box-shadow: 0 0 0 1px  #875A7B;
 }
 .jw-odoo-field-invalid {
-    outline: 1px red solid !important;
+    box-shadow: 0 0 0 1px  red !important;
 }
 
 .supported {

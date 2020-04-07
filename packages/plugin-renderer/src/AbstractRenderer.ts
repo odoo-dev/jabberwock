@@ -8,6 +8,8 @@ export abstract class AbstractRenderer<T> implements Renderer<T> {
     engine: RenderingEngine<T>;
     super: Renderer<T>;
     _renderChildMutex: Map<VNode, Promise<T>> = new Map();
+    protected _destroyCallbacks: Function[] = [];
+
     constructor(engine: RenderingEngine<T>, superRenderer: Renderer<T>) {
         this.engine = engine;
         this.super = superRenderer;

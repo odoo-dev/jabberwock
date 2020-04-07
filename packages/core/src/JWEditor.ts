@@ -315,6 +315,7 @@ export class JWEditor {
      * @param event
      */
     async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
+        if (document.activeElement instanceof HTMLInputElement) return;
         const keymap = this.plugins.get(Keymap);
         const commands = keymap.match(event);
         const [command, context] = this.contextManager.match(commands);

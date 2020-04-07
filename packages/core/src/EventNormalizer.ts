@@ -548,6 +548,7 @@ export class EventNormalizer {
      * @see _processEvents
      */
     _registerEvent(ev: EventToProcess): void {
+        if (ev instanceof Event && ev.target instanceof HTMLInputElement) return;
         // See comment on `_keyboardSelectionTimeout`.
         if (this._keyboardSelectionTimeout?.pending) {
             this._keyboardSelectionTimeout.fire();
@@ -1475,6 +1476,8 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
+        if (document.activeElement instanceof HTMLInputElement) return;
+
         if (this._pointerSelectionTimeout?.pending) {
             this._pointerSelectionTimeout.fire();
         }
@@ -1505,6 +1508,7 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
+        if (ev instanceof Event && ev.target instanceof HTMLInputElement) return;
         this._updateModifiersKeys(ev);
         this._registerEvent(ev);
         const selection = this._getSelection();
@@ -1519,6 +1523,7 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
+        if (ev.target instanceof HTMLInputElement) return;
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
         if (ev.target instanceof Element && this.editable.contains(ev.target)) {
@@ -1537,6 +1542,7 @@ export class EventNormalizer {
      * @param ev
      */
     _onPointerUp(ev: MouseEvent): void {
+        if (ev instanceof Event && ev.target instanceof HTMLInputElement) return;
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
         if (this._mousedownInEditable && ev.target instanceof Element) {
@@ -1639,6 +1645,7 @@ export class EventNormalizer {
      * @param ev
      */
     _onClipboard(ev: ClipboardEvent): void {
+        if (document.activeElement instanceof HTMLInputElement) return;
         if (ev.type === 'paste') {
             // Prevent the default browser wild pasting behavior.
             ev.preventDefault();

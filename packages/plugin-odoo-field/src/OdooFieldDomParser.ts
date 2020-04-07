@@ -2,14 +2,13 @@ import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { OdooFieldNode } from './OdooFieldNode';
-import {
-    OMonetaryFieldNode,
-    OdooFieldNodeCurrencyPosition,
-} from './fields/monetary/OMonetaryFieldNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { VNodeType, VNode } from '../../core/src/VNodes/VNode';
 import { OdooFieldInfo, OdooRecordDefinition } from './OdooField';
 import { OdooField } from './OdooField';
+import { OMonetaryFieldNode, OdooFieldNodeCurrencyPosition } from './OMonetaryFieldNode';
+import { ONumberFieldNode } from './ONumberFieldNode';
+import { OFloatFieldNode } from './OFloatFieldNode';
 
 /**
  * Regex used to validate a field.
@@ -60,7 +59,8 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
             item.attributes['data-oe-type'] &&
             item.attributes['data-oe-model'] &&
             (item.attributes['data-oe-type'].value === 'text' ||
-                item.attributes['data-oe-type'].value === 'html' ||
+                // todo: html field should be handeled with an "independent node"
+                // item.attributes['data-oe-type'].value === 'html' ||
                 item.attributes['data-oe-type'].value === 'float' ||
                 item.attributes['data-oe-type'].value === 'integer' ||
                 item.attributes['data-oe-type'].value === 'monetary')
@@ -121,7 +121,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         // data-oe-type is kind of a widget in Odoo.
         const fieldWidgetType = element.attributes['data-oe-type'].value;
         let value;
-        let childNodesToParse;
+        // let childNodesToParse;
         let fieldNode: OdooFieldNode;
 
         // ? dmo: Special case 1/4 for monetary field. Should I place the logic
@@ -138,7 +138,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         if (element.attributes['data-oe-type'].value === 'monetary') {
             const amountElement = element.querySelector('.oe_currency_value');
             value = amountElement.textContent;
-            childNodesToParse = amountElement.childNodes;
+            // childNodesToParse = amountElement.childNodes;
             const currency = (amountElement.previousSibling || amountElement.nextSibling)
                 .textContent;
             fieldNode = new OMonetaryFieldNode(element.tagName, odooReactiveField, {
@@ -149,8 +149,15 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
             });
         } else {
             value = element.innerHTML;
-            childNodesToParse = element.childNodes;
-            fieldNode = new OdooFieldNode(element.tagName, odooReactiveField);
+            // childNodesToParse = element.childNodes;
+            const fieldType = element.attributes['data-oe-type'].value;
+            if (fieldType === 'float') {
+                fieldNode = new OFloatFieldNode(element.tagName, odooReactiveField);
+            } else if (fieldType === 'integer') {
+                fieldNode = new ONumberFieldNode(element.tagName, odooReactiveField);
+            } else {
+                fieldNode = new OdooFieldNode(element.tagName, odooReactiveField);
+            }
         }
 
         // Inform the Odoo record registry that we found a value on the page.
@@ -166,22 +173,22 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         };
         reactiveField.on('set', isValidCallback);
 
-        const fieldSet = this._reactiveToFields.get(odooReactiveField);
-        if (!fieldSet) {
+        const fields = this._reactiveToFields.get(odooReactiveField);
+        if (!fields) {
             reactiveField.set(value);
             this._reactiveToFields.set(odooReactiveField, new Set([fieldNode]));
         } else {
-            fieldSet.add(fieldNode);
+            fields.add(fieldNode);
         }
 
-        const children = await this.engine.parse(...childNodesToParse);
-        fieldNode.append(...children);
+        // const children = await this.engine.parse(...childNodesToParse);
+        // fieldNode.append(...children);
 
         // todo: When the memory will be merged, observe the change of the
         //       memory rather than the node.
-        fieldNode.on('childList', async () => {
-            this.reactiveChanges.set(odooReactiveField, fieldNode);
-        });
+        // fieldNode.on('childList', async () => {
+        //     this.reactiveChanges.set(odooReactiveField, fieldNode);
+        // });
 
         return [fieldNode];
     }

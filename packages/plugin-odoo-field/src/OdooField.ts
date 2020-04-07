@@ -6,7 +6,7 @@ import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
 import { OdooFieldDomParser } from './OdooFieldDomParser';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
-import { OdooMonetaryFieldDomParser } from './fields/monetary/OMonetaryFieldNodeParser';
+// import { OdooMonetaryFieldDomParser } from './fields/monetary/OMonetaryFieldNodeParser';
 
 /**
  * The record definion is mainly used to get a reactive field using the method `getReactiveField`.

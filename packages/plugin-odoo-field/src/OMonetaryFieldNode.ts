@@ -1,5 +1,5 @@
-import { OdooFieldNode } from '../../OdooFieldNode';
-import { OdooFieldInfo } from '../../OdooField';
+import { OdooFieldNode } from './OdooFieldNode';
+import { OdooFieldInfo } from './OdooField';
 
 export enum OdooFieldNodeCurrencyPosition {
     BEFORE = 'BEFORE',
