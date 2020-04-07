@@ -1,10 +1,10 @@
 import { fake } from 'sinon';
 import { expect } from 'chai';
-import { VEvent } from '../src/VEvent';
+import { EventMixin } from '../src/EventMixin';
 describe('utils', () => {
-    describe('VEvent', () => {
+    describe('EventMixin', () => {
         it('should register and fire one callback', async () => {
-            const event = new VEvent();
+            const event = new EventMixin();
             const callback = fake();
             await event.on('event', callback);
             await event.fire('event');
@@ -12,7 +12,7 @@ describe('utils', () => {
             expect(callback.callCount).to.equal(1);
         });
         it('should register and fire multiples callback', async () => {
-            const event = new VEvent();
+            const event = new EventMixin();
             const callback1 = fake();
             const callback2 = fake();
             await event.on('event', callback1);
@@ -24,22 +24,12 @@ describe('utils', () => {
         });
 
         it('should register and fire one callback with arguments', async () => {
-            const event = new VEvent();
+            const event = new EventMixin();
             const callback = fake();
             await event.on('event', callback);
             await event.fire('event', 'arg');
             expect(callback.args[0].length).to.equal(1);
             expect(callback.args[0][0]).to.equal('arg');
-        });
-
-        it('should trigger object on cascade', async () => {
-            const parent = new VEvent();
-            const child = new VEvent();
-            child.parent = parent;
-            const callback = fake();
-            parent.on('event', callback);
-            await child.fire('event');
-            expect(callback.callCount).to.equal(1);
         });
     });
 });

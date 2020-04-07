@@ -1,12 +1,13 @@
-import { VNode } from '../../core/src/VNodes/VNode';
-import { ReactiveValue } from '../../utils/src/ReactiveValue';
+import { VElement } from '../../core/src/VNodes/VElement';
+import { OdooFieldInfo } from './OdooField';
 
-export class OdooFieldNode extends VNode {
+export class OdooFieldNode extends VElement {
     constructor(
-        public originalTagName: string,
-        public value: ReactiveValue<any>,
-        public isValid: ReactiveValue<boolean>,
+        public htmlTag: string,
+        // todo: change name
+        public fieldInfo: OdooFieldInfo,
+        public options = {},
     ) {
-        super();
+        super(htmlTag);
     }
 }
