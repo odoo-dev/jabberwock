@@ -1062,6 +1062,19 @@ describe('core', () => {
                         }).to.throw(ChildError);
                     });
                 });
+                describe('empty', () => {
+                    it('should remove all the children nodes', () => {
+                        const root = new ContainerNode();
+                        const child1 = new CharNode({ char: 'a' });
+                        const child2 = new CharNode({ char: 'a' });
+                        const child3 = new CharNode({ char: 'a' });
+                        root.append(child1);
+                        root.append(child2);
+                        root.append(child3);
+                        root.empty();
+                        expect(root.children().length).to.equal(0);
+                    });
+                });
                 describe('remove', () => {
                     it('should remove node itself', async () => {
                         const root = new ContainerNode();
