@@ -1,11 +1,12 @@
 import { Modifier } from '../../core/src/Modifier';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export class Attributes extends Modifier {
-    private _record: Record<string, string> = {};
+    private _record: Record<string, string> = makeVersionable({});
     constructor(attributes?: Record<string, string> | Attributes) {
         super();
         if (attributes instanceof Attributes) {
-            this._record = { ...attributes._record };
+            this._record = makeVersionable({ ...attributes._record });
         } else if (attributes) {
             this._record = attributes;
         }
@@ -30,7 +31,7 @@ export class Attributes extends Modifier {
      */
     clone(): this {
         const clone = new this.constructor();
-        clone._record = { ...this._record };
+        clone._record = makeVersionable({ ...this._record });
         return clone;
     }
     /**

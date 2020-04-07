@@ -13,7 +13,7 @@ export class ListNode extends ContainerNode {
         return node && node.is(ListNode) && node.listType === ListType.ORDERED;
     }
     static UNORDERED(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType == ListType.UNORDERED;
+        return node && node.is(ListNode) && node.listType === ListType.UNORDERED;
     }
     listType: ListType;
     constructor(params: { listType: ListType }) {

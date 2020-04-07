@@ -1506,16 +1506,20 @@ describe('VDocument', () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
-                    const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
-                    const aNode = editable.next(node => node.name === 'a');
-                    await withRange(VRange.at(aNode), async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            const domEngine = editor.plugins.get(Layout).engines.dom;
+                            const editable = domEngine.components.get('editable')[0];
+                            const aNode = editable.next(node => node.name === 'a');
+                            await withRange(VRange.at(aNode), async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'cab[]',
@@ -1525,16 +1529,20 @@ describe('VDocument', () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
-                    const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
-                    const aNode = editable.next(node => node.name === 'a');
-                    await withRange(VRange.selecting(aNode, aNode), async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            const domEngine = editor.plugins.get(Layout).engines.dom;
+                            const editable = domEngine.components.get('editable')[0];
+                            const aNode = editable.next(node => node.name === 'a');
+                            await withRange(VRange.selecting(aNode, aNode), async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1551,13 +1559,17 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.BEFORE],
                         [aNode, RelativePosition.BEFORE],
                     ];
-                    await withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            await withRange(rangeParams, async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'cab[]',
@@ -1574,13 +1586,17 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.BEFORE],
                         [aNode, RelativePosition.AFTER],
                     ];
-                    await withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            await withRange(rangeParams, async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1597,13 +1613,17 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                         [aNode, RelativePosition.AFTER],
                     ];
-                    await withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            await withRange(rangeParams, async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'acb[]',
@@ -1621,13 +1641,17 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                         [bNode, RelativePosition.BEFORE],
                     ];
-                    await withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            await withRange(rangeParams, async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'acb[]',
@@ -1645,13 +1669,17 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                         [bNode, RelativePosition.AFTER],
                     ];
-                    await withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            await withRange(rangeParams, async range => {
+                                await editor.execCommand<Char>('insertText', {
+                                    text: 'c',
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'ac[]',

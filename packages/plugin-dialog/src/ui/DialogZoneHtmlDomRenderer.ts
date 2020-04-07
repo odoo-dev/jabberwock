@@ -19,7 +19,7 @@ export class DialogZoneHtmlDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: DialogZoneNode): Promise<Node[]> {
         const float = document.createElement('jw-dialog-container');
         for (const child of node.childVNodes) {
-            if (!node.hidden.get(child)) {
+            if (!node.hidden[child.id]) {
                 float.appendChild(await this._renderDialog(child));
             }
         }

@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
-import { JWPlugin } from '../../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
 import { targetDeepest } from './Dom';
@@ -19,6 +19,18 @@ export interface TestEditorSpec {
     stepFunction?: (editor: JWEditor) => void | Promise<void>;
     devtools?: boolean;
     debug?: boolean;
+}
+
+class BypassPlugin<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
+    commands = {
+        TestWrapWithCommandForMemorySecurity: {
+            title: 'Use only in test to wrap the method in command',
+            handler: this.bypassMemorySecurity,
+        },
+    };
+    async bypassMemorySecurity(spec: { callback: Function }): Promise<void> {
+        await spec.callback(this.editor);
+    }
 }
 
 export type EditorTestSuite = (
@@ -167,6 +179,8 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     if (spec.devtools) {
         editor.load(DevTools);
     }
+
+    editor.load(BypassPlugin);
 
     if (spec.beforeStart) {
         await spec.beforeStart(editor);

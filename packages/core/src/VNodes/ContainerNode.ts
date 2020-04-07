@@ -1,9 +1,10 @@
 import { AbstractNode } from './AbstractNode';
 import { VNode, Predicate, isLeaf } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
+import { VersionableArray } from '../Memory/VersionableArray';
 
 export class ContainerNode extends AbstractNode {
-    readonly childVNodes: VNode[] = [];
+    readonly childVNodes: VNode[] = new VersionableArray<VNode>();
 
     //--------------------------------------------------------------------------
     // Browsing children.

@@ -9,6 +9,7 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/Core';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export interface HeadingParams extends CommandParams {
     level: number;

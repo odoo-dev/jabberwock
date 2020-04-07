@@ -309,7 +309,7 @@ describe('test performances', () => {
                             }
                         }
 
-                        console.log(
+                        console.info(
                             'Time to load ' +
                                 nodesNb +
                                 ' nodes and ' +
@@ -323,7 +323,7 @@ describe('test performances', () => {
                         const d2 = Date.now();
                         readAll(section);
                         const dt2 = Date.now() - d2;
-                        console.log(
+                        console.info(
                             'Time to re-load ' +
                                 nodesNb +
                                 ' nodes and ' +
@@ -389,7 +389,7 @@ describe('test performances', () => {
                         }
                         const dt = Date.now() - d;
 
-                        console.log(
+                        console.info(
                             'Time to create ' +
                                 (ID - nodeInti) +
                                 ' nodes and ' +
@@ -408,7 +408,7 @@ describe('test performances', () => {
                         memory.switchTo('1-2');
                         memory.switchTo('1-3-1');
                         const dt = Date.now() - d;
-                        console.log('Time to switch memory', dt);
+                        console.info('Time to switch memory', dt);
                         expect(dt).to.lessThan(50);
                     });
                     it('Should read the nodes the first time in minimum time', () => {
@@ -416,7 +416,7 @@ describe('test performances', () => {
                         const d = Date.now();
                         readAll(root);
                         const dt = Date.now() - d;
-                        console.log('Time to load nodes', dt);
+                        console.info('Time to load nodes', dt);
                         expect(dt).to.lessThan(250);
                     });
                     it('Should read the nodes in minimum time', () => {
@@ -426,7 +426,7 @@ describe('test performances', () => {
                         const nodes = readAll(root);
                         const dt = Date.now() - d;
                         times.push(dt);
-                        console.log('Time to re-load nodes', dt);
+                        console.info('Time to re-load nodes', dt);
 
                         for (let k = 0; k < 5; k++) {
                             const d = Date.now();
@@ -434,7 +434,7 @@ describe('test performances', () => {
                             readAll(root);
                             const dt = Date.now() - d;
                             times.push(dt);
-                            console.log('Time to re-load nodes', dt);
+                            console.info('Time to re-load nodes', dt);
                         }
 
                         let nodesNb = 0;
@@ -447,7 +447,7 @@ describe('test performances', () => {
                             }
                         });
                         const average = Math.round(times.reduce((a, b) => a + b) / times.length);
-                        console.log(
+                        console.info(
                             're-load ' + nodesNb + ' nodes and ' + chars + ' chars time average',
                             average,
                         );

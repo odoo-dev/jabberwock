@@ -1907,11 +1907,11 @@ describe('DomLayout', () => {
             const zoneMain = root.descendants(ZoneNode).find(n => n.managedZones.includes('main'));
             await layout.add('aaa', 'main');
             const node = zoneMain.children().pop();
-            expect(!!zoneMain.hidden.get(node)).to.equal(false, 'Component is visible');
+            expect(!!zoneMain.hidden[node.id]).to.equal(false, 'Component is visible');
             await editor.execCommand('hide', { componentID: 'aaa' });
-            expect(zoneMain.hidden.get(node)).to.equal(true, 'Component is hidden');
+            expect(zoneMain.hidden[node.id]).to.equal(true, 'Component is hidden');
             await layout.remove('aaa');
-            expect(zoneMain.hidden.get(node)).to.equal(undefined);
+            expect(zoneMain.hidden[node.id]).to.equal(undefined);
         });
         it('should remove a component in all layout engines', async () => {
             await editor.plugins.get(Layout).add('aaa', 'main');

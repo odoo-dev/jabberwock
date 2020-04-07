@@ -11,7 +11,7 @@ export class ZoneHtmlDomRenderer extends AbstractRenderer<Node[]> {
         const renderedChildren: Node[] = [];
         if (node.hasChildren()) {
             for (const child of node.childVNodes) {
-                if (!node.hidden.get(child)) {
+                if (!node.hidden[child.id]) {
                     renderedChildren.push(...(await this.engine.render(child)));
                 }
             }

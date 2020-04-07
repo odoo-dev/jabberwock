@@ -1,9 +1,12 @@
 import { Modifier } from './Modifier';
 import { Constructor, isConstructor } from '../../utils/src/utils';
+import { VersionableObject } from './Memory/VersionableObject';
+import { VersionableArray } from './Memory/VersionableArray';
 
-export class Modifiers {
-    _contents: Modifier[] = [];
+export class Modifiers extends VersionableObject {
+    _contents: Modifier[] = new VersionableArray();
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
+        super();
         const clonedModifiers = modifiers.map(mod => {
             return mod instanceof Modifier ? mod.clone() : mod;
         });

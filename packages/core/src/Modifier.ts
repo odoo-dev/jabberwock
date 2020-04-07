@@ -1,5 +1,6 @@
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from './VNodes/VNode';
+import { VersionableObject } from './Memory/VersionableObject';
 
 interface ModifierConstructor {
     new <T extends Constructor<Modifier>>(...args: ConstructorParameters<T>): this;
@@ -7,7 +8,7 @@ interface ModifierConstructor {
 export interface Modifier {
     constructor: ModifierConstructor & this;
 }
-export class Modifier {
+export class Modifier extends VersionableObject {
     get name(): string {
         return '';
     }

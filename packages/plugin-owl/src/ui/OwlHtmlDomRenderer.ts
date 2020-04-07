@@ -19,8 +19,9 @@ export class OwlHtmlDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: OwlNode): Promise<Node[]> {
         const placeholder = document.createElement('jw-placeholer');
         document.body.appendChild(placeholder);
-        node.Component.env = this.env;
-        const component = new node.Component(null, node.props);
+        const params = node.params;
+        params.Component.env = this.env;
+        const component = new params.Component(null, params.props);
         await component.mount(placeholder);
         placeholder.remove();
         return [...placeholder.childNodes];

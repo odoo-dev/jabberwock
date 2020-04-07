@@ -952,16 +952,20 @@ describePlugin(Indent, testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab<br>cd[]',
                 stepFunction: async (editor: JWEditor) => {
-                    const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
-                    const bNode = editable.next(node => node.name === 'b');
-                    const dNode = editable.next(node => node.name === 'd');
-                    await withRange(VRange.selecting(bNode, dNode), async range => {
-                        await editor.execCommand<Indent>('indent', {
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            const domEngine = editor.plugins.get(Layout).engines.dom;
+                            const editable = domEngine.components.get('editable')[0];
+                            const bNode = editable.next(node => node.name === 'b');
+                            const dNode = editable.next(node => node.name === 'd');
+                            await withRange(VRange.selecting(bNode, dNode), async range => {
+                                await editor.execCommand<Indent>('indent', {
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: '&nbsp;&nbsp; &nbsp;ab<br>&nbsp;&nbsp; &nbsp;cd[]',
@@ -1039,16 +1043,20 @@ describePlugin(Indent, testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: '&nbsp;&nbsp;&nbsp;&nbsp;ab<br>&nbsp;&nbsp;&nbsp;&nbsp;cd[]',
                 stepFunction: async (editor: JWEditor) => {
-                    const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
-                    const bNode = editable.next(node => node.name === 'b');
-                    const dNode = editable.next(node => node.name === 'd');
-                    await withRange(VRange.selecting(bNode, dNode), async range => {
-                        await editor.execCommand<Indent>('outdent', {
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execCommand('TestWrapWithCommandForMemorySecurity', {
+                        callback: async () => {
+                            const domEngine = editor.plugins.get(Layout).engines.dom;
+                            const editable = domEngine.components.get('editable')[0];
+                            const bNode = editable.next(node => node.name === 'b');
+                            const dNode = editable.next(node => node.name === 'd');
+                            await withRange(VRange.selecting(bNode, dNode), async range => {
+                                await editor.execCommand<Indent>('outdent', {
+                                    context: {
+                                        range: range,
+                                    },
+                                });
+                            });
+                        },
                     });
                 },
                 contentAfter: 'ab<br>cd[]',

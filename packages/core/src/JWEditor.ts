@@ -9,6 +9,9 @@ import { ModeError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
+import { Memory } from './Memory/Memory';
+import { makeVersionable } from './Memory/Versionable';
+import { VersionableArray } from './Memory/VersionableArray';
 
 export enum Mode {
     CONFIGURATION = 'configuration',
@@ -57,6 +60,9 @@ export class JWEditor {
         plugins: [],
         loadables: {},
     };
+    memory: Memory;
+    memoryID = 0;
+    private memoryInfo: { commandNames: string[] };
     selection = new VSelection();
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
@@ -94,9 +100,18 @@ export class JWEditor {
             }
         }
 
+        // create memory
+        this.memoryInfo = makeVersionable({ commandNames: [] });
+        this.memory = new Memory();
+        this.memory.linkToMemory(this.memoryInfo);
+
         for (const plugin of this.plugins.values()) {
             await plugin.start();
         }
+
+        // create the next memory slice (and freeze the current memory)
+        this.memoryID++;
+        this.memory.create(this.memoryID.toString());
     }
 
     //--------------------------------------------------------------------------
@@ -277,7 +292,24 @@ export class JWEditor {
         commandName: C,
         params?: CommandParams<P, C>,
     ): Promise<void> {
+        const isFrozen = !this.memoryID || this.memory.isFrozen();
+        if (isFrozen) {
+            // switch to the next memory slice (unfreeze the memory)
+            this.memory.switchTo(this.memoryID.toString());
+            this.memoryInfo.commandNames = new VersionableArray<string>();
+        }
+        this.memoryInfo.commandNames.push(commandName);
+
+        // TODO:
+        // create memory for each plugin who use the command then
+        // use squashInto(winnerSliceKey, winnerSliceKey, newMasterSliceKey)
         await this.dispatcher.dispatch(commandName, params);
+
+        if (isFrozen) {
+            // create the next memory slice (and freeze the current memory)
+            this.memoryID++;
+            this.memory.create(this.memoryID.toString());
+        }
     }
 
     /**

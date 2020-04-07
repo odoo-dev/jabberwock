@@ -2,13 +2,14 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { VersionableSet } from '../../core/src/Memory/VersionableSet';
 
 export class TableCellNode extends ContainerNode {
     breakable = false;
     header: boolean;
     // Only the `managerCell` setter should modify the following private keys.
     __managerCell: TableCellNode;
-    __managedCells = new Set<TableCellNode>();
+    __managedCells = new VersionableSet<TableCellNode>();
 
     constructor(params?: { header: boolean }) {
         super();

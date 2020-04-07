@@ -842,7 +842,7 @@ describe('core', () => {
                     expect(array.indexOf(-3)).to.equal(3);
                 });
                 it('array indexOf value several times', () => {
-                    const array = new VersionableArray(0, 1, 2, 3, 1, 4);
+                    const array = new VersionableArray<number>(0, 1, 2, 3, 1, 4);
                     const memory = new Memory();
                     memory.create('test');
                     memory.switchTo('test');
@@ -1294,7 +1294,7 @@ describe('core', () => {
                 });
                 it('default value for array', () => {
                     const memory = new Memory();
-                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    const array = new VersionableArray<number>(1, 2, 3, 4, 5);
                     memory.linkToMemory(array);
                     memory.create('a');
                     memory.switchTo('a');
@@ -1310,7 +1310,7 @@ describe('core', () => {
                     memory.create('test');
                     memory.switchTo('test');
 
-                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    const array = new VersionableArray<number>(1, 2, 3, 4, 5);
                     memory.linkToMemory(array);
                     delete array[0];
                     array[0] = 1;
@@ -1324,7 +1324,7 @@ describe('core', () => {
                     memory.create('test');
                     memory.switchTo('test');
 
-                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    const array = new VersionableArray<number>(1, 2, 3, 4, 5);
                     memory.linkToMemory(array);
 
                     memory.create('1-1');
@@ -1348,7 +1348,7 @@ describe('core', () => {
                 });
                 it('array push and pop in same slide memory have a clean memory slice values', () => {
                     const memory = new Memory();
-                    const array = new VersionableArray(1, 2, 3, 4, 5);
+                    const array = new VersionableArray<number>(1, 2, 3, 4, 5);
                     memory.linkToMemory(array);
                     memory.create('1');
                     memory.switchTo('1');

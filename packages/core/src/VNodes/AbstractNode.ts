@@ -3,10 +3,12 @@ import { Constructor, nodeLength } from '../../../utils/src/utils';
 import { ContainerNode } from './ContainerNode';
 import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
+import { VersionableObject } from './../Memory/VersionableObject';
+import { markAsDiffRoot } from './../Memory/Memory';
 
 let id = 0;
-export abstract class AbstractNode {
-    readonly id = id;
+export abstract class AbstractNode extends VersionableObject {
+    readonly id = ++id;
     editable = true;
     tangible = true;
     breakable = true;
@@ -25,7 +27,8 @@ export abstract class AbstractNode {
     }
 
     constructor() {
-        id++;
+        super();
+        markAsDiffRoot(this);
     }
 
     get name(): string {
