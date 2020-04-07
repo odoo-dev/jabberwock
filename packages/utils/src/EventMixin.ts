@@ -1,8 +1,9 @@
 /**
  * Abstract class to add event mechanism.
  */
-export class EventMixin {
+export class EventMixin<T extends EventMixin<T>> {
     _eventCallbacks: Record<string, Function[]> = {};
+    parent?: T;
     /**
      * Subscribe to an event with a callback.
      */
@@ -22,6 +23,9 @@ export class EventMixin {
                 await callback(args);
             }
         }
-        await this.fire(eventName, args);
+
+        if (this.parent) {
+            await this.parent.fire(eventName, args);
+        }
     }
 }

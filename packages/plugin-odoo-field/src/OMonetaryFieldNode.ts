@@ -1,15 +1,14 @@
-import { OdooFieldNode } from './OdooFieldNode';
-import { OdooFieldInfo } from './OdooField';
+import { OdooFieldNode } from '../../OdooFieldNode';
+import { OdooFieldInfo } from '../../OdooField';
 
 export enum OdooFieldNodeCurrencyPosition {
     BEFORE = 'BEFORE',
     AFTER = 'AFTER',
 }
 
-export class OdooFieldNodeCurrency extends OdooFieldNode {
+export class OMonetaryFieldNode extends OdooFieldNode {
     constructor(
         public htmlTag: string,
-        // todo: check name
         public fieldInfo: OdooFieldInfo,
         public options: {
             currencyValue: string;

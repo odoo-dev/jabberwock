@@ -1,19 +1,22 @@
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
-import { OdooFieldNodeCurrency, OdooFieldNodeCurrencyPosition } from './OdooFieldNodeCurrency';
+import {
+    OMonetaryFieldNode,
+    OdooFieldNodeCurrencyPosition,
+} from './fields/monetary/OMonetaryFieldNode';
 
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
     engine: DomRenderingEngine;
     predicate = (node): boolean => node instanceof OdooFieldNode;
 
-    async render(node: OdooFieldNode | OdooFieldNodeCurrency): Promise<Node[]> {
+    async render(node: OdooFieldNode | OMonetaryFieldNode): Promise<Node[]> {
         const container = document.createElement(node.htmlTag);
         let fieldContainer = container;
 
         // Special case 4/4 for monetary field.
-        if (node instanceof OdooFieldNodeCurrency) {
+        if (node instanceof OMonetaryFieldNode) {
             fieldContainer = document.createElement('span');
             fieldContainer.classList.add('oe_currency_value');
             container.appendChild(fieldContainer);

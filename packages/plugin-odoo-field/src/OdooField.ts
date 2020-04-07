@@ -6,6 +6,7 @@ import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
 import { OdooFieldDomParser } from './OdooFieldDomParser';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
+import { OdooMonetaryFieldDomParser } from './fields/monetary/OMonetaryFieldNodeParser';
 
 /**
  * The record definion is mainly used to get a reactive field using the method `getReactiveField`.
@@ -25,6 +26,8 @@ export interface OdooFieldInfo {
 
 type OdooFieldRegistryIdentifier = string;
 
+class ChangeAndCastManager {}
+
 export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Dom];
     readonly loadables: Loadables<Parser & Renderer> = {
@@ -33,6 +36,7 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
     };
 
     registry: Record<OdooFieldRegistryIdentifier, OdooFieldInfo> = {};
+    changeAndCastManager = new ChangeAndCastManager();
 
     /**
      * Get reactive field.

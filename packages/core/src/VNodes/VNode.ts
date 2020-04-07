@@ -37,7 +37,7 @@ export interface VNode {
  * made in its tree. This will be unnecessary when the memory branch will be
  * merged. Hence, this extends will disappear.
  */
-export class VNode extends EventMixin {
+export class VNode extends EventMixin<VNode> {
     static test(node: VNode): boolean {
         return node && node.test(this);
     }

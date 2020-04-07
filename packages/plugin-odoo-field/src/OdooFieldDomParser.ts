@@ -2,7 +2,10 @@ import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { OdooFieldNode } from './OdooFieldNode';
-import { OdooFieldNodeCurrency, OdooFieldNodeCurrencyPosition } from './OdooFieldNodeCurrency';
+import {
+    OMonetaryFieldNode,
+    OdooFieldNodeCurrencyPosition,
+} from './fields/monetary/OMonetaryFieldNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { VNodeType, VNode } from '../../core/src/VNodes/VNode';
 import { OdooFieldInfo, OdooRecordDefinition } from './OdooField';
@@ -138,7 +141,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
             childNodesToParse = amountElement.childNodes;
             const currency = (amountElement.previousSibling || amountElement.nextSibling)
                 .textContent;
-            fieldNode = new OdooFieldNodeCurrency(element.tagName, odooReactiveField, {
+            fieldNode = new OMonetaryFieldNode(element.tagName, odooReactiveField, {
                 currencyValue: currency,
                 currencyPosition: amountElement.previousSibling
                     ? OdooFieldNodeCurrencyPosition.BEFORE
