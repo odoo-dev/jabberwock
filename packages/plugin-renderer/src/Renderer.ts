@@ -7,6 +7,7 @@ import {
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ModifierRendererConstructor } from './ModifierRenderer';
 import { RendererConstructor } from './NodeRenderer';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     loaders = {
@@ -14,6 +15,10 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
         renderers: this.loadRenderers,
     };
     engines: Record<RenderingIdentifier, RenderingEngine> = {};
+
+    commandHooks = {
+        'commit': this._invalidCache,
+    };
 
     async render<T>(renderingId: string, node: VNode): Promise<T | void>;
     async render<T>(renderingId: string, nodes: VNode[]): Promise<T[] | void>;
@@ -52,6 +57,19 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
                     renderingEngine.register(RendererClass);
                 }
             }
+        }
+    }
+
+    private _invalidCache(): void {
+        const nodes: VNode[] = [];
+        const pathChanges = new Map(this.editor.memory.getChangedVersionables());
+        for (const [node] of pathChanges) {
+            if (node instanceof AbstractNode) {
+                nodes.push(node as VNode);
+            }
+        }
+        for (const engine of Object.values(this.engines)) {
+            engine.invalidateRendererCache(nodes);
         }
     }
 }

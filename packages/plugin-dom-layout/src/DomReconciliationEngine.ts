@@ -310,6 +310,7 @@ export class DomReconciliationEngine {
                 object.object.attach(...object.dom);
             }
         }
+        this._domUpdated.clear();
     }
 
     /**

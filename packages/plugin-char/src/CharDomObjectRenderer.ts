@@ -28,9 +28,9 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     private _groupByAttributes(charNodes: CharNode[]): [CharNode[], Attributes][] {
         const groups: [CharNode[], Attributes][] = [];
         for (const charNode of charNodes) {
-            const attr = charNode.modifiers.get(Attributes);
+            const attr = charNode.modifiers.find(Attributes);
             const last = groups[groups.length - 1];
-            if (!last || (!last[1] && !attr) || (attr && !attr.isSameAs(last[1]))) {
+            if (!last || !last[1] !== !attr || (attr && !attr.isSameAs(last[1]))) {
                 groups.push([[charNode], attr]);
             } else {
                 last[0].push(charNode);
@@ -63,7 +63,7 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
         const textObject = { text: texts.join('') };
         this.engine.locate(charNodes, textObject);
 
-        if (attr.keys().length) {
+        if (attr?.keys().length) {
             const domObject = {
                 tag: 'SPAN',
                 children: [textObject],

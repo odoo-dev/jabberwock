@@ -21,15 +21,14 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
     locations?: [ComponentId, DomLayoutLocation][];
     components?: ComponentDefinition[];
     componentZones?: [ComponentId, ZoneIdentifier[]][];
-    afterRender?: Function;
 }
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
@@ -52,7 +51,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         domLocations: this._loadComponentLocations,
     };
     commandHooks = {
-        '*': this.redraw,
+        'commit': this._redraw,
     };
 
     constructor(editor: JWEditor, configuration: T) {
@@ -75,9 +74,6 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         this._loadComponentLocations(this.configuration.locations || []);
         domLayoutEngine.location = this.configuration.location;
         await domLayoutEngine.start();
-        if (this.configuration.afterRender) {
-            await this.configuration.afterRender();
-        }
         window.addEventListener('keydown', this.processKeydown, true);
     }
     async stop(): Promise<void> {
@@ -120,25 +116,6 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         }
     }
 
-    async redraw(): Promise<void> {
-        // TODO: adapt when add memory
-        // * redraw node with change
-        // * redraw children if add or remove children (except for selection)
-        const layout = this.dependencies.get(Layout);
-        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-        const editables = domLayoutEngine.components.get('editable');
-        if (editables?.length) {
-            const nodes = [...editables];
-            for (const node of nodes) {
-                if (node instanceof ContainerNode) {
-                    nodes.push(...node.childVNodes);
-                }
-            }
-            await domLayoutEngine.redraw(...nodes);
-            await this.configuration.afterRender?.();
-        }
-    }
-
     /**
      * return True if target node is inside JB main editable Zone
      *
@@ -159,7 +136,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const node = nodes?.pop();
         // We cannot always expect a 'contentEditable' attribute on the main ancestor.
         // So we expect to find the main editor ZoneNode if we are in the editable part of JB
-        return node && node.ancestor(ZoneNode).managedZones.includes('main');
+        return node && node.ancestor(ZoneNode)?.managedZones.includes('main');
     }
 
     //--------------------------------------------------------------------------
@@ -171,6 +148,54 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         for (const [id, location] of locations) {
             domLayoutEngine.locations[id] = location;
+        }
+    }
+    private async _redraw(): Promise<void> {
+        const layout = this.dependencies.get(Layout);
+        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        const pathChanges = new Map(this.editor.memory.getChangedVersionables());
+        if (pathChanges.size) {
+            const nodes = [];
+            for (const [root] of pathChanges) {
+                if (
+                    !(root instanceof AbstractNode) ||
+                    root === this.editor.selection.anchor ||
+                    root === this.editor.selection.focus
+                ) {
+                    // Filter not VNode changes and selection change.
+                    pathChanges.delete(root);
+                }
+            }
+            let removedNode = false;
+            for (const [root] of pathChanges) {
+                if (root instanceof AbstractNode) {
+                    nodes.push(root);
+                    if (!root.parent) {
+                        removedNode = true;
+                    }
+                }
+            }
+            if (removedNode) {
+                // Need to force redrawing of children if remove a child.
+                for (const [root, paths] of pathChanges) {
+                    if (root instanceof AbstractNode) {
+                        if (paths.find(path => path[0] === 'childVNodes')) {
+                            for (const node of [...nodes]) {
+                                if (node instanceof ContainerNode) {
+                                    for (const child of node.childVNodes) {
+                                        const index = nodes.indexOf(child);
+                                        if (index !== -1) {
+                                            nodes.splice(index, 1);
+                                        }
+                                        nodes.push(child);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            await domLayoutEngine.redraw(nodes);
         }
     }
 }

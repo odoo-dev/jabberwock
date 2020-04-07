@@ -20,11 +20,13 @@ export class LinkFormat extends Format {
     }
 
     get target(): string {
-        return this.modifiers.find(Attributes)?.get('target');
+        return this.modifiers.find(Attributes)?.get('target') || '';
     }
 
-    set target(url: string) {
-        this.modifiers.get(Attributes).set('target', url);
+    set target(target: string) {
+        if (target.length) {
+            this.modifiers.get(Attributes).set('target', target);
+        }
     }
 
     //--------------------------------------------------------------------------

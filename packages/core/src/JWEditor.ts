@@ -9,6 +9,9 @@ import { ModeError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
+import { Memory } from './Memory/Memory';
+import { makeVersionable, markNotVersionable } from './Memory/Versionable';
+import { VersionableArray } from './Memory/VersionableArray';
 
 export enum Mode {
     CONFIGURATION = 'configuration',
@@ -57,13 +60,12 @@ export class JWEditor {
         plugins: [],
         loadables: {},
     };
+    memory: Memory;
+    memoryID = 0;
+    memoryInfo: { commandNames: string[] };
     selection = new VSelection();
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
-    // Use a set so that when asynchronous functions are called we ensure that
-    // each command batch is waited for.
-    preventRenders: Set<Function> = new Set();
-    enableRender = true;
 
     constructor() {
         this.dispatcher = new Dispatcher(this);
@@ -98,9 +100,18 @@ export class JWEditor {
             }
         }
 
+        // create memory
+        this.memoryInfo = makeVersionable({ commandNames: [] });
+        this.memory = new Memory();
+        this.memory.linkToMemory(this.memoryInfo);
+
         for (const plugin of this.plugins.values()) {
             await plugin.start();
         }
+
+        // create the next memory slice (and freeze the current memory)
+        this.memoryID++;
+        this.memory.create(this.memoryID.toString());
     }
 
     //--------------------------------------------------------------------------
@@ -271,11 +282,16 @@ export class JWEditor {
         }
     }
 
+    /**
+     * Execute arbitrary code in `callback`, then dispatch the commit event.
+     *
+     * @param callback
+     */
     async execBatch(callback: () => Promise<void>): Promise<void> {
-        this.preventRenders.add(callback);
-        await callback();
-        this.preventRenders.delete(callback);
-        await this.dispatcher.dispatchHooks('@batch');
+        return this._execBatchInMemory(() => {
+            this.memoryInfo.commandNames.push('@batch');
+            return callback();
+        });
     }
 
     /**
@@ -288,23 +304,49 @@ export class JWEditor {
         commandName: C,
         params?: CommandParams<P, C>,
     ): Promise<void> {
-        return await this.dispatcher.dispatch(commandName, params);
+        await this._execBatchInMemory(() => {
+            this.memoryInfo.commandNames.push(commandName);
+            return this.dispatcher.dispatch(commandName, params);
+        });
     }
 
     /**
-     * Execute arbitrary code in `callback`, then dispatch the event.
+     * Execute arbitrary code in `callback` in a free memory slice.
+     * Return true if we open a memory slice.
+     *
+     * TODO: create memory for each plugin who use the command then use
+     * squashInto(winnerSliceKey, winnerSliceKey, newMasterSliceKey)
+     *
+     * @param callback
      */
-    async execCustomCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
-        callback: () => Promise<void>,
-    ): Promise<void> {
+    private async _execBatchInMemory(callback: () => Promise<void>): Promise<void> {
+        const isFrozen = !this.memoryID || this.memory.isFrozen();
+        if (isFrozen) {
+            // Switch to the next memory slice (unfreeze the memory).
+            this.memory.switchTo(this.memoryID.toString());
+            this.memoryInfo.commandNames = new VersionableArray();
+        }
         await callback();
-        await this.dispatcher.dispatchHooks('@custom');
+        if (isFrozen) {
+            // Check if it's frozen for calling execCommand inside a call of
+            // execCommand Create the next memory slice (and freeze the
+            // current memory).
+            this.memoryID++;
+            this.memory.create(this.memoryID.toString());
+            await this.dispatcher.commit();
+        }
     }
 
     /**
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
+        if (this.memory) {
+            // Unfreeze the memory.
+            this.memory.create('stop');
+            this.memory.switchTo('stop');
+            this.memory = null;
+        }
         for (const plugin of this.plugins.values()) {
             await plugin.stop();
         }

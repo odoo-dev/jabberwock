@@ -69,7 +69,6 @@ export class ListNode extends ContainerNode {
             } else {
                 // Check the node itself otherwise.
                 node.modifiers.set(IsChecked);
-
                 // Propagate to next indented list if any.
                 const indentedChild = node.nextSibling();
                 if (indentedChild && indentedChild.is(ListNode)) {

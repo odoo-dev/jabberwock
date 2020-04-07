@@ -1,5 +1,6 @@
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from './VNodes/VNode';
+import { VersionableObject } from './Memory/VersionableObject';
 
 export type ModifierTypeguard<T extends Modifier> = (
     modifier: Modifier,
@@ -15,7 +16,7 @@ interface ModifierConstructor {
 export interface Modifier {
     constructor: ModifierConstructor & this;
 }
-export class Modifier {
+export class Modifier extends VersionableObject {
     preserve = true;
     get name(): string {
         return '';

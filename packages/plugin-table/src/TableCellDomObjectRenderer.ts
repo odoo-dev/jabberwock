@@ -20,22 +20,21 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
         const domObject: DomObject = {
             tag: cell.header ? 'TH' : 'TD',
             children: await this.engine.renderChildren(cell),
+            attributes: {},
         };
 
-        // Render attributes.
+        this.engine.renderAttributes(Attributes, cell, domObject);
+
         // Colspan and rowspan are handled differently from other attributes:
         // they are automatically calculated in function of the cell's managed
         // cells. Render them here. If their value is 1 or less, they are
         // insignificant so no need to render them.
         if (cell.colspan > 1) {
-            cell.modifiers.get(Attributes).set('colspan', '' + cell.colspan);
+            domObject.attributes.colspan = '' + cell.colspan;
         }
         if (cell.rowspan > 1) {
-            cell.modifiers.get(Attributes).set('rowspan', '' + cell.rowspan);
+            domObject.attributes.rowspan = '' + cell.rowspan;
         }
-        this.engine.renderAttributes(Attributes, cell, domObject);
-        cell.modifiers.get(Attributes).remove('colspan');
-        cell.modifiers.get(Attributes).remove('rowspan');
 
         return domObject;
     }

@@ -139,52 +139,30 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     /**
      * Get the modifiers for the next insertion.
      */
-    getCurrentModifiers(range = this.editor.selection.range): Modifiers {
-        if (this.cache.modifiers) {
+    getCurrentModifiers(range = this.editor.selection.range): Modifiers | null {
+        if (this.cache.modifiers && range === this.editor.selection.range) {
             return this.cache.modifiers;
-        }
-
-        let inlineToCopyModifiers: VNode;
-        if (range.isCollapsed()) {
-            // TODO: LineBreakNode should have the formats as well.
-            inlineToCopyModifiers =
-                range.start.previousSibling(node => !node.test(LineBreakNode)) ||
-                range.start.nextSibling();
         } else {
-            inlineToCopyModifiers = range.start.nextSibling();
+            return this._getCurrentModifiers(range);
         }
-        if (inlineToCopyModifiers && inlineToCopyModifiers.is(InlineNode)) {
-            return inlineToCopyModifiers.modifiers.clone();
-        }
-
-        return new Modifiers();
     }
     /**
      * Get the styles for the next insertion.
      */
-    getCurrentStyle(range = this.editor.selection.range): CssStyle {
-        if (this.cache.style) {
+    getCurrentStyle(range = this.editor.selection.range): CssStyle | null {
+        if (this.cache.style && range === this.editor.selection.range) {
             return this.cache.style;
-        }
-
-        let inlineToCopyStyle: VNode;
-        if (range.isCollapsed()) {
-            inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
         } else {
-            inlineToCopyStyle = range.start.nextSibling();
+            return this._getCurrentStyle(range);
         }
-        if (inlineToCopyStyle && inlineToCopyStyle.is(InlineNode)) {
-            return inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || new CssStyle();
-        }
-        return new CssStyle();
     }
     /**
      * Each time the selection changes, we reset its format and style.
      */
     resetCache(): void {
         this.cache = {
-            modifiers: null,
-            style: null,
+            modifiers: this._getCurrentModifiers(),
+            style: this._getCurrentStyle(),
         };
     }
     /**
@@ -197,6 +175,42 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         for (const node of nodes) {
             // TODO: some formats might be on the parent...
             node.modifiers.empty();
+        }
+    }
+
+    /**
+     * Get the current modifiers.
+     */
+    private _getCurrentModifiers(range = this.editor.selection.range): Modifiers | null {
+        let inlineToCopyModifiers: VNode;
+        if (range.isCollapsed()) {
+            // TODO: LineBreakNode should have the formats as well.
+            inlineToCopyModifiers =
+                range.start.previousSibling(node => !(node instanceof LineBreakNode)) ||
+                range.start.nextSibling();
+        } else {
+            inlineToCopyModifiers = range.start.nextSibling();
+        }
+        if (inlineToCopyModifiers && inlineToCopyModifiers.is(InlineNode)) {
+            return inlineToCopyModifiers.modifiers.clone();
+        }
+    }
+    /**
+     * Get the current styles for the next insertion.
+     */
+    private _getCurrentStyle(range = this.editor.selection.range): CssStyle | null {
+        if (this.cache.style) {
+            return this.cache.style;
+        }
+
+        let inlineToCopyStyle: VNode;
+        if (range.isCollapsed()) {
+            inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
+        } else {
+            inlineToCopyStyle = range.start.nextSibling();
+        }
+        if (inlineToCopyStyle && inlineToCopyStyle.is(InlineNode)) {
+            return inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || new CssStyle();
         }
     }
 }

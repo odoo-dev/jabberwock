@@ -65,7 +65,10 @@ export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOption) {
         super();
         class CustomPlugin extends JWPlugin {
-            commands = options.customCommands;
+            commands = Object.assign(
+                { commit: { handler: options.afterRender } },
+                options.customCommands,
+            );
         }
 
         this.configure({
@@ -199,7 +202,6 @@ export class OdooWebsiteEditor extends JWEditor {
                 ['editable', ['main']],
             ],
             location: options.location,
-            afterRender: options.afterRender,
         });
         this.configure(DomEditable, {
             autoFocus: true,
@@ -223,7 +225,7 @@ export class OdooWebsiteEditor extends JWEditor {
     }
 
     async render(): Promise<void> {
-        const domLayout = this.plugins.get(DomLayout);
-        return domLayout.redraw();
+        // const domLayout = this.plugins.get(DomLayout);
+        // return domLayout._redrawAfterCommand();
     }
 }

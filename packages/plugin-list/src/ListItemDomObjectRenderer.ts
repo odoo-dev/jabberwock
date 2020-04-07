@@ -70,14 +70,16 @@ export class ListItemDomObjectRenderer extends NodeRenderer<DomObject> {
 
             // Handle click in the checkbox.
             const handlerMouseDown = (ev: MouseEvent): void => {
-                if (ev.offsetX < 0) {
+                if (ev.offsetX <= 0) {
                     ev.stopImmediatePropagation();
                     ev.preventDefault();
-                    withRange(VRange.at(node.firstChild() || node), range => {
-                        return this.engine.editor.execCommand('toggleChecked', {
-                            context: {
-                                range: range,
-                            },
+                    this.engine.editor.execBatch(async () => {
+                        return withRange(VRange.at(node.firstChild() || node), range => {
+                            return this.engine.editor.execCommand('toggleChecked', {
+                                context: {
+                                    range: range,
+                                },
+                            });
                         });
                     });
                 }

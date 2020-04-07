@@ -19,7 +19,7 @@ export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
                     children: await this.engine.renderChildren(node),
                 };
                 this.engine.renderAttributes(Attributes, node, domObject);
-            } else if (node.test(FragmentNode)) {
+            } else if (node instanceof FragmentNode) {
                 domObject = {
                     children: await this.engine.renderChildren(node),
                 };

@@ -1,6 +1,4 @@
 import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
-import { InlineNode } from '../../../plugin-inline/src/InlineNode';
-import { LinkFormat } from '../LinkFormat';
 import { LinkParams } from '../Link';
 import { Layout } from '../../../plugin-layout/src/Layout';
 import { useState } from '@odoo/owl';

@@ -43,9 +43,9 @@ export class FullsreenButtonDomObjectRenderer extends NodeRenderer<DomObject> {
                         fullscreenPlugin.isFullscreen = true;
                         document.body.classList.add('jw-fullscreen');
                         element.classList.add('jw-fullscreen');
-                        domLayoutEngine.redraw(
+                        domLayoutEngine.redraw([
                             ...domLayoutEngine.components.get('FullscreenButton'),
-                        );
+                        ]);
                         window.dispatchEvent(new CustomEvent('resize'));
                         return;
                     }
@@ -54,7 +54,7 @@ export class FullsreenButtonDomObjectRenderer extends NodeRenderer<DomObject> {
             if (fullscreenPlugin.isFullscreen) {
                 fullscreenPlugin.isFullscreen = false;
                 document.body.classList.remove('jw-fullscreen');
-                domLayoutEngine.redraw(...domLayoutEngine.components.get('FullscreenButton'));
+                domLayoutEngine.redraw([...domLayoutEngine.components.get('FullscreenButton')]);
                 window.dispatchEvent(new CustomEvent('resize'));
             }
         };

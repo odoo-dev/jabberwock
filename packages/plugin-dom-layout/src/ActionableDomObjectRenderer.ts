@@ -15,8 +15,17 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
     engine: DomObjectRenderingEngine;
     predicate: Predicate = ActionableNode;
 
+    actionableNodes = new Map<ActionableNode, HTMLElement>();
+
+    constructor(engine: DomObjectRenderingEngine) {
+        super(engine);
+        this.engine.editor.dispatcher.registerCommandHook(
+            'commit',
+            this._updateActionables.bind(this),
+        );
+    }
+
     async render(button: ActionableNode): Promise<DomObjectActionable> {
-        let updateButton: () => void;
         let handler: (ev: MouseEvent) => void;
         const objectButton: DomObjectActionable = {
             tag: 'BUTTON',
@@ -34,13 +43,11 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
                     objectButton.handler();
                 };
                 el.addEventListener('click', handler);
-                updateButton = this._updateButton.bind(this, button, el);
-                updateButton();
-                this.engine.editor.dispatcher.registerCommandHook('*', updateButton);
+                this.actionableNodes.set(button, el);
             },
             detach: (el: HTMLButtonElement): void => {
                 el.removeEventListener('click', handler);
-                this.engine.editor.dispatcher.removeCommandHook('*', updateButton);
+                this.actionableNodes.delete(button);
             },
         };
         this.engine.renderAttributes(Attributes, button, objectButton);
@@ -55,33 +62,41 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
 
         return objectButton;
     }
+
     /**
      * Update button rendering after the command if the value of selected or
      * enabled change.
      *
-     * @param button
+     * @param aactionable
      * @param element
      */
-    private _updateButton(button: ActionableNode, element: HTMLButtonElement): void {
-        const editor = this.engine.editor;
-        const select = !!button.selected(editor);
-        const enable = !!button.enabled(editor);
-
-        const attrSelected = element.getAttribute('aria-pressed');
-        if (select.toString() !== attrSelected) {
-            element.setAttribute('aria-pressed', select.toString());
-            if (select) {
-                element.classList.add('pressed');
-            } else {
-                element.classList.remove('pressed');
-            }
+    protected _updateActionables(): void {
+        const commandNames = this.engine.editor.memoryInfo.commandNames;
+        if (commandNames.length === 1 && commandNames.includes('insertText')) {
+            // By default the actionable buttons are not update for a text insertion.
+            return;
         }
-        const domEnable = !element.getAttribute('disabled');
-        if (enable !== domEnable) {
-            if (enable) {
-                element.removeAttribute('disabled');
-            } else {
-                element.setAttribute('disabled', 'true');
+        for (const [aactionable, element] of this.actionableNodes) {
+            const editor = this.engine.editor;
+            const select = !!aactionable.selected(editor);
+            const enable = !!aactionable.enabled(editor);
+
+            const attrSelected = element.getAttribute('aria-pressed');
+            if (select.toString() !== attrSelected) {
+                element.setAttribute('aria-pressed', select.toString());
+                if (select) {
+                    element.classList.add('pressed');
+                } else {
+                    element.classList.remove('pressed');
+                }
+            }
+            const domEnable = !element.getAttribute('disabled');
+            if (enable !== domEnable) {
+                if (enable) {
+                    element.removeAttribute('disabled');
+                } else {
+                    element.setAttribute('disabled', 'true');
+                }
             }
         }
     }

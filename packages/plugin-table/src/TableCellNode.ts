@@ -7,13 +7,14 @@ import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
 export interface TableCellNodeParams extends AbstractNodeParams {
     header: boolean;
 }
+import { VersionableSet } from '../../core/src/Memory/VersionableSet';
 
 export class TableCellNode extends ContainerNode {
     breakable = false;
     header: boolean;
     // Only the `managerCell` setter should modify the following private keys.
     __managerCell: TableCellNode;
-    __managedCells = new Set<TableCellNode>();
+    __managedCells = new VersionableSet<TableCellNode>();
 
     constructor(params?: TableCellNodeParams) {
         super(params);

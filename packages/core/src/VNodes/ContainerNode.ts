@@ -1,10 +1,10 @@
 import { AbstractNode } from './AbstractNode';
 import { VNode, Predicate, isLeaf } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
+import { VersionableArray } from '../Memory/VersionableArray';
 
 export class ContainerNode extends AbstractNode {
-    parent: ContainerNode;
-    readonly childVNodes: VNode[] = [];
+    readonly childVNodes: VNode[] = new VersionableArray<VNode>();
 
     //--------------------------------------------------------------------------
     // Browsing children.
@@ -17,14 +17,14 @@ export class ContainerNode extends AbstractNode {
     children(predicate?: Predicate): VNode[];
     children(predicate?: Predicate): VNode[] {
         return this.childVNodes.filter(child => {
-            return child.tangible && child.test(predicate);
+            return child.tangible && (!predicate || child.test(predicate));
         });
     }
     /**
      * See {@link AbstractNode.hasChildren}.
      */
     hasChildren(): boolean {
-        return this.children().length > 0;
+        return !!this.childVNodes.find(child => child.tangible);
     }
     /**
      * See {@link AbstractNode.nthChild}.
@@ -39,7 +39,7 @@ export class ContainerNode extends AbstractNode {
     firstChild(predicate?: Predicate): VNode;
     firstChild(predicate?: Predicate): VNode {
         let child = this.childVNodes[0];
-        while (child && !(child.tangible && child.test(predicate))) {
+        while (child && !(child.tangible && (!predicate || child.test(predicate)))) {
             child = child.nextSibling();
         }
         return child;
@@ -51,7 +51,7 @@ export class ContainerNode extends AbstractNode {
     lastChild(predicate?: Predicate): VNode;
     lastChild(predicate?: Predicate): VNode {
         let child = this.childVNodes[this.childVNodes.length - 1];
-        while (child && !(child.tangible && child.test(predicate))) {
+        while (child && !(child.tangible && (!predicate || child.test(predicate)))) {
             child = child.previousSibling();
         }
         return child;
@@ -63,7 +63,7 @@ export class ContainerNode extends AbstractNode {
     firstLeaf(predicate?: Predicate): VNode;
     firstLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return isLeaf(node) && node.test(predicate);
+            return isLeaf(node) && (!predicate || node.test(predicate));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -78,7 +78,7 @@ export class ContainerNode extends AbstractNode {
     lastLeaf(predicate?: Predicate): VNode;
     lastLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return isLeaf(node) && node.test(predicate);
+            return isLeaf(node) && (!predicate || node.test(predicate));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -93,7 +93,7 @@ export class ContainerNode extends AbstractNode {
     firstDescendant(predicate?: Predicate): VNode;
     firstDescendant(predicate?: Predicate): VNode {
         let firstDescendant = this.firstChild();
-        while (firstDescendant && !firstDescendant.test(predicate)) {
+        while (firstDescendant && predicate && firstDescendant.test(predicate)) {
             firstDescendant = this._descendantAfter(firstDescendant);
         }
         return firstDescendant;
@@ -108,7 +108,7 @@ export class ContainerNode extends AbstractNode {
         while (lastDescendant && lastDescendant.hasChildren()) {
             lastDescendant = lastDescendant.lastChild();
         }
-        while (lastDescendant && !lastDescendant.test(predicate)) {
+        while (lastDescendant && predicate && !lastDescendant.test(predicate)) {
             lastDescendant = this._descendantBefore(lastDescendant);
         }
         return lastDescendant;
@@ -123,7 +123,7 @@ export class ContainerNode extends AbstractNode {
         const stack = [...this.childVNodes];
         while (stack.length) {
             const node = stack.shift();
-            if (node.tangible && node.test(predicate)) {
+            if (node.tangible && (!predicate || node.test(predicate))) {
                 descendants.push(node);
             }
             if (node instanceof ContainerNode) {

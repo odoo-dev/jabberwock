@@ -33,8 +33,10 @@ describePlugin(Align, testEditor => {
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
                         const root = editable;
-                        root.lastChild().editable = false;
-                        return align(AlignType.LEFT)(editor);
+                        return editor.execBatch(() => {
+                            root.lastChild().editable = false;
+                            return align(AlignType.LEFT)(editor);
+                        });
                     },
                     contentAfter: '<p>ab</p><p><span style="text-align: left;">c[]d</span></p>',
                 });
@@ -46,8 +48,10 @@ describePlugin(Align, testEditor => {
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
                         const root = editable;
-                        root.lastChild().editable = false;
-                        return align(AlignType.LEFT)(editor);
+                        return editor.execBatch(() => {
+                            root.lastChild().editable = false;
+                            return align(AlignType.LEFT)(editor);
+                        });
                     },
                     contentAfter:
                         '<p>ab</p><p style="text-align: right;"><span style="text-align: left;">c[]d</span></p>',

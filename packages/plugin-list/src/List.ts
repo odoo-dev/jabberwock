@@ -271,7 +271,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     indent(params: IndentParams): void {
         const range = params.context.range;
-        const items = range.targetedNodes(node => node.parent?.test(ListNode));
+        const items = range.targetedNodes(node => node.parent instanceof ListNode);
 
         // Do not indent items of a targeted nested list, since they
         // will automatically be indented with their list ancestor.

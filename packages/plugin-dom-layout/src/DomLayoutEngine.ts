@@ -6,7 +6,7 @@ import {
     ComponentDefinition,
 } from '../../plugin-layout/src/LayoutEngine';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { ZoneNode, ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
+import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Direction, VSelectionDescription } from '../../core/src/VSelection';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
@@ -112,99 +112,13 @@ export class DomLayoutEngine extends LayoutEngine {
     getDomNodes(node: VNode): Node[] {
         return this._domReconciliationEngine.toDom(node);
     }
-    /**
-     * Redraw the layout component after insertion.
-     * If the target zone is the root, prepare its location before redrawing.
-     *
-     * @override
-     */
-    async prepend(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const nodes = await super.prepend(componentId, zoneId, props);
-        // Filter out children of nodes that we are already going to redraw.
-        const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
-        for (const node of nodeToRedraw) {
-            nodeToRedraw.push(...node.childVNodes);
-        }
-        // only used if the zone want to return a Node but hide the component (eg: a panel)
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    /**
-     * Redraw the layout component after insertion.
-     * If the target zone is the root, prepare its location before redrawing.
-     *
-     * @override
-     */
-    async append(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const nodes = await super.append(componentId, zoneId, props);
-        // Filter out children of nodes that we are already going to redraw.
-        const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
-        for (const node of nodeToRedraw) {
-            nodeToRedraw.push(...node.childVNodes);
-        }
-        // only used if the zone want to return a Node but hide the component (eg: a panel)
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    /**
-     * Redraw the layout component after removal.
-     *
-     * @override
-     */
-    async remove(componentId: ComponentId): Promise<ZoneNode[]> {
-        const zones = await super.remove(componentId);
-        // TODO: adapt when add memory
-        await this.redraw(...zones);
-        return zones;
-    }
-    /**
-     * Redraw the layout component after showing the component.
-     *
-     * @override
-     */
-    async show(componentId: ComponentId): Promise<VNode[]> {
-        const nodes = await super.show(componentId);
-        const nodeToRedraw = [...nodes];
-        for (const node of nodeToRedraw) {
-            nodeToRedraw.push(...node.childVNodes);
-        }
-        for (const node of nodes) {
-            nodeToRedraw.push(node.ancestor(ZoneNode));
-        }
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    /**
-     * Redraw the layout component after hidding the component.
-     *
-     * @override
-     */
-    async hide(componentId: ComponentId): Promise<VNode[]> {
-        const nodes = await super.hide(componentId);
-        const nodeToRedraw = [...nodes];
-        for (const node of nodes) {
-            nodeToRedraw.push(node.ancestor(ZoneNode));
-        }
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    async redraw(...nodes: VNode[]): Promise<void> {
-        if (
-            !this.editor.enableRender ||
-            (this.editor.preventRenders && this.editor.preventRenders.size)
-        ) {
-            return;
-        }
+    async redraw(nodes?: VNode[]): Promise<void> {
         if (this._currentlyRedrawing) {
             throw new Error('Double redraw detected');
         }
         this._currentlyRedrawing = true;
 
-        if (nodes.length) {
+        if (nodes) {
             for (let node of nodes) {
                 while (
                     (this._domReconciliationEngine.getRenderedWith(node).length !== 1 ||
@@ -215,22 +129,27 @@ export class DomLayoutEngine extends LayoutEngine {
                     // If not in layout then redraw the parent.
                     node = node.parent;
                     if (!nodes.includes(node)) {
-                        nodes.push(node);
+                        nodes.unshift(node);
                     }
                 }
             }
             for (const node of [...nodes]) {
                 // Add direct siblings nodes for batched nodes with format.
                 const previous = node.previous();
-                if (previous && !nodes.includes(previous)) {
-                    nodes.push(previous);
+                if (previous && !nodes.includes(previous) && previous.parent === node.parent) {
+                    nodes.splice(nodes.indexOf(node), 0, previous);
                 }
                 const next = node.next();
-                if (next && !nodes.includes(next)) {
-                    nodes.push(next);
+                if (next && !nodes.includes(next) && next.parent === node.parent) {
+                    nodes.splice(nodes.indexOf(node) + 1, 0, next);
+                }
+                // Add parent for wrap/unwrapped node list formatted charNodes.
+                if (node.parent && !nodes.includes(node.parent)) {
+                    nodes.push(node.parent);
                 }
             }
         } else {
+            nodes = [];
             // Redraw all.
             for (const componentId in this.locations) {
                 nodes.push(...this.components.get(componentId));

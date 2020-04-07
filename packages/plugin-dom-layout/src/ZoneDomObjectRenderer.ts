@@ -12,7 +12,7 @@ export class ZoneDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(node: ZoneNode): Promise<DomObject> {
         return {
-            children: node.children().filter(child => !node.hidden.get(child)),
+            children: node.children().filter(child => !node.hidden[child.id]),
         };
     }
 }

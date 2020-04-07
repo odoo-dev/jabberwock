@@ -103,10 +103,6 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
         const ancestor = this.editor.selection.anchor.ancestor(ThemeNode);
         if (ancestor) {
             ancestor.themeName = params.theme;
-
-            // TODO: remove this redraw when memory send the nodes to redraw into domLayout
-            const domEngine = this.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            await domEngine.redraw(ancestor);
         }
     }
 }

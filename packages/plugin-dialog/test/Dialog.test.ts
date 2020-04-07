@@ -79,7 +79,9 @@ describe('Dialog', async () => {
         });
 
         it('should add a vNode in the dialog', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-editor>',
@@ -97,14 +99,18 @@ describe('Dialog', async () => {
             );
         });
         it('should add a vNode in the dialog and hide it', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             await editor.execCommand('hide', { componentId: 'aaa' });
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 ['<jw-editor>', '<main></main>', '</jw-editor>'].join(''),
             );
         });
         it('should add a vNode in the dialog and show it', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             await editor.execCommand('hide', { componentId: 'aaa' });
             await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
@@ -124,7 +130,9 @@ describe('Dialog', async () => {
             );
         });
         it('should add a vNode in dialog because dialog is the default zone', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'not available zone');
+            });
             await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
@@ -143,10 +151,14 @@ describe('Dialog', async () => {
             );
         });
         it('should add 2 vNodes in the dialog and show it', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             await editor.execCommand('show', { componentId: 'aaa' });
 
-            await editor.plugins.get(Layout).append('bbb', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('bbb', 'not available zone');
+            });
             await editor.execCommand('show', { componentId: 'bbb' });
 
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
@@ -174,10 +186,14 @@ describe('Dialog', async () => {
             );
         });
         it('should close 2 dialogs with the X button', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             await editor.execCommand('show', { componentId: 'aaa' });
 
-            await editor.plugins.get(Layout).append('bbb', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('bbb', 'not available zone');
+            });
             await editor.execCommand('show', { componentId: 'bbb' });
 
             await click(
@@ -217,10 +233,14 @@ describe('Dialog', async () => {
             expect(section.parent).to.instanceOf(DialogZoneNode);
         });
         it('should close 2 dialogs it with the backdrop', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             await editor.execCommand('show', { componentId: 'aaa' });
 
-            await editor.plugins.get(Layout).append('bbb', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('bbb', 'not available zone');
+            });
             await editor.execCommand('show', { componentId: 'bbb' });
 
             await click(
@@ -259,7 +279,9 @@ describe('Dialog', async () => {
             expect(section.parent).to.instanceOf(DialogZoneNode);
         });
         it('should close a dialog and re-open a dialog', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'float');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'float');
+            });
             await editor.execCommand('show', { componentId: 'aaa' });
 
             await click(
@@ -270,7 +292,9 @@ describe('Dialog', async () => {
                 ['<jw-editor>', '<main></main>', '</jw-editor>'].join(''),
             );
 
-            await editor.plugins.get(Layout).append('bbb', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('bbb', 'not available zone');
+            });
             await editor.execCommand('show', { componentId: 'bbb' });
 
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
@@ -291,7 +315,9 @@ describe('Dialog', async () => {
             );
         });
         it('should not close the dialog if click in content', async () => {
-            await editor.plugins.get(Layout).append('bbb', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('bbb', 'not available zone');
+            });
             await editor.execCommand('show', { componentId: 'bbb' });
 
             await click(Array.from(container.querySelectorAll('jw-dialog jw-content')).pop());
@@ -314,7 +340,9 @@ describe('Dialog', async () => {
             );
         });
         it('should hide a vNode in dialog (without remove the vNode)', async () => {
-            await editor.plugins.get(Layout).append('bbb', 'not available zone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('bbb', 'not available zone');
+            });
 
             await editor.execCommand('hide', { componentId: 'bbb' });
 

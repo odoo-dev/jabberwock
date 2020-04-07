@@ -85,7 +85,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 previousSibling.removeBackward();
             } else if (range.startContainer.breakable && range.startContainer.editable) {
                 // Otherwise set range start at previous valid leaf.
-                let ancestor = range.start.parent;
+                let ancestor: VNode = range.start.parent;
                 while (ancestor?.breakable && ancestor.editable && !ancestor.previousSibling()) {
                     ancestor = ancestor.parent;
                 }
@@ -113,7 +113,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 nextSibling.removeForward();
             } else if (range.endContainer.breakable && range.endContainer.editable) {
                 // Otherwise set range end at next valid leaf.
-                let ancestor = range.end.parent;
+                let ancestor: VNode = range.end.parent;
                 while (ancestor?.breakable && ancestor.editable && !ancestor.nextSibling()) {
                     ancestor = ancestor.parent;
                 }

@@ -50,10 +50,13 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         let modifiers = inline.getCurrentModifiers(range);
         // Ony preserved modifiers are applied at the start of a container.
         const previousSibling = range.start.previousSibling();
-        if (!previousSibling) {
+        if (!previousSibling && modifiers) {
             modifiers = new Modifiers(...modifiers.filter(mod => mod.preserve));
         }
         if (params.formats) {
+            if (!modifiers) {
+                modifiers = new Modifiers();
+            }
             modifiers.set(...params.formats.map(format => format.clone()));
         }
         const style = inline.getCurrentStyle(range);
@@ -64,15 +67,20 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         const charNodes = characters.map(char => {
-            return new CharNode({ char: char, modifiers: modifiers.clone() });
+            if (modifiers) {
+                return new CharNode({ char: char, modifiers: modifiers.clone() });
+            } else {
+                return new CharNode({ char: char });
+            }
         });
         charNodes.forEach(charNode => {
-            charNode.modifiers.get(Attributes).style = style;
+            if (style) {
+                charNode.modifiers.get(Attributes).style = style;
+            }
             range.start.before(charNode);
         });
         if (params.select && charNodes.length) {
             this.editor.selection.select(charNodes[0], charNodes[charNodes.length - 1]);
         }
-        inline.resetCache();
     }
 }

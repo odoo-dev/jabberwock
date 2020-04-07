@@ -105,4 +105,13 @@ export class Dispatcher {
             await hookCallback(args, signal);
         }
     }
+
+    /**
+     * Dispatch the commit signal.
+     */
+    async commit(): Promise<void> {
+        for (const hookCallback of this.commandHooks.commit) {
+            await hookCallback({}, 'commit');
+        }
+    }
 }

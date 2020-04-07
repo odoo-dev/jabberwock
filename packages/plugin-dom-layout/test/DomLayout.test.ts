@@ -1198,6 +1198,8 @@ describe('DomLayout', () => {
                 stepFunction: async editor => {
                     const layout = editor.plugins.get(Layout);
                     const domLayout = layout.engines.dom as DomLayoutEngine;
+                    editor.memory.create('test').switchTo('test'); // Unfreeze the memory for test.
+
                     domLayout.components
                         .get('editable')[0]
                         .children()[0]
@@ -1418,7 +1420,7 @@ describe('DomLayout', () => {
             const parent = div.parent;
             div.remove();
 
-            await engine.redraw(parent);
+            await engine.redraw([parent]);
 
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
 
@@ -1526,7 +1528,7 @@ describe('DomLayout', () => {
                 });
 
                 document.getSelection().removeAllRanges();
-                await engine.redraw(custom.parent, custom.previous(), custom.next());
+                await engine.redraw([custom.parent, custom.previous(), custom.next()]);
 
                 const domEditor = container.getElementsByTagName('jw-editor')[0];
 
@@ -1536,7 +1538,7 @@ describe('DomLayout', () => {
                 expect(domSelection.anchorOffset).to.deep.equal(1);
 
                 // redraw without changes
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
 
                 childNodes = [...domEditor.childNodes] as Node[];
                 domSelection = target.ownerDocument.getSelection();
@@ -1613,13 +1615,14 @@ describe('DomLayout', () => {
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
                     const editable = domEngine.components.get('editable')[0];
-
                     const renderer = editor.plugins.get(Renderer);
                     const br = editable.children()[2];
-                    new BoldFormat().applyTo(br);
 
-                    await editor.execCommand<Inline>('toggleFormat', {
-                        FormatClass: BoldFormat,
+                    await editor.execBatch(() => {
+                        new BoldFormat().applyTo(br);
+                        return editor.execCommand<Inline>('toggleFormat', {
+                            FormatClass: BoldFormat,
+                        });
                     });
                     expect(await renderer.render('dom/object', br)).to.deep.equal({
                         tag: 'B',
@@ -2197,7 +2200,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2222,7 +2225,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, f, e);
+                await engine.redraw([p, f, e]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2246,7 +2249,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2270,7 +2273,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2296,7 +2299,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
@@ -2327,7 +2330,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>aef</p><p>123456</p></div></jw-editor>',
@@ -2353,7 +2356,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
@@ -2381,7 +2384,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2407,7 +2410,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2431,7 +2434,7 @@ describe('DomLayout', () => {
                 x.after(x2);
                 x2.after(x3);
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abcxxxdef</p><p>123456</p></div></jw-editor>',
@@ -2442,7 +2445,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2480,7 +2483,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2515,7 +2518,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2535,7 +2538,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(div, p1, ...chars, p2);
+                await engine.redraw([div, p1, ...chars, p2]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2559,7 +2562,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p1, ...chars);
+                await engine.redraw([p1, ...chars]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(!!text.parentNode).to.equal(false);
@@ -2578,7 +2581,7 @@ describe('DomLayout', () => {
                 const chars = p1.children();
                 p1.empty();
 
-                await engine.redraw(p1, ...chars);
+                await engine.redraw([p1, ...chars]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
@@ -2591,7 +2594,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(div, p1, ...chars2, p2);
+                await engine.redraw([div, p1, ...chars2, p2]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>123456</p></div></jw-editor>',
@@ -2615,7 +2618,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(div, p1, ...chars, p2);
+                await engine.redraw([div, p1, ...chars, p2]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2639,7 +2642,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, g, h);
+                await engine.redraw([p, g, h]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2664,7 +2667,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes, newP, ...newP.childVNodes);
+                await engine.redraw([p, ...p.childVNodes, newP, ...newP.childVNodes]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abcd</p><p>ef</p><p>123456</p></div></jw-editor>',
@@ -2693,7 +2696,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(...p.children(), ...p2.children());
+                await engine.redraw([...p.children(), ...p2.children()]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p><b>abcdef</b></p><p><b>123456</b></p></div></jw-editor>',
@@ -2717,7 +2720,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, p2);
+                await engine.redraw([p, p2]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><b><p>abcdef</p><p>123456</p></b></div></jw-editor>',
@@ -2737,7 +2740,7 @@ describe('DomLayout', () => {
                     new BoldFormat().applyTo(char);
                 }
 
-                await engine.redraw(...p.children(), ...p2.children());
+                await engine.redraw([...p.children(), ...p2.children()]);
 
                 const dBold = pDom.firstChild;
 
@@ -2750,7 +2753,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes, newP, ...newP.childVNodes);
+                await engine.redraw([p, ...p.childVNodes, newP, ...newP.childVNodes]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p><b>abcd</b></p><p><b>ef</b></p><p>123456</p></div></jw-editor>',
@@ -2773,7 +2776,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2792,7 +2795,7 @@ describe('DomLayout', () => {
                 const lineBreak = new LineBreakNode();
                 p.children()[2].after(lineBreak);
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 lineBreak.remove();
 
@@ -2803,7 +2806,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
 
@@ -2834,7 +2837,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...children);
+                await engine.redraw([p, ...children]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
@@ -2857,7 +2860,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p);
+                await engine.redraw([p]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
@@ -2880,7 +2883,7 @@ describe('DomLayout', () => {
 
                 editor.selection.setAt(d, RelativePosition.AFTER);
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw([p, ...p.childVNodes]);
 
                 d.remove();
                 const pDom = container.querySelector('p');
@@ -2891,7 +2894,7 @@ describe('DomLayout', () => {
                 engine.markForRedraw(new Set([br, text2]));
 
                 mutationNumber = 0;
-                const promise = engine.redraw(p, ...p.childVNodes);
+                const promise = engine.redraw([p, ...p.childVNodes]);
 
                 pDom.removeChild(br);
 
@@ -2916,7 +2919,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(children[1], children[2]);
+                await engine.redraw([children[1], children[2]]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>a<b>bc</b>def</p><p>123456</p></div></jw-editor>',
@@ -2934,7 +2937,7 @@ describe('DomLayout', () => {
                 bold.applyTo(children[1]);
                 bold.applyTo(children[2]);
 
-                await engine.redraw(children[1], children[2]);
+                await engine.redraw([children[1], children[2]]);
 
                 children[1].modifiers.remove(bold);
                 children[2].modifiers.remove(bold);
@@ -2942,7 +2945,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(children[1], children[2]);
+                await engine.redraw([children[1], children[2]]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abcdef</p><p>123456</p></div></jw-editor>',
@@ -3009,11 +3012,11 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const nodesWithChanges = new Set([pDom, textDom, newPDom, newTextDom, divDom]);
                 engine.markForRedraw(nodesWithChanges);
-                await engine.redraw(
+                await engine.redraw([
                     div,
                     ...div.childVNodes,
                     ...flat(div.childVNodes.map(n => n.childVNodes)),
-                );
+                ]);
 
                 expect(sectionDom.innerHTML).to.equal('<div><p>ab</p><p>cdz</p></div>');
                 expect(container.querySelector('section') === sectionDom).to.equal(
@@ -3081,11 +3084,11 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const nodesWithChanges = new Set([pDom, textDom, newPDom, newTextDom, divDom]);
                 engine.markForRedraw(nodesWithChanges);
-                await engine.redraw(
+                await engine.redraw([
                     div,
                     ...div.childVNodes,
                     ...flat(div.childVNodes.map(n => n.childVNodes)),
-                );
+                ]);
 
                 expect(sectionDom.innerHTML).to.equal('<div><p>ab</p><p>cd</p></div>');
                 expect(container.querySelector('section') === sectionDom).to.equal(
@@ -3145,7 +3148,7 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor><div>a</div></jw-editor>');
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(div, custom);
+                await engine.redraw([div, custom]);
                 expect(container.innerHTML).to.equal('<jw-editor><div><area>a</div></jw-editor>');
 
                 expect(mutationNumber).to.equal(1, 'add <area>');
@@ -3190,7 +3193,7 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>');
 
                 expect(mutationNumber).to.equal(1, 'add <div>');
@@ -3235,7 +3238,7 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>');
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
 
                 expect(mutationNumber).to.equal(1, 'remove <div>');
@@ -3277,7 +3280,7 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>');
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>');
 
                 expect(mutationNumber).to.equal(2, 'remove <div>, add <div>');
@@ -3323,7 +3326,7 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>');
 
                 expect(mutationNumber).to.equal(1, 'add <div>');
@@ -3369,7 +3372,7 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>');
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
 
                 expect(mutationNumber).to.equal(1, 'remove <div>');
@@ -3415,15 +3418,15 @@ describe('DomLayout', () => {
 
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>', '1st');
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor></jw-editor>', '1st empty');
                 expect(mutationNumber).to.equal(1, 'remove <div>');
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor><div></div></jw-editor>', '2nd');
                 expect(mutationNumber).to.equal(1, 'add <div>');
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal('<jw-editor></jw-editor>', '2nd empty');
                 expect(mutationNumber).to.equal(1, 'remove <div>');
 
@@ -3470,7 +3473,7 @@ describe('DomLayout', () => {
                     '<jw-editor><div class="redraw1"></div></jw-editor>',
                 );
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div class="redraw2"></div></jw-editor>',
                 );
@@ -3513,7 +3516,7 @@ describe('DomLayout', () => {
                 mutationNumber = 0;
 
                 expect(container.innerHTML).to.equal('<jw-editor><p>abc</p><p>def</p></jw-editor>');
-                await engine.redraw(area.parent, ...area.parent.childVNodes);
+                await engine.redraw([area.parent, ...area.parent.childVNodes]);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><p>ab<custom><br></custom>c</p><p>def</p></jw-editor>',
                 );
@@ -3555,7 +3558,7 @@ describe('DomLayout', () => {
                 p.wrap(area);
 
                 mutationNumber = 0;
-                await engine.redraw(area, area.parent, p);
+                await engine.redraw([area, area.parent, p]);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><custom><p>a</p></custom></jw-editor>',
                 );
@@ -3595,12 +3598,12 @@ describe('DomLayout', () => {
 
                 const area = new VElement({ htmlTag: 'custom' });
                 p.wrap(area);
-                await engine.redraw(area, p.parent, p);
+                await engine.redraw([area, p.parent, p]);
 
                 area.unwrap();
 
                 mutationNumber = 0;
-                await engine.redraw(area, p.parent, p);
+                await engine.redraw([area, p.parent, p]);
                 expect(container.innerHTML).to.equal('<jw-editor><p>a</p></jw-editor>');
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
@@ -3643,7 +3646,7 @@ describe('DomLayout', () => {
                     .wrap(area);
 
                 mutationNumber = 0;
-                await engine.redraw(area, area.parent, p);
+                await engine.redraw([area, area.parent, p]);
                 expect(container.innerHTML).to.equal(
                     '<custom><jw-editor><p>a</p></jw-editor></custom>',
                 );
@@ -3685,12 +3688,12 @@ describe('DomLayout', () => {
                 const layoutContainer = engine.root.firstChild();
                 const layoutchild = layoutContainer.firstChild();
                 layoutchild.wrap(area);
-                await engine.redraw(layoutContainer, area, layoutchild);
+                await engine.redraw([layoutContainer, area, layoutchild]);
 
                 area.unwrap();
 
                 mutationNumber = 0;
-                await engine.redraw(layoutContainer, area, layoutchild);
+                await engine.redraw([layoutContainer, area, layoutchild]);
                 expect(container.innerHTML).to.equal('<jw-editor><p>a</p></jw-editor>');
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
@@ -3757,7 +3760,7 @@ describe('DomLayout', () => {
 
                 mutationNumber = 0;
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
 
                 expect(container.querySelector('section').outerHTML).to.equal(
                     '<section attr="1"><div attr="1">abc</div>' +
@@ -3826,7 +3829,7 @@ describe('DomLayout', () => {
 
                 mutationNumber = 0;
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                await engine.redraw(customChild);
+                await engine.redraw([customChild]);
 
                 expect(container.querySelector('section').outerHTML).to.equal(
                     '<section attr="1"><div attr="1">abc</div>' +
@@ -3896,7 +3899,7 @@ describe('DomLayout', () => {
                 mutationNumber = 0;
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 custom.sectionAttr = 2;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
 
                 expect(container.querySelector('section').outerHTML).to.equal(
                     '<section attr="2"><div attr="1">abc</div>' +
@@ -3966,7 +3969,7 @@ describe('DomLayout', () => {
                 mutationNumber = 0;
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 custom.divAttr = 2;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
 
                 expect(container.querySelector('section').outerHTML).to.equal(
                     '<section attr="1"><div attr="2">abc</div>' +
@@ -4036,7 +4039,7 @@ describe('DomLayout', () => {
                 mutationNumber = 0;
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 customChild.sectionAttr = 2;
-                await engine.redraw(customChild);
+                await engine.redraw([customChild]);
 
                 expect(container.querySelector('section').outerHTML).to.equal(
                     '<section attr="1"><div attr="1">abc</div>' +
@@ -4106,7 +4109,7 @@ describe('DomLayout', () => {
                 mutationNumber = 0;
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 customChild.divAttr = 2;
-                await engine.redraw(customChild);
+                await engine.redraw([customChild]);
 
                 expect(container.querySelector('section').outerHTML).to.equal(
                     '<section attr="1"><div attr="1">abc</div>' +
@@ -4127,7 +4130,7 @@ describe('DomLayout', () => {
                         mutationNumber = 0;
                         await editor.execCommand('uncolorBackground');
                         expect(mutationNumber).to.equal(
-                            5,
+                            6,
                             'remove 3 formats + remove 2 empty styles',
                         );
                     },
@@ -4185,7 +4188,7 @@ describe('DomLayout', () => {
 
                 // redraw without changes
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(mutationNumber).to.equal(0);
 
                 await editor.stop();
@@ -4243,12 +4246,12 @@ describe('DomLayout', () => {
                 custom.after(new CharNode({ char: 'Y' }));
 
                 mutationNumber = 0;
-                await engine.redraw(custom.parent, custom.previous(), custom.next());
+                await engine.redraw([custom.parent, custom.previous(), custom.next()]);
                 expect(mutationNumber).to.equal(2, 'add 2 text');
 
                 // redraw without changes
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(mutationNumber).to.equal(0);
 
                 await editor.stop();
@@ -4304,7 +4307,7 @@ describe('DomLayout', () => {
 
                 // redraw with changes but identical result
                 mutationNumber = 0;
-                await engine.redraw(span, a, a2);
+                await engine.redraw([span, a, a2]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><span>a</span></div></jw-editor>',
@@ -4364,7 +4367,7 @@ describe('DomLayout', () => {
 
                 // redraw with changes but identical result
                 mutationNumber = 0;
-                await engine.redraw(span, a, a2);
+                await engine.redraw([span, a, a2]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><span>a</span></div></jw-editor>',
@@ -4430,7 +4433,7 @@ describe('DomLayout', () => {
 
                 // redraw with changes but identical result
                 mutationNumber = 0;
-                await engine.redraw(span, a, a2);
+                await engine.redraw([span, a, a2]);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><font>a</font></div></jw-editor>',
@@ -4509,7 +4512,7 @@ describe('DomLayout', () => {
 
                 custom.layout = 1;
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><head>a</head><content><article><br></article></content><foot>b</foot></div></jw-editor>',
                     'first change',
@@ -4518,7 +4521,7 @@ describe('DomLayout', () => {
 
                 custom.layout = 0;
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section><article><br></article></section></jw-editor>',
                     'second change',
@@ -4530,7 +4533,7 @@ describe('DomLayout', () => {
 
                 custom.layout = 1;
                 mutationNumber = 0;
-                await engine.redraw(custom);
+                await engine.redraw([custom]);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><head>a</head><content><article><br></article></content><foot>b</foot></div></jw-editor>',
                     'third change',
@@ -4581,7 +4584,7 @@ describe('DomLayout', () => {
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4599,13 +4602,13 @@ describe('DomLayout', () => {
                     const attributes = new Attributes();
                     attributes.set('style', 'color: red;');
                     div.firstChild().modifiers.prepend(attributes);
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
                     div.firstChild().modifiers.remove(attributes);
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4631,7 +4634,7 @@ describe('DomLayout', () => {
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild(), div.lastChild());
+                    await engine.redraw([div.firstChild(), div.lastChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(p2).to.equal(container.querySelectorAll('p')[2]);
@@ -4653,14 +4656,14 @@ describe('DomLayout', () => {
                     const attributes2 = new Attributes();
                     attributes2.set('style', 'border: 1px solid black; color: red;');
                     div.lastChild().modifiers.prepend(attributes2);
-                    await engine.redraw(div.firstChild(), div.lastChild());
+                    await engine.redraw([div.firstChild(), div.lastChild()]);
 
                     attributes.set('style', 'color: blue;');
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4682,14 +4685,14 @@ describe('DomLayout', () => {
                     const attributes2 = new Attributes();
                     attributes2.set('style', 'border: 1px solid black; color: red;');
                     div.lastChild().modifiers.prepend(attributes2);
-                    await engine.redraw(div.firstChild(), div.lastChild());
+                    await engine.redraw([div.firstChild(), div.lastChild()]);
                     attributes.set('style', 'color: blue;');
                     attributes2.set('style', 'border: 2px solid black; color: blue;');
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild(), div.lastChild());
+                    await engine.redraw([div.firstChild(), div.lastChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(p2).to.equal(container.querySelectorAll('p')[2]);
@@ -4710,7 +4713,7 @@ describe('DomLayout', () => {
                     const attributes2 = new Attributes();
                     attributes2.set('style', 'border: 1px solid black; color: red;');
                     div.lastChild().modifiers.prepend(attributes2);
-                    await engine.redraw(div.firstChild(), div.lastChild());
+                    await engine.redraw([div.firstChild(), div.lastChild()]);
                     attributes.set('style', 'color: blue;');
                     attributes2.set('style', 'border: 2px solid black; color: blue;');
                     container.querySelector('p').style.background = 'black';
@@ -4719,7 +4722,7 @@ describe('DomLayout', () => {
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild(), div.lastChild());
+                    await engine.redraw([div.firstChild(), div.lastChild()]);
 
                     expect(container.innerHTML).to.equal(
                         '<jw-editor><div><p style="color: blue; background: black;">1</p><p>2</p><p style="border: 2px solid black; color: blue; background: black;">3</p></div></jw-editor>',
@@ -4740,14 +4743,14 @@ describe('DomLayout', () => {
                     const attributes = new Attributes();
                     attributes.set('style', 'color: red;');
                     p.modifiers.prepend(attributes);
-                    await engine.redraw(p);
+                    await engine.redraw([p]);
                     attributes.set('style', 'color: blue;');
                     container.querySelector('p').style.background = 'black';
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(p);
+                    await engine.redraw([p]);
 
                     expect(container.innerHTML).to.equal(
                         '<jw-editor><div><p style="color: blue; background: black;">1</p><p>2</p><p>3</p></div></jw-editor>',
@@ -4766,7 +4769,7 @@ describe('DomLayout', () => {
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(p2, div, p);
+                    await engine.redraw([p2, div, p]);
 
                     expect(container.innerHTML).to.equal(
                         '<jw-editor><div><p class="aaa"><br></p><p>2</p><p>3</p></div></jw-editor>',
@@ -4814,7 +4817,7 @@ describe('DomLayout', () => {
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4832,13 +4835,13 @@ describe('DomLayout', () => {
                     const attributes = new Attributes();
                     attributes.set('class', 'a b c d');
                     div.firstChild().modifiers.prepend(attributes);
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
                     attributes.set('class', 'd a');
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4856,13 +4859,13 @@ describe('DomLayout', () => {
                     const attributes = new Attributes();
                     attributes.set('class', 'a b c d');
                     div.firstChild().modifiers.prepend(attributes);
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
                     div.firstChild().modifiers.remove(attributes);
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4880,14 +4883,14 @@ describe('DomLayout', () => {
                     const attributes = new Attributes();
                     attributes.set('class', 'a b c d');
                     div.firstChild().modifiers.prepend(attributes);
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
                     container.querySelector('p').classList.add('animation');
                     attributes.set('class', 'd a');
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4905,14 +4908,14 @@ describe('DomLayout', () => {
                     const attributes = new Attributes();
                     attributes.set('class', 'a b c d');
                     div.firstChild().modifiers.prepend(attributes);
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
                     container.querySelector('p').classList.add('animation');
                     div.firstChild().modifiers.remove(attributes);
 
                     await nextTick();
                     mutationNumber = 0;
 
-                    await engine.redraw(div.firstChild());
+                    await engine.redraw([div.firstChild()]);
 
                     expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                     expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -4946,10 +4949,12 @@ describe('DomLayout', () => {
             await editor.start();
         });
         afterEach(async () => {
-            await editor.stop();
+            await editor?.stop();
         });
         it('should add a component in a zone', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'main');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'main');
+            });
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
             await editor.stop();
         });
@@ -4974,7 +4979,9 @@ describe('DomLayout', () => {
 
             expect(container.innerHTML).to.equal('<div class="a"></div><div class="b"></div>');
 
-            await editor.plugins.get(Layout).append('aaa', 'totoZone');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'totoZone');
+            });
 
             expect(container.innerHTML).to.equal(
                 '<div class="a"></div><div class="b"><div><area></div></div>',
@@ -4983,42 +4990,61 @@ describe('DomLayout', () => {
             await editor.stop();
         });
         it('should add a component and show it by default', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'main');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'main');
+            });
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
         });
         it('should hide a component', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'main');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'main');
+            });
             await editor.execCommand('hide', { componentId: 'aaa' });
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
         it('should show a component', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'main');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'main');
+            });
             await editor.execCommand('hide', { componentId: 'aaa' });
             await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
         });
         it('should remove a component', async () => {
             const layout = editor.plugins.get(Layout);
-            await layout.append('aaa', 'main');
-            await layout.remove('aaa');
+            await editor.execBatch(async () => {
+                await layout.append('aaa', 'main');
+                await layout.remove('aaa');
+            });
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
         it('should remove a component without memory leak', async () => {
             const layout = editor.plugins.get(Layout);
             const root = layout.engines.dom.root;
             const zoneMain = root.descendants(ZoneNode).find(n => n.managedZones.includes('main'));
-            await layout.append('aaa', 'main');
-            const node = zoneMain.children().pop();
-            expect(!!zoneMain.hidden.get(node)).to.equal(false, 'Component is visible');
+            await editor.execBatch(() => {
+                return layout.append('aaa', 'main');
+            });
+            const node = zoneMain.children().slice(-1)[0];
+            await editor.execBatch(async () => {
+                zoneMain.children().pop();
+            });
+            expect(!!zoneMain.hidden[node.id]).to.equal(false, 'Component is visible');
             await editor.execCommand('hide', { componentId: 'aaa' });
-            expect(zoneMain.hidden.get(node)).to.equal(true, 'Component is hidden');
-            await layout.remove('aaa');
-            expect(zoneMain.hidden.get(node)).to.equal(undefined);
+            expect(zoneMain.hidden[node.id]).to.equal(true, 'Component is hidden');
+            await editor.execBatch(() => {
+                return layout.remove('aaa');
+            });
+            expect(zoneMain.hidden[node.id]).to.equal(undefined);
         });
         it('should remove a component in all layout engines', async () => {
-            await editor.plugins.get(Layout).append('aaa', 'main');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).append('aaa', 'main');
+            });
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
-            await editor.plugins.get(Layout).remove('aaa');
+            await editor.execBatch(() => {
+                return editor.plugins.get(Layout).remove('aaa');
+            });
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
     });
@@ -5141,7 +5167,7 @@ describe('DomLayout', () => {
         it('should keep (detach & attach) listener when redraw without change', async () => {
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
 
-            await engine.redraw(custom);
+            await engine.redraw([custom]);
 
             flag = 0;
             await click(container.querySelector('section'));
@@ -5152,10 +5178,9 @@ describe('DomLayout', () => {
             expect(flag).to.equal(2);
         });
         it('should keep (detach & attach) listener when redraw self attribute', async () => {
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-
-            custom.sectionAttr = 2;
-            await engine.redraw(custom);
+            await editor.execBatch(async () => {
+                custom.sectionAttr = 2;
+            });
 
             flag = 0;
             await click(container.querySelector('section'));
@@ -5166,10 +5191,9 @@ describe('DomLayout', () => {
             expect(flag).to.equal(2);
         });
         it('should keep (detach & attach) listener when redraw child attribute', async () => {
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-
-            custom.divAttr = 2;
-            await engine.redraw(custom);
+            await editor.execBatch(async () => {
+                custom.divAttr = 2;
+            });
 
             flag = 0;
             await click(container.querySelector('section'));
@@ -5182,7 +5206,7 @@ describe('DomLayout', () => {
         it('should keep (detach & attach) listener when redraw childNode without change', async () => {
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
 
-            await engine.redraw(customChild);
+            await engine.redraw([customChild]);
 
             flag = 0;
             await click(container.querySelector('section'));
@@ -5193,10 +5217,9 @@ describe('DomLayout', () => {
             expect(flag).to.equal(2);
         });
         it('should keep (detach & attach) listener when redraw childNode self attribute', async () => {
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-
-            customChild.sectionAttr = 2;
-            await engine.redraw(customChild);
+            await editor.execBatch(async () => {
+                customChild.sectionAttr = 2;
+            });
 
             flag = 0;
             await click(container.querySelector('section'));
@@ -5207,10 +5230,9 @@ describe('DomLayout', () => {
             expect(flag).to.equal(2);
         });
         it('should keep (detach & attach) listener when redraw childNode child attribute', async () => {
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-
-            customChild.divAttr = 2;
-            await engine.redraw(customChild);
+            await editor.execBatch(async () => {
+                customChild.divAttr = 2;
+            });
 
             flag = 0;
             await click(container.querySelector('section'));
@@ -5221,23 +5243,20 @@ describe('DomLayout', () => {
             expect(flag).to.equal(2);
         });
         it('should keep (detach & attach) listener when redraw when remove child', async () => {
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-
-            customChild.remove();
-            await engine.redraw(custom, customChild);
+            await editor.execBatch(async () => {
+                customChild.remove();
+            });
 
             flag = 0;
             await click(container.querySelector('section'));
             expect(flag).to.equal(1);
         });
         it('should keep (detach & attach) listener when redraw when add child', async () => {
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-
-            const child = new CustomNode();
-            child.sectionAttr = 2;
-            custom.append(child);
-
-            await engine.redraw(custom, child);
+            await editor.execBatch(async () => {
+                const child = new CustomNode();
+                child.sectionAttr = 2;
+                custom.append(child);
+            });
 
             flag = 0;
             await click(container.querySelector('section'));

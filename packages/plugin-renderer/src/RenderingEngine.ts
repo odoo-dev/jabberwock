@@ -17,6 +17,10 @@ export class RenderingEngine<T = {}> {
     readonly modifierRenderers: ModifierRenderer<T>[] = [];
     readonly renderings: Map<VNode, Promise<T>> = new Map();
     readonly locations: Map<T, VNode[]> = new Map();
+    readonly cachedCompatibleRenderer: Map<
+        VNode,
+        Map<NodeRenderer<T>, NodeRenderer<T>>
+    > = new Map();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -130,12 +134,20 @@ export class RenderingEngine<T = {}> {
      * @param previousRenderer
      */
     getCompatibleRenderer(node: VNode, previousRenderer: NodeRenderer<T>): NodeRenderer<T> {
+        let cache = this.cachedCompatibleRenderer.get(node);
+        if (!cache) {
+            cache = new Map();
+            this.cachedCompatibleRenderer.set(node, cache);
+        } else if (cache.get(previousRenderer)) {
+            return cache.get(previousRenderer);
+        }
         let nextRendererIndex = this.renderers.indexOf(previousRenderer) + 1;
         let nextRenderer: NodeRenderer<T>;
         do {
             nextRenderer = this.renderers[nextRendererIndex];
             nextRendererIndex++;
         } while (nextRenderer && !node.test(nextRenderer.predicate));
+        cache.set(previousRenderer, nextRenderer);
         return nextRenderer;
     }
     /**
@@ -170,6 +182,20 @@ export class RenderingEngine<T = {}> {
     clear(): void {
         this.renderings.clear();
         this.locations.clear();
+    }
+    /**
+     * Clear the renderer in cache for this node. The cache renderer is added
+     * only for performance at redrawing time. The invalidation are
+     * automatically made from memory changes.
+     *
+     * @param nodes
+     */
+    invalidateRendererCache(nodes: VNode[]): void {
+        for (const node of nodes) {
+            this.cachedCompatibleRenderer.delete(node);
+        }
+
+        // TODO: invalidate for linked rendering
     }
 }
 

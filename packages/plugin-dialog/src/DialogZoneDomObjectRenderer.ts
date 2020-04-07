@@ -24,7 +24,7 @@ export class DialogZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     async render(node: DialogZoneNode): Promise<DomObject> {
         const float = document.createElement('jw-dialog-container');
         for (const child of node.childVNodes) {
-            if (!node.hidden.get(child) && (child.tangible || child.is(MetadataNode))) {
+            if (!node.hidden[child.id] && (child.tangible || child.is(MetadataNode))) {
                 float.appendChild(await this._renderDialog(child));
             }
         }

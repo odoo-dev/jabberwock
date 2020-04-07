@@ -1,6 +1,7 @@
 import { OwlComponent } from './OwlComponent';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+import { markNotVersionable } from '../../core/src/Memory/Versionable';
 
 export interface OwlNodeParams extends AbstractNodeParams {
     Component: typeof OwlComponent;
@@ -8,14 +9,13 @@ export interface OwlNodeParams extends AbstractNodeParams {
 }
 
 export class OwlNode extends AtomicNode {
-    Component: typeof OwlComponent;
-    props: Record<string, {}>;
+    params: OwlNodeParams;
     constructor(params: OwlNodeParams) {
         super(params);
-        this.Component = params.Component;
-        this.props = params.props;
+        markNotVersionable(params);
+        this.params = params;
     }
     get name(): string {
-        return super.name + ': ' + this.Component.name;
+        return super.name + ': ' + this.params.Component.name;
     }
 }
