@@ -11,7 +11,7 @@
    <section>
       <h3>text width parent of different width</h3>
       <div class="note supported">text is supported.</div>
-      <p style="width: 200px; border: 1px red solid; font-family: monospace;"><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
+      <p style="width: 200px; border: 1px red solid;"><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
       <p style="width: 50px; border: 1px red solid;"><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
       <p style="width: 50px; border: 1px red solid;"><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="2" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>
    </section>

@@ -4,7 +4,7 @@ import { OdooFieldNode } from './OdooFieldNode';
 import { OMonetaryFieldNode } from './OMonetaryFieldNode';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
 
-const props = getComputedStyle(document.body);
+// const props = getComputedStyle(document.body);
 
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
@@ -21,6 +21,7 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
         span.appendChild(textNode);
         const input = this._createInput(node);
         input.classList.add('jw-odoo-field');
+        input.classList.add('inherit-all');
 
         if (node.fieldInfo.value === this.focusedNode) {
             input.classList.add('jw-focus');
@@ -120,9 +121,9 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
         // container.style.position = 'relative';
         // container.style.display = 'inline-block';
         container.style.color = 'red';
-        for (const prop of props) {
-            input.style[prop] = 'inherit';
-        }
+        // for (const prop of props) {
+        //     input.style[prop] = 'inherit';
+        // }
 
         input.style.position = 'absolute';
         input.style.color = 'rgba(0, 0, 150, 0.5)';
