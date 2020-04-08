@@ -129,19 +129,19 @@ jw-editable {
     border-top-width: inherit !important;
     border-width: inherit !important;
     bottom: inherit !important;
-    box-shadow: inherit !important;
+    /* box-shadow: inherit !important; */
     box-sizing: inherit !important;
     break-after: inherit !important;
     break-before: inherit !important;
     break-inside: inherit !important;
     buffered-rendering: inherit !important;
     caption-side: inherit !important;
-    caret-color: inherit !important;
+    /* caret-color: inherit !important; */
     clear: inherit !important;
     clip: inherit !important;
     clip-path: inherit !important;
     clip-rule: inherit !important;
-    color: inherit !important;
+    /* color: inherit !important; */
     color-interpolation: inherit !important;
     color-interpolation-filters: inherit !important;
     color-rendering: inherit !important;
@@ -164,7 +164,7 @@ jw-editable {
     cy: inherit !important;
     d: inherit !important;
     direction: inherit !important;
-    display: inherit !important;
+    /* display: inherit !important; */
     dominant-baseline: inherit !important;
     empty-cells: inherit !important;
     fill: inherit !important;
@@ -216,7 +216,7 @@ jw-editable {
     grid-template-areas: inherit !important;
     grid-template-columns: inherit !important;
     grid-template-rows: inherit !important;
-    height: inherit !important;
+    /* height: inherit !important; */
     hyphens: inherit !important;
     image-rendering: inherit !important;
     inline-size: inherit !important;
@@ -274,11 +274,11 @@ jw-editable {
     outline-offset: inherit !important;
     outline-style: inherit !important;
     outline-width: inherit !important;
-    overflow: inherit !important;
+    /* overflow: inherit !important;
     overflow-anchor: inherit !important;
     overflow-wrap: inherit !important;
     overflow-x: inherit !important;
-    overflow-y: inherit !important;
+    overflow-y: inherit !important; */
     overscroll-behavior: inherit !important;
     overscroll-behavior-block: inherit !important;
     overscroll-behavior-inline: inherit !important;
@@ -304,7 +304,6 @@ jw-editable {
     place-items: inherit !important;
     place-self: inherit !important;
     pointer-events: inherit !important;
-    position: inherit !important;
     quotes: inherit !important;
     r: inherit !important;
     resize: inherit !important;
@@ -554,7 +553,7 @@ jw-editable {
     webkit-writing-mode: inherit !important;
     white-space: inherit !important;
     widows: inherit !important;
-    width: inherit !important;
+    /* width: inherit !important; */
     will-change: inherit !important;
     word-break: inherit !important;
     word-spacing: inherit !important;
