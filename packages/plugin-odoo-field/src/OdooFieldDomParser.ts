@@ -9,6 +9,8 @@ import { OdooField } from './OdooField';
 import { OMonetaryFieldNode, OdooFieldNodeCurrencyPosition } from './OMonetaryFieldNode';
 import { ONumberFieldNode } from './ONumberFieldNode';
 import { OFloatFieldNode } from './OFloatFieldNode';
+import { OTextFieldNode } from './OTextFieldNode';
+import { OCharFieldNode } from './OCharFieldNode';
 
 /**
  * Regex used to validate a field.
@@ -58,7 +60,8 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
             item instanceof Element &&
             item.attributes['data-oe-type'] &&
             item.attributes['data-oe-model'] &&
-            (item.attributes['data-oe-type'].value === 'text' ||
+            (item.attributes['data-oe-type'].value === 'char' ||
+                item.attributes['data-oe-type'].value === 'text' ||
                 // todo: html field should be handeled with an "independent node"
                 // item.attributes['data-oe-type'].value === 'html' ||
                 item.attributes['data-oe-type'].value === 'float' ||
@@ -155,8 +158,10 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
                 fieldNode = new OFloatFieldNode(element.tagName, odooReactiveField);
             } else if (fieldType === 'integer') {
                 fieldNode = new ONumberFieldNode(element.tagName, odooReactiveField);
+            } else if (fieldType === 'char') {
+                fieldNode = new OCharFieldNode(element.tagName, odooReactiveField);
             } else {
-                fieldNode = new OdooFieldNode(element.tagName, odooReactiveField);
+                fieldNode = new OTextFieldNode(element.tagName, odooReactiveField);
             }
         }
 

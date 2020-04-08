@@ -1,45 +1,26 @@
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
-import { OMonetaryFieldNode, OdooFieldNodeCurrencyPosition } from './OMonetaryFieldNode';
-import { ONumberFieldNode } from './ONumberFieldNode';
-import { OFloatFieldNode } from './OFloatFieldNode';
+import { OMonetaryFieldNode } from './OMonetaryFieldNode';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
+
+const props = getComputedStyle(document.body);
 
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
     engine: DomRenderingEngine;
-    predicate = (node): boolean => node instanceof OdooFieldNode;
+    predicate = OdooFieldNode;
     focusedNode: ReactiveValue<OdooFieldNode | undefined> = new ReactiveValue(undefined);
 
     async render(node: OdooFieldNode | OMonetaryFieldNode): Promise<Node[]> {
         const container = document.createElement(node.htmlTag);
 
         this.engine.renderAttributes(node.attributes, container);
-        const input = document.createElement('input');
+        const span = document.createElement('span');
+        const textNode = document.createTextNode(node.fieldInfo.value.get());
+        span.appendChild(textNode);
+        const input = this._createInput(node);
         input.classList.add('jw-odoo-field');
-
-        // todo: get the decimal separator from odoo;
-        const decimalSeparator = '.';
-
-        const value = node.fieldInfo.value.get();
-        if (node instanceof ONumberFieldNode) {
-            const parsedValue = parseInt(value.replace(/\D/g, ''));
-            input.setAttribute('type', 'number');
-            input.setAttribute('value', parsedValue);
-        } else if (node instanceof OFloatFieldNode) {
-            const splitedValue = value.split(decimalSeparator);
-            const beforeDecimal = parseInt(splitedValue[0].replace(/\D/g, ''));
-            const afterDecimal = splitedValue[1];
-            const inputValue = afterDecimal ? beforeDecimal + '.' + afterDecimal : beforeDecimal;
-
-            input.setAttribute('type', 'number');
-            input.setAttribute('step', `0.01`);
-            input.setAttribute('value', inputValue);
-        } else {
-            input.setAttribute('type', 'text');
-            input.setAttribute('value', node.fieldInfo.value.get());
-        }
 
         if (node.fieldInfo.value === this.focusedNode) {
             input.classList.add('jw-focus');
@@ -50,7 +31,6 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
                 input.classList.add('jw-focus');
             } else {
                 input.classList.remove('jw-focus');
-                true;
             }
         };
         this.focusedNode.on('set', focusHander);
@@ -58,76 +38,110 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
 
         const textHandler = event => {
             node.fieldInfo.value.set(input.value);
+            // const spanStyle = getComputedStyle(span);
         };
         const clickHandler = (event: MouseEvent) => {
             event.stopPropagation();
             event.preventDefault();
             event.stopImmediatePropagation();
+            console.log('add preventEvent from odooField');
+            this.engine.editor.preventEvent.add(event);
         };
         const focusHandler = event => {
             this.focusedNode.set(node);
         };
         const blurHandler = event => {
-            console.log('blur');
             this.focusedNode.set(undefined);
+            // input.remove();
+            // span.style['white-space'] = 'normal';
+            // span.style.visibility = 'visible';
         };
 
+        const setNodeValue = () => {
+            span.innerText = node.fieldInfo.value.get();
+            if (span.innerHTML.match(/<br>$/)) {
+                span.innerHTML += '<br>';
+            }
+            if (span.innerHTML === '') {
+                span.innerHTML = '<br>';
+            }
+            input.value = input.value.replace(/ {2}/g, ' \u00A0');
+            const spaces = span.innerHTML.match(/(\s+)$/);
+            // if (spaces) {
+            // const spacesLength = spaces[1].length;
+            // span.innerHTML = span.innerHTML.slice(0, span.innerHTML.length - spacesLength);
+            // span.innerHTML += Array(spacesLength + 1).join('&nbsp;');
+            // }
+            span.innerHTML = span.innerHTML.replace(/\s\s/g, ' &nbsp;');
+            // input.style.left = '300px';
+            input.style.width = `${span.offsetWidth}px`;
+            input.style.height = `${span.offsetHeight}px`;
+            if (span.innerHTML === '<br>') {
+                span.innerHTML = '<br>';
+                input.style.width = `5px`;
+                span.style['background-color'] = 'red';
+                span.style.width = '10px';
+                span.style.display = 'block';
+            } else {
+                span.style.width = 'auto';
+                span.style.display = 'inline';
+                span.style['background-color'] = 'inherit';
+            }
+        };
         node.fieldInfo.value.on('set', () => {
             input.value = node.fieldInfo.value.get();
+            setNodeValue();
         });
+
+        const spanClickHandler = (event: MouseEvent) => {
+            console.log('spanclickhandler');
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            container.prepend(input);
+            // span.style['white-space'] = 'pre';
+            // span.style.visibility = 'hidden';
+            input.focus();
+        };
+        // span.addEventListener('click', spanClickHandler);
+        span.addEventListener('mousedown', spanClickHandler);
         input.addEventListener('click', clickHandler);
         input.addEventListener('input', textHandler);
         input.addEventListener('focus', focusHandler);
         input.addEventListener('blur', blurHandler);
 
         this._destroyCallbacks.push(() => {
+            span.removeEventListener('click', spanClickHandler);
+            input.removeEventListener('click', clickHandler);
             input.removeEventListener('input', textHandler);
             input.removeEventListener('focus', focusHandler);
             input.removeEventListener('blur', blurHandler);
         });
+        // container.style.position = 'relative';
+        // container.style.display = 'inline-block';
+        container.style.color = 'red';
+        for (const prop of props) {
+            input.style[prop] = 'inherit';
+        }
 
-        container.appendChild(input);
+        input.style.position = 'absolute';
+        input.style.color = 'rgba(0, 0, 150, 0.5)';
+        input.style['caret-color'] = 'black';
+        input.style.overflow = 'hidden';
+        input.style['box-shadow'] = '0 0 0 1px  #875A7B';
+        // input.style['box-sizing'] = 'border-box';
+        input.style.display = 'block';
+
+        setTimeout(() => {
+            setNodeValue();
+        }, 100);
+
+        container.appendChild(span);
 
         return [container];
     }
 
-    async renderBak(node: OdooFieldNode | OMonetaryFieldNode): Promise<Node[]> {
-        const container = document.createElement(node.htmlTag);
-        let fieldContainer = container;
-
-        // Special case 4/4 for monetary field.
-        if (node instanceof OMonetaryFieldNode) {
-            fieldContainer = document.createElement('span');
-            fieldContainer.classList.add('oe_currency_value');
-            container.appendChild(fieldContainer);
-            const currency = document.createTextNode(node.options.currencyValue);
-            if (node.options.currencyPosition === OdooFieldNodeCurrencyPosition.BEFORE) {
-                container.prepend(currency);
-            } else {
-                container.append(currency);
-            }
-        }
-        this.engine.renderAttributes(node.attributes, container);
-        const selectionAncestor = this.engine.editor.selection.range.start.ancestor(
-            ancestor =>
-                ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,
-        );
-        if (selectionAncestor) {
-            fieldContainer.classList.add('jw-focus');
-        }
-        fieldContainer.classList.add('jw-odoo-field');
-
-        if (!node.fieldInfo.isValid.get()) {
-            fieldContainer.classList.add('jw-odoo-field-invalid');
-        }
-
-        const renderedChildren = await this.renderChildren(node);
-        for (const renderedChild of renderedChildren) {
-            for (const domChild of renderedChild) {
-                fieldContainer.append(domChild);
-            }
-        }
-
-        return [container];
+    _createInput(node: OdooFieldNode): HTMLInputElement | HTMLTextAreaElement {
+        return document.createElement('input');
     }
 }

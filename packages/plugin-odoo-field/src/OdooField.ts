@@ -7,6 +7,10 @@ import { OdooFieldDomParser } from './OdooFieldDomParser';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
 // import { OdooMonetaryFieldDomParser } from './fields/monetary/OMonetaryFieldNodeParser';
+import { OCharFieldDomRenderer } from './fields/OCharFieldDomRenderer';
+import { OTextFieldDomRenderer } from './fields/OTextFieldDomRenderer';
+import { ONumberFieldDomRenderer } from './fields/ONumberFieldDomRenderer';
+import { OFloatFieldDomRenderer } from './fields/OFloatFieldDomRenderer';
 
 /**
  * The record definion is mainly used to get a reactive field using the method `getReactiveField`.
@@ -32,7 +36,12 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
     static dependencies = [Dom];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [OdooFieldDomParser],
-        renderers: [OdooFieldDomRenderer],
+        renderers: [
+            OTextFieldDomRenderer,
+            OCharFieldDomRenderer,
+            ONumberFieldDomRenderer,
+            OFloatFieldDomRenderer,
+        ],
     };
 
     registry: Record<OdooFieldRegistryIdentifier, OdooFieldInfo> = {};

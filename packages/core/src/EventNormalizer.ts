@@ -2,6 +2,7 @@ import { Direction } from '../../core/src/VSelection';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint } from '../../utils/polyfill';
 import { targetDeepest } from '../../utils/src/Dom';
+import JWEditor from './JWEditor';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -466,7 +467,11 @@ export class EventNormalizer {
      */
     _stackTimeout: Timeout<EventBatch>;
 
-    constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
+    constructor(
+        editable: HTMLElement,
+        callback: TriggerEventBatchCallback,
+        public editor?: JWEditor,
+    ) {
         this.editable = editable;
         this._triggerEventBatch = callback;
 
@@ -526,6 +531,13 @@ export class EventNormalizer {
             type: type,
             listener: boundListener,
         });
+        target.addEventListener(
+            type,
+            () => {
+                console.log('normalizer hit', type);
+            },
+            false,
+        );
         target.addEventListener(type, boundListener, false);
     }
     /**
@@ -548,7 +560,14 @@ export class EventNormalizer {
      * @see _processEvents
      */
     _registerEvent(ev: EventToProcess): void {
-        if (ev instanceof Event && ev.target instanceof HTMLInputElement) return;
+        if (this.editor && ev instanceof Event && this.editor.preventEvent.has(ev)) return;
+
+        if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+        ) {
+            return;
+        }
         // See comment on `_keyboardSelectionTimeout`.
         if (this._keyboardSelectionTimeout?.pending) {
             this._keyboardSelectionTimeout.fire();
@@ -1476,6 +1495,8 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
+        if (this.editor && this.editor.preventEvent.has(ev)) return;
+
         if (document.activeElement instanceof HTMLInputElement) return;
 
         if (this._pointerSelectionTimeout?.pending) {
@@ -1508,7 +1529,14 @@ export class EventNormalizer {
      * @param {KeyboardEvent} ev
      */
     _onKeyDownOrKeyPress(ev: KeyboardEvent): void {
-        if (ev instanceof Event && ev.target instanceof HTMLInputElement) return;
+        if (this.editor && this.editor.preventEvent.has(ev)) return;
+
+        if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+        ) {
+            return;
+        }
         this._updateModifiersKeys(ev);
         this._registerEvent(ev);
         const selection = this._getSelection();
@@ -1523,6 +1551,8 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
+        if (this.editor && this.editor.preventEvent.has(ev)) return;
+
         if (ev.target instanceof HTMLInputElement) return;
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
@@ -1542,7 +1572,13 @@ export class EventNormalizer {
      * @param ev
      */
     _onPointerUp(ev: MouseEvent): void {
-        if (ev instanceof Event && ev.target instanceof HTMLInputElement) return;
+        if (this.editor && this.editor.preventEvent.has(ev)) return;
+        if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+        ) {
+            return;
+        }
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
         if (this._mousedownInEditable && ev.target instanceof Element) {
@@ -1645,7 +1681,14 @@ export class EventNormalizer {
      * @param ev
      */
     _onClipboard(ev: ClipboardEvent): void {
-        if (document.activeElement instanceof HTMLInputElement) return;
+        if (this.editor && this.editor.preventEvent.has(ev)) return;
+
+        if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+        ) {
+            return;
+        }
         if (ev.type === 'paste') {
             // Prevent the default browser wild pasting behavior.
             ev.preventDefault();

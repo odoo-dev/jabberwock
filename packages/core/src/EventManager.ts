@@ -17,6 +17,7 @@ export class EventManager {
         this.eventNormalizer = new EventNormalizer(
             domPlugin.editable,
             this._onNormalizedEvent.bind(this),
+            editor,
         );
     }
     stop(): void {

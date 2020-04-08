@@ -59,6 +59,7 @@ export class JWEditor {
     selection = new VSelection();
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
+    preventEvent = new Set<Event>();
 
     constructor() {
         this.el = document.createElement('jw-editor');
@@ -315,7 +316,14 @@ export class JWEditor {
      * @param event
      */
     async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
-        if (document.activeElement instanceof HTMLInputElement) return;
+        if (this.preventEvent.has(event)) return;
+
+        if (
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement
+        ) {
+            return;
+        }
         const keymap = this.plugins.get(Keymap);
         const commands = keymap.match(event);
         const [command, context] = this.contextManager.match(commands);

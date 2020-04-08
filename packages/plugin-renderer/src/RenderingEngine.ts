@@ -27,6 +27,7 @@ export class RenderingEngine<T = {}> {
     readonly editor: JWEditor;
     readonly renderers: Renderer<T>[] = [];
     readonly renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
+    preventEvent = new Set<Event>();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
