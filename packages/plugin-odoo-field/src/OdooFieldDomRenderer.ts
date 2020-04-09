@@ -24,12 +24,6 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
         }
         const focusNodeHandler = () => {
             const focusedNode = this.focusedNode.get();
-            console.log('focusedNode?.fieldInfo.value:', focusedNode?.fieldInfo.value);
-            console.log('node.fieldInfo.value:', node.fieldInfo.value);
-            console.log(
-                'focusedNode.fieldInfo.value === node.fieldInfo.value:',
-                focusedNode?.fieldInfo.value === node.fieldInfo.value,
-            );
             if (focusedNode && focusedNode.fieldInfo.value === node.fieldInfo.value) {
                 container.classList.add('jw-focus');
             } else {
