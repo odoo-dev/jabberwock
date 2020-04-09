@@ -124,6 +124,11 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
         input.style['caret-color'] = getComputedStyle(container).color + ' !important';
         input.style['box-shadow'] = '0 0 0 1px  #875A7B !important';
 
+        span.style['word-wrap'] = 'break-word';
+        (span.style as any).appearance = 'textarea';
+        span.style['-webkit-appearance'] = 'textarea';
+        span.style['-moz-appearance'] = 'textfield-multiline';
+
         setTimeout(() => {
             setNodeValue();
         }, 100);
