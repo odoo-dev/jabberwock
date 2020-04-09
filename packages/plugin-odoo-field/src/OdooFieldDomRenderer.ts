@@ -4,8 +4,6 @@ import { OdooFieldNode } from './OdooFieldNode';
 import { OMonetaryFieldNode } from './OMonetaryFieldNode';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
 
-const props = getComputedStyle(document.body);
-
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
     engine: DomRenderingEngine;
@@ -73,20 +71,23 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
             // span.innerHTML = span.innerHTML.slice(0, span.innerHTML.length - spacesLength);
             // span.innerHTML += Array(spacesLength + 1).join('&nbsp;');
             // }
+
             span.innerHTML = span.innerHTML.replace(/\s\s/g, ' &nbsp;');
             // input.style.left = '300px';
-            input.style.width = `${span.offsetWidth + 0.5}px`;
-            input.style.height = `${span.offsetHeight}px`;
+            input.setAttribute(
+                'style',
+                `width: ${span.offsetWidth + 0.5}px !important; height: ${
+                    span.offsetHeight
+                }px !important`,
+            );
             if (span.innerHTML === '<br>') {
                 span.innerHTML = '<br>';
                 input.style.width = `5px`;
-                span.style['background-color'] = 'red';
                 span.style.width = '10px';
                 span.style.display = 'block';
             } else {
                 span.style.width = 'auto';
                 span.style.display = 'inline';
-                span.style['background-color'] = 'inherit';
             }
         };
         node.fieldInfo.value.on('set', () => {
@@ -119,19 +120,9 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
             input.removeEventListener('blur', blurHandler);
         });
         // container.style.position = 'relative';
-        // container.style.display = 'inline-block';
         container.style.color = 'red';
-        for (const prop of props) {
-            input.style[prop] = 'inherit';
-        }
-
-        input.style.position = 'absolute';
-        input.style.color = 'rgba(0, 0, 150, 0.5)';
-        input.style['caret-color'] = 'black';
-        input.style.overflow = 'hidden';
-        input.style['box-shadow'] = '0 0 0 1px  #875A7B';
-        // input.style['box-sizing'] = 'border-box';
-        input.style.display = 'block';
+        input.style['caret-color'] = getComputedStyle(container).color + ' !important';
+        input.style['box-shadow'] = '0 0 0 1px  #875A7B !important';
 
         setTimeout(() => {
             setNodeValue();
