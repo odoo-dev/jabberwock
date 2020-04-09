@@ -12,123 +12,110 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: OdooFieldNode | OMonetaryFieldNode): Promise<Node[]> {
         const container = document.createElement(node.htmlTag);
+        const textNode = document.createTextNode(node.fieldInfo.value.get());
 
         this.engine.renderAttributes(node.attributes, container);
-        const span = document.createElement('span');
-        const textNode = document.createTextNode(node.fieldInfo.value.get());
-        span.appendChild(textNode);
         const input = this._createInput(node);
-        input.classList.add('jw-odoo-field');
-        // input.classList.add('inherit-all');
+        container.classList.add('jw-odoo-field');
+        input.classList.add('jw-odoo-field-textarea');
 
         if (node.fieldInfo.value === this.focusedNode) {
             input.classList.add('jw-focus');
         }
-        const focusHander = () => {
+        const focusNodeHandler = () => {
             const focusedNode = this.focusedNode.get();
+            console.log('focusedNode?.fieldInfo.value:', focusedNode?.fieldInfo.value);
+            console.log('node.fieldInfo.value:', node.fieldInfo.value);
+            console.log(
+                'focusedNode.fieldInfo.value === node.fieldInfo.value:',
+                focusedNode?.fieldInfo.value === node.fieldInfo.value,
+            );
             if (focusedNode && focusedNode.fieldInfo.value === node.fieldInfo.value) {
-                input.classList.add('jw-focus');
+                container.classList.add('jw-focus');
             } else {
-                input.classList.remove('jw-focus');
+                container.classList.remove('jw-focus');
+            }
+            if (document.activeElement !== input) {
+                input.remove();
+                container.appendChild(textNode);
             }
         };
-        this.focusedNode.on('set', focusHander);
-        focusHander();
+        this.focusedNode.on('set', focusNodeHandler);
+        focusNodeHandler();
 
-        const textHandler = event => {
+        const textHandler = () => {
             node.fieldInfo.value.set(input.value);
-            // const spanStyle = getComputedStyle(span);
         };
         const clickHandler = (event: MouseEvent) => {
             event.stopPropagation();
             event.preventDefault();
             event.stopImmediatePropagation();
-            console.log('add preventEvent from odooField');
             this.engine.editor.preventEvent.add(event);
         };
         const focusHandler = event => {
             this.focusedNode.set(node);
         };
         const blurHandler = event => {
-            this.focusedNode.set(undefined);
-            // input.remove();
-            // span.style['white-space'] = 'normal';
-            // span.style.visibility = 'visible';
+            // this.focusedNode.set(undefined);
         };
 
-        const setNodeValue = () => {
-            span.innerText = node.fieldInfo.value.get();
-            if (span.innerHTML.match(/<br>$/)) {
-                span.innerHTML += '<br>';
-            }
-            if (span.innerHTML === '') {
-                span.innerHTML = '<br>';
-            }
-            input.value = input.value.replace(/ {2}/g, ' \u00A0');
-            const spaces = span.innerHTML.match(/(\s+)$/);
-            // if (spaces) {
-            // const spacesLength = spaces[1].length;
-            // span.innerHTML = span.innerHTML.slice(0, span.innerHTML.length - spacesLength);
-            // span.innerHTML += Array(spacesLength + 1).join('&nbsp;');
-            // }
-
-            span.innerHTML = span.innerHTML.replace(/\s\s/g, ' &nbsp;');
-            // input.style.left = '300px';
-            input.setAttribute(
-                'style',
-                `width: ${span.offsetWidth + 0.5}px !important; height: ${
-                    span.offsetHeight
-                }px !important`,
-            );
-            if (span.innerHTML === '<br>') {
-                span.innerHTML = '<br>';
-                input.style.width = `5px`;
-                span.style.width = '10px';
-                span.style.display = 'block';
-            } else {
-                span.style.width = 'auto';
-                span.style.display = 'inline';
-            }
-        };
         node.fieldInfo.value.on('set', () => {
             input.value = node.fieldInfo.value.get();
-            setNodeValue();
+            textNode.textContent = node.fieldInfo.value.get();
+            delayedResize();
         });
 
-        const spanClickHandler = (event: MouseEvent) => {
-            console.log('spanclickhandler');
+        function resize() {
+            input.style.height = 'auto';
+            input.style.height = input.scrollHeight + 'px';
+        }
+        /* 0-timeout to get the already changed text */
+        function delayedResize() {
+            window.setTimeout(resize, 0);
+        }
+
+        const containerClickHandler = (event: MouseEvent) => {
+            console.log('containerClick!!');
+            if (
+                event.target instanceof HTMLTextAreaElement ||
+                event.target instanceof HTMLInputElement
+            ) {
+                console.log('target is input');
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
+
+            console.log('prepend!!');
             container.prepend(input);
-            // span.style['white-space'] = 'pre';
-            // span.style.visibility = 'hidden';
+            textNode.remove();
+            this.focusedNode.set(node);
             input.focus();
+            resize();
         };
+
+        input.addEventListener('change', resize);
+        input.addEventListener('cut', delayedResize);
+        input.addEventListener('paste', delayedResize);
+        input.addEventListener('drop', delayedResize);
+        input.addEventListener('keydown', delayedResize);
+
         // span.addEventListener('click', spanClickHandler);
-        span.addEventListener('mousedown', spanClickHandler);
+        container.addEventListener('mousedown', containerClickHandler);
         input.addEventListener('click', clickHandler);
         input.addEventListener('input', textHandler);
         input.addEventListener('focus', focusHandler);
         input.addEventListener('blur', blurHandler);
 
         this._destroyCallbacks.push(() => {
-            span.removeEventListener('click', spanClickHandler);
-            input.removeEventListener('click', clickHandler);
-            input.removeEventListener('input', textHandler);
-            input.removeEventListener('focus', focusHandler);
-            input.removeEventListener('blur', blurHandler);
+            // todo: destroy all callback here
         });
         // container.style.position = 'relative';
         container.style.color = 'red';
         input.style['caret-color'] = getComputedStyle(container).color + ' !important';
-        input.style['box-shadow'] = '0 0 0 1px  #875A7B !important';
 
-        setTimeout(() => {
-            setNodeValue();
-        }, 100);
-
-        container.appendChild(span);
+        container.appendChild(textNode);
 
         return [container];
     }

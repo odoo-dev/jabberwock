@@ -29,11 +29,17 @@ jw-editable {
     border: 0;
     outline: none;
 }
+.jw-odoo-field.jw-focus {
+    display: inline-block;
+    width: 100%;
+}
 .jw-odoo-field:hover, .jw-odoo-field.jw-focus {
     box-shadow: 0 0 0 1px  #875A7B;
+    /* border: 1px #875A7B solid; */
 }
 .jw-odoo-field-invalid {
-    box-shadow: 0 0 0 1px  red !important;
+    /* box-shadow: 0 0 0 1px  red !important; */
+    border: 1px #875A7B solid;
 }
 
 .supported {
@@ -46,15 +52,13 @@ jw-editable {
     color: red;
 }
 
-[data-oe-field] {
-    word-wrap: break-word; /* for firefox issue */
-}
-
-.jw-odoo-field {
-    all: inherit !important;
-    position: absolute !important;
-    color: blue !important;
-    background: transparent !important;
-    display: inline-block !important;
-    overflow: hidden !important;
+.jw-odoo-field-textarea{
+    all: inherit;
+    display: inline-block;
+    outline: none;
+    width: 100%;
+    color: blue;
+    background: transparent;
+    overflow: hidden;
+    min-height: 0;
 }
