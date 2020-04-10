@@ -362,3 +362,16 @@ devtools-info devtools-about devtools-id {
     color: #76526c;
     font-size: smaller;
 }
+
+devtools-shortcuts {
+    margin-left: 10px;
+    color: gray;
+}
+
+devtools-shortcut:not(:first)::before {
+    content: " - ";
+}
+
+.shortcut-user {
+    color: purple;
+}

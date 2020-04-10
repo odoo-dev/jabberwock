@@ -15,15 +15,18 @@ interface ModifiedShortcut {
     modifiers: Set<string>;
 }
 
-interface KeyShortcutPattern extends ModifiedShortcut {
+export interface KeyShortcutPattern extends ModifiedShortcut {
     key: string;
 }
+export function isKeyPattern(pattern: ShortcutPattern): pattern is KeyShortcutPattern {
+    return !!(pattern as KeyShortcutPattern).key;
+}
 
-interface CodeShortcutPattern extends ModifiedShortcut {
+export interface CodeShortcutPattern extends ModifiedShortcut {
     code: string;
 }
 
-type ShortcutPattern = KeyShortcutPattern | CodeShortcutPattern;
+export type ShortcutPattern = KeyShortcutPattern | CodeShortcutPattern;
 
 interface Mapping {
     pattern: ShortcutPattern;

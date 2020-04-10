@@ -3,29 +3,75 @@ import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
-
+import { Keymap, LEVEL, ShortcutPattern, isKeyPattern } from '../../../plugin-keymap/src/Keymap';
 interface CommandsState {
     currentTab: string;
     registry: Record<CommandIdentifier, CommandImplementation[]>;
     selectedCommandIndex: number;
     selectedCommandIdentifier: string;
     selectedCommandImplementationIndex: number;
+    shortcuts: MappingConfigs;
 }
 interface CommandsProps {
     // Stack of all commands executed since init.
     commands: Array<[CommandIdentifier, CommandParams]>;
 }
-
+type CommandPatterns = Record<CommandIdentifier, string[]>;
+interface MappingConfigs {
+    default: CommandPatterns;
+    user: CommandPatterns;
+}
 export class CommandsComponent extends OwlUIComponent<CommandsProps> {
+    static components = { CommandsComponent };
     state: CommandsState = {
         currentTab: 'queue',
         registry: this.env.editor.dispatcher.commands,
         selectedCommandIndex: null, // Index of the selected command in the stack
         selectedCommandIdentifier: null, // Identifier of the selected command
         selectedCommandImplementationIndex: null, // Index of the selected command definition
+        shortcuts: {
+            default: {},
+            user: {},
+        },
     };
     localStorage = ['currentTab'];
 
+    willStart() {
+        this.getShortctus();
+        return super.willStart();
+    }
+
+    getShortctus() {
+        const keymap = this.env.editor.plugins.get(Keymap);
+        this.state.shortcuts = {
+            default: {},
+            user: {},
+        };
+        for (const mappings of keymap.mappings[LEVEL.DEFAULT]) {
+            if (mappings.configuredCommand) {
+                if (!this.state.shortcuts.default[mappings.configuredCommand.commandId]) {
+                    this.state.shortcuts.default[mappings.configuredCommand.commandId] = [];
+                }
+                this.state.shortcuts.default[mappings.configuredCommand.commandId].push(
+                    this._representShortcutPattern(mappings.pattern),
+                );
+            }
+        }
+        for (const mappings of keymap.mappings[LEVEL.USER]) {
+            if (mappings.configuredCommand) {
+                if (!this.state.shortcuts.user[mappings.configuredCommand.commandId]) {
+                    this.state.shortcuts.user[mappings.configuredCommand.commandId] = [];
+                }
+                this.state.shortcuts.user[mappings.configuredCommand.commandId].push(
+                    this._representShortcutPattern(mappings.pattern),
+                );
+            }
+        }
+    }
+    _representShortcutPattern(pattern: ShortcutPattern) {
+        const key = isKeyPattern(pattern) ? pattern.key : '<' + pattern.code + '>';
+        return [[...pattern.modifiers].join(' '), key].join(' ');
+    }
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------

@@ -256,6 +256,13 @@
                         }"
                         t-on-click="selectCommand(commandIdentifier)">
                         <t t-esc="commandIdentifier"/>
+                        <devtools-shortcuts class="devtool-shortcut" t-foreach="[...(state.shortcuts.default[commandIdentifier] || [])]" t-as="shortcut">
+                                <devtools-shortcut t-esc="shortcut"/>
+                        </devtools-shortcuts>
+                        <devtools-shortcuts class="devtool-shortcut" t-foreach="[...(state.shortcuts.user[commandIdentifier] || [])]" t-as="shortcut">
+                                <devtools-shortcut class="shortuct-user" t-esc="shortcut"/>
+                        </devtools-shortcuts>
+
                     </devtools-command>
                 </mainpane-contents>
             </devtools-mainpane>
@@ -289,6 +296,9 @@
             </devtools-sidepane>
         </devtools-contents>
     </devtools-panel>
+
+    <t t-name="shortcuts">
+    </t>
 
     <t t-name="commandArgs">
         <devtools-table>
