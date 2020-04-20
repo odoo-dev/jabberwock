@@ -1,7 +1,6 @@
 import { BasicEditor } from '../../bundles/BasicEditor';
 import { jabberwocky } from '../utils/jabberwocky';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
-import '../utils/jabberwocky.css';
 import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';
 import { ParagraphButton } from '../../packages/plugin-heading/src/HeadingButtons';
 import { Heading1Button } from '../../packages/plugin-heading/src/HeadingButtons';
@@ -17,16 +16,55 @@ import { OrderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
-import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
+import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
+import { VNode } from '../../packages/core/src/VNodes/VNode';
+import JWEditor from '../../packages/core/src/JWEditor';
+import { Parser } from '../../packages/plugin-parser/src/Parser';
+
+import '../utils/jabberwocky.css';
+import headerTemplate from './header.xml';
+import mainTemplate from './main.xml';
+import otherTemplate from './other.xml';
+import footerTemplate from './footer.xml';
 
 const target = document.getElementById('contentToEdit');
-target.style.textAlign = 'center';
 jabberwocky.init(target);
 
 const editor = new BasicEditor();
 editor.configure(DomLayout, {
-    location: [target, 'replace'],
+    components: [
+        {
+            id: 'domHeader',
+            render(editor: JWEditor): Promise<VNode[]> {
+                return editor.plugins.get(Parser).parse('text/html', headerTemplate);
+            },
+        },
+        {
+            id: 'domMain',
+            render(editor: JWEditor): Promise<VNode[]> {
+                return editor.plugins.get(Parser).parse('text/html', mainTemplate);
+            },
+        },
+        {
+            id: 'domOther',
+            render(editor: JWEditor): Promise<VNode[]> {
+                return editor.plugins.get(Parser).parse('text/html', otherTemplate);
+            },
+        },
+        {
+            id: 'domFooter',
+            render(editor: JWEditor): Promise<VNode[]> {
+                return editor.plugins.get(Parser).parse('text/html', footerTemplate);
+            },
+        },
+    ],
+    locations: [
+        ['domHeader', [document.body, 'prepend']],
+        ['domMain', [target, 'replace']],
+        ['domOther', [target, 'after']],
+        ['domFooter', [document.body, 'append']],
+    ],
 });
 editor.configure(DomEditable, {
     autoFocus: true,
@@ -51,5 +89,4 @@ editor.configure(Toolbar, {
     ],
 });
 editor.load(DevTools);
-
 editor.start();

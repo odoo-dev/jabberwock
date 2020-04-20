@@ -3,15 +3,11 @@ body {
     height:100vh;
 }
 
-jw-editor {
-    display: block;
-    height: 100vh;
-}
-
 jw-editable {
     display: block;
     padding: 10px;
-    height: 100vh;
+    width: 100%;
+    text-align: center;
 }
 
 jw-editable .drop-cap {

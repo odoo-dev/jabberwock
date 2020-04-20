@@ -1,0 +1,2 @@
+<b>zone "debug" and "dialog" just after this bold tag (append in body)<br/>Content after a br tag</b>
+<t t-zone="debug"/>

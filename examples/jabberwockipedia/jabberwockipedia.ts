@@ -1,8 +1,11 @@
 import { BasicEditor } from '../../bundles/BasicEditor';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
-import { Dom } from '../../packages/plugin-dom/src/Dom';
+import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
+import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 
 const editor = new BasicEditor();
-editor.configure(Dom, { target: document.getElementById('example') });
+const target = document.getElementById('example');
+editor.configure(DomLayout, { location: [target, 'replace'] });
+editor.configure(DomEditable, { source: target });
 editor.load(DevTools);
 editor.start();
