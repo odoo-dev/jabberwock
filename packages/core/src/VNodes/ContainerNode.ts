@@ -3,7 +3,7 @@ import { VNode, Predicate, isLeaf } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
 
 export class ContainerNode extends AbstractNode {
-    readonly childVNodes = [];
+    readonly childVNodes: VNode[] = [];
 
     //--------------------------------------------------------------------------
     // Browsing children.

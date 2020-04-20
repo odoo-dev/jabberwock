@@ -119,7 +119,9 @@ export class VRange {
             if (!endContainers.includes(node)) {
                 let selectedNode: VNode = node;
                 while (!selectedNode?.test(FragmentNode) && selectedNode?.test(predicate)) {
-                    selectedNodes.push(selectedNode);
+                    if (selectedNode.editable) {
+                        selectedNodes.push(selectedNode);
+                    }
                     // Find the next ancestor whose children are all selected
                     // and add it to the list.
                     selectedNode = selectedNode.ancestor(ancestor => {
@@ -141,14 +143,19 @@ export class VRange {
     targetedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
     targetedNodes(predicate?: Predicate): VNode[];
     targetedNodes(predicate?: Predicate): VNode[] {
-        const targetedNodes: VNode[] = [];
-
+        const targetedNodes: VNode[] = this.traversedNodes(predicate);
         const closestStartAncestor = this.start.ancestor(predicate);
-        if (closestStartAncestor) {
-            targetedNodes.push(closestStartAncestor);
+        if (closestStartAncestor?.editable) {
+            targetedNodes.unshift(closestStartAncestor);
+        } else if (closestStartAncestor) {
+            const children = [...closestStartAncestor.childVNodes].reverse();
+            for (const child of children) {
+                if (!targetedNodes.includes(child) && child.test(predicate)) {
+                    targetedNodes.unshift(child);
+                }
+            }
         }
-
-        return targetedNodes.concat(this.traversedNodes(predicate));
+        return targetedNodes;
     }
 
     /**
@@ -161,7 +168,7 @@ export class VRange {
         let node = this.start;
         const bound = this.end.next();
         while ((node = node.next()) && node !== bound) {
-            if (node.test(predicate)) {
+            if (node.editable && node.test(predicate)) {
                 traversedNodes.push(node);
             }
         }

@@ -78,7 +78,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const previousSibling = range.start.previousSibling();
             if (previousSibling) {
                 previousSibling.removeBackward();
-            } else if (range.startContainer.breakable) {
+            } else if (range.startContainer.breakable && range.startContainer.editable) {
                 // Otherwise set range start at previous valid leaf.
                 let previous = range.startContainer.previous();
                 while (previous && !isLeaf(previous)) {
@@ -111,7 +111,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const nextSibling = range.end.nextSibling();
             if (nextSibling) {
                 nextSibling.removeForward();
-            } else if (range.endContainer.breakable) {
+            } else if (range.endContainer.breakable && range.endContainer.editable) {
                 // Otherwise set range end at next valid leaf.
                 let next = range.end.next();
                 while (next && !isLeaf(next)) {

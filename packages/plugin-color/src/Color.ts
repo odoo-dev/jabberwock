@@ -1,11 +1,10 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { VNode } from '../../core/src/VNodes/VNode';
+import { VNode, isLeaf } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { getStyle, setStyle, removeStyle } from '../../utils/src/utils';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
-import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VRange } from '../../core/src/VRange';
 import { Format } from '../../plugin-inline/src/Format';
 
@@ -49,7 +48,6 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
      */
     color(params: ColorParams): void {
         const color = params.color;
-
         if (params.context.range.isCollapsed()) {
             // Set the style cache.
             const inline = this.dependencies.get(Inline);
@@ -76,7 +74,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // this style, style these ancestors instead of their
                 // descendants.
                 let parent = node.parent;
-                while (parent && !parent.test(FragmentNode) && this._isAllColored(parent, color)) {
+                while (parent && parent.editable && this._isAllColored(parent, color)) {
                     setStyle(parent, this.styleName, color);
                     // TODO: not remove the children's styles when we have modifiers.
                     for (const child of parent.children()) {
