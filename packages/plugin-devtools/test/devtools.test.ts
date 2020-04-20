@@ -722,6 +722,7 @@ describe('Plugin: DevTools', () => {
                 'toggleList',
                 'indent',
                 'outdent',
+                'toggleListCheck',
                 'link',
                 'unlink',
                 'addRowAbove',

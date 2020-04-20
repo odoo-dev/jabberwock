@@ -23,3 +23,13 @@ export const UnorderedListButton: Button = {
         return targetedNodes.every(List.isInList.bind(List, ListType.UNORDERED));
     },
 };
+export const CheckboxListButton: Button = {
+    title: 'Toggle checkbox list',
+    class: 'far fa-check-square',
+    commandId: 'toggleList',
+    commandArgs: { type: ListType.CHECKLIST } as ListParams,
+    selected: (editor: JWEditor): boolean => {
+        const targetedNodes = editor.selection.range.targetedNodes();
+        return targetedNodes.every(List.isInList.bind(List, ListType.CHECKLIST));
+    },
+};

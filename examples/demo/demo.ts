@@ -18,6 +18,7 @@ import { ItalicButton } from '../../packages/plugin-italic/src/ItalicButtons';
 import { UnderlineButton } from '../../packages/plugin-underline/src/UnderlineButtons';
 import { OrderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
+import { CheckboxListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { AlignLeftButton } from '../../packages/plugin-align/src/AlignButtons';
@@ -53,7 +54,7 @@ editor.configure(Toolbar, {
         ],
         [BoldButton, ItalicButton, UnderlineButton],
         [AlignLeftButton, AlignCenterButton, AlignRightButton, AlignJustifyButton],
-        [OrderedListButton, UnorderedListButton],
+        [OrderedListButton, UnorderedListButton, CheckboxListButton],
         [IndentButton, OutdentButton],
     ],
 });

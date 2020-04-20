@@ -1,9 +1,11 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { ChecklistNode } from './ChecklistNode';
 
 export enum ListType {
     ORDERED = 'ORDERED',
     UNORDERED = 'UNORDERED',
+    CHECKLIST = 'CHECKLIST',
 }
 
 export class ListNode extends ContainerNode {
@@ -13,7 +15,10 @@ export class ListNode extends ContainerNode {
         return node && node.is(ListNode) && node.listType === ListType.ORDERED;
     }
     static UNORDERED(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType == ListType.UNORDERED;
+        return node && node.is(ListNode) && node.listType === ListType.UNORDERED;
+    }
+    static CHECKLIST(node: VNode): node is ChecklistNode {
+        return node && node.is(ListNode) && node.listType === ListType.CHECKLIST;
     }
     listType: ListType;
     constructor(listType: ListType) {

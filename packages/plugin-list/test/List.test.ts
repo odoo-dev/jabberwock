@@ -108,6 +108,11 @@ describePlugin(List, testEditor => {
                 '        <li><h1>b.3</h1></li>', // li3_2
                 '        <li>b.4</li>', // li3_3
                 '    </ol>',
+                '    <ul class="checklist">', // li4
+                '        <li class="unchecked">c.1</li>', // li4_0
+                '        <li class="checked">c.2</li>', // li4_1
+                '        <li class="checked"></li>',
+                '    </ol>',
                 '</ul>',
             ].join('\n');
             const node = (await engine.parse(element))[0];
@@ -116,7 +121,7 @@ describePlugin(List, testEditor => {
             const list = node.firstChild() as ListNode;
             expect(list.toString()).to.equal('ListNode: ' + ListType.UNORDERED);
             expect(list.listType).to.equal(ListType.UNORDERED);
-            expect(list.childVNodes.length).to.equal(4); // li0, li1, li2, li3
+            expect(list.childVNodes.length).to.equal(5); // li0, li1, li2, li3, li4
 
             const li0 = list.children()[0];
             expect(li0.toString()).to.equal('ParagraphNode');
@@ -210,6 +215,25 @@ describePlugin(List, testEditor => {
             expect(li3_3.children()[0].toString()).to.equal('b');
             expect(li3_3.children()[1].toString()).to.equal('.');
             expect(li3_3.children()[2].toString()).to.equal('4');
+
+            const li4 = list.children()[4] as ListNode;
+            expect(li4.toString()).to.equal('ChecklistNode');
+            expect(li4.listType).to.equal(ListType.CHECKLIST);
+            expect(li4.children().length).to.equal(2);
+
+            const li4_0 = li4.children()[0];
+            expect(li4_0.toString()).to.equal('ParagraphNode');
+            expect(li4_0.children().length).to.equal(3);
+            expect(li4_0.children()[0].toString()).to.equal('c');
+            expect(li4_0.children()[1].toString()).to.equal('.');
+            expect(li4_0.children()[2].toString()).to.equal('1');
+
+            const li4_1 = li4.children()[1];
+            expect(li4_1.toString()).to.equal('ParagraphNode');
+            expect(li4_1.children().length).to.equal(3);
+            expect(li4_1.children()[0].toString()).to.equal('c');
+            expect(li4_1.children()[1].toString()).to.equal('.');
+            expect(li4_1.children()[2].toString()).to.equal('2');
             /* eslint-enable @typescript-eslint/camelcase */
         });
         it('should parse a list item with several blocks, inlines and whitespace', async () => {
