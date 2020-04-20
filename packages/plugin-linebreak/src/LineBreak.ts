@@ -25,8 +25,8 @@ export class LineBreak<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
     /**
      * Insert a line break node at range.
      */
-    insertLineBreak(): void {
-        this.editor.execCommand<Core>('insert', {
+    insertLineBreak(): Promise<void> {
+        return this.editor.execCommand<Core>('insert', {
             node: new LineBreakNode(),
         });
     }
