@@ -6,6 +6,7 @@ import { AtomicNode } from './AtomicNode';
 let id = 0;
 export abstract class AbstractNode {
     readonly id = id;
+    editable = true;
     tangible = true;
     breakable = true;
     parent: VNode;

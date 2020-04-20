@@ -4,6 +4,7 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { setStyle } from '../../utils/src/utils';
 
 export enum AlignType {
     LEFT = 'left',
@@ -72,7 +73,9 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      * Align text.
      */
     align(params: AlignParams): void {
-        const nodes = params.context.range.targetedNodes(node => node.is(ContainerNode));
+        const nodes = params.context.range.targetedNodes((node: VNode): boolean => {
+            return node.is(ContainerNode) || (node.parent && !node.parent.editable);
+        });
         const type = params.type;
         for (const node of nodes) {
             const alignedAncestor = node.ancestor(Align.isAligned);
@@ -86,26 +89,7 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             }
 
             if (!alignedAncestor || currentAlignment !== type) {
-                const textAlign = 'text-align: ' + type.toLowerCase();
-                if (Align.isAligned(node)) {
-                    // Replace the existing alignment.
-                    const styles = (node.attributes.style as string).split(/;\s*/);
-                    const alignIndex = styles.findIndex(style => style.startsWith('text-align'));
-                    styles[alignIndex] = textAlign;
-                    node.attributes.style = styles.join('; ');
-                } else if (typeof node.attributes.style === 'string') {
-                    // Add an alignment to the existing styles.
-                    node.attributes.style = [textAlign, node.attributes.style].join('; ');
-                } else {
-                    // Create a new style attribute, with an alignment.
-                    node.attributes.style = textAlign;
-                }
-                // Remove unnecessary space from the style attribute.
-                node.attributes.style = (node.attributes.style as string).trim();
-                if (!node.attributes.style.endsWith(';')) {
-                    // Ensure the style attribute ends with a semicolon.
-                    node.attributes.style += ';';
-                }
+                setStyle(node, 'text-align', type.toLowerCase());
             }
         }
     }
