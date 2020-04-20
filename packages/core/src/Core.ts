@@ -2,7 +2,7 @@ import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
 import { VSelectionDescription, Direction } from './VSelection';
-import { VNode, RelativePosition, isLeaf } from './VNodes/VNode';
+import { VNode, RelativePosition } from './VNodes/VNode';
 
 export type InsertParagraphBreakParams = CommandParams;
 export type DeleteBackwardParams = CommandParams;
@@ -76,25 +76,24 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly preceding the range.
             const previousSibling = range.start.previousSibling();
-            if (previousSibling) {
+            if (
+                previousSibling &&
+                range.startContainer.breakable &&
+                range.startContainer.editable
+            ) {
                 previousSibling.removeBackward();
             } else if (range.startContainer.breakable && range.startContainer.editable) {
                 // Otherwise set range start at previous valid leaf.
-                let previous = range.startContainer.previous();
-                while (previous && !isLeaf(previous)) {
-                    const sibling = previous.previousSibling();
-                    if (sibling) {
-                        previous = sibling.lastLeaf();
-                    } else if (previous.parent?.breakable) {
-                        previous = previous.parent;
-                    } else {
-                        // Stop browsing at the first child of an unbreakable.
-                        previous = undefined;
-                    }
+                let ancestor = range.start.parent;
+                while (ancestor?.breakable && ancestor.editable && !ancestor.previousSibling()) {
+                    ancestor = ancestor.parent;
                 }
-                if (previous) {
-                    range.setStart(previous, RelativePosition.AFTER);
-                    range.empty();
+                if (ancestor?.breakable && ancestor.editable) {
+                    const previous = ancestor.previousSibling().lastLeaf();
+                    if (previous) {
+                        range.setStart(previous, RelativePosition.AFTER);
+                        range.empty();
+                    }
                 }
             }
         } else {
@@ -109,17 +108,20 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly following the range.
             const nextSibling = range.end.nextSibling();
-            if (nextSibling) {
+            if (nextSibling && range.endContainer.breakable && range.endContainer.editable) {
                 nextSibling.removeForward();
             } else if (range.endContainer.breakable && range.endContainer.editable) {
                 // Otherwise set range end at next valid leaf.
-                let next = range.end.next();
-                while (next && !isLeaf(next)) {
-                    next = next.firstChild();
+                let ancestor = range.end.parent;
+                while (ancestor?.breakable && ancestor.editable && !ancestor.nextSibling()) {
+                    ancestor = ancestor.parent;
                 }
-                if (next) {
-                    range.setEnd(next, RelativePosition.BEFORE);
-                    range.empty();
+                if (ancestor?.breakable && ancestor.editable) {
+                    const next = ancestor.nextSibling().firstLeaf();
+                    if (next) {
+                        range.setEnd(next, RelativePosition.BEFORE);
+                        range.empty();
+                    }
                 }
             }
         } else {
