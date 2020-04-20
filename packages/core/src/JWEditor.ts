@@ -8,7 +8,6 @@ import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
-import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { ModeError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
@@ -80,7 +79,6 @@ export class JWEditor {
         // Core is a special mandatory plugin that handles the matching between
         // the commands supported in the core of the editor and the VDocument.
         this.load(Core);
-        this.load(Parser);
         this.load(Keymap);
     }
 
@@ -183,6 +181,7 @@ export class JWEditor {
                     // Load the dependency before the plugin depending on it.
                     const [[Dep, config]] = Plugins.splice(depIndex, 1);
                     Plugins.splice(index, 0, [Dep, config]);
+                    offset--;
                 }
             }
         }
