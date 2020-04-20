@@ -210,7 +210,13 @@ export class ContainerNode extends AbstractNode {
      */
     mergeWith(newContainer: VNode): void {
         if (newContainer !== this) {
-            newContainer.append(...this.childVNodes);
+            if (newContainer.childVNodes.includes(this)) {
+                for (const child of this.childVNodes.slice()) {
+                    newContainer.insertBefore(child, this);
+                }
+            } else {
+                newContainer.append(...this.childVNodes);
+            }
             this.remove();
         }
     }
