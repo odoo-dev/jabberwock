@@ -105,6 +105,9 @@ describe('core', () => {
                 class F<T extends LocalConfig> extends JWPlugin<T> {
                     static readonly dependencies = [D, C];
                 }
+                class G<T extends LocalConfig> extends JWPlugin<T> {
+                    static readonly dependencies = [E];
+                }
 
                 it('should start all plugins in order', async () => {
                     const editor = new JWEditor();
@@ -139,6 +142,27 @@ describe('core', () => {
                         'C',
                         'D',
                         'E',
+                    ]);
+                });
+                it('with dependencies automatically add before the plugin with the sub-dependencies', async () => {
+                    const editor = new JWEditor();
+                    editor.load(A);
+                    editor.load(B);
+                    editor.load(G);
+                    editor.load(C);
+                    editor.load(E);
+                    await editor.start();
+                    const plugins = Array.from(editor.plugins.values());
+                    expect(plugins.map(p => p.constructor.name)).to.eql([
+                        'Core',
+                        'Parser',
+                        'Keymap',
+                        'A',
+                        'B',
+                        'D',
+                        'E',
+                        'G',
+                        'C',
                     ]);
                 });
                 it('with dependencies without overwrite previous configuration and order', async () => {
