@@ -1,0 +1,9 @@
+
+<t-dialog>
+    <t t-zone="dialog"/>
+    <t t-zone="default"/>
+</t-dialog>
+<div class="editor-header">
+    <b>header (prepend in the body), zone "tools" just after this bold tag</b>
+    <t t-zone="tools"/>
+</div>

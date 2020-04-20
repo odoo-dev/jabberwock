@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <title>Jabberwock Editor</title>
+        <link rel="shortcut icon" href="#" />
+        <style>
+            td jw-devtools {
+                position: absolute;
+                top: 0;
+                height: 100% !important; /* The devtools is in a other container than usual */
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <header>header not editable (before contentEditable)</header>
+            <section id="contentToEdit" style="text-align: center;">
+                Content in section to edit
+            </section>
+            <footer>footer not editable (after contentEditable)</footer>
+        </div>
+        <!-- The following file is created by webpack in the config file -->
+        <!-- The path generated is "/<filename>.js" -->
+        <script type="text/javascript" src="layout.js" charset="UTF-8"></script>
+    </body>
+</html>

@@ -1,7 +1,6 @@
 import { BasicEditor } from '../../bundles/BasicEditor';
 import { FontAwesome } from '../../packages/plugin-fontawesome/src/FontAwesome';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
-import { Dom } from '../../packages/plugin-dom/src/Dom';
 import template from './demo.xml';
 import './demo.css';
 import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';
@@ -20,12 +19,16 @@ import { OrderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
-import { AlignLeftButton } from '../../packages/plugin-align/src/AlignButtons';
-import { AlignCenterButton } from '../../packages/plugin-align/src/AlignButtons';
-import { AlignRightButton } from '../../packages/plugin-align/src/AlignButtons';
-import { AlignJustifyButton } from '../../packages/plugin-align/src/AlignButtons';
+import {
+    AlignLeftButton,
+    AlignCenterButton,
+    AlignRightButton,
+    AlignJustifyButton,
+} from '../../packages/plugin-align/src/AlignButtons';
+import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
+import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 
-const target = document.createElement('div');
+const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';
 target.style.paddingLeft = '8px';
 target.innerHTML = template;
@@ -33,9 +36,12 @@ target.innerHTML = template;
 const editor = new BasicEditor();
 editor.load(FontAwesome);
 editor.load(DevTools);
-editor.configure(Dom, {
+editor.configure(DomLayout, {
+    location: [target, 'replace'],
+});
+editor.configure(DomEditable, {
     autoFocus: true,
-    target: target,
+    source: target,
 });
 editor.configure(Toolbar, {
     layout: [
