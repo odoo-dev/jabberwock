@@ -13,6 +13,8 @@ export interface CheckingContext extends Context {
 export interface Contextual {
     context?: Context;
     selector?: Predicate[];
+    // If the selector match and a `check` callback has been provided, call
+    // it with the current context to perform an additional checking.
     check?: (context: CheckingContext) => boolean;
 }
 
