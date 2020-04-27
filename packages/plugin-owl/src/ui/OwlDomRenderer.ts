@@ -13,10 +13,7 @@ export class OwlDomRenderer extends AbstractRenderer<Node[]> {
 
     constructor(engine: DomRenderingEngine, superRenderer: Renderer<Node[]>) {
         super(engine, superRenderer);
-        this.engine = engine;
-        this.super = superRenderer;
-        const owlPlugin = this.engine.editor.plugins.get(Owl);
-        this.env = owlPlugin.owlEnv;
+        this.env = this.engine.editor.plugins.get(Owl).env;
     }
 
     async render(node: OwlNode): Promise<Node[]> {

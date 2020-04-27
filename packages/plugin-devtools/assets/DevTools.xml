@@ -8,15 +8,15 @@
                 <mainpane-contents>
                     <devtools-tree>
                         <TreeComponent
-                            vNode="env.editor.vDocument.root"
+                            vNode="domEngine.root"
                             isRoot="true"
                             selectedPath="getPath(selectedNode)"
-                            selectedID="state.selectedNodeID"/>
+                            selectedID="state.selectedID"/>
                     </devtools-tree>
                 </mainpane-contents>
                 <PathComponent
                     path="getPath(selectedNode)"
-                    selectedID="state.selectedNodeID"/>
+                    selectedID="state.selectedID"/>
             </devtools-mainpane>
             <devtools-sidepane>
                 <InfoComponent vNode="selectedNode"/>
@@ -374,9 +374,10 @@
             <devtools-button t-on-click="openTab('commands')" t-att-class="{
                 selected: state.currentTab == 'commands',
             }">Commands</devtools-button>
+            <devtools-button t-on-click="inpectDom()">&#128269;</devtools-button>
         </devtools-navbar>
         <t t-if="!state.closed">
-            <InspectorComponent isOpen="state.currentTab == 'inspector'"/>
+            <InspectorComponent isOpen="state.currentTab == 'inspector'" t-ref="inspector"/>
             <CommandsComponent isOpen="state.currentTab == 'commands'"
                 commands="state.commands"/>
         </t>

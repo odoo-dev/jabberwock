@@ -1,4 +1,4 @@
-import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
+import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../../core/src/VNodes/AtomicNode';
 import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
@@ -6,7 +6,7 @@ import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
 interface InfoState {
     currentTab: string;
 }
-export class InfoComponent extends OwlUIComponent<{}> {
+export class InfoComponent extends OwlComponent<{}> {
     aboutMeProps = ['id', 'name', 'length', 'atomic'];
     familyProps = ['parent', 'children', 'siblings'];
     customPropsBlacklist = this.aboutMeProps.concat(this.familyProps).concat(['childVNodes']);

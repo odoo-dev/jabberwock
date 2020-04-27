@@ -1,8 +1,8 @@
-import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
+import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode'; // todo: remove dependency
 
-export class PathComponent extends OwlUIComponent<{}> {
+export class PathComponent extends OwlComponent<{}> {
     getNodeRepr(vNode: VNode): string {
         let repr: string = vNode.name || '?';
         if (vNode instanceof InlineNode) {

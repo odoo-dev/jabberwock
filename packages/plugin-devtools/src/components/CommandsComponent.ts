@@ -1,4 +1,4 @@
-import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
+import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
@@ -16,7 +16,7 @@ interface CommandsProps {
     commands: Array<[CommandIdentifier, CommandParams]>;
 }
 
-export class CommandsComponent extends OwlUIComponent<CommandsProps> {
+export class CommandsComponent extends OwlComponent<CommandsProps> {
     state: CommandsState = {
         currentTab: 'queue',
         registry: this.env.editor.dispatcher.commands,

@@ -1,6 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { Owl } from '../../owl-ui/src/OwlPlugin';
-import { OwlNode } from '../../owl-ui/src/ui/OwlNode';
+import { Owl } from '../../plugin-owl/src/Owl';
+import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
 import { DevToolsComponent } from './components/DevToolsComponent';
 import { Dom } from '../../plugin-dom/src/Dom';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';

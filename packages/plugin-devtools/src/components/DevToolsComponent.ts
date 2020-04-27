@@ -1,7 +1,9 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
-import { OwlUIComponent, OwlUIEnv } from '../../../owl-ui/src/ui/OwlUIComponent';
+import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
+import { nodeName } from '../../../utils/src/utils';
+import { hooks } from '@odoo/owl';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
 
@@ -12,9 +14,11 @@ interface DevToolsState {
     commands: Array<[CommandIdentifier, CommandParams]>;
 }
 
-export class DevToolsComponent<T = {}> extends OwlUIComponent<T> {
+export class DevToolsComponent<T = {}> extends OwlComponent<T> {
     static components = { CommandsComponent: CommandsComponent, InspectorComponent };
     static template = 'devtools';
+    inspectorRef = hooks.useRef('inspector');
+
     state: DevToolsState = {
         closed: true,
         currentTab: 'inspector',
@@ -40,6 +44,17 @@ export class DevToolsComponent<T = {}> extends OwlUIComponent<T> {
      */
     openTab(tabName: string): void {
         this.state.currentTab = tabName;
+    }
+    /**
+     * Bind mouse handler to allow the selection of the node in the devtools inspector.
+     * When the mouse will move, we add a class to highlight the targeted node (linked to VNode).
+     * Will be unbind when the user click inside the dom.
+     *
+     * @param ev
+     */
+    inpectDom(): void {
+        this.state.currentTab = 'inspector';
+        (this.inspectorRef.comp as InspectorComponent).inpectDom();
     }
     /**
      * Refresh this component with respect to the recent dispatching of the
@@ -95,7 +110,7 @@ export class DevToolsComponent<T = {}> extends OwlUIComponent<T> {
      */
     toggleClosed(event: MouseEvent): void {
         const didJustResize = this._heightOnLastMousedown !== this.state.height;
-        const isOnButton = (event.target as HTMLElement).tagName === 'DEVTOOLS-BUTTON';
+        const isOnButton = nodeName(event.target as HTMLElement) === 'DEVTOOLS-BUTTON';
         if (!didJustResize && !(isOnButton && !this.state.closed)) {
             this.state.closed = !this.state.closed;
         }
