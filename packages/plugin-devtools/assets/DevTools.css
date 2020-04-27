@@ -16,7 +16,6 @@ jw-devtools {
     align-items: stretch;
     user-select: none;
     outline: none;
-    overflow-y: hidden;
 }
 
 devtools-table {

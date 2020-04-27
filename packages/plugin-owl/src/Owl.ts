@@ -13,14 +13,14 @@ export class Owl<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
         owlTemplates: this._loadTemplates,
     };
 
-    owlEnv: OwlEnv = {
+    env: OwlEnv = {
         qweb: new QWeb(),
         editor: this.editor,
     };
 
     private _loadTemplates(templates: Array<string | Document>): void {
         for (const template of templates) {
-            this.owlEnv.qweb.addTemplates(template);
+            this.env.qweb.addTemplates(template);
         }
     }
 }

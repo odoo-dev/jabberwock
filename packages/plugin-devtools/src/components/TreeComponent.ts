@@ -1,5 +1,5 @@
 import { toUnicode } from '../../../utils/src/utils';
-import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
+import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
@@ -23,13 +23,14 @@ interface NodeState {
  *       - isRoot: boolean
  *       - selectedID: number (the ID of the selected VNode)
  */
-export class TreeComponent extends OwlUIComponent<NodeProps> {
+export class TreeComponent extends OwlComponent<NodeProps> {
     // This is a recursive Component: each node of the tree is itself a tree
     static components = { TreeComponent };
     // User-friendly representation of the node
     _repr: string = this._getNodeRepr(this.props.vNode);
     state: NodeState = {
-        folded: !this.props.isRoot, // Fold everything but the root on init
+        // Show the selected node and root by default
+        folded: !this.props.isRoot && !this.props.selectedPath.includes(this.props.vNode),
     };
 
     //--------------------------------------------------------------------------
