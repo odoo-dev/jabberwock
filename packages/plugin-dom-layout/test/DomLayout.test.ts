@@ -1049,6 +1049,24 @@ describe('DomLayout', () => {
             await editor.stop();
         });
     });
+    describe('renderSelection', () => {
+        it('should not render the selection if the range is not in the root element of the vDocument', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<div><div><div>a[]</div></div><p>b</p></div>',
+                stepFunction: async editor => {
+                    const layout = editor.plugins.get(Layout);
+                    const domLayout = layout.engines.dom as DomLayoutEngine;
+                    domLayout.components
+                        .get('editable')[0]
+                        .children()[0]
+                        .children()[0]
+                        .remove();
+                    await domLayout.redraw();
+                },
+                contentAfter: '<div><p>b</p></div>',
+            });
+        });
+    });
     describe('redraw', () => {
         describe('selection', () => {
             it("shouldn't redraw a wrong selection", async () => {
