@@ -3,6 +3,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { Indent } from '../src/Indent';
 import { withRange, VRange } from '../../core/src/VRange';
 import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 const indent = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Indent>('indent');
@@ -951,8 +952,10 @@ describePlugin(Indent, testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: 'ab<br>cd[]',
                 stepFunction: async (editor: JWEditor) => {
-                    const bNode = editor.vDocument.root.next(node => node.name === 'b');
-                    const dNode = editor.vDocument.root.next(node => node.name === 'd');
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const bNode = editable.next(node => node.name === 'b');
+                    const dNode = editable.next(node => node.name === 'd');
                     await withRange(VRange.selecting(bNode, dNode), async range => {
                         await editor.execCommand<Indent>('indent', {
                             context: {
@@ -965,7 +968,7 @@ describePlugin(Indent, testEditor => {
             });
         });
     });
-    describe('outdent', async function() {
+    describe('outdent', function() {
         it('should do nothing if no space at the beginning of line', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[]b<br>&nbsp;&nbsp; &nbsp;cd</p>',
@@ -1036,8 +1039,10 @@ describePlugin(Indent, testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: '&nbsp;&nbsp;&nbsp;&nbsp;ab<br>&nbsp;&nbsp;&nbsp;&nbsp;cd[]',
                 stepFunction: async (editor: JWEditor) => {
-                    const bNode = editor.vDocument.root.next(node => node.name === 'b');
-                    const dNode = editor.vDocument.root.next(node => node.name === 'd');
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const bNode = editable.next(node => node.name === 'b');
+                    const dNode = editable.next(node => node.name === 'd');
                     await withRange(VRange.selecting(bNode, dNode), async range => {
                         await editor.execCommand<Indent>('outdent', {
                             context: {

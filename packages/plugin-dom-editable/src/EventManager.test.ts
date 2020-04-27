@@ -2,17 +2,19 @@ import { spy } from 'sinon';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { expect } from 'chai';
-import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
-import { Loadables } from '../src/JWEditor';
+import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
+import { JWEditor, Loadables } from '../../core/src/JWEditor';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { DomEditable } from './DomEditable';
 
 describe('core', () => {
     describe('EventManager', () => {
         describe('_onNormalizedEvent', () => {
             it('should exec command from a virtualized keydown event', async () => {
-                await testEditor(BasicEditor, {
+                await testEditor(JWEditor, {
                     contentBefore: '<p>[]</p>',
                     beforeStart: (editor: BasicEditor) => {
+                        editor.load(DomEditable);
                         editor.load(
                             class FakePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                                 commands = {
@@ -32,7 +34,8 @@ describe('core', () => {
                         const params = {
                             context: editor.contextManager.defaultContext,
                         };
-                        await editor.eventManager._onNormalizedEvent(
+                        const domEditable = editor.plugins.get(DomEditable);
+                        await domEditable._onNormalizedEvent(
                             Promise.resolve({
                                 actions: [],
                                 inferredKeydownEvent: {

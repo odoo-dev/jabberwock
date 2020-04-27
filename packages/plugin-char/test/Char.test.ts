@@ -4,8 +4,8 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Char } from '../src/Char';
 import { CharNode } from '../src/CharNode';
 import { describePlugin } from '../../utils/src/testUtils';
-import { CharDomParser } from '../src/CharDomParser';
-import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { CharXmlDomParser } from '../src/CharXmlDomParser';
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
 import { Inline } from '../../plugin-inline/src/Inline';
@@ -38,31 +38,33 @@ describePlugin(Char, testEditor => {
             editor.stop();
         });
         it('should parse a textNode', async () => {
-            const engine = new DomParsingEngine(new JWEditor());
+            const engine = new XmlDomParsingEngine(new JWEditor());
             const text = document.createTextNode('abc');
-            const nodes = await new CharDomParser(engine).parse(text);
+            const nodes = await new CharXmlDomParser(engine).parse(text);
             expect(nodes.length).to.equal(3);
             expect((nodes[0] as CharNode).char).to.equal('a');
             expect((nodes[1] as CharNode).char).to.equal('b');
             expect((nodes[2] as CharNode).char).to.equal('c');
         });
         it('should not parse a SPAN node', async () => {
-            const engine = new DomParsingEngine(new JWEditor());
-            const nodes = await new CharDomParser(engine).parse(document.createElement('span'))[1];
+            const engine = new XmlDomParsingEngine(new JWEditor());
+            const nodes = await new CharXmlDomParser(engine).parse(
+                document.createElement('span'),
+            )[1];
             expect(nodes).to.be.undefined;
         });
     });
     describe('CharNode', () => {
         describe('constructor', () => {
             it('should create a CharNode', async () => {
-                const c = new CharNode(' ');
+                const c = new CharNode({ char: ' ' });
                 expect(c.char).to.equal(' ');
                 expect(c.is(AtomicNode)).to.equal(true);
                 expect(c.formats.length).to.equal(0);
                 expect(c.length).to.equal(1);
             });
             it('should create a CharNode with format', async () => {
-                const c = new CharNode(' ', new Formats(BoldFormat));
+                const c = new CharNode({ char: ' ', format: new Formats(BoldFormat) });
                 expect(c.char).to.equal(' ');
                 expect(c.is(AtomicNode)).to.equal(true);
                 expect(c.formats.length).to.equal(1);
@@ -71,17 +73,17 @@ describePlugin(Char, testEditor => {
             it('should throw an exception if create a CharNode with wrong value', async () => {
                 expect(() => {
                     // eslint-disable-next-line no-new
-                    new CharNode('ab');
+                    new CharNode({ char: 'ab' });
                 }).to.throw('Char', 'length greater than 1');
                 expect(() => {
                     // eslint-disable-next-line no-new
-                    new CharNode('');
+                    new CharNode({ char: '' });
                 }).to.throw('Char', 'empty text');
             });
         });
         describe('clone', () => {
             it('should duplicate a simple char', async () => {
-                const c = new CharNode('a');
+                const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
                 expect(copy).to.not.equal(c);
                 expect(copy instanceof CharNode).to.equal(true);
@@ -89,7 +91,7 @@ describePlugin(Char, testEditor => {
                 expect(copy.formats).to.deep.equal(c.formats);
             });
             it('should duplicate a char with format', async () => {
-                const c = new CharNode('a');
+                const c = new CharNode({ char: 'a' });
                 c.formats = new Formats(BoldFormat);
                 const copy = c.clone();
                 expect(copy).to.not.equal(c);
@@ -98,7 +100,7 @@ describePlugin(Char, testEditor => {
                 expect(copy.formats[0].htmlTag).to.equal('B', 'copy is now bold');
             });
             it('should mark as italic a duplicate a char', async () => {
-                const c = new CharNode('a');
+                const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
                 copy.formats = new Formats(ItalicFormat);
                 expect(copy.formats.length).to.equal(1, 'copy now has one format');
@@ -106,7 +108,7 @@ describePlugin(Char, testEditor => {
                 expect(c.formats.length).to.equal(0, 'original char is not italic');
             });
             it('should update the format for a duplicate a char', async () => {
-                const c = new CharNode('a');
+                const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
                 copy.formats = new Formats(ItalicFormat);
                 expect(copy.formats.length).to.equal(1, 'copy now has one format');

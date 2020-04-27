@@ -1,13 +1,16 @@
 import JWEditor from '../../core/src/JWEditor';
 import { expect } from 'chai';
-import { DomSelectionDescription } from '../../core/src/EventNormalizer';
+import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
 import { removeFormattingSpace } from './formattingSpace';
 import { Direction, ANCHOR_CHAR, FOCUS_CHAR } from '../../core/src/VSelection';
 import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
-import { Dom } from '../../plugin-dom/src/Dom';
 import { targetDeepest } from './Dom';
+import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -78,8 +81,16 @@ export async function testEditor(
         Editor = JWEditor;
     }
     const container = document.createElement('jw-container-test');
+    document.body.appendChild(container);
     const editor = initSpec(Editor, spec, container);
-    await testSpec(editor, spec);
+    try {
+        await testSpec(editor, spec);
+    } catch (e) {
+        if (!spec.debug) {
+            container.remove();
+        }
+        throw e;
+    }
     if (!spec.debug) {
         container.remove();
     }
@@ -106,10 +117,18 @@ async function testPlugin(
         spec = Editor;
         Editor = JWEditor;
     }
-    const container = document.createElement('p');
+    const container = document.createElement('jw-container-test');
+    document.body.appendChild(container);
     const editor = initSpec(Editor, spec, container);
     editor.load(Plugin);
-    await testSpec(editor, spec);
+    try {
+        await testSpec(editor, spec);
+    } catch (e) {
+        if (!spec.debug) {
+            container.remove();
+        }
+        throw e;
+    }
     if (!spec.debug) {
         container.remove();
     }
@@ -122,16 +141,18 @@ async function testPlugin(
  * @param spec
  */
 function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTMLElement): JWEditor {
-    container.innerHTML = spec.contentBefore;
-    const selection = _parseTextualSelection(container);
-    document.body.appendChild(container);
+    const target = document.createElement('jw-test');
+    target.innerHTML = spec.contentBefore;
+    const selection = _parseTextualSelection(target);
+    container.appendChild(target);
     if (selection) {
-        _setSelection(selection);
+        setSelection(selection);
     } else {
         document.getSelection().removeAllRanges();
     }
     const editor = new Editor();
-    editor.configure(Dom, { target: container });
+    editor.configure(DomLayout, { location: [target, 'replace'] });
+    editor.configure(DomEditable, { source: target });
     return editor;
 }
 
@@ -155,16 +176,26 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
     await editor.start();
 
     if (spec.stepFunction) {
-        await spec.stepFunction(editor);
+        try {
+            await spec.stepFunction(editor);
+        } catch (e) {
+            await editor.stop();
+            throw e;
+        }
     }
 
-    // Render the selection in the test container and test the result.
-    renderTextualSelection();
     if (spec.contentAfter) {
-        const domPlugin = editor.plugins.get(Dom);
-        expect(domPlugin.editable.innerHTML).to.deep.equal(spec.contentAfter);
-    }
-    if (!spec.debug) {
+        // Render the selection in the test container and test the result.
+        renderTextualSelection();
+        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+        const editable = domEngine.components.get('editable')[0];
+        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+        const value = domEditable.innerHTML;
+        if (!spec.debug) {
+            await editor.stop();
+        }
+        expect(value).to.equal(spec.contentAfter);
+    } else if (!spec.debug) {
         await editor.stop();
     }
 }
@@ -241,7 +272,7 @@ function _parseTextualSelection(testContainer: Node): DomSelectionDescription {
  *
  * @param selection
  */
-function _setSelection(selection: DomSelectionDescription): void {
+export function setSelection(selection: DomSelectionDescription): void {
     const domRange = document.createRange();
     if (selection.direction === Direction.FORWARD) {
         domRange.setStart(selection.anchorNode, selection.anchorOffset);

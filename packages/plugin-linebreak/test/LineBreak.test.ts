@@ -6,8 +6,8 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreak } from '../src/LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
-import { LineBreakDomParser } from '../src/LineBreakDomParser';
-import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { LineBreakXmlDomParser } from '../src/LineBreakXmlDomParser';
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
@@ -29,8 +29,8 @@ describePlugin(LineBreak, testEditor => {
             const p = document.createElement('p');
             const br = document.createElement('br');
             p.appendChild(br);
-            const engine = new DomParsingEngine(new JWEditor());
-            const result = await new LineBreakDomParser(engine).parse(br);
+            const engine = new XmlDomParsingEngine(new JWEditor());
+            const result = await new LineBreakXmlDomParser(engine).parse(br);
             expect(result instanceof Array).to.be.true;
             expect(result.length).to.equal(0);
         });
@@ -40,15 +40,17 @@ describePlugin(LineBreak, testEditor => {
             const br2 = document.createElement('br');
             p.appendChild(br1);
             p.appendChild(br2);
-            const engine = new DomParsingEngine(new JWEditor());
-            const lineBreak = (await new LineBreakDomParser(engine).parse(br1))[0] as LineBreakNode;
+            const engine = new XmlDomParsingEngine(new JWEditor());
+            const lineBreak = (
+                await new LineBreakXmlDomParser(engine).parse(br1)
+            )[0] as LineBreakNode;
             expect(lineBreak instanceof AbstractNode).to.be.true;
             expect(lineBreak.is(AtomicNode)).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {
-            const engine = new DomParsingEngine(new JWEditor());
+            const engine = new XmlDomParsingEngine(new JWEditor());
             const span = document.createElement('span');
-            expect(new LineBreakDomParser(engine).predicate(span)).to.be.false;
+            expect(new LineBreakXmlDomParser(engine).predicate(span)).to.be.false;
         });
     });
     describe('LineBreakNode', () => {
@@ -68,8 +70,8 @@ describePlugin(LineBreak, testEditor => {
         });
         describe('locate', () => {
             it('should locate where to set the selection marker at end', async () => {
-                const p = new VElement('P');
-                const a = new CharNode('a');
+                const p = new VElement({ htmlTag: 'P' });
+                const a = new CharNode({ char: 'a' });
                 p.append(a);
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
@@ -79,12 +81,12 @@ describePlugin(LineBreak, testEditor => {
                 expect(lineBreak.locate(doc.childNodes[2], 0)).to.deep.equal([lineBreak, 'AFTER']);
             });
             it('should locate where to set the selection marker inside string', async () => {
-                const p = new VElement('P');
-                const a = new CharNode('a');
+                const p = new VElement({ htmlTag: 'P' });
+                const a = new CharNode({ char: 'a' });
                 p.append(a);
                 const lineBreak = new LineBreakNode();
                 p.append(lineBreak);
-                const b = new CharNode('b');
+                const b = new CharNode({ char: 'b' });
                 p.append(b);
                 const doc = document.createElement('p');
                 doc.innerHTML = 'a<br>b';

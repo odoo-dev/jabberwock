@@ -4,7 +4,9 @@ import JWEditor, { JWEditorConfig, Loadables } from '../../core/src/JWEditor';
 import { Platform, Keymap, LEVEL, ConfiguredCommand } from '../src/Keymap';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { testEditor, keydown } from '../../utils/src/testUtils';
-import { Dom } from '../../plugin-dom/src/Dom';
+import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 function keydownEvent(key, code, options = {}): KeyboardEvent {
     return new KeyboardEvent('keydown', { ...options, key, code });
@@ -14,6 +16,9 @@ describe('Keymap', () => {
     let editor: JWEditor;
     beforeEach(() => {
         editor = new JWEditor();
+    });
+    afterEach(async () => {
+        await editor.stop();
     });
     describe('bind', () => {
         let keymap: Keymap;
@@ -116,7 +121,7 @@ describe('Keymap', () => {
             await editor.start();
             keymap = editor.plugins.get(Keymap);
         });
-        it('should match shortcuts with key', () => {
+        it('should match shortcuts with key', async () => {
             keymap.bind('a', { commandId: 'command-a' });
             keymap.bind('b', { commandId: 'command-b' });
             const call = keymap.match(keydownEvent('a', 'KeyA'));
@@ -127,7 +132,7 @@ describe('Keymap', () => {
             ];
             expect(call).to.deep.equal(expectedCommands);
         });
-        it('should match shortcuts with code', () => {
+        it('should match shortcuts with code', async () => {
             keymap.bind('<KeyA>', { commandId: 'command-a' });
             keymap.bind('b', { commandId: 'command-b' });
             const call = keymap.match(keydownEvent('a', 'KeyA'));
@@ -138,7 +143,7 @@ describe('Keymap', () => {
             ];
             expect(call).to.deep.equal(expectedCommands);
         });
-        it('should match shortcuts with command args', () => {
+        it('should match shortcuts with command args', async () => {
             const args = { propA: 'valA' };
             keymap.bind('<KeyA>', { commandId: 'command-a', commandArgs: args });
             const call = keymap.match(keydownEvent('a', 'KeyA'));
@@ -150,7 +155,7 @@ describe('Keymap', () => {
             ];
             expect(call).to.deep.equal(expectedCommands);
         });
-        it('should not trigger the map with modifiers', () => {
+        it('should not trigger the map with modifiers', async () => {
             const args = { propA: 'valA' };
             keymap.bind('a', { commandId: 'command-a', commandArgs: args });
             keymap.bind('ctrl  +a', { commandId: 'command-b', commandArgs: args });
@@ -163,7 +168,7 @@ describe('Keymap', () => {
             ];
             expect(call).to.deep.equal(expectedCommands);
         });
-        it('should remove a shortuct if there is no commandIdentifier', () => {
+        it('should remove a shortuct if there is no commandIdentifier', async () => {
             keymap.bind('a', { commandId: 'command-a' });
             keymap.bind('a', {
                 commandId: undefined,
@@ -183,7 +188,7 @@ describe('Keymap', () => {
             ];
             expect(call).to.deep.equal(expectedCommands);
         });
-        it('should match shortcuts only when one modifier is active', () => {
+        it('should match shortcuts only when one modifier is active', async () => {
             keymap.bind('ctRl+<KeyA>', { commandId: 'command-a' });
             const call = keymap.match(keydownEvent('a', 'KeyA', { ctrlKey: true }));
             const expectedCommands: ConfiguredCommand[] = [
@@ -193,12 +198,12 @@ describe('Keymap', () => {
             ];
             expect(call).to.deep.equal(expectedCommands);
         });
-        it('should match shortcuts only when one modifier is active but not the others', () => {
+        it('should match shortcuts only when one modifier is active but not the others', async () => {
             keymap.bind('cTrl+<KeyA>', { commandId: 'command-a' });
             const call = keymap.match(keydownEvent('a', 'KeyA', { ctrlKey: true, altKey: true }));
             expect(call).to.deep.equal([]);
         });
-        it('should match shortcuts only when multiples modifier are active', () => {
+        it('should match shortcuts only when multiples modifier are active', async () => {
             keymap.bind('Ctrl+alt+<KeyA>', { commandId: 'command-a' });
             const call = keymap.match(keydownEvent('a', 'KeyA', { ctrlKey: true, altKey: true }));
             const expectedCommands: ConfiguredCommand[] = [{ commandId: 'command-a' }];
@@ -372,6 +377,7 @@ describe('Keymap', () => {
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
+                    editor.load(DomEditable, { autoFocus: true });
                     editor.configure(Keymap, { platform: Platform.PC });
                     const loadables: Loadables<Keymap> = {
                         shortcuts: [
@@ -386,8 +392,14 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     editor.execCommand = (): Promise<void> => Promise.resolve();
                     const execSpy = spy(editor, 'execCommand');
-                    const domPlugin = editor.plugins.get(Dom);
-                    await keydown(domPlugin.editable, 'a', { ctrlKey: true });
+
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const editable = domEngine.components.get('editable')[0];
+                    const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+
+                    await keydown(domEditable, 'a', {
+                        ctrlKey: true,
+                    });
                     const params = {
                         context: editor.contextManager.defaultContext,
                     };
@@ -396,9 +408,16 @@ describe('Keymap', () => {
             });
         });
         it('should trigger default shortuct', async () => {
+            class DomEditableTest<T> extends DomEditable<T> {
+                async _onNormalizedEvent(): Promise<void> {
+                    return;
+                }
+            }
+
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
+                    editor.load(DomEditableTest, { autoFocus: true });
                     editor.configure(Keymap, { platform: Platform.PC });
                     editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
@@ -416,12 +435,15 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     // todo: to remove when the normalizer will
                     //       not be in included by default
-                    editor.eventManager.eventNormalizer._triggerEventBatch = (): void => {};
                     editor.execCommand = (): Promise<void> => Promise.resolve();
                     const execSpy = spy(editor, 'execCommand');
-                    const domPlugin = editor.plugins.get(Dom);
-                    await keydown(domPlugin.editable, 'a', { ctrlKey: true });
-                    await keydown(domPlugin.editable, 'b', { ctrlKey: true });
+
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const editable = domEngine.components.get('editable')[0];
+                    let domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                    await keydown(domEditable, 'a', { ctrlKey: true });
+                    domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                    await keydown(domEditable, 'b', { ctrlKey: true });
                     const params = {
                         context: editor.contextManager.defaultContext,
                     };
@@ -430,9 +452,15 @@ describe('Keymap', () => {
             });
         });
         it('should trigger the binding from the user config rather the default', async () => {
+            class DomEditableTest<T> extends DomEditable<T> {
+                async _onNormalizedEvent(): Promise<void> {
+                    return;
+                }
+            }
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
+                    editor.load(DomEditableTest, { autoFocus: true });
                     editor.configure(Keymap, { platform: Platform.PC });
                     editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
@@ -461,12 +489,15 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     // todo: to remove when the normalizer will
                     //       not be in included by default
-                    editor.eventManager.eventNormalizer._triggerEventBatch = (): void => {};
                     editor.execCommand = (): Promise<void> => Promise.resolve();
                     const execSpy = spy(editor, 'execCommand');
-                    const domPlugin = editor.plugins.get(Dom);
-                    await keydown(domPlugin.editable, 'a', { ctrlKey: true });
-                    await keydown(domPlugin.editable, 'b', { ctrlKey: true });
+
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const editable = domEngine.components.get('editable')[0];
+                    let domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                    await keydown(domEditable, 'a', { ctrlKey: true });
+                    domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                    await keydown(domEditable, 'b', { ctrlKey: true });
                     const params = {
                         context: editor.contextManager.defaultContext,
                     };
@@ -475,9 +506,15 @@ describe('Keymap', () => {
             });
         });
         it('should remove the binding from the user config', async () => {
+            class DomEditableTest<T> extends DomEditable<T> {
+                async _onNormalizedEvent(): Promise<void> {
+                    return;
+                }
+            }
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
+                    editor.load(DomEditableTest, { autoFocus: true });
                     editor.configure(Keymap, { platform: Platform.PC });
                     editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
@@ -506,12 +543,14 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     // todo: to remove when the normalizer will
                     //       not be in included by default
-                    editor.eventManager.eventNormalizer._triggerEventBatch = (): void => {};
                     editor.execCommand = (): Promise<void> => Promise.resolve();
                     const execSpy = spy(editor, 'execCommand');
-                    const domPlugin = editor.plugins.get(Dom);
-                    await keydown(domPlugin.editable, 'a', { ctrlKey: true });
-                    await keydown(domPlugin.editable, 'b', { ctrlKey: true });
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const editable = domEngine.components.get('editable')[0];
+                    let domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                    await keydown(domEditable, 'a', { ctrlKey: true });
+                    domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                    await keydown(domEditable, 'b', { ctrlKey: true });
                     expect(execSpy.args).to.eql([]);
                 },
             });

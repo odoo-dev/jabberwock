@@ -3,16 +3,35 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { DevTools } from '../src/DevTools';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
-import { Dom } from '../../plugin-dom/src/Dom';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import JWEditor from '../../core/src/JWEditor';
+import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
+import { Char } from '../../plugin-char/src/Char';
+import { Paragraph } from '../../plugin-paragraph/src/Paragraph';
+import { Bold } from '../../plugin-bold/src/Bold';
+import { Italic } from '../../plugin-italic/src/Italic';
+import { Underline } from '../../plugin-underline/src/Underline';
+import { CharNode } from '../../plugin-char/src/CharNode';
 
-async function openDevTools(devtools: HTMLElement): Promise<void> {
-    await click(devtools.querySelector('devtools-navbar'));
+import template from '../../../bundles/basicLayout.xml';
+import { Parser } from '../../plugin-parser/src/Parser';
+import { nodeName } from '../../utils/src/utils';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { Layout } from '../../plugin-layout/src/Layout';
+
+let wrapper: HTMLElement;
+async function openDevTools(): Promise<void> {
+    await click(wrapper.querySelector('devtools-navbar'));
+    await nextTickFrame(); // redraw
+    document
+        .evaluate('//jw-devtools//devtools-node//devtools-nodename[text()="Zone: main"]', wrapper)
+        .iterateNext()
+        .parentElement.classList.add('zone-main'); // add for test query selector
 }
 
 describe('Plugin: DevTools', () => {
-    let wrapper: HTMLElement;
-    let devtools: HTMLElement;
     let editor: BasicEditor;
+    let domEngine: DomLayoutEngine;
 
     beforeEach(async () => {
         wrapper = document.createElement('test-wrapper');
@@ -31,41 +50,61 @@ describe('Plugin: DevTools', () => {
             }
         });
 
-        editor = new BasicEditor();
-        editor.configure(Dom, { target: root });
+        editor = new JWEditor();
+        editor.load(Char);
+        editor.load(Bold);
+        editor.load(Italic);
+        editor.load(Underline);
+        editor.load(Paragraph);
         editor.load(DevTools);
+        editor.load(DomEditable, { autoFocus: true, source: root });
+        editor.configure(DomLayout, {
+            components: [
+                {
+                    id: 'basicLayout',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+            ],
+            locations: [['basicLayout', [root, 'replace']]],
+        });
 
         await editor.start();
-
-        devtools = editor.el.querySelector('jw-devtools');
+        domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
     });
     afterEach(async () => {
-        editor.stop();
+        await editor.stop();
         document.body.removeChild(wrapper);
+        wrapper = null;
     });
 
     describe('DevToolsComponent', () => {
         it('should display the devtools', async () => {
-            expect(!!devtools).to.equal(true);
+            expect(!!wrapper.querySelector('jw-devtools')).to.equal(true);
         });
         it('should display the devtools closed as bottom bar', async () => {
-            expect(devtools.classList.contains('closed')).to.equal(true);
+            expect(wrapper.querySelector('jw-devtools').classList.contains('closed')).to.equal(
+                true,
+            );
         });
         it('should open the devTools', async () => {
-            await openDevTools(devtools);
-            expect(devtools.classList.contains('closed')).to.equal(false);
+            await openDevTools();
+            expect(wrapper.querySelector('jw-devtools').classList.contains('closed')).to.equal(
+                false,
+            );
         });
         it('should display the devTools with "Inspector" by default when open', async () => {
-            await openDevTools(devtools);
-            const button = devtools.querySelector('devtools-navbar devtools-button');
+            await openDevTools();
+            const button = wrapper.querySelector('jw-devtools devtools-navbar devtools-button');
             expect(button.textContent).to.equal('Inspector');
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
-            const panel = devtools.querySelector('devtools-panel.inspector.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.inspector.active');
             expect(!!panel).to.equal(true, 'panel is active');
         });
         it('should resize the devTools', async () => {
-            await openDevTools(devtools);
-            const navbar = devtools.querySelector('devtools-navbar');
+            await openDevTools();
+            const navbar = wrapper.querySelector('jw-devtools').querySelector('devtools-navbar');
             const pos = navbar.getBoundingClientRect();
             const begin = { clientX: pos.left + 5, clientY: pos.top + 5, bubbles: true };
             const step = { clientX: pos.left + 15, clientY: pos.top + 25, bubbles: true };
@@ -80,70 +119,87 @@ describe('Plugin: DevTools', () => {
             await nextTickFrame();
             navbar.dispatchEvent(new MouseEvent('click', end));
             await nextTickFrame();
-            expect(devtools.classList.contains('closed')).to.equal(false);
+            expect(wrapper.querySelector('jw-devtools').classList.contains('closed')).to.equal(
+                false,
+            );
         });
         it('should close the devTools', async () => {
-            await openDevTools(devtools);
-            const navbar = devtools.querySelector('devtools-navbar');
+            await openDevTools();
+            const navbar = wrapper.querySelector('jw-devtools').querySelector('devtools-navbar');
             await click(navbar);
-            expect(devtools.classList.contains('closed')).to.equal(true);
+            expect(wrapper.querySelector('jw-devtools').classList.contains('closed')).to.equal(
+                true,
+            );
         });
         it('should open the devTools when click on button "Commands"', async () => {
-            const button = devtools.querySelector('devtools-navbar devtools-button:nth-child(2)');
+            const button = wrapper.querySelector(
+                'jw-devtools devtools-navbar devtools-button:nth-child(2)',
+            );
             await click(button);
-            expect(devtools.classList.contains('closed')).to.equal(false);
+            expect(wrapper.querySelector('jw-devtools').classList.contains('closed')).to.equal(
+                false,
+            );
         });
     });
     describe('InspectorComponent', () => {
         it('should change panel to "Inspector" with top button', async () => {
-            await openDevTools(devtools);
-            const buttonCommand = devtools.querySelector(
-                'devtools-navbar devtools-button:nth-child(2)',
+            await openDevTools();
+            const buttonCommand = wrapper.querySelector(
+                'jw-devtools devtools-navbar devtools-button:nth-child(2)',
             );
             await click(buttonCommand);
 
-            const button = devtools.querySelector('devtools-navbar devtools-button');
+            const button = wrapper.querySelector('jw-devtools devtools-navbar devtools-button');
             expect(button.textContent).to.equal('Inspector');
             expect(button.classList.contains('selected')).to.equal(false, 'button is not selected');
 
             await click(button);
 
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
-            expect(!!devtools.querySelector('devtools-panel.active devtools-tree')).to.equal(true);
+            expect(
+                !!wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-panel.active devtools-tree'),
+            ).to.equal(true);
         });
         it('should display the VNode tab by default in info', async () => {
-            await openDevTools(devtools);
-            const button = devtools.querySelector('devtools-info devtools-navbar devtools-button');
+            await openDevTools();
+            const button = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-navbar devtools-button',
+            );
             expect(button.textContent).to.equal('VNode');
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
         });
         it('should display the root by default in info', async () => {
-            await openDevTools(devtools);
-            const about = devtools.querySelector('devtools-info devtools-about');
+            await openDevTools();
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
+            const root = domEngine.components.get('editable')[0];
             const aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
-                editor.vDocument.root.constructor.name +
+                root.constructor.name +
                 '</devtools-type> ' +
-                editor.vDocument.root.name +
+                root.name +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
-                editor.vDocument.root.id +
+                root.id +
                 '</devtools-id>' +
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const properties = devtools.querySelector('devtools-info devtools-properties');
+            const properties = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-properties',
+            );
             const pResult =
                 '<devtools-properties>' +
                 '<devtools-infotitle>👤 About me</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
                 '<devtools-tr><devtools-td>id</devtools-td><devtools-td>' +
-                editor.vDocument.root.id +
+                root.id +
                 '</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>name</devtools-td><devtools-td>"' +
-                editor.vDocument.root.name +
+                root.name +
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
@@ -153,23 +209,25 @@ describe('Plugin: DevTools', () => {
                 '<devtools-infotitle>📖 My Properties</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
-                '<devtools-tr><devtools-td>attributes</devtools-td><devtools-td>{}</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>attributes</devtools-td><devtools-td>style: display: block;\ncontentEditable: true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>breakable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>editable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>htmlTag</devtools-td><devtools-td>"TEST-CONTAINER"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
                 '<devtools-infotitle>👪 My Family</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
-                '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>undefined</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>ZoneNode: main</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td><devtools-list><devtools-listitem>' +
-                editor.vDocument.root.children()[0].name +
+                root.children()[0].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[1].name +
+                root.children()[1].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[2].name +
+                root.children()[2].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[3].name +
+                root.children()[3].name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '<devtools-tr>' +
                 '<devtools-td>siblings</devtools-td>' +
@@ -185,10 +243,8 @@ describe('Plugin: DevTools', () => {
     });
     describe('TreeComponent', () => {
         it('should select the first paragraph', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector(
-                'devtools-node devtools-children devtools-node:nth-child(2)',
-            );
+            await openDevTools();
+            const node = wrapper.querySelector('.zone-main devtools-node:nth-child(2)');
             const name = node.querySelector('devtools-nodename');
             const pos = name.getBoundingClientRect();
             await click(name, {
@@ -203,31 +259,32 @@ describe('Plugin: DevTools', () => {
                 'not displayed anymore',
             );
 
-            const about = devtools.querySelector('devtools-info devtools-about');
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
+            const root = domEngine.components.get('editable')[0];
             const aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
-                editor.vDocument.root.children()[1].constructor.name +
+                root.children()[1].constructor.name +
                 '</devtools-type> ' +
-                editor.vDocument.root.children()[1].name +
+                root.children()[1].name +
                 '<devtools-button class="logger">&gt;_</devtools-button>' +
                 '<devtools-id>' +
-                editor.vDocument.root.children()[1].id +
+                root.children()[1].id +
                 '</devtools-id>' +
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const aboutMe = devtools.querySelector(
-                'devtools-info devtools-properties devtools-table',
+            const aboutMe = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-properties devtools-table',
             );
             const aboutMeResult =
                 '<devtools-table>' +
                 '<devtools-tbody>' +
                 '<devtools-tr><devtools-td>id</devtools-td><devtools-td>' +
-                editor.vDocument.root.children()[1].id +
+                root.children()[1].id +
                 '</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>name</devtools-td><devtools-td>"' +
-                editor.vDocument.root.children()[1].name +
+                root.children()[1].name +
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
@@ -236,35 +293,35 @@ describe('Plugin: DevTools', () => {
                 '</devtools-table>';
             expect(aboutMe.outerHTML).to.equal(aboutMeResult);
 
-            const family = devtools.querySelector(
-                'devtools-info devtools-properties devtools-table:last-child',
+            const family = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-properties devtools-table:last-child',
             );
             const familyResult =
                 '<devtools-table>' +
                 '<devtools-tbody>' +
                 '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>' +
-                editor.vDocument.root.name +
+                root.name +
                 '</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td><devtools-list><devtools-listitem>' +
-                editor.vDocument.root.children()[1].children()[0].name +
+                root.children()[1].children()[0].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[1].children()[1].name +
+                root.children()[1].children()[1].name +
                 '</devtools-listitem><devtools-listitem>' +
-                editor.vDocument.root.children()[1].children()[2].name +
+                root.children()[1].children()[2].name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>siblings</devtools-td><devtools-td><devtools-list><devtools-listitem> previous: ' +
-                editor.vDocument.root.children()[0].name +
+                root.children()[0].name +
                 '</devtools-listitem><devtools-listitem> next: ' +
-                editor.vDocument.root.children()[2].name +
+                root.children()[2].name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
             expect(family.outerHTML).to.equal(familyResult);
         });
         it('should select a sibling node with arrow (up, down)', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector(
-                'devtools-node devtools-children devtools-node.block:nth-child(2)',
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-children devtools-node.block:nth-child(2)',
             );
 
             const name = node.querySelector('devtools-nodename');
@@ -275,7 +332,6 @@ describe('Plugin: DevTools', () => {
             });
 
             const span = node.firstElementChild;
-
             await keydown(node, 'ArrowDown');
             expect(span.classList.contains('selected')).to.equal(false, 'unselect');
             const next = node.nextElementSibling;
@@ -292,9 +348,9 @@ describe('Plugin: DevTools', () => {
             );
         });
         it('should select a sibling node with arrow (left, right)', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector(
-                'devtools-node devtools-children devtools-node.block:nth-child(2)',
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-children devtools-node.block:nth-child(2)',
             );
 
             const name = node.querySelector('devtools-nodename');
@@ -322,11 +378,14 @@ describe('Plugin: DevTools', () => {
             );
         });
         it('should select a child node with arrow (down on last)', async () => {
-            await openDevTools(devtools);
-            const last = devtools.querySelector(
-                'devtools-node devtools-children > devtools-node.block:last-child',
+            await openDevTools();
+            const elements = wrapper.querySelectorAll(
+                '.zone-main devtools-children > devtools-node.block',
             );
+            const last = elements[elements.length - 1];
             const span = last.firstElementChild;
+            span.scrollIntoView();
+            await nextTickFrame();
             const pos = span.getBoundingClientRect();
             await click(span, {
                 clientX: pos.left + 30,
@@ -337,16 +396,16 @@ describe('Plugin: DevTools', () => {
 
             await keydown(last, 'ArrowDown');
             expect(span.classList.contains('selected')).to.equal(false, 'unselect');
-            expect(last.querySelector('.folded .inline').classList.contains('selected')).to.equal(
-                true,
-                'select the first char',
-            );
+            const char = last.lastElementChild.querySelector('devtools-nodename');
+            expect(char.textContent).to.equal('d');
+            expect(char.classList.contains('selected')).to.equal(true, 'select the first char');
         });
         it('should open the first paragraph', async () => {
-            await openDevTools(devtools);
-            const last = devtools.querySelector(
-                'devtools-node devtools-children > devtools-node.block:last-child',
+            await openDevTools();
+            const elements = wrapper.querySelectorAll(
+                '.zone-main devtools-children > devtools-node.block',
             );
+            const last = elements[elements.length - 1];
             const span = last.firstElementChild;
             const pos = span.getBoundingClientRect();
             await click(span, {
@@ -354,7 +413,7 @@ describe('Plugin: DevTools', () => {
                 clientY: pos.top,
             });
 
-            const node = devtools.querySelectorAll('devtools-node.block.folded')[1];
+            const node = wrapper.querySelectorAll('.zone-main devtools-node.block.folded')[1];
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -368,9 +427,9 @@ describe('Plugin: DevTools', () => {
             );
         });
         it('should open/close the last paragraph with enter', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector(
-                'devtools-node devtools-children devtools-node.block:nth-child(3)',
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-children devtools-node.block:nth-child(3)',
             );
             await keydown(node, 'Enter');
             expect(node.classList.contains('folded')).to.equal(false, 'node is unfolded');
@@ -387,9 +446,9 @@ describe('Plugin: DevTools', () => {
             );
         });
         it('should change the selection to select the paragraph', async () => {
-            await openDevTools(devtools);
-            const p = devtools.querySelector(
-                'devtools-tree > devtools-node > devtools-children > devtools-node:nth-child(2)',
+            await openDevTools();
+            const p = wrapper.querySelector(
+                '.zone-main devtools-children devtools-node:nth-child(2)',
             );
             const name = p.firstElementChild;
             const pchildren = p.lastElementChild;
@@ -410,8 +469,10 @@ describe('Plugin: DevTools', () => {
             );
         });
         it('should select the bold char', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector('devtools-node.block.folded:nth-child(2)');
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-node.block.folded:nth-child(2)',
+            );
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -419,7 +480,7 @@ describe('Plugin: DevTools', () => {
                 clientY: namePos.top,
             });
 
-            const nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+            const nameBold = wrapper.querySelector('.zone-main .selectable-line.bold');
             const bold = nameBold.parentNode as HTMLElement;
             const pos = nameBold.getBoundingClientRect();
             await click(nameBold, {
@@ -430,9 +491,12 @@ describe('Plugin: DevTools', () => {
             expect(bold.classList.contains('folded')).to.equal(true, 'node is folded');
             expect(bold.querySelector('devtools-children')).to.equal(null);
 
-            const vNodeChar = editor.vDocument.root.children()[1].children()[1];
+            const vNodeChar = domEngine.components
+                .get('editable')[0]
+                .children()[1]
+                .children()[1];
 
-            const about = devtools.querySelector('devtools-info devtools-about');
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
@@ -447,8 +511,8 @@ describe('Plugin: DevTools', () => {
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const aboutMe = devtools.querySelector(
-                'devtools-info devtools-properties devtools-table',
+            const aboutMe = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-properties devtools-table',
             );
             const aboutMeResult =
                 '<devtools-table>' +
@@ -466,8 +530,8 @@ describe('Plugin: DevTools', () => {
                 '</devtools-table>';
             expect(aboutMe.outerHTML).to.equal(aboutMeResult);
 
-            const family = devtools.querySelector(
-                'devtools-info devtools-properties devtools-table:last-child',
+            const family = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-properties devtools-table:last-child',
             );
             const familyResult =
                 '<devtools-table>' +
@@ -485,16 +549,20 @@ describe('Plugin: DevTools', () => {
                 '</devtools-table>';
             expect(family.outerHTML).to.equal(familyResult);
 
-            const path = devtools.querySelector('devtools-path');
-            expect([].map.call(path.childNodes, (n: Node) => n.textContent)).to.deep.equal([
-                editor.vDocument.root.name,
-                vNodeChar.parent.name,
-                vNodeChar.name + '.' + vNodeChar.name,
-            ]);
+            const path = wrapper.querySelector('jw-devtools').querySelector('devtools-path');
+            expect([].map.call(path.childNodes, (n: Node) => n.textContent)).to.deep.equal(
+                vNodeChar
+                    .ancestors()
+                    .map(n => n.name)
+                    .reverse()
+                    .concat([vNodeChar.name + '.' + vNodeChar.name]),
+            );
         });
         it('should change the selection to select the char', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector('devtools-node.block.folded:nth-child(2)');
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-node.block.folded:nth-child(2)',
+            );
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -502,7 +570,7 @@ describe('Plugin: DevTools', () => {
                 clientY: namePos.top,
             });
 
-            const nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+            const nameBold = wrapper.querySelector('.zone-main .selectable-line.bold');
             const bold = nameBold.parentNode as HTMLElement;
 
             const pos = nameBold.getBoundingClientRect();
@@ -525,16 +593,18 @@ describe('Plugin: DevTools', () => {
             expect(selection.rangeCount).to.equal(1, 'range exist');
             const range = selection.getRangeAt(0);
 
-            const b = editor.el.querySelector('test-container b');
+            const b = wrapper.querySelector('jw-editor test-container b');
             expect(range.startContainer).to.equal(b.previousSibling);
             expect(range.startOffset).to.equal(1);
             expect(range.endContainer).to.equal(b.firstChild);
             expect(range.endOffset).to.equal(1);
         });
         it('should insert a char in editable (to add commands)', async () => {
-            await openDevTools(devtools);
+            await openDevTools();
 
-            const node = devtools.querySelector('devtools-node.block.folded:nth-child(2)');
+            const node = wrapper.querySelector(
+                '.zone-main devtools-node.block.folded:nth-child(2)',
+            );
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -542,31 +612,42 @@ describe('Plugin: DevTools', () => {
                 clientY: namePos.top,
             });
 
-            let nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+            let nameBold = wrapper.querySelector('.zone-main .selectable-line.bold');
             const pos = nameBold.getBoundingClientRect();
             nameBold.dispatchEvent(
                 new MouseEvent('dblclick', { clientX: pos.left, clientY: pos.top, bubbles: true }),
             );
             await nextTickFrame();
 
-            const container = editor.el.querySelector('test-container');
-            container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
+            const container = wrapper.querySelector('jw-editor test-container');
+            container.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', bubbles: true }),
+            );
             container.querySelector('b').firstChild.textContent = 'z';
             container.dispatchEvent(new InputEvent('input', { bubbles: true }));
             await nextTickFrame();
             await nextTickFrame();
+
             expect(container.querySelector('b').parentElement.innerHTML).to.equal('a<b>z</b>c');
+            expect(
+                !!domEngine.components
+                    .get('editable')[0]
+                    .descendants(CharNode)
+                    .find(c => c.char === 'z'),
+            ).to.equal(true, 'z should be in vDocument');
 
             await nextTickFrame();
-            nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+            nameBold = wrapper.querySelector('.zone-main .selectable-line.bold');
             expect(nameBold.parentElement.parentElement.textContent).to.equal('az[]c');
         });
     });
     describe('PathComponent', () => {
         it('should display the path in bottom bar', async () => {
-            await openDevTools(devtools);
+            await openDevTools();
 
-            const node = devtools.querySelector('devtools-node.block.folded:nth-child(3)');
+            const node = wrapper.querySelector(
+                'jw-devtools devtools-node.block.folded:nth-child(3)',
+            );
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -574,28 +655,52 @@ describe('Plugin: DevTools', () => {
                 clientY: namePos.top,
             });
 
-            const path = devtools.querySelector('devtools-path');
+            const path = wrapper.querySelector('jw-devtools').querySelector('devtools-path');
 
-            const i = devtools.querySelector('devtools-node .selectable-line.italic');
+            const i = wrapper.querySelector('.zone-main .selectable-line.italic');
             const posI = i.getBoundingClientRect();
             await click(i, {
                 clientX: posI.left,
                 clientY: posI.top,
             });
-            expect(path.textContent).to.equal('FragmentNodeParagraphNodei.i');
+            expect(
+                [...path.querySelectorAll('devtools-pathnode')].map(n => n.textContent),
+            ).to.deep.equal([
+                'ZoneNode: root',
+                'LayoutContainer',
+                'VElement',
+                'VElement',
+                'ZoneNode: main',
+                'VElement',
+                'ParagraphNode',
+                'i.i',
+            ]);
 
-            const u = devtools.querySelector('devtools-node .selectable-line.underline');
+            const u = wrapper.querySelector('.zone-main .selectable-line.underline');
             const posU = u.getBoundingClientRect();
             await click(u, {
                 clientX: posU.left,
                 clientY: posU.top,
             });
-            expect(path.textContent).to.equal('FragmentNodeParagraphNodeu.u');
+            expect(
+                [...path.querySelectorAll('devtools-pathnode')].map(n => n.textContent),
+            ).to.deep.equal([
+                'ZoneNode: root',
+                'LayoutContainer',
+                'VElement',
+                'VElement',
+                'ZoneNode: main',
+                'VElement',
+                'ParagraphNode',
+                'u.u',
+            ]);
         });
         it('should select a parent node with the bottom path bar', async () => {
-            await openDevTools(devtools);
+            await openDevTools();
 
-            const node = devtools.querySelector('devtools-node.block.folded:nth-child(2)');
+            const node = wrapper.querySelector(
+                '.zone-main devtools-node.block.folded:nth-child(2)',
+            );
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -603,26 +708,29 @@ describe('Plugin: DevTools', () => {
                 clientY: namePos.top,
             });
 
-            const nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+            const nameBold = wrapper.querySelector('.zone-main .selectable-line.bold');
             const pos = nameBold.getBoundingClientRect();
             await click(nameBold, {
                 clientX: pos.left,
                 clientY: pos.top,
             });
 
-            const path = devtools.querySelector('devtools-path devtools-pathnode:nth-child(2)');
+            const elements = wrapper.querySelectorAll(
+                'jw-devtools devtools-path devtools-pathnode',
+            );
+            const path = Array.from(elements).find(el => el.textContent === 'ParagraphNode');
             await click(path);
-            const p = devtools.querySelector(
-                'devtools-node devtools-children > devtools-node.block:nth-child(2)',
+            const p = wrapper.querySelector(
+                '.zone-main devtools-children > devtools-node.block:nth-child(2)',
             );
             expect(p.firstElementChild.classList.contains('selected')).to.equal(true);
         });
     });
     describe('InfoComponent', () => {
         it('should select a child node with the info panel', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector(
-                'devtools-node devtools-children devtools-node:nth-child(2)',
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-children devtools-node:nth-child(2)',
             );
             const name = node.querySelector('devtools-nodename');
             const pos = name.getBoundingClientRect();
@@ -631,9 +739,9 @@ describe('Plugin: DevTools', () => {
                 clientY: pos.top,
             });
 
-            const vNode = editor.vDocument.root.children()[1];
+            const vNode = domEngine.components.get('editable')[0].children()[1];
 
-            let about = devtools.querySelector('devtools-info devtools-about');
+            let about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             let aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
@@ -647,15 +755,16 @@ describe('Plugin: DevTools', () => {
                 '</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
 
-            const tr = Array.from(
-                devtools.querySelectorAll('devtools-info devtools-properties devtools-tr'),
-            )
+            const elements = wrapper.querySelectorAll(
+                'jw-devtools devtools-info devtools-properties devtools-tr',
+            );
+            const tr = Array.from(elements)
                 .filter(tr => tr.firstElementChild.textContent === 'children')
                 .pop();
             const li = tr.querySelector('devtools-listitem:last-child');
             await click(li);
 
-            about = devtools.querySelector('devtools-info devtools-about');
+            about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
@@ -671,13 +780,15 @@ describe('Plugin: DevTools', () => {
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should change panel to "Selection"', async () => {
-            await openDevTools(devtools);
-            const button = devtools.querySelector('devtools-info devtools-button:nth-child(2)');
+            await openDevTools();
+            const button = wrapper.querySelector(
+                'jw-devtools devtools-info devtools-button:nth-child(2)',
+            );
             expect(button.textContent).to.equal('Selection');
             await click(button);
 
             expect(button.classList.contains('selected')).to.equal(true);
-            const about = devtools.querySelector('devtools-info devtools-about');
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
                 '<devtools-about><devtools-type>VSelection</devtools-type> Selection </devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
@@ -685,8 +796,10 @@ describe('Plugin: DevTools', () => {
     });
     describe('CommandsComponent', () => {
         it('should change panel to "Commands" with top button', async () => {
-            await openDevTools(devtools);
-            const button = devtools.querySelector('devtools-navbar devtools-button:not(.selected)');
+            await openDevTools();
+            const button = wrapper.querySelector(
+                'jw-devtools devtools-navbar devtools-button:not(.selected)',
+            );
             expect(button.textContent).to.equal('Commands');
             expect(button.classList.contains('selected')).to.equal(false, 'button is not selected');
 
@@ -694,56 +807,46 @@ describe('Plugin: DevTools', () => {
 
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
 
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.firstElementChild.tagName).to.equal('DEVTOOLS-TABLE');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
+            expect(nodeName(subpanel.firstElementChild)).to.equal('DEVTOOLS-TABLE');
         });
         it('should change sub panel to "Registry"', async () => {
-            await openDevTools(devtools);
-            await click(devtools.querySelector('devtools-navbar devtools-button:not(.selected)'));
+            await openDevTools();
+            await click(
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)'),
+            );
 
-            const panel = devtools.querySelector('devtools-panel.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.active');
             const button = panel.querySelector('devtools-navbar devtools-button:not(.selected)');
             expect(button.textContent).to.equal('Registry');
             await click(button);
             expect(button.classList.contains('selected')).to.equal(true, 'button is selected');
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
-            expect(subpanel.firstElementChild.tagName).to.equal('DEVTOOLS-COMMAND');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
+            expect(nodeName(subpanel.firstElementChild)).to.equal('DEVTOOLS-COMMAND');
             expect(Array.from(subpanel.childNodes).map((n: Node) => n.textContent)).to.deep.equal([
                 'insert',
                 'insertParagraphBreak',
                 'setSelection',
                 'deleteBackward',
                 'deleteForward',
-                'selectAll',
                 'toggleFormat',
                 'insertText',
-                'insertLineBreak',
-                'applyHeadingStyle',
-                'toggleList',
-                'indent',
-                'outdent',
-                'link',
-                'unlink',
-                'addRowAbove',
-                'addRowBelow',
-                'addColumnBefore',
-                'addColumnAfter',
-                'deleteRow',
-                'deleteColumn',
-                'deleteTable',
-                'mergeCells',
-                'unmergeCells',
-                'align',
-                'applyPreStyle',
-                'colorText',
-                'uncolorText',
-                'colorBackground',
-                'uncolorBackground',
+                'show',
+                'hide',
+                'selectAll',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {
-            await openDevTools(devtools);
-            const node = devtools.querySelector('devtools-node.block.folded:nth-child(2)');
+            await openDevTools();
+            const node = wrapper.querySelector(
+                '.zone-main devtools-node.block.folded:nth-child(2)',
+            );
             const name = node.querySelector('devtools-nodename');
             const namePos = name.getBoundingClientRect();
             await click(name, {
@@ -751,54 +854,72 @@ describe('Plugin: DevTools', () => {
                 clientY: namePos.top,
             });
 
-            const nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+            const nameBold = wrapper.querySelector('.zone-main .selectable-line.bold');
             const pos = nameBold.getBoundingClientRect();
             nameBold.dispatchEvent(
                 new MouseEvent('dblclick', { clientX: pos.left, clientY: pos.top, bubbles: true }),
             );
             await nextTickFrame();
 
-            const container = editor.el.querySelector('test-container');
-            container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
+            const container = wrapper.querySelector('jw-editor test-container');
+            container.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', bubbles: true }),
+            );
             container.querySelector('b').firstChild.textContent = 'z';
             container.dispatchEvent(new InputEvent('input', { bubbles: true }));
             await nextTickFrame();
             await nextTickFrame();
 
-            const button = devtools.querySelector('devtools-navbar devtools-button:not(.selected)');
+            const button = wrapper.querySelector(
+                'jw-devtools devtools-navbar devtools-button:not(.selected)',
+            );
             await click(button);
 
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
             expect(subpanel.textContent).to.equal('insertTextsetSelection');
         });
         it('should select "setSelection"', async () => {
-            await openDevTools(devtools);
-            await click(devtools.querySelector('devtools-navbar devtools-button:not(.selected)'));
+            await openDevTools();
+            await click(
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)'),
+            );
 
-            const panel = devtools.querySelector('devtools-panel.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.active');
             const button = panel.querySelector('devtools-navbar devtools-button:not(.selected)');
             await click(button);
 
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
             const line = subpanel.querySelector('.selectable-line:nth-child(3)');
             await click(line);
 
             expect(line.classList.contains('selected')).to.equal(true);
 
-            const about = devtools.querySelector('devtools-info devtools-about');
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
                 '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should select "insertParagraphBreak" with arrow', async () => {
-            await openDevTools(devtools);
-            await click(devtools.querySelector('devtools-navbar devtools-button:not(.selected)'));
+            await openDevTools();
+            await click(
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)'),
+            );
 
-            const panel = devtools.querySelector('devtools-panel.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.active');
             const button = panel.querySelector('devtools-navbar devtools-button:not(.selected)');
             await click(button);
 
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
             const line = subpanel.querySelector('.selectable-line:nth-child(3)');
             await click(line);
 
@@ -806,20 +927,26 @@ describe('Plugin: DevTools', () => {
             expect(line.classList.contains('selected')).to.equal(false);
             expect(line.previousElementSibling.classList.contains('selected')).to.equal(true);
 
-            const about = devtools.querySelector('devtools-info devtools-about');
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
                 '<devtools-about><devtools-type>Command</devtools-type> insertParagraphBreak</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should select "setSelection" with arrow', async () => {
-            await openDevTools(devtools);
-            await click(devtools.querySelector('devtools-navbar devtools-button:not(.selected)'));
+            await openDevTools();
+            await click(
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)'),
+            );
 
-            const panel = devtools.querySelector('devtools-panel.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.active');
             const button = panel.querySelector('devtools-navbar devtools-button:not(.selected)');
             await click(button);
 
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
             const line = subpanel.querySelector('.selectable-line:nth-child(2)');
             await click(line);
 
@@ -827,25 +954,31 @@ describe('Plugin: DevTools', () => {
             expect(line.classList.contains('selected')).to.equal(false);
             expect(line.nextElementSibling.classList.contains('selected')).to.equal(true);
 
-            const about = devtools.querySelector('devtools-info devtools-about');
+            const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
                 '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should not change the selection with other key', async () => {
-            await openDevTools(devtools);
-            await click(devtools.querySelector('devtools-navbar devtools-button:not(.selected)'));
+            await openDevTools();
+            await click(
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)'),
+            );
 
-            const panel = devtools.querySelector('devtools-panel.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.active');
             const button = panel.querySelector('devtools-navbar devtools-button:not(.selected)');
             await click(button);
 
-            const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+            const subpanel = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents',
+            );
             const line = subpanel.querySelector('.selectable-line:nth-child(3)');
             await click(line);
 
-            const selected = devtools.querySelector(
-                'devtools-panel.active mainpane-contents .selectable-line.selected',
+            const selected = wrapper.querySelector(
+                'jw-devtools devtools-panel.active mainpane-contents .selectable-line.selected',
             );
             selected.dispatchEvent(
                 new KeyboardEvent('keydown', {
@@ -858,15 +991,21 @@ describe('Plugin: DevTools', () => {
             expect(selected.classList.contains('selected')).to.equal(true);
         });
         it('should change sub panel to "Queue"', async () => {
-            await openDevTools(devtools);
-            await click(devtools.querySelector('devtools-navbar devtools-button:not(.selected)'));
+            await openDevTools();
             await click(
-                devtools.querySelector(
-                    'devtools-panel.active devtools-navbar devtools-button:not(.selected)',
-                ),
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)'),
+            );
+            await click(
+                wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector(
+                        'devtools-panel.active devtools-navbar devtools-button:not(.selected)',
+                    ),
             );
 
-            const panel = devtools.querySelector('devtools-panel.active');
+            const panel = wrapper.querySelector('jw-devtools devtools-panel.active');
             const button = panel.querySelector('devtools-navbar devtools-button:not(.selected)');
             expect(button.textContent).to.equal('Queue');
             await click(button);
@@ -876,8 +1015,10 @@ describe('Plugin: DevTools', () => {
             let charBeforeChange: VNode;
 
             beforeEach(async () => {
-                await openDevTools(devtools);
-                const node = devtools.querySelector('devtools-node.block.folded:nth-child(2)');
+                await openDevTools();
+                const node = wrapper.querySelector(
+                    '.zone-main devtools-node.block.folded:nth-child(2)',
+                );
                 const name = node.querySelector('devtools-nodename');
                 const namePos = name.getBoundingClientRect();
                 await click(name, {
@@ -885,7 +1026,9 @@ describe('Plugin: DevTools', () => {
                     clientY: namePos.top,
                 });
 
-                const nameBold = devtools.querySelector('devtools-node .selectable-line.bold');
+                const nameBold = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-node .selectable-line.bold');
                 const pos = nameBold.getBoundingClientRect();
                 nameBold.dispatchEvent(
                     new MouseEvent('dblclick', {
@@ -896,45 +1039,60 @@ describe('Plugin: DevTools', () => {
                 );
                 await nextTickFrame();
 
-                charBeforeChange = editor.vDocument.root.children()[1].children()[1];
+                charBeforeChange = domEngine.components
+                    .get('editable')[0]
+                    .children()[1]
+                    .children()[1];
 
-                const container = editor.el.querySelector('test-container');
-                container.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ' }));
+                const container = wrapper
+                    .querySelector('jw-editor')
+                    .querySelector('test-container');
+                container.dispatchEvent(
+                    new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', bubbles: true }),
+                );
                 container.querySelector('b').firstChild.textContent = 'z';
                 container.dispatchEvent(new InputEvent('input', { bubbles: true }));
                 await nextTickFrame();
                 await nextTickFrame();
 
-                const button = devtools.querySelector(
-                    'devtools-navbar devtools-button:not(.selected)',
-                );
+                const button = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-navbar devtools-button:not(.selected)');
                 await click(button);
             });
             it('should select "insertText"', async () => {
-                const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+                const subpanel = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line');
                 await click(line);
                 expect(line.classList.contains('selected')).to.equal(true);
 
-                const about = devtools.querySelector('devtools-info devtools-about');
+                const about = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-info devtools-about');
                 const aResult =
                     '<devtools-about><devtools-type>Command</devtools-type> insertText</devtools-about>';
                 expect(about.outerHTML).to.equal(aResult);
             });
             it('should select "setSelection"', async () => {
-                const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+                const subpanel = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line:nth-child(2)');
                 await click(line);
                 expect(line.classList.contains('selected')).to.equal(true);
 
-                const about = devtools.querySelector('devtools-info devtools-about');
+                const about = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-info devtools-about');
                 const aResult =
                     '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
                 expect(about.outerHTML).to.equal(aResult);
 
-                const properties = devtools.querySelector(
-                    'devtools-info devtools-properties devtools-table',
-                );
+                const properties = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-info devtools-properties devtools-table');
                 const pResult =
                     '<devtools-table>' +
                     '<devtools-tbody>' +
@@ -952,21 +1110,25 @@ describe('Plugin: DevTools', () => {
                 expect(properties.outerHTML).to.equal(pResult);
             });
             it('should select "insertText" with arrow', async () => {
-                const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+                const subpanel = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line:nth-child(2)');
                 await click(line);
                 await keydown(line, 'ArrowUp');
 
                 expect(line.classList.contains('selected')).to.equal(false);
 
-                const about = devtools.querySelector('devtools-info devtools-about');
+                const about = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-info devtools-about');
                 const aResult =
                     '<devtools-about><devtools-type>Command</devtools-type> insertText</devtools-about>';
                 expect(about.outerHTML).to.equal(aResult);
 
-                const properties = devtools.querySelector(
-                    'devtools-info devtools-properties devtools-table',
-                );
+                const properties = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-info devtools-properties devtools-table');
                 const pResult =
                     '<devtools-table>' +
                     '<devtools-tbody>' +
@@ -976,20 +1138,26 @@ describe('Plugin: DevTools', () => {
                 expect(properties.outerHTML).to.equal(pResult);
             });
             it('should select "setSelection" with arrow', async () => {
-                const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+                const subpanel = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line');
                 await click(line);
 
                 await keydown(line, 'ArrowDown');
                 expect(line.classList.contains('selected')).to.equal(false);
 
-                const about = devtools.querySelector('devtools-info devtools-about');
+                const about = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-info devtools-about');
                 const aResult =
                     '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
                 expect(about.outerHTML).to.equal(aResult);
             });
             it('should not change the selection with other key', async () => {
-                const subpanel = devtools.querySelector('devtools-panel.active mainpane-contents');
+                const subpanel = wrapper
+                    .querySelector('jw-devtools')
+                    .querySelector('devtools-panel.active mainpane-contents');
                 const line = subpanel.querySelector('.selectable-line');
                 await click(line);
 

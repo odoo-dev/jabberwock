@@ -1,16 +1,16 @@
 import { expect } from 'chai';
 import { describePlugin } from '../../utils/src/testUtils';
 import { Youtube } from '../src/Youtube';
-import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import JWEditor from '../../core/src/JWEditor';
-import { YoutubeDomParser } from '../src/YoutubeDomParser';
+import { YoutubeXmlDomParser } from '../src/YoutubeXmlDomParser';
 
 describePlugin(Youtube, () => {
     describe('parser', () => {
         it('should parse a youtube video', async () => {
             const editor = new JWEditor();
-            const engine = new DomParsingEngine(editor);
-            engine.register(YoutubeDomParser);
+            const engine = new XmlDomParsingEngine(editor);
+            engine.register(YoutubeXmlDomParser);
             const element = document.createElement('div');
             element.innerHTML =
                 '<iframe src="https://www.youtube-nocookie.com/embed/Ih8K2SKHJPI?start=15"></iframe>';

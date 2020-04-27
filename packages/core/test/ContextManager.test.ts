@@ -8,6 +8,7 @@ import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 import { VNode } from '../src/VNodes/VNode';
 import { VSelection } from '../src/VSelection';
 import { Context, CheckingContext } from '../src/ContextManager';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('core', () => {
     describe('ContextManager', () => {
@@ -289,7 +290,10 @@ describe('core', () => {
                         const checkSpy1 = sinon.spy(check);
                         const checkSpy2 = sinon.spy(check);
                         const newSelection = new VSelection();
-                        newSelection.setAt(editor.vDocument.root);
+
+                        const domEngine = editor.plugins.get(Layout).engines.dom;
+                        const editable = domEngine.components.get('editable')[0];
+                        newSelection.setAt(editable);
                         const commands: CommandImplementation[] = [
                             {
                                 title: 'paragraph',
