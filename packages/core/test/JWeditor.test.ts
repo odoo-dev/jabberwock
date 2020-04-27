@@ -2,6 +2,10 @@ import JWEditor, { Mode } from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
 import { ModeError } from '../../utils/src/errors';
+import { testEditor } from '../../utils/src/testUtils';
+import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -223,6 +227,24 @@ describe('core', () => {
                     ]);
                     const c = editor.plugins.get(C);
                     expect((c.configuration as LocalConfig).toto).to.eql(3);
+                });
+            });
+        });
+        describe('execCommandCustom', () => {
+            it('should execute a custom command and trigger plugins', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>ab[]</div>',
+                    stepFunction: async editor => {
+                        const layout = editor.plugins.get(Layout);
+                        const domEngine = layout.engines.dom as DomLayoutEngine;
+                        const root = domEngine.components.get('editable')[0];
+                        await editor.execCustomCommand(async () => {
+                            root.children()[0]
+                                .children()[0]
+                                .remove();
+                        });
+                    },
+                    contentAfter: '<div>b[]</div>',
                 });
             });
         });
