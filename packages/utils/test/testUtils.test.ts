@@ -5,6 +5,7 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('core', () => {
     describe('utils', () => {
@@ -39,10 +40,11 @@ describe('core', () => {
                     testEditor(BasicEditor, {
                         contentBefore: '<p>[a]</p>',
                         stepFunction: (editor: JWEditor) => {
-                            const vDocument = editor.vDocument;
-                            expect(vDocument.root instanceof FragmentNode).to.be.true;
-                            expect(vDocument.root.children().length).to.equal(1);
-                            const p = vDocument.root.children()[0] as VElement;
+                            const domEngine = editor.plugins.get(Layout).engines.dom;
+                            const editable = domEngine.components.get('editable')[0];
+                            expect(editable instanceof FragmentNode).to.be.true;
+                            expect(editable.children().length).to.equal(1);
+                            const p = editable.children()[0] as VElement;
                             expect(p.htmlTag).to.equal('P');
                             expect(p.children().length).to.equal(1);
                             expect(p.children()[0] instanceof CharNode).to.be.true;

@@ -4,36 +4,39 @@ import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { testEditor, renderTextualSelection } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { CharDomParser } from '../../plugin-char/src/CharDomParser';
-import { HeadingDomParser } from '../../plugin-heading/src/HeadingDomParser';
-import { LineBreakDomParser } from '../../plugin-linebreak/src/LineBreakDomParser';
-import { ParagraphDomParser } from '../../plugin-paragraph/src/ParagraphDomParser';
-import { ListDomParser } from '../../plugin-list/src/ListDomParser';
-import { ListItemDomParser } from '../../plugin-list/src/ListItemDomParser';
-import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { CharXmlDomParser } from '../../plugin-char/src/CharXmlDomParser';
+import { HeadingXmlDomParser } from '../../plugin-heading/src/HeadingXmlDomParser';
+import { LineBreakXmlDomParser } from '../../plugin-linebreak/src/LineBreakXmlDomParser';
+import { ParagraphXmlDomParser } from '../../plugin-paragraph/src/ParagraphXmlDomParser';
+import { ListXmlDomParser } from '../../plugin-list/src/ListXmlDomParser';
+import { ListItemXmlDomParser } from '../../plugin-list/src/ListItemXmlDomParser';
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import JWEditor from '../../core/src/JWEditor';
-import { ItalicDomParser } from '../../plugin-italic/src/ItalicDomParser';
-import { BoldDomParser } from '../../plugin-bold/src/BoldDomParser';
-import { UnderlineDomParser } from '../../plugin-underline/src/UnderlineDomParser';
-import { SpanDomParser } from '../../plugin-span/src/SpanDomParser';
-import { Dom } from '../../plugin-dom/src/Dom';
+import { ItalicXmlDomParser } from '../../plugin-italic/src/ItalicXmlDomParser';
+import { BoldXmlDomParser } from '../../plugin-bold/src/BoldXmlDomParser';
+import { UnderlineXmlDomParser } from '../../plugin-underline/src/UnderlineXmlDomParser';
+import { SpanXmlDomParser } from '../../plugin-span/src/SpanXmlDomParser';
+import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 
 describe('utils', () => {
     describe('Parser', () => {
-        describe('parse()', async () => {
-            let parser: DomParsingEngine;
+        describe('parse()', () => {
+            let parser: XmlDomParsingEngine;
             beforeEach(async () => {
-                parser = new DomParsingEngine(new JWEditor());
-                parser.register(CharDomParser);
-                parser.register(HeadingDomParser);
-                parser.register(LineBreakDomParser);
-                parser.register(ParagraphDomParser);
-                parser.register(ListDomParser);
-                parser.register(ListItemDomParser);
-                parser.register(BoldDomParser);
-                parser.register(ItalicDomParser);
-                parser.register(UnderlineDomParser);
-                parser.register(SpanDomParser);
+                parser = new XmlDomParsingEngine(new JWEditor());
+                parser.register(CharXmlDomParser);
+                parser.register(HeadingXmlDomParser);
+                parser.register(LineBreakXmlDomParser);
+                parser.register(ParagraphXmlDomParser);
+                parser.register(ListXmlDomParser);
+                parser.register(ListItemXmlDomParser);
+                parser.register(BoldXmlDomParser);
+                parser.register(ItalicXmlDomParser);
+                parser.register(UnderlineXmlDomParser);
+                parser.register(SpanXmlDomParser);
             });
             it('should parse a "p" tag with some content', async () => {
                 const element = document.createElement('div');
@@ -306,6 +309,7 @@ describe('utils', () => {
                     const container = document.createElement('jw-container-test');
                     container.innerHTML = '<div>abc</div><div>cde</div><div>fgh</div>';
                     document.body.appendChild(container);
+                    const target = container.children[1] as HTMLElement;
 
                     // selection in the first text node of the first div
                     const domRange = document.createRange();
@@ -317,12 +321,19 @@ describe('utils', () => {
 
                     // apply editor on the second div
                     const editor = new BasicEditor();
-                    editor.configure(Dom, { target: container.children[1] as HTMLElement });
+                    editor.configure(DomEditable, { source: target });
+                    editor.configure(DomLayout, {
+                        location: [target, 'replace'],
+                    });
                     await editor.start();
 
                     renderTextualSelection();
-                    const domPlugin = editor.plugins.get(Dom);
-                    const value = domPlugin.editable.innerHTML;
+
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const editable = domEngine.components.get('editable')[0];
+                    const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+
+                    const value = domEditable.innerHTML;
                     document.body.removeChild(container);
 
                     expect(value).to.deep.equal('cde');

@@ -7,7 +7,7 @@ import { AbstractRenderer } from '../src/AbstractRenderer';
 import { RenderingEngine } from '../src/RenderingEngine';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
-import { Dom } from '../../plugin-dom/src/Dom';
+import { Html } from '../../plugin-html/src/Html';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 describe('Renderer', () => {
@@ -28,18 +28,17 @@ describe('Renderer', () => {
                 };
             }
             const editor = new JWEditor();
-            editor.load(Dom, { target: document.createElement('p') });
+            editor.load(Html, { target: document.createElement('p') });
             editor.load(VNodePlugin);
             editor.load(Renderer);
             await editor.start();
-            const node = new ContainerNode();
-            editor.vDocument.root.append(node);
+            const root = new ContainerNode();
             const renderer = editor.plugins.get(Renderer);
-            const rendering = await renderer.render<VNode>('VNode', editor.vDocument.root);
+            const rendering = await renderer.render<VNode>('VNode', root);
             if (expect(rendering).to.exist) {
-                expect(rendering).to.equal(editor.vDocument.root);
+                expect(rendering).to.equal(root);
             }
-            const voidRendering = await renderer.render<VNode>('vNode', editor.vDocument.root);
+            const voidRendering = await renderer.render<VNode>('vNode', root);
             expect(voidRendering).to.not.exist;
         });
         it('should render textual selection at the beginning', async () => {

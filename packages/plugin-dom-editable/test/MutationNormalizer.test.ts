@@ -13,9 +13,11 @@ describe('utils', () => {
 
         before(() => {
             root = document.createElement('root');
-            normalizer = new MutationNormalizer(root);
+            document.body.appendChild(root);
+            normalizer = new MutationNormalizer();
         });
         after(() => {
+            document.body.removeChild(root);
             normalizer.destroy();
         });
 

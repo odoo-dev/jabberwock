@@ -9,7 +9,7 @@ import {
 } from './eventNormalizerUtils';
 import { testCallbackBefore } from './eventNormalizerUtils';
 import { EventBatch, NormalizedAction } from '../src/EventNormalizer';
-import { Direction } from '../src/VSelection';
+import { Direction } from '../../core/src/VSelection';
 
 describe('utils', () => {
     describe('EventNormalizer', () => {

@@ -118,7 +118,6 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
-                        'Parser',
                         'Keymap',
                         'A',
                         'B',
@@ -135,7 +134,6 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
-                        'Parser',
                         'Keymap',
                         'A',
                         'B',
@@ -155,7 +153,6 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
-                        'Parser',
                         'Keymap',
                         'A',
                         'B',
@@ -175,7 +172,6 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
-                        'Parser',
                         'Keymap',
                         'A',
                         'B',
@@ -196,7 +192,6 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
-                        'Parser',
                         'Keymap',
                         'A',
                         'D',
@@ -218,7 +213,6 @@ describe('core', () => {
                     const plugins = Array.from(editor.plugins.values());
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
-                        'Parser',
                         'Keymap',
                         'A',
                         'D',

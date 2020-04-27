@@ -7,23 +7,24 @@ import { describePlugin, keydown, unformat } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { List } from '../src/List';
-import { ListDomParser } from '../src/ListDomParser';
-import { ListItemDomParser } from '../src/ListItemDomParser';
-import { CharDomParser } from '../../plugin-char/src/CharDomParser';
-import { HeadingDomParser } from '../../plugin-heading/src/HeadingDomParser';
-import { LineBreakDomParser } from '../../plugin-linebreak/src/LineBreakDomParser';
-import { ParagraphDomParser } from '../../plugin-paragraph/src/ParagraphDomParser';
-import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { ListXmlDomParser } from '../src/ListXmlDomParser';
+import { ListItemXmlDomParser } from '../src/ListItemXmlDomParser';
+import { CharXmlDomParser } from '../../plugin-char/src/CharXmlDomParser';
+import { HeadingXmlDomParser } from '../../plugin-heading/src/HeadingXmlDomParser';
+import { LineBreakXmlDomParser } from '../../plugin-linebreak/src/LineBreakXmlDomParser';
+import { ParagraphXmlDomParser } from '../../plugin-paragraph/src/ParagraphXmlDomParser';
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
-import { ItalicDomParser } from '../../plugin-italic/src/ItalicDomParser';
-import { BoldDomParser } from '../../plugin-bold/src/BoldDomParser';
-import { UnderlineDomParser } from '../../plugin-underline/src/UnderlineDomParser';
-import { SpanDomParser } from '../../plugin-span/src/SpanDomParser';
+import { ItalicXmlDomParser } from '../../plugin-italic/src/ItalicXmlDomParser';
+import { BoldXmlDomParser } from '../../plugin-bold/src/BoldXmlDomParser';
+import { UnderlineXmlDomParser } from '../../plugin-underline/src/UnderlineXmlDomParser';
+import { SpanXmlDomParser } from '../../plugin-span/src/SpanXmlDomParser';
 import { Char } from '../../plugin-char/src/Char';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
-import { LinkDomParser } from '../../plugin-link/src/LinkDomParser';
-import { SuperscriptDomParser } from '../../plugin-superscript/src/SuperscriptDomParser';
-import { Dom } from '../../plugin-dom/src/Dom';
+import { LinkXmlDomParser } from '../../plugin-link/src/LinkXmlDomParser';
+import { SuperscriptXmlDomParser } from '../../plugin-superscript/src/SuperscriptXmlDomParser';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Core>('deleteForward');
@@ -47,8 +48,10 @@ const toggleUnorderedList = async (editor: JWEditor): Promise<void> => {
     });
 };
 const backspace = async (editor: JWEditor): Promise<void> => {
-    const domPlugin = editor.plugins.get(Dom);
-    await keydown(domPlugin.editable, 'Backspace');
+    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+    const editable = domEngine.components.get('editable')[0];
+    const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+    await keydown(domEditable, 'Backspace');
 };
 const insertText = async (editor: JWEditor, text: string): Promise<void> => {
     await editor.execCommand<Char>('insertText', {
@@ -59,7 +62,7 @@ const insertText = async (editor: JWEditor, text: string): Promise<void> => {
 describePlugin(List, testEditor => {
     describe('parse', () => {
         let editor: JWEditor;
-        let engine: DomParsingEngine;
+        let engine: XmlDomParsingEngine;
         beforeEach(async () => {
             editor = new JWEditor();
             editor.configure({
@@ -67,19 +70,19 @@ describePlugin(List, testEditor => {
                     Container: ParagraphNode,
                 },
             });
-            engine = new DomParsingEngine(editor);
-            engine.register(CharDomParser);
-            engine.register(HeadingDomParser);
-            engine.register(LineBreakDomParser);
-            engine.register(ParagraphDomParser);
-            engine.register(ListDomParser);
-            engine.register(ListItemDomParser);
-            engine.register(ItalicDomParser);
-            engine.register(BoldDomParser);
-            engine.register(UnderlineDomParser);
-            engine.register(SpanDomParser);
-            engine.register(LinkDomParser);
-            engine.register(SuperscriptDomParser);
+            engine = new XmlDomParsingEngine(editor);
+            engine.register(CharXmlDomParser);
+            engine.register(HeadingXmlDomParser);
+            engine.register(LineBreakXmlDomParser);
+            engine.register(ParagraphXmlDomParser);
+            engine.register(ListXmlDomParser);
+            engine.register(ListItemXmlDomParser);
+            engine.register(ItalicXmlDomParser);
+            engine.register(BoldXmlDomParser);
+            engine.register(UnderlineXmlDomParser);
+            engine.register(SpanXmlDomParser);
+            engine.register(LinkXmlDomParser);
+            engine.register(SuperscriptXmlDomParser);
         });
         it('should parse a complex list', async () => {
             const element = document.createElement('div');

@@ -4,6 +4,8 @@ import { TableNode } from '../src/TableNode';
 import { Table } from '../src/Table';
 import { TableRowNode } from '../src/TableRowNode';
 import { describePlugin } from '../../utils/src/testUtils';
+import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 import {
     withSelectedCell,
     testActive,
@@ -16,10 +18,11 @@ import {
 } from './tableTestUtils';
 import template from './tableTestTemplate.xml';
 import { TableCellNode } from '../src/TableCellNode';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 let element: Element;
-describePlugin(Table, async testEditor => {
-    describe('parse and render in the DOM', async () => {
+describePlugin(Table, testEditor => {
+    describe('parse and render in the DOM', () => {
         it('should parse a simple table', async () => {
             await testEditor(BasicEditor, {
                 /* eslint-disable prettier/prettier */
@@ -369,7 +372,419 @@ describePlugin(Table, async testEditor => {
             });
         });
     });
-    describe('addRowAbove', async () => {
+    describe('parse string and render in the DOM', () => {
+        let editor: BasicEditor;
+        beforeEach(async () => {
+            editor = new BasicEditor();
+            await editor.start();
+        });
+        afterEach(async () => {
+            await editor.stop();
+        });
+
+        it('should parse a simple table', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<th>ab</th>',
+                            '<td>cd</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>e[f]g</td>',
+                            '<td>hi</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+            expect(vNodes.length).to.equal(1);
+
+            expect(vNodes[0]._repr().replace(/ \([0-9]+\)|\s+$/g, '')).to.equal(
+                [
+                    'TableNode: 2x2',
+                    '    TableRowNode: header',
+                    '        TableCellNode <(0, 0)>: header',
+                    '            a',
+                    '            b',
+                    '        TableCellNode <(0, 1)>',
+                    '            c',
+                    '            d',
+                    '    TableRowNode',
+                    '        TableCellNode <(1, 0)>',
+                    '            e',
+                    '            [',
+                    '            f',
+                    '            ]',
+                    '            g',
+                    '        TableCellNode <(1, 1)>',
+                    '            h',
+                    '            i',
+                ].join('\n'),
+            );
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<th>ab</th>',
+                            '<td>cd</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>e[f]g</td>',
+                            '<td>hi</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+        it('should add a tbody to a table without tbody', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<td>ab</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tr>',
+                        '<td>c[d]e</td>',
+                    '</tr>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+            expect(vNodes.length).to.equal(1);
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<td>ab</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>c[d]e</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+        it('should parse a nested table', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>ab</td>',
+                            '<td>cd</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>',
+                                '<table>',
+                                    '<thead>',
+                                        '<tr>',
+                                            '<td>ef</td>',
+                                            '<td>gh</td>',
+                                            '<td>ij</td>',
+                                        '</tr>',
+                                    '</thead>',
+                                    '<tbody>',
+                                        '<tr>',
+                                            '<td>kl</td>',
+                                            '<td>mn</td>',
+                                            '<td>op</td>',
+                                        '</tr>',
+                                    '</tbody>',
+                                '</table>',
+                            '</td>',
+                            '<td>qr</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>st</td>',
+                            '<td>uv</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+            expect(vNodes.length).to.equal(1);
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>ab</td>',
+                            '<td>cd</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>',
+                                '<table>',
+                                    '<thead>',
+                                        '<tr>',
+                                            '<td>ef</td>',
+                                            '<td>gh</td>',
+                                            '<td>ij</td>',
+                                        '</tr>',
+                                    '</thead>',
+                                    '<tbody>',
+                                        '<tr>',
+                                            '<td>kl</td>',
+                                            '<td>mn</td>',
+                                            '<td>op</td>',
+                                        '</tr>',
+                                    '</tbody>',
+                                '</table>',
+                            '</td>',
+                            '<td>qr</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>st</td>',
+                            '<td>uv</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+        it('should parse all attributes in a table in the right places', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table class="a">',
+                    '<thead class="b">',
+                        '<tr class="c">',
+                            '<td class="d">ab</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody class="e">',
+                        '<tr class="f">',
+                            '<td class="g">c[d]e</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+            expect(vNodes.length).to.equal(1);
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table class="a">',
+                    '<thead class="b">',
+                        '<tr class="c">',
+                            '<td class="d">ab</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody class="e">',
+                        '<tr class="f">',
+                            '<td class="g">c[d]e</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+        it('should parse complex combinations of colpsans and rowspans in a table', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<th>(0, 0)</th>',
+                            '<td colspan="3">(0, 1)</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tr>',
+                        '<td>(1, 0)</td>',
+                        '<td>(1, 1)</td>',
+                        '<td>(1, 2)</td>',
+                        '<td>(1, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<th>(2, 0)</th>',
+                        '<td>(2, 1)</td>',
+                        '<td>(2, 2)</td>',
+                        '<td>(2, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td colspan="2">(3, 0)</td>',
+                        '<td rowspan="3">(3, 2)</td>',
+                        '<td>(3, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>(4, 0)</td>',
+                        '<td rowspan="3">(4, 1)</td>',
+                        '<td>(4, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>(5, 0)</td>',
+                        '<td>(5, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>(6, 0)</td>',
+                        '<td>(6, 2)</td>',
+                        '<td>(6, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>(7, 0)</td>',
+                        '<td colspan="2" rowspan="2">(7, 1)</td>',
+                        '<td>(7, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>(8, 0)</td>',
+                        '<td>(8, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td colspan="2" rowspan="2">(9, 0)</td>',
+                        '<td>(9, 2)</td>',
+                        '<td>(9, 3)</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>(10, 2)</td>',
+                        '<td>(10, 3)</td>',
+                    '</tr>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+            expect(vNodes.length).to.equal(1);
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<th>(0, 0)</th>',
+                            '<td colspan="3">(0, 1)</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>(1, 0)</td>',
+                            '<td>(1, 1)</td>',
+                            '<td>(1, 2)</td>',
+                            '<td>(1, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<th>(2, 0)</th>',
+                            '<td>(2, 1)</td>',
+                            '<td>(2, 2)</td>',
+                            '<td>(2, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td colspan="2">(3, 0)</td>',
+                            '<td rowspan="3">(3, 2)</td>',
+                            '<td>(3, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>(4, 0)</td>',
+                            '<td rowspan="3">(4, 1)</td>',
+                            '<td>(4, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>(5, 0)</td>',
+                            '<td>(5, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>(6, 0)</td>',
+                            '<td>(6, 2)</td>',
+                            '<td>(6, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>(7, 0)</td>',
+                            '<td colspan="2" rowspan="2">(7, 1)</td>',
+                            '<td>(7, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>(8, 0)</td>',
+                            '<td>(8, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td colspan="2" rowspan="2">(9, 0)</td>',
+                            '<td>(9, 2)</td>',
+                            '<td>(9, 3)</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>(10, 2)</td>',
+                            '<td>(10, 3)</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+        it('should split a tbody to parse a non-tr element within a table', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<td>ab</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tr>',
+                        '<td>cd</td>',
+                    '</tr>',
+                    '<caption>e[f]g</caption>',
+                    '<tr>',
+                        '<td>hi</td>',
+                    '</tr>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+            expect(vNodes.length).to.equal(1);
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<td>ab</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>cd</td>',
+                        '</tr>',
+                    '</tbody>',
+                    '<caption>e[f]g</caption>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>hi</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+    });
+    describe('addRowAbove', () => {
         beforeEach(async () => {
             element = document.createElement('div');
             element.innerHTML = template;
@@ -378,7 +793,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row0 = table.children(TableRowNode)[0];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[0];
@@ -483,7 +900,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row1 = table.children(TableRowNode)[1];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[1];
@@ -589,7 +1008,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 2, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row2 = table.children(TableRowNode)[2];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[2];
@@ -687,7 +1108,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 3, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row3 = table.children(TableRowNode)[3];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[3];
@@ -789,7 +1212,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 4, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row4 = table.children(TableRowNode)[4];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[4];
@@ -901,7 +1326,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 5, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row5 = table.children(TableRowNode)[5];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[5];
@@ -1015,7 +1442,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 6, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row6 = table.children(TableRowNode)[6];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[6];
@@ -1125,7 +1554,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 7, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row7 = table.children(TableRowNode)[7];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[7];
@@ -1222,7 +1653,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 8, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row8 = table.children(TableRowNode)[8];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[8];
@@ -1328,7 +1761,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 9, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row9 = table.children(TableRowNode)[9];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[9];
@@ -1425,7 +1860,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 10, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row10 = table.children(TableRowNode)[10];
                     await editor.execCommand('addRowAbove');
                     const insertedRow = table.children(TableRowNode)[10];
@@ -1528,7 +1965,7 @@ describePlugin(Table, async testEditor => {
             });
         });
     });
-    describe('addRowBelow', async () => {
+    describe('addRowBelow', () => {
         beforeEach(async () => {
             element = document.createElement('div');
             element.innerHTML = template;
@@ -1537,7 +1974,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row0 = table.children(TableRowNode)[0];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[1];
@@ -1642,7 +2081,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row1 = table.children(TableRowNode)[1];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[2];
@@ -1748,7 +2189,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 2, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row2 = table.children(TableRowNode)[2];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[3];
@@ -1846,7 +2289,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 3, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row3 = table.children(TableRowNode)[3];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[4];
@@ -1958,7 +2403,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 4, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row4 = table.children(TableRowNode)[4];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[5];
@@ -2073,7 +2520,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 5, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row5 = table.children(TableRowNode)[5];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[6];
@@ -2180,7 +2629,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 6, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row6 = table.children(TableRowNode)[6];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[7];
@@ -2278,7 +2729,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 7, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row7 = table.children(TableRowNode)[7];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[8];
@@ -2385,7 +2838,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 8, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row8 = table.children(TableRowNode)[8];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[9];
@@ -2487,7 +2942,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 9, 2),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row9 = table.children(TableRowNode)[9];
                     await editor.execCommand('addRowBelow');
                     const insertedRow = table.children(TableRowNode)[10];
@@ -2594,7 +3051,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 9, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const row9 = table.children(TableRowNode)[9];
                     const row10 = table.children(TableRowNode)[10];
                     await editor.execCommand('addRowBelow');
@@ -2699,7 +3158,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 10, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     await editor.execCommand('addRowBelow');
                     const row10 = table.children(TableRowNode)[10];
                     table.addRowBelow(row10.children(TableCellNode)[0]);
@@ -2797,7 +3258,7 @@ describePlugin(Table, async testEditor => {
             });
         });
     });
-    describe('addColumnBefore', async () => {
+    describe('addColumnBefore', () => {
         beforeEach(async () => {
             element = document.createElement('div');
             element.innerHTML = template;
@@ -2806,7 +3267,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col0 = table.columns[0];
                     await editor.execCommand('addColumnBefore');
                     const insertedCells = table.columns[0].filter(cell => cell);
@@ -2914,7 +3377,10 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 0, 1),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
+
                     const col1 = table.columns[1];
                     await editor.execCommand('addColumnBefore');
                     const insertedCells = table.columns[1].filter(cell => cell);
@@ -3028,7 +3494,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 2),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col2 = table.columns[2];
                     await editor.execCommand('addColumnBefore');
                     const insertedCells = table.columns[2].filter(cell => cell);
@@ -3145,7 +3613,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 3),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col3 = table.columns[3];
                     await editor.execCommand('addColumnBefore');
                     const insertedCells = table.columns[3].filter(cell => cell);
@@ -3247,7 +3717,7 @@ describePlugin(Table, async testEditor => {
             });
         });
     });
-    describe('addColumnAfter', async () => {
+    describe('addColumnAfter', () => {
         beforeEach(async () => {
             element = document.createElement('div');
             element.innerHTML = template;
@@ -3256,7 +3726,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col0 = table.columns[0];
                     await editor.execCommand('addColumnAfter');
                     const insertedCells = table.columns[1].filter(cell => cell);
@@ -3371,7 +3843,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 1),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col1 = table.columns[1];
                     await editor.execCommand('addColumnAfter');
                     const insertedCells = table.columns[2].filter(cell => cell);
@@ -3491,7 +3965,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 2),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col2 = table.columns[2];
                     await editor.execCommand('addColumnAfter');
                     const insertedCells = table.columns[3].filter(cell => cell);
@@ -3606,7 +4082,9 @@ describePlugin(Table, async testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: withSelectedCell(element, 1, 3),
                 stepFunction: async (editor: BasicEditor) => {
-                    const table = editor.vDocument.root.firstChild() as TableNode;
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    const table = editable.firstChild() as TableNode;
                     const col3 = table.columns[3];
                     await editor.execCommand('addColumnAfter');
                     const insertedCells = table.columns[4].filter(cell => cell);
@@ -3708,7 +4186,7 @@ describePlugin(Table, async testEditor => {
             });
         });
     });
-    describe('deleteRow', async () => {
+    describe('deleteRow', () => {
         it('should remove the first row', async () => {
             /* eslint-disable prettier/prettier */
             await testEditor(BasicEditor, {
@@ -4324,7 +4802,7 @@ describePlugin(Table, async testEditor => {
             /* eslint-enable prettier/prettier */
         });
     });
-    describe('deleteColumn', async () => {
+    describe('deleteColumn', () => {
         it('should remove the first column', async () => {
             /* eslint-disable prettier/prettier */
             await testEditor(BasicEditor, {
@@ -4981,7 +5459,7 @@ describePlugin(Table, async testEditor => {
             /* eslint-enable prettier/prettier */
         });
     });
-    describe('mergeCells', async () => {
+    describe('mergeCells', () => {
         it('should merge two adjacent cells together', async () => {
             await testEditor(BasicEditor, {
                 /* eslint-disable prettier/prettier */
@@ -5154,7 +5632,7 @@ describePlugin(Table, async testEditor => {
             });
         });
     });
-    describe('unmergeCells', async () => {
+    describe('unmergeCells', () => {
         it('should unmerge two adjacent cells', async () => {
             await testEditor(BasicEditor, {
                 /* eslint-disable prettier/prettier */

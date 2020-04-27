@@ -1,6 +1,6 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
-import { Direction } from '../src/VSelection';
+import { Direction } from '../../core/src/VSelection';
 import { EventBatch, NormalizedAction, ModifierKeys } from '../src/EventNormalizer';
 import {
     testCallbackAfter,

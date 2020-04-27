@@ -1,6 +1,8 @@
 import { describePlugin } from '../../utils/src/testUtils';
 import { Align, AlignType } from '../src/Align';
 import { BasicEditor } from '../../../bundles/BasicEditor';
+import JWEditor from '../../core/src/JWEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 /**
  * Return a function that takes an editor and executes the 'align' command with
@@ -14,14 +16,41 @@ function align(type: AlignType) {
     };
 }
 
-describePlugin(Align, async testEditor => {
+describePlugin(Align, testEditor => {
     describe('align', () => {
-        describe('left', async () => {
+        describe('left', () => {
             it('should align left', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p>c[]d</p>',
                     stepFunction: align(AlignType.LEFT),
                     contentAfter: '<p>ab</p><p style="text-align: left;">c[]d</p>',
+                });
+            });
+            it('should not align left an imeditable node', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab</p><p>c[]d</p>',
+                    stepFunction: (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom;
+                        const editable = domEngine.components.get('editable')[0];
+                        const root = editable;
+                        root.lastChild().editable = false;
+                        return align(AlignType.LEFT)(editor);
+                    },
+                    contentAfter: '<p>ab</p><p><span style="text-align: left;">c[]d</span></p>',
+                });
+            });
+            it('should not change align style of an imeditable node', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab</p><p style="text-align: right;">c[]d</p>',
+                    stepFunction: (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom;
+                        const editable = domEngine.components.get('editable')[0];
+                        const root = editable;
+                        root.lastChild().editable = false;
+                        return align(AlignType.LEFT)(editor);
+                    },
+                    contentAfter:
+                        '<p>ab</p><p style="text-align: right;"><span style="text-align: left;">c[]d</span></p>',
                 });
             });
             it('should align several paragraphs left', async () => {
@@ -75,7 +104,7 @@ describePlugin(Align, async testEditor => {
                 });
             });
         });
-        describe('center', async () => {
+        describe('center', () => {
             it('should align center', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p>c[]d</p>',
@@ -134,7 +163,7 @@ describePlugin(Align, async testEditor => {
                 });
             });
         });
-        describe('right', async () => {
+        describe('right', () => {
             it('should align right', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p>c[]d</p>',
@@ -193,7 +222,7 @@ describePlugin(Align, async testEditor => {
                 });
             });
         });
-        describe('justify', async () => {
+        describe('justify', () => {
             it('should align justify', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p>c[]d</p>',

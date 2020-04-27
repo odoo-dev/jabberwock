@@ -1,5 +1,6 @@
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('VRange', () => {
     describe('split', () => {
@@ -9,7 +10,9 @@ describe('VRange', () => {
                 stepFunction: async (editor: BasicEditor) => {
                     editor.dispatcher.registerCommand('refresh', { handler: () => {} });
                     const nodes = editor.selection.range.split();
-                    editor.vDocument.root.lastChild().after(nodes[0]);
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+                    editable.lastChild().after(nodes[0]);
                     await editor.execCommand('refresh');
                 },
                 contentAfter:

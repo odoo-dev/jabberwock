@@ -1,7 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 import { expect } from 'chai';
 import { EventBatch, NormalizedAction } from '../src/EventNormalizer';
-import { Direction } from '../src/VSelection';
+import { Direction } from '../../core/src/VSelection';
 import { defaultModifierKeys } from './EventNormalizer.test';
 import {
     testCallbackAfter,
@@ -5417,9 +5417,9 @@ describe('utils', () => {
                         {
                             type: 'setSelection',
                             domSelection: {
-                                anchorNode: ctx.editable,
+                                anchorNode: document.body,
                                 anchorOffset: 0,
-                                focusNode: ctx.editable,
+                                focusNode: document.body,
                                 focusOffset: 0,
                                 direction: Direction.FORWARD,
                             },
