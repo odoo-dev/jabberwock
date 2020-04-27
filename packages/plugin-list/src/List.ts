@@ -2,10 +2,10 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { ListNode, ListType } from './ListNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { CommandParams } from '../../core/src/Dispatcher';
-import { ListDomRenderer } from './ListDomRenderer';
-import { ListItemDomRenderer } from './ListItemDomRenderer';
-import { ListDomParser } from './ListDomParser';
-import { ListItemDomParser } from './ListItemDomParser';
+import { ListHtmlDomRenderer } from './ListHtmlDomRenderer';
+import { ListItemHtmlDomRenderer } from './ListItemHtmlDomRenderer';
+import { ListXmlDomParser } from './ListXmlDomParser';
+import { ListItemXmlDomParser } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
 import { IndentParams, OutdentParams } from '../../plugin-indent/src/Indent';
 import { CheckingContext } from '../../core/src/ContextManager';
@@ -58,8 +58,8 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         deleteForward: this.rejoin.bind(this),
     };
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
-        parsers: [ListDomParser, ListItemDomParser],
-        renderers: [ListItemDomRenderer, ListDomRenderer],
+        parsers: [ListXmlDomParser, ListItemXmlDomParser],
+        renderers: [ListItemHtmlDomRenderer, ListHtmlDomRenderer],
         shortcuts: [
             {
                 pattern: 'CTRL+SHIFT+<Digit7>',

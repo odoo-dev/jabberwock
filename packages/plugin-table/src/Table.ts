@@ -1,12 +1,12 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { TableDomParser } from './TableDomParser';
+import { TableXmlDomParser } from './TableXmlDomParser';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { TableRowDomParser } from './TableRowDomParser';
-import { TableCellDomParser } from './TableCellDomParser';
-import { TableDomRenderer } from './TableDomRenderer';
-import { TableRowDomRenderer } from './TableRowDomRenderer';
-import { TableCellDomRenderer } from './TableCellDomRenderer';
+import { TableRowXmlDomParser } from './TableRowXmlDomParser';
+import { TableCellXmlDomParser } from './TableCellXmlDomParser';
+import { TableHtmlDomRenderer } from './TableHtmlDomRenderer';
+import { TableRowHtmlDomRenderer } from './TableRowHtmlDomRenderer';
+import { TableCellHtmlDomRenderer } from './TableCellHtmlDomRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { TableCellNode } from './TableCellNode';
 import { CommandParams } from '../../core/src/Dispatcher';
@@ -18,8 +18,8 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 
 export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
-        parsers: [TableDomParser, TableRowDomParser, TableCellDomParser],
-        renderers: [TableDomRenderer, TableRowDomRenderer, TableCellDomRenderer],
+        parsers: [TableXmlDomParser, TableRowXmlDomParser, TableCellXmlDomParser],
+        renderers: [TableHtmlDomRenderer, TableRowHtmlDomRenderer, TableCellHtmlDomRenderer],
         shortcuts: [
             {
                 pattern: 'CTRL+<Slash>',

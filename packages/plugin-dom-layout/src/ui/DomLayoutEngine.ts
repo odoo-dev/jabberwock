@@ -35,7 +35,7 @@ export class DomLayoutEngine extends LayoutEngine {
         id: 'editor',
         render(editor: JWEditor): Promise<VNode[]> {
             const layout = '<jw-editor><t t-zone="main"/><t t-zone="default"/></jw-editor>';
-            return editor.plugins.get(Parser).parse('html', layout);
+            return editor.plugins.get(Parser).parse('text/html', layout);
         },
     };
 
@@ -218,7 +218,7 @@ export class DomLayoutEngine extends LayoutEngine {
     }
     async parseElement(element: HTMLElement): Promise<VNode[]> {
         const parser = this.editor.plugins.get(Parser);
-        const domParserEngine = parser.engines.dom as ParsingEngine<Node>;
+        const domParserEngine = parser.engines['dom/html'] as ParsingEngine<Node>;
         const parsedVNodes = await domParserEngine.parse(element);
 
         // Construct DOM map from the parsing in order to parse the selection.
@@ -540,11 +540,11 @@ export class DomLayoutEngine extends LayoutEngine {
     }
     private async _renderNode(node: VNode): Promise<Node[]> {
         const renderer = this.editor.plugins.get(Renderer);
-        const domRendererEngine = renderer.engines.dom as RenderingEngine<Node[]>;
+        const domRendererEngine = renderer.engines['dom/html'] as RenderingEngine<Node[]>;
 
         // Clear the rendering cache and update the rendering.
         domRendererEngine.renderings.clear();
-        const domNodes = await renderer.render<Node[]>('dom', node);
+        const domNodes = await domRendererEngine.render(node);
 
         // Put the rendered nodes into the map.
         let child = node.lastLeaf();

@@ -1,5 +1,5 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { HeadingDomParser } from './HeadingDomParser';
+import { HeadingXmlDomParser } from './HeadingXmlDomParser';
 import { HeadingNode } from './HeadingNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { VNode } from '../../core/src/VNodes/VNode';
@@ -29,7 +29,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         },
     };
     readonly loadables: Loadables<Parser & Keymap> = {
-        parsers: [HeadingDomParser],
+        parsers: [HeadingXmlDomParser],
         shortcuts: [0, 1, 2, 3, 4, 5, 6].map(level => {
             return {
                 pattern: 'CTRL+SHIFT+<Digit' + level + '>',

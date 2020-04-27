@@ -1,6 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { LinkDomParser } from './LinkDomParser';
+import { LinkXmlDomParser } from './LinkXmlDomParser';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from './LinkFormat';
@@ -37,7 +37,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         },
     };
     readonly loadables: Loadables<Parser & Keymap> = {
-        parsers: [LinkDomParser],
+        parsers: [LinkXmlDomParser],
         shortcuts: [
             {
                 pattern: 'CTRL+K',
