@@ -48,13 +48,15 @@ export class Dispatcher {
             // Call command handler.
             await command.handler(args);
 
-            // Call command hooks.
-            const hooks = this.commandHooks[commandId] || [];
-            const globalHooks = this.commandHooks['*'] || [];
-            for (const hookCallback of [...hooks, ...globalHooks]) {
-                await hookCallback(args, commandId);
-            }
+            await this._dispatchHooks(commandId, args);
         }
+    }
+
+    /**
+     * Trigger the dispatcher for a custom command.
+     */
+    async dispatchCustom(): Promise<void> {
+        return this._dispatchHooks('@custom');
     }
 
     /**
@@ -95,6 +97,17 @@ export class Dispatcher {
             if (index !== -1) {
                 this.commandHooks[id].splice(index, 1);
             }
+        }
+    }
+
+    /**
+     * Dispatch to all registred `commandHooks`.
+     */
+    private async _dispatchHooks(commandId: CommandIdentifier, args?): Promise<void> {
+        const hooks = this.commandHooks[commandId] || [];
+        const globalHooks = this.commandHooks['*'] || [];
+        for (const hookCallback of [...hooks, ...globalHooks]) {
+            await hookCallback(args, commandId);
         }
     }
 }
