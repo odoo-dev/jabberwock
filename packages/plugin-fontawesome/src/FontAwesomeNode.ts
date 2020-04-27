@@ -1,6 +1,6 @@
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
-import { FontAwesomeDomParser } from './FontAwesomeDomParser';
+import { FontAwesomeXmlDomParser } from './FontAwesomeXmlDomParser';
 
 export class FontAwesomeNode extends InlineNode {
     static readonly atomic = true;
@@ -19,7 +19,7 @@ export class FontAwesomeNode extends InlineNode {
         if (domNode.nodeType === Node.TEXT_NODE) {
             // We are targetting one of the invisible characters surrounding the
             // fontawesome node.
-            if (FontAwesomeDomParser.isFontAwesome(domNode.previousSibling)) {
+            if (FontAwesomeXmlDomParser.isFontAwesome(domNode.previousSibling)) {
                 // We are targetting the invisible character AFTER the
                 // fontawesome node.
                 if (offset === 0) {

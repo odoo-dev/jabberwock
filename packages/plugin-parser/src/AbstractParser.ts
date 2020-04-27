@@ -1,5 +1,5 @@
 import { VNode } from '../../core/src/VNodes/VNode';
-import { ParsingEngine, ParsingIdentifier, Parser } from './ParsingEngine';
+import { ParsingEngine, ParsingIdentifier, Parser, ParserConstructor } from './ParsingEngine';
 
 export abstract class AbstractParser<T = {}> implements Parser<T> {
     static id: ParsingIdentifier;
@@ -9,4 +9,8 @@ export abstract class AbstractParser<T = {}> implements Parser<T> {
     }
     predicate?: (item: T) => boolean;
     abstract async parse(item: T): Promise<VNode[]>;
+}
+
+export interface AbstractParser<T = {}> {
+    constructor: ParserConstructor<T>;
 }

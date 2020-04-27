@@ -4,7 +4,7 @@ import { Predicate, VNode } from '../../core/src/VNodes/VNode';
 import { Format } from './Format';
 
 export class InlineFormatDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom';
+    static id = 'dom/html';
     predicate: Predicate<boolean | VNode> = InlineNode;
     async render(node: InlineNode): Promise<Node[]> {
         const inline = await this.super.render(node);

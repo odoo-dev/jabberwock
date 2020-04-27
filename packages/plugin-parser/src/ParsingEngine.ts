@@ -1,17 +1,22 @@
 import JWEditor from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { Constructor } from '../../utils/src/utils';
 
 export type ParsingIdentifier = string;
 
 export interface Parser<T = {}> {
     predicate?: (item: T) => boolean;
     parse: (item: T) => Promise<VNode[]>;
+    constructor: ParserConstructor<T>;
 }
+export type ParserConstructor<T = {}> = {
+    new (...args): Parser<T>;
+    id: ParsingIdentifier;
+};
 
 export class ParsingEngine<T = {}> {
     static readonly id: ParsingIdentifier;
-    static defaultParser: Constructor<Parser>;
+    static readonly extends: ParsingIdentifier[] = [];
+    static readonly defaultParser: ParserConstructor;
     readonly editor: JWEditor;
     readonly parsers: Parser<T>[] = [];
     readonly parsingMap = new Map<T, VNode[]>();
@@ -20,7 +25,7 @@ export class ParsingEngine<T = {}> {
         this.editor = editor;
         const defaultParser = new this.constructor.defaultParser(this);
         if (defaultParser.predicate) {
-            throw `Default renderer cannot have a predicate.`;
+            throw new Error(`Default renderer cannot have a predicate.`);
         } else {
             this.parsers.push(defaultParser);
         }
@@ -35,8 +40,17 @@ export class ParsingEngine<T = {}> {
      *
      * @param ParserClass
      */
-    register(ParserClass: Constructor<Parser<T>>): void {
-        this.parsers.unshift(new ParserClass(this));
+    register(ParserClass: ParserConstructor<T>): void {
+        if (ParserClass.id === this.constructor.id) {
+            this.parsers.unshift(new ParserClass(this));
+        } else {
+            const supportedTypes = [this.constructor.id, ...this.constructor.extends];
+            const priorParserIds = supportedTypes.slice(0, supportedTypes.indexOf(ParserClass.id));
+            const postParserIndex = this.parsers.findIndex(
+                parser => !priorParserIds.includes(parser.constructor.id),
+            );
+            this.parsers.splice(postParserIndex, 0, new ParserClass(this));
+        }
     }
     /**
      * Parse items into the editor's virtual `VNode` representation.
@@ -77,12 +91,10 @@ export class ParsingEngine<T = {}> {
         return nodes;
     }
 }
-export type ParserConstructor<T = {}> = Constructor<Parser<T>> & {
-    id: ParsingIdentifier;
-};
 export type ParsingEngineConstructor<T = {}> = {
     new (...args: ConstructorParameters<typeof ParsingEngine>): ParsingEngine;
     id: ParsingIdentifier;
+    extends: ParsingIdentifier[];
     defaultParser: ParserConstructor<T>;
 };
 export interface ParsingEngine<T = {}> {

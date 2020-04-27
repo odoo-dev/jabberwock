@@ -1,6 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { FontAwesomeDomParser } from './FontAwesomeDomParser';
-import { FontAwesomeDomRenderer } from './FontAwesomeDomRenderer';
+import { FontAwesomeXmlDomParser } from './FontAwesomeXmlDomParser';
+import { FontAwesomeHtmlDomRenderer } from './FontAwesomeHtmlDomRenderer';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
@@ -17,7 +17,7 @@ import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/web
 
 export class FontAwesome<T extends JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer> = {
-        parsers: [FontAwesomeDomParser],
-        renderers: [FontAwesomeDomRenderer],
+        parsers: [FontAwesomeXmlDomParser],
+        renderers: [FontAwesomeHtmlDomRenderer],
     };
 }

@@ -6,7 +6,7 @@
         <t t-zone="status"/>
     </jw-footer>
     <t-dialog>
-        <t t-zone="float"/>
+        <t t-zone="dialog"/>
         <t t-zone="default"/>
     </t-dialog>
     <t t-zone="debug"/>

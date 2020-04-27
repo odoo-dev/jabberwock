@@ -2,9 +2,9 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CharNode } from './CharNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { CharFormatDomRenderer } from './CharFormatDomRenderer';
-import { CharDomRenderer } from './CharDomRenderer';
-import { CharDomParser } from './CharDomParser';
+import { CharFormatHtmlDomRenderer } from './CharFormatHtmlDomRenderer';
+import { CharHtmlDomRenderer } from './CharHtmlDomRenderer';
+import { CharXmlDomParser } from './CharXmlDomParser';
 import { Formats } from '../../plugin-inline/src/Formats';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
@@ -19,8 +19,8 @@ export interface InsertTextParams extends CommandParams {
 export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
     readonly loadables: Loadables<Parser & Renderer> = {
-        parsers: [CharDomParser],
-        renderers: [CharFormatDomRenderer, CharDomRenderer],
+        parsers: [CharXmlDomParser],
+        renderers: [CharFormatHtmlDomRenderer, CharHtmlDomRenderer],
     };
     commands = {
         insertText: {

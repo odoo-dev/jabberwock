@@ -1,6 +1,6 @@
 import JWEditor from '../packages/core/src/JWEditor';
 import { Parser } from '../packages/plugin-parser/src/Parser';
-import { Dom } from '../packages/plugin-dom/src/Dom';
+import { Html } from '../packages/plugin-html/src/Html';
 import { Char } from '../packages/plugin-char/src/Char';
 import { LineBreak } from '../packages/plugin-linebreak/src/LineBreak';
 import { Heading } from '../packages/plugin-heading/src/Heading';
@@ -33,7 +33,6 @@ import { Layout } from '../packages/plugin-layout/src/Layout';
 import { DomLayout } from '../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../packages/plugin-dom-editable/src/DomEditable';
 import { VNode } from '../packages/core/src/VNodes/VNode';
-import { ParsingEngine } from '../packages/plugin-parser/src/ParsingEngine';
 
 import template from './basicLayout.xml';
 import './basicLayout.css';
@@ -52,13 +51,8 @@ export class BasicEditor extends JWEditor {
                 [Renderer],
                 [Layout],
                 [Keymap],
-                [Dom],
-                [
-                    DomLayout,
-                    {
-                        templates: [{ template: template }],
-                    },
-                ],
+                [Html],
+                [DomLayout],
                 [DomEditable],
                 [Inline],
                 [Char],
@@ -90,10 +84,8 @@ export class BasicEditor extends JWEditor {
             components: [
                 {
                     id: 'editor',
-                    getNodes(editor: JWEditor): Promise<VNode[]> {
-                        const parser = editor.plugins.get(Parser);
-                        const htmlParserEngine = parser.engines.html as ParsingEngine<string>;
-                        return htmlParserEngine.parse(template);
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins.get(Parser).parse('text/html', template);
                     },
                 },
             ],
