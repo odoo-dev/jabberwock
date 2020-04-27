@@ -1,6 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { DomRenderingEngine } from '../../plugin-dom/src/DomRenderingEngine';
 import { PreNode } from './PreNode';
+import { nodeName } from '../../utils/src/utils';
 
 export class PreDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom';
@@ -36,13 +37,13 @@ export class PreDomRenderer extends AbstractRenderer<Node[]> {
             // another <br>, added just to make the first one visible).
             const last = domNodes[domNodes.length - 1];
             const penultimate = domNodes[domNodes.length - 2];
-            if (last.nodeName === 'BR' && penultimate.nodeName === 'BR') {
+            if (nodeName(last) === 'BR' && nodeName(penultimate) === 'BR') {
                 domNodes.pop();
             }
         }
         let domNodeIndex = 0;
         for (const domNode of domNodes) {
-            if (domNode.nodeName === 'BR') {
+            if (nodeName(domNode) === 'BR') {
                 // Replace every <br> with a newline.
                 domNodes.splice(domNodeIndex, 1, document.createTextNode('\n'));
             }

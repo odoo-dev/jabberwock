@@ -1,13 +1,14 @@
 import { PreNode } from './PreNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { nodeName } from '../../utils/src/utils';
 
 export class PreDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.tagName === 'PRE';
+        return item instanceof Element && nodeName(item) === 'PRE';
     };
 
     async parse(item: Element): Promise<PreNode[]> {

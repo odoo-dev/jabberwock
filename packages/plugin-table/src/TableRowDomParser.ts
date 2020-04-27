@@ -8,7 +8,8 @@ export class TableRowDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): item is Element => {
-        return nodeName(item) === 'THEAD' || nodeName(item) === 'TBODY' || nodeName(item) === 'TR';
+        const name = nodeName(item);
+        return name === 'THEAD' || name === 'TBODY' || name === 'TR';
     };
 
     /**
@@ -48,9 +49,10 @@ export class TableRowDomParser extends AbstractParser<Node> {
 
         // Apply the attributes and `header` property of the container to each
         // row.
+        const name = nodeName(tableSection);
         for (const parsedNode of parsedNodes) {
             if (parsedNode.is(TableRowNode)) {
-                parsedNode.header = nodeName(tableSection) === 'THEAD';
+                parsedNode.header = name === 'THEAD';
                 parsedNode.attributes['table-section-attributes'] = containerAttributes;
             }
         }
@@ -67,6 +69,7 @@ export class TableRowDomParser extends AbstractParser<Node> {
      * @param item
      */
     _isTableSection(item: Node): item is HTMLTableSectionElement {
-        return nodeName(item) === 'THEAD' || nodeName(item) === 'TBODY';
+        const name = nodeName(item);
+        return name === 'THEAD' || name === 'TBODY';
     }
 }
