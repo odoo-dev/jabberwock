@@ -281,6 +281,16 @@ export class JWEditor {
     }
 
     /**
+     * Execute arbitrary code in `callback`, then dispatch the event.
+     */
+    async execCustomCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        callback: () => Promise<void>,
+    ): Promise<void> {
+        await callback();
+        await this.dispatcher.dispatchCustom();
+    }
+
+    /**
      * Stop this editor instance.
      */
     async stop(): Promise<void> {

@@ -2,6 +2,9 @@ import JWEditor, { Mode } from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
 import { ModeError } from '../../utils/src/errors';
+import { testEditor } from '../../utils/src/testUtils';
+import { BasicEditor } from '../../../bundles/BasicEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -223,6 +226,24 @@ describe('core', () => {
                     ]);
                     const c = editor.plugins.get(C);
                     expect((c.configuration as LocalConfig).toto).to.eql(3);
+                });
+            });
+        });
+        describe('execCustomCommand', () => {
+            it('should execute a custom command and trigger plugins', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>ab[]</div>',
+                    stepFunction: async editor => {
+                        await editor.execCustomCommand(async () => {
+                            const layout = editor.plugins.get(Layout);
+                            const domEngine = layout.engines.dom;
+                            domEngine.components
+                                .get('editable')[0]
+                                .firstLeaf()
+                                .remove();
+                        });
+                    },
+                    contentAfter: '<div>b[]</div>',
                 });
             });
         });
