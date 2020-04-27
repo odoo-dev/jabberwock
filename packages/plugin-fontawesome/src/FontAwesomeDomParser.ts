@@ -1,6 +1,7 @@
 import { FontAwesomeNode } from './FontAwesomeNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { nodeName } from '../../utils/src/utils';
 
 export const FontAwesomeRegex = /(^|[\s*\n*])fa[bdlrs]?[\s*\n*$]/;
 
@@ -13,7 +14,7 @@ export class FontAwesomeDomParser extends AbstractParser<Node> {
     };
 
     async parse(item: Element): Promise<FontAwesomeNode[]> {
-        const fontawesome = new FontAwesomeNode(item.nodeName);
+        const fontawesome = new FontAwesomeNode(nodeName(item));
         fontawesome.attributes = this.engine.parseAttributes(item);
         return [fontawesome];
     }

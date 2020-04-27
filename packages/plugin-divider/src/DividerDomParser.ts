@@ -1,13 +1,14 @@
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { DividerNode } from './DividerNode';
+import { nodeName } from '../../utils/src/utils';
 
 export class DividerDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.tagName === 'DIV';
+        return item instanceof Element && nodeName(item) === 'DIV';
     };
 
     async parse(item: Element): Promise<DividerNode[]> {

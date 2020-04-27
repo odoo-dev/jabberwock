@@ -51,6 +51,7 @@ export class TableDomRenderer extends AbstractRenderer<Node[]> {
      * @param item
      */
     _isTableSection(item: Node): item is HTMLTableSectionElement {
-        return nodeName(item) === 'THEAD' || nodeName(item) === 'TBODY';
+        const name = nodeName(item);
+        return name === 'THEAD' || name === 'TBODY';
     }
 }

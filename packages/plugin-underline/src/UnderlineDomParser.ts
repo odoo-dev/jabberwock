@@ -2,13 +2,14 @@ import { FormatParser } from '../../plugin-inline/src/FormatParser';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { UnderlineFormat } from './UnderlineFormat';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { nodeName } from '../../utils/src/utils';
 
 export class UnderlineDomParser extends FormatParser {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.tagName === 'U';
+        return item instanceof Element && nodeName(item) === 'U';
     };
 
     /**

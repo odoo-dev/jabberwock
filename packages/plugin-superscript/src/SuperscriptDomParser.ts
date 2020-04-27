@@ -2,13 +2,14 @@ import { FormatParser } from '../../plugin-inline/src/FormatParser';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { SuperscriptFormat } from './SuperscriptFormat';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
+import { nodeName } from '../../utils/src/utils';
 
 export class SuperscriptDomParser extends FormatParser {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.tagName === 'SUP';
+        return item instanceof Element && nodeName(item) === 'SUP';
     };
 
     /**

@@ -2,13 +2,14 @@ import { LineBreakNode } from './LineBreakNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { isBlock } from '../../utils/src/isBlock';
+import { nodeName } from '../../utils/src/utils';
 
 export class LineBreakDomParser extends AbstractParser<Node> {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.tagName === 'BR';
+        return item instanceof Element && nodeName(item) === 'BR';
     };
 
     async parse(item: Element): Promise<LineBreakNode[]> {

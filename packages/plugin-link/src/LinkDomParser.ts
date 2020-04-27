@@ -2,13 +2,14 @@ import { FormatParser } from '../../plugin-inline/src/FormatParser';
 import { DomParsingEngine } from '../../plugin-dom/src/DomParsingEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LinkFormat } from './LinkFormat';
+import { nodeName } from '../../utils/src/utils';
 
 export class LinkDomParser extends FormatParser {
     static id = 'dom';
     engine: DomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && item.tagName === 'A';
+        return item instanceof Element && nodeName(item) === 'A';
     };
 
     async parse(item: Element): Promise<VNode[]> {

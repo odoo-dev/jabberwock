@@ -8,7 +8,8 @@ export class TableCellDomParser extends AbstractParser<Node> {
     engine: DomParsingEngine;
 
     predicate = (item: Node): item is HTMLTableCellElement => {
-        return nodeName(item) === 'TD' || nodeName(item) === 'TH';
+        const name = nodeName(item);
+        return name === 'TD' || name === 'TH';
     };
 
     /**
