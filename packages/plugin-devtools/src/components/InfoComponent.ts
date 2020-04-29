@@ -1,4 +1,4 @@
-import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../../core/src/VNodes/AtomicNode';
 import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';

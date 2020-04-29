@@ -1,8 +1,11 @@
-import JWEditor from '../../core/src/JWEditor';
-import { OwlUI } from '../../owl-ui/src/OwlUI';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { ToolbarUI } from './ToolbarUI';
 import { CommandIdentifier, CommandParams } from '../../core/src/Dispatcher';
+import { Owl } from '../../plugin-owl/src/Owl';
+import { ToolbarComponent } from './components/ToolbarComponent';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
+
 import '!style-loader!css-loader!@fortawesome/fontawesome-free/css/all.css';
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff';
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2';
@@ -13,6 +16,9 @@ import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/web
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff';
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2';
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf';
+
+import toolbarTemplates from '../assets/Toolbar.xml';
+import '../assets/Toolbar.css';
 
 export interface Button {
     title: string;
@@ -31,18 +37,17 @@ export interface ToolbarConfig extends JWPluginConfig {
 }
 
 export class Toolbar<T extends ToolbarConfig = {}> extends JWPlugin<T> {
-    ui = new OwlUI(this.editor);
-    /**
-     * Start the ui when the editor stops.
-     */
-    async start(): Promise<void> {
-        this.ui.addPlugin(ToolbarUI);
-        await this.ui.start();
-    }
-    /**
-     * Stop the ui when the editor stops.
-     */
-    async stop(): Promise<void> {
-        await this.ui.stop();
-    }
+    static dependencies = [Owl];
+    readonly loadables: Loadables<Layout & Owl> = {
+        components: [
+            {
+                id: 'toolbar',
+                async render(): Promise<OwlNode[]> {
+                    return [new OwlNode(ToolbarComponent, {})];
+                },
+            },
+        ],
+        componentZones: [['toolbar', 'tools']],
+        owlTemplates: [toolbarTemplates],
+    };
 }

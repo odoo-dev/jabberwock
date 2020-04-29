@@ -1,8 +1,8 @@
-import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 import { Toolbar, ToolbarLayout, Button, ToolbarItem } from '../Toolbar';
+import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 
-export class ToolbarComponent extends OwlUIComponent<{}> {
+export class ToolbarComponent<T = {}> extends OwlComponent<T> {
     static components = {};
     static template = 'toolbar';
     config: ToolbarLayout = this.env.editor.plugins.get(Toolbar).configuration.layout || [];

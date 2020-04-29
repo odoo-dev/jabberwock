@@ -1,8 +1,13 @@
 import { Component } from '@odoo/owl';
 import { useState } from '@odoo/owl';
-import { OwlUIEnv } from './OwlUI';
+import { Env } from '@odoo/owl/dist/types/component/component';
+import JWEditor from '../../../core/src/JWEditor';
 
-export class OwlUIComponent<Props> extends Component<Props, OwlUIEnv> {
+export interface OwlEnv extends Env {
+    editor: JWEditor;
+}
+
+export class OwlComponent<Props> extends Component<Props, OwlEnv> {
     state: {};
 
     _storageKeyPrefix = 'OwlUI' + this.constructor.name + ':';

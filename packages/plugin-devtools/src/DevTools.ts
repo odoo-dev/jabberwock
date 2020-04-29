@@ -1,20 +1,27 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { OwlUI } from '../../owl-ui/src/OwlUI';
-import { DevToolsUI } from './DevToolsUI';
+import { Owl } from '../../owl-ui/src/OwlPlugin';
+import { OwlNode } from '../../owl-ui/src/ui/OwlNode';
+import { DevToolsComponent } from './components/DevToolsComponent';
+import { Dom } from '../../plugin-dom/src/Dom';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import { Loadables } from '../../core/src/JWEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
+
+import devtoolsTemplates from '../assets/DevTools.xml';
+import '../assets/DevTools.css';
 
 export class DevTools<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    ui = new OwlUI(this.editor);
-    /**
-     * Start the ui when the editor stops.
-     */
-    async start(): Promise<void> {
-        this.ui.addPlugin(DevToolsUI);
-        await this.ui.start();
-    }
-    /**
-     * Stop the ui when the editor stops.
-     */
-    async stop(): Promise<void> {
-        await this.ui.stop();
-    }
+    static dependencies = [Owl, Dom, DomLayout];
+    readonly loadables: Loadables<Layout & Owl> = {
+        components: [
+            {
+                id: 'devTools',
+                async render(): Promise<OwlNode[]> {
+                    return [new OwlNode(DevToolsComponent, {})];
+                },
+            },
+        ],
+        componentZones: [['devTools', 'debug']],
+        owlTemplates: [devtoolsTemplates],
+    };
 }
