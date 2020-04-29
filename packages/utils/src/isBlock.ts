@@ -1,3 +1,5 @@
+import { nodeName } from './utils';
+
 /**
  * The following is a complete list of all HTML "block-level" elements.
  *
@@ -57,6 +59,11 @@ const computedStyles = new WeakMap<Node, CSSStyleDeclaration>();
 export function isBlock(node: Node): boolean {
     let result: boolean;
     if (node instanceof Element) {
+        const tagName = nodeName(node);
+        // every custom jw-* node will be considered as blocks
+        if (tagName.startsWith('JW-') || tagName === 'T') {
+            return true;
+        }
         // We won't call `getComputedStyle` more than once per node.
         let style = computedStyles.get(node);
         if (!style) {
@@ -66,7 +73,7 @@ export function isBlock(node: Node): boolean {
         if (style.display) {
             result = !style.display.includes('inline') && style.display !== 'contents';
         } else {
-            result = blockTagNames.includes(node.tagName);
+            result = blockTagNames.includes(tagName);
         }
     } else {
         result = false;

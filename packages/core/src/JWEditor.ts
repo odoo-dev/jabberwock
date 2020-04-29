@@ -1,10 +1,6 @@
-import { Dispatcher, CommandIdentifier } from './Dispatcher';
-import { EventManager } from './EventManager';
+import { Dispatcher } from './Dispatcher';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
-import { VDocument } from './VDocument';
 import { Core } from './Core';
-import { Dom } from '../../plugin-dom/src/Dom';
-import { FragmentNode } from './VNodes/FragmentNode';
 import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
@@ -49,9 +45,7 @@ export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
 
 export class JWEditor {
     private _mode: Mode = Mode.CONFIGURATION;
-    el: HTMLElement;
     dispatcher: Dispatcher;
-    eventManager: EventManager;
     contextManager: ContextManager;
     plugins: PluginMap = new Map();
     configuration: JWEditorConfig = {
@@ -63,13 +57,11 @@ export class JWEditor {
         plugins: [],
         loadables: {},
     };
-    vDocument: VDocument;
     selection = new VSelection();
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
 
     constructor() {
-        this.el = document.createElement('jw-editor');
         this.dispatcher = new Dispatcher(this);
         this.plugins = new Map();
         this.contextManager = new ContextManager(this);
@@ -102,20 +94,8 @@ export class JWEditor {
             }
         }
 
-        this.vDocument = new VDocument(new FragmentNode());
-
-        document.body.prepend(this.el);
-
         for (const plugin of this.plugins.values()) {
             await plugin.start();
-        }
-
-        // Init the event manager now that the cloned editable is in the DOM.
-        const domPlugin = this.plugins.get(Dom);
-        if (domPlugin) {
-            // Attach the keymap listener to the editable.
-            domPlugin.editable.addEventListener('keydown', this.processKeydown.bind(this));
-            this.eventManager = new EventManager(this, domPlugin);
         }
     }
 
@@ -307,36 +287,9 @@ export class JWEditor {
         for (const plugin of this.plugins.values()) {
             await plugin.stop();
         }
-        this.eventManager.stop();
-        this.el.remove();
+        // Clear loaders.
+        this.loaders = {};
         this._mode = Mode.CONFIGURATION;
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * KeyboardEvent listener to be added to the DOM that calls `execCommand` if
-     * the keys pressed match one of the shortcut registered in the keymap.
-     *
-     * @param event
-     */
-    async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
-        const keymap = this.plugins.get(Keymap);
-        const commands = keymap.match(event);
-        const [command, context] = this.contextManager.match(commands);
-        if (command && command.commandId) {
-            const params = { context, ...command.commandArgs };
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            this.eventManager.eventNormalizer.initNextObservation();
-            this.nextEventMutex(() => {
-                return this.execCommand(command.commandId, params);
-            });
-            return command.commandId;
-        }
     }
 }
 

@@ -1,7 +1,7 @@
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
-import { VSelectionDescription, Direction } from './VSelection';
+import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 
 export type InsertParagraphBreakParams = CommandParams;
@@ -34,9 +34,6 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         deleteForward: {
             handler: this.deleteForward,
         },
-        selectAll: {
-            handler: this.selectAll,
-        },
     };
 
     //--------------------------------------------------------------------------
@@ -66,7 +63,11 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      * @param params
      */
     insert(params: InsertParams): void {
-        this.editor.vDocument.insert(params.node, params.context.range);
+        // Remove the contents of the range if needed.
+        if (!params.context.range.isCollapsed()) {
+            params.context.range.empty();
+        }
+        params.context.range.start.before(params.node);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
@@ -135,19 +136,5 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     setSelection(params: VSelectionParams): void {
         this.editor.selection.set(params.vSelection);
-    }
-    /**
-     * Update the selection in such a way that it selects the entire document.
-     *
-     * @param params
-     */
-    selectAll(): void {
-        this.editor.selection.set({
-            anchorNode: this.editor.vDocument.root.firstLeaf(),
-            anchorPosition: RelativePosition.BEFORE,
-            focusNode: this.editor.vDocument.root.lastLeaf(),
-            focusPosition: RelativePosition.AFTER,
-            direction: Direction.FORWARD,
-        });
     }
 }

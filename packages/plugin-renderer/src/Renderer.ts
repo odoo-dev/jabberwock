@@ -30,7 +30,7 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
             if (this.engines[id]) {
                 throw new Error(`Rendering engine ${id} already registered.`);
             }
-            const engine = new EngineClass(this);
+            const engine = new EngineClass(this.editor);
             this.engines[id] = engine;
         }
     }

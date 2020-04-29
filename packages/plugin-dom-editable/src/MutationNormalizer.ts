@@ -13,11 +13,6 @@ interface CharactersMapping {
 
 export class MutationNormalizer {
     /**
-     * HTML element that represents the editable zone. Only events happening
-     * inside the editable zone are subject to normalization.
-     */
-    editable: HTMLElement;
-    /**
      * The MutationObserver used by the normalizer to watch the nodes that are
      * being modified since the normalizer creation until it is drestroyed.
      */
@@ -26,9 +21,9 @@ export class MutationNormalizer {
     _listen: boolean;
     _mutations: MutationRecord[];
 
-    constructor(editable: HTMLElement) {
+    constructor() {
         this._observer = new MutationObserver(this._onMutation.bind(this));
-        this._observer.observe(editable, {
+        this._observer.observe(document, {
             characterDataOldValue: true, // add old text value on changes
             characterData: true, // monitor text content changes
             childList: true, // monitor child nodes addition or removal
@@ -327,12 +322,18 @@ export class MutationNormalizer {
             if (obj.nodes.length) {
                 const charParented = new Set();
                 let node = charMutation.target;
-                while (node && node !== this.editable) {
+                while (
+                    node &&
+                    (!(node instanceof Element) || !node.getAttribute('contentEditable'))
+                ) {
                     charParented.add(node);
                     node = node.parentNode;
                 }
                 let first = obj.nodes[0];
-                while (first && first !== this.editable) {
+                while (
+                    first &&
+                    (!(first instanceof Element) || !first.getAttribute('contentEditable'))
+                ) {
                     if (charParented.has(first.previousSibling)) {
                         obj.chars = charMutation[type] + obj.chars;
                         obj.nodes.unshift(...new Array(len).fill(charMutation.target));

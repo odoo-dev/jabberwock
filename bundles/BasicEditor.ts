@@ -29,6 +29,14 @@ import { Align } from '../packages/plugin-align/src/Align';
 import { Pre } from '../packages/plugin-pre/src/Pre';
 import { TextColor } from '../packages/plugin-textcolor/src/TextColor';
 import { BackgroundColor } from '../packages/plugin-backgroundcolor/src/BackgroundColor';
+import { Layout } from '../packages/plugin-layout/src/Layout';
+import { DomLayout } from '../packages/plugin-dom-layout/src/DomLayout';
+import { DomEditable } from '../packages/plugin-dom-editable/src/DomEditable';
+import { VNode } from '../packages/core/src/VNodes/VNode';
+import { ParsingEngine } from '../packages/plugin-parser/src/ParsingEngine';
+
+import template from './basicLayout.xml';
+import './basicLayout.css';
 
 export class BasicEditor extends JWEditor {
     constructor() {
@@ -42,8 +50,16 @@ export class BasicEditor extends JWEditor {
             plugins: [
                 [Parser],
                 [Renderer],
+                [Layout],
                 [Keymap],
                 [Dom],
+                [
+                    DomLayout,
+                    {
+                        templates: [{ template: template }],
+                    },
+                ],
+                [DomEditable],
                 [Inline],
                 [Char],
                 [LineBreak],
@@ -69,6 +85,19 @@ export class BasicEditor extends JWEditor {
                 [TextColor],
                 [BackgroundColor],
             ],
+        });
+        this.configure(DomLayout, {
+            components: [
+                {
+                    id: 'editor',
+                    getNodes(editor: JWEditor): Promise<VNode[]> {
+                        const parser = editor.plugins.get(Parser);
+                        const htmlParserEngine = parser.engines.html as ParsingEngine<string>;
+                        return htmlParserEngine.parse(template);
+                    },
+                },
+            ],
+            componentZones: [['editor', 'root']],
         });
     }
 }

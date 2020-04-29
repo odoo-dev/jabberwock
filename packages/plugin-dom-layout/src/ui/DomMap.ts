@@ -1,70 +1,23 @@
-import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
+import { VNode } from '../../../core/src/VNodes/VNode';
+import { LayoutContainer } from './LayoutContainerNode';
+
+export type DomPoint = [Node, number];
 
 export class DomMap {
-    _fromDom = new Map<Node, VNode[]>();
-    _toDom = new Map<VNode, [Node, number][]>();
-
-    /**
-     * Clear the map of all correspondances.
-     */
-    clear(): void {
-        this._fromDom.clear();
-        this._toDom.clear();
-    }
-    /**
-     * Return the VNode(s) corresponding to the given DOM Node.
-     *
-     * @param Node
-     */
-    fromDom(domNode: Node): VNode[] {
-        return this._fromDom.get(domNode);
-    }
-    /**
-     * Return the DOM Node corresponding to the given VNode.
-     *
-     * @param node
-     */
-    toDom(node: VNode): [Node, number][] {
-        return this._toDom.get(node);
-    }
-    /**
-     * Return the DOM location corresponding to the given VNode as a tuple
-     * containing a reference DOM Node and the offset of the DOM Node
-     * corresponding to the given VNode within the reference DOM Node.
-     * If the given position is "before", the reference DOM Node is the first
-     * DOM node matching the given VNode.
-     * If the given position is "after", the reference DOM Node is the last DOM
-     * node matching the given VNode.
-     *
-     * @param node
-     * @param position
-     */
-    toDomLocation(node: VNode, position: RelativePosition): [Node, number] {
-        const locations = this._toDom.get(node);
-        const locationIndex = position === RelativePosition.BEFORE ? 0 : locations.length - 1;
-        let [domNode, offset] = locations[locationIndex];
-        if (domNode.nodeType === Node.TEXT_NODE && offset === -1) {
-            // This -1 is a hack to accomodate the VDocumentMap to the new
-            // rendering process without altering it for the parser.
-            return [domNode, this._fromDom.get(domNode).indexOf(node)];
-        } else {
-            // Char nodes have their offset in the corresponding text nodes
-            // registered in the map via `set` but other nodes don't. Their
-            // location need to be computed with respect to their parents.
-            const container = domNode.parentNode;
-            offset = Array.prototype.indexOf.call(container.childNodes, domNode);
-            domNode = container;
-        }
-        return [domNode, offset];
-    }
+    private readonly _fromDom = new Map<Node, VNode[]>();
+    private readonly _toDom = new Map<VNode, DomPoint[]>();
     /**
      * Map the given VNode to its corresponding DOM Node and its offset in it.
      *
-     * @param domNode
      * @param node
-     * @param [offset]
+     * @param domNode
+     * @param offset
+     * @param method
      */
     set(node: VNode, domNode: Node, offset = 0, method = 'push'): void {
+        if (node instanceof LayoutContainer) {
+            return;
+        }
         if (this._fromDom.has(domNode)) {
             const matches = this._fromDom.get(domNode);
             if (!matches.some((match: VNode) => match.id === node.id)) {
@@ -76,12 +29,64 @@ export class DomMap {
         const locations = this._toDom.get(node) || [];
         locations.push([domNode, offset]);
         this._toDom.set(node, locations);
+
+        // Set children.
+        for (const renderedChild of domNode.childNodes) {
+            const mapping = this.toDomPoint(node);
+            if (!mapping) {
+                this.set(node, renderedChild, -1, 'unshift');
+            }
+        }
     }
     /**
-     * Log the content of the internal maps for debugging purposes.
+     * Return the VNode(s) corresponding to the given DOM Node.
+     *
+     * @param domNode
      */
-    _log(): void {
-        console.log(this._toDom);
-        console.log(this._fromDom);
+    fromDom(domNode: Node): VNode[] {
+        return this._fromDom.get(domNode);
+    }
+    /**
+     * Return the array of tuple (node, number) corresponding to the given VNode.
+     *
+     * @param node
+     */
+    toDomPoint(node: VNode): DomPoint[] {
+        return this._toDom.get(node) || [];
+    }
+    /**
+     * Return the DOM Node corresponding to the given VNode.
+     *
+     * @param node
+     */
+    toDom(node: VNode): Node[] {
+        const domNodes: Node[] = [];
+        for (const point of this._toDom.get(node) || []) {
+            domNodes.push(point[0]);
+        }
+        return domNodes;
+    }
+    /**
+     * Clear the map of all correspondances.
+     *
+     * @param [node]
+     */
+    clear(node?: VNode): void {
+        if (node) {
+            for (const point of this._toDom.get(node) || []) {
+                const nodes = this._fromDom.get(point[0]);
+                const index = nodes.indexOf(node);
+                if (index !== -1) {
+                    nodes.splice(index, 0);
+                }
+                if (nodes.length === 0) {
+                    this._fromDom.delete(point[0]);
+                }
+            }
+            this._toDom.delete(node);
+        } else {
+            this._fromDom.clear();
+            this._toDom.clear();
+        }
     }
 }

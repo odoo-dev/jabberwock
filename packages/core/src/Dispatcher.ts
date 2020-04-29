@@ -16,13 +16,11 @@ export type CommandHook = (params: CommandParams, commandId: string) => void;
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
-    el: Element;
     commands: Record<CommandIdentifier, CommandImplementation[]> = {};
     commandHooks: Record<CommandIdentifier, CommandHook[]> = {};
 
     constructor(editor: JWEditor) {
         this.editor = editor;
-        this.el = editor.el;
     }
 
     //--------------------------------------------------------------------------
