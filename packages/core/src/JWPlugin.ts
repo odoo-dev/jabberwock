@@ -12,7 +12,7 @@ export class JWPlugin<T extends JWPluginConfig = {}> {
     commands: Record<CommandIdentifier, CommandImplementation> = {};
     commandHooks: Record<CommandIdentifier, CommandHook> = {};
 
-    constructor(public editor: JWEditor, public configuration: T) {
+    constructor(public editor: JWEditor, public configuration: Partial<T> = {}) {
         // Populate instantiated dependencies.
         for (const Dependency of this.constructor.dependencies) {
             this.dependencies.set(Dependency, editor.plugins.get(Dependency));

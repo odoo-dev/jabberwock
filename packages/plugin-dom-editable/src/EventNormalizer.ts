@@ -370,11 +370,6 @@ type TriggerEventBatchCallback = (batch: Promise<EventBatch>) => void;
  */
 export class EventNormalizer {
     /**
-     * HTML element that represents the editable zone. Only events happening
-     * inside the editable zone are subject to normalization.
-     */
-    editable: HTMLElement;
-    /**
      * Event listeners that are bound in the DOM by the normalizer on creation
      * and unbound on destroy.
      */
@@ -392,10 +387,6 @@ export class EventNormalizer {
      * select all the `editable`
      */
     _followsPointerAction: boolean;
-    /**
-     * Callback function to trigger for each user action.
-     */
-    _triggerEventBatch: TriggerEventBatchCallback;
     /**
      * Whether the current state of the selection is already recognized as being
      * a "select all".
@@ -467,35 +458,40 @@ export class EventNormalizer {
      */
     _stackTimeout: Timeout<EventBatch>;
 
-    constructor(editable: HTMLElement, callback: TriggerEventBatchCallback) {
-        this.editable = editable;
-        this._triggerEventBatch = callback;
-
+    /**
+     *
+     * @param _isInEditable Callback to check if the node is in editable.
+     * @param _triggerEventBatch Callback to trigger for each user action.
+     */
+    constructor(
+        private _isInEditable: (node: Node) => boolean,
+        private _triggerEventBatch: TriggerEventBatchCallback,
+    ) {
         this.initNextObservation();
 
-        const document = this.editable.ownerDocument;
-        this._bindEvent(editable, 'compositionstart', this._registerEvent);
-        this._bindEvent(editable, 'compositionupdate', this._registerEvent);
-        this._bindEvent(editable, 'compositionend', this._registerEvent);
-        this._bindEvent(editable, 'beforeinput', this._registerEvent);
-        this._bindEvent(editable, 'input', this._registerEvent);
+        // const document = this.editable.ownerDocument;
+        this._bindEventInEditable(document, 'compositionstart', this._registerEvent);
+        this._bindEventInEditable(document, 'compositionupdate', this._registerEvent);
+        this._bindEventInEditable(document, 'compositionend', this._registerEvent);
+        this._bindEventInEditable(document, 'beforeinput', this._registerEvent);
+        this._bindEventInEditable(document, 'input', this._registerEvent);
 
         this._bindEvent(document, 'selectionchange', this._onSelectionChange);
-        this._bindEvent(editable, 'contextmenu', this._onContextMenu);
+        this._bindEventInEditable(document, 'contextmenu', this._onContextMenu);
         this._bindEvent(document, 'mousedown', this._onPointerDown);
         this._bindEvent(document, 'touchstart', this._onPointerDown);
         this._bindEvent(document, 'mouseup', this._onPointerUp);
         this._bindEvent(document, 'touchend', this._onPointerUp);
-        this._bindEvent(editable, 'keydown', this._onKeyDownOrKeyPress);
-        this._bindEvent(editable, 'keypress', this._onKeyDownOrKeyPress);
+        this._bindEventInEditable(document, 'keydown', this._onKeyDownOrKeyPress);
+        this._bindEventInEditable(document, 'keypress', this._onKeyDownOrKeyPress);
         this._bindEvent(document, 'onkeyup', this._updateModifiersKeys);
 
-        this._bindEvent(editable, 'cut', this._onClipboard);
-        this._bindEvent(editable, 'paste', this._onClipboard);
-        this._bindEvent(editable, 'dragstart', this._onDragStart);
-        this._bindEvent(editable, 'drop', this._onDrop);
+        this._bindEventInEditable(document, 'cut', this._onClipboard);
+        this._bindEventInEditable(document, 'paste', this._onClipboard);
+        this._bindEventInEditable(document, 'dragstart', this._onDragStart);
+        this._bindEventInEditable(document, 'drop', this._onDrop);
 
-        this._mutationNormalizer = new MutationNormalizer(editable);
+        this._mutationNormalizer = new MutationNormalizer();
     }
     /**
      * Called when destroy the event normalizer.
@@ -528,6 +524,23 @@ export class EventNormalizer {
             listener: boundListener,
         });
         target.addEventListener(type, boundListener, false);
+    }
+    /**
+     * Filter event from editable.
+     *
+     * @see _bindEvent
+     *
+     * @param target element on which to listen for events
+     * @param type of the event to listen
+     * @param listener to call when the even occurs on the target
+     */
+    _bindEventInEditable(target: EventTarget, type: string, listener: Function): void {
+        const boundListener = (ev: EventToProcess): void => {
+            if (!('target' in ev) || this._isInEditable(ev.target as Node)) {
+                listener.call(this, ev);
+            }
+        };
+        this._bindEvent(target, type, boundListener);
     }
     /**
      * Unbind all events bound by calls to _bindEvent.
@@ -938,7 +951,7 @@ export class EventNormalizer {
     _getDropActions(ev: DataTransferDetails): (DeleteContentAction | SetSelectionAction)[] {
         const actions = [];
         if (ev.draggingFromEditable && !ev.files.length) {
-            const selection = this.editable.ownerDocument.getSelection();
+            const selection = document.getSelection();
             if (!selection.isCollapsed) {
                 const deleteContentAction: DeleteContentAction = {
                     type: 'deleteContent',
@@ -1293,15 +1306,15 @@ export class EventNormalizer {
      */
     _getSelection(ev?: MouseEvent | TouchEvent): DomSelectionDescription {
         let selectionDescription: DomSelectionDescription;
-        const selection = this.editable.ownerDocument.getSelection();
+        const selection = document.getSelection();
 
         let forward: boolean;
         if (!selection || selection.rangeCount === 0) {
             // No selection in the DOM. Create a fake one.
             selectionDescription = {
-                anchorNode: this.editable,
+                anchorNode: document.body,
                 anchorOffset: 0,
-                focusNode: this.editable,
+                focusNode: document.body,
                 focusOffset: 0,
                 direction: Direction.FORWARD,
             };
@@ -1360,7 +1373,7 @@ export class EventNormalizer {
         let startOffset = selection.anchorOffset;
         let endContainer = selection.focusNode;
         let endOffset = selection.focusOffset;
-        const body = this.editable.ownerDocument.body;
+        const body = document.body;
         // The selection might still be on a node which has since been removed.
         const invalidStart = !startContainer || !body.contains(startContainer);
         const invalidEnd = !endContainer || !body.contains(endContainer);
@@ -1389,10 +1402,11 @@ export class EventNormalizer {
         }
 
         // Look for visible nodes in editable that would be outside the selection.
-        return (
-            this._isAtVisibleEdge(startContainer, 'start') &&
-            this._isAtVisibleEdge(endContainer, 'end')
-        );
+        const startInside = this._isInEditable(startContainer);
+        const endInside = this._isInEditable(endContainer);
+        const startEdge = startInside && this._isAtVisibleEdge(startContainer, 'start');
+        const endEdge = endInside && this._isAtVisibleEdge(endContainer, 'end');
+        return (startEdge && endEdge) || (startEdge && !endInside) || (!startInside && endEdge);
     }
     /**
      * Return true if the given element is at the edge of the editable node in
@@ -1400,22 +1414,25 @@ export class EventNormalizer {
      * node if there is no other visible element in editable that is located
      * beyond it in the given direction.
      *
-     * @param element to check whether it is at the visible edge
+     * @param node to check whether it is at the visible edge
      * @param side from which to look for textual nodes ('start' or 'end')
      */
-    _isAtVisibleEdge(element: Node, side: 'start' | 'end'): boolean {
+    _isAtVisibleEdge(node: Node, side: 'start' | 'end'): boolean {
+        const element = node instanceof Element ? node : node.parentElement;
+        const editable: Element = element.closest('[contentEditable=true]');
+
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
-        let currentNode: Node = this.editable;
+        let currentNode: Node = editable;
         const child = side === 'start' ? 'firstChild' : 'lastChild';
         const sibling = side === 'start' ? 'nextSibling' : 'previousSibling';
         let crossVisible = false;
         while (currentNode) {
-            if (currentNode === element) {
+            if (currentNode === node) {
                 // The element was reached without finding another visible node.
                 return !crossVisible;
             }
-            if (this._isTextualNode(currentNode) && this._isVisible(currentNode)) {
+            if (this._isTextualNode(currentNode) && this._isVisible(currentNode, editable)) {
                 // There is a textual node in editable beyond the given element.
                 crossVisible = true;
             }
@@ -1424,7 +1441,7 @@ export class EventNormalizer {
                 currentNode = currentNode[child];
             } else if (currentNode[sibling]) {
                 currentNode = currentNode[sibling];
-            } else if (currentNode.parentNode === this.editable) {
+            } else if (currentNode.parentNode === editable) {
                 // Depth-first search has checked all elements in editable.
                 return true;
             } else {
@@ -1436,11 +1453,11 @@ export class EventNormalizer {
     /**
      * Determine if a node is considered visible.
      */
-    _isVisible(el: Node): boolean {
+    _isVisible(el: Node, editable: Element): boolean {
         if (el === document) {
             return false;
         }
-        if (el === this.editable) {
+        if (el === editable) {
             // The editable node was reached without encountering a hidden
             // container. The editable node is supposed to be visible.
             return true;
@@ -1454,13 +1471,13 @@ export class EventNormalizer {
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
-        return this._isVisible(el.parentNode);
+        return this._isVisible(el.parentNode, editable);
     }
     _getEventCaretPosition(ev: MouseEvent | TouchEvent): CaretPosition {
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);
-        if (!this.editable.contains(caretPosition.offsetNode)) {
+        if (!this._isInEditable(caretPosition.offsetNode)) {
             caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
         return caretPosition;
@@ -1522,7 +1539,7 @@ export class EventNormalizer {
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        if (ev.target instanceof Element && this.editable.contains(ev.target)) {
+        if (ev.target instanceof Element && this._isInEditable(ev.target)) {
             this._mousedownInEditable = true;
             this._initialCaretPosition = this._getEventCaretPosition(ev);
             this._selectionHasChanged = false;

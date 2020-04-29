@@ -1,0 +1,13 @@
+<jw-editor>
+    <t t-zone="range"/>
+    <jw-header><t t-zone="tools"/></jw-header>
+    <jw-body><t t-zone="main"/></jw-body>
+    <jw-footer>
+        <t t-zone="status"/>
+    </jw-footer>
+    <t-dialog>
+        <t t-zone="float"/>
+        <t t-zone="default"/>
+    </t-dialog>
+    <t t-zone="debug"/>
+</jw-editor>

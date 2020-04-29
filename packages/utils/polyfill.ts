@@ -1,4 +1,4 @@
-import { CaretPosition } from '../core/src/EventNormalizer';
+import { CaretPosition } from '../plugin-dom-editable/src/EventNormalizer';
 import { targetDeepest } from './src/Dom';
 
 export function caretPositionFromPoint(x: number, y: number): CaretPosition {
