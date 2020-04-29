@@ -1,7 +1,7 @@
 import { InfoComponent } from './InfoComponent';
 import { PathComponent } from './PathComponent';
 import { TreeComponent } from './TreeComponent';
-import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 
 export class InspectorComponent extends OwlUIComponent<{}> {

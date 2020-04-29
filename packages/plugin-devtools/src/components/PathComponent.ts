@@ -1,4 +1,4 @@
-import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode'; // todo: remove dependency
 

@@ -1,4 +1,4 @@
-import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { OwlUIComponent } from '../../../owl-ui/src/ui/OwlUIComponent';
 import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';

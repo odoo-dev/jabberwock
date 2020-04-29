@@ -8,18 +8,8 @@ jw-toolbar {
     overflow: hidden;
     font-family: "Montserrat", sans-serif;
     text-align: center;
-}
-
-/* TODO: remove this when layout manager is merged */
-jw-toolbar {
-    position: fixed;
-    top: 0;
     width: 100%;
 }
-jw-editable {
-    margin-top: 40px;
-}
-/* */
 
 jw-toolbar span {
     font-weight: 600;

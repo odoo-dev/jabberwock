@@ -1,6 +1,6 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
-import { OwlUIComponent } from '../../../owl-ui/src/OwlUIComponent';
+import { OwlUIComponent, OwlUIEnv } from '../../../owl-ui/src/ui/OwlUIComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
@@ -12,7 +12,7 @@ interface DevToolsState {
     commands: Array<[CommandIdentifier, CommandParams]>;
 }
 
-export class DevToolsComponent extends OwlUIComponent<{}> {
+export class DevToolsComponent<T = {}> extends OwlUIComponent<T> {
     static components = { CommandsComponent: CommandsComponent, InspectorComponent };
     static template = 'devtools';
     state: DevToolsState = {
