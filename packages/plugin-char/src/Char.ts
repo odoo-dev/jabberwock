@@ -56,7 +56,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new CharNode(char, formats.clone());
+            const vNode = new CharNode({ char: char, format: formats.clone() });
             setStyles(vNode, styles);
             range.start.before(vNode);
         });

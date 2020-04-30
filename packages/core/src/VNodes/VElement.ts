@@ -2,9 +2,9 @@ import { ContainerNode } from './ContainerNode';
 
 export class VElement extends ContainerNode {
     htmlTag: string;
-    constructor(tagName: string) {
+    constructor(params: { htmlTag: string }) {
         super();
-        this.htmlTag = tagName;
+        this.htmlTag = params.htmlTag;
     }
 
     //--------------------------------------------------------------------------
@@ -14,9 +14,10 @@ export class VElement extends ContainerNode {
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      */
-    clone(): this {
-        const clone = new this.constructor<typeof VElement>(this.htmlTag);
-        clone.attributes = { ...this.attributes };
-        return clone;
+    clone(deepClone?: boolean, params?: {}): this {
+        const defaults: ConstructorParameters<typeof VElement>[0] = {
+            htmlTag: this.htmlTag,
+        };
+        return super.clone(deepClone, { ...defaults, ...params });
     }
 }

@@ -13,7 +13,7 @@ export class CharDomParser extends AbstractParser<Node> {
         const nodes: CharNode[] = [];
         const text = removeFormattingSpace(item);
         for (let i = 0; i < text.length; i++) {
-            const parsedVNode = new CharNode(text.charAt(i));
+            const parsedVNode = new CharNode({ char: text.charAt(i) });
             nodes.push(parsedVNode);
         }
         return nodes;

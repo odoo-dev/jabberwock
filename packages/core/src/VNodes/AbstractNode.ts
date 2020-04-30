@@ -57,11 +57,12 @@ export abstract class AbstractNode {
         }
         return [this, position];
     }
+
     /**
      * Return a new VNode with the same type and attributes as this VNode.
      */
-    clone(): this {
-        const clone = new this.constructor();
+    clone(params?: {}): this {
+        const clone = new this.constructor(params);
         clone.attributes = { ...this.attributes };
         return clone;
     }

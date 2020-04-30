@@ -22,7 +22,7 @@ export class ListDomParser extends AbstractParser<Node> {
     async parse(item: Element): Promise<VNode[]> {
         if (!listTags.includes(nodeName(item))) return;
         const listType = nodeName(item) === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
-        const listNode = new ListNode(listType);
+        const listNode = new ListNode({ listType });
         listNode.attributes = this.engine.parseAttributes(item);
         const nodes = await this.engine.parse(...item.childNodes);
         listNode.append(...nodes);

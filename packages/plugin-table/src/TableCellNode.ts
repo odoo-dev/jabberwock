@@ -10,13 +10,15 @@ export interface TableCellAttributes extends Record<string, string | Record<stri
 
 export class TableCellNode extends ContainerNode {
     breakable = false;
+    header: boolean;
     attributes: TableCellAttributes;
     // Only the `managerCell` setter should modify the following private keys.
     __managerCell: TableCellNode;
     __managedCells = new Set<TableCellNode>();
 
-    constructor(public header = false) {
+    constructor(params?: { header: boolean }) {
         super();
+        this.header = params?.header || false;
     }
 
     //--------------------------------------------------------------------------
@@ -28,10 +30,11 @@ export class TableCellNode extends ContainerNode {
      *
      *  @override
      */
-    clone(): this {
-        const clone = new this.constructor<typeof TableCellNode>(this.header);
-        clone.attributes = { ...this.attributes };
-        return clone;
+    clone(deepClone?: boolean, params?: {}): this {
+        const defaults: ConstructorParameters<typeof TableCellNode>[0] = {
+            header: this.header,
+        };
+        return super.clone(deepClone, { ...defaults, ...params });
     }
 
     //--------------------------------------------------------------------------

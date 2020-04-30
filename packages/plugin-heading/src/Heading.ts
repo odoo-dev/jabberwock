@@ -84,7 +84,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         if (level === 0) {
             return new this.editor.configuration.defaults.Container();
         } else {
-            return new HeadingNode(level);
+            return new HeadingNode({ level: level });
         }
     }
 }
