@@ -16,9 +16,9 @@ export class ListNode extends ContainerNode {
         return node && node.is(ListNode) && node.listType == ListType.UNORDERED;
     }
     listType: ListType;
-    constructor(listType: ListType) {
+    constructor(params: { listType: ListType }) {
         super();
-        this.listType = listType;
+        this.listType = params.listType;
     }
     get name(): string {
         return super.name + ': ' + this.listType;
@@ -33,9 +33,10 @@ export class ListNode extends ContainerNode {
      *
      *  @override
      */
-    clone(): this {
-        const clone = new this.constructor<typeof ListNode>(this.listType);
-        clone.attributes = { ...this.attributes };
-        return clone;
+    clone(deepClone?: boolean, params?: {}): this {
+        const defaults: ConstructorParameters<typeof ListNode>[0] = {
+            listType: this.listType,
+        };
+        return super.clone(deepClone, { ...defaults, ...params });
     }
 }

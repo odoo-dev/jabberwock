@@ -4,9 +4,9 @@ import { TableNode } from './TableNode';
 export class TableRowNode extends VElement {
     breakable = false;
     header: boolean;
-    constructor(header = false) {
-        super('TR');
-        this.header = header;
+    constructor(params?: { header: boolean }) {
+        super({ htmlTag: 'TR' });
+        this.header = params?.header || false;
     }
 
     //--------------------------------------------------------------------------
@@ -18,10 +18,11 @@ export class TableRowNode extends VElement {
      *
      *  @override
      */
-    clone(): this {
-        const clone = new this.constructor<typeof TableRowNode>(this.header);
-        clone.attributes = { ...this.attributes };
-        return clone;
+    clone(deepClone?: boolean, params?: {}): this {
+        const defaults: ConstructorParameters<typeof TableRowNode>[0] = {
+            header: this.header,
+        };
+        return super.clone(deepClone, { ...defaults, ...params });
     }
 
     //--------------------------------------------------------------------------

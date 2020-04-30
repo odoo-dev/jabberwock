@@ -134,6 +134,18 @@ export class ContainerNode extends AbstractNode {
     //--------------------------------------------------------------------------
 
     /**
+     * Return a new VNode with the same type and attributes as this VNode.
+     */
+    clone(deepClone?: boolean, params?: {}): this {
+        const clone = super.clone(params);
+        if (deepClone) {
+            for (const child of this.childVNodes) {
+                clone.append(child.clone(true));
+            }
+        }
+        return clone;
+    }
+    /**
      * See {@link AbstractNode.prepend}.
      */
     prepend(...children: VNode[]): void {

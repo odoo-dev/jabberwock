@@ -2,16 +2,17 @@ import { VElement } from '../../core/src/VNodes/VElement';
 
 export class HeadingNode extends VElement {
     level: number;
-    constructor(level: number) {
-        super('H' + level);
-        this.level = level;
+    constructor(params: { level: number }) {
+        super({ htmlTag: 'H' + params.level });
+        this.level = params.level;
     }
     get name(): string {
         return super.name + ': ' + this.level;
     }
-    clone(): this {
-        const clone = new this.constructor<typeof HeadingNode>(this.level);
-        clone.attributes = { ...this.attributes };
-        return clone;
+    clone(deepClone?: boolean, params?: {}): this {
+        const defaults: ConstructorParameters<typeof HeadingNode>[0] = {
+            level: this.level,
+        };
+        return super.clone(deepClone, { ...defaults, ...params });
     }
 }

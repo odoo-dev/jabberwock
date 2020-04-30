@@ -6,16 +6,16 @@ import { Formats } from '../../plugin-inline/src/Formats';
 export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    constructor(char: string, format?: Formats) {
+    constructor(params: { char: string; format?: Formats }) {
         super();
-        if (char.length !== 1) {
+        if (params.char.length !== 1) {
             throw new Error(
                 'Cannot make a CharNode out of anything else than a string of length 1.',
             );
         }
-        this.char = char;
-        if (format) {
-            this.formats = format;
+        this.char = params.char;
+        if (params.format) {
+            this.formats = params.format;
         }
     }
 
@@ -31,10 +31,12 @@ export class CharNode extends InlineNode {
      *
      * @override
      */
-    clone(): this {
-        const clone = new this.constructor<typeof CharNode>(this.char, this.formats.clone());
-        clone.attributes = { ...this.attributes };
-        return clone;
+    clone(params?: {}): this {
+        const defaults: ConstructorParameters<typeof CharNode>[0] = {
+            char: this.char,
+            format: this.formats.clone(),
+        };
+        return super.clone({ ...defaults, ...params });
     }
 
     //--------------------------------------------------------------------------

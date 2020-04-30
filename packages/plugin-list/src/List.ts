@@ -132,7 +132,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 const lists = distinct(targetedLists);
                 const listsToConvert = lists.filter(l => l.listType !== type);
                 for (const list of listsToConvert) {
-                    let newList = new ListNode(type);
+                    let newList = new ListNode({ listType: type });
                     list.before(newList);
                     list.mergeWith(newList);
 
@@ -155,7 +155,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 // If only some nodes are in lists and other aren't then only
                 // wrap the ones that were not already in a list into a list of
                 // the given type.
-                let newList = new ListNode(type);
+                let newList = new ListNode({ listType: type });
                 const nodesToConvert = range.split(ListNode);
                 for (const node of nodesToConvert) {
                     node.wrap(newList);
@@ -217,7 +217,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             } else {
                 // If no other candidate exists then wrap it in a new ListNode.
                 const listType = item.ancestor(ListNode).listType;
-                item.wrap(new ListNode(listType));
+                item.wrap(new ListNode({ listType: listType }));
             }
         }
     }
