@@ -6,7 +6,7 @@ import { nodeName } from '../../utils/src/utils';
 export const FontAwesomeRegex = /(^|[\s*\n*])fa[bdlrs]?[\s*\n*$]/;
 
 export class FontAwesomeXmlDomParser extends AbstractParser<Node> {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {

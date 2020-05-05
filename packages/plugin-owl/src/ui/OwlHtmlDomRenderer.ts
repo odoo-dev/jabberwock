@@ -6,7 +6,7 @@ import { Owl } from '../Owl';
 import { OwlEnv } from './OwlComponent';
 
 export class OwlHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = OwlNode;
     env: OwlEnv;

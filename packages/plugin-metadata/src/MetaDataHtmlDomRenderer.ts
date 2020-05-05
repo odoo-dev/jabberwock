@@ -3,7 +3,7 @@ import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEn
 import { MetadataNode } from './MetadataNode';
 
 export class MetadataHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = MetadataNode;
 

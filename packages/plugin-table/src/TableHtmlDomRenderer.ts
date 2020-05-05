@@ -5,7 +5,7 @@ import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEn
 import { nodeName } from '../../utils/src/utils';
 
 export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = TableNode;
 

@@ -2,9 +2,10 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { InlineNode } from './InlineNode';
 import { Predicate, VNode } from '../../core/src/VNodes/VNode';
 import { Format } from './Format';
+import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 
 export class InlineFormatDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     predicate: Predicate<boolean | VNode> = InlineNode;
     async render(node: InlineNode): Promise<Node[]> {
         const inline = await this.super.render(node);

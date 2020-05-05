@@ -5,7 +5,7 @@ import { ZoneNode } from '../../../plugin-layout/src/ZoneNode';
 import { nodeName } from '../../../utils/src/utils';
 
 export class ZoneXmlDomParser extends AbstractParser<Node> {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {

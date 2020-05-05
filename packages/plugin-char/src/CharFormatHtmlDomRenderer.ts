@@ -3,7 +3,7 @@ import { CharNode } from './CharNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 
 export class CharFormatHtmlDomRenderer extends InlineFormatDomRenderer {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = CharNode;
 
