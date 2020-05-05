@@ -812,7 +812,7 @@ describe('DomLayout', () => {
         it('should parse the selection inside a child node create by the renderer (only his parent is linked to VNode)', async () => {
             class CustomNode extends ContainerNode {}
             class CustomDomRenderer extends AbstractRenderer<Node[]> {
-                static id = 'dom/html';
+                static id = HtmlDomRenderingEngine.id;
                 engine: HtmlDomRenderingEngine;
                 predicate = CustomNode;
                 async render(): Promise<Node[]> {
@@ -1347,7 +1347,7 @@ describe('DomLayout', () => {
             const div = document.createElement('div');
             let index = 0;
             class CustomDomRenderer extends AbstractRenderer<Node[]> {
-                static id = 'dom/html';
+                static id = HtmlDomRenderingEngine.id;
                 engine: HtmlDomRenderingEngine;
                 predicate = CustomNode;
                 async render(): Promise<Node[]> {
@@ -1392,7 +1392,7 @@ describe('DomLayout', () => {
             const div = document.createElement('div');
             let index = 0;
             class CustomDomRenderer extends AbstractRenderer<Node[]> {
-                static id = 'dom/html';
+                static id = HtmlDomRenderingEngine.id;
                 engine: HtmlDomRenderingEngine;
                 predicate = CustomNode;
                 async render(): Promise<Node[]> {
@@ -1755,7 +1755,7 @@ describe('DomLayout', () => {
             const div = document.createElement('div');
             let index = 0;
             class CustomDomRenderer extends AbstractRenderer<Node[]> {
-                static id = 'dom/html';
+                static id = HtmlDomRenderingEngine.id;
                 engine: HtmlDomRenderingEngine;
                 predicate = CustomNode;
                 async render(): Promise<Node[]> {

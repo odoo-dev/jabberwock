@@ -17,6 +17,7 @@ import { ChildError } from '../../utils/src/errors';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine';
 
 describe('core', () => {
     describe('src', () => {
@@ -1151,7 +1152,7 @@ describe('core', () => {
                         customKey = 'yes';
                     }
                     class MyCustomParser extends AbstractParser<Node> {
-                        static id = 'dom/html';
+                        static id = HtmlDomParsingEngine.id;
                         predicate = (node: Node): boolean => {
                             return nodeName(node) === 'CUSTOM-NODE';
                         };

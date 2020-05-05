@@ -6,7 +6,7 @@ import { nodeName } from '../../utils/src/utils';
 const HeadingTags = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
 export class HeadingXmlDomParser extends AbstractParser<Node> {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {

@@ -16,7 +16,7 @@ const METADATA_NODENAMES = [
 ];
 
 export class MetadataXmlDomParser extends AbstractParser<Node> {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {

@@ -3,7 +3,7 @@ import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer'
 import { ZoneNode } from '../../../plugin-layout/src/ZoneNode';
 
 export class ZoneHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = ZoneNode;
 

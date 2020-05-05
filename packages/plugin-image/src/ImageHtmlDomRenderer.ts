@@ -3,7 +3,7 @@ import { ImageNode } from './ImageNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 
 export class ImageHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = ImageNode;
 

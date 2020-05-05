@@ -5,7 +5,7 @@ import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEn
 const zeroWidthSpace = '\u200b';
 
 export class FontAwesomeHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = FontAwesomeNode;
 

@@ -5,7 +5,7 @@ import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
 
 export class UnderlineXmlDomParser extends FormatParser {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {

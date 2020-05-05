@@ -3,7 +3,7 @@ import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer'
 import { LayoutContainer } from './LayoutContainerNode';
 
 export class LayoutContainerHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = LayoutContainer;
 

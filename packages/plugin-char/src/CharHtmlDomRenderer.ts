@@ -1,9 +1,10 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { CharNode } from './CharNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
+import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 
 export class CharHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     predicate = CharNode;
 
     async render(node: CharNode): Promise<Node[]> {

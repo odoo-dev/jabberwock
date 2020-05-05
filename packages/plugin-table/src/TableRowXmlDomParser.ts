@@ -4,7 +4,7 @@ import { TableRowNode } from './TableRowNode';
 import { nodeName } from '../../utils/src/utils';
 
 export class TableRowXmlDomParser extends AbstractParser<Node> {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): item is Element => {

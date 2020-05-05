@@ -5,7 +5,7 @@ import { LinkFormat } from './LinkFormat';
 import { nodeName } from '../../utils/src/utils';
 
 export class LinkXmlDomParser extends FormatParser {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {

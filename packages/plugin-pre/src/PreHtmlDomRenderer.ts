@@ -4,7 +4,7 @@ import { PreNode } from './PreNode';
 import { nodeName } from '../../utils/src/utils';
 
 export class PreHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = 'dom/html';
+    static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate = PreNode;
 

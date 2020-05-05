@@ -4,7 +4,7 @@ import { DividerNode } from './DividerNode';
 import { nodeName } from '../../utils/src/utils';
 
 export class DividerXmlDomParser extends AbstractParser<Node> {
-    static id = 'dom/xml';
+    static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {
