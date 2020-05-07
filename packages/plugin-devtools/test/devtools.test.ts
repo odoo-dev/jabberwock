@@ -212,10 +212,10 @@ describe('Plugin: DevTools', () => {
                 '<devtools-infotitle>📖 My Properties</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
-                '<devtools-tr><devtools-td>attributes</devtools-td><devtools-td>style: display: block;\ncontentEditable: true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>breakable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>editable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>htmlTag</devtools-td><devtools-td>"TEST-CONTAINER"</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>style: display: block;; contentEditable: true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +

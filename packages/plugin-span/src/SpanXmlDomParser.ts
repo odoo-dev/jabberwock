@@ -19,7 +19,7 @@ export class SpanXmlDomParser extends FormatParser {
      */
     async parse(item: Element): Promise<VNode[]> {
         const span = new SpanFormat(nodeName(item) as 'SPAN' | 'FONT');
-        span.attributes = this.engine.parseAttributes(item);
+        span.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(span, children);
 

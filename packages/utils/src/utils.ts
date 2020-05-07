@@ -1,5 +1,6 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Format } from '../../plugin-inline/src/Format';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export type Constructor<T> = new (...args) => T;
 
@@ -22,8 +23,16 @@ export function deepEqualObjects(a: object, b: object): boolean {
     const aKeys = Object.keys(a);
     if (aKeys.length !== Object.keys(b).length) return false;
     for (const key of aKeys) {
-        if (a[key] !== b[key]) {
-            return false;
+        const aValue = a[key];
+        const bValue = b[key];
+        if (typeof aValue === 'object') {
+            if (!deepEqualObjects(aValue, bValue)) {
+                return false;
+            }
+        } else {
+            if (aValue !== bValue) {
+                return false;
+            }
         }
     }
     return true;
@@ -81,7 +90,7 @@ export function nodeName(node: Node): string {
  * @param target
  */
 export function getStyles(target: VNode | Format): Record<string, string> {
-    const stylesArray = ((target.attributes.style as string) || '')
+    const stylesArray = ((target.modifiers.get(Attributes)?.get('style') as string) || '')
         .split(';')
         .map(style => style.trim())
         .filter(style => style.length);
@@ -107,9 +116,18 @@ export function setStyles(target: VNode | Format, styles: Record<string, string>
         stylesArray.push([key, styles[key]].join(': '));
     }
     if (stylesArray.length) {
-        target.attributes.style = stylesArray.join('; ') + ';';
-    } else {
-        delete target.attributes.style;
+        if (target.modifiers.get(Attributes)) {
+            target.modifiers.get(Attributes).set('style', stylesArray.join('; ') + ';');
+        } else {
+            const attributes = new Attributes();
+            attributes.set('style', stylesArray.join('; ') + ';');
+            target.modifiers.append(attributes);
+        }
+    } else if (target.modifiers.get(Attributes)) {
+        target.modifiers.get(Attributes).remove('style');
+        if (!target.modifiers.get(Attributes).length) {
+            target.modifiers.remove(Attributes);
+        }
     }
 }
 

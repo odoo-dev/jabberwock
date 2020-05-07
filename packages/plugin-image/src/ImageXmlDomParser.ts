@@ -13,7 +13,7 @@ export class ImageXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<ImageNode[]> {
         const image = new ImageNode();
-        image.attributes = this.engine.parseAttributes(item);
+        image.modifiers.append(this.engine.parseAttributes(item));
         return [image];
     }
 }

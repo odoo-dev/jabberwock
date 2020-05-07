@@ -19,6 +19,8 @@ import {
 import template from './tableTestTemplate.xml';
 import { TableCellNode } from '../src/TableCellNode';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { TableSectionAttributes } from '../src/TableRowXmlDomParser';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 let element: Element;
 describePlugin(Table, testEditor => {
@@ -808,16 +810,14 @@ describePlugin(Table, testEditor => {
                         '1th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(true, 'new row is a header row');
-                    expect(insertedRow.attributes['table-section-attributes']).not.to.equal(
+                    expect(insertedRow.modifiers.get(TableSectionAttributes)).not.to.equal(
                         undefined,
                         'new row has table container attributes',
                     );
-                    expect(
-                        (insertedRow.attributes['table-section-attributes'] as Record<
-                            string,
-                            string
-                        >).style,
-                    ).to.equal('background-color: red;', 'new row preserved styles of thead');
+                    expect(insertedRow.modifiers.get(TableSectionAttributes).get('style')).to.equal(
+                        'background-color: red;',
+                        'new row preserved styles of thead',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, false, false]);
@@ -915,7 +915,7 @@ describePlugin(Table, testEditor => {
                         '2th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
                         'background-color: green;',
                         'row preserved style',
                     );
@@ -1023,7 +1023,10 @@ describePlugin(Table, testEditor => {
                         '3th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes)?.get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, true, true]);
@@ -1123,7 +1126,10 @@ describePlugin(Table, testEditor => {
                         '4th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, true, true]);
@@ -1227,7 +1233,10 @@ describePlugin(Table, testEditor => {
                         '5th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, false, true]);
@@ -1341,7 +1350,10 @@ describePlugin(Table, testEditor => {
                         '6th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, false, true]);
@@ -1457,7 +1469,10 @@ describePlugin(Table, testEditor => {
                         '7th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, true, true]);
@@ -1569,7 +1584,10 @@ describePlugin(Table, testEditor => {
                         '8th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, false, true]);
@@ -1668,7 +1686,10 @@ describePlugin(Table, testEditor => {
                         '9th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, false, true]);
@@ -1776,7 +1797,10 @@ describePlugin(Table, testEditor => {
                         '10th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, true, true]);
@@ -1875,7 +1899,10 @@ describePlugin(Table, testEditor => {
                         '11th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [false, false, true, true]);
@@ -1989,16 +2016,14 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row0, '1th row is a new row');
                     expect(insertedRow.header).to.equal(true, 'new row is a header row');
-                    expect(insertedRow.attributes['table-section-attributes']).not.to.equal(
+                    expect(insertedRow.modifiers.get(TableSectionAttributes)).not.to.equal(
                         undefined,
                         'new row has table container attributes',
                     );
-                    expect(
-                        (insertedRow.attributes['table-section-attributes'] as Record<
-                            string,
-                            string
-                        >).style,
-                    ).to.equal('background-color: red;', 'new row preserved styles of thead');
+                    expect(insertedRow.modifiers.get(TableSectionAttributes).get('style')).to.equal(
+                        'background-color: red;',
+                        'new row preserved styles of thead',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, false, false]);
@@ -2096,7 +2121,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row1, '2th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
                         'background-color: green;',
                         'row preserved style',
                     );
@@ -2204,7 +2229,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row2, '3th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, true, true]);
@@ -2304,7 +2332,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row3, '4th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, false, true]);
@@ -2418,7 +2449,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row4, '5th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, false, true]);
@@ -2535,7 +2569,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row5, '6th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, true, true]);
@@ -2644,7 +2681,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row6, '7th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, true, true]);
@@ -2744,7 +2784,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row7, '8th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, false, true]);
@@ -2853,7 +2896,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row8, '9th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, true, false, true]);
@@ -2957,7 +3003,10 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row9, '10th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [false, false, true, true]);
@@ -3074,7 +3123,10 @@ describePlugin(Table, testEditor => {
                         '11th row is a new row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, true, true]);
@@ -3177,7 +3229,10 @@ describePlugin(Table, testEditor => {
                         '11th row is a new row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.attributes.style).to.equal(undefined, 'row preserved style');
+                    expect(insertedRow.modifiers.get(Attributes).get('style')).to.equal(
+                        undefined,
+                        'row preserved style',
+                    );
 
                     // Test individual cells
                     testActive(insertedCells, [true, false, true, true]);

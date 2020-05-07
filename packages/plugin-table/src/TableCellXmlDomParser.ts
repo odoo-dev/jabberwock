@@ -19,7 +19,7 @@ export class TableCellXmlDomParser extends AbstractParser<Node> {
      */
     async parse(item: HTMLTableCellElement): Promise<TableCellNode[]> {
         const cell = new TableCellNode({ header: nodeName(item) === 'TH' });
-        cell.attributes = this.engine.parseAttributes(item);
+        cell.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
         cell.append(...children);
         return [cell];

@@ -6,7 +6,7 @@ import { Modifiers } from '../../core/src/Modifiers';
 export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    constructor(params: { char: string; format?: Modifiers }) {
+    constructor(params: { char: string; modifiers?: Modifiers }) {
         super();
         if (params.char.length !== 1) {
             throw new Error(
@@ -14,8 +14,8 @@ export class CharNode extends InlineNode {
             );
         }
         this.char = params.char;
-        if (params.format) {
-            this.formats = params.format;
+        if (params.modifiers) {
+            this.modifiers = params.modifiers;
         }
     }
 
@@ -34,7 +34,7 @@ export class CharNode extends InlineNode {
     clone(params?: {}): this {
         const defaults: ConstructorParameters<typeof CharNode>[0] = {
             char: this.char,
-            format: this.formats.clone(),
+            modifiers: this.modifiers.clone(),
         };
         return super.clone({ ...defaults, ...params });
     }
@@ -65,16 +65,9 @@ export class CharNode extends InlineNode {
      */
     isSameTextNode(node: VNode): boolean {
         if (this.is(CharNode) && node.is(CharNode)) {
-            // Char VNodes are the same text node if they have the same format,
-            // attributes and format attributes.
-            const attributes = [...Object.keys(this.attributes), ...Object.keys(node.attributes)];
-            return (
-                this.formats.length === node.formats.length &&
-                this.formats.every(aFormat => {
-                    return !!node.formats.find(bFormat => bFormat.isSameAs(aFormat));
-                }) &&
-                attributes.every(k => this.attributes[k] === node.attributes[k])
-            );
+            // Char VNodes are the same text node if they have the same
+            // modifiers.
+            return this.modifiers.areSameAs(node.modifiers);
         } else if (this.is(MarkerNode) || node.is(MarkerNode)) {
             // A Marker node is always considered to be part of the same text
             // node as another node in the sense that the text node must not

@@ -5,6 +5,7 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { setStyle } from '../../utils/src/utils';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export enum AlignType {
     LEFT = 'left',
@@ -61,10 +62,13 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      * @param [type]
      */
     static isAligned(node: VNode, type?: AlignType): boolean {
-        if (typeof node.attributes.style !== 'string') {
+        if (typeof node.modifiers.get(Attributes)?.get('style') !== 'string') {
             return false;
         } else {
-            const styles = node.attributes.style.split(';');
+            const styles = node.modifiers
+                .get(Attributes)
+                ?.get('style')
+                .split(';');
             const align = styles.find(style => style.includes('text-align'));
             return type ? align?.includes(type) : !!align;
         }
@@ -82,8 +86,11 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
 
             // Compute current alignment.
             let currentAlignment: string;
-            if (typeof alignedAncestor?.attributes.style === 'string') {
-                const styles = alignedAncestor.attributes.style.split(';');
+            if (typeof alignedAncestor?.modifiers.get(Attributes)?.get('style') === 'string') {
+                const styles = alignedAncestor.modifiers
+                    .get(Attributes)
+                    .get('style')
+                    .split(';');
                 const alignment = styles.find(style => style.includes('text-align'));
                 currentAlignment = alignment?.replace(/text-align\s*:|;/, '').trim();
             }

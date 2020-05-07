@@ -47,9 +47,9 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const range = params.context.range;
         const text = params.text;
         const inline = this.editor.plugins.get(Inline);
-        const formats = inline.getCurrentFormats(range);
+        const modifiers = inline.getCurrentModifiers(range);
         if (params.formats) {
-            formats.append(...params.formats);
+            modifiers.append(...params.formats);
         }
         const styles = inline.getCurrentStyles(range);
         // Remove the contents of the range if needed.
@@ -59,7 +59,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         characters.forEach(char => {
-            const vNode = new CharNode({ char: char, format: formats.clone() });
+            const vNode = new CharNode({ char: char, modifiers: modifiers.clone() });
             setStyles(vNode, styles);
             range.start.before(vNode);
         });

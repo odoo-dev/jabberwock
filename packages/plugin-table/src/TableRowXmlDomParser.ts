@@ -2,6 +2,9 @@ import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { TableRowNode } from './TableRowNode';
 import { nodeName } from '../../utils/src/utils';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+
+export class TableSectionAttributes extends Attributes {}
 
 export class TableRowXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -22,7 +25,7 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
             return this.parseTableSection(item);
         } else if (nodeName(item) === 'TR') {
             const row = new TableRowNode();
-            row.attributes = this.engine.parseAttributes(item);
+            row.modifiers.append(this.engine.parseAttributes(item));
             const cells = await this.engine.parse(...item.childNodes);
             row.append(...cells);
             return [row];
@@ -53,7 +56,10 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
         for (const parsedNode of parsedNodes) {
             if (parsedNode.is(TableRowNode)) {
                 parsedNode.header = name === 'THEAD';
-                parsedNode.attributes['table-section-attributes'] = containerAttributes;
+                parsedNode.modifiers.replace(
+                    TableSectionAttributes,
+                    new TableSectionAttributes(containerAttributes),
+                );
             }
         }
         return parsedNodes;

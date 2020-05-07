@@ -1,6 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { InputNode } from './InputNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class InputHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -12,7 +13,10 @@ export class InputHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: InputNode): Promise<Node[]> {
         const input = document.createElement('input');
-        this.engine.renderAttributes(node.attributes, input);
+        const attributes = node.modifiers.get(Attributes);
+        if (attributes) {
+            this.engine.renderAttributes(attributes, input);
+        }
         input.value = node.value;
         return [input];
     }

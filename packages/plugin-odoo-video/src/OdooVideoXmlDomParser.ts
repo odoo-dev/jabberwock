@@ -19,7 +19,7 @@ export class OdooVideoXmlDomParser extends AbstractParser<Node> {
 
     async parse(element: Element): Promise<OdooVideoNode[]> {
         const video = new OdooVideoNode({ src: element.attributes['data-oe-expression'].value });
-        video.attributes = this.engine.parseAttributes(element);
+        video.modifiers.append(this.engine.parseAttributes(element));
         return [video];
     }
 }

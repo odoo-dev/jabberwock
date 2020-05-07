@@ -11,6 +11,7 @@ import { JWEditor, Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface DomEditableConfig extends JWPluginConfig {
     autoFocus?: boolean;
@@ -35,12 +36,23 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
                     } else {
                         root = new VElement({ htmlTag: 'jw-editable' });
                         // Semantic elements are inline by default.
-                        // We need to guarantee it's a block so it can contain other blocks.
-                        root.attributes.style = 'display: block;';
+                        // We need to guarantee it's a block so it can contain
+                        // other blocks.
+                        let attributes = root.modifiers.get(Attributes);
+                        if (!attributes) {
+                            attributes = new Attributes();
+                            root.modifiers.append(attributes);
+                        }
+                        attributes.set('style', 'display: block;');
                     }
                     root.editable = false;
                     root.breakable = false;
-                    root.attributes.contentEditable = 'true';
+                    let attributes = root.modifiers.get(Attributes);
+                    if (!attributes) {
+                        attributes = new Attributes();
+                        root.modifiers.append(attributes);
+                    }
+                    root.modifiers.get(Attributes).set('contentEditable', 'true');
 
                     if (!this.editor.selection.anchor.parent && this.configuration.autoFocus) {
                         this.editor.selection.setAt(root, RelativePosition.INSIDE);
@@ -112,8 +124,10 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
             nodes = domLayoutEngine.getNodes(target);
         }
         const node = nodes?.pop();
-        const ancestorContentEditable = node?.closest(node => !!node.attributes?.contentEditable);
-        return ancestorContentEditable?.attributes.contentEditable === 'true';
+        const ancestorContentEditable = node?.closest(
+            node => !!node.modifiers.get(Attributes)?.get('contentEditable'),
+        );
+        return ancestorContentEditable?.modifiers.get(Attributes).get('contentEditable') === 'true';
     }
 
     /**

@@ -79,16 +79,16 @@ describe('utils', () => {
                 const a = p.children()[0] as CharNode;
                 expect(a instanceof CharNode).to.be.true;
                 expect(a.char).to.equal('a');
-                expect(Object.keys(a.formats)).to.deep.equal([]);
+                expect(Object.keys(a.modifiers)).to.deep.equal([]);
                 const b = p.children()[1] as CharNode;
                 expect(b.char).to.equal('b');
-                expect(b.formats.map(f => f.name)).to.deep.equal(['i']);
+                expect(b.modifiers.map(f => f.name)).to.deep.equal(['i']);
                 const c = p.children()[2] as CharNode;
                 expect(c.char).to.equal('c');
-                expect(c.formats.map(f => f.name)).to.deep.equal(['i', 'b']);
+                expect(c.modifiers.map(f => f.name)).to.deep.equal(['i', 'b']);
                 const d = p.children()[3] as CharNode;
                 expect(d.char).to.equal('d');
-                expect(d.formats.map(f => f.name)).to.deep.equal(['i']);
+                expect(d.modifiers.map(f => f.name)).to.deep.equal(['i']);
             });
         });
         describe('parse() who use selection', () => {

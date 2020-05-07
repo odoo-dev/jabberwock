@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { TableCellNode } from '../src/TableCellNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export function withSelectedCell(element: Element, rowIndex: number, columnIndex: number): string {
     const domTable = element.querySelector('table');
@@ -35,7 +36,8 @@ export function testRowspan(cells: TableCellNode[], expected: number[]): void {
 export function testStyles(cells: TableCellNode[], expected: string[]): void {
     for (let i = 0; i < cells.length; i += 1) {
         const desc = `${i}th cell preserved style`;
-        expect(cells[i].attributes.style).to.equal(expected[i], desc);
+        const attributes = cells[i].modifiers.get(Attributes);
+        expect(attributes?.get('style')).to.equal(expected[i], desc);
     }
 }
 export function testManagers(

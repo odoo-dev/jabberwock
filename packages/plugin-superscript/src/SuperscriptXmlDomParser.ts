@@ -18,10 +18,10 @@ export class SuperscriptXmlDomParser extends FormatParser {
      * @param item
      */
     async parse(item: Element): Promise<VNode[]> {
-        const subscript = new SuperscriptFormat();
-        subscript.attributes = this.engine.parseAttributes(item);
+        const superscript = new SuperscriptFormat();
+        superscript.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
-        this.applyFormat(subscript, children);
+        this.applyFormat(superscript, children);
 
         return children;
     }

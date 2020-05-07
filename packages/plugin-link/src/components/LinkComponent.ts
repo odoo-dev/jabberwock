@@ -36,8 +36,8 @@ export class LinkComponent<T = {}> extends OwlComponent<T> {
     _getCurrentUrl(): string {
         const range = this.env.editor.selection.range;
         const selectedInlines = range.selectedNodes(InlineNode);
-        const firstLink = selectedInlines.find(node => node.formats.get(LinkFormat));
-        const link = firstLink && firstLink.formats.get(LinkFormat).clone();
+        const firstLink = selectedInlines.find(node => node.modifiers.get(LinkFormat));
+        const link = firstLink && firstLink.modifiers.get(LinkFormat).clone();
         return (link && link.url) || '';
     }
     _getCurrentLabel(): string {

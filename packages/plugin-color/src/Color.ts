@@ -1,7 +1,7 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { VNode, isLeaf } from '../../core/src/VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { getStyle, setStyle, removeStyle } from '../../utils/src/utils';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
@@ -59,9 +59,9 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // Skip if the node already has the right color, through an
                 // ancestor or a format.
                 if (node.is(InlineNode)) {
-                    const colorFormat = node.formats.find(format =>
-                        getStyle(format, this.styleName),
-                    );
+                    const colorFormat = node.modifiers
+                        .getAll(Format)
+                        .find(format => getStyle(format, this.styleName));
                     if (colorFormat && getStyle(colorFormat, this.styleName) === color) continue;
                 }
                 const colorAncestor = node.ancestor(this.hasColor.bind(this));
@@ -125,7 +125,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 for (const child of node.children()) {
                     removeStyle(child, this.styleName);
                     if (child.is(InlineNode)) {
-                        for (const format of child.formats) {
+                        for (const format of child.modifiers.getAll(Format)) {
                             removeStyle(format, this.styleName);
                         }
                     }
@@ -156,7 +156,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
      * @param node
      */
     _nodeOrFirstFormat(node: VNode): VNode | Format {
-        return node.is(InlineNode) ? node.formats[0] || node : node;
+        return node.is(InlineNode) ? node.modifiers?.get(Format) || node : node;
     }
     /**
      * Return true if all the children of the given node have the given color.

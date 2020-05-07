@@ -1,6 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { ImageNode } from './ImageNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class ImageHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -9,7 +10,10 @@ export class ImageHtmlDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: ImageNode): Promise<Node[]> {
         const image = document.createElement('img');
-        this.engine.renderAttributes(node.attributes, image);
+        const attributes = node.modifiers.get(Attributes);
+        if (attributes) {
+            this.engine.renderAttributes(attributes, image);
+        }
         return [image];
     }
 }

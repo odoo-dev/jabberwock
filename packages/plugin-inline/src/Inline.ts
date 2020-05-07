@@ -1,6 +1,8 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Format } from './Format';
+import { Modifier } from '../../core/src/Modifier';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 import { InlineNode } from './InlineNode';
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
@@ -11,7 +13,7 @@ export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 interface InlineCache {
-    format: Modifiers | null;
+    modifiers: Modifiers | null;
     style: Record<string, string> | null;
 }
 
@@ -25,12 +27,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         setSelection: this.resetCache,
     };
     /**
-     * When applying a format or a style on a collapsed range, cache the
-     * calculation of the format or style in the following property. This value
-     * is reset each time the range changes in a document.
+     * When applying a modifier on a collapsed range, cache the calculation of
+     * the modifier in the following property. This value is reset each time the
+     * range changes in a document.
      */
     cache: InlineCache = {
-        format: null,
+        modifiers: null,
         style: null,
     };
 
@@ -48,14 +50,14 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         const FormatClass = params.FormatClass;
 
         if (range.isCollapsed()) {
-            if (!this.cache.format) {
-                this.cache.format = this.getCurrentFormats(range);
+            if (!this.cache.modifiers) {
+                this.cache.modifiers = this.getCurrentModifiers(range);
             }
-            const index = this.cache.format.findIndex(f => f instanceof FormatClass);
+            const index = this.cache.modifiers.findIndex(f => f instanceof FormatClass);
             if (index !== -1) {
-                this.cache.format.splice(index, 1);
+                this.cache.modifiers.splice(index, 1);
             } else {
-                this.cache.format.push(new FormatClass());
+                this.cache.modifiers.push(new FormatClass());
             }
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
@@ -63,63 +65,69 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             // If every char in the range has the format `FormatClass`, remove
             // the format for all of them.
             const allHaveFormat = selectedInlines.every(inline => {
-                return !!inline.formats.find(f => f instanceof FormatClass);
+                return !!inline.modifiers.find(f => f instanceof FormatClass);
             });
             if (allHaveFormat) {
                 for (const inline of selectedInlines) {
-                    const index = inline.formats.findIndex(f => f instanceof FormatClass);
+                    const index = inline.modifiers.findIndex(f => f instanceof FormatClass);
                     // Apply the attributes of the format we're about to remove to
                     // the inline itself.
-                    const matchingFormat = inline.formats[index];
-                    for (const key of Object.keys(matchingFormat.attributes)) {
-                        inline.attributes[key] = matchingFormat.attributes[key];
+                    const matchingFormat = inline.modifiers[index] as Format;
+                    const attributes = inline.modifiers.get(Attributes);
+                    const matchingFormatAttributes = matchingFormat.modifiers.get(Attributes);
+                    if (attributes && matchingFormatAttributes) {
+                        for (const key of matchingFormatAttributes.keys()) {
+                            attributes.set(key, matchingFormatAttributes.get(key));
+                        }
+                    } else if (matchingFormatAttributes) {
+                        inline.modifiers.append(matchingFormatAttributes.clone());
                     }
                     // Remove the format.
-                    inline.formats.splice(index, 1);
+                    inline.modifiers.splice(index, 1);
                 }
             } else {
                 // If there is at least one char in the range without the format
                 // `FormatClass`, set the format for all nodes.
                 for (const inline of selectedInlines) {
-                    if (!inline.formats.find(f => f instanceof FormatClass)) {
+                    if (!inline.modifiers.find(f => f instanceof FormatClass)) {
                         new FormatClass().applyTo(inline);
                     }
                 }
             }
         }
     }
-    isAllFormat(FormatClass: Constructor<Format>, range = this.editor.selection.range): boolean {
+    isAllFormat(FormatClass: Constructor<Modifier>, range = this.editor.selection.range): boolean {
         if (range.isCollapsed()) {
-            if (!this.cache.format) {
-                this.cache.format = this.getCurrentFormats(range);
+            if (!this.cache.modifiers) {
+                this.cache.modifiers = this.getCurrentModifiers(range);
             }
-            return !!this.cache.format.find(format => format instanceof FormatClass);
+            return !!this.cache.modifiers.find(format => format instanceof FormatClass);
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
             return (
                 selectedInlines.length &&
                 selectedInlines.every(
-                    char => !!char.formats.find(format => format instanceof FormatClass),
+                    char => !!char.modifiers.find(format => format instanceof FormatClass),
                 )
             );
         }
     }
     /**
-     * Get the format for the next insertion.
+     * Get the modifiers for the next insertion.
      */
-    getCurrentFormats(range = this.editor.selection.range): Modifiers {
-        if (this.cache.format) {
-            return this.cache.format;
+    getCurrentModifiers(range = this.editor.selection.range): Modifiers {
+        if (this.cache.modifiers) {
+            return this.cache.modifiers;
         }
 
-        let inlineToCopyFormat: VNode;
+        let inlineToCopyModifiers: VNode;
         if (range.isCollapsed()) {
-            inlineToCopyFormat = range.start.previousSibling() || range.start.nextSibling();
+            inlineToCopyModifiers = range.start.previousSibling() || range.start.nextSibling();
         } else {
-            inlineToCopyFormat = range.start.nextSibling();
+            inlineToCopyModifiers = range.start.nextSibling();
         }
-        if (inlineToCopyFormat && inlineToCopyFormat.is(InlineNode)) {
-            return inlineToCopyFormat.formats.clone();
+        if (inlineToCopyModifiers && inlineToCopyModifiers.is(InlineNode)) {
+            return inlineToCopyModifiers.modifiers.clone();
         }
 
         return new Modifiers();
@@ -149,7 +157,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      */
     resetCache(): void {
         this.cache = {
-            format: null,
+            modifiers: null,
             style: null,
         };
     }

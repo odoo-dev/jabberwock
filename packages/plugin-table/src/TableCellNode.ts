@@ -3,15 +3,9 @@ import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
-export interface TableCellAttributes extends Record<string, string | Record<string, string>> {
-    colspan?: string;
-    rowspan?: string;
-}
-
 export class TableCellNode extends ContainerNode {
     breakable = false;
     header: boolean;
-    attributes: TableCellAttributes;
     // Only the `managerCell` setter should modify the following private keys.
     __managerCell: TableCellNode;
     __managedCells = new Set<TableCellNode>();
@@ -153,7 +147,7 @@ export class TableCellNode extends ContainerNode {
     }
     /**
      * Set the given cell as managed by this cell.
-     * Note: A cell managed by another cell also copies its manager's attributes
+     * Note: A cell managed by another cell also copies its manager's modifiers
      * and properties and hands over its children to its manager.
      *
      * @param cell
@@ -161,8 +155,8 @@ export class TableCellNode extends ContainerNode {
     manage(cell: TableCellNode): void {
         this.__managedCells.add(cell);
 
-        // Copy the manager's attributes and properties.
-        cell.attributes = { ...this.attributes };
+        // Copy the manager's modifiers and properties.
+        cell.modifiers = this.modifiers.clone();
         cell.header = this.header;
 
         // Move the children to the manager.
@@ -182,7 +176,7 @@ export class TableCellNode extends ContainerNode {
             if (rowIsMerged) {
                 const managerRow = cell.managerCell.ancestor(TableRowNode);
                 row.header = managerRow.header;
-                row.attributes = { ...managerRow.attributes };
+                row.modifiers = managerRow.modifiers.clone();
             }
         }
 

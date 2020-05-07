@@ -3,6 +3,9 @@ import { isBlock } from '../../utils/src/isBlock';
 import { nodeName } from '../../utils/src/utils';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+
+export class ListItemAttributes extends Attributes {}
 
 export class ListItemXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -25,9 +28,9 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
         }
         const nodes: VNode[] = [];
         let inlinesContainer: VNode;
-        // Parse the list item's attributes into a technical key of the node's
-        // attributes, that will be read only by ListItemDomRenderer.
-        const itemAttributes = { 'li-attributes': this.engine.parseAttributes(item) };
+        // Parse the list item's attributes into the node's ListItemAttributes,
+        // which will be read only by ListItemDomRenderer.
+        const itemAttributes = this.engine.parseAttributes(item);
         const Container = this.engine.editor.configuration.defaults.Container;
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];
@@ -38,14 +41,26 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     // wrapped together in a base container.
                     if (!inlinesContainer) {
                         inlinesContainer = new Container();
-                        inlinesContainer.attributes = itemAttributes;
+                        inlinesContainer.modifiers.replace(
+                            ListItemAttributes,
+                            new ListItemAttributes(itemAttributes),
+                        );
                         nodes.push(inlinesContainer);
                     }
                     inlinesContainer.append(...parsedChild);
                 } else {
                     inlinesContainer = null; // Close the inlinesContainer.
                     for (const child of parsedChild) {
-                        child.attributes = { ...child.attributes, ...itemAttributes };
+                        const attributes = child.modifiers.get(Attributes);
+                        if (attributes) {
+                            child.modifiers.replace(Attributes, attributes.clone());
+                        }
+                        if (itemAttributes) {
+                            child.modifiers.replace(
+                                ListItemAttributes,
+                                new ListItemAttributes(itemAttributes),
+                            );
+                        }
                     }
                     nodes.push(...parsedChild);
                 }

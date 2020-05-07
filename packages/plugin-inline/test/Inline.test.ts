@@ -13,7 +13,7 @@ const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>):
 };
 
 describePlugin(Inline, testEditor => {
-    describe('InlineFormatDomParser', () => {
+    describe('FormatDomParser', () => {
         it('should parse text with nested similar formats', async () => {
             await testEditor(BasicEditor, {
                 contentBefore:

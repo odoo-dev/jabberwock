@@ -17,7 +17,7 @@ export class LineBreakXmlDomParser extends AbstractParser<Node> {
             return [];
         }
         const lineBreak = new LineBreakNode();
-        lineBreak.attributes = this.engine.parseAttributes(item);
+        lineBreak.modifiers.append(this.engine.parseAttributes(item));
         return [lineBreak];
     }
 

@@ -3,6 +3,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { HtmlDomRenderingEngine } from './HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom/html';
@@ -21,7 +22,10 @@ export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {
                     nodeName = node.constructor.name.toUpperCase() + '-' + node.id;
                 }
                 const element = document.createElement(nodeName);
-                this.engine.renderAttributes(node.attributes, element);
+                const attributes = node.modifiers.get(Attributes);
+                if (attributes) {
+                    this.engine.renderAttributes(attributes, element);
+                }
                 domNode = element;
             }
 
