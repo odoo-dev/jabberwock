@@ -5,7 +5,7 @@ import { Inline } from '../../plugin-inline/src/Inline';
 import { CharFormatHtmlDomRenderer } from './CharFormatHtmlDomRenderer';
 import { CharHtmlDomRenderer } from './CharHtmlDomRenderer';
 import { CharXmlDomParser } from './CharXmlDomParser';
-import { Formats } from '../../plugin-inline/src/Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
@@ -13,7 +13,7 @@ import { setStyles } from '../../utils/src/utils';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
-    formats?: Formats;
+    formats?: Modifiers;
 }
 
 export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {

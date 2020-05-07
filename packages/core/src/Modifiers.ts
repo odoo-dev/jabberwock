@@ -1,7 +1,7 @@
-import { Format } from './Format';
+import { Format } from '../../plugin-inline/src/Format';
 import { Constructor } from '../../utils/src/utils';
 
-export class Formats extends Array<Format> {
+export class Modifiers extends Array<Format> {
     constructor(...formats: Array<Format | Constructor<Format>>) {
         // Native Array constructor takes the length as argument.
         const length = formats[0];
@@ -134,7 +134,7 @@ export class Formats extends Array<Format> {
     /**
      * Return a new instance of the Formats class containing the same formats.
      */
-    clone(): Formats {
-        return new Formats(...this);
+    clone(): Modifiers {
+        return new Modifiers(...this);
     }
 }

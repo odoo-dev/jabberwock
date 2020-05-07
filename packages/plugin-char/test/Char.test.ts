@@ -12,7 +12,7 @@ import { Inline } from '../../plugin-inline/src/Inline';
 import { Constructor } from '../../utils/src/utils';
 import { Format } from '../../plugin-inline/src/Format';
 import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
-import { Formats } from '../../plugin-inline/src/Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 const insertText = async function(editor: JWEditor, text: string): Promise<void> {
@@ -64,7 +64,7 @@ describePlugin(Char, testEditor => {
                 expect(c.length).to.equal(1);
             });
             it('should create a CharNode with format', async () => {
-                const c = new CharNode({ char: ' ', format: new Formats(BoldFormat) });
+                const c = new CharNode({ char: ' ', format: new Modifiers(BoldFormat) });
                 expect(c.char).to.equal(' ');
                 expect(c.is(AtomicNode)).to.equal(true);
                 expect(c.formats.length).to.equal(1);
@@ -92,7 +92,7 @@ describePlugin(Char, testEditor => {
             });
             it('should duplicate a char with format', async () => {
                 const c = new CharNode({ char: 'a' });
-                c.formats = new Formats(BoldFormat);
+                c.formats = new Modifiers(BoldFormat);
                 const copy = c.clone();
                 expect(copy).to.not.equal(c);
                 expect(copy.char).to.equal(c.char);
@@ -102,7 +102,7 @@ describePlugin(Char, testEditor => {
             it('should mark as italic a duplicate a char', async () => {
                 const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
-                copy.formats = new Formats(ItalicFormat);
+                copy.formats = new Modifiers(ItalicFormat);
                 expect(copy.formats.length).to.equal(1, 'copy now has one format');
                 expect(copy.formats[0].htmlTag).to.equal('I', 'copy is now italic');
                 expect(c.formats.length).to.equal(0, 'original char is not italic');
@@ -110,7 +110,7 @@ describePlugin(Char, testEditor => {
             it('should update the format for a duplicate a char', async () => {
                 const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
-                copy.formats = new Formats(ItalicFormat);
+                copy.formats = new Modifiers(ItalicFormat);
                 expect(copy.formats.length).to.equal(1, 'copy now has one format');
                 expect(copy.formats[0].htmlTag).to.equal('I', 'copy is now italic');
                 expect(c.formats.length).to.equal(0, 'original char is not italic');

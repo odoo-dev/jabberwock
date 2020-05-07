@@ -1,6 +1,6 @@
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
-import { Formats } from './Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 
 export class InlineNode extends AtomicNode {
-    formats = new Formats();
+    formats = new Modifiers();
 }

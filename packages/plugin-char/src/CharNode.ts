@@ -1,12 +1,12 @@
 import { MarkerNode } from '../../core/src/VNodes/MarkerNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { Formats } from '../../plugin-inline/src/Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 
 export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    constructor(params: { char: string; format?: Formats }) {
+    constructor(params: { char: string; format?: Modifiers }) {
         super();
         if (params.char.length !== 1) {
             throw new Error(

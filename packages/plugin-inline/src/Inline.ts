@@ -4,14 +4,14 @@ import { Format } from './Format';
 import { InlineNode } from './InlineNode';
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { Formats } from './Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 import { getStyles } from '../../utils/src/utils';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 interface InlineCache {
-    format: Formats | null;
+    format: Modifiers | null;
     style: Record<string, string> | null;
 }
 
@@ -107,7 +107,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     /**
      * Get the format for the next insertion.
      */
-    getCurrentFormats(range = this.editor.selection.range): Formats {
+    getCurrentFormats(range = this.editor.selection.range): Modifiers {
         if (this.cache.format) {
             return this.cache.format;
         }
@@ -122,7 +122,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             return inlineToCopyFormat.formats.clone();
         }
 
-        return new Formats();
+        return new Modifiers();
     }
     /**
      * Get the styles for the next insertion.
