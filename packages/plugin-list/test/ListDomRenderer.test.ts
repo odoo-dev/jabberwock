@@ -4,7 +4,7 @@ import { ListNode, ListType } from '../src/ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
-import { Formats } from '../../plugin-inline/src/Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { List } from '../src/List';
 import { Char } from '../../plugin-char/src/Char';
@@ -63,7 +63,7 @@ describe('ListDomRenderer', () => {
             const ul = new ListNode({ listType: ListType.UNORDERED });
             const p2 = new VElement({ htmlTag: 'P' });
             p2.append(new CharNode({ char: 'a' }));
-            p2.append(new CharNode({ char: '.', format: new Formats(BoldFormat) }));
+            p2.append(new CharNode({ char: '.', format: new Modifiers(BoldFormat) }));
             p2.append(new CharNode({ char: 'a' }));
             ul.append(p2);
 

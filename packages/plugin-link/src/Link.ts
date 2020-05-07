@@ -5,7 +5,7 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from './LinkFormat';
 import { Char } from '../../plugin-char/src/Char';
-import { Formats } from '../../plugin-inline/src/Formats';
+import { Modifiers } from '../../core/src/Modifiers';
 import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Loadables } from '../../core/src/JWEditor';
@@ -85,7 +85,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const link = new LinkFormat(params.url);
         return this.editor.execCommand<Char>('insertText', {
             text: params.label || link.url,
-            formats: new Formats(link),
+            formats: new Modifiers(link),
         });
     }
     unlink(params: LinkParams): void {
