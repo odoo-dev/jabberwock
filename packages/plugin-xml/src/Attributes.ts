@@ -33,14 +33,22 @@ export class Attributes extends Modifier {
         clone._record = { ...this._record };
         return clone;
     }
+    /**
+     * Return an array containg all the keys in the record.
+     */
+    toString(): string {
+        if (!this.length) return `${this.constructor.name}: {}`;
+        const valueRepr = [];
+        for (const key of this.keys()) {
+            valueRepr.push(`${key}: "${this.get(key)}"`);
+        }
+        return `${this.constructor.name}: { ${valueRepr.join(', ')} }`;
+    }
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    /**
-     * Return an array containg all the keys in the record.
-     */
     keys(): string[] {
         return Object.keys(this._record);
     }

@@ -7,7 +7,7 @@ interface InfoState {
     currentTab: string;
 }
 export class InfoComponent extends OwlComponent<{}> {
-    aboutMeProps = ['id', 'name', 'length', 'atomic'];
+    aboutMeProps = ['id', 'name', 'length', 'atomic', 'modifiers'];
     familyProps = ['parent', 'children', 'siblings'];
     customPropsBlacklist = this.aboutMeProps.concat(this.familyProps).concat(['childVNodes']);
     state: InfoState = {
@@ -57,6 +57,13 @@ export class InfoComponent extends OwlComponent<{}> {
             } else {
                 return '?';
             }
+        } else if (propName === 'modifiers') {
+            if (!vNode.modifiers.length) return '[]';
+            const modifiersRepr = [];
+            for (const modifier of vNode.modifiers) {
+                modifiersRepr.push(modifier.toString());
+            }
+            return `[ ${modifiersRepr.join(', ')} ]`;
         } else {
             if ({}.toString.call(prop) === '[object Function]') {
                 prop = vNode[propName]();

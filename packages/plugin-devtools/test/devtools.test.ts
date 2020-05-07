@@ -203,6 +203,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ Attributes: { style: "display: block;", contentEditable: "true" } ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>23</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
                 root.textContent +
@@ -215,7 +216,6 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>breakable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>editable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>htmlTag</devtools-td><devtools-td>"TEST-CONTAINER"</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>style: display: block;; contentEditable: true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
@@ -291,6 +291,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ Attributes: {} ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
                 root.children()[1].textContent +
@@ -531,6 +532,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ b ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
                 vNodeChar.textContent +
