@@ -13,8 +13,15 @@ export class Format extends Modifier {
         return this.htmlTag.toLowerCase();
     }
     toString(): string {
-        if (Object.keys(this.modifiers).length) {
-            return this.name + '[' + Object.keys(this.modifiers).join(', ') + ']';
+        const nonEmptyAttributes = this.modifiers.filter(
+            modifier => !(modifier instanceof Attributes) || !!modifier.length,
+        );
+        if (nonEmptyAttributes.length) {
+            const modifiersRepr = [];
+            for (const modifier of nonEmptyAttributes) {
+                modifiersRepr.push(modifier.toString());
+            }
+            return `${this.name}[${modifiersRepr.join(', ')}]`;
         } else {
             return this.name;
         }
