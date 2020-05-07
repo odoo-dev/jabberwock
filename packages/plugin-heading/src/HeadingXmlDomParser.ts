@@ -15,7 +15,7 @@ export class HeadingXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<HeadingNode[]> {
         const heading = new HeadingNode({ level: parseInt(nodeName(item)[1], 10) });
-        heading.attributes = this.engine.parseAttributes(item);
+        heading.modifiers.append(this.engine.parseAttributes(item));
         const nodes = await this.engine.parse(...item.childNodes);
         heading.append(...nodes);
         return [heading];

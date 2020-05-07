@@ -1,6 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { TableCellNode } from './TableCellNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -31,14 +32,21 @@ export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
         // they are automatically calculated in function of the cell's managed
         // cells. Render them here. If their value is 1 or less, they are
         // insignificant so no need to render them.
-        const attributes = { ...cell.attributes };
+        let attributes = cell.modifiers.get(Attributes);
+        if (attributes) {
+            attributes = attributes.clone();
+        } else {
+            attributes = new Attributes();
+        }
         if (cell.colspan > 1) {
-            attributes.colspan = '' + cell.colspan;
+            attributes.set('colspan', '' + cell.colspan);
         }
         if (cell.rowspan > 1) {
-            attributes.rowspan = '' + cell.rowspan;
+            attributes.set('rowspan', '' + cell.rowspan);
         }
-        this.engine.renderAttributes(attributes, td);
+        if (attributes) {
+            this.engine.renderAttributes(attributes, td);
+        }
 
         return [td];
     }

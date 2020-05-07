@@ -3,6 +3,8 @@ import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 import { nodeName } from '../../utils/src/utils';
+import { TableSectionAttributes } from './TableRowXmlDomParser';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -23,12 +25,9 @@ export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
                 // If the child is a row, append it to its containing section.
                 const tableSection = child.header ? domHead : domBody;
                 tableSection.append(...domChild);
-                const sectionAttributes = child.attributes['table-section-attributes'];
+                const sectionAttributes = child.modifiers.get(TableSectionAttributes);
                 if (sectionAttributes) {
-                    this.engine.renderAttributes(
-                        sectionAttributes as Record<string, string>,
-                        tableSection,
-                    );
+                    this.engine.renderAttributes(sectionAttributes, tableSection);
                 }
                 if (!tableSection.parentNode) {
                     domTable.append(tableSection);
@@ -40,7 +39,10 @@ export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
                 domBody = document.createElement('tbody');
             }
         }
-        this.engine.renderAttributes(table.attributes, domTable);
+        const attributes = table.modifiers.get(Attributes);
+        if (attributes) {
+            this.engine.renderAttributes(attributes, domTable);
+        }
         return [domTable];
     }
 

@@ -17,7 +17,7 @@ export class YoutubeXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<YoutubeNode[]> {
         const youtube = new YoutubeNode();
-        youtube.attributes = this.engine.parseAttributes(item);
+        youtube.modifiers.append(this.engine.parseAttributes(item));
         return [youtube];
     }
 }

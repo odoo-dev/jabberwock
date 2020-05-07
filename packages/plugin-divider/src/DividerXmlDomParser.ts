@@ -13,7 +13,7 @@ export class DividerXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<DividerNode[]> {
         const divider = new DividerNode();
-        divider.attributes = this.engine.parseAttributes(item);
+        divider.modifiers.append(this.engine.parseAttributes(item));
         const nodes = await this.engine.parse(...item.childNodes);
         divider.append(...nodes);
         return [divider];

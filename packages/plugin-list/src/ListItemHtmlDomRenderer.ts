@@ -4,6 +4,7 @@ import { ListNode } from './ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { List } from './List';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { ListItemAttributes } from './ListItemXmlDomParser';
 
 export class ListItemHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -36,8 +37,8 @@ export class ListItemHtmlDomRenderer extends AbstractRenderer<Node[]> {
         }
         // Render the node's attributes that were stored on the technical key
         // that specifies those attributes belong on the list item.
-        const liAttributes = node.attributes['li-attributes'];
-        if (liAttributes && typeof liAttributes !== 'string') {
+        const liAttributes = node.modifiers.get(ListItemAttributes);
+        if (liAttributes) {
             this.engine.renderAttributes(liAttributes, domListItem);
         }
         return [domListItem];

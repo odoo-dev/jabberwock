@@ -63,7 +63,7 @@ describe('ListDomRenderer', () => {
             const ul = new ListNode({ listType: ListType.UNORDERED });
             const p2 = new VElement({ htmlTag: 'P' });
             p2.append(new CharNode({ char: 'a' }));
-            p2.append(new CharNode({ char: '.', format: new Modifiers(BoldFormat) }));
+            p2.append(new CharNode({ char: '.', modifiers: new Modifiers(BoldFormat) }));
             p2.append(new CharNode({ char: 'a' }));
             ul.append(p2);
 

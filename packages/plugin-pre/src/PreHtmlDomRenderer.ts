@@ -1,6 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 import { PreNode } from './PreNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class PreHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -12,7 +13,10 @@ export class PreHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: PreNode): Promise<Node[]> {
         const pre = document.createElement('pre');
-        this.engine.renderAttributes(node.attributes, pre);
+        const attributes = node.modifiers.get(Attributes);
+        if (attributes) {
+            this.engine.renderAttributes(attributes, pre);
+        }
         for (const child of node.children()) {
             const domChildren = await this.renderChild(child);
             pre.append(...domChildren);

@@ -1,6 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { TableRowNode } from './TableRowNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableRowHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -12,7 +13,10 @@ export class TableRowHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(row: TableRowNode): Promise<Node[]> {
         const domRow = document.createElement('tr');
-        this.engine.renderAttributes(row.attributes, domRow);
+        const attributes = row.modifiers.get(Attributes);
+        if (attributes) {
+            this.engine.renderAttributes(attributes, domRow);
+        }
         const renderedChildren = await this.renderChildren(row);
         for (const renderedChild of renderedChildren) {
             for (const domChild of renderedChild) {

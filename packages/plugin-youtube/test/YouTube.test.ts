@@ -4,6 +4,7 @@ import { Youtube } from '../src/Youtube';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import JWEditor from '../../core/src/JWEditor';
 import { YoutubeXmlDomParser } from '../src/YoutubeXmlDomParser';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 describePlugin(Youtube, () => {
     describe('parser', () => {
@@ -17,9 +18,11 @@ describePlugin(Youtube, () => {
             const node = (await engine.parse(element))[0];
             expect(node.children().length).to.equal(1);
             expect(node.children()[0].toString()).to.equal('YoutubeNode');
-            expect(node.children()[0].attributes).to.deep.equal({
-                src: 'https://www.youtube-nocookie.com/embed/Ih8K2SKHJPI?start=15',
-            });
+            const attributes = node.children()[0].modifiers.get(Attributes);
+            expect(attributes.keys()).to.deep.equal(['src']);
+            expect(attributes.values()).to.deep.equal([
+                'https://www.youtube-nocookie.com/embed/Ih8K2SKHJPI?start=15',
+            ]);
         });
     });
 });

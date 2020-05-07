@@ -2,6 +2,7 @@ import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { DefaultHtmlDomRenderer } from './DefaultHtmlDomRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
     static readonly id = 'dom/html';
@@ -11,15 +12,10 @@ export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
      *
      * @param node
      */
-    renderAttributes(
-        attributes: Record<string, string | Record<string, string>>,
-        element: Element,
-    ): void {
-        for (const name of Object.keys(attributes).sort()) {
-            const value = attributes[name];
-            if (typeof value === 'string') {
-                element.setAttribute(name, value);
-            }
+    renderAttributes(attributes: Attributes, element: Element): void {
+        for (const name of attributes.keys().sort()) {
+            const value = attributes.get(name);
+            element.setAttribute(name, value);
         }
     }
     /**

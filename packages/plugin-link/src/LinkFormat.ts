@@ -1,4 +1,5 @@
 import { Format } from '../../plugin-inline/src/Format';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class LinkFormat extends Format {
     constructor(url?: string) {
@@ -6,9 +7,14 @@ export class LinkFormat extends Format {
         this.url = url;
     }
     get url(): string {
-        return this.attributes.href;
+        return this.modifiers.get(Attributes)?.get('href');
     }
     set url(url: string) {
-        this.attributes.href = url;
+        let xmlAttributes = this.modifiers.get(Attributes);
+        if (!xmlAttributes) {
+            xmlAttributes = new Attributes();
+            this.modifiers.append(xmlAttributes);
+        }
+        xmlAttributes.set('href', url);
     }
 }

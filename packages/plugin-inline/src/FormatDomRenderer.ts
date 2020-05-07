@@ -4,12 +4,12 @@ import { Predicate, VNode } from '../../core/src/VNodes/VNode';
 import { Format } from './Format';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 
-export class InlineFormatDomRenderer extends AbstractRenderer<Node[]> {
+export class FormatDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
     predicate: Predicate<boolean | VNode> = InlineNode;
     async render(node: InlineNode): Promise<Node[]> {
         const inline = await this.super.render(node);
-        return this.renderFormats(node.formats, inline);
+        return this.renderFormats(node.modifiers.getAll(Format), inline);
     }
     /**
      * Render an inline node's formats and return them in a fragment.

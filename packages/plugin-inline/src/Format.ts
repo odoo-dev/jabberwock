@@ -1,24 +1,20 @@
-import { deepEqualObjects, Constructor } from '../../utils/src/utils';
-import { InlineNode } from './InlineNode';
+import { Modifier } from '../../core/src/Modifier';
+import { Modifiers } from '../../core/src/Modifiers';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
-interface FormatConstructor {
-    new <T extends Constructor<Format>>(...args: ConstructorParameters<T>): this;
-}
-export interface Format {
-    constructor: FormatConstructor & this;
-}
-export class Format {
+export class Format extends Modifier {
     htmlTag: string; // TODO: remove this reference to DOM.
-    attributes: Record<string, string> = {};
+    modifiers = new Modifiers();
     constructor(htmlTag?: string) {
+        super();
         this.htmlTag = htmlTag;
     }
     get name(): string {
         return this.htmlTag.toLowerCase();
     }
     toString(): string {
-        if (Object.keys(this.attributes).length) {
-            return this.name + '[' + Object.keys(this.attributes).join(', ') + ']';
+        if (Object.keys(this.modifiers).length) {
+            return this.name + '[' + Object.keys(this.modifiers).join(', ') + ']';
         } else {
             return this.name;
         }
@@ -30,24 +26,23 @@ export class Format {
 
     render(): Node {
         const node = document.createElement(this.htmlTag);
-        for (const name of Object.keys(this.attributes)) {
-            node.setAttribute(name, this.attributes[name]);
+        const attributes = this.modifiers.get(Attributes);
+        if (attributes) {
+            for (const name of attributes.keys()) {
+                node.setAttribute(name, this.modifiers.get(Attributes).get(name));
+            }
         }
         return node;
-    }
-    applyTo(node: InlineNode): void {
-        node.formats.unshift(this);
     }
     clone(): this {
         const clone = new this.constructor();
         clone.htmlTag = this.htmlTag;
-        clone.attributes = { ...this.attributes };
+        clone.modifiers = this.modifiers.clone();
         return clone;
     }
     isSameAs(otherFormat: Format): boolean {
-        return (
-            otherFormat instanceof this.constructor &&
-            deepEqualObjects(this.attributes, otherFormat.attributes)
-        );
+        const aModifiers = this.modifiers;
+        const bModifiers = otherFormat?.modifiers;
+        return otherFormat instanceof this.constructor && aModifiers.areSameAs(bModifiers);
     }
 }

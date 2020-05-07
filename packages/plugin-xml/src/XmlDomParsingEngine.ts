@@ -1,5 +1,6 @@
 import { ParsingEngine, ParsingIdentifier } from '../../plugin-parser/src/ParsingEngine';
 import { DefaultXmlDomParser } from './DefaultXmlDomParser';
+import { Attributes } from './Attributes';
 
 export class XmlDomParsingEngine<T extends Node = Node> extends ParsingEngine<T> {
     static readonly id: ParsingIdentifier = 'dom/xml';
@@ -9,10 +10,11 @@ export class XmlDomParsingEngine<T extends Node = Node> extends ParsingEngine<T>
      *
      * @param node
      */
-    parseAttributes(node: Element): Record<string, string> {
-        return Array.from(node.attributes || []).reduce((attributes, attribute) => {
-            attributes[attribute.name] = attribute.value;
-            return attributes;
-        }, {});
+    parseAttributes(node: Element): Attributes {
+        const attributes = new Attributes();
+        for (const attribute of Array.from(node.attributes)) {
+            attributes.set(attribute.name, attribute.value);
+        }
+        return attributes;
     }
 }

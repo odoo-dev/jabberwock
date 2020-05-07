@@ -1,14 +1,12 @@
 import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { InlineNode } from '../../../plugin-inline/src/InlineNode'; // todo: remove dependency
+import { Format } from '../../../plugin-inline/src/Format';
 
 export class PathComponent extends OwlComponent<{}> {
     getNodeRepr(vNode: VNode): string {
         let repr: string = vNode.name || '?';
-        if (vNode instanceof InlineNode) {
-            for (const format of vNode.formats) {
-                repr += '.' + format.name;
-            }
+        for (const format of vNode.modifiers.getAll(Format)) {
+            repr += '.' + format.name;
         }
         return repr;
     }

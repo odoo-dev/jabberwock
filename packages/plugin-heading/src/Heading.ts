@@ -51,7 +51,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
     applyHeadingStyle(params: HeadingParams): void {
         for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const heading = this._createHeadingContainer(params.level);
-            heading.attributes = { ...node.attributes };
+            heading.modifiers = node.modifiers.clone();
             node.replaceWith(heading);
         }
     }

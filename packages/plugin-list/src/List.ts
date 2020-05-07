@@ -5,7 +5,7 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { ListHtmlDomRenderer } from './ListHtmlDomRenderer';
 import { ListItemHtmlDomRenderer } from './ListItemHtmlDomRenderer';
 import { ListXmlDomParser } from './ListXmlDomParser';
-import { ListItemXmlDomParser } from './ListItemXmlDomParser';
+import { ListItemXmlDomParser, ListItemAttributes } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
 import { IndentParams, OutdentParams } from '../../plugin-indent/src/Indent';
 import { CheckingContext } from '../../core/src/ContextManager';
@@ -117,9 +117,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     const nodesToUnlist = range.split(ListNode);
                     for (const list of nodesToUnlist) {
                         for (const nestedList of list.descendants(ListNode)) {
-                            // TODO: automatically invalidate `li-attributes`.
+                            // TODO: automatically invalidate `ListItemAttributes`.
                             for (const child of nestedList.childVNodes) {
-                                delete child.attributes['li-attributes'];
+                                child.modifiers.remove(ListItemAttributes);
                             }
                             nestedList.unwrap();
                         }

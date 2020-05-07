@@ -19,7 +19,7 @@ export class BoldXmlDomParser extends FormatParser {
      */
     async parse(item: Element): Promise<VNode[]> {
         const bold = new BoldFormat(nodeName(item) as 'B' | 'STRONG');
-        bold.attributes = this.engine.parseAttributes(item);
+        bold.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(bold, children);
 

@@ -33,7 +33,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
     applyPreStyle(params: CommandParams): void {
         for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const pre = new PreNode();
-            pre.attributes = { ...node.attributes };
+            pre.modifiers = node.modifiers.clone();
             node.replaceWith(pre);
         }
     }

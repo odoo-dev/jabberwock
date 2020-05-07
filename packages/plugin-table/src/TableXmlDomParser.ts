@@ -4,6 +4,7 @@ import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { TableCellNode } from './TableCellNode';
 import { nodeName } from '../../utils/src/utils';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -21,7 +22,7 @@ export class TableXmlDomParser extends AbstractParser<Node> {
     async parse(item: HTMLTableElement): Promise<TableNode[]> {
         // Parse the table itself and its attributes.
         const table = new TableNode();
-        table.attributes = this.engine.parseAttributes(item);
+        table.modifiers.append(this.engine.parseAttributes(item));
 
         // Parse the contents of the table.
         const children = await this.engine.parse(...item.childNodes);
@@ -117,10 +118,15 @@ export class TableXmlDomParser extends AbstractParser<Node> {
                 // Check traversing colspan and rowspan to insert placeholder
                 // cells where necessary. Consume these attributes as they will
                 // be replaced with getters.
-                const colspan = parseInt(cell.attributes.colspan, 10) || 1;
-                const rowspan = parseInt(cell.attributes.rowspan, 10) || 1;
-                delete cell.attributes.colspan;
-                delete cell.attributes.rowspan;
+                const attributes = cell.modifiers.get(Attributes);
+                let colspan = 1;
+                let rowspan = 1;
+                if (attributes) {
+                    colspan = parseInt(attributes.get('colspan'), 10) || 1;
+                    rowspan = parseInt(attributes.get('rowspan'), 10) || 1;
+                    attributes.remove('colspan');
+                    attributes.remove('rowspan');
+                }
                 for (let i = rowIndex; i < rowIndex + rowspan; i += 1) {
                     for (let j = columnIndex; j < columnIndex + colspan; j += 1) {
                         if (i === rowIndex && j === columnIndex) {

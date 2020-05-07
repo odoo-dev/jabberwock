@@ -14,7 +14,7 @@ export class LinkXmlDomParser extends FormatParser {
 
     async parse(item: Element): Promise<VNode[]> {
         const link = new LinkFormat();
-        link.attributes = this.engine.parseAttributes(item);
+        link.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(link, children);
 

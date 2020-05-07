@@ -23,7 +23,7 @@ export class Modifier {
         node.modifiers.unshift(this);
     }
     isSameAs(otherModifier: Modifier): boolean {
-        return otherModifier instanceof this.constructor;
+        return this === otherModifier;
     }
     clone(): this {
         return new this.constructor();

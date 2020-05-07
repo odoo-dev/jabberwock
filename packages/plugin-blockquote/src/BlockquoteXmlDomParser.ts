@@ -13,7 +13,7 @@ export class BlockquoteXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<BlockquoteNode[]> {
         const blockquote = new BlockquoteNode();
-        blockquote.attributes = this.engine.parseAttributes(item);
+        blockquote.modifiers.append(this.engine.parseAttributes(item));
         const nodes = await this.engine.parse(...item.childNodes);
         blockquote.append(...nodes);
         return [blockquote];

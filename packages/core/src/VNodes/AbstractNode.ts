@@ -2,6 +2,7 @@ import { VNode, RelativePosition, Predicate, Typeguard, isLeaf } from './VNode';
 import { Constructor, nodeLength } from '../../../utils/src/utils';
 import { ContainerNode } from './ContainerNode';
 import { AtomicNode } from './AtomicNode';
+import { Modifiers } from '../Modifiers';
 
 let id = 0;
 export abstract class AbstractNode {
@@ -10,7 +11,7 @@ export abstract class AbstractNode {
     tangible = true;
     breakable = true;
     parent: VNode;
-    attributes: Record<string, string | Record<string, string>> = {};
+    modifiers = new Modifiers();
     childVNodes: VNode[];
     /**
      * Return whether the given predicate is a constructor of a VNode class.
@@ -71,7 +72,7 @@ export abstract class AbstractNode {
      */
     clone(params?: {}): this {
         const clone = new this.constructor(params);
-        clone.attributes = { ...this.attributes };
+        clone.modifiers = this.modifiers.clone();
         return clone;
     }
 
