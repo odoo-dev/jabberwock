@@ -1,5 +1,6 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
+import { ShortcutsComponent } from './ShortcutsComponent';
 import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
@@ -15,7 +16,11 @@ interface DevToolsState {
 }
 
 export class DevToolsComponent<T = {}> extends OwlComponent<T> {
-    static components = { CommandsComponent: CommandsComponent, InspectorComponent };
+    static components = {
+        CommandsComponent: CommandsComponent,
+        InspectorComponent,
+        ShortcutsComponent,
+    };
     static template = 'devtools';
     inspectorRef = hooks.useRef('inspector');
 

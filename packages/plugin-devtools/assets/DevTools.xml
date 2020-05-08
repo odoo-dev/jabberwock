@@ -369,6 +369,25 @@
         </t>
     </t>
 
+    <!-- SHORTCUTS -->
+    <devtools-panel t-name="ShortcutsComponent"
+        t-att-class="{active: props.isOpen}" tabindex="1"
+        t-on-keydown="onKeydown">
+        <devtools-contents t-if="props.isOpen">
+            <devtools-mainpane style="overflow: hidden">
+                <mainpane-contents style="overflow: auto">
+                    <devtools-table>
+                        <devtools-tr t-foreach="mappings" t-as="mapping" t-key="mapping_index" class="selectable-line">
+                            <devtools-td><t t-esc="stringifyPattern(mapping.pattern)"/></devtools-td>
+                            <devtools-td><t t-esc="mapping.configuredCommand.commandId"/></devtools-td>
+                            <devtools-td><t t-esc="argsRepr(mapping.configuredCommand.commandArgs)"/></devtools-td>
+                        </devtools-tr>
+                    </devtools-table>
+                </mainpane-contents>
+            </devtools-mainpane>
+        </devtools-contents>
+    </devtools-panel>
+
     <!-- MAIN -->
     <jw-devtools t-name="devtools"
         t-att-class="{
@@ -386,12 +405,16 @@
             <devtools-button t-on-click="openTab('commands')" t-att-class="{
                 selected: state.currentTab == 'commands',
             }">Commands</devtools-button>
+            <devtools-button t-on-click="openTab('shortcuts')" t-att-class="{
+                selected: state.currentTab == 'shortcuts',
+            }">Shortcuts</devtools-button>
             <devtools-button t-on-click="inpectDom()">&#128269;</devtools-button>
         </devtools-navbar>
         <t t-if="!state.closed">
             <InspectorComponent isOpen="state.currentTab == 'inspector'" t-ref="inspector"/>
             <CommandsComponent isOpen="state.currentTab == 'commands'"
                 commands="state.commands"/>
+            <ShortcutsComponent isOpen="state.currentTab == 'shortcuts'"/>
         </t>
     </jw-devtools>
 

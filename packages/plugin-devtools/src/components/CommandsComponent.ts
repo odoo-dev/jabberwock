@@ -4,6 +4,7 @@ import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
 import { Keymap, Mapping } from '../../../plugin-keymap/src/Keymap';
+import { argsRepr } from '../utils';
 
 interface CommandsState {
     currentTab: string;
@@ -26,6 +27,7 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
         selectedCommandImplementationIndex: null, // Index of the selected command definition
     };
     localStorage = ['currentTab'];
+    argsRepr = argsRepr;
     stringifyPattern = this.env.editor.plugins.get(Keymap).stringifyPattern;
 
     //--------------------------------------------------------------------------
@@ -109,16 +111,5 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
             .get(Keymap)
             .mappings.flat()
             .filter(mapping => mapping.configuredCommand.commandId === commandIdentifier);
-    }
-    /**
-     * Return a string representing the arguments of a command.
-     *
-     * @param args
-     */
-    argsRepr(args: {}): string {
-        if (args === undefined) return '';
-        return `{ ${Object.keys(args)
-            .map(key => key + ': ' + args[key])
-            .join(', ')} }`;
     }
 }
