@@ -27,6 +27,7 @@ import {
 } from '../../packages/plugin-align/src/AlignButtons';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
+import { LinkButton, UnlinkButton } from '../../packages/plugin-link/src/LinkButtons';
 
 const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';
@@ -61,6 +62,7 @@ editor.configure(Toolbar, {
         [AlignLeftButton, AlignCenterButton, AlignRightButton, AlignJustifyButton],
         [OrderedListButton, UnorderedListButton],
         [IndentButton, OutdentButton],
+        [LinkButton, UnlinkButton],
     ],
 });
 
