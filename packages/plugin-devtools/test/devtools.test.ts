@@ -830,16 +830,16 @@ describe('Plugin: DevTools', () => {
             );
             expect(nodeName(subpanel.firstElementChild)).to.equal('DEVTOOLS-COMMAND');
             expect(Array.from(subpanel.childNodes).map((n: Node) => n.textContent)).to.deep.equal([
-                'insert',
-                'insertParagraphBreak',
-                'setSelection',
                 'deleteBackward',
                 'deleteForward',
-                'toggleFormat',
-                'insertText',
-                'show',
                 'hide',
+                'insert',
+                'insertParagraphBreak',
+                'insertText',
                 'selectAll',
+                'setSelection',
+                'show',
+                'toggleFormat',
             ]);
         });
         it('should display the previous commands in "Queue" of "Commands" panel', async () => {
@@ -880,7 +880,7 @@ describe('Plugin: DevTools', () => {
             );
             expect(subpanel.textContent).to.equal('insertTextsetSelection');
         });
-        it('should select "setSelection"', async () => {
+        it('should select "hide"', async () => {
             await openDevTools();
             await click(
                 wrapper
@@ -902,10 +902,10 @@ describe('Plugin: DevTools', () => {
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
-                '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
+                '<devtools-about><devtools-type>Command</devtools-type> hide</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
-        it('should select "insertParagraphBreak" with arrow', async () => {
+        it('should select "deleteForward" with arrow', async () => {
             await openDevTools();
             await click(
                 wrapper
@@ -929,10 +929,10 @@ describe('Plugin: DevTools', () => {
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
-                '<devtools-about><devtools-type>Command</devtools-type> insertParagraphBreak</devtools-about>';
+                '<devtools-about><devtools-type>Command</devtools-type> deleteForward</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
-        it('should select "setSelection" with arrow', async () => {
+        it('should select "hide" with arrow', async () => {
             await openDevTools();
             await click(
                 wrapper
@@ -956,7 +956,7 @@ describe('Plugin: DevTools', () => {
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
-                '<devtools-about><devtools-type>Command</devtools-type> setSelection</devtools-about>';
+                '<devtools-about><devtools-type>Command</devtools-type> hide</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should not change the selection with other key', async () => {

@@ -249,7 +249,7 @@
                     </devtools-table>
                 </mainpane-contents>
                 <mainpane-contents t-elif="state.currentTab == 'registry'" style="overflow: auto">
-                    <devtools-command t-foreach="Object.keys(state.registry)" t-as="commandIdentifier"
+                    <devtools-command t-foreach="Object.keys(state.registry).sort()" t-as="commandIdentifier"
                         t-key="record_index" class="selectable-line"
                         t-att-class="{
                             selected: state.selectedCommandIdentifier == commandIdentifier,
