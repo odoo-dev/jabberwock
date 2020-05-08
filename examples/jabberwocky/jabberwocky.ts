@@ -19,6 +19,7 @@ import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
+import { LinkButton, UnlinkButton } from '../../packages/plugin-link/src/LinkButtons';
 
 const target = document.getElementById('contentToEdit');
 target.style.textAlign = 'center';
@@ -48,6 +49,7 @@ editor.configure(Toolbar, {
         [BoldButton, ItalicButton, UnderlineButton],
         [OrderedListButton, UnorderedListButton],
         [IndentButton, OutdentButton],
+        [LinkButton, UnlinkButton],
     ],
 });
 editor.load(DevTools);
