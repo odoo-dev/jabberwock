@@ -19,7 +19,7 @@ export class ToolbarComponent<T = {}> extends OwlComponent<T> {
     execCommand(commandId: CommandIdentifier, commandArgs?: CommandParams): void {
         this.env.editor.execCommand(commandId, commandArgs);
     }
-    async isEnabled(item: Button): Promise<boolean> {
+    isEnabled(item: Button): boolean {
         return !item.enabled || item.enabled(this.env.editor);
     }
     isSelected(item: Button): boolean {
