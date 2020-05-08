@@ -60,7 +60,7 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
                 return;
             }
         } else if (this.state.currentTab === 'registry') {
-            const identifiers = Object.keys(this.state.registry);
+            const identifiers = Object.keys(this.state.registry).sort();
             const currentIndex = identifiers.indexOf(this.state.selectedCommandIdentifier);
             if (event.code === 'ArrowDown') {
                 this.state.selectedCommandIdentifier =
