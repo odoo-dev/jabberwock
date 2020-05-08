@@ -33,6 +33,7 @@ import { Layout } from '../packages/plugin-layout/src/Layout';
 import { DomLayout } from '../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../packages/plugin-dom-editable/src/DomEditable';
 import { VNode } from '../packages/core/src/VNodes/VNode';
+import { Input } from '../packages/plugin-input/src/Input';
 
 import template from './basicLayout.xml';
 import './basicLayout.css';
@@ -78,6 +79,7 @@ export class BasicEditor extends JWEditor {
                 [Pre],
                 [TextColor],
                 [BackgroundColor],
+                [Input],
             ],
         });
         this.configure(DomLayout, {
