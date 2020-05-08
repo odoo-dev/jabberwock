@@ -37,13 +37,15 @@
                             </select>
                         </t>
                         <t t-else="">
-                            <button t-if="isEnabled(toolbarItem)" t-attf-class="fas {{toolbarItem.class}} fa-fw"
+                            <button t-attf-class="fas {{toolbarItem.class}} fa-fw"
                                 t-att-class="{
                                     pressed: isSelected(toolbarItem),
                                 }"
                                 t-attf-title="{{toolbarItem.title}}"
                                 t-att-aria-pressed="isSelected(toolbarItem)"
-                                t-on-click="execCommand(toolbarItem.commandId, toolbarItem.commandArgs)"/>
+                                t-on-click="execCommand(toolbarItem.commandId,
+                                    toolbarItem.commandArgs)"
+                                t-att-disabled="!isEnabled(toolbarItem)"/>
                         </t>
                     </t>
                 </toolbar-group>
