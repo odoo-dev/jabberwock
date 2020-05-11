@@ -157,7 +157,8 @@ export class Keymap<T extends KeymapConfig = KeymapConfig> extends JWPlugin<T> {
                 if ('code' in shortcut.pattern) {
                     match = shortcut.pattern.code === keyEvent.code;
                 } else {
-                    match = shortcut.pattern.key === keyEvent.key.toUpperCase();
+                    // In rare case the KeyboardEvent `key` is undefined.
+                    match = shortcut.pattern.key === keyEvent.key?.toUpperCase();
                 }
 
                 match =
