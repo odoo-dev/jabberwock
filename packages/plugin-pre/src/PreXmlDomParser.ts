@@ -15,7 +15,6 @@ export class PreXmlDomParser extends AbstractParser<Node> {
         const pre = new PreNode();
         pre.attributes = this.engine.parseAttributes(item);
         const children = await this.engine.parse(...item.childNodes);
-        // TODO: parse contained \n as LineBreaks.
         pre.append(...children);
         return [pre];
     }
