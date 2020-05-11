@@ -24,25 +24,19 @@ describePlugin(Pre, testEditor => {
         it('should parse a pre with spaces at the beginning', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<pre>     a[b]c</pre>',
-                // TODO: the space needs not be rendered as
-                // non-breakable space.
-                contentAfter: '<pre>&nbsp;&nbsp; &nbsp; a[b]c</pre>',
+                contentAfter: '<pre>     a[b]c</pre>',
             });
         });
         it('should parse a pre with spaces at the end', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<pre>a[b]c     </pre>',
-                // TODO: the space needs not be rendered as
-                // non-breakable space.
-                contentAfter: '<pre>a[b]c &nbsp; &nbsp;&nbsp;</pre>',
+                contentAfter: '<pre>a[b]c     </pre>',
             });
         });
         it('should parse a pre with spaces at the beginning and at the end', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<pre>     a[b]c     </pre>',
-                // TODO: the space needs not be rendered as
-                // non-breakable space.
-                contentAfter: '<pre>&nbsp;&nbsp; &nbsp; a[b]c &nbsp; &nbsp;&nbsp;</pre>',
+                contentAfter: '<pre>     a[b]c     </pre>',
             });
         });
         it('should parse a pre with newlines and spaces', async () => {
@@ -50,11 +44,9 @@ describePlugin(Pre, testEditor => {
                 contentBefore: `<pre>ab
                 [c]
                 de</pre>`,
-                // TODO: the space needs not be rendered as
-                // non-breakable space.
                 contentAfter: `<pre>ab
- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;[c]
- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;de</pre>`,
+                [c]
+                de</pre>`,
             });
         });
     });
@@ -72,36 +64,28 @@ describePlugin(Pre, testEditor => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>     ab[]cd</pre>',
                         stepFunction: deleteForward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>&nbsp;&nbsp; &nbsp; ab[]d</pre>',
+                        contentAfter: '<pre>     ab[]d</pre>',
                     });
                 });
                 it('should delete a character in a pre (space after)', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>ab[]cd     </pre>',
                         stepFunction: deleteForward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>ab[]d &nbsp; &nbsp;&nbsp;</pre>',
+                        contentAfter: '<pre>ab[]d     </pre>',
                     });
                 });
                 it('should delete a character in a pre (space before and after)', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>     ab[]cd     </pre>',
                         stepFunction: deleteForward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>&nbsp;&nbsp; &nbsp; ab[]d &nbsp; &nbsp;&nbsp;</pre>',
+                        contentAfter: '<pre>     ab[]d     </pre>',
                     });
                 });
                 it('should delete a space in a pre', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>  []   ab</pre>',
                         stepFunction: deleteForward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>&nbsp;&nbsp;[] &nbsp;ab</pre>',
+                        contentAfter: '<pre>  []  ab</pre>',
                     });
                 });
                 it('should delete a newline in a pre', async () => {
@@ -154,36 +138,28 @@ describePlugin(Pre, testEditor => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>     ab[]cd</pre>',
                         stepFunction: deleteBackward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>&nbsp;&nbsp; &nbsp; a[]cd</pre>',
+                        contentAfter: '<pre>     a[]cd</pre>',
                     });
                 });
                 it('should delete a character in a pre (space after)', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>ab[]cd     </pre>',
                         stepFunction: deleteBackward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>a[]cd &nbsp; &nbsp;&nbsp;</pre>',
+                        contentAfter: '<pre>a[]cd     </pre>',
                     });
                 });
                 it('should delete a character in a pre (space before and after)', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>     ab[]cd     </pre>',
                         stepFunction: deleteBackward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>&nbsp;&nbsp; &nbsp; a[]cd &nbsp; &nbsp;&nbsp;</pre>',
+                        contentAfter: '<pre>     a[]cd     </pre>',
                     });
                 });
                 it('should delete a space in a pre', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<pre>   []  ab</pre>',
                         stepFunction: deleteBackward,
-                        // TODO: the space needs not be rendered as
-                        // non-breakable space.
-                        contentAfter: '<pre>&nbsp;&nbsp;[] &nbsp;ab</pre>',
+                        contentAfter: '<pre>  []  ab</pre>',
                     });
                 });
                 it('should delete a newline in a pre', async () => {
@@ -240,11 +216,11 @@ describePlugin(Pre, testEditor => {
                             contentAfter: '<pre>ab\n[]cd</pre>',
                         });
                     });
-                    it('should insert a newline at the end of text', async () => {
+                    it('should insert a double newline at the end of text', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<pre>ab[]</pre>',
                             stepFunction: insertLineBreak,
-                            contentAfter: '<pre>ab\n[]</pre>',
+                            contentAfter: '<pre>ab\n\n[]</pre>',
                         });
                     });
                 });
@@ -280,30 +256,24 @@ describePlugin(Pre, testEditor => {
                 await testHeadingEditor(BasicEditor, {
                     contentBefore: '<pre>     a\nb[]c\n     d     </pre>',
                     stepFunction: applyHeadingStyle(0),
-                    // TODO: the space needs not be rendered as non-breakable
-                    // space. The \n should turn into a <br> when in a <p>.
                     contentAfter:
-                        '<p>&nbsp;&nbsp; &nbsp; a\nb[]c\n &nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p>',
+                        '<p>&nbsp;&nbsp; &nbsp; a<br>b[]c<br>&nbsp;&nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p>',
                 });
             });
             it('should turn a pre with space and newlines into a paragraph (character selected)', async () => {
                 await testHeadingEditor(BasicEditor, {
                     contentBefore: '<pre>     a\n[b]\n     c     </pre>',
                     stepFunction: applyHeadingStyle(0),
-                    // TODO: the space needs not be rendered as non-breakable
-                    // space. The \n should turn into a <br> when in a <p>.
                     contentAfter:
-                        '<p>&nbsp;&nbsp; &nbsp; a\n[b]\n &nbsp; &nbsp; c &nbsp; &nbsp;&nbsp;</p>',
+                        '<p>&nbsp;&nbsp; &nbsp; a<br>[b]<br>&nbsp;&nbsp; &nbsp; c &nbsp; &nbsp;&nbsp;</p>',
                 });
             });
             it('should turn a heading 1, a pre with space and newlines, and a heading 2 into three paragraphs', async () => {
                 await testHeadingEditor(BasicEditor, {
                     contentBefore: '<h1>a[b</h1><pre>     c\n     d     </pre><h2>e]f</h2>',
                     stepFunction: applyHeadingStyle(0),
-                    // TODO: the space needs not be rendered as non-breakable
-                    // space. The \n should turn into a <br> when in a <p>.
                     contentAfter:
-                        '<p>a[b</p><p>&nbsp;&nbsp; &nbsp; c\n &nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p><p>e]f</p>',
+                        '<p>a[b</p><p>&nbsp;&nbsp; &nbsp; c<br>&nbsp;&nbsp; &nbsp; d &nbsp; &nbsp;&nbsp;</p><p>e]f</p>',
                 });
             });
         });
