@@ -209,6 +209,23 @@ describe('Keymap', () => {
             const expectedCommands: ConfiguredCommand[] = [{ commandId: 'command-a' }];
             expect(call).to.deep.equal(expectedCommands);
         });
+        it('should not throw if the event has no key', () => {
+            // In rare case the KeyboardEvent `key` is undefined.
+            keymap.bind('a', { commandId: 'command-a' });
+
+            const keyboardEvent = new Proxy(new KeyboardEvent('keydown', {}), {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                get: (event, prop): any => {
+                    if (prop === 'key') {
+                        return undefined;
+                    } else {
+                        return event[prop];
+                    }
+                },
+            });
+            const call = keymap.match(keyboardEvent);
+            expect(call).to.deep.equal([]);
+        });
     });
     describe('loadShortcuts', () => {
         it('should only register default mapping for pc and other', async () => {
