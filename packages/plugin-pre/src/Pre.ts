@@ -8,6 +8,7 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { PreNode } from './PreNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { PreCharHtmlDomRenderer } from './PreCharHtmlDomRenderer';
+import { PreSeparatorHtmlDomRenderer } from './PreSeparatorHtmlDomRenderer';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -17,7 +18,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
     };
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [PreXmlDomParser],
-        renderers: [PreHtmlDomRenderer, PreCharHtmlDomRenderer],
+        renderers: [PreHtmlDomRenderer, PreSeparatorHtmlDomRenderer, PreCharHtmlDomRenderer],
     };
 
     //--------------------------------------------------------------------------
