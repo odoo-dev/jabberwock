@@ -133,8 +133,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 const listsToConvert = lists.filter(l => l.listType !== type);
                 for (const list of listsToConvert) {
                     let newList = new ListNode({ listType: type });
-                    list.before(newList);
-                    list.mergeWith(newList);
+                    list.replaceWith(newList);
 
                     // If the new list is after or before a list of the same
                     // type, merge them. Example:

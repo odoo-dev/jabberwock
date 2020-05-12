@@ -34,8 +34,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
         for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const pre = new PreNode();
             pre.attributes = { ...node.attributes };
-            node.before(pre);
-            node.mergeWith(pre);
+            node.replaceWith(pre);
         }
     }
 }
