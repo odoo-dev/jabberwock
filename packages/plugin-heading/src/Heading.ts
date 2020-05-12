@@ -52,8 +52,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const heading = this._createHeadingContainer(params.level);
             heading.attributes = { ...node.attributes };
-            node.before(heading);
-            node.mergeWith(heading);
+            node.replaceWith(heading);
         }
     }
 
@@ -67,8 +66,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         const heading = range.targetedNodes(HeadingNode)[0];
         const duplicate = heading.splitAt(range.start);
         const newContainer = new this.editor.configuration.defaults.Container();
-        duplicate.before(newContainer);
-        duplicate.mergeWith(newContainer);
+        duplicate.replaceWith(newContainer);
     }
 
     //--------------------------------------------------------------------------

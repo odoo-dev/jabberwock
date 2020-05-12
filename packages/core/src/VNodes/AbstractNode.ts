@@ -67,6 +67,16 @@ export abstract class AbstractNode {
         return clone;
     }
 
+    /**
+     * Replace this VNode with the given VNode.
+     *
+     * @param node
+     */
+    replaceWith(node: VNode): void {
+        this.before(node);
+        this.mergeWith(node);
+    }
+
     //--------------------------------------------------------------------------
     // Properties
     //--------------------------------------------------------------------------
