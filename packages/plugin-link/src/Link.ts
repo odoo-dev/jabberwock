@@ -29,7 +29,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (link instanceof AbstractNode) {
             node = link;
         }
-        const format = node.is(InlineNode) && node.modifiers.get(LinkFormat);
+        const format = node.is(InlineNode) && node.modifiers.find(LinkFormat);
         return link instanceof AbstractNode ? !!format : format === link;
     }
     static dependencies = [Inline];
@@ -93,7 +93,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const node = range.start.previousSibling() || range.start.nextSibling();
         if (!node.is(InlineNode)) return;
 
-        const link = node.modifiers.get(LinkFormat);
+        const link = node.modifiers.find(LinkFormat);
         if (!link) return;
 
         const sameLink: Typeguard<InlineNode> = Link.isLink.bind(Link, link);

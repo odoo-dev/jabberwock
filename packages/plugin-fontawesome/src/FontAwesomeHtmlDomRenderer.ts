@@ -12,7 +12,7 @@ export class FontAwesomeHtmlDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: FontAwesomeNode): Promise<Node[]> {
         const fontawesome = document.createElement(node.htmlTag);
-        const attributes = node.modifiers.get(Attributes);
+        const attributes = node.modifiers.find(Attributes);
         if (attributes) {
             this.engine.renderAttributes(attributes, fontawesome);
         }

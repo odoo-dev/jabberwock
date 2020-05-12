@@ -68,7 +68,7 @@ describePlugin(Char, testEditor => {
                 expect(c.char).to.equal(' ');
                 expect(c.is(AtomicNode)).to.equal(true);
                 expect(c.modifiers.length).to.equal(1);
-                expect((c.modifiers[0] as Format).htmlTag).to.equal('B');
+                expect(c.modifiers.map(m => m.constructor.name)).to.deep.equal(['BoldFormat']);
             });
             it('should throw an exception if create a CharNode with wrong value', async () => {
                 expect(() => {
@@ -97,22 +97,31 @@ describePlugin(Char, testEditor => {
                 expect(copy).to.not.equal(c);
                 expect(copy.char).to.equal(c.char);
                 expect(copy.modifiers.length).to.equal(1, 'copy now has one format');
-                expect((copy.modifiers[0] as Format).htmlTag).to.equal('B', 'copy is now bold');
+                expect(copy.modifiers.map(m => m.constructor.name)).to.deep.equal(
+                    ['BoldFormat'],
+                    'copy is now bold',
+                );
             });
-            it('should mark as italic a duplicate a char', async () => {
+            it('should mark as italic a duplicate char', async () => {
                 const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
                 copy.modifiers = new Modifiers(ItalicFormat);
                 expect(copy.modifiers.length).to.equal(1, 'copy now has one format');
-                expect((copy.modifiers[0] as Format).htmlTag).to.equal('I', 'copy is now italic');
+                expect(copy.modifiers.map(m => m.constructor.name)).to.deep.equal(
+                    ['ItalicFormat'],
+                    'copy is now italic',
+                );
                 expect(c.modifiers.length).to.equal(0, 'original char is not italic');
             });
-            it('should update the format for a duplicate a char', async () => {
+            it('should update the format for a duplicate char', async () => {
                 const c = new CharNode({ char: 'a' });
                 const copy = c.clone();
                 copy.modifiers = new Modifiers(ItalicFormat);
                 expect(copy.modifiers.length).to.equal(1, 'copy now has one format');
-                expect((copy.modifiers[0] as Format).htmlTag).to.equal('I', 'copy is now italic');
+                expect(copy.modifiers.map(m => m.constructor.name)).to.deep.equal(
+                    ['ItalicFormat'],
+                    'copy is now italic',
+                );
                 expect(c.modifiers.length).to.equal(0, 'original char is not italic');
             });
         });

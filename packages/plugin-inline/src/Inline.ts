@@ -53,11 +53,11 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             if (!this.cache.modifiers) {
                 this.cache.modifiers = this.getCurrentModifiers(range);
             }
-            const index = this.cache.modifiers.findIndex(f => f instanceof FormatClass);
-            if (index !== -1) {
-                this.cache.modifiers.splice(index, 1);
+            const format = this.cache.modifiers.find(FormatClass);
+            if (format) {
+                this.cache.modifiers.remove(format);
             } else {
-                this.cache.modifiers.push(new FormatClass());
+                this.cache.modifiers.append(new FormatClass());
             }
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
@@ -65,16 +65,15 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             // If every char in the range has the format `FormatClass`, remove
             // the format for all of them.
             const allHaveFormat = selectedInlines.every(inline => {
-                return !!inline.modifiers.find(f => f instanceof FormatClass);
+                return !!inline.modifiers.find(FormatClass);
             });
             if (allHaveFormat) {
                 for (const inline of selectedInlines) {
-                    const index = inline.modifiers.findIndex(f => f instanceof FormatClass);
+                    const format = inline.modifiers.find(FormatClass);
                     // Apply the attributes of the format we're about to remove to
                     // the inline itself.
-                    const matchingFormat = inline.modifiers[index] as Format;
-                    const attributes = inline.modifiers.get(Attributes);
-                    const matchingFormatAttributes = matchingFormat.modifiers.get(Attributes);
+                    const attributes = inline.modifiers.find(Attributes);
+                    const matchingFormatAttributes = format.modifiers.find(Attributes);
                     if (attributes && matchingFormatAttributes) {
                         for (const key of matchingFormatAttributes.keys()) {
                             attributes.set(key, matchingFormatAttributes.get(key));
@@ -83,7 +82,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         inline.modifiers.append(matchingFormatAttributes.clone());
                     }
                     // Remove the format.
-                    inline.modifiers.splice(index, 1);
+                    inline.modifiers.remove(format);
                 }
             } else {
                 // If there is at least one char in the range without the format

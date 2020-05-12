@@ -118,7 +118,7 @@ export class TableXmlDomParser extends AbstractParser<Node> {
                 // Check traversing colspan and rowspan to insert placeholder
                 // cells where necessary. Consume these attributes as they will
                 // be replaced with getters.
-                const attributes = cell.modifiers.get(Attributes);
+                const attributes = cell.modifiers.find(Attributes);
                 let colspan = 1;
                 let rowspan = 1;
                 if (attributes) {

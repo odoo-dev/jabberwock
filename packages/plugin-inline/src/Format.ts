@@ -33,10 +33,10 @@ export class Format extends Modifier {
 
     render(): Node {
         const node = document.createElement(this.htmlTag);
-        const attributes = this.modifiers.get(Attributes);
+        const attributes = this.modifiers.find(Attributes);
         if (attributes) {
             for (const name of attributes.keys()) {
-                node.setAttribute(name, this.modifiers.get(Attributes).get(name));
+                node.setAttribute(name, this.modifiers.find(Attributes).get(name));
             }
         }
         return node;

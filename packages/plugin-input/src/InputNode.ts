@@ -18,24 +18,24 @@ export class InputNode extends VElement {
      * Return the `name` attribute of this Input node.
      */
     get inputName(): string {
-        return this.modifiers.get(Attributes)?.get('name') as string;
+        return this.modifiers.find(Attributes)?.get('name') as string;
     }
     /**
      * Set the `name` attribute of this Input node.
      */
     set inputName(name: string) {
-        this.modifiers.get(Attributes)?.set('name', name);
+        this.modifiers.find(Attributes)?.set('name', name);
     }
     /**
      * Return the `type` attribute of this Input node.
      */
     get inputType(): string {
-        return this.modifiers.get(Attributes)?.get('type') as string;
+        return this.modifiers.find(Attributes)?.get('type') as string;
     }
     /**
      * Set the `type` attribute of this Input node.
      */
     set inputType(name: string) {
-        this.modifiers.get(Attributes)?.set('type', name);
+        this.modifiers.find(Attributes)?.set('type', name);
     }
 }

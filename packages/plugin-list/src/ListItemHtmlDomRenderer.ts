@@ -37,7 +37,7 @@ export class ListItemHtmlDomRenderer extends AbstractRenderer<Node[]> {
         }
         // Render the node's attributes that were stored on the technical key
         // that specifies those attributes belong on the list item.
-        const liAttributes = node.modifiers.get(ListItemAttributes);
+        const liAttributes = node.modifiers.find(ListItemAttributes);
         if (liAttributes) {
             this.engine.renderAttributes(liAttributes, domListItem);
         }

@@ -18,7 +18,7 @@ describePlugin(Youtube, () => {
             const node = (await engine.parse(element))[0];
             expect(node.children().length).to.equal(1);
             expect(node.children()[0].toString()).to.equal('YoutubeNode');
-            const attributes = node.children()[0].modifiers.get(Attributes);
+            const attributes = node.children()[0].modifiers.find(Attributes);
             expect(attributes.keys()).to.deep.equal(['src']);
             expect(attributes.values()).to.deep.equal([
                 'https://www.youtube-nocookie.com/embed/Ih8K2SKHJPI?start=15',

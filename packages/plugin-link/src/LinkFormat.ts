@@ -7,10 +7,10 @@ export class LinkFormat extends Format {
         this.url = url;
     }
     get url(): string {
-        return this.modifiers.get(Attributes)?.get('href');
+        return this.modifiers.find(Attributes)?.get('href');
     }
     set url(url: string) {
-        let xmlAttributes = this.modifiers.get(Attributes);
+        let xmlAttributes = this.modifiers.find(Attributes);
         if (!xmlAttributes) {
             xmlAttributes = new Attributes();
             this.modifiers.append(xmlAttributes);

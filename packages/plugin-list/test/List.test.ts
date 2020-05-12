@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
 import { ListType, ListNode } from '../src/ListNode';
-import { CharNode } from '../../plugin-char/src/CharNode';
 import { describePlugin, keydown, unformat } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
@@ -20,12 +19,11 @@ import { BoldXmlDomParser } from '../../plugin-bold/src/BoldXmlDomParser';
 import { UnderlineXmlDomParser } from '../../plugin-underline/src/UnderlineXmlDomParser';
 import { SpanXmlDomParser } from '../../plugin-span/src/SpanXmlDomParser';
 import { Char } from '../../plugin-char/src/Char';
-import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkXmlDomParser } from '../../plugin-link/src/LinkXmlDomParser';
 import { SuperscriptXmlDomParser } from '../../plugin-superscript/src/SuperscriptXmlDomParser';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
-import { Format } from '../../plugin-inline/src/Format';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Core>('deleteForward');
@@ -138,10 +136,10 @@ describePlugin(List, testEditor => {
             expect(li1_0.children().length).to.equal(3);
             expect(li1_0.children()[0].toString()).to.equal('a');
             expect(li1_0.children()[1].toString()).to.equal('.');
-            expect((li1_0.children()[1] as CharNode).modifiers.length).to.equal(1);
-            expect(((li1_0.children()[1] as CharNode).modifiers[0] as Format).htmlTag).to.equal(
-                'B',
-            );
+            expect(li1_0.children()[1].modifiers.length).to.equal(1);
+            expect(li1_0.children()[1].modifiers.map(m => m.constructor.name)).to.deep.equal([
+                'BoldFormat',
+            ]);
             expect(li1_0.children()[2].toString()).to.equal('a');
 
             const li1_1 = li1.children()[1];
@@ -262,18 +260,18 @@ describePlugin(List, testEditor => {
             expect(li.toString()).to.equal('ParagraphNode');
             expect(li.children().length).to.equal(15);
 
-            function mapFormats(node: InlineNode): string[] {
+            function mapFormats(node: VNode): string[] {
                 return node.modifiers.map(format => format.constructor.name);
             }
 
             expect(li.children()[0].toString()).to.equal('a');
-            expect(mapFormats(li.children()[0] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[0])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[1].toString()).to.equal(' ');
-            expect(mapFormats(li.children()[1] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[1])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[2].toString()).to.equal('b');
-            expect(mapFormats(li.children()[2] as InlineNode)).to.deep.equal([
+            expect(mapFormats(li.children()[2])).to.deep.equal([
                 'SpanFormat',
                 'LinkFormat',
                 'SuperscriptFormat',
@@ -282,10 +280,10 @@ describePlugin(List, testEditor => {
             ]);
 
             expect(li.children()[3].toString()).to.equal(' ');
-            expect(mapFormats(li.children()[3] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[3])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[4].toString()).to.equal('c');
-            expect(mapFormats(li.children()[4] as InlineNode)).to.deep.equal([
+            expect(mapFormats(li.children()[4])).to.deep.equal([
                 'SpanFormat',
                 'LinkFormat',
                 'SuperscriptFormat',
@@ -294,42 +292,33 @@ describePlugin(List, testEditor => {
             ]);
 
             expect(li.children()[5].toString()).to.equal(' ');
-            expect((li.children()[5] as InlineNode).modifiers).to.deep.equal([]);
+            expect(mapFormats(li.children()[5])).to.deep.equal([]);
 
             expect(li.children()[6].toString()).to.equal('d');
-            expect(mapFormats(li.children()[6] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[6])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[7].toString()).to.equal(' ');
-            expect(mapFormats(li.children()[7] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[7])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[8].toString()).to.equal('e');
-            expect(mapFormats(li.children()[8] as InlineNode)).to.deep.equal([
-                'SpanFormat',
-                'ItalicFormat',
-            ]);
+            expect(mapFormats(li.children()[8])).to.deep.equal(['SpanFormat', 'ItalicFormat']);
             expect(li.children()[9].toString()).to.equal(' ');
-            expect(mapFormats(li.children()[9] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[9])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[10].toString()).to.equal('f');
-            expect(mapFormats(li.children()[10] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[10])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[11].toString()).to.equal(' ');
-            expect(mapFormats(li.children()[11] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[11])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[12].toString()).to.equal('g');
-            expect(mapFormats(li.children()[12] as InlineNode)).to.deep.equal([
-                'SpanFormat',
-                'LinkFormat',
-            ]);
+            expect(mapFormats(li.children()[12])).to.deep.equal(['SpanFormat', 'LinkFormat']);
 
             expect(li.children()[13].toString()).to.equal(' ');
-            expect(mapFormats(li.children()[13] as InlineNode)).to.deep.equal(['SpanFormat']);
+            expect(mapFormats(li.children()[13])).to.deep.equal(['SpanFormat']);
 
             expect(li.children()[14].toString()).to.equal('h');
-            expect(mapFormats(li.children()[14] as InlineNode)).to.deep.equal([
-                'SpanFormat',
-                'LinkFormat',
-            ]);
+            expect(mapFormats(li.children()[14])).to.deep.equal(['SpanFormat', 'LinkFormat']);
         });
     });
     describe('toggleList', () => {
