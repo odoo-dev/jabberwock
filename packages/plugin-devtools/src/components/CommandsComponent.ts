@@ -3,6 +3,7 @@ import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
+import { Keymap, Mapping } from '../../../plugin-keymap/src/Keymap';
 
 interface CommandsState {
     currentTab: string;
@@ -25,6 +26,7 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
         selectedCommandImplementationIndex: null, // Index of the selected command definition
     };
     localStorage = ['currentTab'];
+    stringifyPattern = this.env.editor.plugins.get(Keymap).stringifyPattern;
 
     //--------------------------------------------------------------------------
     // Public
@@ -96,5 +98,27 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
      */
     selectCommand(commandIdentifier: string): void {
         this.state.selectedCommandIdentifier = commandIdentifier;
+    }
+    /**
+     * Return the key mappings matching the given command identifier.
+     *
+     * @param commandIdentifier
+     */
+    matchingMappings(commandIdentifier: string): Mapping[] {
+        return this.env.editor.plugins
+            .get(Keymap)
+            .mappings.flat()
+            .filter(mapping => mapping.configuredCommand.commandId === commandIdentifier);
+    }
+    /**
+     * Return a string representing the arguments of a command.
+     *
+     * @param args
+     */
+    argsRepr(args: {}): string {
+        if (args === undefined) return '';
+        return `{ ${Object.keys(args)
+            .map(key => key + ': ' + args[key])
+            .join(', ')} }`;
     }
 }

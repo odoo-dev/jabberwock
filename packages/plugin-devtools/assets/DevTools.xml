@@ -355,6 +355,18 @@
                 </devtools-tr>
             </devtools-tbody>
         </devtools-table>
+        <t t-set="mappings" t-value="matchingMappings(state.selectedCommandIdentifier)"/>
+        <t t-if="mappings.length">
+            <devtools-infotitle>Shortcuts</devtools-infotitle>
+            <devtools-table>
+                <devtools-tbody>
+                    <devtools-tr t-foreach="mappings" t-as="mapping" t-key="mapping_index">
+                        <devtools-td style="width: 50%;"><t t-esc="stringifyPattern(mapping.pattern)"/></devtools-td>
+                        <devtools-td><t t-esc="argsRepr(mapping.configuredCommand.commandArgs)"/></devtools-td>
+                    </devtools-tr>
+                </devtools-tbody>
+            </devtools-table>
+        </t>
     </t>
 
     <!-- MAIN -->
