@@ -32,7 +32,7 @@ export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
         // they are automatically calculated in function of the cell's managed
         // cells. Render them here. If their value is 1 or less, they are
         // insignificant so no need to render them.
-        let attributes = cell.modifiers.get(Attributes);
+        let attributes = cell.modifiers.find(Attributes);
         if (attributes) {
             attributes = attributes.clone();
         } else {

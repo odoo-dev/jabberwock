@@ -59,11 +59,7 @@ export class InfoComponent extends OwlComponent<{}> {
             }
         } else if (propName === 'modifiers') {
             if (!vNode.modifiers.length) return '[]';
-            const modifiersRepr = [];
-            for (const modifier of vNode.modifiers) {
-                modifiersRepr.push(modifier.toString());
-            }
-            return `[ ${modifiersRepr.join(', ')} ]`;
+            return `[ ${vNode.modifiers.map(m => m.toString()).join(', ')} ]`;
         } else {
             if ({}.toString.call(prop) === '[object Function]') {
                 prop = vNode[propName]();

@@ -90,7 +90,7 @@ export function nodeName(node: Node): string {
  * @param target
  */
 export function getStyles(target: VNode | Format): Record<string, string> {
-    const stylesArray = ((target.modifiers.get(Attributes)?.get('style') as string) || '')
+    const stylesArray = ((target.modifiers.find(Attributes)?.get('style') as string) || '')
         .split(';')
         .map(style => style.trim())
         .filter(style => style.length);
@@ -116,16 +116,16 @@ export function setStyles(target: VNode | Format, styles: Record<string, string>
         stylesArray.push([key, styles[key]].join(': '));
     }
     if (stylesArray.length) {
-        if (target.modifiers.get(Attributes)) {
-            target.modifiers.get(Attributes).set('style', stylesArray.join('; ') + ';');
+        if (target.modifiers.find(Attributes)) {
+            target.modifiers.find(Attributes).set('style', stylesArray.join('; ') + ';');
         } else {
             const attributes = new Attributes();
             attributes.set('style', stylesArray.join('; ') + ';');
             target.modifiers.append(attributes);
         }
-    } else if (target.modifiers.get(Attributes)) {
-        target.modifiers.get(Attributes).remove('style');
-        if (!target.modifiers.get(Attributes).length) {
+    } else if (target.modifiers.find(Attributes)) {
+        target.modifiers.find(Attributes).remove('style');
+        if (!target.modifiers.find(Attributes).length) {
             target.modifiers.remove(Attributes);
         }
     }

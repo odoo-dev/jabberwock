@@ -13,7 +13,7 @@ export class LineBreakHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: LineBreakNode): Promise<Node[]> {
         const br = document.createElement('br');
-        const attributes = node.modifiers.get(Attributes);
+        const attributes = node.modifiers.find(Attributes);
         if (attributes) {
             this.engine.renderAttributes(attributes, br);
         }

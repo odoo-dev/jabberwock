@@ -20,7 +20,7 @@ export class CharFormatHtmlDomRenderer extends FormatDomRenderer {
         // If the node has attributes, wrap it inside a span with those
         // attributes.
         let rendering: Node[];
-        const attributes = node.modifiers.get(Attributes);
+        const attributes = node.modifiers.find(Attributes);
         if (attributes && attributes.length) {
             const span = document.createElement('span');
             this.engine.renderAttributes(attributes, span);
@@ -30,6 +30,6 @@ export class CharFormatHtmlDomRenderer extends FormatDomRenderer {
             rendering = textNode;
         }
 
-        return this.renderFormats(node.modifiers.getAll(Format), rendering);
+        return this.renderFormats(node.modifiers.filter(Format), rendering);
     }
 }

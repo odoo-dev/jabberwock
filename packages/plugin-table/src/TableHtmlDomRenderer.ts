@@ -25,7 +25,7 @@ export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
                 // If the child is a row, append it to its containing section.
                 const tableSection = child.header ? domHead : domBody;
                 tableSection.append(...domChild);
-                const sectionAttributes = child.modifiers.get(TableSectionAttributes);
+                const sectionAttributes = child.modifiers.find(TableSectionAttributes);
                 if (sectionAttributes) {
                     this.engine.renderAttributes(sectionAttributes, tableSection);
                 }
@@ -39,7 +39,7 @@ export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
                 domBody = document.createElement('tbody');
             }
         }
-        const attributes = table.modifiers.get(Attributes);
+        const attributes = table.modifiers.find(Attributes);
         if (attributes) {
             this.engine.renderAttributes(attributes, domTable);
         }

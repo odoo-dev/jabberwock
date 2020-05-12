@@ -20,7 +20,7 @@ export class Modifier {
     //--------------------------------------------------------------------------
 
     applyTo(node: VNode): void {
-        node.modifiers.unshift(this);
+        node.modifiers.prepend(this);
     }
     isSameAs(otherModifier: Modifier): boolean {
         return this === otherModifier;

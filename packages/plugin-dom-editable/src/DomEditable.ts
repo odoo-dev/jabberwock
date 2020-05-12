@@ -38,7 +38,7 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
                         // Semantic elements are inline by default.
                         // We need to guarantee it's a block so it can contain
                         // other blocks.
-                        let attributes = root.modifiers.get(Attributes);
+                        let attributes = root.modifiers.find(Attributes);
                         if (!attributes) {
                             attributes = new Attributes();
                             root.modifiers.append(attributes);
@@ -47,12 +47,12 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
                     }
                     root.editable = false;
                     root.breakable = false;
-                    let attributes = root.modifiers.get(Attributes);
+                    let attributes = root.modifiers.find(Attributes);
                     if (!attributes) {
                         attributes = new Attributes();
                         root.modifiers.append(attributes);
                     }
-                    root.modifiers.get(Attributes).set('contentEditable', 'true');
+                    root.modifiers.find(Attributes).set('contentEditable', 'true');
 
                     if (!this.editor.selection.anchor.parent && this.configuration.autoFocus) {
                         this.editor.selection.setAt(root, RelativePosition.INSIDE);
@@ -125,9 +125,11 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
         }
         const node = nodes?.pop();
         const ancestorContentEditable = node?.closest(
-            node => !!node.modifiers.get(Attributes)?.get('contentEditable'),
+            node => !!node.modifiers.find(Attributes)?.get('contentEditable'),
         );
-        return ancestorContentEditable?.modifiers.get(Attributes).get('contentEditable') === 'true';
+        return (
+            ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') === 'true'
+        );
     }
 
     /**

@@ -60,7 +60,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // ancestor or a format.
                 if (node.is(InlineNode)) {
                     const colorFormat = node.modifiers
-                        .getAll(Format)
+                        .filter(Format)
                         .find(format => getStyle(format, this.styleName));
                     if (colorFormat && getStyle(colorFormat, this.styleName) === color) continue;
                 }
@@ -125,7 +125,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 for (const child of node.children()) {
                     removeStyle(child, this.styleName);
                     if (child.is(InlineNode)) {
-                        for (const format of child.modifiers.getAll(Format)) {
+                        for (const format of child.modifiers.filter(Format)) {
                             removeStyle(format, this.styleName);
                         }
                     }
@@ -156,7 +156,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
      * @param node
      */
     _nodeOrFirstFormat(node: VNode): VNode | Format {
-        return node.is(InlineNode) ? node.modifiers?.get(Format) || node : node;
+        return node.is(InlineNode) ? node.modifiers?.find(Format) || node : node;
     }
     /**
      * Return true if all the children of the given node have the given color.

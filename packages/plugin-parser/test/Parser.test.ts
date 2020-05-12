@@ -79,7 +79,7 @@ describe('utils', () => {
                 const a = p.children()[0] as CharNode;
                 expect(a instanceof CharNode).to.be.true;
                 expect(a.char).to.equal('a');
-                expect(Object.keys(a.modifiers)).to.deep.equal([]);
+                expect(a.modifiers.map(m => m)).to.deep.equal([]);
                 const b = p.children()[1] as CharNode;
                 expect(b.char).to.equal('b');
                 expect(b.modifiers.map(f => f.name)).to.deep.equal(['i']);

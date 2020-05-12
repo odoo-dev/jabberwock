@@ -10,7 +10,7 @@ export class YoutubeHtmlDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: YoutubeNode): Promise<Node[]> {
         const youtube = document.createElement('iframe');
-        const attributes = node.modifiers.get(Attributes);
+        const attributes = node.modifiers.find(Attributes);
         if (attributes) {
             this.engine.renderAttributes(attributes, youtube);
         }

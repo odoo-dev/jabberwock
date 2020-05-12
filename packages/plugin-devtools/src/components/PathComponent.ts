@@ -5,7 +5,7 @@ import { Format } from '../../../plugin-inline/src/Format';
 export class PathComponent extends OwlComponent<{}> {
     getNodeRepr(vNode: VNode): string {
         let repr: string = vNode.name || '?';
-        for (const format of vNode.modifiers.getAll(Format)) {
+        for (const format of vNode.modifiers.filter(Format)) {
             repr += '.' + format.name;
         }
         return repr;

@@ -9,7 +9,7 @@ export class FormatDomRenderer extends AbstractRenderer<Node[]> {
     predicate: Predicate<boolean | VNode> = InlineNode;
     async render(node: InlineNode): Promise<Node[]> {
         const inline = await this.super.render(node);
-        return this.renderFormats(node.modifiers.getAll(Format), inline);
+        return this.renderFormats(node.modifiers.filter(Format), inline);
     }
     /**
      * Render an inline node's formats and return them in a fragment.

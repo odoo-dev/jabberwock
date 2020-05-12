@@ -13,7 +13,7 @@ export class InputHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: InputNode): Promise<Node[]> {
         const input = document.createElement('input');
-        const attributes = node.modifiers.get(Attributes);
+        const attributes = node.modifiers.find(Attributes);
         if (attributes) {
             this.engine.renderAttributes(attributes, input);
         }

@@ -1,19 +1,16 @@
 import { Modifier } from './Modifier';
-import { Constructor } from '../../utils/src/utils';
+import { Constructor, isConstructor } from '../../utils/src/utils';
 
-export class Modifiers extends Array<Modifier> {
+export class Modifiers {
+    _contents: Modifier[] = [];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
-        // Native Array constructor takes the length as argument.
-        const length = modifiers[0];
-        if (typeof length === 'number') {
-            super(length);
-        } else {
-            super(0);
-            const clonedModifiers = modifiers.map(mod => {
-                return mod instanceof Modifier ? mod.clone() : mod;
-            });
-            this.append(...clonedModifiers);
-        }
+        const clonedModifiers = modifiers.map(mod => {
+            return mod instanceof Modifier ? mod.clone() : mod;
+        });
+        this.append(...clonedModifiers);
+    }
+    get length(): number {
+        return this._contents.length;
     }
 
     //--------------------------------------------------------------------------
@@ -29,9 +26,9 @@ export class Modifiers extends Array<Modifier> {
     append(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
         for (const modifier of modifiers) {
             if (modifier instanceof Modifier) {
-                this.push(modifier);
+                this._contents.push(modifier);
             } else {
-                this.push(new modifier());
+                this._contents.push(new modifier());
             }
         }
     }
@@ -44,9 +41,9 @@ export class Modifiers extends Array<Modifier> {
     prepend(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
         for (const modifier of modifiers) {
             if (modifier instanceof Modifier) {
-                this.unshift(modifier);
+                this._contents.unshift(modifier);
             } else {
-                this.unshift(new modifier());
+                this._contents.unshift(new modifier());
             }
         }
     }
@@ -57,12 +54,21 @@ export class Modifiers extends Array<Modifier> {
      *
      * @param modifier
      */
-    get<T extends Modifier>(modifier: T | Constructor<T>): T {
+    find<T extends Modifier>(callback: (modifier: T) => boolean): T;
+    find<T extends Modifier>(modifier: T | Constructor<T>): T;
+    find<T extends Modifier>(modifier: ((modifier: T) => boolean) | T | Constructor<T>): T {
         if (modifier instanceof Modifier) {
-            return this.find(mod => mod === modifier) as T;
-        } else {
-            return (this.find(mod => mod.constructor.name === modifier.name) ||
-                this.find(mod => mod instanceof modifier)) as T;
+            // `modifier` is an instance of `Modifier` -> find it in the array.
+            return this._contents.find(instance => instance === modifier) as T;
+        } else if (isConstructor<typeof Modifier>(modifier, Modifier)) {
+            // `modifier` is a `Modifier` class -> find its first instance in
+            // the array. If an instance couldn't be found, find the first
+            // instance of an extension of the given class.
+            return (this._contents.find(mod => mod.constructor.name === modifier.name) ||
+                this._contents.find(mod => mod instanceof modifier)) as T;
+        } else if (modifier instanceof Function) {
+            // `modifier` is a callback -> call `find` natively on the array.
+            return this._contents.find(modifier) as T;
         }
     }
     /**
@@ -71,14 +77,29 @@ export class Modifiers extends Array<Modifier> {
      *
      * @param modifier
      */
-    getAll<T extends Modifier>(modifier: Constructor<T>): T[] {
-        const items = [];
-        for (const instance of this) {
-            if (instance instanceof modifier) {
-                items.push(instance);
-            }
+    filter<T extends Modifier>(
+        callbackfn: (value: Modifier, index: number, array: Modifier[]) => boolean,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        thisArg?: any,
+    ): T[];
+    filter<T extends Modifier>(modifier: Constructor<T>): T[];
+    filter<T extends Modifier>(
+        modifier: ((value: Modifier, index: number, array: Modifier[]) => boolean) | Constructor<T>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        thisArg?: any,
+    ): T[] {
+        if (modifier instanceof Modifier) {
+            // `modifier` is an instance of `Modifier` -> find it in the array
+            // and return it in a new array.
+            return this._contents.filter(m => m === modifier) as T[];
+        } else if (isConstructor<typeof Modifier>(modifier, Modifier)) {
+            // `modifier` is a `Modifier` class -> return all instances of it in
+            // the array.
+            return this._contents.filter(m => m instanceof modifier) as T[];
+        } else {
+            // `modifier` is a callback -> call `filter` natively on the array.
+            return this._contents.filter(modifier, thisArg) as T[];
         }
-        return items;
     }
     /**
      * Remove the first modifier in the array that is an instance of the given
@@ -89,7 +110,7 @@ export class Modifiers extends Array<Modifier> {
      * @param modifier
      */
     remove(modifier: Modifier | Constructor<Modifier>): boolean {
-        const modifierIndex = this.findIndex(modifierInstance => {
+        const modifierIndex = this._contents.findIndex(modifierInstance => {
             if (modifier instanceof Modifier) {
                 return modifierInstance === modifier;
             } else {
@@ -99,7 +120,7 @@ export class Modifiers extends Array<Modifier> {
         if (modifierIndex === -1) {
             return false;
         } else {
-            this.splice(modifierIndex, 1);
+            this._contents.splice(modifierIndex, 1);
             return true;
         }
     }
@@ -120,7 +141,7 @@ export class Modifiers extends Array<Modifier> {
         oldModifier: Modifier | Constructor<Modifier>,
         newModifier: Modifier | Constructor<Modifier>,
     ): boolean {
-        const oldModifierIndex = this.findIndex(modifierInstance => {
+        const oldModifierIndex = this._contents.findIndex(modifierInstance => {
             if (oldModifier instanceof Modifier) {
                 return modifierInstance === oldModifier;
             } else {
@@ -152,7 +173,7 @@ export class Modifiers extends Array<Modifier> {
      * modifiers.
      */
     clone(): Modifiers {
-        return new Modifiers(...this);
+        return new Modifiers(...this._contents);
     }
     /**
      * Return true if the modifiers in this array are the same as the modifiers
@@ -162,14 +183,43 @@ export class Modifiers extends Array<Modifier> {
      * @param otherModifiers
      */
     areSameAs(otherModifiers: Modifiers): boolean {
-        const modifiersMap = new Map(this.map(a => [a, otherModifiers.find(b => a.isSameAs(b))]));
+        const modifiersMap = new Map(
+            this._contents.map(a => [a, otherModifiers.find(b => a.isSameAs(b))]),
+        );
         const aModifiers = Array.from(modifiersMap.keys());
         const bModifiers = Array.from(modifiersMap.values());
 
         const allAinB = aModifiers.every(a => a.isSameAs(modifiersMap.get(a)));
         const allBinA = otherModifiers.every(
-            b => bModifiers.includes(b) || b.isSameAs(this.get(b)),
+            b => bModifiers.includes(b) || b.isSameAs(this.find(b)),
         );
         return allAinB && allBinA;
+    }
+    /**
+     * Proxy for the native `some` method of `Array`, called on `this._contents`.
+     *
+     * @see Array.some
+     * @param callbackfn
+     */
+    some(callbackfn: (value: Modifier, index: number, array: Modifier[]) => unknown): boolean {
+        return this._contents.some(callbackfn);
+    }
+    /**
+     * Proxy for the native `every` method of `Array`, called on `this._contents`.
+     *
+     * @see Array.every
+     * @param callbackfn
+     */
+    every(callbackfn: (value: Modifier, index: number, array: Modifier[]) => unknown): boolean {
+        return this._contents.every(callbackfn);
+    }
+    /**
+     * Proxy for the native `map` method of `Array`, called on `this._contents`.
+     *
+     * @see Array.map
+     * @param callbackfn
+     */
+    map<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): T[] {
+        return this._contents.map(callbackfn);
     }
 }
