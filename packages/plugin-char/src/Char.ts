@@ -48,6 +48,9 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const text = params.text;
         const inline = this.editor.plugins.get(Inline);
         const formats = inline.getCurrentFormats(range);
+        if (params.formats) {
+            formats.append(...params.formats);
+        }
         const styles = inline.getCurrentStyles(range);
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
