@@ -48,7 +48,7 @@ describe('core', () => {
                             expect(p.htmlTag).to.equal('P');
                             expect(p.children().length).to.equal(1);
                             expect(p.children()[0] instanceof CharNode).to.be.true;
-                            expect((p.children()[0] as CharNode).char).to.equal('a');
+                            expect(p.children()[0].textContent).to.equal('a');
                         },
                     });
                 });

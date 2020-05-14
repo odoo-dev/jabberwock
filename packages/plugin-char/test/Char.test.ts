@@ -42,9 +42,9 @@ describePlugin(Char, testEditor => {
             const text = document.createTextNode('abc');
             const nodes = await new CharXmlDomParser(engine).parse(text);
             expect(nodes.length).to.equal(3);
-            expect((nodes[0] as CharNode).char).to.equal('a');
-            expect((nodes[1] as CharNode).char).to.equal('b');
-            expect((nodes[2] as CharNode).char).to.equal('c');
+            expect(nodes[0].textContent).to.equal('a');
+            expect(nodes[1].textContent).to.equal('b');
+            expect(nodes[2].textContent).to.equal('c');
         });
         it('should not parse a SPAN node', async () => {
             const engine = new XmlDomParsingEngine(new JWEditor());

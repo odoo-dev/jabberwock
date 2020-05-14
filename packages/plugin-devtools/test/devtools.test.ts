@@ -204,6 +204,9 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>23</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
+                root.textContent +
+                '</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
                 '<devtools-infotitle>📖 My Properties</devtools-infotitle>' +
@@ -289,6 +292,9 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
+                root.children()[1].textContent +
+                '</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
             expect(aboutMe.outerHTML).to.equal(aboutMeResult);
@@ -526,6 +532,9 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
+                vNodeChar.textContent +
+                '</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
             expect(aboutMe.outerHTML).to.equal(aboutMeResult);

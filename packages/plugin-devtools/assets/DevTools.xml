@@ -143,6 +143,10 @@
                         <devtools-td>total length</devtools-td>
                         <devtools-td><t t-esc="totalLength(props.vNode)"/></devtools-td>
                     </devtools-tr>
+                    <devtools-tr>
+                        <devtools-td>text content</devtools-td>
+                        <devtools-td><t t-esc="props.vNode.textContent"/></devtools-td>
+                    </devtools-tr>
                 </devtools-tbody>
             </devtools-table>
             <devtools-infotitle>📖 My Properties</devtools-infotitle>

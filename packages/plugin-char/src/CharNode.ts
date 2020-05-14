@@ -50,6 +50,14 @@ export class CharNode extends InlineNode {
         return 1;
     }
     /**
+     * Return the text content of this node.
+     *
+     * @override
+     */
+    get textContent(): string {
+        return this.char;
+    }
+    /**
      * Return true if `a` has the same format properties as `b`.
      *
      * @param a
