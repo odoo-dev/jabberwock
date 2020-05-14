@@ -51,16 +51,10 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                 } else {
                     inlinesContainer = null; // Close the inlinesContainer.
                     for (const child of parsedChild) {
-                        const attributes = child.modifiers.find(Attributes);
-                        if (attributes) {
-                            child.modifiers.replace(Attributes, attributes.clone());
-                        }
-                        if (itemAttributes) {
-                            child.modifiers.replace(
-                                ListItemAttributes,
-                                new ListItemAttributes(itemAttributes),
-                            );
-                        }
+                        child.modifiers.replace(
+                            ListItemAttributes,
+                            new ListItemAttributes(itemAttributes),
+                        );
                     }
                     nodes.push(...parsedChild);
                 }

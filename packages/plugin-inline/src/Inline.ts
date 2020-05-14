@@ -72,14 +72,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                     const format = inline.modifiers.find(FormatClass);
                     // Apply the attributes of the format we're about to remove to
                     // the inline itself.
-                    const attributes = inline.modifiers.find(Attributes);
+                    const attributes = inline.modifiers.get(Attributes);
                     const matchingFormatAttributes = format.modifiers.find(Attributes);
-                    if (attributes && matchingFormatAttributes) {
+                    if (matchingFormatAttributes) {
                         for (const key of matchingFormatAttributes.keys()) {
                             attributes.set(key, matchingFormatAttributes.get(key));
                         }
-                    } else if (matchingFormatAttributes) {
-                        inline.modifiers.append(matchingFormatAttributes.clone());
                     }
                     // Remove the format.
                     inline.modifiers.remove(format);
@@ -88,7 +86,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 // If there is at least one char in the range without the format
                 // `FormatClass`, set the format for all nodes.
                 for (const inline of selectedInlines) {
-                    if (!inline.modifiers.find(f => f instanceof FormatClass)) {
+                    if (!inline.modifiers.find(FormatClass)) {
                         new FormatClass().applyTo(inline);
                     }
                 }
@@ -100,14 +98,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             if (!this.cache.modifiers) {
                 this.cache.modifiers = this.getCurrentModifiers(range);
             }
-            return !!this.cache.modifiers.find(format => format instanceof FormatClass);
+            return !!this.cache.modifiers.find(FormatClass);
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
             return (
                 selectedInlines.length &&
-                selectedInlines.every(
-                    char => !!char.modifiers.find(format => format instanceof FormatClass),
-                )
+                selectedInlines.every(char => !!char.modifiers.find(FormatClass))
             );
         }
     }

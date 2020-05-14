@@ -13,10 +13,7 @@ export class TableRowHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(row: TableRowNode): Promise<Node[]> {
         const domRow = document.createElement('tr');
-        const attributes = row.modifiers.find(Attributes);
-        if (attributes) {
-            this.engine.renderAttributes(attributes, domRow);
-        }
+        this.engine.renderAttributes(Attributes, row, domRow);
         const renderedChildren = await this.renderChildren(row);
         for (const renderedChild of renderedChildren) {
             for (const domChild of renderedChild) {

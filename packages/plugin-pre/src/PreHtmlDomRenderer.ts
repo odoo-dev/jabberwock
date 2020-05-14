@@ -13,10 +13,7 @@ export class PreHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: PreNode): Promise<Node[]> {
         const pre = document.createElement('pre');
-        const attributes = node.modifiers.find(Attributes);
-        if (attributes) {
-            this.engine.renderAttributes(attributes, pre);
-        }
+        this.engine.renderAttributes(Attributes, node, pre);
         for (const child of node.children()) {
             const domChildren = await this.renderChild(child);
             pre.append(...domChildren);

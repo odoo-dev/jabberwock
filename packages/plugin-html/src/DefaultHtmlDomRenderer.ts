@@ -22,10 +22,7 @@ export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {
                     nodeName = node.constructor.name.toUpperCase() + '-' + node.id;
                 }
                 const element = document.createElement(nodeName);
-                const attributes = node.modifiers.find(Attributes);
-                if (attributes) {
-                    this.engine.renderAttributes(attributes, element);
-                }
+                this.engine.renderAttributes(Attributes, node, element);
                 domNode = element;
             }
 

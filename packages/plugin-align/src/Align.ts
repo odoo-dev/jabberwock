@@ -62,15 +62,15 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      * @param [type]
      */
     static isAligned(node: VNode, type?: AlignType): boolean {
-        if (typeof node.modifiers.find(Attributes)?.get('style') !== 'string') {
-            return false;
-        } else {
-            const styles = node.modifiers
-                .find(Attributes)
-                ?.get('style')
-                .split(';');
+        const styles = node.modifiers
+            .find(Attributes)
+            ?.get('style')
+            ?.split(';');
+        if (styles) {
             const align = styles.find(style => style.includes('text-align'));
             return type ? align?.includes(type) : !!align;
+        } else {
+            return false;
         }
     }
     /**
@@ -86,11 +86,11 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
 
             // Compute current alignment.
             let currentAlignment: string;
-            if (typeof alignedAncestor?.modifiers.find(Attributes)?.get('style') === 'string') {
-                const styles = alignedAncestor.modifiers
-                    .find(Attributes)
-                    .get('style')
-                    .split(';');
+            const styles = alignedAncestor?.modifiers
+                ?.find(Attributes)
+                ?.get('style')
+                ?.split(';');
+            if (styles) {
                 const alignment = styles.find(style => style.includes('text-align'));
                 currentAlignment = alignment?.replace(/text-align\s*:|;/, '').trim();
             }

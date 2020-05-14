@@ -32,21 +32,15 @@ export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
         // they are automatically calculated in function of the cell's managed
         // cells. Render them here. If their value is 1 or less, they are
         // insignificant so no need to render them.
-        let attributes = cell.modifiers.find(Attributes);
-        if (attributes) {
-            attributes = attributes.clone();
-        } else {
-            attributes = new Attributes();
-        }
         if (cell.colspan > 1) {
-            attributes.set('colspan', '' + cell.colspan);
+            cell.modifiers.get(Attributes).set('colspan', '' + cell.colspan);
         }
         if (cell.rowspan > 1) {
-            attributes.set('rowspan', '' + cell.rowspan);
+            cell.modifiers.get(Attributes).set('rowspan', '' + cell.rowspan);
         }
-        if (attributes) {
-            this.engine.renderAttributes(attributes, td);
-        }
+        this.engine.renderAttributes(Attributes, cell, td);
+        cell.modifiers.get(Attributes).remove('colspan');
+        cell.modifiers.get(Attributes).remove('rowspan');
 
         return [td];
     }

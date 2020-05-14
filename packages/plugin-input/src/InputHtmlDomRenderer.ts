@@ -15,7 +15,7 @@ export class InputHtmlDomRenderer extends AbstractRenderer<Node[]> {
         const input = document.createElement('input');
         const attributes = node.modifiers.find(Attributes);
         if (attributes) {
-            this.engine.renderAttributes(attributes, input);
+            this.engine.renderAttributes(Attributes, node, input);
         }
         input.value = node.value;
         return [input];

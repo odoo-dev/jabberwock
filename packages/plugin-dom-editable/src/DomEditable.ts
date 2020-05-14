@@ -38,21 +38,11 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
                         // Semantic elements are inline by default.
                         // We need to guarantee it's a block so it can contain
                         // other blocks.
-                        let attributes = root.modifiers.find(Attributes);
-                        if (!attributes) {
-                            attributes = new Attributes();
-                            root.modifiers.append(attributes);
-                        }
-                        attributes.set('style', 'display: block;');
+                        root.modifiers.get(Attributes).set('style', 'display: block;');
                     }
                     root.editable = false;
                     root.breakable = false;
-                    let attributes = root.modifiers.find(Attributes);
-                    if (!attributes) {
-                        attributes = new Attributes();
-                        root.modifiers.append(attributes);
-                    }
-                    root.modifiers.find(Attributes).set('contentEditable', 'true');
+                    root.modifiers.get(Attributes).set('contentEditable', 'true');
 
                     if (!this.editor.selection.anchor.parent && this.configuration.autoFocus) {
                         this.editor.selection.setAt(root, RelativePosition.INSIDE);

@@ -36,7 +36,7 @@ export class Format extends Modifier {
         const attributes = this.modifiers.find(Attributes);
         if (attributes) {
             for (const name of attributes.keys()) {
-                node.setAttribute(name, this.modifiers.find(Attributes).get(name));
+                node.setAttribute(name, attributes.get(name));
             }
         }
         return node;

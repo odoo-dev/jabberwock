@@ -116,18 +116,9 @@ export function setStyles(target: VNode | Format, styles: Record<string, string>
         stylesArray.push([key, styles[key]].join(': '));
     }
     if (stylesArray.length) {
-        if (target.modifiers.find(Attributes)) {
-            target.modifiers.find(Attributes).set('style', stylesArray.join('; ') + ';');
-        } else {
-            const attributes = new Attributes();
-            attributes.set('style', stylesArray.join('; ') + ';');
-            target.modifiers.append(attributes);
-        }
-    } else if (target.modifiers.find(Attributes)) {
-        target.modifiers.find(Attributes).remove('style');
-        if (!target.modifiers.find(Attributes).length) {
-            target.modifiers.remove(Attributes);
-        }
+        target.modifiers.get(Attributes).set('style', stylesArray.join('; ') + ';');
+    } else {
+        target.modifiers.find(Attributes)?.remove('style');
     }
 }
 

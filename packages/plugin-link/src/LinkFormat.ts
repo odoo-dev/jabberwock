@@ -10,11 +10,6 @@ export class LinkFormat extends Format {
         return this.modifiers.find(Attributes)?.get('href');
     }
     set url(url: string) {
-        let xmlAttributes = this.modifiers.find(Attributes);
-        if (!xmlAttributes) {
-            xmlAttributes = new Attributes();
-            this.modifiers.append(xmlAttributes);
-        }
-        xmlAttributes.set('href', url);
+        this.modifiers.get(Attributes).set('href', url);
     }
 }

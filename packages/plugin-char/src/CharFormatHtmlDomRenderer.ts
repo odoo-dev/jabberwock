@@ -21,9 +21,9 @@ export class CharFormatHtmlDomRenderer extends FormatDomRenderer {
         // attributes.
         let rendering: Node[];
         const attributes = node.modifiers.find(Attributes);
-        if (attributes && attributes.length) {
+        if (attributes?.length) {
             const span = document.createElement('span');
-            this.engine.renderAttributes(attributes, span);
+            this.engine.renderAttributes(Attributes, node, span);
             textNode.forEach(child => span.appendChild(child));
             rendering = [span];
         } else {
