@@ -25,9 +25,9 @@ interface CodeShortcutPattern extends ModifiedShortcut {
 
 type ShortcutPattern = KeyShortcutPattern | CodeShortcutPattern;
 
-interface Mapping {
+export interface Mapping {
     pattern: ShortcutPattern;
-    configuredCommand?: ConfiguredCommand;
+    configuredCommand: ConfiguredCommand;
 }
 
 export enum Platform {
@@ -186,7 +186,7 @@ export class Keymap<T extends KeymapConfig = KeymapConfig> extends JWPlugin<T> {
     }
 
     /**
-     * Parse a string that represend a pattern and return a `ShortuctPattern`.
+     * Parse a string that represents a pattern and return a `ShortuctPattern`.
      * Supported pattern is: [modifier+]*[<code>|key]
      *
      * @param pattern
@@ -210,6 +210,22 @@ export class Keymap<T extends KeymapConfig = KeymapConfig> extends JWPlugin<T> {
         } else {
             return { key: keyCode.toUpperCase(), modifiers };
         }
+    }
+
+    /**
+     * Take a `ShortuctPattern` and return a string that represents a pattern,
+     * in the form [modifier+]*[<code>|key].
+     *
+     * @param pattern
+     */
+    stringifyPattern(pattern: ShortcutPattern): string {
+        const parts = Array.from(pattern.modifiers);
+        if ('code' in pattern) {
+            parts.push(pattern.code);
+        } else if ('key' in pattern) {
+            parts.push(pattern.key);
+        }
+        return parts.join('+');
     }
 
     //--------------------------------------------------------------------------
