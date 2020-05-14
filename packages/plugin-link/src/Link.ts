@@ -11,6 +11,11 @@ import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { Layout } from '../../plugin-layout/src/Layout';
+import linkForm from '../assets/LinkForm.xml';
+import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
+import { LinkComponent } from './components/LinkComponent';
+import { Owl } from '../../plugin-owl/src/Owl';
 
 export interface LinkParams extends CommandParams {
     label?: string;
@@ -36,18 +41,13 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             handler: this.unlink,
         },
     };
-    readonly loadables: Loadables<Parser & Keymap> = {
+    readonly loadables: Loadables<Parser & Keymap & Layout & Owl> = {
         parsers: [LinkXmlDomParser],
         shortcuts: [
             {
                 pattern: 'CTRL+K',
                 selector: [(node: VNode): boolean => !Link.isLink(node)],
                 commandId: 'link',
-                // TODO: use dialog to get params
-                commandArgs: {
-                    url: 'https://en.wikipedia.org/wiki/Jabberwocky',
-                    label: 'Jabberwockipedia',
-                },
             },
             {
                 pattern: 'CTRL+K',
@@ -55,38 +55,38 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 commandId: 'unlink',
             },
         ],
+        components: [
+            {
+                id: 'link',
+                async render(): Promise<OwlNode[]> {
+                    return [new OwlNode(LinkComponent, {})];
+                },
+            },
+        ],
+        componentZones: [['link', 'float']],
+        owlTemplates: [linkForm],
     };
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    link(params: LinkParams): void {
-        const range = params.context.range;
-        const selectedInlines = range.selectedNodes(InlineNode);
+    async link(params: LinkParams): Promise<void> {
+        // If the url is undefined, ask the user to provide one.
+        if (!params.url) {
+            const layout = this.editor.plugins.get(Layout);
+            await layout.remove('link');
+            await layout.add('link');
 
-        let link: LinkFormat;
-        if (params.url) {
-            link = new LinkFormat(params.url);
-        } else {
-            // Reuse the url of the first link found in range.
-            const firstLink = selectedInlines.find(node => node.formats.get(LinkFormat));
-            link = firstLink && firstLink.formats.get(LinkFormat).clone();
+            return this.editor.execCommand('show', { componentID: 'link' });
         }
 
-        // TODO: modal re-using url
-        if (!link) return;
-
-        if (range.isCollapsed()) {
-            this.editor.execCommand<Char>('insertText', {
-                text: params.label || link.url,
-                formats: new Formats(link),
-            });
-        } else {
-            for (const inline of selectedInlines) {
-                inline.formats.replace(LinkFormat, link);
-            }
-        }
+        // Otherwise create a link and insert it.
+        const link = new LinkFormat(params.url);
+        return this.editor.execCommand<Char>('insertText', {
+            text: params.label || link.url,
+            formats: new Formats(link),
+        });
     }
     unlink(params: LinkParams): void {
         const range = params.context.range;

@@ -1,0 +1,17 @@
+<templates>
+    <div t-name="link">
+        <h2>Insert a link</h2>
+        <table class="form-table">
+            <tr>
+                <td><label for="linkUrl">URL </label></td>
+                <td><input type="text" id="linkUrl" name="url" t-model="state.url"/></td>
+            </tr>
+            <tr>
+                <td><label for="linkLabel">Label </label></td>
+                <td><input type="text" id="linkLabel" name="label" t-model="state.label"/></td>
+            </tr>
+        </table>
+        <br/>
+        <button name="save" t-on-click="saveLink()">Save</button> <button name="save" t-on-click="cancel()">Cancel</button>
+    </div>
+</templates>

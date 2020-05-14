@@ -36,3 +36,9 @@ jw-dialog-container jw-dialog > jw-content > jw-button.close {
     top: 4px;
     cursor: pointer;
 }
+jw-dialog-container jw-dialog table.form-table {
+    border: none;
+}
+jw-dialog-container jw-dialog table.form-table td {
+    border: none;
+}

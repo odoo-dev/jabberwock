@@ -549,7 +549,6 @@ describe('DomLayout', () => {
                             '</jw-test>' +
                             '</jw-body>' +
                             '<jw-footer></jw-footer>' +
-                            '<t-dialog></t-dialog>' +
                         '</jw-editor>',
                     );
                     /* eslint-enable prettier/prettier */
