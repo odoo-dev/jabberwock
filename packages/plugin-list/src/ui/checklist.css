@@ -1,0 +1,13 @@
+ul.checklist > li {
+    list-style: none;
+    position: relative;
+}
+ul.checklist > li.unchecked:before, ul.checklist > li.checked:before {
+    position: absolute;
+    left: -20px;
+    line-height: 1em;
+    content: '☐';
+}
+ul.checklist > li.checked:before {
+    content: '☑';
+}

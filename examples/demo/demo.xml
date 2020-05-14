@@ -125,9 +125,9 @@ neologisms such as "galumphing" and "chortle".
     1
   </li>
   <li style="list-style: none;">
-    <ul>
-      <li>1.1</li>
-      <li>
+    <ul class="checklist">
+      <li class="checked">1.1</li>
+      <li class="unchecked">
         1.2
       </li>
       <li style="list-style: none;">
@@ -154,18 +154,28 @@ neologisms such as "galumphing" and "chortle".
             </li>
         </ol>
       </li>
-      <li>
+      <li class="unchecked">
         1.3
       </li>
       <li style="list-style: none;">
         <ul><li>1.3.1</li></ul>
       </li>
-      <li>1.4</li>
+      <li class="checked">1.4</li>
       <li>
         1.5
       </li>
       <li style="list-style: none;">
-        <ul><li>1.5.1</li></ul>
+        <ul class="checklist">
+          <li>1.5.1</li>
+          <li class="checked">1.5.2</li>
+          <li style="list-style: none;">
+            <ul class="checklist">
+              <li class="checked">1.5.2.1</li>
+              <li class="checked">1.5.2.2</li>
+            </ul>
+          </li>
+          <li class="checked">1.5.2</li>
+        </ul>
       </li>
     </ul>
   </li>

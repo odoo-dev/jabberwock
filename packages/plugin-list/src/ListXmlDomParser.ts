@@ -3,6 +3,7 @@ import { ListNode, ListType } from './ListNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
+import { ListItemAttributes } from './ListItemXmlDomParser';
 
 const listTags = ['UL', 'OL'];
 
@@ -15,17 +16,41 @@ export class ListXmlDomParser extends AbstractParser<Node> {
     };
 
     /**
-     * Parse a list (UL, OL) and his children list elements (LI).
+     * Parse a list (UL, OL) and its children list elements (LI).
      *
      * @param context
      */
     async parse(item: Element): Promise<VNode[]> {
-        if (!listTags.includes(nodeName(item))) return;
-        const listType = nodeName(item) === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
-        const listNode = new ListNode({ listType });
-        listNode.modifiers.append(this.engine.parseAttributes(item));
-        const nodes = await this.engine.parse(...item.childNodes);
-        listNode.append(...nodes);
-        return [listNode];
+        // Get the list's type (ORDERED, UNORDERED, CHECKLIST).
+        let type: ListType;
+        if (item.className.match(/(^| )checklist( |$)/i)) {
+            type = ListType.CHECKLIST;
+        } else {
+            type = nodeName(item) === 'UL' ? ListType.UNORDERED : ListType.ORDERED;
+        }
+
+        // Create the list node and parse its children and attributes.
+        const list = new ListNode({ listType: type });
+        list.modifiers.append(this.engine.parseAttributes(item));
+        const children = await this.engine.parse(...item.childNodes);
+        list.append(...children);
+
+        // In the case of a checklist, parse their checked/unchecked status and
+        // ensure vertical propagation.
+        if (type === ListType.CHECKLIST) {
+            for (const child of children) {
+                const liAttributes = child.modifiers.find(ListItemAttributes);
+                if (liAttributes) {
+                    // Parse the list item's checked status.
+                    if (liAttributes.classList.has('checked')) {
+                        ListNode.check(child);
+                    }
+
+                    // Remove the checklist-related classes from `liAttributes`.
+                    liAttributes.classList.remove('checklist checked unchecked');
+                }
+            }
+        }
+        return [list];
     }
 }
