@@ -31,6 +31,14 @@ export abstract class AbstractNode {
         return this.constructor.name;
     }
     /**
+     * Return the text content of this node.
+     */
+    get textContent(): string {
+        return this.children()
+            .map(child => child.textContent)
+            .join('');
+    }
+    /**
      * @override
      */
     toString(): string {

@@ -48,7 +48,7 @@ describe('utils', () => {
                 expect(p.htmlTag).to.equal('P');
                 expect(p.children().length).to.equal(1);
                 expect(p.children()[0] instanceof CharNode).to.be.true;
-                expect((p.children()[0] as CharNode).char).to.equal('a');
+                expect(p.children()[0].textContent).to.equal('a');
             });
             it('should parse a "p" tag with no content', async () => {
                 const element = document.createElement('div');
@@ -66,7 +66,7 @@ describe('utils', () => {
                 // Only one <br> should be parsed.
                 expect(p.children().length).to.equal(2);
                 expect(p.lastChild() instanceof LineBreakNode).to.be.true;
-                expect((p.lastChild().previousSibling() as CharNode).char).to.equal('a');
+                expect(p.lastChild().previousSibling().textContent).to.equal('a');
             });
             it('handles nested formatted nodes', async () => {
                 const element = document.createElement('div');
