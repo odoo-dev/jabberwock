@@ -20,6 +20,7 @@ import { distinct } from '../../utils/src/utils';
 export interface ListParams extends CommandParams {
     type: ListType;
 }
+export type toggleCheckedParams = CommandParams;
 
 export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static isListItem(node: VNode): boolean {
@@ -51,6 +52,11 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             },
             handler: this.insertParagraphBreak,
         },
+        toggleChecked: {
+            title: 'Check or uncheck list items',
+            selector: [ListNode.CHECKLIST],
+            handler: this.toggleChecked,
+        },
     };
     commandHooks = {
         // TODO: replace this with `onSiblingsChange` when we introduce events.
@@ -70,6 +76,15 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 pattern: 'CTRL+SHIFT+<Digit8>',
                 commandId: 'toggleList',
                 commandArgs: { type: ListType.UNORDERED } as ListParams,
+            },
+            {
+                pattern: 'CTRL+SHIFT+<Digit9>',
+                commandId: 'toggleList',
+                commandArgs: { type: ListType.CHECKLIST } as ListParams,
+            },
+            {
+                pattern: 'CTRL+<Space>',
+                commandId: 'toggleChecked',
             },
             {
                 pattern: 'Backspace',
@@ -116,12 +131,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 while (range.start.ancestor(ListNode)) {
                     const nodesToUnlist = range.split(ListNode);
                     for (const list of nodesToUnlist) {
-                        for (const nestedList of list.descendants(ListNode)) {
-                            // TODO: automatically invalidate `ListItemAttributes`.
-                            for (const child of nestedList.childVNodes) {
-                                child.modifiers.remove(ListItemAttributes);
-                            }
-                            nestedList.unwrap();
+                        for (const child of list.childVNodes) {
+                            // TODO: automatically invalidate `li-attributes`.
+                            child.modifiers.remove(ListItemAttributes);
                         }
                         list.unwrap();
                     }
@@ -144,7 +156,6 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         newList.mergeWith(previousSibling);
                         newList = previousSibling;
                     }
-
                     const nextSibling = newList.nextSibling();
                     if (nextSibling && nextSibling.is(ListNode[type])) {
                         nextSibling.mergeWith(newList);
@@ -157,10 +168,11 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 let newList = new ListNode({ listType: type });
                 const nodesToConvert = range.split(ListNode);
                 for (const node of nodesToConvert) {
-                    node.wrap(newList);
                     // Merge top-level lists instead of nesting them.
                     if (node.is(ListNode)) {
                         node.mergeWith(newList);
+                    } else {
+                        node.wrap(newList);
                     }
                 }
 
@@ -196,8 +208,6 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const itemsToIndent = items.filter(item => {
             return !items.includes(item.ancestor(ListNode));
         });
-
-        if (!itemsToIndent.length) return;
 
         for (const item of itemsToIndent) {
             const prev = item.previousSibling();
@@ -236,8 +246,6 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             return !items.includes(item.ancestor(ListNode));
         });
 
-        if (!itemsToOutdent.length) return;
-
         for (const item of itemsToOutdent) {
             const list = item.ancestor(ListNode);
             const previousSibling = item.previousSibling();
@@ -250,6 +258,10 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             } else if (nextSibling) {
                 list.before(item);
             } else {
+                for (const child of list.childVNodes) {
+                    // TODO: automatically invalidate `li-attributes`.
+                    child.modifiers.remove(ListItemAttributes);
+                }
                 list.unwrap();
             }
         }
@@ -294,6 +306,25 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 nextSibling.mergeWith(list);
                 list = nextList;
                 nextSibling = nextListSibling;
+            }
+        }
+    }
+
+    /**
+     * Check or uncheck the list items at range.
+     *
+     * @param params
+     */
+    toggleChecked(params: toggleCheckedParams): void {
+        const range = params.context.range;
+        const items = range.targetedNodes(node => ListNode.CHECKLIST(node.parent));
+
+        const areAllChecked = items.every(ListNode.isChecked);
+        for (const item of items) {
+            if (areAllChecked) {
+                ListNode.uncheck(item);
+            } else {
+                ListNode.check(item);
             }
         }
     }
