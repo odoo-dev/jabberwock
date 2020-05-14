@@ -49,9 +49,13 @@ export class Modifiers {
     }
     /**
      * Return the first modifier in the array that is an instance of the given
-     * modifier class, if any. If the modifier passed is a modifier instance,
-     * return it if it was present in the array.
+     * Modifier class, if any.
+     * If the modifier passed is a Modifier instance, return it if it was
+     * present in the array.
+     * This also functions as a proxy to the native `find` method of `Array`,
+     * for `this._contents`.
      *
+     * @see Array.find
      * @param modifier
      */
     find<T extends Modifier>(callback: (modifier: T) => boolean): T;
@@ -72,9 +76,28 @@ export class Modifiers {
         }
     }
     /**
+     * Return the first modifier in the array that is an instance of the given
+     * modifier class or create one, append it and return it.
+     * If the modifier passed is a modifier instance, return it if it was
+     * present in the array.
+     *
+     * @param modifier
+     */
+    get<T extends Modifier>(modifier: T | Constructor<T>): T {
+        let found = this.find(modifier);
+        if (!found && isConstructor<typeof Modifier>(modifier, Modifier)) {
+            found = new modifier();
+            this.append(found);
+        }
+        return found;
+    }
+    /**
      * Return all modifiers in the array that are an instance of the given
      * modifier class, if any.
+     * This also functions as a proxy to the native `filter` method of `Array`,
+     * for `this._contents`.
      *
+     * @see Array.filter
      * @param modifier
      */
     filter<T extends Modifier>(

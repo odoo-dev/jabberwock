@@ -11,10 +11,7 @@ export class ListHtmlDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: ListNode): Promise<Node[]> {
         const tag = node.listType === ListType.ORDERED ? 'OL' : 'UL';
         const domListNode = document.createElement(tag);
-        const attributes = node.modifiers.find(Attributes);
-        if (attributes && attributes.constructor.name === 'Attributes') {
-            this.engine.renderAttributes(attributes, domListNode);
-        }
+        this.engine.renderAttributes(Attributes, node, domListNode);
 
         for (const child of node.childVNodes) {
             const renderedChild = await this.engine.render(child);

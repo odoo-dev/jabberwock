@@ -10,10 +10,7 @@ export class MetadataHtmlDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: MetadataNode): Promise<Node[]> {
         const domNode = document.createElement(node.htmlTag);
-        const attributes = node.modifiers.find(Attributes);
-        if (attributes) {
-            this.engine.renderAttributes(attributes, domNode);
-        }
+        this.engine.renderAttributes(Attributes, node, domNode);
         domNode.innerHTML = node.contents;
         return [domNode];
     }

@@ -13,10 +13,7 @@ export class LineBreakHtmlDomRenderer extends AbstractRenderer<Node[]> {
      */
     async render(node: LineBreakNode): Promise<Node[]> {
         const br = document.createElement('br');
-        const attributes = node.modifiers.find(Attributes);
-        if (attributes) {
-            this.engine.renderAttributes(attributes, br);
-        }
+        this.engine.renderAttributes(Attributes, node, br);
         const rendering = [br];
         if (!node.nextSibling()) {
             // If a LineBreakNode has no next sibling, it must be rendered

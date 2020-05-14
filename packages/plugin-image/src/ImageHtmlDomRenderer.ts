@@ -10,10 +10,7 @@ export class ImageHtmlDomRenderer extends AbstractRenderer<Node[]> {
 
     async render(node: ImageNode): Promise<Node[]> {
         const image = document.createElement('img');
-        const attributes = node.modifiers.find(Attributes);
-        if (attributes) {
-            this.engine.renderAttributes(attributes, image);
-        }
+        this.engine.renderAttributes(Attributes, node, image);
         return [image];
     }
 }
