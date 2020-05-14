@@ -41,7 +41,7 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
      * @param componentId
      * @param zoneId
      */
-    async add(componentId: ComponentId, zoneId: ZoneIdentifier): Promise<void> {
+    async add(componentId: ComponentId, zoneId: ZoneIdentifier = 'default'): Promise<void> {
         const engines = Object.values(this.engines);
         await Promise.all(engines.map(engine => engine.add(componentId, zoneId)));
     }
