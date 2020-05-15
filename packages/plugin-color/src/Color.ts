@@ -3,10 +3,10 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
-import { getStyle, setStyle, removeStyle } from '../../utils/src/utils';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
-import { VRange } from '../../core/src/VRange';
 import { Format } from '../../plugin-inline/src/Format';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+import { CssStyle } from '../../plugin-xml/src/CssStyle';
 
 export interface ColorParams extends CommandParams {
     color?: string; // css-valid color name
@@ -34,7 +34,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
         if (color instanceof AbstractNode) {
             node = color;
         }
-        const nodeBackgroundColor = getStyle(node, this.styleName);
+        const nodeBackgroundColor = node.modifiers.find(Attributes)?.style.get(this.styleName);
         if (color instanceof AbstractNode) {
             return !!nodeBackgroundColor;
         } else {
@@ -52,33 +52,31 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
             // Set the style cache.
             const inline = this.dependencies.get(Inline);
             const currentCache = inline.cache.style || {};
-            inline.cache.style = { ...currentCache, [this.styleName]: color };
+            inline.cache.style = new CssStyle({ ...currentCache, [this.styleName]: color });
         } else {
-            // TODO: apply on all `selectedNodes` when we have modifiers.
-            for (const node of this._highestSelectedNodes(params.context.range)) {
-                // Skip if the node already has the right color, through an
-                // ancestor or a format.
-                if (node.is(InlineNode)) {
-                    const colorFormat = node.modifiers
-                        .filter(Format)
-                        .find(format => getStyle(format, this.styleName));
-                    if (colorFormat && getStyle(colorFormat, this.styleName) === color) continue;
-                }
+            const selectedNodes = params.context.range.selectedNodes();
+            // Skip if the node already has the right color, through an
+            // ancestor or a format.
+            const notColoredYet = selectedNodes.filter(node => {
+                if (this.hasColor(color, node)) return false;
                 const colorAncestor = node.ancestor(this.hasColor.bind(this));
-                if (colorAncestor && this.hasColor(color, colorAncestor)) continue;
-
+                return !colorAncestor || !this.hasColor(color, colorAncestor);
+            });
+            for (const node of notColoredYet) {
                 // Apply the style to the node or its first format.
-                setStyle(this._nodeOrFirstFormat(node), this.styleName, color);
+                this._nodeOrFirstFormat(node)
+                    .modifiers.get(Attributes)
+                    .style.set(this.styleName, color);
 
                 // If there are ancestors of this node whose children all have
                 // this style, style these ancestors instead of their
                 // descendants.
                 let parent = node.parent;
                 while (parent && parent.editable && this._isAllColored(parent, color)) {
-                    setStyle(parent, this.styleName, color);
+                    parent.modifiers.get(Attributes).style.set(this.styleName, color);
                     // TODO: not remove the children's styles when we have modifiers.
                     for (const child of parent.children()) {
-                        removeStyle(child, this.styleName);
+                        child.modifiers.find(Attributes)?.style.remove(this.styleName);
                     }
                     parent = parent.parent;
                 }
@@ -101,32 +99,33 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
 
             if (range.start.ancestor(hasColor)) {
                 // Set the color style cache to the default color.
-                const currentCache = inline.cache.style || {};
-                inline.cache.style = { ...currentCache, [this.styleName]: defaultColor };
+                if (!inline.cache.style) {
+                    inline.cache.style = new CssStyle();
+                }
+                inline.cache.style.set(this.styleName, defaultColor);
             } else if (inline.cache.style) {
                 // Unset the color style cache.
-                delete inline.cache.style[this.styleName];
+                inline.cache.style.remove(this.styleName);
             }
         } else {
-            // TODO: apply on all `selectedNodes` when we have modifiers.
-            for (const node of this._highestSelectedNodes(params.context.range)) {
+            for (const node of params.context.range.selectedNodes()) {
                 const target = this._nodeOrFirstFormat(node);
-                const currentColor = getStyle(target, this.styleName);
+                const currentColor = target.modifiers.find(Attributes)?.style.get(this.styleName);
 
                 if (!currentColor || currentColor === defaultColor || node.ancestor(hasColor)) {
                     // Set the color to the default color.
-                    setStyle(target, this.styleName, defaultColor);
+                    target.modifiers.get(Attributes).style.set(this.styleName, defaultColor);
                 } else {
                     // Remove the color.
-                    removeStyle(target, this.styleName);
+                    target.modifiers.find(Attributes)?.style.remove(this.styleName);
                 }
 
                 // Uncolor the children and their formats as well.
                 for (const child of node.children()) {
-                    removeStyle(child, this.styleName);
+                    child.modifiers.find(Attributes)?.style.remove(this.styleName);
                     if (child.is(InlineNode)) {
                         for (const format of child.modifiers.filter(Format)) {
-                            removeStyle(format, this.styleName);
+                            format.modifiers.find(Attributes)?.style.remove(this.styleName);
                         }
                     }
                 }
@@ -139,24 +138,12 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the range's selected nodes, filtering out a selected node's
-     * children if they are listed.
-     *
-     * @param range
-     */
-    _highestSelectedNodes(range: VRange): VNode[] {
-        const selectedNodes = range.selectedNodes();
-        return selectedNodes.filter(node => {
-            return !node.ancestor(ancestor => selectedNodes.includes(ancestor));
-        });
-    }
-    /**
      * Return the node's first format if any, itself otherwise.
      *
      * @param node
      */
     _nodeOrFirstFormat(node: VNode): VNode | Format {
-        return node.is(InlineNode) ? node.modifiers?.find(Format) || node : node;
+        return node.modifiers.filter(Format)[0] || node;
     }
     /**
      * Return true if all the children of the given node have the given color.

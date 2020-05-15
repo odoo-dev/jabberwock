@@ -4,6 +4,7 @@ import { nodeName } from '../../utils/src/utils';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { Modifiers } from '../../core/src/Modifiers';
 
 export class ListItemAttributes extends Attributes {}
 
@@ -30,7 +31,7 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
         let inlinesContainer: VNode;
         // Parse the list item's attributes into the node's ListItemAttributes,
         // which will be read only by ListItemDomRenderer.
-        const itemAttributes = this.engine.parseAttributes(item);
+        const itemModifiers = new Modifiers(this.engine.parseAttributes(item));
         const Container = this.engine.editor.configuration.defaults.Container;
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];
@@ -41,9 +42,8 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     // wrapped together in a base container.
                     if (!inlinesContainer) {
                         inlinesContainer = new Container();
-                        inlinesContainer.modifiers.replace(
-                            ListItemAttributes,
-                            new ListItemAttributes(itemAttributes),
+                        inlinesContainer.modifiers.append(
+                            new ListItemAttributes(itemModifiers.get(Attributes)),
                         );
                         nodes.push(inlinesContainer);
                     }
@@ -53,7 +53,7 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     for (const child of parsedChild) {
                         child.modifiers.replace(
                             ListItemAttributes,
-                            new ListItemAttributes(itemAttributes),
+                            new ListItemAttributes(itemModifiers.get(Attributes)),
                         );
                     }
                     nodes.push(...parsedChild);

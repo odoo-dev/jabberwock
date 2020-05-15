@@ -130,7 +130,7 @@ describePlugin(TextColor, testEditor => {
                         await insertText(editor, 'b');
                     },
                     contentAfter:
-                        '<p style="color: red">a<span style="color: black;">b[]</span>c</p>',
+                        '<p style="color: red;">a<span style="color: black;">b[]</span>c</p>',
                 });
             });
             it('should write two characters in black background', async () => {
@@ -142,7 +142,7 @@ describePlugin(TextColor, testEditor => {
                         await insertText(editor, 'c');
                     },
                     contentAfter:
-                        '<p style="color: red">a<span style="color: black;">bc[]</span>d</p>',
+                        '<p style="color: red;">a<span style="color: black;">bc[]</span>d</p>',
                 });
             });
         });

@@ -1,24 +1,41 @@
 import { Modifier } from '../../core/src/Modifier';
+import { CssStyle } from './CssStyle';
+import { ClassList } from './ClassList';
 
 export class Attributes extends Modifier {
     private _record: Record<string, string> = {};
-    constructor(attributes?: Record<string, string> | Attributes) {
+    style = new CssStyle();
+    classList = new ClassList();
+    constructor(attributes?: Attributes | NamedNodeMap | Record<string, string>) {
         super();
         if (attributes instanceof Attributes) {
-            this._record = { ...attributes._record };
+            for (const key of attributes.keys()) {
+                this.set(key, attributes.get(key));
+            }
+        } else if (attributes instanceof NamedNodeMap) {
+            for (const attribute of Array.from(attributes)) {
+                this.set(attribute.name, attribute.value);
+            }
         } else if (attributes) {
-            this._record = attributes;
+            for (const key of Object.keys(attributes)) {
+                this.set(key, attributes[key]);
+            }
         }
     }
+
+    //--------------------------------------------------------------------------
+    // Getters
+    //--------------------------------------------------------------------------
+
     get length(): number {
         return this.keys().length;
     }
     get name(): string {
         const name = [];
         for (const attributeName of this.keys()) {
-            name.push(attributeName + ': ' + this.get(attributeName));
+            name.push(`${attributeName}: "${this.get(attributeName)}"`);
         }
-        return name.join('; ');
+        return `{${name.join(', ')}}`;
     }
 
     //--------------------------------------------------------------------------
@@ -31,10 +48,12 @@ export class Attributes extends Modifier {
     clone(): this {
         const clone = new this.constructor();
         clone._record = { ...this._record };
+        clone.style = this.style.clone();
+        clone.classList = this.classList.clone();
         return clone;
     }
     /**
-     * Return an array containg all the keys in the record.
+     * Return a string representing the attributes.
      */
     toString(): string {
         if (!this.length) return `${this.constructor.name}: {}`;
@@ -49,14 +68,42 @@ export class Attributes extends Modifier {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Return true if the record has the given key, false otherwise.
+     *
+     * @param key
+     */
+    has(key: string): boolean {
+        return this.keys().includes(key);
+    }
+    /**
+     * Return an array containing all the keys in the record.
+     */
     keys(): string[] {
-        return Object.keys(this._record);
+        const keys = Object.keys(this._record).filter(key => {
+            return (
+                (key !== 'style' || !!this.style.length) &&
+                (key !== 'class' || !!this.classList.length)
+            );
+        });
+        if (this.classList.length && !keys.includes('class')) {
+            // The node was not parsed with a class attribute, add it in place.
+            // Use `get` for its value but record its position in the record.
+            this._record.class = null;
+            keys.push('class');
+        }
+        if (this.style.length && !keys.includes('style')) {
+            // The node was not parsed with a style attribute, keep it always at
+            // the end of the attributes list.
+            keys.push('style');
+        }
+        return keys;
     }
     /**
      * Return an array containing all the values in the record.
      */
     values(): string[] {
-        return Object.values(this._record);
+        return this.keys().map(key => this.get(key));
     }
     /**
      * Return the record matching the given name.
@@ -64,7 +111,13 @@ export class Attributes extends Modifier {
      * @param name
      */
     get(name: string): string {
-        return this._record[name];
+        if (name === 'style') {
+            return this.style.cssText;
+        } else if (name === 'class') {
+            return this.classList.className;
+        } else {
+            return this._record[name];
+        }
     }
     /**
      * Set the record with the given name to the given value.
@@ -73,15 +126,38 @@ export class Attributes extends Modifier {
      * @param value
      */
     set(name: string, value: string): void {
-        this._record[name] = value;
+        if (name === 'style') {
+            this.style.reset(value);
+            // Use `get` for its value but record its position in the record.
+            this._record.style = null;
+        } else if (name === 'class') {
+            this.classList.reset(value);
+            // Use `get` for its value but record its position in the record.
+            this._record.class = null;
+        } else {
+            this._record[name] = value;
+        }
     }
     /**
-     * Remove the record with the given name.
+     * Remove the records with the given names.
      *
-     * @param name
+     * @param names
      */
-    remove(name: string): void {
-        delete this._record[name];
+    remove(...names: string[]): void {
+        for (const name of names) {
+            if (name === 'style') {
+                this.style.clear();
+            } else if (name === 'class') {
+                this.classList.clear();
+            } else {
+                delete this._record[name];
+            }
+        }
+    }
+    clear(): void {
+        this._record = {};
+        this.style.clear();
+        this.classList.clear();
     }
     /**
      * Return true if the given attributes are the same as the ones in this
@@ -93,7 +169,9 @@ export class Attributes extends Modifier {
         if (otherAttributes) {
             return (
                 this.length === otherAttributes.length &&
-                this.keys().every(key => this._record[key] === otherAttributes._record[key])
+                this.keys().every(key => {
+                    return this.get(key) === otherAttributes.get(key);
+                })
             );
         } else {
             return !this.length;

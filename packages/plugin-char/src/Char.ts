@@ -9,7 +9,7 @@ import { Modifiers } from '../../core/src/Modifiers';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { setStyles } from '../../utils/src/utils';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
@@ -51,7 +51,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (params.formats) {
             modifiers.append(...params.formats.map(format => format.clone()));
         }
-        const styles = inline.getCurrentStyles(range);
+        const style = inline.getCurrentStyle(range);
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
@@ -60,7 +60,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const characters = text.split('');
         characters.forEach(char => {
             const vNode = new CharNode({ char: char, modifiers: modifiers.clone() });
-            setStyles(vNode, styles);
+            vNode.modifiers.get(Attributes).style = style;
             range.start.before(vNode);
         });
         inline.resetCache();

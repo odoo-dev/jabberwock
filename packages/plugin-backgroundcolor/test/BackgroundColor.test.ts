@@ -130,7 +130,7 @@ describePlugin(BackgroundColor, testEditor => {
                         await insertText(editor, 'b');
                     },
                     contentAfter:
-                        '<p style="background-color: red">a<span style="background-color: white;">b[]</span>c</p>',
+                        '<p style="background-color: red;">a<span style="background-color: white;">b[]</span>c</p>',
                 });
             });
             it('should write two characters in white background', async () => {
@@ -142,7 +142,7 @@ describePlugin(BackgroundColor, testEditor => {
                         await insertText(editor, 'c');
                     },
                     contentAfter:
-                        '<p style="background-color: red">a<span style="background-color: white;">bc[]</span>d</p>',
+                        '<p style="background-color: red;">a<span style="background-color: white;">bc[]</span>d</p>',
                 });
             });
         });

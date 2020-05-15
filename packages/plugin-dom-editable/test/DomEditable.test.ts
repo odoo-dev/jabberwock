@@ -58,7 +58,7 @@ describe('DomEditable', () => {
             editor.configure(DomLayout, { location: [section, 'replace'] });
             await editor.start();
             expect(container.innerHTML).to.equal(
-                '<jw-editor><jw-editable contenteditable="true" style="display: block;"><br></jw-editable></jw-editor>',
+                '<jw-editor><jw-editable style="display: block;" contenteditable="true"><br></jw-editable></jw-editor>',
             );
             await editor.stop();
             expect(container.innerHTML).to.equal('<section></section>');
@@ -109,7 +109,7 @@ describe('DomEditable', () => {
         afterEach(async () => {
             return editor.stop();
         });
-        describe('hande user events with EventNormalizer', () => {
+        describe('handle user events with EventNormalizer', () => {
             beforeEach(async () => {
                 editor = new JWEditor();
                 editor.load(Char);

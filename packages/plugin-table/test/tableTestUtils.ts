@@ -37,7 +37,7 @@ export function testStyles(cells: TableCellNode[], expected: string[]): void {
     for (let i = 0; i < cells.length; i += 1) {
         const desc = `${i}th cell preserved style`;
         const attributes = cells[i].modifiers.find(Attributes);
-        expect(attributes?.get('style')).to.equal(expected[i], desc);
+        expect(attributes?.style.cssText).to.equal(expected[i], desc);
     }
 }
 export function testManagers(

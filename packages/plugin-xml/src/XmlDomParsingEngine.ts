@@ -11,10 +11,6 @@ export class XmlDomParsingEngine<T extends Node = Node> extends ParsingEngine<T>
      * @param node
      */
     parseAttributes(node: Element): Attributes {
-        const attributes = new Attributes();
-        for (const attribute of Array.from(node.attributes)) {
-            attributes.set(attribute.name, attribute.value);
-        }
-        return attributes;
+        return new Attributes(node.attributes);
     }
 }

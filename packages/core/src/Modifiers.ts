@@ -2,15 +2,35 @@ import { Modifier } from './Modifier';
 import { Constructor, isConstructor } from '../../utils/src/utils';
 
 export class Modifiers {
-    _contents: Modifier[] = [];
+    private _contents: Modifier[] = [];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
         const clonedModifiers = modifiers.map(mod => {
             return mod instanceof Modifier ? mod.clone() : mod;
         });
         this.append(...clonedModifiers);
     }
+
+    //--------------------------------------------------------------------------
+    // Getters
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return the length of the array.
+     */
     get length(): number {
         return this._contents.length;
+    }
+
+    //--------------------------------------------------------------------------
+    // Lifecycle
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return a new instance of the Modifiers class containing the same
+     * modifiers.
+     */
+    clone(): Modifiers {
+        return new Modifiers(...this._contents.map(mod => mod.clone()));
     }
 
     //--------------------------------------------------------------------------
@@ -66,10 +86,8 @@ export class Modifiers {
             return this._contents.find(instance => instance === modifier) as T;
         } else if (isConstructor<typeof Modifier>(modifier, Modifier)) {
             // `modifier` is a `Modifier` class -> find its first instance in
-            // the array. If an instance couldn't be found, find the first
-            // instance of an extension of the given class.
-            return (this._contents.find(mod => mod.constructor.name === modifier.name) ||
-                this._contents.find(mod => mod instanceof modifier)) as T;
+            // the array.
+            return this._contents.find(mod => mod.constructor.name === modifier.name) as T;
         } else if (modifier instanceof Function) {
             // `modifier` is a callback -> call `find` natively on the array.
             return this._contents.find(modifier) as T;
@@ -190,13 +208,6 @@ export class Modifiers {
      */
     toggle(modifier: Modifier | Constructor<Modifier>): void {
         this.remove(modifier) || this.append(modifier);
-    }
-    /**
-     * Return a new instance of the Modifiers class containing the same
-     * modifiers.
-     */
-    clone(): Modifiers {
-        return new Modifiers(...this._contents);
     }
     /**
      * Return true if the modifiers in this array are the same as the modifiers

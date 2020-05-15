@@ -3,6 +3,7 @@ import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { TableRowNode } from './TableRowNode';
 import { nodeName } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { Modifiers } from '../../core/src/Modifiers';
 
 export class TableSectionAttributes extends Attributes {}
 
@@ -46,19 +47,18 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
             parsedNodes.push(...(await this.engine.parse(child)));
         }
 
-        // Parse the <tbody> or <thead>'s attributes into a technical key of the
-        // node's attributes, that will be read only by `TableRowDomRenderer`.
-        const containerAttributes = this.engine.parseAttributes(tableSection);
+        // Parse the <tbody> or <thead>'s modifiers.
+        const containerModifiers = new Modifiers(this.engine.parseAttributes(tableSection));
 
-        // Apply the attributes and `header` property of the container to each
-        // row.
+        // Apply the attributes, style and `header` property of the container to
+        // each row.
         const name = nodeName(tableSection);
         for (const parsedNode of parsedNodes) {
             if (parsedNode.is(TableRowNode)) {
                 parsedNode.header = name === 'THEAD';
                 parsedNode.modifiers.replace(
                     TableSectionAttributes,
-                    new TableSectionAttributes(containerAttributes),
+                    new TableSectionAttributes(containerModifiers.get(Attributes)),
                 );
             }
         }
