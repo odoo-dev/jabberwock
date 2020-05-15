@@ -31,7 +31,7 @@ export class Format extends Modifier {
     // Public
     //--------------------------------------------------------------------------
 
-    render(): Node {
+    render(): Element {
         const node = document.createElement(this.htmlTag);
         const attributes = this.modifiers.find(Attributes);
         if (attributes) {
