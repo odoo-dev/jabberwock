@@ -7,14 +7,14 @@ import { InlineNode } from './InlineNode';
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifiers } from '../../core/src/Modifiers';
-import { getStyles } from '../../utils/src/utils';
+import { CssStyle } from '../../plugin-xml/src/CssStyle';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 interface InlineCache {
     modifiers: Modifiers | null;
-    style: Record<string, string> | null;
+    style: CssStyle | null;
 }
 
 export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -70,8 +70,8 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             if (allHaveFormat) {
                 for (const inline of selectedInlines) {
                     const format = inline.modifiers.find(FormatClass);
-                    // Apply the attributes of the format we're about to remove to
-                    // the inline itself.
+                    // Apply the attributes of the format we're about to remove
+                    // to the inline itself.
                     const attributes = inline.modifiers.get(Attributes);
                     const matchingFormatAttributes = format.modifiers.find(Attributes);
                     if (matchingFormatAttributes) {
@@ -130,22 +130,21 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     /**
      * Get the styles for the next insertion.
      */
-    getCurrentStyles(range = this.editor.selection.range): Record<string, string> {
+    getCurrentStyle(range = this.editor.selection.range): CssStyle {
         if (this.cache.style) {
             return this.cache.style;
         }
 
-        let inlineToCopyStyles: VNode;
+        let inlineToCopyStyle: VNode;
         if (range.isCollapsed()) {
-            inlineToCopyStyles = range.start.previousSibling() || range.start.nextSibling();
+            inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
         } else {
-            inlineToCopyStyles = range.start.nextSibling();
+            inlineToCopyStyle = range.start.nextSibling();
         }
-        if (inlineToCopyStyles && inlineToCopyStyles.is(InlineNode)) {
-            return getStyles(inlineToCopyStyles);
+        if (inlineToCopyStyle && inlineToCopyStyle.is(InlineNode)) {
+            return inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || new CssStyle();
         }
-
-        return {};
+        return new CssStyle();
     }
     /**
      * Each time the selection changes, we reset its format and style.

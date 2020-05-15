@@ -815,7 +815,7 @@ describePlugin(Table, testEditor => {
                         'new row has table container attributes',
                     );
                     expect(
-                        insertedRow.modifiers.find(TableSectionAttributes).get('style'),
+                        insertedRow.modifiers.find(TableSectionAttributes)?.style.cssText,
                     ).to.equal('background-color: red;', 'new row preserved styles of thead');
 
                     // Test individual cells
@@ -854,7 +854,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -914,7 +914,7 @@ describePlugin(Table, testEditor => {
                         '2th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         'background-color: green;',
                         'row preserved style',
                     );
@@ -962,7 +962,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1022,7 +1022,7 @@ describePlugin(Table, testEditor => {
                         '3th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes)?.get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1065,7 +1065,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1125,7 +1125,7 @@ describePlugin(Table, testEditor => {
                         '4th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1172,7 +1172,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">[](3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1232,7 +1232,7 @@ describePlugin(Table, testEditor => {
                         '5th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1284,7 +1284,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="4" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="4">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1349,7 +1349,7 @@ describePlugin(Table, testEditor => {
                         '6th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1404,7 +1404,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="4" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="4">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1468,7 +1468,7 @@ describePlugin(Table, testEditor => {
                         '7th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1518,7 +1518,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1583,7 +1583,7 @@ describePlugin(Table, testEditor => {
                         '8th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1620,7 +1620,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1685,7 +1685,7 @@ describePlugin(Table, testEditor => {
                         '9th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1732,7 +1732,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1796,7 +1796,7 @@ describePlugin(Table, testEditor => {
                         '10th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1833,7 +1833,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -1898,7 +1898,7 @@ describePlugin(Table, testEditor => {
                         '11th row is the old row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -1945,7 +1945,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2020,7 +2020,7 @@ describePlugin(Table, testEditor => {
                         'new row has table container attributes',
                     );
                     expect(
-                        insertedRow.modifiers.find(TableSectionAttributes).get('style'),
+                        insertedRow.modifiers.find(TableSectionAttributes)?.style.cssText,
                     ).to.equal('background-color: red;', 'new row preserved styles of thead');
 
                     // Test individual cells
@@ -2059,7 +2059,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2119,7 +2119,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row1, '2th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         'background-color: green;',
                         'row preserved style',
                     );
@@ -2167,7 +2167,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2227,7 +2227,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row2, '3th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2270,7 +2270,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2330,7 +2330,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row3, '4th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2383,7 +2383,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">[](3, 0)</td>',
-                                '<td rowspan="4" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="4">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2447,7 +2447,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row4, '5th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2503,7 +2503,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="4" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="4">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2567,7 +2567,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row5, '6th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2614,7 +2614,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2679,7 +2679,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row6, '7th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2716,7 +2716,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2782,7 +2782,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row7, '8th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2830,7 +2830,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -2894,7 +2894,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row8, '9th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -2936,7 +2936,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3001,7 +3001,7 @@ describePlugin(Table, testEditor => {
                     );
                     expect(insertedRow).to.not.equal(row9, '10th row is a new row');
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -3049,7 +3049,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3121,7 +3121,7 @@ describePlugin(Table, testEditor => {
                         '11th row is a new row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -3158,7 +3158,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3227,7 +3227,7 @@ describePlugin(Table, testEditor => {
                         '11th row is a new row',
                     );
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
-                    expect(insertedRow.modifiers.find(Attributes).get('style')).to.equal(
+                    expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
                         'row preserved style',
                     );
@@ -3264,7 +3264,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3379,7 +3379,7 @@ describePlugin(Table, testEditor => {
                             '<tr>',
                                 '<td><br></td>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3500,7 +3500,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="3">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3617,8 +3617,8 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;"><br></td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3"><br></td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3720,7 +3720,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td><br></td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
@@ -3846,7 +3846,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="3">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -3971,7 +3971,7 @@ describePlugin(Table, testEditor => {
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
                                 '<td><br></td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -4085,8 +4085,8 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
-                                '<td rowspan="3" style="background-color: yellow;"><br></td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3"><br></td>',
                                 '<td>(3, 3)</td>',
                             '</tr>',
                             '<tr>',
@@ -4189,7 +4189,7 @@ describePlugin(Table, testEditor => {
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2">(3, 0)</td>',
-                                '<td rowspan="3" style="background-color: yellow;">(3, 2)</td>',
+                                '<td style="background-color: yellow;" rowspan="3">(3, 2)</td>',
                                 '<td>(3, 3)</td>',
                                 '<td><br></td>',
                             '</tr>',

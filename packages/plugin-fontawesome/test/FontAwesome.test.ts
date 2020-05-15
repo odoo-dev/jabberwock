@@ -70,16 +70,14 @@ describePlugin(FontAwesome, testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: `<p><i class="fas
                                 fa-pastafarianism"></i></p>`,
-                contentAfter: `<p>\u200b<i class="fas
-                                fa-pastafarianism"></i>\u200b</p>`,
+                contentAfter: `<p>\u200b<i class="fas fa-pastafarianism"></i>\u200b</p>`,
             });
         });
         it('should parse a fontawesome with more multi-line classes', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: `<p><i class="red fas bordered
                                 big fa-pastafarianism scary"></i></p>`,
-                contentAfter: `<p>\u200b<i class="red fas bordered
-                                big fa-pastafarianism scary"></i>\u200b</p>`,
+                contentAfter: `<p>\u200b<i class="red fas bordered big fa-pastafarianism scary"></i>\u200b</p>`,
             });
         });
         it('should parse a fontawesome at the beginning of a paragraph', async () => {

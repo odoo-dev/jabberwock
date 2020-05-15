@@ -15,12 +15,26 @@ export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
      * @param node
      * @param element
      */
-    renderAttributes<T extends typeof Attributes>(Class: T, node: VNode, element: Element): void {
+    renderAttributes<T extends typeof Attributes>(
+        Class: T,
+        node: VNode,
+        element: HTMLElement,
+    ): void {
         const attributes = node.modifiers.find(Class);
         if (attributes) {
-            for (const name of attributes.keys().sort()) {
+            for (const name of attributes.keys()) {
                 const value = attributes.get(name);
                 element.setAttribute(name, value);
+            }
+            if (attributes.style.length) {
+                for (const name of attributes.style.keys()) {
+                    element.style.setProperty(name, attributes.style.get(name));
+                }
+            }
+            if (attributes.classList.length) {
+                for (const className of attributes.classList.items()) {
+                    element.classList.add(className);
+                }
             }
         }
     }

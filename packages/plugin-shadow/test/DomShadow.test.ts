@@ -127,16 +127,18 @@ describe('DomShadow', async () => {
                 expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
 
                 expect(link.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href1',
+                    '{rel: "stylesheet", href: "#href1"}',
                 );
                 const link2 = shadow.childVNodes[1];
                 expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href2',
+                    '{rel: "stylesheet", href: "#href2"}',
                 );
                 const link3 = shadow.childVNodes[2];
                 expect(link3.is(MetadataNode) && link3.htmlTag).to.equal('LINK');
-                expect(link3.modifiers.find(Attributes).name).to.equal('rel: help; href: /help/');
+                expect(link3.modifiers.find(Attributes).name).to.equal(
+                    '{rel: "help", href: "/help/"}',
+                );
                 const section = shadow.firstChild();
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
             });
@@ -164,7 +166,7 @@ describe('DomShadow', async () => {
                 const link = shadow.childVNodes[0];
                 expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href1',
+                    '{rel: "stylesheet", href: "#href1"}',
                 );
                 const style = shadow.childVNodes[1];
                 expect(style.is(MetadataNode) && style.htmlTag).to.equal('STYLE');
@@ -172,7 +174,7 @@ describe('DomShadow', async () => {
                 const link2 = shadow.childVNodes[2];
                 expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href2',
+                    '{rel: "stylesheet", href: "#href2"}',
                 );
                 const section = shadow.firstChild();
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
@@ -321,16 +323,18 @@ describe('DomShadow', async () => {
                 const link = shadow.childVNodes[0];
                 expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href1',
+                    '{rel: "stylesheet", href: "#href1"}',
                 );
                 const link2 = shadow.childVNodes[1];
                 expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href2',
+                    '{rel: "stylesheet", href: "#href2"}',
                 );
                 const link3 = shadow.childVNodes[2];
                 expect(link3.is(MetadataNode) && link3.htmlTag).to.equal('LINK');
-                expect(link3.modifiers.find(Attributes).name).to.equal('rel: help; href: /help/');
+                expect(link3.modifiers.find(Attributes).name).to.equal(
+                    '{rel: "help", href: "/help/"}',
+                );
                 const section = shadow.firstChild();
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
             });
@@ -369,7 +373,7 @@ describe('DomShadow', async () => {
                 const link = shadow.childVNodes[0];
                 expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href1',
+                    '{rel: "stylesheet", href: "#href1"}',
                 );
                 const style = shadow.childVNodes[1];
                 expect(style.is(MetadataNode) && style.htmlTag).to.equal('STYLE');
@@ -377,7 +381,7 @@ describe('DomShadow', async () => {
                 const link2 = shadow.childVNodes[2];
                 expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
-                    'rel: stylesheet; href: #href2',
+                    '{rel: "stylesheet", href: "#href2"}',
                 );
                 const section = shadow.firstChild();
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
@@ -504,7 +508,7 @@ describe('DomShadow', async () => {
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
             expect(container.querySelector('jw-shadow').shadowRoot.innerHTML).to.equal(
-                '<link href="#1" rel="stylesheet"><link href="#2" rel="stylesheet"><section contenteditable="true"><p>abc</p><p>def</p></section>',
+                '<link rel="stylesheet" href="#1"><link rel="stylesheet" href="#2"><section contenteditable="true"><p>abc</p><p>def</p></section>',
             );
             await editor.stop();
         });

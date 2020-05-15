@@ -69,7 +69,7 @@ describePlugin(Inline, testEditor => {
                         await toggleFormat(editor, BoldFormat);
                     },
                     contentAfter:
-                        'a<b style="color: red">b[</b><span style="color: red">cd</span><span style="color: green">ef]</span><b style="color: green">g</b>',
+                        'a<b style="color: red;">b[</b><span style="color: red;">cd</span><span style="color: green;">ef]</span><b style="color: green;">g</b>',
                 });
             });
         });

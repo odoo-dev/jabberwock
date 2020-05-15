@@ -4,7 +4,6 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { setStyle } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export enum AlignType {
@@ -62,16 +61,8 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      * @param [type]
      */
     static isAligned(node: VNode, type?: AlignType): boolean {
-        const styles = node.modifiers
-            .find(Attributes)
-            ?.get('style')
-            ?.split(';');
-        if (styles) {
-            const align = styles.find(style => style.includes('text-align'));
-            return type ? align?.includes(type) : !!align;
-        } else {
-            return false;
-        }
+        const align = node.modifiers.find(Attributes)?.style.get('text-align');
+        return type ? align?.includes(type) : !!align;
     }
     /**
      * Align text.
@@ -85,18 +76,12 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             const alignedAncestor = node.ancestor(Align.isAligned);
 
             // Compute current alignment.
-            let currentAlignment: string;
-            const styles = alignedAncestor?.modifiers
+            const currentAlignment = alignedAncestor?.modifiers
                 ?.find(Attributes)
-                ?.get('style')
-                ?.split(';');
-            if (styles) {
-                const alignment = styles.find(style => style.includes('text-align'));
-                currentAlignment = alignment?.replace(/text-align\s*:|;/, '').trim();
-            }
+                ?.style.get('text-align');
 
             if (!alignedAncestor || currentAlignment !== type) {
-                setStyle(node, 'text-align', type.toLowerCase());
+                node.modifiers.get(Attributes).style.set('text-align', type.toLowerCase());
             }
         }
     }

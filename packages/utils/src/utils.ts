@@ -1,7 +1,3 @@
-import { VNode } from '../../core/src/VNodes/VNode';
-import { Format } from '../../plugin-inline/src/Format';
-import { Attributes } from '../../plugin-xml/src/Attributes';
-
 export type Constructor<T> = new (...args) => T;
 
 /**
@@ -93,80 +89,4 @@ export function getDocument(node: Node): Document | ShadowRoot {
         }
     }
     return root || document;
-}
-
-/**
- * Get the target VNode or Format's style attribute as a record of style name to
- * style value.
- *
- * @param target
- */
-export function getStyles(target: VNode | Format): Record<string, string> {
-    const stylesArray = ((target.modifiers.find(Attributes)?.get('style') as string) || '')
-        .split(';')
-        .map(style => style.trim())
-        .filter(style => style.length);
-    const styles: Record<string, string> = {};
-    stylesArray.reduce((accumulator, value) => {
-        const [key, v] = value.split(':');
-        styles[key.trim()] = v.trim();
-        return accumulator;
-    }, styles);
-    return styles;
-}
-
-/**
- * Set the target VNode or Format's style attribute from a record of style name
- * to style value.
- *
- * @param target
- * @param styles
- */
-export function setStyles(target: VNode | Format, styles: Record<string, string>): void {
-    const stylesArray: string[] = [];
-    for (const key of Object.keys(styles)) {
-        stylesArray.push([key, styles[key]].join(': '));
-    }
-    if (stylesArray.length) {
-        target.modifiers.get(Attributes).set('style', stylesArray.join('; ') + ';');
-    } else {
-        target.modifiers.find(Attributes)?.remove('style');
-    }
-}
-
-/**
- * Get the value of the given style name from the target VNode or Format's style
- * attribute.
- *
- * @param target
- * @param styleName
- */
-export function getStyle(target: VNode | Format, styleName: string): string {
-    return getStyles(target)[styleName];
-}
-
-/**
- * Set the target VNode or Format's style attribute of the given name to the
- * given value.
- *
- * @param target
- * @param styleName
- * @param styleValue
- */
-export function setStyle(target: VNode | Format, styleName: string, styleValue: string): void {
-    const styles = getStyles(target);
-    styles[styleName] = styleValue;
-    setStyles(target, styles);
-}
-
-/**
- * Remove the given style from the target VNode or Format's style attribute.
- *
- * @param target
- * @param styleName
- */
-export function removeStyle(target: VNode | Format, styleName: string): void {
-    const styles = getStyles(target);
-    delete styles[styleName];
-    setStyles(target, styles);
 }
