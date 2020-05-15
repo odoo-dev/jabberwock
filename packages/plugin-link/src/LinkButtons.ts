@@ -10,7 +10,7 @@ export const LinkButton: Button = {
     selected: (editor: JWEditor): boolean => {
         const range = editor.selection.range;
         const node = range.start.nextSibling() || range.start.previousSibling();
-        return node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+        return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
     },
 };
 
@@ -21,6 +21,6 @@ export const UnlinkButton: Button = {
     enabled: (editor: JWEditor): boolean => {
         const range = editor.selection.range;
         const node = range.start.nextSibling() || range.start.previousSibling();
-        return node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+        return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
     },
 };
