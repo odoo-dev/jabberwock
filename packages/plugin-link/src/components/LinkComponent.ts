@@ -22,6 +22,7 @@ export class LinkComponent<T = {}> extends OwlComponent<T> {
             url: this.state.url,
             label: this.state.label,
         } as LinkParams);
+        this.env.editor.plugins.get(Layout).remove('link');
         this.destroy();
     }
     cancel(): void {
