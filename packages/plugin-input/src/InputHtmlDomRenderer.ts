@@ -17,6 +17,12 @@ export class InputHtmlDomRenderer extends AbstractRenderer<Node[]> {
         if (attributes) {
             this.engine.renderAttributes(Attributes, node, input);
         }
+        if (node.inputType) {
+            input.setAttribute('type', node.inputType);
+        }
+        if (node.inputName) {
+            input.setAttribute('name', node.inputName);
+        }
         input.value = node.value;
         return [input];
     }
