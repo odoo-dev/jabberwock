@@ -145,7 +145,7 @@ describe('Dialog', async () => {
                 ].join(''),
             );
         });
-        it('should close 2 dialogs with the ❌ button', async () => {
+        it('should close 2 dialogs with the X button', async () => {
             await editor.plugins.get(Layout).add('aaa', 'float');
             await editor.execCommand('show', { componentID: 'aaa' });
 
