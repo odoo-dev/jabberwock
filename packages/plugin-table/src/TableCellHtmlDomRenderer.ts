@@ -21,11 +21,7 @@ export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
         // Render the cell and its contents.
         const td = document.createElement(cell.header ? 'th' : 'td');
         const renderedChildren = await this.renderChildren(cell);
-        for (const renderedChild of renderedChildren) {
-            for (const domChild of renderedChild) {
-                td.append(domChild);
-            }
-        }
+        td.append(...renderedChildren.flat());
 
         // Render attributes.
         // Colspan and rowspan are handled differently from other attributes:

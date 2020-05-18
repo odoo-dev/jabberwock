@@ -23,17 +23,11 @@ export class ListItemHtmlDomRenderer extends AbstractRenderer<Node[]> {
         // while other nodes will be rendered inside the "LI".
         if (node.is(VElement) && node.htmlTag === 'P') {
             const renderedChildren = await this.renderChildren(node);
-            for (const renderedChild of renderedChildren) {
-                for (const domChild of renderedChild) {
-                    domListItem.appendChild(domChild);
-                }
-            }
+            domListItem.append(...renderedChildren.flat());
         } else {
             // The node was wrapped in a "LI" but needs to be rendered as well.
             const renderedNode = await this.super.render(node);
-            for (const domNode of renderedNode) {
-                domListItem.appendChild(domNode);
-            }
+            domListItem.append(...renderedNode);
         }
         // Render the node's attributes that were stored on the technical key
         // that specifies those attributes belong on the list item.

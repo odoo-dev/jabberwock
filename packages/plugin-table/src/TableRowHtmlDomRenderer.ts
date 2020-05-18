@@ -15,11 +15,7 @@ export class TableRowHtmlDomRenderer extends AbstractRenderer<Node[]> {
         const domRow = document.createElement('tr');
         this.engine.renderAttributes(Attributes, row, domRow);
         const renderedChildren = await this.renderChildren(row);
-        for (const renderedChild of renderedChildren) {
-            for (const domChild of renderedChild) {
-                domRow.appendChild(domChild);
-            }
-        }
+        domRow.append(...renderedChildren.flat());
         return [domRow];
     }
 }

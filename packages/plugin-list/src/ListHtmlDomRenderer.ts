@@ -12,14 +12,8 @@ export class ListHtmlDomRenderer extends AbstractRenderer<Node[]> {
         const tag = node.listType === ListType.ORDERED ? 'OL' : 'UL';
         const domListNode = document.createElement(tag);
         this.engine.renderAttributes(Attributes, node, domListNode);
-
-        for (const child of node.childVNodes) {
-            const renderedChild = await this.engine.render(child);
-            for (const domChild of renderedChild) {
-                domListNode.appendChild(domChild);
-            }
-        }
-
+        const renderedChildren = await this.renderChildren(node);
+        domListNode.append(...renderedChildren.flat());
         return [domListNode];
     }
 }
