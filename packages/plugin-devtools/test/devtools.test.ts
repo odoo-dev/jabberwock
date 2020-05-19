@@ -18,6 +18,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { nodeName } from '../../utils/src/utils';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { QWeb } from '@odoo/owl';
 
 let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
@@ -77,6 +78,8 @@ describe('Plugin: DevTools', () => {
         await editor.stop();
         document.body.removeChild(wrapper);
         wrapper = null;
+        // TODO: remove when OWL is fixed.
+        QWeb.slots = {};
     });
 
     describe('DevToolsComponent', () => {
