@@ -1,25 +1,28 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { LineBreakNode } from './LineBreakNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class LineBreakHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class LineBreakDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = LineBreakNode;
 
     /**
      * Render the VNode to the given format.
      */
-    async render(node: LineBreakNode): Promise<Node[]> {
-        const br = document.createElement('br');
+    async render(node: LineBreakNode): Promise<DomObject> {
+        const br: DomObject = { tag: 'BR' };
         this.engine.renderAttributes(Attributes, node, br);
-        const rendering = [br];
+        const domObject = { nodes: [node], children: [br] };
         if (!node.nextSibling()) {
             // If a LineBreakNode has no next sibling, it must be rendered
             // as two BRs in order for it to be visible.
-            rendering.push(document.createElement('br'));
+            domObject.children.push({ tag: 'BR' });
         }
-        return rendering;
+        return domObject;
     }
 }

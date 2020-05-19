@@ -1,21 +1,25 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { TableRowNode } from './TableRowNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class TableRowHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class TableRowDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = TableRowNode;
 
     /**
      * Render the TableRowNode along with its contents.
      */
-    async render(row: TableRowNode): Promise<Node[]> {
-        const domRow = document.createElement('tr');
-        this.engine.renderAttributes(Attributes, row, domRow);
-        const renderedChildren = await this.renderChildren(row);
-        domRow.append(...renderedChildren.flat());
-        return [domRow];
+    async render(row: TableRowNode): Promise<DomObject> {
+        const objectRow: DomObject = {
+            tag: 'TR',
+            children: row.children(),
+        };
+        this.engine.renderAttributes(Attributes, row, objectRow);
+        return objectRow;
     }
 }

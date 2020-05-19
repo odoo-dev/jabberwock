@@ -1,7 +1,6 @@
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { LayoutContainer } from './LayoutContainerNode';
-
-export type DomPoint = [Node, number];
+import { DomPoint } from './DomLayoutEngine';
 
 export class DomMap {
     private readonly _fromDom = new Map<Node, VNode[]>();

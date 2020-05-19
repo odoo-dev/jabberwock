@@ -7,32 +7,37 @@ export type RenderingIdentifier = string;
 export interface Renderer<T = {}> {
     predicate?: Predicate;
     render: (node: VNode) => Promise<T>;
+    constructor: RendererConstructor<T>;
 }
 
-export type RendererConstructor<T = {}> = Constructor<Renderer<T>> & {
+export type RendererConstructor<T = {}> = {
+    new (...args): Renderer<T>;
     id: RenderingIdentifier;
 };
 
-export type RenderingEngineConstructor<T = {}> = Constructor<RenderingEngine> & {
-    id: RenderingIdentifier;
-    defaultRenderer: Constructor<Renderer<T>>;
-};
-
-export interface RenderingEngine<T = {}> {
-    constructor: RenderingEngineConstructor<T>;
+class SuperRenderer<T> implements Renderer<T> {
+    static id = 'super';
+    constructor(public render: (node: VNode) => Promise<T>) {}
 }
+
+interface SuperRenderer<T = {}> {
+    constructor: RendererConstructor<T>;
+}
+
 export class RenderingEngine<T = {}> {
     static readonly id: RenderingIdentifier;
-    static readonly defaultRenderer: Constructor<Renderer>;
+    static readonly extends: RenderingIdentifier[] = [];
+    static readonly defaultRenderer: RendererConstructor;
     readonly editor: JWEditor;
     readonly renderers: Renderer<T>[] = [];
-    readonly renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
+    readonly renderings: Map<VNode, [Renderer<T>, Promise<T>, boolean][]> = new Map();
+    readonly locations: Map<T, VNode[]> = new Map();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
         const defaultRenderer = new this.constructor.defaultRenderer(this);
         if (defaultRenderer.predicate) {
-            throw `Default renderer cannot have a predicate.`;
+            throw new Error(`Default renderer cannot have a predicate.`);
         } else {
             this.renderers.push(defaultRenderer);
         }
@@ -46,12 +51,21 @@ export class RenderingEngine<T = {}> {
      *
      * @param RendererClass
      */
-    register(RendererClass: Constructor<Renderer<T>>): void {
-        const superRenderer: Renderer<T> = {
-            render: this._render.bind(this),
-        };
-        const renderer = new RendererClass(this, superRenderer);
-        this.renderers.unshift(renderer);
+    register(RendererClass: RendererConstructor<T>): void {
+        const superRenderer: Renderer<T> = new SuperRenderer(this._render.bind(this));
+        if (RendererClass.id === this.constructor.id) {
+            this.renderers.unshift(new RendererClass(this, superRenderer));
+        } else {
+            const supportedTypes = [this.constructor.id, ...this.constructor.extends];
+            const priorRendererIds = supportedTypes.slice(
+                0,
+                supportedTypes.indexOf(RendererClass.id),
+            );
+            const postRendererIndex = this.renderers.findIndex(
+                parser => !priorRendererIds.includes(parser.constructor.id),
+            );
+            this.renderers.splice(postRendererIndex, 0, new RendererClass(this, superRenderer));
+        }
     }
 
     /**
@@ -70,13 +84,6 @@ export class RenderingEngine<T = {}> {
     }
 
     /**
-     * Render the contents of a node that has no children.
-     *
-     * @param node
-     */
-    async renderEmpty?(node: VNode): Promise<T>;
-
-    /**
      * Return the rendering of several nodes, so as to skip rendering them again
      * later in the process.
      *
@@ -88,7 +95,23 @@ export class RenderingEngine<T = {}> {
             const renderings = this.renderings.get(node) || [];
             renderings.push(rendering);
         }
-        return rendering[1];
+        return rendered;
+    }
+
+    /**
+     * Indicates the location of the nodes in the rendering performed.
+     *
+     * For example, if you avec a 2 charNodes (X, Y) seperate by a linebreak
+     * but, you want to display one text node, you can have a text node equal
+     * to 'x_y' and indicate that it's [charNode, LineBreak, CharNode].
+     * Or you want to display the Linebreak twice: 'x_y_' and indicate this
+     * [charNode, LineBreak, CharNode, LineBreak]
+     *
+     * @param nodes
+     * @param rendering
+     */
+    locate(nodes: VNode[], domObject: T): void {
+        this.locations.set(domObject, nodes);
     }
 
     /**
@@ -121,4 +144,13 @@ export class RenderingEngine<T = {}> {
         this.renderings.set(node, renderings);
         return rendererProm;
     }
+}
+export type RenderingEngineConstructor<T = {}> = {
+    new (...args: ConstructorParameters<typeof RenderingEngine>): RenderingEngine;
+    id: RenderingIdentifier;
+    extends: RenderingIdentifier[];
+    defaultRenderer: Constructor<Renderer<T>>;
+};
+export interface RenderingEngine<T = {}> {
+    constructor: RenderingEngineConstructor<T>;
 }

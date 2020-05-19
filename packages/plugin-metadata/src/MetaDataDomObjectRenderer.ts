@@ -1,17 +1,22 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { MetadataNode } from './MetadataNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class MetadataHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class MetadataDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = MetadataNode;
 
-    async render(node: MetadataNode): Promise<Node[]> {
-        const domNode = document.createElement(node.htmlTag);
-        this.engine.renderAttributes(Attributes, node, domNode);
-        domNode.innerHTML = node.contents;
-        return [domNode];
+    async render(node: MetadataNode): Promise<DomObject> {
+        const meta = {
+            tag: node.htmlTag,
+            children: [{ text: node.contents }],
+        };
+        this.engine.renderAttributes(Attributes, node, meta);
+        return meta;
     }
 }

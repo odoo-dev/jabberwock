@@ -31,6 +31,7 @@ export class Format extends Modifier {
     // Public
     //--------------------------------------------------------------------------
 
+    // TODO: remove this reference to DOM.
     render(): Element {
         const domNode = document.createElement(this.htmlTag);
         const attributes = this.modifiers.find(Attributes);

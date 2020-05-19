@@ -1,16 +1,21 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { YoutubeNode } from './YoutubeNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class YoutubeHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class YoutubeDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = YoutubeNode;
 
-    async render(node: YoutubeNode): Promise<Node[]> {
-        const youtube = document.createElement('iframe');
+    async render(node: YoutubeNode): Promise<DomObject> {
+        const youtube: DomObject = {
+            tag: 'IFRAME',
+        };
         this.engine.renderAttributes(Attributes, node, youtube);
-        return [youtube];
+        return youtube;
     }
 }

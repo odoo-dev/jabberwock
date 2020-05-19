@@ -1,6 +1,6 @@
 import { QWeb } from '@odoo/owl';
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
-import { OwlHtmlDomRenderer } from './ui/OwlHtmlDomRenderer';
+import { OwlDomObjectRenderer } from './ui/OwlDomObjectRenderer';
 import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OwlEnv, OwlComponent } from './ui/OwlComponent';
@@ -24,7 +24,7 @@ const browser: Browser = {
 
 export class Owl<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Renderer> = {
-        renderers: [OwlHtmlDomRenderer],
+        renderers: [OwlDomObjectRenderer],
     };
     readonly loaders = {
         owlTemplates: this._loadTemplates,

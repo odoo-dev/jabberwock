@@ -3,12 +3,12 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { PreXmlDomParser } from './PreXmlDomParser';
-import { PreHtmlDomRenderer } from './PreHtmlDomRenderer';
+import { PreDomObjectRenderer } from './PreDomObjectRenderer';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { PreNode } from './PreNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { PreCharHtmlDomRenderer } from './PreCharHtmlDomRenderer';
-import { PreSeparatorHtmlDomRenderer } from './PreSeparatorHtmlDomRenderer';
+import { PreCharDomObjectRenderer } from './PreCharDomObjectRenderer';
+import { PreSeparatorDomObjectRenderer } from './PreSeparatorDomObjectRenderer';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -18,7 +18,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
     };
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [PreXmlDomParser],
-        renderers: [PreHtmlDomRenderer, PreSeparatorHtmlDomRenderer, PreCharHtmlDomRenderer],
+        renderers: [PreDomObjectRenderer, PreSeparatorDomObjectRenderer, PreCharDomObjectRenderer],
     };
 
     //--------------------------------------------------------------------------

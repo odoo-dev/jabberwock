@@ -1,40 +1,70 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
-import { VElement } from '../../core/src/VNodes/VElement';
 import { HtmlDomRenderingEngine } from './HtmlDomRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {
     static id = 'dom/html';
     engine: HtmlDomRenderingEngine;
 
     async render(node: VNode): Promise<Node[]> {
-        let domNode: Node;
-        if (node.tangible) {
-            if (node.test(FragmentNode)) {
-                domNode = document.createDocumentFragment();
-            } else {
-                let nodeName: string;
-                if (node.is(VElement)) {
-                    nodeName = node.htmlTag;
-                } else {
-                    nodeName = node.constructor.name.toUpperCase() + '-' + node.id;
+        const renderer = this.engine.editor.plugins.get(Renderer);
+        const objectEngine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
+        const domObject = await objectEngine.render(node);
+        const stack = [domObject];
+        for (const domObject of stack) {
+            if ('children' in domObject) {
+                const children: DomObject[] = [];
+                for (const index in domObject.children) {
+                    const child = domObject.children[index];
+                    const childObject =
+                        child instanceof AbstractNode ? await objectEngine.render(child) : child;
+                    if (!stack.includes(childObject)) {
+                        children.push(childObject);
+                        stack.push(childObject);
+                    }
                 }
-                const element = document.createElement(nodeName);
-                this.engine.renderAttributes(Attributes, node, element);
-                domNode = element;
+                domObject.children = children;
             }
-
-            const renderedChildren = await this.renderChildren(node);
-            for (const renderedChild of renderedChildren) {
-                for (const domChild of renderedChild) {
-                    domNode.appendChild(domChild);
-                }
-            }
-            return [domNode];
-        } else {
-            return [];
         }
+        const domNode = this._objectToDom(domObject);
+        return domNode instanceof DocumentFragment ? [...domNode.childNodes] : [domNode];
+    }
+    private _objectToDom(domObject: DomObject): Node {
+        let domNode: Node;
+        if ('tag' in domObject) {
+            const element = document.createElement(domObject.tag);
+            if (domObject.attributes) {
+                for (const name in domObject.attributes) {
+                    const value = domObject.attributes[name];
+                    element.setAttribute(name, value);
+                }
+            }
+            if (domObject.children) {
+                for (const child of domObject.children) {
+                    if (!(child instanceof AbstractNode)) {
+                        element.appendChild(this._objectToDom(child));
+                    }
+                }
+            }
+            domNode = element;
+        } else if ('text' in domObject) {
+            domNode = document.createTextNode(domObject.text);
+        } else if ('children' in domObject) {
+            domNode = document.createDocumentFragment();
+            for (const child of domObject.children) {
+                if (!(child instanceof AbstractNode)) {
+                    domNode.appendChild(this._objectToDom(child));
+                }
+            }
+        } else {
+            domNode = document.createDocumentFragment();
+            for (const domNode of domObject.dom) {
+                domNode.appendChild(domNode);
+            }
+        }
+        return domNode;
     }
 }

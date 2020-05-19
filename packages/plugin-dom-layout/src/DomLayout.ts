@@ -10,9 +10,9 @@ import {
     ComponentId,
 } from '../../plugin-layout/src/LayoutEngine';
 import { Html } from '../../plugin-html/src/Html';
-import { ZoneHtmlDomRenderer } from './ui/ZoneHtmlDomRenderer';
+import { ZoneDomObjectRenderer } from './ui/ZoneDomObjectRenderer';
 import { ZoneXmlDomParser } from './ui/ZoneXmlDomParser';
-import { LayoutContainerHtmlDomRenderer } from './ui/LayoutContainerHtmlDomRenderer';
+import { LayoutContainerDomObjectRenderer } from './ui/LayoutContainerDomObjectRenderer';
 import { ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CommandIdentifier } from '../../core/src/Dispatcher';
@@ -27,7 +27,7 @@ export interface DomLayoutConfig extends JWPluginConfig {
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
     static dependencies = [Html, Parser, Renderer, Layout, Keymap];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
-        renderers: [ZoneHtmlDomRenderer, LayoutContainerHtmlDomRenderer],
+        renderers: [ZoneDomObjectRenderer, LayoutContainerDomObjectRenderer],
         parsers: [ZoneXmlDomParser],
         layoutEngines: [],
         components: [],

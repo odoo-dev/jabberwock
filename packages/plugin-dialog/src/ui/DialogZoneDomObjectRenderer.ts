@@ -1,38 +1,42 @@
-import { HtmlDomRenderingEngine } from '../../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
 import { DialogZoneNode } from './DialogZoneNode';
 import { VNode } from '../../../core/src/VNodes/VNode';
+import { ComponentId } from '../../../plugin-layout/src/LayoutEngine';
+import { Layout } from '../../../plugin-layout/src/Layout';
+
 import template from './Dialog.xml';
 import './Dialog.css';
-import { Layout } from '../../../plugin-layout/src/Layout';
-import { ComponentId } from '../../../plugin-layout/src/LayoutEngine';
+import { MetadataNode } from '../../../plugin-metadata/src/MetadataNode';
 
 const container = document.createElement('jw-container');
 container.innerHTML = template;
 const dialog = container.firstElementChild;
 
-export class DialogZoneHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class DialogZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = DialogZoneNode;
 
-    async render(node: DialogZoneNode): Promise<Node[]> {
+    async render(node: DialogZoneNode): Promise<DomObject> {
         const float = document.createElement('jw-dialog-container');
         for (const child of node.childVNodes) {
-            if (!node.hidden.get(child)) {
+            if (!node.hidden.get(child) && (child.tangible || child.is(MetadataNode))) {
                 float.appendChild(await this._renderDialog(child));
             }
         }
-        return float.childNodes.length ? [float] : [document.createDocumentFragment()];
+        return {
+            dom: float.childNodes.length ? [float] : [],
+        };
     }
 
     private async _renderDialog(node: VNode): Promise<Element> {
         const clone = dialog.cloneNode(true) as Element;
         const content = clone.querySelector('jw-content');
-        for (const domNode of await this.engine.render(node)) {
-            content.appendChild(domNode);
-        }
-
+        content.appendChild(this.engine.renderPlaceholder(node));
         let componentId: ComponentId;
         const components = this.engine.editor.plugins.get(Layout).engines.dom.components;
         for (const [id, nodes] of components) {
@@ -40,14 +44,12 @@ export class DialogZoneHtmlDomRenderer extends AbstractRenderer<Node[]> {
                 componentId = id;
             }
         }
-
         clone.addEventListener('click', (ev: MouseEvent): void => {
             const target = ev.target as Element;
             if (target.classList.contains('jw-close')) {
                 this.engine.editor.execCommand('hide', { componentID: componentId });
             }
         });
-
         return clone;
     }
 }
