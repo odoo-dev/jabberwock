@@ -28,7 +28,7 @@ export class ShadowHtmlDomParser extends AbstractParser<Node> {
             return [shadow];
         } else {
             const element = new VElement({ htmlTag: nodeName(item) });
-            element.attributes = this.engine.parseAttributes(item);
+            element.modifiers.append(this.engine.parseAttributes(item));
             element.append(shadow);
             return [element];
         }
