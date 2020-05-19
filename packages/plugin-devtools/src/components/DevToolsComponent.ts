@@ -38,6 +38,9 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
         this.env.editor.dispatcher.registerCommandHook('*', this.refresh.bind(this));
         return super.willStart();
     }
+    willUnmount(): void {
+        this.state.commands = [];
+    }
 
     //--------------------------------------------------------------------------
     // Public

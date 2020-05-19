@@ -511,6 +511,8 @@ export class EventNormalizer {
         this._mutationNormalizer.destroy();
         this._unbindEvents();
         this._shadowNormalizers.forEach(eventNormalizer => eventNormalizer.destroy());
+        this._triggerEventBatch = null;
+        this._isInEditable = null;
     }
 
     //--------------------------------------------------------------------------
@@ -569,7 +571,7 @@ export class EventNormalizer {
      */
     _unbindEvents(): void {
         this._eventListeners.forEach(({ target, type, listener }) => {
-            target.removeEventListener(type, listener);
+            target.removeEventListener(type, listener, true);
         });
     }
     /**

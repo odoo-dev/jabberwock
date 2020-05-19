@@ -17,10 +17,15 @@ export class OwlHtmlDomRenderer extends AbstractRenderer<Node[]> {
     }
 
     async render(node: OwlNode): Promise<Node[]> {
+        const components = this.engine.editor.plugins.get(Owl).components;
+        if (components.get(node)) {
+            components.get(node).destroy();
+        }
         const placeholder = document.createElement('jw-placeholer');
         document.body.appendChild(placeholder);
         node.Component.env = this.env;
         const component = new node.Component(null, node.props);
+        components.set(node, component);
         await component.mount(placeholder);
         placeholder.remove();
         return [...placeholder.childNodes];

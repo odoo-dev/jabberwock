@@ -39,6 +39,10 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         this._onInspectorMouseDown = this._onInspectorMouseDown.bind(this);
         this._onInspectorClick = this._onInspectorClick.bind(this);
     }
+    willUnmount(): void {
+        this._hoveredTargets = [];
+        this.selectedNode = null;
+    }
 
     /**
      * Handle keyboard navigation in DevTools (arrows to move in the tree)
