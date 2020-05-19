@@ -49,6 +49,17 @@ describePlugin(Pre, testEditor => {
                 de</pre>`,
             });
         });
+        it('should parse a pre with bold and italic', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<pre><b>a<i>b
+                [c]</i></b>
+                de</pre>`,
+                contentAfter:
+                    '<pre><b>a</b><b><i>b</i></b>\n' +
+                    '<b><i>                [c]</i></b>\n' +
+                    '                de</pre>',
+            });
+        });
     });
     describe('deleteForward', () => {
         describe('Selection collapsed', () => {

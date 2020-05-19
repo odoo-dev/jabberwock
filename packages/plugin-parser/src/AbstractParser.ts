@@ -3,11 +3,16 @@ import { ParsingEngine, ParsingIdentifier, Parser, ParserConstructor } from './P
 
 export abstract class AbstractParser<T = {}> implements Parser<T> {
     static id: ParsingIdentifier;
+    readonly predicate?: (item: T) => boolean;
     readonly engine: ParsingEngine<T>;
     constructor(engine: ParsingEngine<T>) {
         this.engine = engine;
     }
-    predicate?: (item: T) => boolean;
+    /**
+     * Parse the given node.
+     *
+     * @param node
+     */
     abstract async parse(item: T): Promise<VNode[]>;
 }
 

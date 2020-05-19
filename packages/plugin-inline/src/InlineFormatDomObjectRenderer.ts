@@ -1,33 +1,47 @@
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { InlineNode } from './InlineNode';
 import { Predicate, VNode } from '../../core/src/VNodes/VNode';
 import { Format } from './Format';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class FormatDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
+export class InlineFormatDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
     predicate: Predicate<boolean | VNode> = InlineNode;
-    async render(node: InlineNode): Promise<Node[]> {
+
+    async render(node: InlineNode): Promise<DomObject> {
         const inline = await this.super.render(node);
-        return this.renderFormats(node.modifiers.filter(Format), inline);
+        return this.renderFormats(node.modifiers.filter(Format), inline as DomObject);
     }
     /**
      * Render an inline node's formats and return them in a fragment.
      *
-     * @param rendering
      */
-    async renderFormats(formats: Format[], rendering: Node[]): Promise<Node[]> {
-        const fragment = document.createDocumentFragment();
-        let parent: Node = fragment;
-        for (const value of Object.values(formats)) {
-            const formatNode = value.render();
-            parent.appendChild(formatNode);
-            // Update the parent so the text is inside the format node.
-            parent = formatNode;
+    async renderFormats(formats: Format[], rendering: DomObject): Promise<DomObject> {
+        let children: Array<DomObject | VNode> = [];
+        if ('tag' in rendering || 'text' in rendering) {
+            children = [rendering];
+        } else if ('children' in rendering) {
+            children = [...rendering.children];
         }
-        for (const domChild of rendering) {
-            parent.appendChild(domChild);
+        let domObject: DomObject = rendering;
+        for (const format of [...formats].reverse()) {
+            domObject = {
+                tag: format.htmlTag.toUpperCase(),
+                attributes: {},
+                children: children,
+            };
+            const attributes = format.modifiers.find(Attributes);
+            if (attributes) {
+                for (const name of attributes.keys()) {
+                    domObject.attributes[name] = attributes.get(name);
+                }
+            }
+            children = [domObject];
         }
-        return Array.from(fragment.childNodes);
+        return domObject;
     }
 }

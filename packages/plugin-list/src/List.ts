@@ -2,8 +2,8 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { ListNode, ListType } from './ListNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { CommandParams } from '../../core/src/Dispatcher';
-import { ListHtmlDomRenderer } from './ListHtmlDomRenderer';
-import { ListItemHtmlDomRenderer } from './ListItemHtmlDomRenderer';
+import { ListDomObjectRenderer } from './ListDomObjectRenderer';
+import { ListItemDomObjectRenderer } from './ListItemDomObjectRenderer';
 import { ListXmlDomParser } from './ListXmlDomParser';
 import { ListItemXmlDomParser, ListItemAttributes } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
@@ -65,7 +65,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     };
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [ListXmlDomParser, ListItemXmlDomParser],
-        renderers: [ListItemHtmlDomRenderer, ListHtmlDomRenderer],
+        renderers: [ListItemDomObjectRenderer, ListDomObjectRenderer],
         shortcuts: [
             {
                 pattern: 'CTRL+SHIFT+<Digit7>',

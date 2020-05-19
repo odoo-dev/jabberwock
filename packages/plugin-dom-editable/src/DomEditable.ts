@@ -177,6 +177,10 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
         return this.editor.nextEventMutex(
             async (): Promise<void> => {
                 const batch = await batchPromise;
+                const domEngine = this.dependencies.get(Layout).engines.dom as DomLayoutEngine;
+                if (batch.mutatedElements) {
+                    domEngine.markForRedraw(batch.mutatedElements);
+                }
                 let processed = false;
                 if (batch.inferredKeydownEvent) {
                     const domLayout = this.dependencies.get(DomLayout);

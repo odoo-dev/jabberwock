@@ -1,56 +1,55 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
-import { nodeName } from '../../utils/src/utils';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { TableSectionAttributes } from './TableRowXmlDomParser';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class TableHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class TableDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = TableNode;
 
     /**
      * Render the TableNode along with its contents (TableRowNodes).
      */
-    async render(table: TableNode): Promise<Node[]> {
-        const domTable = document.createElement('table');
-        const domHead = document.createElement('thead');
-        let domBody = document.createElement('tbody');
+    async render(table: TableNode): Promise<DomObject> {
+        const objectTable: DomObject = {
+            tag: 'TABLE',
+            children: [],
+        };
+        const objectHead: DomObject = {
+            tag: 'THEAD',
+            children: [],
+        };
+        let objectBody: DomObject = {
+            tag: 'TBODY',
+            children: [],
+        };
 
         for (const child of table.children()) {
-            const domChild = await this.renderChild(child);
             if (child.is(TableRowNode)) {
                 // If the child is a row, append it to its containing section.
-                const tableSection = child.header ? domHead : domBody;
-                tableSection.append(...domChild);
+                const tableSection = child.header ? objectHead : objectBody;
+                tableSection.children.push(child);
                 this.engine.renderAttributes(TableSectionAttributes, child, tableSection);
-                if (!tableSection.parentNode) {
-                    domTable.append(tableSection);
+                if (!objectTable.children.includes(tableSection)) {
+                    objectTable.children.push(tableSection);
                 }
             } else {
-                domTable.append(...domChild);
+                objectTable.children.push(child);
                 // Create a new <tbody> so the rest of the rows, if any, get
                 // appended to it, after this element.
-                domBody = document.createElement('tbody');
+                objectBody = {
+                    tag: 'TBODY',
+                    children: [],
+                };
             }
         }
-        this.engine.renderAttributes(Attributes, table, domTable);
-        return [domTable];
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Return true if the given item is a table section element.
-     *
-     * @param item
-     */
-    _isTableSection(item: Node): item is HTMLTableSectionElement {
-        const name = nodeName(item);
-        return name === 'THEAD' || name === 'TBODY';
+        this.engine.renderAttributes(Attributes, table, objectTable);
+        return objectTable;
     }
 }

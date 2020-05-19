@@ -8,26 +8,29 @@ import {
 import { Parser } from '../../../plugin-parser/src/Parser';
 import { ParsingEngine } from '../../../plugin-parser/src/ParsingEngine';
 import { Renderer } from '../../../plugin-renderer/src/Renderer';
-import { RenderingEngine } from '../../../plugin-renderer/src/RenderingEngine';
 import { ZoneNode, ZoneIdentifier } from '../../../plugin-layout/src/ZoneNode';
 import { nodeLength } from '../../../utils/src/utils';
 import { Direction, VSelectionDescription } from '../../../core/src/VSelection';
 import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
-import { LayoutContainer } from './LayoutContainerNode';
-import { MarkerNode } from '../../../core/src/VNodes/MarkerNode';
-import { DomMap, DomPoint } from './DomMap';
+import { DomMap } from './DomMap';
 import { DomSelectionDescription } from '../../../plugin-dom-editable/src/EventNormalizer';
 import JWEditor from '../../../core/src/JWEditor';
+import { DomReconciliationEngine } from './DomReconciliationEngine';
+import { LayoutContainer } from './LayoutContainerNode';
+import { DomObject } from '../../../plugin-html/src/DomObjectRenderingEngine';
 
+export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
 
 export class DomLayoutEngine extends LayoutEngine {
     readonly id = 'dom';
-    private readonly _domMap = new DomMap();
+    readonly _domReconciliationEngine = new DomReconciliationEngine();
+
     // used only to develop and avoid wrong promise from commands
     private _currentlyRedrawing = false;
 
     private renderingMap: Record<ComponentId, Node[]> = {};
+    private _markedForRedraw = new Set<Node>();
     location: [Node, DomZonePosition];
     locations: Record<ComponentId, DomLayoutLocation> = {};
 
@@ -68,7 +71,7 @@ export class DomLayoutEngine extends LayoutEngine {
             if (location) {
                 const nodes = this.components.get(componentId);
                 for (const node of nodes) {
-                    const domNodes = this.getDomNodes(node);
+                    const domNodes = this._domReconciliationEngine.toDom(node);
                     if (location[1] === 'replace') {
                         // Undo the replace that was done by the layout engine.
                         let first = domNodes && domNodes[0];
@@ -79,18 +82,13 @@ export class DomLayoutEngine extends LayoutEngine {
                             first.parentNode.insertBefore(location[0], first);
                         }
                     }
-                    for (const domNode of domNodes) {
-                        if (domNode.parentNode) {
-                            domNode.parentNode.removeChild(domNode);
-                        }
-                    }
                 }
             }
         }
-        this._domMap.clear();
         this.renderingMap = {};
         this.location = null;
         this.locations = {};
+        this._domReconciliationEngine.clear();
         return super.stop();
     }
 
@@ -104,15 +102,10 @@ export class DomLayoutEngine extends LayoutEngine {
      * @param Node
      */
     getNodes(domNode: Node): VNode[] {
-        const nodes = this._domMap.fromDom(domNode) || [];
-        return nodes.filter(node => !(node instanceof ZoneNode));
+        return this._domReconciliationEngine.fromDom(domNode);
     }
     getDomNodes(node: VNode): Node[] {
-        if (node instanceof LayoutContainer) {
-            return node.childVNodes.map(node => this.getDomNodes(node)).flat();
-        } else {
-            return this._domMap.toDom(node);
-        }
+        return this._domReconciliationEngine.toDom(node);
     }
     /**
      * Redraw the layout component after insertion.
@@ -166,53 +159,67 @@ export class DomLayoutEngine extends LayoutEngine {
         }
         return nodes;
     }
-    async redraw(node?: VNode): Promise<void> {
+    async redraw(...nodes: VNode[]): Promise<void> {
         if (this._currentlyRedrawing) {
             throw new Error('Double redraw detected');
         }
         this._currentlyRedrawing = true;
-        // Find the closest node that has already been rendered preciously.
-        const nodeToRedraw = node?.closest(n => {
-            const domNode = this._domMap.toDom(n).pop();
-            return domNode?.ownerDocument.body.contains(domNode);
-        });
 
-        if (nodeToRedraw) {
-            // redraw item
-            const domNodeToRedraw = this._domMap.toDom(nodeToRedraw).pop();
-            let componentIdentifier: ComponentId;
-            for (const [componentId, nodes] of this.components) {
-                if (nodes.includes(nodeToRedraw)) {
-                    componentIdentifier = componentId;
-                    break;
-                }
-            }
-            if (this.locations[componentIdentifier]) {
-                await this._renderNode(nodeToRedraw);
-                await this._appendComponentInDom(componentIdentifier);
-            } else {
-                const parentNode = domNodeToRedraw.parentNode;
-                const domNodes = await this._renderNode(nodeToRedraw);
-                for (const domNode of domNodes) {
-                    if (domNode !== domNodeToRedraw) {
-                        parentNode.insertBefore(domNode, domNodeToRedraw);
-                    }
-                }
-                const last = domNodes?.length && domNodes[domNodes.length - 1];
-                if (last !== domNodeToRedraw) {
-                    parentNode.removeChild(domNodeToRedraw);
+        if (nodes.length) {
+            for (const index in nodes) {
+                let node = nodes[index];
+                while (
+                    (this._domReconciliationEngine.getRenderedWith(node).length !== 1 ||
+                        !this._domReconciliationEngine.toDom(node).length) &&
+                    node.parent
+                ) {
+                    // If the node are redererd with some other nodes then redraw parent.
+                    // If not in layout then redraw the parent.
+                    node = nodes[index] = node.parent;
                 }
             }
         } else {
-            // redraw all
+            // Redraw all.
             for (const componentId in this.locations) {
-                const nodes = this.components.get(componentId);
-                for (const node of nodes) {
-                    await this._renderNode(node);
-                }
-                await this._appendComponentInDom(componentId);
+                nodes.push(...this.components.get(componentId));
             }
         }
+
+        nodes = nodes.filter(node => {
+            const ancestor = node.ancestors(ZoneNode).pop();
+            return ancestor?.managedZones.includes('root');
+        });
+
+        // TODO: adapt when add memory
+        for (const node of nodes) {
+            if (node instanceof ContainerNode) {
+                nodes.push(...node.childVNodes);
+            }
+        }
+
+        // Render nodes.
+        const renderer = this.editor.plugins.get(Renderer);
+        const map = new Map<VNode, DomObject>();
+        const renderings = await renderer.render<DomObject>('dom/object', nodes);
+        for (const index in nodes) {
+            map.set(nodes[index], renderings[index]);
+        }
+        const locations = renderer.engines['dom/object'].locations as Map<DomObject, VNode[]>;
+        this._domReconciliationEngine.update(map, locations, this._markedForRedraw);
+        this._markedForRedraw = new Set();
+
+        // Append in dom if needed.
+        for (const componentId in this.locations) {
+            const nodes = this.components.get(componentId);
+            const needInsert = nodes.find(node => {
+                const domNodes = this._domReconciliationEngine.toDom(node);
+                return !domNodes.length || domNodes.some(node => !node.parentNode);
+            });
+            if (needInsert) {
+                this._appendComponentInDom(componentId);
+            }
+        }
+
         this._renderSelection();
         this._currentlyRedrawing = false;
     }
@@ -220,23 +227,120 @@ export class DomLayoutEngine extends LayoutEngine {
         const parser = this.editor.plugins.get(Parser);
         const domParserEngine = parser.engines['dom/html'] as ParsingEngine<Node>;
         const parsedVNodes = await domParserEngine.parse(element);
-
-        // Construct DOM map from the parsing in order to parse the selection.
-        for (const node of parsedVNodes) {
-            this._domMap.set(node, element);
-        }
-        for (const [domNode, nodes] of domParserEngine.parsingMap) {
-            for (const node of nodes) {
-                this._domMap.set(node, domNode);
-            }
-        }
-
         const domSelection = element.ownerDocument.getSelection();
         const anchorNode = domSelection.anchorNode;
         if (element === anchorNode || element.contains(anchorNode)) {
-            const selection = this.parseSelection(domSelection);
+            const domMap = new DomMap();
+
+            // Construct DOM map from the parsing in order to parse the selection.
+            for (const node of parsedVNodes) {
+                domMap.set(node, element);
+            }
+            for (const [domNode, nodes] of domParserEngine.parsingMap) {
+                for (const node of nodes) {
+                    domMap.set(node, domNode);
+                }
+            }
+
+            const _locate = (domNode: Node, domOffset: number): Point => {
+                /**
+                 * Return a position in the VNodes as a tuple containing a reference
+                 * node and a relative position with respect to this node ('BEFORE' or
+                 * 'AFTER'). The position is always given on the leaf.
+                 *
+                 * @param container
+                 * @param offset
+                 */
+                let forceAfter = false;
+                let forcePrepend = false;
+                let container = domNode.childNodes[domOffset] || domNode;
+                let offset = container === domNode ? domOffset : 0;
+                if (container === domNode && container.childNodes.length) {
+                    container = container.childNodes[container.childNodes.length - 1];
+                    offset = nodeLength(container);
+                    forceAfter = true;
+                }
+                while (!domMap.fromDom(container)) {
+                    forceAfter = false;
+                    forcePrepend = false;
+                    if (container.previousSibling) {
+                        forceAfter = true;
+                        container = container.previousSibling;
+                        offset = nodeLength(container);
+                    } else {
+                        forcePrepend = true;
+                        offset = [].indexOf.call(container.parentNode.childNodes, container);
+                        container = container.parentNode;
+                    }
+                }
+
+                // When targetting the end of a node, the DOM gives an offset that is
+                // equal to the length of the container. In order to retrieve the last
+                // descendent, we need to make sure we target an existing node, ie. an
+                // existing index.
+                const isAfterEnd = offset >= nodeLength(container);
+                let index = isAfterEnd ? nodeLength(container) - 1 : offset;
+                // Move to deepest child of container.
+                while (container.hasChildNodes()) {
+                    const child = container.childNodes[index];
+                    if (!domMap.fromDom(child)) {
+                        break;
+                    }
+                    container = child;
+                    index = isAfterEnd ? nodeLength(container) - 1 : 0;
+                    // Adapt the offset to be its equivalent within the new container.
+                    offset = isAfterEnd ? nodeLength(container) : index;
+                }
+
+                const nodes = domMap.fromDom(container);
+
+                // Get the VNodes matching the container.
+                let reference: VNode;
+                if (container.nodeType === Node.TEXT_NODE) {
+                    // The reference is the index-th match (eg.: text split into chars).
+                    reference = forceAfter ? nodes[nodes.length - 1] : nodes[index];
+                } else {
+                    reference = nodes[0];
+                }
+                if (forceAfter) {
+                    return [reference, RelativePosition.AFTER];
+                }
+                if (forcePrepend && reference.is(ContainerNode)) {
+                    return [reference, RelativePosition.INSIDE];
+                }
+
+                return reference.locate(container, offset);
+            };
+
+            // Parse the dom selection into the description of a VSelection.
+            const start = _locate(domSelection.anchorNode, domSelection.anchorOffset);
+            const end = _locate(domSelection.focusNode, domSelection.focusOffset);
+            const [startVNode, startPosition] = start;
+            const [endVNode, endPosition] = end;
+            let direction: Direction;
+            if (domSelection instanceof Selection) {
+                const domRange = domSelection.rangeCount && domSelection.getRangeAt(0);
+                if (
+                    domRange.startContainer === domSelection.anchorNode &&
+                    domRange.startOffset === domSelection.anchorOffset
+                ) {
+                    direction = Direction.FORWARD;
+                } else {
+                    direction = Direction.BACKWARD;
+                }
+            }
+            const selection: VSelectionDescription = {
+                anchorNode: startVNode,
+                anchorPosition: startPosition,
+                focusNode: endVNode,
+                focusPosition: endPosition,
+                direction: direction,
+            };
             this.editor.selection.set(selection);
+
+            domMap.clear();
         }
+
         return parsedVNodes;
     }
     /**
@@ -246,8 +350,14 @@ export class DomLayoutEngine extends LayoutEngine {
      * @param [direction]
      */
     parseSelection(selection: Selection | DomSelectionDescription): VSelectionDescription {
-        const start = this._locate(selection.anchorNode, selection.anchorOffset);
-        const end = this._locate(selection.focusNode, selection.focusOffset);
+        const start = this._domReconciliationEngine.locate(
+            selection.anchorNode,
+            selection.anchorOffset,
+        );
+        const end = this._domReconciliationEngine.locate(
+            selection.focusNode,
+            selection.focusOffset,
+        );
         const [startVNode, startPosition] = start;
         const [endVNode, endPosition] = end;
 
@@ -274,6 +384,11 @@ export class DomLayoutEngine extends LayoutEngine {
             direction: direction,
         };
     }
+    markForRedraw(domNodes: Set<Node>): void {
+        for (const domNode of domNodes) {
+            this._markedForRedraw.add(domNode);
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Private
@@ -287,13 +402,14 @@ export class DomLayoutEngine extends LayoutEngine {
      */
     private _renderSelection(): void {
         const selection = this.editor.selection;
-        const domNode = this._domMap.toDom(selection.anchor.parent)[0];
-        if (!domNode) {
+        const domNodes = this._domReconciliationEngine.toDom(selection.anchor.parent);
+        if (!domNodes.length) {
             return;
         }
-        const document = domNode.ownerDocument;
-        const anchor = this._getDomLocation(selection.anchor);
-        const focus = this._getDomLocation(selection.focus);
+        const anchor = this._domReconciliationEngine.getLocations(selection.anchor);
+        const focus = this._domReconciliationEngine.getLocations(selection.focus);
+
+        const document = anchor[0].ownerDocument;
         const domSelection = document.getSelection();
 
         if (
@@ -305,7 +421,7 @@ export class DomLayoutEngine extends LayoutEngine {
             return;
         }
 
-        const domRange = domNode.ownerDocument.createRange();
+        const domRange = document.createRange();
         if (selection.direction === Direction.FORWARD) {
             domRange.setStart(anchor[0], anchor[1]);
             domRange.collapse(true);
@@ -317,7 +433,7 @@ export class DomLayoutEngine extends LayoutEngine {
         domSelection.addRange(domRange);
         domSelection.extend(focus[0], focus[1]);
     }
-    private async _appendComponentInDom(id: ComponentId): Promise<void> {
+    private _appendComponentInDom(id: ComponentId): void {
         let [target, position] = this.locations[id];
         const nodes = this.renderingMap[id];
         const first = nodes.find(node => node.parentNode && node.ownerDocument.body.contains(node));
@@ -346,9 +462,9 @@ export class DomLayoutEngine extends LayoutEngine {
             throw new Error('Impossible to replace an element without any parent.');
         }
 
-        const domNodes = [];
+        const domNodes: Node[] = [];
         for (const node of this.components.get(id)) {
-            domNodes.push(...this.getDomNodes(node));
+            domNodes.push(...this._domReconciliationEngine.toDom(node));
         }
         if (!domNodes.length && this.locations[id][1] === 'replace') {
             throw new Error('Impossible to replace a element with an empty template.');
@@ -365,9 +481,15 @@ export class DomLayoutEngine extends LayoutEngine {
                 }
             }
         } else if (position === 'prepend') {
-            const firstChild = target.firstChild;
+            let item: Node = target.firstChild;
             for (const domNode of domNodes) {
-                target.insertBefore(domNode, firstChild);
+                if (!item) {
+                    target.appendChild(domNode);
+                } else if (domNode !== item) {
+                    target.insertBefore(domNode, item);
+                } else {
+                    item = domNode.nextSibling;
+                }
             }
         } else if (position === 'replace') {
             for (const domNode of domNodes) {
@@ -381,7 +503,7 @@ export class DomLayoutEngine extends LayoutEngine {
         }
 
         for (const node of this.renderingMap[id]) {
-            if (node.parentNode) {
+            if (node.parentNode && !domNodes.includes(node)) {
                 node.parentNode.removeChild(node);
             }
         }
@@ -417,155 +539,6 @@ export class DomLayoutEngine extends LayoutEngine {
                 }
             }
         }
-    }
-    /**
-     * Return a position in the VNodes as a tuple containing a reference
-     * node and a relative position with respect to this node ('BEFORE' or
-     * 'AFTER'). The position is always given on the leaf.
-     *
-     * @param container
-     * @param offset
-     */
-    private _locate(domNode: Node, domOffset: number): Point {
-        let forceAfter = false;
-        let forcePrepend = false;
-        let container = domNode.childNodes[domOffset] || domNode;
-        let offset = container === domNode ? domOffset : 0;
-        if (container === domNode && container.childNodes.length) {
-            container = container.childNodes[container.childNodes.length - 1];
-            offset = nodeLength(container);
-            forceAfter = true;
-        }
-        while (!this.getNodes(container).length) {
-            forceAfter = false;
-            forcePrepend = false;
-            if (container.previousSibling) {
-                forceAfter = true;
-                container = container.previousSibling;
-                offset = nodeLength(container);
-            } else {
-                forcePrepend = true;
-                offset = [].indexOf.call(container.parentNode.childNodes, container);
-                container = container.parentNode;
-            }
-        }
-
-        // When targetting the end of a node, the DOM gives an offset that is
-        // equal to the length of the container. In order to retrieve the last
-        // descendent, we need to make sure we target an existing node, ie. an
-        // existing index.
-        const isAfterEnd = offset >= nodeLength(container);
-        let index = isAfterEnd ? nodeLength(container) - 1 : offset;
-        // Move to deepest child of container.
-        while (container.hasChildNodes()) {
-            const child = container.childNodes[index];
-            if (!this.getNodes(child).length) {
-                break;
-            }
-            container = child;
-            index = isAfterEnd ? nodeLength(container) - 1 : 0;
-            // Adapt the offset to be its equivalent within the new container.
-            offset = isAfterEnd ? nodeLength(container) : index;
-        }
-
-        const nodes = this.getNodes(container);
-
-        // Get the VNodes matching the container.
-        let reference: VNode;
-        if (container.nodeType === Node.TEXT_NODE) {
-            // The reference is the index-th match (eg.: text split into chars).
-            reference = forceAfter ? nodes[nodes.length - 1] : nodes[index];
-        } else {
-            reference = nodes[0];
-        }
-        if (forceAfter) {
-            return [reference, RelativePosition.AFTER];
-        }
-        if (forcePrepend && reference.is(ContainerNode)) {
-            return [reference, RelativePosition.INSIDE];
-        }
-
-        return reference.locate(container, offset);
-    }
-    /**
-     * Return the location in the DOM corresponding to the location in the
-     * VDocument of the given VNode. The location in the DOM is expressed as a
-     * tuple containing a reference Node and a relative position with respect to
-     * the reference Node.
-     *
-     * @param node
-     */
-    private _getDomLocation(node: MarkerNode): DomPoint {
-        let reference = node.previousSibling();
-        let position = RelativePosition.AFTER;
-        if (reference) {
-            reference = reference.lastLeaf();
-        } else {
-            reference = node.nextSibling();
-            position = RelativePosition.BEFORE;
-            if (reference) {
-                reference = reference.firstLeaf();
-            }
-        }
-        if (!reference) {
-            reference = node.parent;
-            position = RelativePosition.INSIDE;
-        }
-        // If the given position is "before", the reference DOM Node is the first
-        // DOM node matching the given VNode.
-        // If the given position is "after", the reference DOM Node is the last DOM
-        // node matching the given VNode.
-        const locations = this._domMap.toDomPoint(reference);
-        const locationIndex = position === RelativePosition.BEFORE ? 0 : locations.length - 1;
-        let [domNode, offset] = locations[locationIndex];
-        if (domNode.nodeType === Node.TEXT_NODE && offset === -1) {
-            // This -1 is a hack to accomodate the VDocumentMap to the new
-            // rendering process without altering it for the parser.
-            offset = this._domMap.fromDom(domNode).indexOf(reference);
-        } else if (position === RelativePosition.INSIDE && offset === -1) {
-            offset = 0;
-        } else {
-            // Char nodes have their offset in the corresponding text nodes
-            // registered in the map via `set` but void nodes don't. Their
-            // location need to be computed with respect to their parents.
-            const container = domNode.parentNode;
-            offset = Array.prototype.indexOf.call(container.childNodes, domNode);
-            domNode = container;
-        }
-        if (position === RelativePosition.AFTER) {
-            // Increment the offset to be positioned after the reference node.
-            offset += 1;
-        }
-        return [domNode, offset];
-    }
-    private async _renderNode(node: VNode): Promise<Node[]> {
-        const renderer = this.editor.plugins.get(Renderer);
-        const domRendererEngine = renderer.engines['dom/html'] as RenderingEngine<Node[]>;
-
-        // Clear the rendering cache and update the rendering.
-        domRendererEngine.renderings.clear();
-        const domNodes = await domRendererEngine.render(node);
-
-        // Put the rendered nodes into the map.
-        let child = node.lastLeaf();
-        while (child) {
-            const renderings = domRendererEngine.renderings.get(child);
-            if (renderings) {
-                const rendering = renderings[renderings.length - 1];
-                const renderedNodes = await rendering[1];
-
-                // Remove from cache to update with the newest nodes.
-                this._domMap.clear(child);
-
-                // Add in cache.
-                for (const domNode of renderedNodes) {
-                    this._domMap.set(child, domNode, -1, 'unshift');
-                }
-            }
-            child = child.previous();
-        }
-
-        return domNodes || [];
     }
     private _prepareLayoutContainerAndLocation(componentDefinition: ComponentDefinition): void {
         const zone = this.componentZones[componentDefinition.id];

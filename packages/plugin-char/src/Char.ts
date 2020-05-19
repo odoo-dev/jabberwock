@@ -2,8 +2,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CharNode } from './CharNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { CharFormatHtmlDomRenderer } from './CharFormatHtmlDomRenderer';
-import { CharHtmlDomRenderer } from './CharHtmlDomRenderer';
+import { CharDomObjectRenderer } from './CharDomObjectRenderer';
 import { CharXmlDomParser } from './CharXmlDomParser';
 import { Modifiers } from '../../core/src/Modifiers';
 import { Loadables } from '../../core/src/JWEditor';
@@ -20,7 +19,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     static dependencies = [Inline];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [CharXmlDomParser],
-        renderers: [CharFormatHtmlDomRenderer, CharHtmlDomRenderer],
+        renderers: [CharDomObjectRenderer],
     };
     commands = {
         insertText: {

@@ -23,6 +23,7 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
             return;
         }
         engine.renderings.clear();
+        engine.locations.clear();
         if (nodes instanceof Array) {
             const renderings = nodes.map(node => engine.render(node) as Promise<T>);
             return Promise.all(renderings);

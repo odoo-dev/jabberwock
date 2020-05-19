@@ -1,27 +1,26 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { TableCellNode } from './TableCellNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class TableCellDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = TableCellNode;
 
-    /**
-     * Render the TableCellNode along with its contents.
-     *
-     * @param cell
-     */
-    async render(cell: TableCellNode): Promise<Node[]> {
+    async render(cell: TableCellNode): Promise<DomObject> {
         // If the cell is not active, do not render it (it means it is
         // represented by its manager cell's colspan or rowspan: it was merged).
-        if (!cell.isActive()) return [];
+        if (!cell.isActive()) return { children: [] };
 
         // Render the cell and its contents.
-        const td = document.createElement(cell.header ? 'th' : 'td');
-        const renderedChildren = await this.renderChildren(cell);
-        td.append(...renderedChildren.flat());
+        const domObject: DomObject = {
+            tag: cell.header ? 'TH' : 'TD',
+            children: await this.engine.renderChildren(cell),
+        };
 
         // Render attributes.
         // Colspan and rowspan are handled differently from other attributes:
@@ -34,10 +33,10 @@ export class TableCellHtmlDomRenderer extends AbstractRenderer<Node[]> {
         if (cell.rowspan > 1) {
             cell.modifiers.get(Attributes).set('rowspan', '' + cell.rowspan);
         }
-        this.engine.renderAttributes(Attributes, cell, td);
+        this.engine.renderAttributes(Attributes, cell, domObject);
         cell.modifiers.get(Attributes).remove('colspan');
         cell.modifiers.get(Attributes).remove('rowspan');
 
-        return [td];
+        return domObject;
     }
 }

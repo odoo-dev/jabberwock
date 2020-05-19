@@ -1,29 +1,32 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { InputNode } from './InputNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class InputHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class InputDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = InputNode;
 
     /**
      * Render the VNode to the given format.
      */
-    async render(node: InputNode): Promise<Node[]> {
-        const input = document.createElement('input');
+    async render(node: InputNode): Promise<DomObject> {
+        const input = {
+            tag: 'INPUT',
+            attributes: {
+                type: node.inputType,
+                name: node.inputName,
+                value: node.value,
+            },
+        };
         const attributes = node.modifiers.find(Attributes);
         if (attributes) {
             this.engine.renderAttributes(Attributes, node, input);
         }
-        if (node.inputType) {
-            input.setAttribute('type', node.inputType);
-        }
-        if (node.inputName) {
-            input.setAttribute('name', node.inputName);
-        }
-        input.value = node.value;
-        return [input];
+        return input;
     }
 }

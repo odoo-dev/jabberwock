@@ -1,17 +1,18 @@
-import { HtmlDomRenderingEngine } from '../../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
 import { LayoutContainer } from './LayoutContainerNode';
 
-export class LayoutContainerHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class LayoutContainerDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = LayoutContainer;
 
-    async render(node: LayoutContainer): Promise<Node[]> {
-        if (node.hasChildren()) {
-            const renderedChildren = await this.renderChildren(node);
-            return renderedChildren.flat();
-        }
-        return [];
+    async render(node: LayoutContainer): Promise<DomObject> {
+        return {
+            children: [...node.children()],
+        };
     }
 }

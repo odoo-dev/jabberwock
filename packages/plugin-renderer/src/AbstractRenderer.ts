@@ -1,13 +1,12 @@
-import { Renderer, RenderingIdentifier } from './RenderingEngine';
+import { Renderer, RenderingIdentifier, RendererConstructor } from './RenderingEngine';
 import { RenderingEngine } from './RenderingEngine';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 
 export abstract class AbstractRenderer<T> implements Renderer<T> {
     static id: RenderingIdentifier;
-    predicate?: Predicate;
-    engine: RenderingEngine<T>;
-    super: Renderer<T>;
-    _renderChildMutex: Map<VNode, Promise<T>> = new Map();
+    readonly predicate?: Predicate;
+    readonly engine: RenderingEngine<T>;
+    readonly super: Renderer<T>;
     constructor(engine: RenderingEngine<T>, superRenderer: Renderer<T>) {
         this.engine = engine;
         this.super = superRenderer;
@@ -18,36 +17,8 @@ export abstract class AbstractRenderer<T> implements Renderer<T> {
      * @param node
      */
     abstract render(node: VNode): Promise<T>;
-    /**
-     * Render the given child node. This function ensures that the promise
-     * corresponding to the rendering of each child of the same parent will be
-     * resolved in the order in which `renderChild` was called.
-     *
-     * @param child
-     */
-    async renderChild(child: VNode): Promise<T> {
-        const parent = child.parent;
-        await this._renderChildMutex.get(parent);
-        const renderedChild = this.engine.render(child);
-        this._renderChildMutex.set(parent, renderedChild);
-        return renderedChild;
-    }
-    /**
-     * Render the children of given node. Return a promise resolved with the
-     * result of the rendering of each child concatenated into a single array
-     * conserving the order of the children.
-     *
-     * @param node
-     */
-    async renderChildren(node: VNode): Promise<T[]> {
-        const renderedChildren: Array<Promise<T>> = [];
-        if (node.hasChildren()) {
-            for (const child of node.childVNodes) {
-                renderedChildren.push(this.engine.render(child));
-            }
-        } else if (this.engine.renderEmpty) {
-            renderedChildren.push(this.engine.renderEmpty(node));
-        }
-        return Promise.all(renderedChildren);
-    }
+}
+
+export interface AbstractRenderer<T = {}> {
+    constructor: RendererConstructor<T>;
 }

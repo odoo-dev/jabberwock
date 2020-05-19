@@ -1,6 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { OdooVideoXmlDomParser } from './OdooVideoXmlDomParser';
-import { OdooVideoHtmlDomRenderer } from './OdooVideoHtmlDomRenderer';
+import { OdooVideoHtmlDomRenderer } from './OdooVideoDomObjectRenderer';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';

@@ -1,21 +1,18 @@
-import { HtmlDomRenderingEngine } from '../../../plugin-html/src/HtmlDomRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
 import { ZoneNode } from '../../../plugin-layout/src/ZoneNode';
 
-export class ZoneHtmlDomRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class ZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate = ZoneNode;
 
-    async render(node: ZoneNode): Promise<Node[]> {
-        const renderedChildren: Node[] = [];
-        if (node.hasChildren()) {
-            for (const child of node.childVNodes) {
-                if (!node.hidden.get(child)) {
-                    renderedChildren.push(...(await this.engine.render(child)));
-                }
-            }
-        }
-        return renderedChildren;
+    async render(node: ZoneNode): Promise<DomObject> {
+        return {
+            children: node.children().filter(child => !node.hidden.get(child)),
+        };
     }
 }

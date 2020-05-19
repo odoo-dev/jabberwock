@@ -90,3 +90,23 @@ export function getDocument(node: Node): Document | ShadowRoot {
     }
     return root || document;
 }
+
+// Flattens two union types into a single type with optional values
+// i.e. FlattenUnion<{ a: number, c: number } | { b: string, c: number }> = { a?: number, b?: string, c: number }
+export type FlattenUnion<T> = {
+    [K in keyof UnionToIntersection<T>]: K extends keyof T
+        ? T[K] extends {}[]
+            ? T[K]
+            : T[K] extends object
+            ? FlattenUnion<T[K]>
+            : T[K]
+        : UnionToIntersection<T>[K] | undefined;
+};
+
+// Converts a union of two types into an intersection
+// i.e. A | B -> A & B
+type UnionToIntersection<U> = (U extends {}
+  ? (k: U) => void
+  : never) extends (k: infer I) => void
+    ? I
+    : never;
