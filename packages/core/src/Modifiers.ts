@@ -4,7 +4,7 @@ import { VersionableObject } from './Memory/VersionableObject';
 import { VersionableArray } from './Memory/VersionableArray';
 
 export class Modifiers extends VersionableObject {
-    _contents: Modifier[] = new VersionableArray();
+    _contents: Modifier[];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
         super();
         const clonedModifiers = modifiers.map(mod => {
@@ -13,7 +13,7 @@ export class Modifiers extends VersionableObject {
         this.append(...clonedModifiers);
     }
     get length(): number {
-        return this._contents.length;
+        return this._contents?.length || 0;
     }
 
     //--------------------------------------------------------------------------
@@ -27,6 +27,9 @@ export class Modifiers extends VersionableObject {
      * @param modifiers
      */
     append(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
+        if (modifiers.length && !this._contents) {
+            this._contents = new VersionableArray();
+        }
         for (const modifier of modifiers) {
             if (modifier instanceof Modifier) {
                 this._contents.push(modifier);
@@ -42,6 +45,9 @@ export class Modifiers extends VersionableObject {
      * @param modifiers
      */
     prepend(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
+        if (modifiers.length && !this._contents) {
+            this._contents = new VersionableArray();
+        }
         for (const modifier of modifiers) {
             if (modifier instanceof Modifier) {
                 this._contents.unshift(modifier);
@@ -64,6 +70,9 @@ export class Modifiers extends VersionableObject {
     find<T extends Modifier>(callback: (modifier: T) => boolean): T;
     find<T extends Modifier>(modifier: T | Constructor<T>): T;
     find<T extends Modifier>(modifier: ((modifier: T) => boolean) | T | Constructor<T>): T {
+        if (!this._contents) {
+            return;
+        }
         if (modifier instanceof Modifier) {
             // `modifier` is an instance of `Modifier` -> find it in the array.
             return this._contents.find(instance => instance === modifier) as T;
@@ -114,6 +123,9 @@ export class Modifiers extends VersionableObject {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         thisArg?: any,
     ): T[] {
+        if (!this._contents) {
+            return [];
+        }
         if (modifier instanceof Modifier) {
             // `modifier` is an instance of `Modifier` -> find it in the array
             // and return it in a new array.
@@ -136,6 +148,9 @@ export class Modifiers extends VersionableObject {
      * @param modifier
      */
     remove(modifier: Modifier | Constructor<Modifier>): boolean {
+        if (!this._contents) {
+            return false;
+        }
         const modifierIndex = this._contents.findIndex(modifierInstance => {
             if (modifier instanceof Modifier) {
                 return modifierInstance === modifier;
@@ -167,13 +182,15 @@ export class Modifiers extends VersionableObject {
         oldModifier: Modifier | Constructor<Modifier>,
         newModifier: Modifier | Constructor<Modifier>,
     ): boolean {
-        const oldModifierIndex = this._contents.findIndex(modifierInstance => {
-            if (oldModifier instanceof Modifier) {
-                return modifierInstance === oldModifier;
-            } else {
-                return modifierInstance instanceof oldModifier;
-            }
-        });
+        const oldModifierIndex = this._contents
+            ? this._contents.findIndex(modifierInstance => {
+                  if (oldModifier instanceof Modifier) {
+                      return modifierInstance === oldModifier;
+                  } else {
+                      return modifierInstance instanceof oldModifier;
+                  }
+              })
+            : -1;
         if (oldModifierIndex === -1) {
             this.append(newModifier);
             return false;
@@ -192,14 +209,20 @@ export class Modifiers extends VersionableObject {
      * @param modifier
      */
     toggle(modifier: Modifier | Constructor<Modifier>): void {
-        this.remove(modifier) || this.append(modifier);
+        if (!this.remove(modifier)) {
+            this.append(modifier);
+        }
     }
     /**
      * Return a new instance of the Modifiers class containing the same
      * modifiers.
      */
     clone(): Modifiers {
-        return new Modifiers(...this._contents);
+        if (this._contents) {
+            return new Modifiers(...this._contents);
+        } else {
+            return new Modifiers();
+        }
     }
     /**
      * Return true if the modifiers in this array are the same as the modifiers
@@ -210,7 +233,7 @@ export class Modifiers extends VersionableObject {
      */
     areSameAs(otherModifiers: Modifiers): boolean {
         const modifiersMap = new Map(
-            this._contents.map(a => [a, otherModifiers.find(b => a.isSameAs(b))]),
+            this._contents?.map(a => [a, otherModifiers.find(b => a.isSameAs(b))]) || [],
         );
         const aModifiers = Array.from(modifiersMap.keys());
         const bModifiers = Array.from(modifiersMap.values());
@@ -228,7 +251,7 @@ export class Modifiers extends VersionableObject {
      * @param callbackfn
      */
     some(callbackfn: (value: Modifier, index: number, array: Modifier[]) => unknown): boolean {
-        return this._contents.some(callbackfn);
+        return this._contents?.some(callbackfn);
     }
     /**
      * Proxy for the native `every` method of `Array`, called on `this._contents`.
@@ -237,7 +260,7 @@ export class Modifiers extends VersionableObject {
      * @param callbackfn
      */
     every(callbackfn: (value: Modifier, index: number, array: Modifier[]) => unknown): boolean {
-        return this._contents.every(callbackfn);
+        return this._contents ? this._contents.every(callbackfn) : true;
     }
     /**
      * Proxy for the native `map` method of `Array`, called on `this._contents`.
@@ -246,6 +269,6 @@ export class Modifiers extends VersionableObject {
      * @param callbackfn
      */
     map<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): T[] {
-        return this._contents.map(callbackfn);
+        return this._contents?.map(callbackfn) || [];
     }
 }

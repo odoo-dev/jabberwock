@@ -58,14 +58,24 @@ describe('test performances', () => {
                 editor = new BasicEditor();
                 editor.configure(DomLayout, { location: [root, 'replace'] });
                 editor.configure(DomEditable, { source: root });
-                await editor.start();
             });
             afterEach(async () => {
                 editor.stop();
                 document.body.removeChild(wrapper);
             });
 
-            it('should split a paragraph in two', async () => {
+            it.only('should split a paragraph in two', async function() {
+                this.timeout(8000);
+
+                await new Promise(r => setTimeout(r, 1000));
+
+                let timeToStart = Date.now();
+                await editor.start();
+                timeToStart = Date.now() - timeToStart;
+                console.info('Time to start:', timeToStart);
+
+                await new Promise(r => setTimeout(r, 1000));
+
                 // Parse the editable in the internal format of the editor.
                 const memory = editor.memory;
                 const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
@@ -100,6 +110,8 @@ describe('test performances', () => {
                 // object are not yet loaded. The loading test is done separately.
                 t1.shift();
                 t2.shift();
+
+                expect(timeToStart).to.lessThan(30, 'Time to parse the document');
 
                 const averageInsert = Math.round(t2.reduce((a, b) => a + b) / t2.length);
                 expect(averageInsert).to.lessThan(30, 'Time to compute the insert paragraph');
