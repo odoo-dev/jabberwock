@@ -51,6 +51,17 @@ module.exports = function(config) {
                     test: /\.(eot|svg|ttf|woff|woff2)$/,
                     loader: 'file-loader?name=/fonts/[name].[ext]',
                 },
+                {
+                    test: /\.(png|jpe?g|gif)$/i,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                publicPath: '/',
+                            },
+                        },
+                    ]
+                }
             ],
         },
         resolve: {

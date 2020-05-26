@@ -1,0 +1,180 @@
+jw-vorpal {
+    display: none;
+    text-align: center;
+    position: relative;
+}
+jw-vorpal[data-state='play'] {
+    display: block;
+}
+.vorpal [contenteditable="true"] {
+    display: none;
+}
+.vorpal jw-vorpal {
+    display: block;
+}
+
+/* sword */
+
+jw-vorpal jw-sword {
+    position: absolute;
+    top: 0px;
+    left: -100px;
+}
+jw-vorpal jw-sword[data-state='grabbed'] {
+    transform: translate(-28px, 14px) rotate(-114deg)
+}
+jw-vorpal jw-sword jw-background-image {
+    display: block;
+    width: 52px;
+    height: 200px;
+    background-image: url('./img/sword.png');
+    position: absolute;
+    transform: translate(-26px, -100px) scale(0.5);
+}
+
+/* jabberwock */
+
+jw-vorpal jw-jabberwock {
+    position: absolute;
+    transition-timing-function: ease-in-out;
+    transition-duration: 100ms;
+}
+jw-vorpal jw-head {
+    position: absolute;
+}
+jw-vorpal jw-head jw-background-image {
+    display: block;
+    width: 150px;
+    height: 133px;
+    background-image: url('./img/jabberwock-sprite.png');
+    position: absolute;
+    transform: translate(-68px, -68px);
+}
+jw-vorpal jw-hand-right, jw-vorpal jw-hand-left {
+    position: absolute;
+    top: 65px;
+    left: -36px;
+}
+jw-vorpal jw-hand-left {
+    left: 36px;
+}
+jw-vorpal jw-hand-right jw-background-image,
+jw-vorpal jw-hand-left jw-background-image {
+    display: block;
+    width: 37px;
+    height: 37px;
+    background-image: url('./img/jabberwock-sprite.png');
+    background-position: -37px -133px;
+    position: absolute;
+    transform: translate(-18px, -18px);
+}
+jw-vorpal jw-hand-left jw-background-image {
+    -moz-transform: scaleX(-1);
+    -o-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    transform: translate(-18px, -18px) scaleX(-1);
+}
+
+@keyframes close {
+    0% { background-position-x: -37px; }
+    50% { background-position-x: -74px; }
+    100% { background-position-x: -111px; }
+}
+@keyframes grab {
+    0% { background-position-x: -37px; }
+    20% { background-position-x: 0px; }
+    40% { background-position-x: -37px; }
+    60% { background-position-x: -74px; }
+    80% { background-position-x: -111px; }
+    100% { background-position-x: -111px; }
+}
+@keyframes grabbing {
+    0% { background-position-x: -37px; }
+    14% { background-position-x: 0px; }
+    28% { background-position-x: -37px; }
+    42% { background-position-x: -74px; }
+    56% { background-position-x: -111px; }
+    70% { background-position-x: -74px; }
+    100% { background-position-x: -37px; }
+}
+@keyframes nervous {
+    0% { filter: invert(0); }
+    10% { filter: invert(0.2); }
+    20% { filter: invert(0); }
+    30% { filter: invert(1); }
+    40% { filter: invert(0); }
+    50% { filter: invert(0.8); }
+    60% { filter: invert(1); }
+    70% { filter: invert(0); }
+    80% { filter: invert(0); }
+    90% { filter: invert(1); }
+    100% { filter: invert(1); }
+}
+@keyframes nervous-move {
+    0% {}
+    10% { transform: rotate(1deg); }
+    20% { transform: rotate(0deg) translate(2px,0); }
+    30% { transform: rotate(-2deg) translate(0,0); }
+    40% { transform: rotate(0deg) translate(1px,0); }
+    50% { transform: rotate(0deg) translate(-2px,0); }
+    60% { transform: rotate(1deg) translate(0,0); }
+    70% { transform: rotate(-1deg) translate(0,0); }
+    80% { transform: rotate(1deg) translate(5px,0); }
+    90% { transform: rotate(-2deg) translate(-2px,0); }
+    100% { transform: rotate(0deg) translate(0,0); }
+}
+@keyframes appear {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+jw-vorpal[data-state='play'] jw-jabberwock {
+    animation: appear 0.5s;
+}
+jw-vorpal jw-jabberwock[data-nervous='1'] jw-head,
+jw-vorpal jw-jabberwock[data-nervous='1'] jw-hand-right[data-state='grab'],
+jw-vorpal jw-jabberwock[data-nervous='1'] jw-hand-left[data-state='grab'] {
+    animation: nervous-move 1s steps(1) infinite, nervous 1s steps(1) infinite;
+}
+jw-vorpal jw-jabberwock[data-nervous='1'] jw-hand,
+jw-vorpal jw-jabberwock[data-nervous='1'] jw-hand-right[data-state='grab'],
+jw-vorpal jw-jabberwock[data-nervous='1'] jw-hand-left[data-state='grab'] {
+    animation: nervous 1s steps(1) infinite;
+}
+jw-vorpal jw-hand-right[data-state='open'] jw-background-image,
+jw-vorpal jw-hand-left[data-state='open'] jw-background-image {
+    background-position-x: 0px;
+}
+jw-vorpal jw-hand-right[data-state='close'] jw-background-image,
+jw-vorpal jw-hand-left[data-state='close'] jw-background-image {
+    animation: close 0.2s steps(1) forwards;
+    background-position-x:-111px;
+}
+jw-vorpal jw-hand-right[data-state='grab'] jw-background-image,
+jw-vorpal jw-hand-left[data-state='grab'] jw-background-image {
+    animation: grab 0.3s steps(1) forwards;
+}
+jw-vorpal jw-hand-right[data-state='grabbing'] jw-background-image,
+jw-vorpal jw-hand-left[data-state='grabbing'] jw-background-image {
+    animation: grabbing 0.6s steps(1) infinite;
+}
+
+/* clone */
+
+jw-editable-clone .separate-char {
+    color: inherit !important;
+    font: inherit !important;
+    position: relative !important;
+}
+jw-editable-clone .separate-char .invisible {
+    color: transparent !important;
+}
+jw-editable-clone .separate-char .movable {
+    color: inherit !important;
+    font: inherit !important;
+    position: absolute !important;
+    transform-origin: center !important;
+}
+jw-editable-clone.shake-chars .separate-char .movable:not(.fall) {
+    animation: nervous-move 1s steps(1) infinite;
+}

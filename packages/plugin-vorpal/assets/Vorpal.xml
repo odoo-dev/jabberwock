@@ -1,0 +1,23 @@
+<templates>
+    <!-- INSPECTOR -->
+    <jw-vorpal t-name="VorpalComponent" t-att-data-state="state.play ? 'play' : ''">
+        <jw-editable-clone/>
+        <jw-sword t-att-data-state="state.sword.state"
+            t-attf-style="left:{{state.sword.x}}px; top:{{state.sword.y}}px"><jw-background-image/></jw-sword>
+        <jw-jabberwock t-att-data-nervous="state.jabberwock.all.nervous ? '1' : '0'"
+            t-attf-style="left:{{state.jabberwock.all.x}}px; top:{{state.jabberwock.all.y}}px">
+            <jw-head t-att-data-state="state.jabberwock.head.state"
+                t-attf-style="left:{{state.jabberwock.head.x}}px; top:{{state.jabberwock.head.y}}px">
+                <jw-background-image/>
+            </jw-head>
+            <jw-hand-right t-att-data-state="state.jabberwock.rightHand.state"
+                t-attf-style="left:{{state.jabberwock.rightHand.x}}px; top:{{state.jabberwock.rightHand.y}}px">
+                <jw-background-image/>
+            </jw-hand-right>
+            <jw-hand-left t-att-data-state="state.jabberwock.leftHand.state"
+                t-attf-style="left:{{state.jabberwock.leftHand.x}}px; top:{{state.jabberwock.leftHand.y}}px">
+                <jw-background-image/>
+            </jw-hand-left>
+        </jw-jabberwock>
+    </jw-vorpal>
+</templates>
