@@ -63,16 +63,11 @@ export class CharNode extends InlineNode {
      * @param a
      * @param b
      */
-    isSameTextNode(node: VNode): boolean {
-        if (this.is(CharNode) && node.is(CharNode)) {
+    isSameTextNode(node: VNode): node is CharNode {
+        if (node instanceof CharNode) {
             // Char VNodes are the same text node if they have the same
             // modifiers.
             return this.modifiers.areSameAs(node.modifiers);
-        } else if (this.is(MarkerNode) || node.is(MarkerNode)) {
-            // A Marker node is always considered to be part of the same text
-            // node as another node in the sense that the text node must not
-            // be broken up just because it contains a marker.
-            return true;
         } else {
             // Nodes that are not valid in a text node must end the text node.
             return false;
