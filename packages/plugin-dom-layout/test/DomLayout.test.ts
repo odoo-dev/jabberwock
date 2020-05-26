@@ -43,6 +43,7 @@ import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { parseElement } from '../../utils/src/configuration';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -512,9 +513,7 @@ describe('DomLayout', () => {
                     {
                         id: 'aaa',
                         async render(editor: JWEditor): Promise<VNode[]> {
-                            const layout = editor.plugins.get(Layout);
-                            const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-                            return await domLayoutEngine.parseElement(template);
+                            return parseElement(editor, template);
                         },
                     },
                 ],
@@ -720,9 +719,7 @@ describe('DomLayout', () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 async render(editor: JWEditor): Promise<VNode[]> {
-                    const layout = editor.plugins.get(Layout);
-                    const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-                    return await domLayoutEngine.parseElement(template);
+                    return await parseElement(editor, template);
                 },
             };
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {

@@ -18,22 +18,13 @@ import { CheckboxListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
-import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
-import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 import { LinkButton, UnlinkButton } from '../../packages/plugin-link/src/LinkButtons';
 
 const target = document.getElementById('contentToEdit');
 target.style.textAlign = 'center';
 jabberwocky.init(target);
 
-const editor = new BasicEditor();
-editor.configure(DomLayout, {
-    location: [target, 'replace'],
-});
-editor.configure(DomEditable, {
-    autoFocus: true,
-    source: target,
-});
+const editor = new BasicEditor({ editable: target });
 editor.configure(Toolbar, {
     layout: [
         [

@@ -7,6 +7,9 @@ import { testEditor, keydown } from '../../utils/src/testUtils';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { createEditable } from '../../utils/src/configuration';
 
 function keydownEvent(key, code, options = {}): KeyboardEvent {
     return new KeyboardEvent('keydown', { ...options, key, code });
@@ -394,7 +397,17 @@ describe('Keymap', () => {
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
-                    editor.load(DomEditable, { autoFocus: true });
+                    editor.load(DomEditable);
+                    editor.configure(DomLayout, {
+                        components: [
+                            {
+                                id: 'editable',
+                                render: async (): Promise<VNode[]> => createEditable(editor),
+                            },
+                        ],
+                        componentZones: [['editable', 'main']],
+                    });
+
                     editor.configure(Keymap, { platform: Platform.PC });
                     const loadables: Loadables<Keymap> = {
                         shortcuts: [
@@ -434,7 +447,7 @@ describe('Keymap', () => {
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
-                    editor.load(DomEditableTest, { autoFocus: true });
+                    editor.load(DomEditableTest);
                     editor.configure(Keymap, { platform: Platform.PC });
                     editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
@@ -477,7 +490,7 @@ describe('Keymap', () => {
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
-                    editor.load(DomEditableTest, { autoFocus: true });
+                    editor.load(DomEditableTest);
                     editor.configure(Keymap, { platform: Platform.PC });
                     editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {
@@ -531,7 +544,7 @@ describe('Keymap', () => {
             await testEditor(JWEditor, {
                 contentBefore: '',
                 beforeStart: async editor => {
-                    editor.load(DomEditableTest, { autoFocus: true });
+                    editor.load(DomEditableTest);
                     editor.configure(Keymap, { platform: Platform.PC });
                     editor.load(
                         class A<T extends JWPluginConfig> extends JWPlugin<T> {

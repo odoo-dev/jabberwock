@@ -16,8 +16,6 @@ import { ItalicXmlDomParser } from '../../plugin-italic/src/ItalicXmlDomParser';
 import { BoldXmlDomParser } from '../../plugin-bold/src/BoldXmlDomParser';
 import { UnderlineXmlDomParser } from '../../plugin-underline/src/UnderlineXmlDomParser';
 import { SpanXmlDomParser } from '../../plugin-span/src/SpanXmlDomParser';
-import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
-import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 
@@ -320,11 +318,7 @@ describe('utils', () => {
                     domSelection.addRange(domRange);
 
                     // apply editor on the second div
-                    const editor = new BasicEditor();
-                    editor.configure(DomEditable, { source: target });
-                    editor.configure(DomLayout, {
-                        location: [target, 'replace'],
-                    });
+                    const editor = new BasicEditor({ editable: target });
                     await editor.start();
 
                     renderTextualSelection();

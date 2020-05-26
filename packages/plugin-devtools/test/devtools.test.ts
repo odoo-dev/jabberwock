@@ -19,6 +19,7 @@ import { nodeName } from '../../utils/src/utils';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { QWeb } from '@odoo/owl';
+import { parseEditable } from '../../utils/src/configuration';
 
 let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
@@ -58,7 +59,7 @@ describe('Plugin: DevTools', () => {
         editor.load(Underline);
         editor.load(Paragraph);
         editor.load(DevTools);
-        editor.load(DomEditable, { autoFocus: true, source: root });
+        editor.load(DomEditable);
         editor.configure(DomLayout, {
             components: [
                 {
@@ -67,8 +68,14 @@ describe('Plugin: DevTools', () => {
                         return editor.plugins.get(Parser).parse('text/html', template);
                     },
                 },
+                {
+                    id: 'editable',
+                    render: async (editor: JWEditor): Promise<VNode[]> =>
+                        parseEditable(editor, root),
+                },
             ],
             locations: [['basicLayout', [root, 'replace']]],
+            componentZones: [['editable', 'main']],
         });
 
         await editor.start();

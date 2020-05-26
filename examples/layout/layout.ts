@@ -16,10 +16,9 @@ import { OrderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
-import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { VNode } from '../../packages/core/src/VNodes/VNode';
-import JWEditor, { JWEditorConfig, Loadables } from '../../packages/core/src/JWEditor';
+import JWEditor from '../../packages/core/src/JWEditor';
 import { Parser } from '../../packages/plugin-parser/src/Parser';
 import { Shadow } from '../../packages/plugin-shadow/src/Shadow';
 
@@ -28,14 +27,15 @@ import headerTemplate from './header.xml';
 import mainTemplate from './main.xml';
 import otherTemplate from './other.xml';
 import footerTemplate from './footer.xml';
-import { Layout } from '../../packages/plugin-layout/src/Layout';
 import { ShadowNode } from '../../packages/plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
+import { parseEditable } from '../../packages/utils/src/configuration';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
 
 const editor = new BasicEditor();
+editor.load(Shadow);
 editor.configure(DomLayout, {
     components: [
         {
@@ -62,6 +62,17 @@ editor.configure(DomLayout, {
                 return editor.plugins.get(Parser).parse('text/html', footerTemplate);
             },
         },
+        {
+            id: 'editable',
+            render: async (editor: JWEditor): Promise<VNode[]> => {
+                const shadow = new ShadowNode();
+                const style = new MetadataNode('STYLE');
+                style.contents = '* {border: 1px #aaa dotted;}';
+                const nodes = await parseEditable(editor, target);
+                shadow.append(style, ...nodes);
+                return [shadow];
+            },
+        },
     ],
     locations: [
         ['domHeader', [document.body, 'prepend']],
@@ -69,35 +80,8 @@ editor.configure(DomLayout, {
         ['domOther', [target, 'after']],
         ['domFooter', [document.body, 'append']],
     ],
+    componentZones: [['editable', 'main']],
 });
-editor.configure(DomEditable, {
-    autoFocus: true,
-    source: target,
-});
-editor.load(Shadow);
-const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
-    loadables: {
-        components: [
-            {
-                id: 'editable',
-                async render(editor: JWEditor): Promise<VNode[]> {
-                    const shadow = new ShadowNode();
-                    const style = new MetadataNode('STYLE');
-                    style.contents = '* {border: 1px #aaa dotted;}';
-                    shadow.append(style);
-                    const domEditable = editor.plugins.get(DomEditable);
-                    const editableComponent = domEditable.loadables.components.find(
-                        component => component.id === 'editable',
-                    );
-                    const nodes = await editableComponent.render(editor);
-                    shadow.append(...nodes);
-                    return [shadow];
-                },
-            },
-        ],
-    },
-};
-editor.configure(config);
 
 editor.configure(Toolbar, {
     layout: [

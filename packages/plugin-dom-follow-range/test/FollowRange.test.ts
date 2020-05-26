@@ -10,6 +10,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { setSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
+import { parseEditable } from '../../utils/src/configuration';
 
 function waitToolbarRedraw(): Promise<void> {
     return new Promise(r => setTimeout(r, 5));
@@ -155,7 +156,7 @@ describe('FollowRange', async () => {
         `;
 
         editor = new BasicEditor();
-        editor.load(DomEditable, { source: section });
+        editor.load(DomEditable);
         editor.load(FollowRange);
         editor.load(DomLayout, {
             components: [
@@ -171,6 +172,11 @@ describe('FollowRange', async () => {
                     },
                 },
                 {
+                    id: 'editable',
+                    render: async (editor: JWEditor): Promise<VNode[]> =>
+                        parseEditable(editor, section),
+                },
+                {
                     id: 'custom',
                     async render(): Promise<VNode[]> {
                         const template = `<section style="width: 20px; height: 20px; background: red;">-</section>`;
@@ -180,6 +186,7 @@ describe('FollowRange', async () => {
             ],
             componentZones: [
                 ['template', 'root'],
+                ['editable', 'main'],
                 ['custom', 'range'],
             ],
             location: [section, 'replace'],
