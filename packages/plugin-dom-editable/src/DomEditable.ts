@@ -7,53 +7,12 @@ import { InsertTextParams } from '../../plugin-char/src/Char';
 import { VSelectionParams } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
-import { JWEditor, Loadables } from '../../core/src/JWEditor';
-import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { JWEditor } from '../../core/src/JWEditor';
+import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export interface DomEditableConfig extends JWPluginConfig {
-    autoFocus?: boolean;
-    source?: HTMLElement;
-}
-
-export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extends JWPlugin<T> {
+export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [DomLayout, Layout];
-    readonly loadables: Loadables<Renderer & Layout & DomLayout> = {
-        renderers: [],
-        components: [
-            {
-                id: 'editable',
-                render: async (): Promise<VNode[]> => {
-                    const parseElement = this.configuration.source;
-                    let root: VNode;
-                    if (parseElement) {
-                        const layout = this.dependencies.get(Layout);
-                        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-                        const node = await domLayoutEngine.parseElement(parseElement);
-                        root = node[0];
-                    } else {
-                        root = new VElement({ htmlTag: 'jw-editable' });
-                        // Semantic elements are inline by default.
-                        // We need to guarantee it's a block so it can contain
-                        // other blocks.
-                        root.modifiers.get(Attributes).set('style', 'display: block;');
-                    }
-                    root.editable = false;
-                    root.breakable = false;
-                    root.modifiers.get(Attributes).set('contentEditable', 'true');
-
-                    if (!this.editor.selection.anchor.parent && this.configuration.autoFocus) {
-                        this.editor.selection.setAt(root, RelativePosition.INSIDE);
-                    }
-
-                    return [root];
-                },
-            },
-        ],
-        componentZones: [['editable', 'main']],
-    };
     commands = {
         selectAll: {
             handler: this.selectAll,

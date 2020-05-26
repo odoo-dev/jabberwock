@@ -1,6 +1,6 @@
-import { VNode } from '../../../core/src/VNodes/VNode';
-import { LayoutContainer } from './LayoutContainerNode';
-import { DomPoint } from './DomLayoutEngine';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { LayoutContainer } from '../../plugin-dom-layout/src/ui/LayoutContainerNode';
+import { DomPoint } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 
 export class DomMap {
     private readonly _fromDom = new Map<Node, VNode[]>();

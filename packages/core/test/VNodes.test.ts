@@ -18,6 +18,8 @@ import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine';
+import { VNode } from '../src/VNodes/VNode';
+import { parseEditable } from '../../utils/src/configuration';
 
 describe('core', () => {
     describe('src', () => {
@@ -1179,8 +1181,18 @@ describe('core', () => {
                             parsers: [MyCustomParser],
                         };
                     }
-                    editor.load(DomEditable, { source: root });
-                    editor.load(DomLayout, { location: [root, 'replace'] });
+                    editor.load(DomEditable);
+                    editor.load(DomLayout, {
+                        location: [root, 'replace'],
+                        components: [
+                            {
+                                id: 'editable',
+                                render: async (editor: JWEditor): Promise<VNode[]> =>
+                                    parseEditable(editor, root),
+                            },
+                        ],
+                        componentZones: [['editable', 'main']],
+                    });
                     editor.load(MyCustomPlugin);
                     await editor.start();
                     const domEngine = editor.plugins.get(Layout).engines.dom;

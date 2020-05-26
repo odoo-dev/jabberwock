@@ -9,6 +9,8 @@ import { Keymap, Platform } from '../../plugin-keymap/src/Keymap';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { renderTextualSelection } from '../../utils/src/testUtils';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { parseEditable, createEditable } from '../../utils/src/configuration';
 
 async function selectAllWithKeyA(container: HTMLElement): Promise<void> {
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
@@ -55,7 +57,17 @@ describe('DomEditable', () => {
             const editor = new JWEditor();
             editor.load(Char);
             editor.load(DomEditable);
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            createEditable(editor),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             await editor.start();
             expect(container.innerHTML).to.equal(
                 '<jw-editor><jw-editable style="display: block;" contenteditable="true"><br></jw-editable></jw-editor>',
@@ -66,8 +78,19 @@ describe('DomEditable', () => {
         it('should use the target of DomLayout as editable', async () => {
             const editor = new JWEditor();
             editor.load(Char);
-            editor.load(DomEditable, { source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
+
             await editor.start();
             expect(container.innerHTML).to.equal(
                 '<jw-editor><section contenteditable="true"><br></section></jw-editor>',
@@ -78,8 +101,18 @@ describe('DomEditable', () => {
         it('should automatically set the range in the editable', async () => {
             const editor = new JWEditor();
             editor.load(Char);
-            editor.load(DomEditable, { autoFocus: true });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            createEditable(editor, true),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             section.ownerDocument.getSelection().removeAllRanges();
             await editor.start();
             renderTextualSelection();
@@ -89,8 +122,18 @@ describe('DomEditable', () => {
         it('should automatically keep the range of the DomLayout target', async () => {
             const editor = new JWEditor();
             editor.load(Char);
-            editor.load(DomEditable, { autoFocus: true, source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section, true),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
 
             section.ownerDocument.getSelection().removeAllRanges();
             section.innerHTML = '<p>abcdef</p>';
@@ -114,8 +157,18 @@ describe('DomEditable', () => {
                 editor = new JWEditor();
                 editor.load(Char);
                 editor.load(LineBreak);
-                editor.load(DomEditable, { source: section });
-                editor.configure(DomLayout, { location: [section, 'replace'] });
+                editor.load(DomEditable);
+                editor.configure(DomLayout, {
+                    location: [section, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> =>
+                                parseEditable(editor, section),
+                        },
+                    ],
+                    componentZones: [['editable', 'main']],
+                });
                 section.innerHTML = '<div>abcd</div>';
                 setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
@@ -670,8 +723,18 @@ describe('DomEditable', () => {
             editor = new JWEditor();
             editor.load(Char);
             editor.load(LineBreak);
-            editor.load(DomEditable, { autoFocus: true, source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section, true),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             section.innerHTML = '<div>abcd</div>';
             editor.configure(Keymap, { platform: Platform.PC });
             const loadables: Loadables<Keymap> = {
@@ -701,8 +764,18 @@ describe('DomEditable', () => {
             container.appendChild(container1);
             const section = document.createElement('section');
             container1.appendChild(section);
-            editor.load(DomEditable, { autoFocus: true, source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section, true),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             section.innerHTML = '<div>abcd</div>';
             editor.configure(Keymap, { platform: Platform.PC });
             const loadables: Loadables<Keymap> = {
@@ -726,8 +799,18 @@ describe('DomEditable', () => {
             container.appendChild(container2);
             const article = document.createElement('article');
             container2.appendChild(article);
-            editor2.load(DomEditable, { autoFocus: true, source: article });
-            editor2.configure(DomLayout, { location: [article, 'replace'] });
+            editor2.load(DomEditable);
+            editor2.configure(DomLayout, {
+                location: [article, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, article, true),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             article.innerHTML = '<div>abcd</div>';
             await editor2.start();
 
@@ -750,8 +833,18 @@ describe('DomEditable', () => {
             setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
             editor = new JWEditor();
             editor.load(Char);
-            editor.load(DomEditable, { source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section),
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             editor.configure(Keymap, { platform: Platform.PC });
             editor.load(
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {

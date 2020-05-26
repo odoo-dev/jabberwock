@@ -26,8 +26,6 @@ import {
     AlignRightButton,
     AlignJustifyButton,
 } from '../../packages/plugin-align/src/AlignButtons';
-import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
-import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 import { LinkButton, UnlinkButton } from '../../packages/plugin-link/src/LinkButtons';
 
 const target = document.getElementById('contentToEdit');
@@ -35,16 +33,9 @@ target.style.paddingTop = '40px';
 target.style.paddingLeft = '8px';
 target.innerHTML = template;
 
-const editor = new BasicEditor();
+const editor = new BasicEditor({ editable: target });
 editor.load(FontAwesome);
 editor.load(DevTools);
-editor.configure(DomLayout, {
-    location: [target, 'replace'],
-});
-editor.configure(DomEditable, {
-    autoFocus: true,
-    source: target,
-});
 editor.configure(Toolbar, {
     layout: [
         [

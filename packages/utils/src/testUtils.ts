@@ -11,6 +11,9 @@ import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+import { parseEditable } from './configuration';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -151,8 +154,19 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
         document.getSelection().removeAllRanges();
     }
     const editor = new Editor();
-    editor.configure(DomLayout, { location: [target, 'replace'] });
-    editor.configure(DomEditable, { source: target });
+    // Configure the plugin to add domEditable is missing but without loose
+    // previous configuration.
+    editor.configure(DomEditable, {});
+    editor.configure(DomLayout, {
+        location: [target, 'replace'],
+        components: [
+            {
+                id: 'editable',
+                render: async (editor: JWEditor): Promise<VNode[]> => parseEditable(editor, target),
+            },
+        ],
+        componentZones: [['editable', 'main']],
+    });
     return editor;
 }
 

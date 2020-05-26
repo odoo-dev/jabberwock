@@ -1,4 +1,4 @@
-import JWEditor from '../packages/core/src/JWEditor';
+import JWEditor, { JWEditorConfig, Loadables } from '../packages/core/src/JWEditor';
 import { Parser } from '../packages/plugin-parser/src/Parser';
 import { Html } from '../packages/plugin-html/src/Html';
 import { Char } from '../packages/plugin-char/src/Char';
@@ -40,9 +40,10 @@ import { FollowRange } from '../packages/plugin-dom-follow-range/src/FollowRange
 import template from './basicLayout.xml';
 import './basicLayout.css';
 import { OdooField } from '../packages/plugin-odoo-field/src/OdooField';
+import { parseEditable, createEditable } from '../packages/utils/src/configuration';
 
 export class BasicEditor extends JWEditor {
-    constructor() {
+    constructor(params?: { editable?: HTMLElement }) {
         super();
 
         this.configure({
@@ -88,16 +89,36 @@ export class BasicEditor extends JWEditor {
                 [OdooField],
             ],
         });
+
+        const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
+            loadables: {
+                components: [
+                    {
+                        id: 'editor',
+                        render(editor: JWEditor): Promise<VNode[]> {
+                            return editor.plugins.get(Parser).parse('text/html', template);
+                        },
+                    },
+                ],
+                componentZones: [['editor', 'root']],
+            },
+        };
+        this.configure(config);
         this.configure(DomLayout, {
+            location: params?.editable ? [params.editable, 'replace'] : null,
             components: [
                 {
-                    id: 'editor',
-                    render(editor: JWEditor): Promise<VNode[]> {
-                        return editor.plugins.get(Parser).parse('text/html', template);
+                    id: 'editable',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        if (params?.editable) {
+                            return parseEditable(editor, params.editable);
+                        } else {
+                            return createEditable(editor);
+                        }
                     },
                 },
             ],
-            componentZones: [['editor', 'root']],
+            componentZones: [['editable', 'main']],
         });
     }
 }

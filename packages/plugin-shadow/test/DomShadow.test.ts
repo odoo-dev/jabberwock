@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import JWEditor, { Loadables, JWEditorConfig } from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Char } from '../../plugin-char/src/Char';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
@@ -24,6 +24,7 @@ import { Html } from '../../plugin-html/src/Html';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { Metadata } from '../../plugin-metadata/src/Metadata';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { parseEditable } from '../../utils/src/configuration';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -396,28 +397,22 @@ describe('DomShadow', async () => {
             editor.load(Metadata);
             editor.load(Html);
             editor.load(Shadow);
-            editor.load(DomEditable, { source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
-            const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
-                loadables: {
-                    components: [
-                        {
-                            id: 'editable',
-                            async render(editor: JWEditor): Promise<VNode[]> {
-                                const shadow = new ShadowNode();
-                                const domEditable = editor.plugins.get(DomEditable);
-                                const editableComponent = domEditable.loadables.components.find(
-                                    component => component.id === 'editable',
-                                );
-                                const nodes = await editableComponent.render(editor);
-                                shadow.append(...nodes);
-                                return [shadow];
-                            },
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const shadow = new ShadowNode();
+                            shadow.append(...nodes);
+                            return [shadow];
                         },
-                    ],
-                },
-            };
-            editor.configure(config);
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
             const shadowRoot = container.querySelector('jw-shadow').shadowRoot;
@@ -432,31 +427,25 @@ describe('DomShadow', async () => {
             editor.load(Metadata);
             editor.load(Html);
             editor.load(Shadow);
-            editor.load(DomEditable, { source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
-            const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
-                loadables: {
-                    components: [
-                        {
-                            id: 'editable',
-                            async render(editor: JWEditor): Promise<VNode[]> {
-                                const shadow = new ShadowNode();
-                                const style = new MetadataNode('STYLE');
-                                style.contents = 'p {color: red;}';
-                                shadow.append(style);
-                                const domEditable = editor.plugins.get(DomEditable);
-                                const editableComponent = domEditable.loadables.components.find(
-                                    component => component.id === 'editable',
-                                );
-                                const nodes = await editableComponent.render(editor);
-                                shadow.append(...nodes);
-                                return [shadow];
-                            },
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const shadow = new ShadowNode();
+                            const style = new MetadataNode('STYLE');
+                            style.contents = 'p {color: red;}';
+                            shadow.append(style, ...nodes);
+
+                            return [shadow];
                         },
-                    ],
-                },
-            };
-            editor.configure(config);
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
             expect(container.querySelector('jw-shadow').shadowRoot.innerHTML).to.equal(
@@ -470,41 +459,35 @@ describe('DomShadow', async () => {
             editor.load(Metadata);
             editor.load(Html);
             editor.load(Shadow);
-            editor.load(DomEditable, { source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
-            const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
-                loadables: {
-                    components: [
-                        {
-                            id: 'editable',
-                            async render(editor: JWEditor): Promise<VNode[]> {
-                                const shadow = new ShadowNode();
-                                const link1 = new MetadataNode('LINK');
-                                const attributes1 = new Attributes();
-                                attributes1.set('rel', 'stylesheet');
-                                attributes1.set('href', '#1');
-                                link1.modifiers.prepend(attributes1);
-                                shadow.append(link1);
-                                const link2 = new MetadataNode('LINK');
-                                const attributes2 = new Attributes();
-                                attributes2.set('rel', 'stylesheet');
-                                attributes2.set('href', '#2');
-                                link2.modifiers.prepend(attributes2);
-                                shadow.append(link2);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const shadow = new ShadowNode();
+                            const link1 = new MetadataNode('LINK');
+                            const attributes1 = new Attributes();
+                            attributes1.set('rel', 'stylesheet');
+                            attributes1.set('href', '#1');
+                            link1.modifiers.prepend(attributes1);
+                            shadow.append(link1);
+                            const link2 = new MetadataNode('LINK');
+                            const attributes2 = new Attributes();
+                            attributes2.set('rel', 'stylesheet');
+                            attributes2.set('href', '#2');
+                            link2.modifiers.prepend(attributes2);
+                            shadow.append(link2);
+                            shadow.append(...nodes);
 
-                                const domEditable = editor.plugins.get(DomEditable);
-                                const editableComponent = domEditable.loadables.components.find(
-                                    component => component.id === 'editable',
-                                );
-                                const nodes = await editableComponent.render(editor);
-                                shadow.append(...nodes);
-                                return [shadow];
-                            },
+                            return [shadow];
                         },
-                    ],
-                },
-            };
-            editor.configure(config);
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
             expect(container.querySelector('jw-shadow').shadowRoot.innerHTML).to.equal(
@@ -524,9 +507,24 @@ describe('DomShadow', async () => {
                 editor.load(Char);
                 editor.load(Html);
                 editor.load(LineBreak);
-                editor.load(Shadow, { editable: {} });
-                editor.load(DomEditable, { source: section });
-                editor.configure(DomLayout, { location: [section, 'replace'] });
+                editor.load(Shadow);
+                editor.load(DomEditable);
+                editor.configure(DomLayout, {
+                    location: [section, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> => {
+                                const nodes = await parseEditable(editor, section);
+                                const shadow = new ShadowNode();
+                                shadow.append(...nodes);
+                                return nodes;
+                            },
+                        },
+                    ],
+                    componentZones: [['editable', 'main']],
+                });
+
                 section.innerHTML = '<div>abcd</div>';
                 setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
@@ -1105,8 +1103,23 @@ describe('DomShadow', async () => {
             setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
             const editor = new JWEditor();
             editor.load(Char);
-            editor.load(DomEditable, { source: section });
-            editor.configure(DomLayout, { location: [section, 'replace'] });
+            editor.load(Shadow);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const shadow = new ShadowNode();
+                            shadow.append(...nodes);
+                            return nodes;
+                        },
+                    },
+                ],
+                componentZones: [['editable', 'main']],
+            });
             editor.configure(Keymap, { platform: Platform.PC });
             editor.load(
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {
