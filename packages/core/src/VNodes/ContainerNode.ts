@@ -120,12 +120,15 @@ export class ContainerNode extends AbstractNode {
     descendants(predicate?: Predicate): VNode[];
     descendants(predicate?: Predicate): VNode[] {
         const descendants = [];
-        let currentDescendant = this.firstChild();
-        while (currentDescendant) {
-            if (currentDescendant.test(predicate)) {
-                descendants.push(currentDescendant);
+        const stack = [...this.childVNodes];
+        while (stack.length) {
+            const node = stack.shift();
+            if (node.tangible && node.test(predicate)) {
+                descendants.push(node);
             }
-            currentDescendant = this._descendantAfter(currentDescendant);
+            if (node instanceof ContainerNode) {
+                stack.unshift(...node.childVNodes);
+            }
         }
         return descendants;
     }
