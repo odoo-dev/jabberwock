@@ -5,7 +5,20 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OwlEnv, OwlComponent } from './ui/OwlComponent';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { browser } from '@odoo/owl/dist/types/browser';
+import { Browser } from '@odoo/owl/dist/types/browser';
+
+const browser: Browser = {
+    setTimeout: window.setTimeout.bind(window),
+    clearTimeout: window.clearTimeout.bind(window),
+    setInterval: window.setInterval.bind(window),
+    clearInterval: window.clearInterval.bind(window),
+    requestAnimationFrame: window.requestAnimationFrame.bind(window),
+    random: Math.random,
+    Date: window.Date,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    fetch: (window.fetch || ((): void => {})).bind(window),
+    localStorage: window.localStorage,
+};
 
 export class Owl<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Renderer> = {
