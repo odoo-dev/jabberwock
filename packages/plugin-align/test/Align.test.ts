@@ -3,6 +3,7 @@ import { Align, AlignType } from '../src/Align';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 /**
  * Return a function that takes an editor and executes the 'align' command with
@@ -12,7 +13,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
  */
 function align(type: AlignType) {
     return async function(editor: BasicEditor): Promise<void> {
-        await editor.execCommand('align', { type: type });
+        await editor.execCommand<Align>('align', { type: type });
     };
 }
 
@@ -26,17 +27,20 @@ describePlugin(Align, testEditor => {
                     contentAfter: '<p>ab</p><p style="text-align: left;">c[]d</p>',
                 });
             });
-            it('should not align left an imeditable node', async () => {
+            it.only('should not align left an imeditable node', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p>c[]d</p>',
                     stepFunction: (editor: JWEditor) => {
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
                         const root = editable;
-                        root.lastChild().editable = false;
+                        root.lastChild()
+                            .modifiers.get(Attributes)
+                            .set('contenteditable', 'false');
                         return align(AlignType.LEFT)(editor);
                     },
-                    contentAfter: '<p>ab</p><p><span style="text-align: left;">c[]d</span></p>',
+                    contentAfter:
+                        '<p>ab</p><p contenteditable="false"><span style="text-align: left;">c[]d</span></p>',
                 });
             });
             it('should not change align style of an imeditable node', async () => {
@@ -46,7 +50,7 @@ describePlugin(Align, testEditor => {
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
                         const root = editable;
-                        root.lastChild().editable = false;
+                        root.lastChild().attributeEditable = false;
                         return align(AlignType.LEFT)(editor);
                     },
                     contentAfter:

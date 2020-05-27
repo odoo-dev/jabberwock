@@ -80,16 +80,26 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             if (
                 previousSibling &&
                 range.startContainer.breakable &&
-                range.startContainer.editable
+                range.startContainer.attributeEditable &&
+                this.editor.mode.isNodeEditable(previousSibling)
             ) {
                 previousSibling.removeBackward();
-            } else if (range.startContainer.breakable && range.startContainer.editable) {
+            } else if (
+                range.startContainer.breakable &&
+                range.startContainer.attributeEditable &&
+                this.editor.mode.isNodeEditable(range.startContainer)
+            ) {
                 // Otherwise set range start at previous valid leaf.
                 let ancestor = range.start.parent;
-                while (ancestor?.breakable && ancestor.editable && !ancestor.previousSibling()) {
+                while (
+                    ancestor?.breakable &&
+                    ancestor.attributeEditable &&
+                    this.editor.mode.isNodeEditable(ancestor) &&
+                    !ancestor.previousSibling()
+                ) {
                     ancestor = ancestor.parent;
                 }
-                if (ancestor?.breakable && ancestor.editable) {
+                if (ancestor?.breakable && this.editor.mode.isNodeEditable(ancestor)) {
                     const previous = ancestor.previousSibling().lastLeaf();
                     if (previous) {
                         range.setStart(previous, RelativePosition.AFTER);
@@ -109,15 +119,33 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly following the range.
             const nextSibling = range.end.nextSibling();
-            if (nextSibling && range.endContainer.breakable && range.endContainer.editable) {
+            if (
+                nextSibling &&
+                range.endContainer.breakable &&
+                range.endContainer.attributeEditable &&
+                this.editor.mode.isNodeEditable(range.endContainer)
+            ) {
                 nextSibling.removeForward();
-            } else if (range.endContainer.breakable && range.endContainer.editable) {
+            } else if (
+                range.endContainer.breakable &&
+                range.endContainer.attributeEditable &&
+                this.editor.mode.isNodeEditable(range.endContainer)
+            ) {
                 // Otherwise set range end at next valid leaf.
                 let ancestor = range.end.parent;
-                while (ancestor?.breakable && ancestor.editable && !ancestor.nextSibling()) {
+                while (
+                    ancestor?.breakable &&
+                    ancestor.attributeEditable &&
+                    this.editor.mode.isNodeEditable(ancestor) &&
+                    !ancestor.nextSibling()
+                ) {
                     ancestor = ancestor.parent;
                 }
-                if (ancestor?.breakable && ancestor.editable) {
+                if (
+                    ancestor?.breakable &&
+                    ancestor.attributeEditable &&
+                    this.editor.mode.isNodeEditable(ancestor)
+                ) {
                     const next = ancestor.nextSibling().firstLeaf();
                     if (next) {
                         range.setEnd(next, RelativePosition.BEFORE);

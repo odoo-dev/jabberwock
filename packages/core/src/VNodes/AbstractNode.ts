@@ -3,12 +3,30 @@ import { Constructor, nodeLength } from '../../../utils/src/utils';
 import { ContainerNode } from './ContainerNode';
 import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
+import { Attributes } from '../../../plugin-xml/src/Attributes';
 
 let id = 0;
 export abstract class AbstractNode {
     readonly id = id;
-    editable = true;
+    /**
+     * If it's attributes are editable.
+     * It does not propagate to the children.
+     */
+    attributeEditable = true;
+    get editable(): boolean {
+        const editable = this.modifiers.find(Attributes)?.get('contenteditable');
+        return typeof editable === 'undefined' || editable === '' || editable === 'true'
+            ? true
+            : false;
+    }
+    /**
+     * If the node has some meaning for the representation in the dom.
+     * For instance, makers are not tangible.
+     */
     tangible = true;
+    /**
+     * If we can split or remove the node in some circumstances.
+     */
     breakable = true;
     parent: VNode;
     modifiers = new Modifiers();

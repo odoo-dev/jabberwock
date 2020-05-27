@@ -1,6 +1,6 @@
 import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
 
 export class LayoutContainer extends ContainerNode {
-    readonly editable = false;
+    readonly attributeEditable = false;
     readonly breakable = false;
 }

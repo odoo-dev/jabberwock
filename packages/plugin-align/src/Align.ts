@@ -78,8 +78,13 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     align(params: AlignParams): void {
         const nodes = params.context.range.targetedNodes((node: VNode): boolean => {
-            return node.is(ContainerNode) || (node.parent && !node.parent.editable);
+            return (
+                node.attributeEditable &&
+                (node.is(ContainerNode) ||
+                    (node.parent && !this.editor.mode.isNodeEditable(node.parent)))
+            );
         });
+        console.log('nodes:', nodes);
         const type = params.type;
         for (const node of nodes) {
             const alignedAncestor = node.ancestor(Align.isAligned);

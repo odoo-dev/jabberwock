@@ -40,7 +40,7 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
                         // other blocks.
                         root.modifiers.get(Attributes).set('style', 'display: block;');
                     }
-                    root.editable = false;
+                    root.attributeEditable = false;
                     root.breakable = false;
                     root.modifiers.get(Attributes).set('contentEditable', 'true');
 
@@ -117,9 +117,18 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
         const ancestorContentEditable = node?.closest(
             node => !!node.modifiers.find(Attributes)?.get('contentEditable'),
         );
-        return (
-            ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') === 'true'
-        );
+        if (this.editor.mode && this.editor.mode.definition.checkEditable) {
+            return (
+                this.editor.mode.isNodeEditable(node) &&
+                ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') ===
+                    'true'
+            );
+        } else {
+            return (
+                ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') ===
+                'true'
+            );
+        }
     }
 
     /**

@@ -74,7 +74,8 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // this style, style these ancestors instead of their
                 // descendants.
                 let parent = node.parent;
-                while (parent && parent.editable && this._isAllColored(parent, color)) {
+                // todo: ask age why do we need this feature and therefore how do we handle the parent.editable with depeding on the mode
+                while (parent && parent.attributeEditable && this._isAllColored(parent, color)) {
                     setStyle(parent, this.styleName, color);
                     // TODO: not remove the children's styles when we have modifiers.
                     for (const child of parent.children()) {

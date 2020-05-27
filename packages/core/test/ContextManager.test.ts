@@ -33,11 +33,7 @@ describe('core', () => {
                         ];
 
                         const result = editor.contextManager.match(commands);
-                        expect(checkSpy.callCount).to.eql(1);
-                        expect(checkSpy.args[0][0]).to.eql({
-                            range: editor.selection.range,
-                            selector: [],
-                        });
+                        expect(checkSpy.callCount).to.eql(0);
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[1]);
                         expect(computedContext).to.deep.equal({
@@ -65,7 +61,6 @@ describe('core', () => {
                                 handler: callback,
                             },
                         ];
-
                         const result = editor.contextManager.match(commands);
                         expect(checkSpy.callCount).to.eql(1);
                         expect(checkSpy.args[0][0]).to.eql({
@@ -154,8 +149,7 @@ describe('core', () => {
                             range: editor.selection.range,
                             selector: [closestList.ancestor(ListNode), closestList],
                         };
-                        expect(checkSpy1.callCount).to.eql(1);
-                        expect(checkSpy1.args[0][0]).to.eql(checkingContext);
+                        expect(checkSpy1.callCount).to.eql(0);
                         expect(checkSpy2.callCount).to.eql(1);
                         expect(checkSpy2.args[0][0]).to.eql(checkingContext);
                         expect(checkSpy3.callCount).to.eql(0);
@@ -299,9 +293,6 @@ describe('core', () => {
                                 title: 'paragraph',
                                 selector: [ParagraphNode],
                                 check: checkSpy1,
-                                context: {
-                                    range: newSelection.range,
-                                },
                                 handler: callback,
                             },
                             {
@@ -312,8 +303,9 @@ describe('core', () => {
                             },
                         ];
 
-                        // Default context is override by the command's context.
-                        const result1 = editor.contextManager.match(commands);
+                        const result1 = editor.contextManager.match(commands, {
+                            range: newSelection.range,
+                        });
                         expect(checkSpy1.callCount).to.eql(1);
                         expect(checkSpy1.args[0][0]).to.eql({
                             range: newSelection.range,

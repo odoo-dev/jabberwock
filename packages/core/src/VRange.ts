@@ -5,6 +5,7 @@ import { Constructor } from '../../utils/src/utils';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AbstractNode } from './VNodes/AbstractNode';
+import { Mode } from '../../plugin-mode/src/Mode';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -69,6 +70,11 @@ export class VRange {
         ];
     }
 
+    /**
+     * The mode at which the range is at.
+     */
+    _mode: Mode | undefined;
+
     constructor(boundaryPoints?: [Point, Point]) {
         // If a range context is given, adapt this range to match it.
         if (boundaryPoints) {
@@ -118,8 +124,8 @@ export class VRange {
         while ((node = node.next()) && node !== bound) {
             if (!endContainers.includes(node)) {
                 let selectedNode: VNode = node;
-                while (!selectedNode?.test(FragmentNode) && selectedNode?.test(predicate)) {
-                    if (selectedNode.editable) {
+                while (selectedNode?.test(predicate)) {
+                    if (!selectedNode.parent || this._isNodeEditable(selectedNode.parent)) {
                         selectedNodes.push(selectedNode);
                     }
                     // Find the next ancestor whose children are all selected
@@ -143,9 +149,10 @@ export class VRange {
     targetedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
     targetedNodes(predicate?: Predicate): VNode[];
     targetedNodes(predicate?: Predicate): VNode[] {
+        debugger;
         const targetedNodes: VNode[] = this.traversedNodes(predicate);
         const closestStartAncestor = this.start.ancestor(predicate);
-        if (closestStartAncestor?.editable) {
+        if (this._isNodeEditable(closestStartAncestor)) {
             targetedNodes.unshift(closestStartAncestor);
         } else if (closestStartAncestor) {
             const children = [...closestStartAncestor.childVNodes].reverse();
@@ -168,7 +175,7 @@ export class VRange {
         let node = this.start;
         const bound = this.end.next();
         while ((node = node.next()) && node !== bound) {
-            if (node.editable && node.test(predicate)) {
+            if (this._isNodeEditable(node.parent) && node.test(predicate)) {
                 traversedNodes.push(node);
             }
         }
@@ -362,6 +369,22 @@ export class VRange {
     remove(): void {
         this.start.remove();
         this.end.remove();
+    }
+
+    /**
+     * Set the mode of this VRange.
+     */
+    setMode(mode: Mode): void {
+        this._mode = mode;
+    }
+
+    /**
+     * Check wether the node is editable relative to the `_mode`.
+     * Editable means that the children can be modified.
+     */
+    _isNodeEditable(node?: VNode): boolean {
+        if (!this._mode || !node) return true;
+        return this._mode.isNodeEditable(node);
     }
 }
 

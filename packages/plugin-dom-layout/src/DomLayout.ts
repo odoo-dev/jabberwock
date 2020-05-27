@@ -36,7 +36,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         domLocations: this._loadComponentLocations,
     };
     commandHooks = {
-        '*': this._redraw,
+        '*': this.redraw,
     };
 
     constructor(editor: JWEditor, configuration: T) {
@@ -106,8 +106,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
-
-    private async _redraw(): Promise<void> {
+    async redraw(): Promise<void> {
         // TODO update this method to use JSON renderer feature (update also show, hide, add, remove)
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
