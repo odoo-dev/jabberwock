@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/odoo/jabberwock#readme",
   "devDependencies": {
-    "@odoo/owl": "^1.0.5",
+    "@odoo/owl": "^1.0.7",
     "@types/chai": "^4.2.10",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.30",
