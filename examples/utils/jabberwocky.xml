@@ -1,36 +1,156 @@
-<h1 style="font-size: 50px;">Jabberwocky</h1>
-<h3>by Lewis Carroll</h3>
-<p><i><span class="drop-cap">’T</span>was brillig, and the slithy toves<br/>
-Did gyre and gimble in the wabe:<br/>
-All mimsy were the borogoves,<br/>
-And the mome raths outgrabe.<br/>
-<br/>
-“Beware the Jabberwock, my son!<br/>
-The jaws that bite, the claws that catch!<br/>
-Beware the Jubjub bird, and shun<br/>
-The frumious Bandersnatch!”<br/>
-<br/>
-He took his vorpal sword in hand;<br/>
-Long time the manxome foe he sought—<br/>
-So rested he by the Tumtum tree<br/>
-And stood awhile in thought.<br/>
-<br/>
-And, as in uffish thought he stood,<br/>
-The Jabberwock, with eyes of flame,<br/>
-Came whiffling through the tulgey wood,<br/>
-And burbled as it came!<br/>
-<br/>
-One, two! One, two! And through and through<br/>
-The vorpal blade went snicker-snack!<br/>
-He left it dead, and with its head<br/>
-He went galumphing back.<br/>
-<br/>
-“And hast thou slain the Jabberwock?<br/>
-Come to my arms, my beamish boy!<br/>
-O frabjous day! Callooh! Callay!”<br/>
-He chortled in his joy.<br/>
-<br/>
-’Twas brillig, and the slithy toves<br/>
-Did gyre and gimble in the wabe:<br/>
-All mimsy were the borogoves,<br/>
-And the mome raths outgrabe.<br/></i></p>
+<div class="homepage" style="display: none;">
+    <header id="top" data-anchor="true" data-name="Header" class=" o_affix_enabled">
+        <nav class="navbar navbar-expand-md navbar-light bg-light">
+            <div class="container">
+                <a href="/" class="navbar-brand logo">
+                    <span data-oe-model="website" data-oe-id="1" data-oe-field="logo" data-oe-type="image"
+                        data-oe-expression="website.logo" role="img" aria-label="Logo of My Website" title="My Website"
+                        class="o_editable"><img src="/web/image/website/1/logo/My%20Website?unique=ae755e1"
+                            class="img img-fluid" alt="My Website"></span>
+                </a>
+                <button type="button" class="navbar-toggler o_editable" data-toggle="collapse"
+                    data-target="#top_menu_collapse" data-oe-model="ir.ui.view" data-oe-id="417" data-oe-field="arch"
+                    data-oe-xpath="/data/xpath[2]/nav/div[1]/button[1]">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="top_menu_collapse" aria-expanded="false">
+                    <ul class="nav navbar-nav ml-auto text-right" id="top_menu">
+                        <li class="nav-item">
+                            <a role="menuitem" href="/" class="nav-link active">
+                                <span data-oe-model="website.menu" data-oe-id="5" data-oe-field="name"
+                                    data-oe-type="char" data-oe-expression="submenu.name" class="o_editable">Home</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a role="menuitem" href="/contactus" class="nav-link ">
+                                <span data-oe-model="website.menu" data-oe-id="6" data-oe-field="name"
+                                    data-oe-type="char" data-oe-expression="submenu.name" class="o_editable">Contact
+                                    us</span>
+                            </a>
+                        </li>
+                        <li class="nav-item divider"></li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                <b>
+                                    <span>OdooBot</span>
+                                </b>
+                            </a>
+                            <div class="dropdown-menu js_usermenu" role="menu">
+                                <a href="/my/home" role="menuitem" class="dropdown-item">My Account</a>
+                                <a id="o_logout" class="dropdown-item" role="menuitem"
+                                    href="/web/session/logout?redirect=/">Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div id="wrap" class="oe_structure oe_empty o_editable" data-oe-model="ir.ui.view" data-oe-id="460"
+            data-oe-field="arch" data-oe-xpath="/t[1]/t[1]/div[1]"></div>
+    </main>
+    <footer id="bottom" data-anchor="true" class="bg-light o_footer" data-name="Footer">
+        <div id="footer" class="oe_structure oe_structure_solo o_editable" data-oe-id="479"
+            data-oe-xpath="/data/xpath/div" data-oe-model="ir.ui.view" data-oe-field="arch">
+            <section class="s_text_block pt16 pb8">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <h5>Our Products &amp; Services</h5>
+                            <ul class="list-unstyled">
+                                <li><a href="/">Home</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-4" id="connect">
+                            <h5>Connect with us</h5>
+                            <ul class="list-unstyled">
+                                <li><a href="/contactus">Contact us</a></li>
+                                <li><i class="fa fa-phone"></i> <span data-oe-model="res.company" data-oe-id="1"
+                                        data-oe-field="phone" data-oe-type="char" data-oe-expression="res_company.phone"
+                                        class="o_force_ltr o_editable">+1 (650) 691-3277 </span></li>
+                                <li><i class="fa fa-envelope"></i> <span data-oe-model="res.company" data-oe-id="1"
+                                        data-oe-field="email" data-oe-type="char" data-oe-expression="res_company.email"
+                                        class="o_editable">info@yourcompany.example.com</span></li>
+                            </ul>
+                            <p>
+                                <a class="btn btn-sm btn-link" href="https://www.facebook.com/Odoo"><i
+                                        class="fa fa-2x fa-facebook-square"></i></a>
+                                <a class="btn btn-sm btn-link" href="https://twitter.com/Odoo"><i
+                                        class="fa fa-2x fa-twitter"></i></a>
+                                <a class="btn btn-sm btn-link" href="https://www.linkedin.com/company/odoo"><i
+                                        class="fa fa-2x fa-linkedin"></i></a>
+                                <a class="btn btn-sm btn-link" href="https://www.youtube.com/user/OpenERPonline"><i
+                                        class="fa fa-2x fa-youtube-play"></i></a>
+                                <a class="btn btn-sm btn-link" href="https://github.com/odoo"><i
+                                        class="fa fa-2x fa-github"></i></a>
+                                <a class="btn btn-sm btn-link" href="https://www.instagram.com/explore/tags/odoo/"><i
+                                        class="fa fa-2x fa-instagram"></i></a>
+                            </p>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5>
+                                <span data-oe-model="res.company" data-oe-id="1" data-oe-field="name"
+                                    data-oe-type="char" data-oe-expression="res_company.name"
+                                    class="o_editable">YourCompany</span>
+                                <small> - <a href="/aboutus">About us</a></small>
+                            </h5>
+                            <p>
+                                We are a team of passionate people whose goal is to improve everyone's
+                                life through disruptive products. We build great products to solve your
+                                business problems.
+                            </p>
+                            <p>
+                                Our products are designed for small to medium size companies willing to optimize
+                                their performance.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="o_footer_copyright">
+            <div class="container py-3">
+                <div class="row">
+                    <div class="col-sm text-center text-sm-left text-muted">
+                        <a class="o_debug_mode o_editable" data-oe-model="ir.ui.view" data-oe-id="204"
+                            data-oe-field="arch" data-oe-xpath="/t[1]/t[1]/a[1]" href="?debug="
+                            title="Debug mode is activated (assets). Click here to exit debug mode."><span
+                                class="fa fa-bug"></span></a>
+                        <span data-oe-model="ir.ui.view" data-oe-id="193" data-oe-field="arch"
+                            data-oe-xpath="/data/xpath[4]/div/footer[1]/div[2]/div[1]/div[1]/div[1]/span[1]"
+                            class="o_editable">Copyright ©</span> <span data-oe-model="res.company" data-oe-id="1"
+                            data-oe-field="name" data-oe-type="char" data-oe-expression="res_company.name"
+                            itemprop="name" class="o_editable">YourCompany</span>
+                        <ul class="js_language_selector mb0 list-inline">
+                            <li class="list-inline-item">
+                                <div class="dropup">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                        <span>English (US)</span>
+                                        <span class="caret ml4 o_editable" data-oe-model="ir.ui.view" data-oe-id="481"
+                                            data-oe-field="arch"
+                                            data-oe-xpath="/t[1]/ul[1]/li[1]/div[1]/button[1]/span[2]"></span>
+                                    </button>
+                                    <div class="dropdown-menu" role="menu">
+                                        <a class="dropdown-item js_change_lang" href="/en/" data-url_code="en">
+                                            English (US)
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-inline-item">
+                                <a class="d-none d-sm-block o_editable" data-oe-model="ir.ui.view" data-oe-id="481"
+                                    data-oe-field="arch" data-oe-xpath="/t[1]/ul[1]/li[2]/a[1]"
+                                    href="/web#action=base.action_view_base_language_install&amp;website_id=1&amp;url_return=%2F%5Blang%5D%2F%3F">
+                                    <i class="fa fa-plus-circle"></i>
+                                    Add a language...
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

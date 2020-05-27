@@ -22,6 +22,7 @@ export interface DomLayoutConfig extends JWPluginConfig {
     locations?: [ComponentId, DomLayoutLocation][];
     components?: ComponentDefinition[];
     componentZones?: [ComponentId, ZoneIdentifier][];
+    afterRender?: Function;
 }
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
@@ -59,6 +60,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         this._loadComponentLocations(this.configuration.locations || []);
         domLayoutEngine.location = this.configuration.location;
         await domLayoutEngine.start();
+        if (this.configuration.afterRender) {
+            await this.configuration.afterRender();
+        }
         window.addEventListener('keydown', this.processKeydown, true);
     }
     async stop(): Promise<void> {
@@ -113,7 +117,8 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         const editables = domLayoutEngine.components.get('editable');
         if (editables?.length) {
-            return domLayoutEngine.redraw(editables[0]);
+            await domLayoutEngine.redraw(editables[0]);
+            await this.configuration.afterRender?.();
         }
     }
     private _loadComponentLocations(locations: [ComponentId, DomLayoutLocation][]): void {

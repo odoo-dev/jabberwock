@@ -190,9 +190,13 @@ export class DomEditable<T extends DomEditableConfig = DomEditableConfig> extend
                 }
                 if (!processed) {
                     for (const action of batch.actions) {
-                        const commandSpec = this._matchCommand(action);
-                        if (commandSpec) {
-                            await this.editor.execCommand(...commandSpec);
+                        try {
+                            const commandSpec = this._matchCommand(action);
+                            if (commandSpec) {
+                                await this.editor.execCommand(...commandSpec);
+                            }
+                        } catch (e) {
+                            console.error('Impossible to launch action.', action);
                         }
                     }
                 }

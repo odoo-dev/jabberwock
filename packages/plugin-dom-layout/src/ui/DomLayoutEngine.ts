@@ -167,9 +167,7 @@ export class DomLayoutEngine extends LayoutEngine {
         return nodes;
     }
     async redraw(node?: VNode): Promise<void> {
-        if (this._currentlyRedrawing) {
-            throw new Error('Double redraw detected');
-        }
+        if (this.editor.preventRenders.size) return;
         this._currentlyRedrawing = true;
         // Find the closest node that has already been rendered preciously.
         const nodeToRedraw = node?.closest(n => {
@@ -214,7 +212,6 @@ export class DomLayoutEngine extends LayoutEngine {
             }
         }
         this._renderSelection();
-        this._currentlyRedrawing = false;
     }
     async parseElement(element: HTMLElement): Promise<VNode[]> {
         const parser = this.editor.plugins.get(Parser);

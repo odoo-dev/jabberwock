@@ -13,8 +13,6 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Layout } from '../../plugin-layout/src/Layout';
 import linkForm from '../assets/LinkForm.xml';
-import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
-import { LinkComponent } from './components/LinkComponent';
 import { Owl } from '../../plugin-owl/src/Owl';
 
 export interface LinkParams extends CommandParams {
@@ -55,14 +53,6 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 commandId: 'unlink',
             },
         ],
-        components: [
-            {
-                id: 'link',
-                async render(): Promise<OwlNode[]> {
-                    return [new OwlNode(LinkComponent, {})];
-                },
-            },
-        ],
         componentZones: [['link', 'float']],
         owlTemplates: [linkForm],
     };
@@ -86,6 +76,8 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         return this.editor.execCommand<Char>('insertText', {
             text: params.label || link.url,
             formats: new Modifiers(link),
+            select: true,
+            context: params.context,
         });
     }
     unlink(params: LinkParams): void {
