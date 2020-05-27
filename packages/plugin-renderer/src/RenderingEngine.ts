@@ -26,7 +26,7 @@ export class RenderingEngine<T = {}> {
     static readonly defaultRenderer: Constructor<Renderer>;
     readonly editor: JWEditor;
     readonly renderers: Renderer<T>[] = [];
-    readonly renderings: Map<VNode, [Renderer<T>, Promise<T>][]> = new Map();
+    readonly renderings: Map<VNode, [Renderer<T>, Promise<T>, VNode[]][]> = new Map();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -83,12 +83,18 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendering
      */
-    async rendered(nodes: VNode[], rendering: [Renderer<T>, Promise<T>]): Promise<T> {
+    async rendered(nodes: VNode[], renderer: Renderer<T>, rendered: Promise<T>): Promise<T> {
         for (const node of nodes) {
             const renderings = this.renderings.get(node) || [];
-            renderings.push(rendering);
+            const index = renderings.findIndex(rendering => rendering[0] === renderer);
+            if (index === -1) {
+                renderings.push([renderer, rendered, nodes]);
+            } else {
+                renderings[index][1] = rendered;
+                renderings[index][2].push(...nodes);
+            }
         }
-        return rendering[1];
+        return rendered;
     }
 
     /**
@@ -110,14 +116,23 @@ export class RenderingEngine<T = {}> {
         } while (nextRenderer && !node.test(nextRenderer.predicate));
         if (!nextRenderer) return;
 
+        const rendering: [Renderer<T>, Promise<T>, VNode[]] = [nextRenderer, null, []];
         // This promise will be returned synchronously and will be resolved
         // later with the same return value as the asynchronous render call.
         const rendererProm = new Promise<T>((resolve): void => {
             Promise.resolve().then(() => {
-                nextRenderer.render(node).then(resolve);
+                const promise = rendering[2].length ? rendering[1] : nextRenderer.render(node);
+                promise.then(n => {
+                    if (!rendering[2].includes(node)) {
+                        rendering[2].push(node);
+                    }
+                    resolve(n);
+                });
             });
         });
-        renderings.push([nextRenderer, rendererProm]);
+
+        rendering[1] = rendererProm;
+        renderings.push(rendering);
         this.renderings.set(node, renderings);
         return rendererProm;
     }

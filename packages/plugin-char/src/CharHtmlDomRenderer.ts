@@ -1,11 +1,14 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { FormatDomRenderer } from '../../plugin-inline/src/FormatDomRenderer';
 import { CharNode } from './CharNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { Format } from '../../plugin-inline/src/Format';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class CharHtmlDomRenderer extends AbstractRenderer<Node[]> {
+export class CharHtmlDomRenderer extends FormatDomRenderer {
     static id = HtmlDomRenderingEngine.id;
+    engine: HtmlDomRenderingEngine;
     predicate = CharNode;
 
     async render(node: CharNode): Promise<Node[]> {
@@ -34,7 +37,23 @@ export class CharHtmlDomRenderer extends AbstractRenderer<Node[]> {
         if (!next || !next.is(InlineNode)) {
             text = text.replace(/ $/g, '\u00A0');
         }
-        const rendering = Promise.resolve([document.createTextNode(text)]);
-        return this.engine.rendered(charNodes, [this, rendering]);
+
+        const textNode = document.createTextNode(text);
+
+        // If the node has attributes, wrap it inside a span with those
+        // attributes.
+        let nodes: Node[];
+        const attributes = node.modifiers.find(Attributes);
+        if (attributes?.length) {
+            const span = document.createElement('span');
+            this.engine.renderAttributes(Attributes, node, span);
+            span.appendChild(textNode);
+            nodes = [span];
+        } else {
+            nodes = [textNode];
+        }
+
+        const rendering = this.renderFormats(node.modifiers.filter(Format), nodes);
+        return this.engine.rendered(charNodes, this, rendering);
     }
 }

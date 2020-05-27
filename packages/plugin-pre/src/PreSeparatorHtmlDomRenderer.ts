@@ -18,6 +18,6 @@ export class PreSeparatorHtmlDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: VNode): Promise<Node[]> {
         const separators = await this.super.render(node);
         const rendering = separators.map(() => document.createTextNode('\n'));
-        return this.engine.rendered([node], [this, Promise.resolve(rendering)]);
+        return this.engine.rendered([node], this, Promise.resolve(rendering));
     }
 }
