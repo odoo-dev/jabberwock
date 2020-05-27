@@ -108,7 +108,7 @@ describePlugin(TextColor, testEditor => {
                     contentAfter: '<p>a<i style="color: yellow;">b[cd]e</i>f</p>',
                 });
             });
-            it("should only set the background color of characters that don't already have that background color through a format", async () => {
+            it.only("should only set the background color of characters that don't already have that background color through a format", async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a<i style="color: yellow;">b[cd</i>e]f</p>',
                     stepFunction: async editor => {
