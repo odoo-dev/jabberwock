@@ -49,7 +49,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const inline = this.editor.plugins.get(Inline);
         const modifiers = inline.getCurrentModifiers(range);
         if (params.formats) {
-            modifiers.append(...params.formats.map(format => format.clone()));
+            modifiers.set(...params.formats.map(format => format.clone()));
         }
         const style = inline.getCurrentStyle(range);
         // Remove the contents of the range if needed.

@@ -22,5 +22,20 @@ describe('core', () => {
                 expect(modifiersMap[3]).to.equal(m4);
             });
         });
+        describe('set()', () => {
+            it('should replace one modifier and append the other', () => {
+                class Modifier1 extends Modifier {}
+                class Modifier2 extends Modifier {}
+                const m1a = new Modifier1();
+                const m1b = new Modifier1();
+                const m2 = new Modifier2();
+                const modifiers1 = new Modifiers(m1a, m2);
+                modifiers1.set(m1b);
+                const allModifiers = modifiers1.filter(() => true);
+                expect(allModifiers.length).to.eql(2);
+                expect(allModifiers[0]).to.eql(m1b);
+                expect(allModifiers[1]).to.eql(m2);
+            });
+        });
     });
 });
