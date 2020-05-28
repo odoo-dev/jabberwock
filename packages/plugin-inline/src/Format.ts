@@ -62,4 +62,8 @@ export class Format extends Modifier {
         const bModifiers = otherFormat?.modifiers;
         return otherFormat instanceof this.constructor && aModifiers.areSameAs(bModifiers);
     }
+    // /**
+    //  * Merge the current format with the previous format.
+    //  */
+    // merge(format: Format) {}
 }

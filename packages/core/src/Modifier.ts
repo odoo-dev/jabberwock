@@ -19,6 +19,17 @@ export class Modifier {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Override this modifier keys with the provider new modifier.
+     *
+     * Similar to Object.asign() in javascript.
+     *
+     * Meant to be overriden if necessary.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    merge<T extends Modifier>(modifier: T): this {
+        return this;
+    }
     applyTo(node: VNode): void {
         node.modifiers.prepend(this);
     }

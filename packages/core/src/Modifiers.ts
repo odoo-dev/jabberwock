@@ -122,6 +122,12 @@ export class Modifiers {
         return found;
     }
     /**
+     * Return all the modifiers instances that are hold by `this`.
+     */
+    getContent(): Modifier[] {
+        return this._contents;
+    }
+    /**
      * Return all modifiers in the array that are an instance of the given
      * modifier class, if any.
      * This also functions as a proxy to the native `filter` method of `Array`,
@@ -215,6 +221,24 @@ export class Modifiers {
             return true;
         }
     }
+
+    /**
+     * Merge each `modifiers` with the current modifiers and return an new
+     * Modifiers.
+     */
+    merge(modifiers: Modifiers): Modifiers {
+        const result = new Modifiers();
+        for (const modifier of modifiers.getContent()) {
+            const foundModifier = this.find(modifier.constructor);
+            if (foundModifier) {
+                result.append(foundModifier.merge(modifier));
+            } else {
+                result.append(modifier.clone());
+            }
+        }
+        return result;
+    }
+
     /**
      * Remove the first modifier in the array that is an instance of the given
      * modifier class or that matches the particular instance passed.
