@@ -13,7 +13,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
-    formats?: Modifiers;
+    modifiers?: Modifiers;
 }
 
 export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {

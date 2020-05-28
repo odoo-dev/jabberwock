@@ -85,7 +85,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const link = new LinkFormat(params.url);
         return this.editor.execCommand<Char>('insertText', {
             text: params.label || link.url,
-            formats: new Modifiers(link),
+            modifiers: new Modifiers(link),
         });
     }
     unlink(params: LinkParams): void {
