@@ -1,0 +1,218 @@
+import { expect } from 'chai';
+import { JWEditor } from '../../core/src/JWEditor';
+import { Char } from '../../plugin-char/src/Char';
+import { VElement } from '../../core/src/VNodes/VElement';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import { FollowRange } from '../src/FollowRange';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { Parser } from '../../plugin-parser/src/Parser';
+import { BasicEditor } from '../../../bundles/BasicEditor';
+import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
+import { setSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
+
+function waitToolbarRedraw(): Promise<void> {
+    return new Promise(r => setTimeout(r, 5));
+}
+
+const container = document.createElement('div');
+container.classList.add('container');
+container.style.fontFamily = 'Arial';
+container.style.fontSize = '20px';
+container.style.lineHeight = '20px';
+container.style.margin = '0';
+container.style.padding = '0';
+const section = document.createElement('section');
+
+describe('FollowRange', async () => {
+    let editor: JWEditor;
+    before(() => {
+        document.body.appendChild(container);
+        container.appendChild(section);
+    });
+    after(() => {
+        document.body.removeChild(container);
+        container.innerHTML = '';
+    });
+    afterEach(async () => {
+        await editor.stop();
+        section.innerHTML = '';
+    });
+
+    it('should add a vNode in the follow range container', async () => {
+        editor = new JWEditor();
+        editor.load(Char);
+        editor.load(FollowRange);
+        editor.load(DomLayout, {
+            components: [
+                {
+                    id: 'template',
+                    async render(editor: JWEditor): Promise<VNode[]> {
+                        const template = `<jw-editor>
+                                <t-range><t t-zone="range"/></t-range>
+                                <main><t t-zone="main"/></main>
+                                <t t-zone="default"/>
+                                </jw-editor>`;
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+                {
+                    id: 'aaa',
+                    async render(): Promise<VNode[]> {
+                        const div = new VElement({ htmlTag: 'div' });
+                        const area = new VElement({ htmlTag: 'area' });
+                        div.append(area);
+                        return [div];
+                    },
+                },
+                {
+                    id: 'bbb',
+                    async render(): Promise<VNode[]> {
+                        return [new VElement({ htmlTag: 'section' })];
+                    },
+                },
+            ],
+            componentZones: [['template', 'root']],
+            location: [section, 'replace'],
+        });
+        await editor.start();
+        await editor.plugins.get(Layout).add('aaa', 'range');
+        await editor.plugins.get(Layout).add('bbb', 'range');
+        expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
+            [
+                '<jw-editor>',
+                '<jw-follow-range style="display: none;">',
+                '<div><area></div>',
+                '<section><br></section>',
+                '</jw-follow-range>',
+                '<main></main>',
+                '</jw-editor>',
+            ].join(''),
+        );
+    });
+    it('should add automatically component in the follow range container', async () => {
+        editor = new JWEditor();
+        editor.load(Char);
+        editor.load(FollowRange);
+        editor.load(DomLayout, {
+            components: [
+                {
+                    id: 'template',
+                    async render(editor: JWEditor): Promise<VNode[]> {
+                        const template = `<jw-editor>
+                            <t-range><t t-zone="range"/></t-range>
+                            <main><t t-zone="main"/></main>
+                            <t t-zone="default"/>
+                            </jw-editor>`;
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+                {
+                    id: 'custom',
+                    async render(): Promise<VNode[]> {
+                        return [new VElement({ htmlTag: 'section' })];
+                    },
+                },
+            ],
+            componentZones: [
+                ['template', 'root'],
+                ['custom', 'range'],
+            ],
+            location: [section, 'replace'],
+        });
+        await editor.start();
+
+        expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
+            [
+                '<jw-editor>',
+                '<jw-follow-range style="display: none;">',
+                '<section><br></section>',
+                '</jw-follow-range>',
+                '<main></main>',
+                '</jw-editor>',
+            ].join(''),
+        );
+    });
+    it('should display the follow range container when select a text', async () => {
+        section.innerHTML = `
+            <p style="margin: 0; padding: 0;">
+                <span class="drop-cap">’T</span>was brillig, and the slithy toves<br/>
+                Did gyre and gimble in the wabe:<br/>
+                All mimsy were the borogoves,<br/>
+                And the mome raths outgrabe.<br/>
+                <br/>
+                <i>“Beware the Jabberwock, my son!<br/>
+                The jaws that bite, the claws that catch!<br/>
+                Beware the Jubjub bird, and shun<br/>
+                The frumious Bandersnatch!”</i><br/>
+                <br/>
+                He took his vorpal sword in hand;<br/>
+                Long time the manxome foe he sought—<br/>
+                So rested he by the Tumtum tree<br/>
+                And stood awhile in thought.<br/>
+                <br/>
+            </p>
+        `;
+
+        editor = new BasicEditor();
+        editor.load(DomEditable, { source: section });
+        editor.load(FollowRange);
+        editor.load(DomLayout, {
+            components: [
+                {
+                    id: 'template',
+                    async render(editor: JWEditor): Promise<VNode[]> {
+                        const template = `<jw-editor>
+                            <t-range><t t-zone="range"/></t-range>
+                            <main><t t-zone="main"/></main>
+                            <t t-zone="default"/>
+                            </jw-editor>`;
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+                {
+                    id: 'custom',
+                    async render(): Promise<VNode[]> {
+                        const template = `<section style="width: 20px; height: 20px; background: red;">-</section>`;
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+            ],
+            componentZones: [
+                ['template', 'root'],
+                ['custom', 'range'],
+            ],
+            location: [section, 'replace'],
+        });
+        await editor.start();
+
+        const range = container.querySelector('jw-follow-range') as HTMLElement;
+
+        const i = container.querySelector('p i');
+        setSelection(i.firstChild, 10, i.firstChild, 10);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('none');
+
+        setSelection(i.firstChild, 10, i.firstChild, 14);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('');
+        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
+        expect(parseInt(range.style.left, 10)).to.be.within(110, 120);
+
+        setSelection(i.firstChild, 10, i.firstChild, 20);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('');
+        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
+        expect(parseInt(range.style.left, 10)).to.be.within(145, 160);
+
+        setSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('');
+        expect(parseInt(range.style.top, 10)).to.be.within(40, 50);
+        expect(parseInt(range.style.left, 10)).to.be.within(130, 145);
+
+        setSelection(i.firstChild, 20, i.firstChild, 20);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('none');
+    });
+});

@@ -1,5 +1,5 @@
 <jw-editor>
-    <t t-zone="range"/>
+    <t-range><t t-zone="tools"/></t-range>
     <jw-header><t t-zone="tools"/></jw-header>
     <jw-body><t t-zone="main"/></jw-body>
     <jw-footer>
