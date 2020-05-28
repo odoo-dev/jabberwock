@@ -71,7 +71,10 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 for (const inline of selectedInlines) {
                     const format = inline.modifiers.find(FormatClass);
                     // Apply the attributes of the format we're about to remove
-                    // to the inline itself.
+                    // to the inline itself in order to keep information of the
+                    // Format.
+                    // For instance, if the Format has a style attribute we need
+                    // to keep that information to render it later.
                     const attributes = inline.modifiers.get(Attributes);
                     const matchingFormatAttributes = format.modifiers.find(Attributes);
                     if (matchingFormatAttributes) {
