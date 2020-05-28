@@ -35,6 +35,7 @@ import { DomEditable } from '../packages/plugin-dom-editable/src/DomEditable';
 import { VNode } from '../packages/core/src/VNodes/VNode';
 import { Input } from '../packages/plugin-input/src/Input';
 import { Dialog } from '../packages/plugin-dialog/src/Dialog';
+import { FollowRange } from '../packages/plugin-dom-follow-range/src/FollowRange';
 
 import template from './basicLayout.xml';
 import './basicLayout.css';
@@ -83,6 +84,7 @@ export class BasicEditor extends JWEditor {
                 [BackgroundColor],
                 [Input],
                 [Dialog],
+                [FollowRange],
                 [OdooField],
             ],
         });
