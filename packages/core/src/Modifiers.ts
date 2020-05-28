@@ -216,6 +216,21 @@ export class Modifiers {
         }
     }
     /**
+     * Set the given modifiers on this Modifiers instance. Replace the modifiers
+     * with same constructor if they exist, otherwise append the modifiers.
+     *
+     * @param modfiers
+     */
+    set(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
+        for (const modifier of modifiers) {
+            if (modifier instanceof Modifier) {
+                this.replace(modifier.constructor, modifier);
+            } else {
+                this.replace(modifier, modifier);
+            }
+        }
+    }
+    /**
      * Remove the first modifier in the array that is an instance of the given
      * modifier class or that matches the particular instance passed.
      * If no modifier was found, add the given modifier instead.
