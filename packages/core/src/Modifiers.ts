@@ -69,7 +69,7 @@ export class Modifiers {
         if (modifiers.length && !this._contents) {
             this._contents = [];
         }
-        for (const modifier of modifiers) {
+        for (const modifier of [...modifiers].reverse()) {
             if (modifier instanceof Modifier) {
                 this._contents.unshift(modifier);
             } else {
