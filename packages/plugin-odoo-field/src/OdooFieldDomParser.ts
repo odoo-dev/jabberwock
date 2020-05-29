@@ -41,7 +41,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
                 item.attributes['data-oe-type'].value === 'float' ||
                 item.attributes['data-oe-type'].value === 'integer')
         );
-        // todo: Handle thoses fields when their dependecies will be met.
+        // TODO: Handle thoses fields when their dependecies will be met.
         // item.attributes['data-oe-type'].value === 'many2one' ||
         // item.attributes['data-oe-type'].value === 'date' ||
         // item.attributes['data-oe-type'].value === 'datetime'
@@ -60,7 +60,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         // ? dmo: We need to discuss about a way to send signals to the dom in a
         // better way because the following code create a dependecy to the dom.
         // I'm not sure we want to code this dependecy that way.
-        // todo: Also, The layout is not yet in the editor when calling the
+        // TODO: Also, The layout is not yet in the editor when calling the
         // constructor. So this code should move.
         const layout = this.engine.editor.plugins.get(Layout);
         const domLayout = layout.engines[DomLayoutEngine.id] as DomLayoutEngine;
@@ -86,10 +86,10 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         const fieldNode = await this._getNode(element, odooReactiveField);
         fieldNode.modifiers.append(this.engine.parseAttributes(element));
 
-        // todo: This mute mechanism can be removed once the changes will be hooked with the memory.
+        // TODO: This mute mechanism can be removed once the changes will be hooked with the memory.
         // This allow to not cycle when changing it's own children (empty and append).
         let mute = false;
-        // todo: When the memory will be merged, observe the change from it. This code is
+        // TODO: When the memory will be merged, observe the change from it. This code is
         //       inefficient as it deep-clone and re-render for each changes made in the descendants
         //       of the fieldNode.
         fieldNode.vevent.on('childList', async () => {
@@ -125,7 +125,6 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
             fieldNode.append(...childs);
             mute = false;
         });
-        debugger;
         return [fieldNode];
     }
     /**

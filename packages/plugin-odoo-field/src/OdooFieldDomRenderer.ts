@@ -7,7 +7,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
-    predicate = node => node instanceof OdooFieldNode;
+    predicate = OdooFieldNode;
 
     async render(node: OdooFieldNode): Promise<Node[]> {
         const container = document.createElement(node.htmlTag);
@@ -39,6 +39,7 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
         return [container];
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _getContent(container: HTMLElement, node: OdooFieldNode): HTMLElement {
         return container;
     }

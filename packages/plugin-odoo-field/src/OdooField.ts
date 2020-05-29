@@ -59,7 +59,7 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
 
     commands = {
         foo: {
-            handler: () => {
+            handler: (): void => {
                 console.log('foo');
             },
         },
@@ -84,7 +84,7 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
         value: string,
     ): void {
         if (!this.registry[this._getHash(recordDefinition)]) {
-            // todo: Retrieve the field from Odoo through RPC.
+            // TODO: Retrieve the field from Odoo through RPC.
             const isValid = new ReactiveValue(true);
             const reactiveValue = new ReactiveValue(value);
             if (fieldType === 'integer' || fieldType === 'float' || fieldType === 'monetary') {
@@ -112,7 +112,7 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
     getField(definition: OdooRecordDefinition): OdooFieldInfo {
         const reactiveOdooField = this.registry[this._getHash(definition)];
         if (!reactiveOdooField) {
-            // todo: Retrieve the field from Odoo through RPC.
+            // TODO: Retrieve the field from Odoo through RPC.
             throw new Error(
                 `Impossible to find the field ${definition.fieldName} for model ${definition.modelId} with id ${definition.modelId}.`,
             );
