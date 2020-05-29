@@ -51,10 +51,7 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                 } else {
                     inlinesContainer = null; // Close the inlinesContainer.
                     for (const child of parsedChild) {
-                        child.modifiers.replace(
-                            ListItemAttributes,
-                            new ListItemAttributes(itemModifiers.get(Attributes)),
-                        );
+                        child.modifiers.set(new ListItemAttributes(itemModifiers.get(Attributes)));
                     }
                     nodes.push(...parsedChild);
                 }
@@ -66,7 +63,13 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
         // br will parse to nothing because it's a placeholder br, not a real
         // line break. We cannot ignore that li because it does in fact exist so
         // we parse it as an empty base container.
-        return nodes.length ? nodes : [new Container()];
+        if (nodes.length) {
+            return nodes;
+        } else {
+            const container = new Container();
+            container.modifiers.append(new ListItemAttributes(itemModifiers.get(Attributes)));
+            return [container];
+        }
     }
 
     /**
