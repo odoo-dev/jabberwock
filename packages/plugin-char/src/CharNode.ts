@@ -1,4 +1,3 @@
-import { MarkerNode } from '../../core/src/VNodes/MarkerNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifiers } from '../../core/src/Modifiers';
