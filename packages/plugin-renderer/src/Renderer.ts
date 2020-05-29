@@ -14,14 +14,21 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
     };
     engines: Record<RenderingIdentifier, RenderingEngine> = {};
 
-    async render<T>(renderingId: string, node: VNode): Promise<T | void> {
+    async render<T>(renderingId: string, node: VNode): Promise<T | void>;
+    async render<T>(renderingId: string, nodes: VNode[]): Promise<T[] | void>;
+    async render<T>(renderingId: string, nodes: VNode | VNode[]): Promise<T[] | T | void> {
         const engine = this.engines[renderingId];
         if (!engine) {
             // The caller might want to fallback on another rendering.
             return;
         }
         engine.renderings.clear();
-        return engine.render(node) as Promise<T>;
+        if (nodes instanceof Array) {
+            const renderings = nodes.map(node => engine.render(node) as Promise<T>);
+            return Promise.all(renderings);
+        } else {
+            return engine.render(nodes) as Promise<T>;
+        }
     }
 
     loadRenderingEngines(renderingEngines: RenderingEngineConstructor[]): void {
@@ -38,9 +45,12 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
     loadRenderers(renderers: RendererConstructor[]): void {
         renderers = [...renderers].reverse();
         for (const RendererClass of renderers) {
-            const renderingEngine = this.engines[RendererClass.id];
-            if (renderingEngine) {
-                renderingEngine.register(RendererClass);
+            for (const id in this.engines) {
+                const renderingEngine = this.engines[id];
+                const supportedTypes = [id, ...renderingEngine.constructor.extends];
+                if (supportedTypes.includes(RendererClass.id)) {
+                    renderingEngine.register(RendererClass);
+                }
             }
         }
     }
