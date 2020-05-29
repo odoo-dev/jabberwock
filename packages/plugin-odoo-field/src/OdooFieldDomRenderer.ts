@@ -2,6 +2,7 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
@@ -12,7 +13,7 @@ export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
         const container = document.createElement(node.htmlTag);
         const fieldContainer = this._getContent(container, node);
 
-        this.engine.renderAttributes(node.attributes, container);
+        this.engine.renderAttributes(Attributes, node, container);
         const selectionAncestor = this.engine.editor.selection.range.start.ancestor(
             ancestor =>
                 ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,

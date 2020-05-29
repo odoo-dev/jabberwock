@@ -84,7 +84,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         const odooReactiveField = reactivePlugin.getField(record);
 
         const fieldNode = await this._getNode(element, odooReactiveField);
-        fieldNode.attributes = this.engine.parseAttributes(element);
+        fieldNode.modifiers.append(this.engine.parseAttributes(element));
 
         // todo: This mute mechanism can be removed once the changes will be hooked with the memory.
         // This allow to not cycle when changing it's own children (empty and append).

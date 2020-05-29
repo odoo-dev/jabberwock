@@ -20,7 +20,7 @@ export class OdooFieldNode extends VElement {
             htmlTag: this.htmlTag,
             fieldInfo: this.fieldInfo,
         });
-        clone.attributes = { ...this.attributes };
+        clone.modifiers = this.modifiers.clone();
         return clone;
     }
 }
