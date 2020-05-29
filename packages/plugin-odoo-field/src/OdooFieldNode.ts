@@ -1,13 +1,14 @@
-import { VElement, VElementParams } from '../../core/src/VNodes/VElement';
+import { VElement } from '../../core/src/VNodes/VElement';
 import { OdooFieldInfo } from './OdooField';
-
-export interface OdooFieldNodeParams extends VElementParams {
-    fieldInfo: OdooFieldInfo;
-}
 
 export class OdooFieldNode extends VElement {
     fieldInfo: OdooFieldInfo;
-    constructor(params: OdooFieldNodeParams) {
+
+    constructor(
+        params: ConstructorParameters<typeof VElement>[0] & {
+            fieldInfo: OdooFieldInfo;
+        },
+    ) {
         super(params);
         this.fieldInfo = params.fieldInfo;
     }
@@ -15,12 +16,11 @@ export class OdooFieldNode extends VElement {
     /**
      * Return a new VNode with the same type and attributes as this OdooFieldNode.
      */
-    clone(): this {
-        const clone = new this.constructor<typeof OdooFieldNode>({
+    clone(deepClone?: boolean, params?: {}): this {
+        const defaults: ConstructorParameters<typeof OdooFieldNode>[0] = {
             htmlTag: this.htmlTag,
             fieldInfo: this.fieldInfo,
-        });
-        clone.modifiers = this.modifiers.clone();
-        return clone;
+        };
+        return super.clone(deepClone, { ...defaults, ...params });
     }
 }

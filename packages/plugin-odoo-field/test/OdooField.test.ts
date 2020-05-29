@@ -5,7 +5,6 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Char } from '../../plugin-char/src/Char';
 import JWEditor from '../../core/src/JWEditor';
 import { cloneChildrenDeep } from '../src/OdooFieldDomParser';
-import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { fieldValidators } from '../src/OdooField';
 
@@ -101,7 +100,7 @@ describePlugin(OdooField, () => {
             });
         });
 
-        // todo: Unskip when the bug of inline will be fixed.
+        // TODO: Unskip when the bug of inline will be fixed.
         //       Currently, a span inside another span renders sibling <span>
         //       rather than as parent/child <span>.
         it.skip('should not parse an odoo field "monetary" if no model is provided', async () => {
@@ -164,9 +163,7 @@ describePlugin(OdooField, () => {
                         '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><p>Content.</p></div>',
                     ].join(''),
                     stepFunction: async editor => {
-                        debugger;
                         await insertText(editor, 'a');
-                        debugger;
                     },
                     debug: true,
                     contentAfter: [

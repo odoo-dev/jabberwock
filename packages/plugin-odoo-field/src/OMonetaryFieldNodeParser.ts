@@ -2,8 +2,8 @@ import { OdooFieldDomParser } from './OdooFieldDomParser';
 import { OdooFieldNodeCurrencyPosition, OMonetaryFieldNode } from './OMonetaryFieldNode';
 import { OdooFieldInfo } from './OdooField';
 
-// todo: retrieve the current decimal of the current lang in odoo
-const localDecimalSeparator = '.';
+// TODO: retrieve the current decimal of the current lang in odoo
+// const localDecimalSeparator = '.';
 
 export class OdooMonetaryFieldDomParser extends OdooFieldDomParser {
     predicate = (item: Node): boolean => {
