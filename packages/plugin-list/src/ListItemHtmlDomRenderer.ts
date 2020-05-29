@@ -31,7 +31,7 @@ export class ListItemHtmlDomRenderer extends AbstractRenderer<Node[]> {
                 if (ev.offsetX < 0) {
                     ev.stopImmediatePropagation();
                     ev.preventDefault();
-                    withRange(VRange.at(node.firstChild()), async range => {
+                    withRange(VRange.at(node.firstChild() || node), async range => {
                         await this.engine.editor.execCommand('toggleChecked', {
                             context: {
                                 range: range,

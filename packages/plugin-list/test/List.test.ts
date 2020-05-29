@@ -78,10 +78,10 @@ describePlugin(List, testEditor => {
                     contentAfter: '<ul class="checklist"><li class="checked">a</li></ul>',
                 });
             });
-            it('should not parse a checked class on empty checklist item (without any content/container)', async () => {
+            it('should parse a checked class on empty checklist item (without any content/container)', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<ul class="checklist"><li class="checked"><br></li></ul>',
-                    contentAfter: '<ul class="checklist"><li class="unchecked"><br></li></ul>',
+                    contentAfter: '<ul class="checklist"><li class="checked"><br></li></ul>',
                 });
             });
             it('should parse a checked class in indented', async () => {
@@ -1703,6 +1703,42 @@ describePlugin(List, testEditor => {
                 contentAfter: unformat(`
                     <ul class="checklist">
                         <li class="unchecked">1</li>
+                    </ul>`),
+            });
+        });
+        it('should check an empty item', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: unformat(`
+                    <ul class="checklist">
+                        <li class="unchecked"><br></li>
+                    </ul>`),
+                stepFunction: async () => {
+                    const editable = document.querySelector('[contenteditable=true]');
+                    const lis = editable.querySelectorAll('li.checked, li.unchecked');
+                    const li = lis[0];
+                    await click(li, { clientX: li.getBoundingClientRect().left - 10 });
+                },
+                contentAfter: unformat(`
+                    <ul class="checklist">
+                        <li class="checked"><br></li>
+                    </ul>`),
+            });
+        });
+        it('should uncheck an empty item', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: unformat(`
+                    <ul class="checklist">
+                        <li class="unchecked"><br></li>
+                    </ul>`),
+                stepFunction: async () => {
+                    const editable = document.querySelector('[contenteditable=true]');
+                    const lis = editable.querySelectorAll('li.checked, li.unchecked');
+                    const li = lis[0];
+                    await click(li, { clientX: li.getBoundingClientRect().left - 10 });
+                },
+                contentAfter: unformat(`
+                    <ul class="checklist">
+                        <li class="checked"><br></li>
                     </ul>`),
             });
         });
@@ -4174,9 +4210,8 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked"><br>[]</li></ul>',
                                 stepFunction: deleteBackward,
-                                // no real line, don't remember checked state
                                 contentAfter:
-                                    '<ul class="checklist"><li class="unchecked">[]<br></li></ul>',
+                                    '<ul class="checklist"><li class="checked">[]<br></li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
@@ -4590,9 +4625,8 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul class="checklist"><li style="list-style: none;"><ul class="checklist"><li class="checked"><br>[]</li></ul></li></ul>',
                                 stepFunction: backspace,
-                                // empty ligne without anything are unchecked
                                 contentAfter:
-                                    '<ul class="checklist"><li class="unchecked">[]<br></li></ul>',
+                                    '<ul class="checklist"><li class="checked">[]<br></li></ul>',
                             });
                         });
                         it("should outdent a list to the point that it's a paragraph", async () => {
