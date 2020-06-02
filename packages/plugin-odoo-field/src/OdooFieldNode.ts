@@ -1,12 +1,12 @@
 import { VElement } from '../../core/src/VNodes/VElement';
 import { OdooFieldInfo } from './OdooField';
 
-export class OdooFieldNode extends VElement {
-    fieldInfo: OdooFieldInfo;
+export class OdooFieldNode<T extends OdooFieldInfo = OdooFieldInfo> extends VElement {
+    fieldInfo: T;
 
     constructor(
         params: ConstructorParameters<typeof VElement>[0] & {
-            fieldInfo: OdooFieldInfo;
+            fieldInfo: T;
         },
     ) {
         super(params);

@@ -1,32 +1,11 @@
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { OdooFieldNode } from './OdooFieldNode';
-
-import { VNode } from '../../core/src/VNodes/VNode';
-import { OdooFieldInfo, OdooRecordDefinition } from './OdooField';
+import { OdooFieldInfo, OdooFieldDefinition } from './OdooField';
 import { OdooField } from './OdooField';
-import { MarkerNode } from '../../core/src/VNodes/MarkerNode';
-import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
-import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
+import { OdooFieldMap } from './OdooFieldMap';
+import { CharNode } from '../../plugin-char/src/CharNode';
 
-/**
- * Clone all the children recursively.
- */
-export function cloneChildrenDeep(node: VNode): VNode[] {
-    return node
-        .children()
-        .filter(node => !(node instanceof MarkerNode))
-        .map(child => {
-            const clonedNode = child.clone();
-            if (child instanceof ContainerNode) {
-                clonedNode.append(...cloneChildrenDeep(child));
-            }
-            return clonedNode;
-        });
-}
 export class OdooFieldDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
@@ -41,121 +20,81 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
                 item.attributes['data-oe-type'].value === 'float' ||
                 item.attributes['data-oe-type'].value === 'integer')
         );
-        // TODO: Handle thoses fields when their dependecies will be met.
+        // TODO: Handle those fields when their dependecies are met.
         // item.attributes['data-oe-type'].value === 'many2one' ||
         // item.attributes['data-oe-type'].value === 'date' ||
         // item.attributes['data-oe-type'].value === 'datetime'
         // item.attributes['data-oe-type'].value === 'image' ||
         // item.attributes['data-oe-type'].value === 'contact'
     };
-    _reactiveChangeExample: Map<OdooFieldInfo, OdooFieldNode> = new Map();
-    _nextRenders: Function[] = [];
 
-    constructor(engine) {
-        super(engine);
-        this._beforeRenderInEditable = this._beforeRenderInEditable.bind(this);
-    }
+    _reactiveChanges = new OdooFieldMap<OdooFieldNode>();
 
     async parse(element: HTMLElement): Promise<OdooFieldNode[]> {
-        // ? dmo: We need to discuss about a way to send signals to the dom in a
-        // better way because the following code create a dependecy to the dom.
-        // I'm not sure we want to code this dependecy that way.
-        // TODO: Also, The layout is not yet in the editor when calling the
-        // constructor. So this code should move.
-        const layout = this.engine.editor.plugins.get(Layout);
-        const domLayout = layout.engines[DomLayoutEngine.id] as DomLayoutEngine;
-        if (!domLayout.beforeRenderInEditable.find(this._beforeRenderInEditable)) {
-            domLayout.beforeRenderInEditable.push(this._beforeRenderInEditable);
-        }
-        const record: OdooRecordDefinition = {
+        const field: OdooFieldDefinition = {
             modelId: element.attributes['data-oe-model'].value,
             recordId: element.attributes['data-oe-id'].value,
             fieldName: element.attributes['data-oe-field'].value,
         };
 
         // data-oe-type is kind of a widget in Odoo.
-        const fieldWidgetType = element.attributes['data-oe-type'].value;
-        const reactivePlugin = this.engine.editor.plugins.get(OdooField);
-        reactivePlugin.setRecordFromParsing(
-            record,
-            fieldWidgetType,
-            this._getValueFromParsing(element),
-        );
-        const odooReactiveField = reactivePlugin.getField(record);
+        const fieldType = element.attributes['data-oe-type'].value;
+        const fieldsRegistry = this.engine.editor.plugins.get(OdooField);
+        const value = this._parseValue(element);
+        const fieldInfo = fieldsRegistry.register(field, fieldType, value);
 
-        const fieldNode = await this._getNode(element, odooReactiveField);
+        const fieldNode = await this._parseField(element, fieldInfo);
         fieldNode.modifiers.append(this.engine.parseAttributes(element));
 
-        // TODO: This mute mechanism can be removed once the changes will be hooked with the memory.
-        // This allow to not cycle when changing it's own children (empty and append).
+        // TODO: Remove the mute mechanism when changes come from memory.
+        // This prevent cycling when regenerating children after a value change.
         let mute = false;
-        // TODO: When the memory will be merged, observe the change from it. This code is
-        //       inefficient as it deep-clone and re-render for each changes made in the descendants
-        //       of the fieldNode.
         fieldNode.on('childList', async () => {
-            this._nextRenders.push(async () => {
-                if (mute) return;
-                const renderer = this.engine.editor.plugins.get(Renderer);
-                // Clone the fieldNode otherwise the renderer will change the mapping of the fieldNode.
-                const clonedNode = fieldNode.clone();
-                const childs = cloneChildrenDeep(fieldNode);
-                clonedNode.empty();
-                clonedNode.append(...childs);
-                const renderedNodes = await renderer.render<Node[]>(
-                    HtmlDomRenderingEngine.id,
-                    clonedNode,
-                );
-                const renderedNode = renderedNodes[0];
-                this._reactiveChangeExample.set(fieldNode.fieldInfo, fieldNode);
-                await fieldNode.fieldInfo.value.set(
-                    this._getValueFromRedering(renderedNode as HTMLElement),
-                );
-            });
+            if (mute) return;
+            this._reactiveChanges.set(fieldNode.fieldInfo, fieldNode);
+            fieldNode.fieldInfo.value.set(this._parseValue(fieldNode));
         });
 
-        // The listening of the value mechanism can be removed once the mirror nodes are available.
+        // TODO: Replace this value listening mechanism by mirror nodes.
         fieldNode.fieldInfo.value.on('set', () => {
-            // Retrieving the node that made the change is a hack that will be removed when the
-            // mirror nodes are available.
-            const fieldNodeToCopy = this._reactiveChangeExample.get(fieldNode.fieldInfo);
-            if (fieldNodeToCopy === fieldNode) return;
+            // TODO: Retrieving the node that made the change is a slight hack
+            // that will be removed when mirror nodes are available.
+            const original = this._reactiveChanges.get(fieldNode.fieldInfo);
+            if (fieldNode === original) return;
             mute = true;
-            const childs = cloneChildrenDeep(fieldNodeToCopy);
             fieldNode.empty();
-            fieldNode.append(...childs);
+            fieldNode.append(...original.children().map(child => child.clone(true)));
             mute = false;
         });
         return [fieldNode];
     }
-    /**
-     * Get the value of `element` when parsing.
-     */
-    _getValueFromParsing(element: HTMLElement): string {
-        return element.innerHTML;
-    }
-    /**
-     * Get the value of `element` when rendering.
-     */
-    _getValueFromRedering(element: HTMLElement): string {
-        return this._getValueFromParsing(element);
-    }
 
     /**
      * Get an `OdooFieldNode` from an element and a ReactiveValue.
+     *
+     * @param element
+     * @param fieldInfo
      */
-    async _getNode(element: HTMLElement, fieldInfo: OdooFieldInfo): Promise<OdooFieldNode> {
-        const childNodesToParse = element.childNodes;
+    async _parseField(element: HTMLElement, fieldInfo: OdooFieldInfo): Promise<OdooFieldNode> {
         const fieldNode = new OdooFieldNode({ htmlTag: element.tagName, fieldInfo });
-        const children = await this.engine.parse(...childNodesToParse);
+        const children = await this.engine.parse(...element.childNodes);
         fieldNode.append(...children);
         return fieldNode;
     }
 
-    async _beforeRenderInEditable(): Promise<void> {
-        console.log('beforerender');
-        while (this._nextRenders.length) {
-            const cb = this._nextRenders.shift();
-            await cb();
+    /**
+     * Parse the value of the field from the given source.
+     *
+     * @param source
+     */
+    _parseValue(source: HTMLElement): string;
+    _parseValue(source: OdooFieldNode): string;
+    _parseValue(source: HTMLElement | OdooFieldNode): string {
+        if (source instanceof HTMLElement) {
+            return source.innerHTML;
+        } else {
+            const chars = source.descendants(CharNode).map(child => child.char);
+            return chars.join('');
         }
     }
 }

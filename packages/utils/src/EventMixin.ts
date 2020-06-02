@@ -24,12 +24,12 @@ export class EventMixin {
      * @param eventName
      * @param args
      */
-    async trigger<A>(eventName: string, args?: A): Promise<void> {
+    trigger<A>(eventName: string, args?: A): void {
         if (this._eventCallbacks[eventName]) {
             for (const callback of this._eventCallbacks[eventName]) {
                 if (!this._callbackWorking.has(callback)) {
                     this._callbackWorking.add(callback);
-                    await callback(args);
+                    callback(args);
                     this._callbackWorking.delete(callback);
                 }
             }

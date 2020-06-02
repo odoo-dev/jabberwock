@@ -5,26 +5,20 @@ import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
 import { OdooFieldDomParser } from './OdooFieldDomParser';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
+import { OdooFieldMap } from './OdooFieldMap';
 import { OdooMonetaryFieldDomParser } from './OdooMonetaryFieldNodeParser';
 import { OdooMonetaryFieldDomRenderer } from './OdooMonetaryFieldNodeRenderer';
 
-/**
- * The record definion is mainly used to get a reactive field using the method `getReactiveField`.
- */
-export interface OdooRecordDefinition {
+export interface OdooFieldDefinition {
     modelId: string;
     recordId: string;
     fieldName: string;
 }
-export interface OdooFieldInfo {
-    modelId: string;
-    recordId: string;
-    fieldName: string;
+
+export interface OdooFieldInfo extends OdooFieldDefinition {
     value: ReactiveValue<string>;
     isValid: ReactiveValue<boolean>;
 }
-
-type OdooFieldRegistryIdentifier = string;
 
 /**
  * Regex used to validate a field.
@@ -34,108 +28,60 @@ export const fieldValidators = {
     float: /^[0-9.,]+$/,
     monetary: /^[0-9.,]+$/,
 };
-/**
- * Check wether a field with `type` and `value` is valid.
- *
- * @param {string} type The type of the field.
- * @param {string} value The value of the field.
- * @returns {boolean}
- */
-export function isFieldValid(type: 'integer' | 'float' | 'monetary', value: string): boolean {
-    return !fieldValidators[type] || !!value.match(fieldValidators[type]);
-}
-
-// class DomRenderingEngineBis extends DomRenderingEngine {
-//     static readonly id = 'domBis';
-// }
 
 export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    // static dependencies = [Dom];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [OdooFieldDomParser, OdooMonetaryFieldDomParser],
         renderers: [OdooMonetaryFieldDomRenderer, OdooFieldDomRenderer],
-        // renderingEngines: [DomRenderingEngineBis],
     };
 
-    commands = {
-        foo: {
-            handler: (): void => {
-                console.log('foo');
-            },
-        },
-    };
-
-    registry: Record<OdooFieldRegistryIdentifier, OdooFieldInfo> = {};
+    private _registry: OdooFieldMap<OdooFieldInfo> = new OdooFieldMap();
 
     /**
-     * Set the record from parsing html.
+     * Register an Odoo record.
      *
-     * No need to get the inforation from the network if it is already present in the document
-     * parsed by the editor.
+     * No need to get the inforation from the network if it is already present
+     * in the document when parsed by the editor.
      *
-     * Create 2 `ReactiveValue`. One that represent the actual value of the `recordDefinition`
-     * and the other represent the validity of the value.
+     * Create two `ReactiveValue`. One that represent the actual value of the
+     * `recordDefinition` and the other represent the validity of the value.
      *
-     * See `getReactiveFieldRecordInfo` to retrieve theses value through an `OdooFieldInfo`.
+     * See `get` to retrieve the values from an `OdooFieldInfo`.
      */
-    setRecordFromParsing(
-        recordDefinition: OdooRecordDefinition,
-        fieldType: string,
-        value: string,
-    ): void {
-        if (!this.registry[this._getHash(recordDefinition)]) {
+    register(field: OdooFieldDefinition, type: string, value: string): OdooFieldInfo {
+        if (!this._registry.get(field)) {
             // TODO: Retrieve the field from Odoo through RPC.
+            const reactiveValue = new ReactiveValue<string>();
             const isValid = new ReactiveValue(true);
-            const reactiveValue = new ReactiveValue(value);
-            if (fieldType === 'integer' || fieldType === 'float' || fieldType === 'monetary') {
-                reactiveValue.on('set', (): void => {
-                    isValid.set(isFieldValid(fieldType, reactiveValue.get()));
+            if (Object.keys(fieldValidators).includes(type)) {
+                reactiveValue.on('set', (newValue: string): void => {
+                    isValid.set(!!newValue.match(fieldValidators[type]));
                 });
-                isValid.set(isFieldValid(fieldType, reactiveValue.get()));
             }
+            reactiveValue.set(value);
 
             const reactiveOdooField = {
-                modelId: recordDefinition.modelId,
-                recordId: recordDefinition.recordId,
-                fieldName: recordDefinition.fieldName,
+                ...field,
                 value: reactiveValue,
                 isValid,
             };
-            this._setRecord(recordDefinition, reactiveOdooField);
+            this._registry.set(field, reactiveOdooField);
         }
+        return this._registry.get(field);
     }
     /**
-     * Retrieve reactive values by providing an `OdooRecordDefinition`.
+     * Retrieve reactive values by providing an `OdooFieldDefinition`.
      *
-     * @param definition
+     * @param field
      */
-    getField(definition: OdooRecordDefinition): OdooFieldInfo {
-        const reactiveOdooField = this.registry[this._getHash(definition)];
+    get(field: OdooFieldDefinition): OdooFieldInfo {
+        const reactiveOdooField = this._registry.get(field);
         if (!reactiveOdooField) {
             // TODO: Retrieve the field from Odoo through RPC.
             throw new Error(
-                `Impossible to find the field ${definition.fieldName} for model ${definition.modelId} with id ${definition.modelId}.`,
+                `Impossible to find the field ${field.fieldName} for model ${field.modelId} with id ${field.modelId}.`,
             );
         }
         return reactiveOdooField;
-    }
-
-    /**
-     * Set a reactive value to the registry using a record definition.
-     *
-     * @param recordDefinition The record definition
-     * @param value The reactive value
-     */
-    _setRecord(recordDefinition: OdooRecordDefinition, value: OdooFieldInfo): void {
-        this.registry[this._getHash(recordDefinition)] = value;
-    }
-
-    /**
-     * Get a hash to store in a dictionnary from a record definition.
-     *
-     * @param recordDefinition The record definition
-     */
-    _getHash(recordDefinition: OdooRecordDefinition): string {
-        return `${recordDefinition.modelId}-${recordDefinition.recordId}-${recordDefinition.fieldName}`;
     }
 }
