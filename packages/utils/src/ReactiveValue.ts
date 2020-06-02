@@ -17,7 +17,7 @@ export class ReactiveValue<T> extends EventMixin {
         if (value !== this._value) {
             this._value = value;
             if (fire) {
-                await this.fire('set', value);
+                await this.trigger('set', value);
             }
         }
     }

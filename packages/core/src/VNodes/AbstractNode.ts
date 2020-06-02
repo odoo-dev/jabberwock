@@ -3,9 +3,10 @@ import { Constructor, nodeLength } from '../../../utils/src/utils';
 import { ContainerNode } from './ContainerNode';
 import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
+import { EventMixin } from '../../../utils/src/EventMixin';
 
 let id = 0;
-export abstract class AbstractNode {
+export abstract class AbstractNode extends EventMixin {
     readonly id = id;
     editable = true;
     tangible = true;
@@ -25,6 +26,7 @@ export abstract class AbstractNode {
     }
 
     constructor() {
+        super();
         id++;
     }
 
@@ -649,6 +651,20 @@ export abstract class AbstractNode {
      * @param newContainer the new container for this node's children
      */
     abstract mergeWith(newContainer: VNode): void;
+
+    //--------------------------------------------------------------------------
+    // Events.
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    async trigger<A>(eventName: string, args?: A): Promise<void> {
+        super.trigger(eventName, args);
+        if (this.parent) {
+            await this.parent.trigger(eventName, args);
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Private.

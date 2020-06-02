@@ -92,7 +92,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
         // TODO: When the memory will be merged, observe the change from it. This code is
         //       inefficient as it deep-clone and re-render for each changes made in the descendants
         //       of the fieldNode.
-        fieldNode.vevent.on('childList', async () => {
+        fieldNode.on('childList', async () => {
             this._nextRenders.push(async () => {
                 if (mute) return;
                 const renderer = this.engine.editor.plugins.get(Renderer);
