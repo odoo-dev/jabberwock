@@ -24,7 +24,6 @@ export type DomLayoutLocation = [Node, DomZonePosition];
 
 export class DomLayoutEngine extends LayoutEngine {
     static readonly id = 'dom';
-    readonly id = 'dom';
     readonly _domReconciliationEngine = new DomReconciliationEngine();
 
     // used only to develop and avoid wrong promise from commands

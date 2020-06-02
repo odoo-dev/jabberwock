@@ -12,7 +12,7 @@ export interface ComponentDefinition {
 }
 
 export abstract class LayoutEngine {
-    readonly id: LayoutEngineId;
+    static readonly id: LayoutEngineId;
     protected componentDefinitions: Record<ComponentId, ComponentDefinition> = {};
     protected componentZones: Record<ComponentId, ZoneIdentifier> = {};
     readonly root = new ZoneNode(['root']);
@@ -216,6 +216,11 @@ export abstract class LayoutEngine {
         // Return the components that were newly created.
         return newComponents;
     }
+}
+export interface LayoutEngine {
+    constructor: LayoutEngineConstructor & {
+        id: LayoutEngineId;
+    };
 }
 export type LayoutEngineConstructor = {
     new (editor: JWEditor): LayoutEngine;

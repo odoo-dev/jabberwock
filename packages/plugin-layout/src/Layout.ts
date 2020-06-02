@@ -90,10 +90,10 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
     private loadEngines(layoutEngines: LayoutEngineConstructor[]): void {
         for (const EngineClass of layoutEngines) {
             const engine = new EngineClass(this.editor);
-            if (this.engines[engine.id]) {
+            if (this.engines[engine.constructor.id]) {
                 throw new Error(`Rendering engine ${EngineClass.name} already registered.`);
             }
-            this.engines[engine.id] = engine;
+            this.engines[engine.constructor.id] = engine;
         }
     }
     /**
