@@ -13,11 +13,11 @@ export class ReactiveValue<T> extends EventMixin {
      * @returns {Promise<void>}
      * @memberof ReactiveValue
      */
-    async set(value: T, fire = true): Promise<void> {
+    set(value: T, fire = true): void {
         if (value !== this._value) {
             this._value = value;
             if (fire) {
-                await this.trigger('set', value);
+                this.trigger('set', value);
             }
         }
     }

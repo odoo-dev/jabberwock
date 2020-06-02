@@ -1,18 +1,18 @@
 import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
-import { OdooMonetaryFieldNode, OdooFieldNodeCurrencyPosition } from './OdooMonetaryFieldNode';
+import { OdooMonetaryFieldNode, CurrencyPosition } from './OdooMonetaryFieldNode';
 export class OdooMonetaryFieldDomRenderer extends OdooFieldDomRenderer {
     predicate = OdooMonetaryFieldNode;
 
-    _getContent(container: HTMLElement, node: OdooMonetaryFieldNode): HTMLElement {
-        const fieldContainer = document.createElement('span');
-        fieldContainer.classList.add('oe_currency_value');
-        container.appendChild(fieldContainer);
-        const currency = document.createTextNode(node.currencyValue);
-        if (node.currencyPosition === OdooFieldNodeCurrencyPosition.BEFORE) {
+    async _renderValue(node: OdooMonetaryFieldNode, container: HTMLElement): Promise<void> {
+        const valueContainer = document.createElement('span');
+        valueContainer.classList.add('oe_currency_value');
+        container.appendChild(valueContainer);
+        const currency = document.createTextNode(node.fieldInfo.currencyValue);
+        if (node.fieldInfo.currencyPosition === CurrencyPosition.BEFORE) {
             container.prepend(currency);
         } else {
             container.append(currency);
         }
-        return fieldContainer;
+        await super._renderValue(node, valueContainer);
     }
 }

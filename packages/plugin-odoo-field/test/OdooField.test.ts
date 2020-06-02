@@ -1,11 +1,9 @@
 import { expect } from 'chai';
-import { describePlugin, testEditor, nextTickFrame } from '../../utils/src/testUtils';
+import { describePlugin, testEditor } from '../../utils/src/testUtils';
 import { OdooField } from '../../plugin-odoo-field/src/OdooField';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { Char } from '../../plugin-char/src/Char';
 import JWEditor from '../../core/src/JWEditor';
-import { cloneChildrenDeep } from '../src/OdooFieldDomParser';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { fieldValidators } from '../src/OdooField';
 
 const insertText = async function(editor: JWEditor, text: string): Promise<void> {
@@ -123,7 +121,6 @@ describePlugin(OdooField, () => {
                 ].join(''),
                 stepFunction: async editor => {
                     await insertText(editor, 'a');
-                    await nextTickFrame();
                 },
                 contentAfter: [
                     '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field jw-odoo-field-invalid">10a[]</span></p>',
@@ -165,7 +162,6 @@ describePlugin(OdooField, () => {
                     stepFunction: async editor => {
                         await insertText(editor, 'a');
                     },
-                    debug: true,
                     contentAfter: [
                         '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html" class="jw-focus jw-odoo-field"><h2>Title</h2><p>Contenta[].</p></div>',
                         '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html" class="jw-focus jw-odoo-field"><h2>Title</h2><p>Contenta.</p></div>',
@@ -230,21 +226,6 @@ describePlugin(OdooField, () => {
                     ].join(''),
                 });
             });
-        });
-    });
-
-    describe('cloneChildrenDeep()', () => {
-        it('should duplicate a VNode', async () => {
-            const container = new ContainerNode();
-            const vNodeChild = new ContainerNode();
-            container.append(vNodeChild);
-            const vNodeChildChild = new ContainerNode();
-            vNodeChild.append(vNodeChildChild);
-            const newContainer = cloneChildrenDeep(container);
-            expect(newContainer.length).to.equal(1);
-            expect(newContainer[0]).to.not.equal(vNodeChild);
-            expect(newContainer[0].children.length).to.equal(1);
-            expect(newContainer[0].children[0]).to.not.equal(vNodeChildChild);
         });
     });
 });

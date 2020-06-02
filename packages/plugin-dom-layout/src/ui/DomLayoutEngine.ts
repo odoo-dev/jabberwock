@@ -34,8 +34,6 @@ export class DomLayoutEngine extends LayoutEngine {
     location: [Node, DomZonePosition];
     locations: Record<ComponentId, DomLayoutLocation> = {};
 
-    beforeRenderInEditable: Function[] = [];
-
     defaultRootComponent: ComponentDefinition = {
         id: 'editor',
         render(editor: JWEditor): Promise<VNode[]> {

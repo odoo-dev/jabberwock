@@ -1,5 +1,5 @@
 import { OdooFieldDomParser } from './OdooFieldDomParser';
-import { OdooFieldNodeCurrencyPosition, OdooMonetaryFieldNode } from './OdooMonetaryFieldNode';
+import { OdooMonetaryFieldNode, CurrencyPosition } from './OdooMonetaryFieldNode';
 import { OdooFieldInfo } from './OdooField';
 
 // TODO: retrieve the current decimal of the current lang in odoo
@@ -15,45 +15,42 @@ export class OdooMonetaryFieldDomParser extends OdooFieldDomParser {
         );
     };
 
-    constructor(engine) {
-        super(engine);
-    }
-
-    async _getNode(
+    async _parseField(
         element: HTMLElement,
-        odooReactiveField: OdooFieldInfo,
+        fieldInfo: OdooFieldInfo,
     ): Promise<OdooMonetaryFieldNode> {
         const amountElement = element.querySelector('.oe_currency_value');
-        const childNodesToParse = amountElement.childNodes;
-
-        const currency = (amountElement.previousSibling || amountElement.nextSibling).textContent;
+        const currencyElement = amountElement.previousSibling || amountElement.nextSibling;
 
         const fieldNode = new OdooMonetaryFieldNode({
             htmlTag: element.tagName,
-            fieldInfo: odooReactiveField,
-            currencyValue: currency,
-            currencyPosition: amountElement.previousSibling
-                ? OdooFieldNodeCurrencyPosition.BEFORE
-                : OdooFieldNodeCurrencyPosition.AFTER,
+            fieldInfo: {
+                ...fieldInfo,
+                currencyValue: currencyElement.textContent,
+                currencyPosition: amountElement.previousSibling
+                    ? CurrencyPosition.BEFORE
+                    : CurrencyPosition.AFTER,
+            },
         });
+
+        const childNodesToParse = amountElement.childNodes;
         const children = await this.engine.parse(...childNodesToParse);
         fieldNode.append(...children);
+
         return fieldNode;
     }
 
     /**
      * @override
      */
-    _getValueFromParsing(element: HTMLElement): string {
-        const amountElement = element.querySelector('.oe_currency_value');
-        return amountElement.textContent;
-    }
-
-    /**
-     * @override
-     */
-    _getValueFromRedering(element: HTMLElement): string {
-        console.log('getFromElement', element);
-        return this._getValueFromParsing(element);
+    _parseValue(source: HTMLElement): string;
+    _parseValue(source: OdooMonetaryFieldNode): string;
+    _parseValue(source: HTMLElement | OdooMonetaryFieldNode): string {
+        if (source instanceof HTMLElement) {
+            const amountElement = source.querySelector('.oe_currency_value');
+            return amountElement.textContent;
+        } else {
+            return super._parseValue(source);
+        }
     }
 }

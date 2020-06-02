@@ -1,23 +1,16 @@
 import { OdooFieldNode } from './OdooFieldNode';
 import { OdooFieldInfo } from './OdooField';
-export enum OdooFieldNodeCurrencyPosition {
+
+export enum CurrencyPosition {
     BEFORE = 'BEFORE',
     AFTER = 'AFTER',
 }
 
-export class OdooMonetaryFieldNode extends OdooFieldNode {
+export interface OdooMonetaryFieldInfo extends OdooFieldInfo {
     currencyValue: string;
-    currencyPosition: OdooFieldNodeCurrencyPosition;
-
-    constructor(
-        params: ConstructorParameters<typeof OdooFieldNode>[0] & {
-            fieldInfo: OdooFieldInfo;
-            currencyValue: string;
-            currencyPosition: OdooFieldNodeCurrencyPosition;
-        },
-    ) {
-        super(params);
-        this.currencyPosition = params.currencyPosition;
-        this.currencyValue = params.currencyValue;
-    }
+    currencyPosition: CurrencyPosition;
 }
+
+export class OdooMonetaryFieldNode<
+    T extends OdooMonetaryFieldInfo = OdooMonetaryFieldInfo
+> extends OdooFieldNode<T> {}
