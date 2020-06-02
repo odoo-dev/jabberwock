@@ -1,5 +1,5 @@
 import { OdooFieldDomParser } from './OdooFieldDomParser';
-import { OdooFieldNodeCurrencyPosition, OMonetaryFieldNode } from './OMonetaryFieldNode';
+import { OdooFieldNodeCurrencyPosition, OdooMonetaryFieldNode } from './OdooMonetaryFieldNode';
 import { OdooFieldInfo } from './OdooField';
 
 // TODO: retrieve the current decimal of the current lang in odoo
@@ -22,13 +22,13 @@ export class OdooMonetaryFieldDomParser extends OdooFieldDomParser {
     async _getNode(
         element: HTMLElement,
         odooReactiveField: OdooFieldInfo,
-    ): Promise<OMonetaryFieldNode> {
+    ): Promise<OdooMonetaryFieldNode> {
         const amountElement = element.querySelector('.oe_currency_value');
         const childNodesToParse = amountElement.childNodes;
 
         const currency = (amountElement.previousSibling || amountElement.nextSibling).textContent;
 
-        const fieldNode = new OMonetaryFieldNode({
+        const fieldNode = new OdooMonetaryFieldNode({
             htmlTag: element.tagName,
             fieldInfo: odooReactiveField,
             currencyValue: currency,

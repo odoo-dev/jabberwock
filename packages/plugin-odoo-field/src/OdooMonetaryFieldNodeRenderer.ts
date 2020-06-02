@@ -1,9 +1,9 @@
 import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
-import { OMonetaryFieldNode, OdooFieldNodeCurrencyPosition } from './OMonetaryFieldNode';
+import { OdooMonetaryFieldNode, OdooFieldNodeCurrencyPosition } from './OdooMonetaryFieldNode';
 export class OdooMonetaryFieldDomRenderer extends OdooFieldDomRenderer {
-    predicate = OMonetaryFieldNode;
+    predicate = OdooMonetaryFieldNode;
 
-    _getContent(container: HTMLElement, node: OMonetaryFieldNode): HTMLElement {
+    _getContent(container: HTMLElement, node: OdooMonetaryFieldNode): HTMLElement {
         const fieldContainer = document.createElement('span');
         fieldContainer.classList.add('oe_currency_value');
         container.appendChild(fieldContainer);
