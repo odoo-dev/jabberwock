@@ -17,6 +17,8 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 import { LinkFormat } from '../../plugin-link/src/LinkFormat';
+import { Inline } from '../../plugin-inline/src/Inline';
+import { CharNode } from '../../plugin-char/src/CharNode';
 
 export interface RemoveClassParams extends CommandParams {
     elements: VElement[];
@@ -25,6 +27,12 @@ export interface RemoveClassParams extends CommandParams {
 export interface AddClassParams extends CommandParams {
     elements?: VElement[];
     classes: string[];
+}
+export interface AddClassToLinkParams extends CommandParams {
+    /**
+     * The class attribute to attatch to the link.
+     */
+    classes: string;
 }
 export interface ToggleClassParams {
     nodes: VNode[];
@@ -70,6 +78,25 @@ export interface ReplaceParams {
     nodes: VNode[];
     html: string;
 }
+interface SelectedLinkInfo {
+    /**
+     * The selected text
+     */
+    text: string;
+    /**
+     * The url of the link
+     */
+    url: string;
+    /**
+     * The css class associated with the link
+     */
+    class: string;
+    /**
+     * The target of an html anchor.
+     * Could be "_blank", "_self" ,"_parent", "_top" or the framename.
+     */
+    target: string;
+}
 
 export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
@@ -83,6 +110,9 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         },
         addClasses: {
             handler: this.addClasses.bind(this),
+        },
+        addClassToLink: {
+            handler: this.addClassToLink.bind(this),
         },
         toggleClass: {
             handler: this.toggleClass.bind(this),
@@ -114,11 +144,8 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         getRecordCover: {
             handler: this.getRecordCover.bind(this),
         },
-        getSelectedText: {
-            handler: this.getSelectedText.bind(this),
-        },
-        getSelectedLink: {
-            handler: this.getSelectedLink.bind(this),
+        getLinkInfo: {
+            handler: this.getLinkInfo.bind(this),
         },
     };
 
@@ -151,6 +178,12 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             for (const className of params.classes) {
                 node.modifiers.get(Attributes).classList.add(className);
             }
+        }
+    }
+    addClassToLink(params: AddClassToLinkParams): void {
+        const nodes = params.context.range.targetedNodes(InlineNode);
+        for (const node of nodes) {
+            node.modifiers.get(Attributes).set('class', params.classes);
         }
     }
     toggleClass(params: ToggleClassParams): void {
@@ -266,6 +299,22 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
                 modifier => modifier instanceof LinkFormat,
             ) as LinkFormat);
         return linkFormat ? linkFormat.url : '';
+    }
+    getLinkInfo(params: CommandParams): SelectedLinkInfo {
+        const targettedNodes = params.context.range.targetedNodes(CharNode);
+        const text = targettedNodes.map(x => x.char).join('');
+        //
+        const inline = this.editor.plugins.get(Inline);
+        const modifiers = inline.getCurrentModifiers(params.context.range);
+        return {
+            text: text,
+            url: modifiers.get(LinkFormat)?.url,
+            class: modifiers.get(Attributes)?.get('class'),
+            target: modifiers
+                .get(LinkFormat)
+                ?.modifiers?.get(Attributes)
+                ?.get('target'),
+        } as SelectedLinkInfo;
     }
 
     //--------------------------------------------------------------------------

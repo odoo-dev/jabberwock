@@ -1,7 +1,7 @@
 import { Format } from '../../plugin-inline/src/Format';
 
 export class LinkFormat extends Format {
-    constructor(public url = '#') {
+    constructor(public url = '#', public target = '') {
         super('A');
     }
 
