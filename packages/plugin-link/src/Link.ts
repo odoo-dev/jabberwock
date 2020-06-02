@@ -78,14 +78,14 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             await layout.remove('link');
             await layout.add('link');
 
-            return this.editor.execCommand('show', { componentID: 'link' });
+            return this.editor.execCommand<Layout>('show', { componentID: 'link' });
         }
 
         // Otherwise create a link and insert it.
         const link = new LinkFormat(params.url);
         return this.editor.execCommand<Char>('insertText', {
             text: params.label || link.url,
-            formats: new Modifiers(link),
+            modifiers: new Modifiers(link),
         });
     }
     unlink(params: LinkParams): void {

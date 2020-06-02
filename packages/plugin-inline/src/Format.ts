@@ -2,16 +2,31 @@ import { Modifier } from '../../core/src/Modifier';
 import { Modifiers } from '../../core/src/Modifiers';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
+/**
+ * A Format might represent DOM inline nodes (a, b, strong) that were parsed or
+ * the DOM inline node (a, b, strong) that we might render.
+ */
 export class Format extends Modifier {
     htmlTag: string; // TODO: remove this reference to DOM.
+    /**
+     * The modifiers for a format is `Attribute`.
+     * Used to be rendered.
+     */
     modifiers = new Modifiers();
+
     constructor(htmlTag?: string) {
         super();
         this.htmlTag = htmlTag;
     }
+    /**
+     * @override
+     */
     get name(): string {
         return this.htmlTag.toLowerCase();
     }
+    /**
+     * @override
+     */
     toString(): string {
         const nonEmptyAttributes = this.modifiers.filter(
             modifier => !(modifier instanceof Attributes) || !!modifier.length,
@@ -31,6 +46,11 @@ export class Format extends Modifier {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Render the current format into a dom Node.
+     *
+     * Meant to be used with `FormatDomRenderer`.
+     */
     render(): Element {
         const domNode = document.createElement(this.htmlTag);
         const attributes = this.modifiers.find(Attributes);
@@ -51,12 +71,18 @@ export class Format extends Modifier {
         }
         return domNode;
     }
+    /**
+     * @override
+     */
     clone(): this {
         const clone = new this.constructor();
         clone.htmlTag = this.htmlTag;
         clone.modifiers = this.modifiers.clone();
         return clone;
     }
+    /**
+     * @override
+     */
     isSameAs(otherFormat: Format): boolean {
         const aModifiers = this.modifiers;
         const bModifiers = otherFormat?.modifiers;

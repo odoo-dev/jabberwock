@@ -1,6 +1,12 @@
 import { Modifier } from './Modifier';
 import { Constructor, isConstructor } from '../../utils/src/utils';
 
+/**
+ * When parsing dom elements, modifiers can be DOM inline nodes (a, b, strong).
+ *
+ * The order of modifiers are important because it impact the way they will
+ * be rendered.
+ */
 export class Modifiers {
     private _contents: Modifier[];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
@@ -86,7 +92,6 @@ export class Modifiers {
      * for `this._contents`.
      *
      * @see Array.find
-     * @param modifier
      */
     find<T extends Modifier>(callback: (modifier: T) => boolean): T;
     find<T extends Modifier>(modifier: T | Constructor<T>): T;
@@ -110,8 +115,6 @@ export class Modifiers {
      * modifier class or create one, append it and return it.
      * If the modifier passed is a modifier instance, return it if it was
      * present in the array.
-     *
-     * @param modifier
      */
     get<T extends Modifier>(modifier: T | Constructor<T>): T {
         let found = this.find(modifier);

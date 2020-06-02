@@ -1,7 +1,7 @@
 import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode';
 import { LinkFormat } from '../LinkFormat';
-import { LinkParams } from '../Link';
+import { Link } from '../Link';
 import { Layout } from '../../../plugin-layout/src/Layout';
 import { useState } from '@odoo/owl';
 
@@ -18,10 +18,10 @@ export class LinkComponent<T = {}> extends OwlComponent<T> {
     //--------------------------------------------------------------------------
 
     async saveLink(): Promise<void> {
-        await this.env.editor.execCommand('link', {
+        await this.env.editor.execCommand<Link>('link', {
             url: this.state.url,
             label: this.state.label,
-        } as LinkParams);
+        });
         this.env.editor.plugins.get(Layout).remove('link');
         this.destroy();
     }
