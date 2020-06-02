@@ -1,17 +1,10 @@
 import { AbstractNode } from './AbstractNode';
 import { VNode, Predicate, isLeaf } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
-import { EventMixin } from '../../../utils/src/EventMixin';
 
 export class ContainerNode extends AbstractNode {
     parent: ContainerNode;
     readonly childVNodes: VNode[] = [];
-    vevent = new EventMixin();
-
-    constructor() {
-        super();
-        this.vevent.parent = (): EventMixin => this.parent?.vevent;
-    }
 
     //--------------------------------------------------------------------------
     // Browsing children.
@@ -164,7 +157,7 @@ export class ContainerNode extends AbstractNode {
             this._insertAtIndex(child, 0);
         }
         if (children.find(child => child.tangible)) {
-            this.vevent.fire('childList');
+            this.trigger('childList');
         }
     }
     /**
@@ -175,7 +168,7 @@ export class ContainerNode extends AbstractNode {
             this._insertAtIndex(child, this.childVNodes.length);
         }
         if (children.find(child => child.tangible)) {
-            this.vevent.fire('childList');
+            this.trigger('childList');
         }
     }
     /**
@@ -188,7 +181,7 @@ export class ContainerNode extends AbstractNode {
         }
         this._insertAtIndex(node, index);
         if (node.tangible) {
-            this.vevent.fire('childList');
+            this.trigger('childList');
         }
     }
     /**
@@ -201,7 +194,7 @@ export class ContainerNode extends AbstractNode {
         }
         this._insertAtIndex(node, index + 1);
         if (node.tangible) {
-            this.vevent.fire('childList');
+            this.trigger('childList');
         }
     }
     /**
@@ -340,7 +333,7 @@ export class ContainerNode extends AbstractNode {
     _removeAtIndex(index: number): void {
         const child = this.childVNodes.splice(index, 1)[0];
         if (child.tangible) {
-            this.vevent.fire('childList');
+            this.trigger('childList');
         }
         child.parent = undefined;
     }

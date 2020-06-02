@@ -3,10 +3,13 @@
  */
 export class EventMixin {
     _eventCallbacks: Record<string, Function[]> = {};
-    parent: () => EventMixin;
     _callbackWorking: Set<Function> = new Set();
+
     /**
      * Subscribe to an event with a callback.
+     *
+     * @param eventName
+     * @param callback
      */
     on(eventName: string, callback: Function): void {
         if (!this._eventCallbacks[eventName]) {
@@ -17,8 +20,11 @@ export class EventMixin {
 
     /**
      * Fire an event for of this object and all ancestors.
+     *
+     * @param eventName
+     * @param args
      */
-    async fire<A>(eventName: string, args?: A): Promise<void> {
+    async trigger<A>(eventName: string, args?: A): Promise<void> {
         if (this._eventCallbacks[eventName]) {
             for (const callback of this._eventCallbacks[eventName]) {
                 if (!this._callbackWorking.has(callback)) {
@@ -27,10 +33,6 @@ export class EventMixin {
                     this._callbackWorking.delete(callback);
                 }
             }
-        }
-
-        if (this.parent) {
-            await this.parent()?.fire(eventName, args);
         }
     }
 }
