@@ -13,6 +13,6 @@ export class ZoneXmlDomParser extends AbstractParser<Node> {
     };
 
     async parse(item: Element): Promise<VNode[]> {
-        return [new ZoneNode([item.getAttribute('t-zone')])];
+        return [new ZoneNode({ managedZones: [item.getAttribute('t-zone')] })];
     }
 }

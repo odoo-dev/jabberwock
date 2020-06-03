@@ -15,7 +15,7 @@ export abstract class LayoutEngine {
     static readonly id: LayoutEngineId;
     protected componentDefinitions: Record<ComponentId, ComponentDefinition> = {};
     protected componentZones: Record<ComponentId, ZoneIdentifier> = {};
-    readonly root = new ZoneNode(['root']);
+    readonly root = new ZoneNode({ managedZones: ['root'] });
 
     components: Map<ComponentId, VNode[]> = new Map();
 
@@ -158,6 +158,22 @@ export abstract class LayoutEngine {
         }
         return components;
     }
+    /**
+     * Check if the string is a zone id where at leat one component will be
+     * automatically added.
+     *
+     * @param zoneId
+     */
+    hasConfiguredComponents(zoneId: string): boolean {
+        // Check the zone list.
+        for (const componentId in this.componentZones) {
+            if (this.componentZones[componentId] === zoneId) {
+                return true;
+            }
+        }
+        // The components all have at least one zone equal to their id.
+        return !!this.componentDefinitions[zoneId];
+    }
 
     //--------------------------------------------------------------------------
     // Private
@@ -175,18 +191,22 @@ export abstract class LayoutEngine {
 
             for (const componentId in this.componentDefinitions) {
                 const zoneId = this.componentZones[componentId];
-                if (zoneId) {
-                    const layoutComponent = this.componentDefinitions[componentId];
-                    // Filter the zones corresponding to the given identifier.
-                    let matchingZones = zones.filter(zone => zone.managedZones.includes(zoneId));
-                    const components = this.components.get(componentId);
-                    if (components) {
-                        // Excluding the ones that are contained within the given node.
-                        // avoid loop with child in itself.
-                        matchingZones = matchingZones.filter(
-                            zone => !zone.closest(ancestor => components.includes(ancestor)),
-                        );
-                    }
+                const layoutComponent = this.componentDefinitions[componentId];
+                // Filter the zones corresponding to the given identifier.
+                let matchingZones = zones.filter(
+                    zone =>
+                        zone.managedZones.includes(zoneId) ||
+                        zone.managedZones.includes(componentId),
+                );
+                const components = this.components.get(componentId);
+                if (components) {
+                    // Excluding the ones that are contained within the given node.
+                    // Avoid loop with child in itself.
+                    matchingZones = matchingZones.filter(
+                        zone => !zone.closest(ancestor => components.includes(ancestor)),
+                    );
+                }
+                if (matchingZones.length) {
                     stack.push(
                         ...(await this._instantiateComponent(layoutComponent, matchingZones)),
                     );

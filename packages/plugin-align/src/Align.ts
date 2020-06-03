@@ -5,6 +5,8 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
 
 export enum AlignType {
     LEFT = 'left',
@@ -24,7 +26,7 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             handler: this.align.bind(this),
         },
     };
-    loadables: Loadables<Keymap> = {
+    loadables: Loadables<Keymap & Layout> = {
         shortcuts: [
             {
                 pattern: 'Ctrl+Shift+L',
@@ -46,6 +48,38 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
                 commandId: 'align',
                 commandArgs: { type: AlignType.JUSTIFY },
             },
+        ],
+        components: [
+            {
+                id: 'AlignLeftButton',
+                async render(): Promise<ActionableNode[]> {
+                    return [alignButton(AlignType.LEFT)];
+                },
+            },
+            {
+                id: 'AlignCenterButton',
+                async render(): Promise<ActionableNode[]> {
+                    return [alignButton(AlignType.CENTER)];
+                },
+            },
+            {
+                id: 'AlignRightButton',
+                async render(): Promise<ActionableNode[]> {
+                    return [alignButton(AlignType.RIGHT)];
+                },
+            },
+            {
+                id: 'AlignJustifyButton',
+                async render(): Promise<ActionableNode[]> {
+                    return [alignButton(AlignType.JUSTIFY)];
+                },
+            },
+        ],
+        componentZones: [
+            ['AlignLeftButton', 'actionables'],
+            ['AlignCenterButton', 'actionables'],
+            ['AlignRightButton', 'actionables'],
+            ['AlignJustifyButton', 'actionables'],
         ],
     };
 
@@ -85,4 +119,29 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             }
         }
     }
+}
+
+function alignButton(type: AlignType): ActionableNode {
+    function isAligned(node: VNode, type: AlignType): boolean {
+        const alignedAncestor = node.ancestor(Align.isAligned);
+        return Align.isAligned(alignedAncestor || node, type);
+    }
+
+    const button = new ActionableNode({
+        name: 'align' + type,
+        label: 'Align ' + type,
+        commandId: 'align',
+        commandArgs: { type: type } as AlignParams,
+        selected: (editor: JWEditor): boolean => {
+            return editor.selection.range
+                .targetedNodes(node => node.is(ContainerNode))
+                .every(node => isAligned(node, type));
+        },
+    });
+    button.modifiers.append(
+        new Attributes({
+            class: 'fas fa-align-' + type + ' fa-fw',
+        }),
+    );
+    return button;
 }

@@ -288,8 +288,8 @@ describe('DomLayout', () => {
         it('should add 2 templates after & after the target (use VNode)', async () => {
             const a = new VElement({ htmlTag: 'a-a' });
             a.append(new VElement({ htmlTag: 'p' }));
-            a.append(new ZoneNode(['main']));
-            a.append(new ZoneNode(['default']));
+            a.append(new ZoneNode({ managedZones: ['main'] }));
+            a.append(new ZoneNode({ managedZones: ['default'] }));
 
             const b = new VElement({ htmlTag: 'b-b' });
             b.append(new VElement({ htmlTag: 'p' }));
@@ -607,19 +607,11 @@ describe('DomLayout', () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<v>abc<w>de[f<x>ghi<y>jkl<z>mno</z>pqr</y>stu</x>vw</w>xy]z</v>',
                 stepFunction: () => {
-                    /* eslint-disable prettier/prettier */
-                    expect(document.querySelector('jw-container-test').innerHTML).to.equal(
-                        '<jw-editor>' +
-                            '<jw-header></jw-header>' +
-                            '<jw-body>' +
-                            '<jw-test contenteditable="true">' +
-                                '<v>abc<w>def<x>ghi<y>jkl<z>mno</z>pqr</y>stu</x>vw</w>xyz</v>' +
-                            '</jw-test>' +
-                            '</jw-body>' +
-                            '<jw-footer></jw-footer>' +
-                        '</jw-editor>',
+                    expect(document.querySelector('jw-body').innerHTML).to.equal(
+                        '<jw-test contenteditable="true">' +
+                            '<v>abc<w>def<x>ghi<y>jkl<z>mno</z>pqr</y>stu</x>vw</w>xyz</v>' +
+                            '</jw-test>',
                     );
-                    /* eslint-enable prettier/prettier */
                 },
                 contentAfter: '<v>abc<w>de[f<x>ghi<y>jkl<z>mno</z>pqr</y>stu</x>vw</w>xy]z</v>',
             });
@@ -1616,7 +1608,7 @@ describe('DomLayout', () => {
                             FormatClass: BoldFormat,
                         });
 
-                        expect(mutationNumber).to.equal(2, 'add <b>, move <i>');
+                        expect(mutationNumber).to.equal(3, 'add <b>, move <i>, toolbar update');
 
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                         const editable = domEngine.components.get('editable')[0];

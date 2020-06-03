@@ -54,6 +54,7 @@ export class DomReconciliationEngine {
     // old one, and the diff are consumed when we redraw the node.
     private readonly _diff: Record<DomObjectID, DiffDomObject> = {};
     private _rendererTreated = new Set<GenericDomObject | DomObjectID>();
+    private _domUpdated = new Set<DomObjectID>();
 
     update(
         rendered: Map<VNode, DomObject>,
@@ -253,6 +254,14 @@ export class DomReconciliationEngine {
         for (const domNode of allOldDomNodes) {
             if (!this._fromDom.get(domNode) && domNode.parentNode) {
                 domNode.parentNode.removeChild(domNode);
+            }
+        }
+
+        // Call attach methods for the changed domNodes.
+        for (const id of this._domUpdated) {
+            const object = this._objects[id];
+            if (typeof object?.object.attach === 'function') {
+                object.object.attach(...object.dom);
             }
         }
     }
@@ -1249,10 +1258,7 @@ export class DomReconciliationEngine {
         }
 
         delete this._diff[id];
-
-        if (typeof domObject.attach === 'function') {
-            domObject.attach(...object.dom);
-        }
+        this._domUpdated.add(id);
 
         return newNode;
     }

@@ -76,10 +76,25 @@ export class Dispatcher {
      * @param id The identifier of the command to hook.
      * @param hook The callback that will be executed.
      */
-    registerCommandHook(id: CommandIdentifier, hook?: CommandHook): void {
+    registerCommandHook(id: CommandIdentifier, hook: CommandHook): void {
         if (!this.commandHooks[id]) {
             this.commandHooks[id] = [];
         }
         this.commandHooks[id].push(hook);
+    }
+
+    /**
+     * Remove a callback that will be executed for each `execCommand` call.
+     *
+     * @param id The identifier of the command to hook.
+     * @param hook The callback that will be removed.
+     */
+    removeCommandHook(id: CommandIdentifier, hook: CommandHook): void {
+        if (this.commandHooks[id]) {
+            const index = this.commandHooks[id].indexOf(hook);
+            if (index !== -1) {
+                this.commandHooks[id].splice(index, 1);
+            }
+        }
     }
 }

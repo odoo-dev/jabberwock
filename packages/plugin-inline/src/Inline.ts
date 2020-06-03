@@ -96,7 +96,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     isAllFormat(FormatClass: Constructor<Modifier>, range = this.editor.selection.range): boolean {
         if (range.isCollapsed()) {
             if (!this.cache.modifiers) {
-                this.cache.modifiers = this.getCurrentModifiers(range);
+                return !!this.getCurrentModifiers(range).find(FormatClass);
             }
             return !!this.cache.modifiers.find(FormatClass);
         } else {

@@ -6,4 +6,5 @@
 <div class="editor-header">
     <b>header (prepend in the body), zone "tools" just after this bold tag</b>
     <t t-zone="tools"/>
+    <t-range><t t-zone="tools"/></t-range>
 </div>

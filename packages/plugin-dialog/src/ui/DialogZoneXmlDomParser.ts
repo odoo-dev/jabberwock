@@ -17,6 +17,6 @@ export class DialogZoneXmlDomParser extends AbstractParser<Node> {
         for (const child of item.querySelectorAll('t[t-zone]')) {
             zones.push(child.getAttribute('t-zone'));
         }
-        return [new DialogZoneNode(zones)];
+        return [new DialogZoneNode({ managedZones: zones })];
     }
 }
