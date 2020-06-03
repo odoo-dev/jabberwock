@@ -224,13 +224,13 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
         if ('tag' in item) {
             const attributes = node.modifiers.find(Class);
             if (attributes) {
-                const attr = {};
+                const attr = item.attributes || {};
                 for (const name of attributes.keys()) {
                     const value = attributes.get(name);
-                    if (item.attributes && name in item.attributes) {
+                    if (name in attr) {
                         attr[name] = item.attributes[name];
                         if (name === 'class') {
-                            attr[name] += ' ' + value;
+                            attr[name] = (attr[name] + ' ' + value).trim();
                         } else if (name === 'style') {
                             attr[name] += '; ' + value;
                         }

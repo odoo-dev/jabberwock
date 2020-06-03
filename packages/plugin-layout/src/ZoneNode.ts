@@ -6,9 +6,11 @@ export type ZoneIdentifier = string;
 export class ZoneNode extends ContainerNode {
     hidden: Map<VNode, boolean> = new Map();
     breakable = false;
+    managedZones: ZoneIdentifier[];
 
-    constructor(public managedZones: ZoneIdentifier[]) {
+    constructor(params: { managedZones: ZoneIdentifier[] }) {
         super();
+        this.managedZones = params.managedZones;
     }
 
     get name(): string {

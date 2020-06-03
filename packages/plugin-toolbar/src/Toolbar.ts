@@ -1,10 +1,17 @@
-import JWEditor, { Loadables } from '../../core/src/JWEditor';
+import { Loadables } from '../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { CommandIdentifier, CommandParams } from '../../core/src/Dispatcher';
-import { Owl } from '../../plugin-owl/src/Owl';
-import { ToolbarComponent } from './components/ToolbarComponent';
+import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { ToolbarZoneXmlDomParser } from './ToolbarXmlDomParser';
+import { ToolbarZoneDomObjectRenderer } from './ToolbarDomObjectRenderer';
+import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
+import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
+import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
+import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRenderer';
+import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
+import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
+import { ActionableNode } from './ActionableNode';
 
 import '!style-loader!css-loader!@fortawesome/fontawesome-free/css/all.css';
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff';
@@ -17,19 +24,17 @@ import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/web
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2';
 import '!file-loader?name=./fonts/[name].[ext]!@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf';
 
-import toolbarTemplates from '../assets/Toolbar.xml';
 import '../assets/Toolbar.css';
+import { ToolbarNode } from './ToolbarNode';
+import { ActionableGroupNode } from './ActionableGroupNode';
+import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
+import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
+import { LabelNode } from './LabelNode';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
-export interface Button {
-    title: string;
-    class?: string;
-    commandId: CommandIdentifier;
-    commandArgs?: CommandParams;
-    selected?: (editor: JWEditor) => boolean;
-    enabled?: (editor: JWEditor) => boolean;
-}
-export type ToolbarItem = Button | string | Array<Button | string>;
-export type ToolbarGroup = ToolbarItem[];
+export type ToolbarItem = ActionableNode | string | string[];
+export type ToolbarOptGroup = ToolbarItem[];
+export type ToolbarGroup = Array<ToolbarItem | ToolbarOptGroup>;
 export type ToolbarLayout = Array<ToolbarGroup | string>;
 
 export interface ToolbarConfig extends JWPluginConfig {
@@ -37,17 +42,59 @@ export interface ToolbarConfig extends JWPluginConfig {
 }
 
 export class Toolbar<T extends ToolbarConfig = {}> extends JWPlugin<T> {
-    static dependencies = [Owl];
-    readonly loadables: Loadables<Layout & Owl> = {
+    static dependencies = [DomLayout];
+    readonly loadables: Loadables<Parser & Renderer & Layout> = {
+        parsers: [ToolbarZoneXmlDomParser],
+        renderers: [
+            ToolbarZoneDomObjectRenderer,
+            ActionableGroupSelectItemDomObjectRenderer,
+            ActionableGroupDomObjectRenderer,
+            ActionableDomObjectRenderer,
+            LabelDomObjectRenderer,
+            SeparatorDomObjectRenderer,
+        ],
         components: [
             {
                 id: 'toolbar',
-                async render(): Promise<OwlNode[]> {
-                    return [new OwlNode(ToolbarComponent, {})];
+                render: async (): Promise<ToolbarNode[]> => {
+                    const toolbar = new ToolbarNode();
+                    this.addToolbarItems(toolbar, this.configuration?.layout || []);
+                    return [toolbar];
                 },
             },
         ],
         componentZones: [['toolbar', 'tools']],
-        owlTemplates: [toolbarTemplates],
     };
+    configuration = { layout: [], ...this.configuration };
+    addToolbarItems(toolbar: ToolbarNode, layout: ToolbarLayout): void;
+    addToolbarItems(group: ActionableGroupNode, layoutGroup: ToolbarGroup | string[]): void;
+    addToolbarItems(
+        node: ToolbarNode | ActionableGroupNode,
+        items: ToolbarLayout | ToolbarGroup | ToolbarOptGroup | string[],
+    ): void {
+        const domEngine = this.editor.plugins.get(Layout).engines.dom;
+
+        for (const item of items) {
+            if (typeof item === 'string') {
+                if (item === '|') {
+                    node.append(new SeparatorNode());
+                } else if (domEngine.hasConfiguredComponents(item)) {
+                    const last = node.lastChild();
+                    if (last instanceof ZoneNode) {
+                        last.managedZones.push(item);
+                    } else {
+                        node.append(new ZoneNode({ managedZones: [item] }));
+                    }
+                } else {
+                    node.append(new LabelNode({ label: item }));
+                }
+            } else if (item instanceof AbstractNode) {
+                node.append(node);
+            } else {
+                const group = new ActionableGroupNode();
+                this.addToolbarItems(group, item);
+                node.append(group);
+            }
+        }
+    }
 }

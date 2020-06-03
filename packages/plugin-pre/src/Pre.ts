@@ -1,5 +1,5 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { Loadables } from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { PreXmlDomParser } from './PreXmlDomParser';
@@ -9,6 +9,9 @@ import { PreNode } from './PreNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { PreCharDomObjectRenderer } from './PreCharDomObjectRenderer';
 import { PreSeparatorDomObjectRenderer } from './PreSeparatorDomObjectRenderer';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -16,9 +19,33 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
             handler: this.applyPreStyle,
         },
     };
-    readonly loadables: Loadables<Parser & Renderer> = {
+    readonly loadables: Loadables<Parser & Renderer & Layout> = {
         parsers: [PreXmlDomParser],
         renderers: [PreDomObjectRenderer, PreSeparatorDomObjectRenderer, PreCharDomObjectRenderer],
+        components: [
+            {
+                id: 'PreButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'pre',
+                        label: 'Pre',
+                        commandId: 'applyPreStyle',
+                        selected: (editor: JWEditor): boolean => {
+                            const nodes = editor.selection.range.targetedNodes();
+                            return (
+                                nodes.length &&
+                                nodes.every(node => {
+                                    return node.closest(PreNode);
+                                })
+                            );
+                        },
+                        modifiers: [new Attributes({ class: 'pre' })],
+                    });
+                    return [button];
+                },
+            },
+        ],
+        componentZones: [['PreButton', 'actionables']],
     };
 
     //--------------------------------------------------------------------------

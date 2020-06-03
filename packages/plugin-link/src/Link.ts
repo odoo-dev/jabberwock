@@ -8,7 +8,7 @@ import { Char } from '../../plugin-char/src/Char';
 import { Modifiers } from '../../core/src/Modifiers';
 import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
-import { Loadables } from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Layout } from '../../plugin-layout/src/Layout';
@@ -16,6 +16,8 @@ import linkForm from '../assets/LinkForm.xml';
 import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
 import { LinkComponent } from './components/LinkComponent';
 import { Owl } from '../../plugin-owl/src/Owl';
+import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface LinkParams extends CommandParams {
     label?: string;
@@ -62,8 +64,46 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     return [new OwlNode(LinkComponent, {})];
                 },
             },
+            {
+                id: 'LinkButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'link',
+                        label: 'Insert link',
+                        commandId: 'link',
+                        selected: (editor: JWEditor): boolean => {
+                            const range = editor.selection.range;
+                            const node = range.start.nextSibling() || range.start.previousSibling();
+                            return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+                        },
+                        modifiers: [new Attributes({ class: 'fas fa-link fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'UnlinkButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'unlink',
+                        label: 'Remove italic',
+                        commandId: 'unlink',
+                        enabled: (editor: JWEditor): boolean => {
+                            const range = editor.selection.range;
+                            const node = range.start.nextSibling() || range.start.previousSibling();
+                            return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+                        },
+                        modifiers: [new Attributes({ class: 'fas fa-unlink fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
         ],
-        componentZones: [['link', 'float']],
+        componentZones: [
+            ['link', 'float'],
+            ['LinkButton', 'actionables'],
+            ['UnlinkButton', 'actionables'],
+        ],
         owlTemplates: [linkForm],
     };
 

@@ -14,8 +14,11 @@ import { DeleteBackwardParams } from '../../core/src/Core';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { Loadables } from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { distinct } from '../../utils/src/utils';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -63,7 +66,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         deleteBackward: this.rejoin.bind(this),
         deleteForward: this.rejoin.bind(this),
     };
-    readonly loadables: Loadables<Parser & Renderer & Keymap> = {
+    readonly loadables: Loadables<Parser & Renderer & Keymap & Layout> = {
         parsers: [ListXmlDomParser, ListItemXmlDomParser],
         renderers: [ListItemDomObjectRenderer, ListDomObjectRenderer],
         shortcuts: [
@@ -94,6 +97,68 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 },
                 commandId: 'outdent',
             },
+        ],
+        components: [
+            {
+                id: 'OrderedListButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'ordered',
+                        label: 'Toggle ordered list',
+                        commandId: 'toggleList',
+                        commandArgs: { type: ListType.ORDERED } as ListParams,
+                        selected: (editor: JWEditor): boolean => {
+                            const targetedNodes = editor.selection.range.targetedNodes();
+                            return targetedNodes.every(List.isInList.bind(List, ListType.ORDERED));
+                        },
+                        modifiers: [new Attributes({ class: 'fas fa-list-ol fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'UnorderedListButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'unordered',
+                        label: 'Toggle unordered list',
+                        commandId: 'toggleList',
+                        commandArgs: { type: ListType.UNORDERED } as ListParams,
+                        selected: (editor: JWEditor): boolean => {
+                            const targetedNodes = editor.selection.range.targetedNodes();
+                            return targetedNodes.every(
+                                List.isInList.bind(List, ListType.UNORDERED),
+                            );
+                        },
+                        modifiers: [new Attributes({ class: 'fas fa-list-ul fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'CheckboxListButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'checkbox',
+                        label: 'Toggle checkbox list',
+                        commandId: 'toggleList',
+                        commandArgs: { type: ListType.CHECKLIST } as ListParams,
+                        selected: (editor: JWEditor): boolean => {
+                            const targetedNodes = editor.selection.range.targetedNodes();
+                            return targetedNodes.every(
+                                List.isInList.bind(List, ListType.CHECKLIST),
+                            );
+                        },
+                        modifiers: [new Attributes({ class: 'fas far fa-check-square fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+        ],
+        componentZones: [
+            ['OrderedListButton', 'actionables'],
+            ['UnorderedListButton', 'actionables'],
+            ['CheckboxListButton', 'actionables'],
         ],
     };
 

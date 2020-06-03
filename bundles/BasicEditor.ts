@@ -36,6 +36,7 @@ import { VNode } from '../packages/core/src/VNodes/VNode';
 import { Input } from '../packages/plugin-input/src/Input';
 import { Dialog } from '../packages/plugin-dialog/src/Dialog';
 import { FollowRange } from '../packages/plugin-dom-follow-range/src/FollowRange';
+import { Toolbar } from '../packages/plugin-toolbar/src/Toolbar';
 
 import template from './basicLayout.xml';
 import './basicLayout.css';
@@ -119,6 +120,27 @@ export class BasicEditor extends JWEditor {
                 },
             ],
             componentZones: [['editable', 'main']],
+        });
+        this.configure(Toolbar, {
+            layout: [
+                [
+                    [
+                        'ParagraphButton',
+                        'Heading1Button',
+                        'Heading2Button',
+                        'Heading3Button',
+                        'Heading4Button',
+                        'Heading5Button',
+                        'Heading6Button',
+                        'PreButton',
+                    ],
+                ],
+                ['BoldButton', 'ItalicButton', 'UnderlineButton'],
+                ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
+                ['OrderedListButton', 'UnorderedListButton', 'CheckboxListButton'],
+                ['IndentButton', 'OutdentButton'],
+                ['LinkButton', 'UnlinkButton'],
+            ],
         });
     }
 }

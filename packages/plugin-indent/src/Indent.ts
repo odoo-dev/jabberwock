@@ -10,6 +10,9 @@ import { withRange, VRange } from '../../core/src/VRange';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
@@ -27,7 +30,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             handler: this.outdent,
         },
     };
-    loadables: Loadables<Keymap> = {
+    loadables: Loadables<Keymap & Layout> = {
         shortcuts: [
             {
                 pattern: 'TAB',
@@ -37,6 +40,36 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 pattern: 'SHIFT+TAB',
                 commandId: 'outdent',
             },
+        ],
+        components: [
+            {
+                id: 'IndentButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'indent',
+                        label: 'Indent',
+                        commandId: 'indent',
+                        modifiers: [new Attributes({ class: 'fas fa-indent fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'OutdentButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'outdent',
+                        label: 'Outdent',
+                        commandId: 'outdent',
+                        modifiers: [new Attributes({ class: 'fas fa-outdent fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+        ],
+        componentZones: [
+            ['IndentButton', 'actionables'],
+            ['OutdentButton', 'actionables'],
         ],
     };
     tab = '    ';

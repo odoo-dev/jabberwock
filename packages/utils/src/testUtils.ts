@@ -156,7 +156,7 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
     const editor = new Editor();
     // Configure the plugin to add domEditable is missing but without loose
     // previous configuration.
-    editor.configure(DomEditable, {});
+    editor.load(DomEditable);
     editor.configure(DomLayout, {
         location: [target, 'replace'],
         components: [

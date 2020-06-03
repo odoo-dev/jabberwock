@@ -161,7 +161,7 @@ describe('FollowRange', async () => {
         editor.load(DomLayout, {
             components: [
                 {
-                    id: 'template',
+                    id: 'editor',
                     async render(editor: JWEditor): Promise<VNode[]> {
                         const template = `<jw-editor>
                             <t-range><t t-zone="range"/></t-range>
@@ -185,7 +185,7 @@ describe('FollowRange', async () => {
                 },
             ],
             componentZones: [
-                ['template', 'root'],
+                ['editor', 'root'],
                 ['editable', 'main'],
                 ['custom', 'range'],
             ],
