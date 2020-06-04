@@ -5,7 +5,7 @@ import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEn
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Predicate } from '../../core/src/VNodes/VNode';
 
-export class OdooFieldDomRenderer extends AbstractRenderer<Node[]> {
+export class OdooFieldDomObjectRenderer extends AbstractRenderer<Node[]> {
     static id = HtmlDomRenderingEngine.id;
     engine: HtmlDomRenderingEngine;
     predicate: Predicate = OdooFieldNode;
