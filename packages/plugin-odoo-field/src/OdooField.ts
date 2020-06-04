@@ -3,10 +3,10 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OdooFieldDomObjectRenderer } from './OdooFieldDomObjectRenderer';
-import { OdooFieldDomParser } from './OdooFieldDomParser';
+import { OdooFieldXmlDomParser } from './OdooFieldXmlDomParser';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
 import { OdooFieldMap } from './OdooFieldMap';
-import { OdooMonetaryFieldDomParser } from './OdooMonetaryFieldNodeParser';
+import { OdooMonetaryFieldXmlDomParser } from './OdooMonetaryFieldXmlDomParser';
 import { OdooMonetaryFieldDomObjectRenderer } from './OdooMonetaryFieldDomObjectRenderer';
 
 export interface OdooFieldDefinition {
@@ -31,7 +31,7 @@ export const fieldValidators = {
 
 export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer> = {
-        parsers: [OdooFieldDomParser, OdooMonetaryFieldDomParser],
+        parsers: [OdooFieldXmlDomParser, OdooMonetaryFieldXmlDomParser],
         renderers: [OdooMonetaryFieldDomObjectRenderer, OdooFieldDomObjectRenderer],
     };
 
