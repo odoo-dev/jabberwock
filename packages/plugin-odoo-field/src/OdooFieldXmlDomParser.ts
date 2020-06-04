@@ -6,7 +6,7 @@ import { OdooField } from './OdooField';
 import { OdooFieldMap } from './OdooFieldMap';
 import { CharNode } from '../../plugin-char/src/CharNode';
 
-export class OdooFieldDomParser extends AbstractParser<Node> {
+export class OdooFieldXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
     predicate = (item: Node): boolean => {
@@ -30,7 +30,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
 
     _reactiveChanges = new OdooFieldMap<OdooFieldNode>();
 
-    async parse(element: HTMLElement): Promise<OdooFieldNode[]> {
+    async parse(element: Element): Promise<OdooFieldNode[]> {
         const field: OdooFieldDefinition = {
             modelId: element.attributes['data-oe-model'].value,
             recordId: element.attributes['data-oe-id'].value,
@@ -75,7 +75,7 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
      * @param element
      * @param fieldInfo
      */
-    async _parseField(element: HTMLElement, fieldInfo: OdooFieldInfo): Promise<OdooFieldNode> {
+    async _parseField(element: Element, fieldInfo: OdooFieldInfo): Promise<OdooFieldNode> {
         const fieldNode = new OdooFieldNode({ htmlTag: element.tagName, fieldInfo });
         const children = await this.engine.parse(...element.childNodes);
         fieldNode.append(...children);
@@ -87,10 +87,10 @@ export class OdooFieldDomParser extends AbstractParser<Node> {
      *
      * @param source
      */
-    _parseValue(source: HTMLElement): string;
+    _parseValue(source: Element): string;
     _parseValue(source: OdooFieldNode): string;
-    _parseValue(source: HTMLElement | OdooFieldNode): string {
-        if (source instanceof HTMLElement) {
+    _parseValue(source: Element | OdooFieldNode): string {
+        if (source instanceof Element) {
             return source.innerHTML;
         } else {
             const chars = source.descendants(CharNode).map(child => child.char);
