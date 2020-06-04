@@ -1,6 +1,7 @@
-import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
+import { OdooFieldDomObjectRenderer } from './OdooFieldDomObjectRenderer';
 import { OdooMonetaryFieldNode, CurrencyPosition } from './OdooMonetaryFieldNode';
-export class OdooMonetaryFieldDomRenderer extends OdooFieldDomRenderer {
+
+export class OdooMonetaryFieldDomObjectRenderer extends OdooFieldDomObjectRenderer {
     predicate = OdooMonetaryFieldNode;
 
     async _renderValue(node: OdooMonetaryFieldNode, container: HTMLElement): Promise<void> {

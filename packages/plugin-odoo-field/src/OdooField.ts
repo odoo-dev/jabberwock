@@ -2,12 +2,12 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { OdooFieldDomRenderer } from './OdooFieldDomRenderer';
+import { OdooFieldDomObjectRenderer } from './OdooFieldDomObjectRenderer';
 import { OdooFieldDomParser } from './OdooFieldDomParser';
 import { ReactiveValue } from '../../utils/src/ReactiveValue';
 import { OdooFieldMap } from './OdooFieldMap';
 import { OdooMonetaryFieldDomParser } from './OdooMonetaryFieldNodeParser';
-import { OdooMonetaryFieldDomRenderer } from './OdooMonetaryFieldNodeRenderer';
+import { OdooMonetaryFieldDomObjectRenderer } from './OdooMonetaryFieldDomObjectRenderer';
 
 export interface OdooFieldDefinition {
     modelId: string;
@@ -32,7 +32,7 @@ export const fieldValidators = {
 export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [OdooFieldDomParser, OdooMonetaryFieldDomParser],
-        renderers: [OdooMonetaryFieldDomRenderer, OdooFieldDomRenderer],
+        renderers: [OdooMonetaryFieldDomObjectRenderer, OdooFieldDomObjectRenderer],
     };
 
     private _registry: OdooFieldMap<OdooFieldInfo> = new OdooFieldMap();
