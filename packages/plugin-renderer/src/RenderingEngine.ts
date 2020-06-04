@@ -90,10 +90,20 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendering
      */
-    async rendered(nodes: VNode[], rendering: [Renderer<T>, Promise<T>]): Promise<T> {
+    async rendered(nodes: VNode[], renderer: Renderer<T>, rendered: Promise<T>): Promise<T> {
         for (const node of nodes) {
-            const renderings = this.renderings.get(node) || [];
-            renderings.push(rendering);
+            let renderings = this.renderings.get(node);
+            if (!renderings) {
+                renderings = [];
+                this.renderings.set(node, renderings);
+            }
+            const index = renderings.findIndex(rendering => rendering[0] === renderer);
+            if (index === -1) {
+                renderings.push([renderer, rendered, true]);
+            } else {
+                renderings[index][1] = rendered;
+                renderings[index][2] = true;
+            }
         }
         return rendered;
     }
@@ -137,10 +147,15 @@ export class RenderingEngine<T = {}> {
         // later with the same return value as the asynchronous render call.
         const rendererProm = new Promise<T>((resolve): void => {
             Promise.resolve().then(() => {
-                nextRenderer.render(node).then(resolve);
+                const rendering = renderings.find(rendering => rendering[0] === nextRenderer);
+                const promise = rendering[2] ? rendering[1] : nextRenderer.render(node);
+                promise.then((n: T) => {
+                    rendering[2] = true;
+                    resolve(n);
+                });
             });
         });
-        renderings.push([nextRenderer, rendererProm]);
+        renderings.push([nextRenderer, rendererProm, false]);
         this.renderings.set(node, renderings);
         return rendererProm;
     }
