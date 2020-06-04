@@ -1,20 +1,22 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Predicate } from '../../core/src/VNodes/VNode';
+import { DomObjectRenderingEngine } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObjectElement } from '../../plugin-html/src/DomObjectRenderingEngine';
 
-export class OdooFieldDomObjectRenderer extends AbstractRenderer<Node[]> {
-    static id = HtmlDomRenderingEngine.id;
-    engine: HtmlDomRenderingEngine;
+export class OdooFieldDomObjectRenderer extends AbstractRenderer<DomObject> {
+    static id = DomObjectRenderingEngine.id;
+    engine: DomObjectRenderingEngine;
     predicate: Predicate = OdooFieldNode;
 
-    async render(node: OdooFieldNode): Promise<Node[]> {
-        const container = document.createElement(node.htmlTag);
-        this.engine.renderAttributes(Attributes, node, container);
-        await this._renderValue(node, container);
-        return [container];
+    async render(node: OdooFieldNode): Promise<DomObject> {
+        const domObject: DomObjectElement = { tag: node.htmlTag };
+        this.engine.renderAttributes(Attributes, node, domObject);
+        await this._renderValue(node, domObject);
+        return domObject;
     }
 
     /**
@@ -23,9 +25,17 @@ export class OdooFieldDomObjectRenderer extends AbstractRenderer<Node[]> {
      * @param node
      * @param container
      */
-    async _renderValue(node: OdooFieldNode, container: HTMLElement): Promise<void> {
-        const renderedChildren = await this.renderChildren(node);
-        container.append(...renderedChildren.flat());
+    async _renderValue(node: OdooFieldNode, container: DomObjectElement): Promise<void> {
+        // TODO CHM: not having default values is cumbersome
+        const children = container.children || [];
+        const renderedChildren = await this.engine.renderChildren(node);
+        children.push(...renderedChildren);
+        container.children = children;
+
+        // TODO CHM: not having default values is cumbersome
+        container.attributes = container.attributes || {};
+
+        const classList = container.attributes.class?.split(' ') || [];
 
         // Instances of the field containing the range are artificially focused.
         const focusedField = this.engine.editor.selection.range.start.ancestor(
@@ -33,17 +43,19 @@ export class OdooFieldDomObjectRenderer extends AbstractRenderer<Node[]> {
                 ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,
         );
         if (focusedField) {
-            container.classList.add('jw-focus');
+            classList.push('jw-focus');
         }
 
-        container.classList.add('jw-odoo-field');
+        classList.push('jw-odoo-field');
 
         if (!node.fieldInfo.isValid.get()) {
-            container.classList.add('jw-odoo-field-invalid');
+            classList.push('jw-odoo-field-invalid');
         }
 
         if (!node.descendants(AtomicNode).length) {
-            container.classList.add('jw-odoo-field-empty');
+            classList.push('jw-odoo-field-empty');
         }
+
+        container.attributes.class = classList.join(' ');
     }
 }
