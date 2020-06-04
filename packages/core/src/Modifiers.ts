@@ -268,7 +268,7 @@ export class Modifiers {
      * @param callbackfn
      */
     some(callbackfn: (value: Modifier, index: number, array: Modifier[]) => unknown): boolean {
-        return this._contents?.some(callbackfn);
+        return this._contents?.some(callbackfn) || false;
     }
     /**
      * Proxy for the native `every` method of `Array`, called on `this._contents`.
