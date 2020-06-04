@@ -1,19 +1,32 @@
 import { OdooFieldDomObjectRenderer } from './OdooFieldDomObjectRenderer';
 import { OdooMonetaryFieldNode, CurrencyPosition } from './OdooMonetaryFieldNode';
+import { DomObjectElement, DomObjectText } from '../../plugin-html/src/DomObjectRenderingEngine';
 
 export class OdooMonetaryFieldDomObjectRenderer extends OdooFieldDomObjectRenderer {
     predicate = OdooMonetaryFieldNode;
 
-    async _renderValue(node: OdooMonetaryFieldNode, container: HTMLElement): Promise<void> {
-        const valueContainer = document.createElement('span');
-        valueContainer.classList.add('oe_currency_value');
-        container.appendChild(valueContainer);
-        const currency = document.createTextNode(node.fieldInfo.currencyValue);
+    async _renderValue(node: OdooMonetaryFieldNode, container: DomObjectElement): Promise<void> {
+        const valueContainer: DomObjectElement = {
+            tag: 'span',
+            attributes: {
+                class: 'oe_currency_value',
+            },
+        };
+
+        // TODO CHM: not having default values is cumbersome
+        const children = container.children || [];
+
+        children.push(valueContainer);
+
+        const currency: DomObjectText = { text: node.fieldInfo.currencyValue };
         if (node.fieldInfo.currencyPosition === CurrencyPosition.BEFORE) {
-            container.prepend(currency);
+            children.unshift(currency);
         } else {
-            container.append(currency);
+            children.push(currency);
         }
+
+        container.children = children;
+
         await super._renderValue(node, valueContainer);
     }
 }
