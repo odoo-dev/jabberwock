@@ -143,10 +143,6 @@ export class Modifiers {
     ): T[] {
         if (!this._contents) {
             return [];
-        } else if (modifier instanceof Modifier) {
-            // `modifier` is an instance of `Modifier` -> find it in the array
-            // and return it in a new array.
-            return this._contents.filter(m => m === modifier) as T[];
         } else if (isConstructor<typeof Modifier>(modifier, Modifier)) {
             // `modifier` is a `Modifier` class -> return all instances of it in
             // the array.
