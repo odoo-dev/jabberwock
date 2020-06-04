@@ -211,7 +211,7 @@ export class Modifiers {
             return false;
         } else {
             const modifier = newModifier instanceof Modifier ? newModifier : new newModifier();
-            this[oldModifierIndex] = modifier;
+            this._contents[oldModifierIndex] = modifier;
             return true;
         }
     }
