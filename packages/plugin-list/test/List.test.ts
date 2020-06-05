@@ -1436,7 +1436,7 @@ describePlugin(List, testEditor => {
                                         <li>ef</li>
                                     </ul>
                                 </li>
-                                <li>gh</li>
+                                <li value="3">gh</li>
                                 <li>i]j</li>
                             </ol>`),
                     });
@@ -1544,12 +1544,12 @@ describePlugin(List, testEditor => {
                                                         <li>mn</li>
                                                     </ol>
                                                 </li>
-                                                <li>op</li>
+                                                <li value="3">op</li>
                                             </ol>
                                         </li>
                                     </ol>
                                 </li>
-                                <li>q]r</li>
+                                <li value="3">q]r</li>
                                 <li>st</li>
                             </ol>`),
                     });
@@ -1599,7 +1599,7 @@ describePlugin(List, testEditor => {
                                                         <li>g</li>
                                                     </ul>
                                                 </li>
-                                                <li>h</li>
+                                                <li value="3">h</li>
                                             </ol>
                                         </li>
                                     </ol>
@@ -2228,13 +2228,13 @@ describePlugin(List, testEditor => {
                                                 <li>b</li>
                                             </ol>
                                         </li>
-                                        <li>c[]d</li>
+                                        <li value="2">c[]d</li>
                                         <li style="list-style: none;">
                                             <ol>
                                                 <li>e</li>
                                             </ol>
                                         </li>
-                                        <li>f</li>
+                                        <li value="3">f</li>
                                     </ol>`),
                         });
                     });
@@ -3596,13 +3596,13 @@ describePlugin(List, testEditor => {
                                                 <li>b</li>
                                             </ol>
                                         </li>
-                                        <li>c[]d</li>
+                                        <li value="2">c[]d</li>
                                         <li style="list-style: none;">
                                             <ol>
                                                 <li>e</li>
                                             </ol>
                                         </li>
-                                        <li>f</li>
+                                        <li value="3">f</li>
                                     </ol>`),
                             });
                         });
@@ -3718,7 +3718,7 @@ describePlugin(List, testEditor => {
                                     '<ol><li>abc</li><li style="list-style: none;"><ol><li>[]<br></li><li><br></li></ol></li><li>def</li></ol>',
                                 stepFunction: backspace,
                                 contentAfter:
-                                    '<ol><li>abc</li><li>[]<br></li><li style="list-style: none;"><ol><li><br></li></ol></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li>[]<br></li><li style="list-style: none;"><ol><li><br></li></ol></li><li value="3">def</li></ol>',
                             });
                         });
                         it('should outdent an empty list within a list', async () => {
@@ -4020,7 +4020,7 @@ describePlugin(List, testEditor => {
                                                 <li>d</li>
                                             </ul>
                                         </li>
-                                        <li>e</li>
+                                        <li value="2">e</li>
                                     </ol>`),
                             });
                         });
@@ -4934,7 +4934,7 @@ describePlugin(List, testEditor => {
                                     '<ol><li>abc</li><li style="list-style: none;"><ul><li>[]<br></li><li><br></li></ul></li><li>def</li></ol>',
                                 stepFunction: backspace,
                                 contentAfter:
-                                    '<ol><li>abc</li><li>[]<br></li><li style="list-style: none;"><ul><li><br></li></ul></li><li>def</li></ol>',
+                                    '<ol><li>abc</li><li>[]<br></li><li style="list-style: none;"><ul><li><br></li></ul></li><li value="3">def</li></ol>',
                             });
                         });
                         it('should outdent an empty unordered list within an ordered list', async () => {
@@ -5777,7 +5777,7 @@ describePlugin(List, testEditor => {
                                     await insertParagraphBreak(editor);
                                 },
                                 contentAfter:
-                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>def</li></ol></li><li>[]<br></li><li>ghi</li></ol>',
+                                    '<ol><li>abc</li><li style="list-style: none;"><ol><li>def</li></ol></li><li value="2">[]<br></li><li>ghi</li></ol>',
                             });
                         });
                         it('should remove a list', async () => {

@@ -1,6 +1,6 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { ListNode } from './ListNode';
+import { ListNode, ListType } from './ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { List } from './List';
 import {
@@ -40,6 +40,19 @@ export class ListItemDomObjectRenderer extends AbstractRenderer<DomObject> {
         // Render the node's attributes that were stored on the technical key
         // that specifies those attributes belong on the list item.
         this.engine.renderAttributes(ListItemAttributes, node, li);
+
+        if (node.ancestor(ListNode)?.listType === ListType.ORDERED) {
+            // Adapt numbering to skip previous list item
+            // Source: https://stackoverflow.com/a/12860083
+            const previousIdentedList = node.previousSibling();
+            if (previousIdentedList instanceof ListNode) {
+                const previousLis = previousIdentedList.previousSiblings(
+                    sibling => !sibling.is(ListNode),
+                );
+                const value = Math.max(previousLis.length, 1) + 1;
+                li.attributes.value = value.toString();
+            }
+        }
 
         if (node.is(ListNode)) {
             let style = li.attributes.style || '';
