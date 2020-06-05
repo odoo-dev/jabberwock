@@ -13,13 +13,17 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Layout } from '../../plugin-layout/src/Layout';
 import linkForm from '../assets/LinkForm.xml';
-import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
-import { LinkComponent } from './components/LinkComponent';
 import { Owl } from '../../plugin-owl/src/Owl';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface LinkParams extends CommandParams {
     label?: string;
     url?: string;
+    /**
+     * The target of an html anchor.
+     * Could be "_blank", "_self" ,"_parent", "_top" or the framename.
+     */
+    target?: string;
 }
 
 export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -55,14 +59,6 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 commandId: 'unlink',
             },
         ],
-        components: [
-            {
-                id: 'link',
-                async render(): Promise<OwlNode[]> {
-                    return [new OwlNode(LinkComponent, {})];
-                },
-            },
-        ],
         componentZones: [['link', 'float']],
         owlTemplates: [linkForm],
     };
@@ -83,9 +79,14 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
 
         // Otherwise create a link and insert it.
         const link = new LinkFormat(params.url);
+        if (params.target) {
+            link.modifiers.get(Attributes).set('target', params.target);
+        }
         return this.editor.execCommand<Char>('insertText', {
             text: params.label || link.url,
             formats: new Modifiers(link),
+            select: true,
+            context: params.context,
         });
     }
     unlink(params: LinkParams): void {
