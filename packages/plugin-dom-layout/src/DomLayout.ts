@@ -22,6 +22,7 @@ export interface DomLayoutConfig extends JWPluginConfig {
     locations?: [ComponentId, DomLayoutLocation][];
     components?: ComponentDefinition[];
     componentZones?: [ComponentId, ZoneIdentifier][];
+    afterRender?: Function;
 }
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
@@ -36,7 +37,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         domLocations: this._loadComponentLocations,
     };
     commandHooks = {
-        '*': this._redraw,
+        '*': this.redraw,
     };
 
     constructor(editor: JWEditor, configuration: T) {
@@ -59,6 +60,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         this._loadComponentLocations(this.configuration.locations || []);
         domLayoutEngine.location = this.configuration.location;
         await domLayoutEngine.start();
+        if (this.configuration.afterRender) {
+            await this.configuration.afterRender();
+        }
         window.addEventListener('keydown', this.processKeydown, true);
     }
     async stop(): Promise<void> {
@@ -103,19 +107,20 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         }
     }
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    private async _redraw(): Promise<void> {
+    async redraw(): Promise<void> {
         // TODO update this method to use JSON renderer feature (update also show, hide, add, remove)
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         const editables = domLayoutEngine.components.get('editable');
         if (editables?.length) {
-            return domLayoutEngine.redraw(editables[0]);
+            await domLayoutEngine.redraw(editables[0]);
+            await this.configuration.afterRender?.();
         }
     }
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     private _loadComponentLocations(locations: [ComponentId, DomLayoutLocation][]): void {
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;

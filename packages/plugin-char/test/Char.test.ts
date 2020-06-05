@@ -15,9 +15,10 @@ import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
 import { Modifiers } from '../../core/src/Modifiers';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
-const insertText = async function(editor: JWEditor, text: string): Promise<void> {
+const insertText = async function(editor: JWEditor, text: string, select = false): Promise<void> {
     await editor.execCommand<Char>('insertText', {
         text: text,
+        select,
     });
 };
 const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
@@ -155,6 +156,13 @@ describePlugin(Char, testEditor => {
                         contentBefore: '<p>a[]c</p>',
                         stepFunction: (editor: JWEditor) => insertText(editor, 'b'),
                         contentAfter: '<p>ab[]c</p>',
+                    });
+                });
+                it('should insert char in text in a paragraph and select it', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>a[]c</p>',
+                        stepFunction: (editor: JWEditor) => insertText(editor, 'b', true),
+                        contentAfter: '<p>a[b]c</p>',
                     });
                 });
             });

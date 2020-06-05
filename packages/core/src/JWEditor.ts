@@ -60,6 +60,10 @@ export class JWEditor {
     selection = new VSelection();
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
+    // Use a set so that when asynchronous functions are called we ensure that
+    // each command batch is waited for.
+    preventRenders: Set<Function> = new Set();
+    enableRender = true;
 
     constructor() {
         this.dispatcher = new Dispatcher(this);
@@ -267,6 +271,12 @@ export class JWEditor {
         }
     }
 
+    async execBatch(callback: () => Promise<void>): Promise<void> {
+        this.preventRenders.add(callback);
+        await callback();
+        this.preventRenders.delete(callback);
+    }
+
     /**
      * Execute the given command.
      *
@@ -277,7 +287,7 @@ export class JWEditor {
         commandName: C,
         params?: CommandParams<P, C>,
     ): Promise<void> {
-        await this.dispatcher.dispatch(commandName, params);
+        return await this.dispatcher.dispatch(commandName, params);
     }
 
     /**

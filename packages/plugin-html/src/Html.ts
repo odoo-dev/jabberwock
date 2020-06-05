@@ -7,11 +7,13 @@ import { HtmlDomParsingEngine } from './HtmlDomParsingEngine';
 import { Xml } from '../../plugin-xml/src/Xml';
 import { DomObjectRenderingEngine } from './DomObjectRenderingEngine';
 import { HtmlDomRenderingEngine } from './HtmlDomRenderingEngine';
+import { HtmlHtmlDomRenderer } from './HtmlNodeDomRenderer';
 
 export class Html<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser, Renderer, Xml];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsingEngines: [HtmlDomParsingEngine, HtmlTextParsingEngine],
         renderingEngines: [DomObjectRenderingEngine, HtmlDomRenderingEngine],
+        renderers: [HtmlHtmlDomRenderer],
     };
 }
