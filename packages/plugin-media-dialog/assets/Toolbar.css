@@ -20,7 +20,7 @@ jw-toolbar span {
     padding: 5px;
 }
 
-jw-toolbar button[aria-pressed="true"] {
+jw-toolbar .pressed {
     background-color: #9c8897;
     color: white;
 }
@@ -37,12 +37,12 @@ jw-toolbar jw-separator {
     vertical-align: bottom;
 }
 
-jw-toolbar jw-group jw-separator {
+jw-toolbar toolbar-group jw-separator {
     margin-top: 0;
     margin-bottom: 0;
 }
 
-jw-toolbar jw-group {
+jw-toolbar toolbar-group {
     display: inline-block;
     margin: 5px;
 }

@@ -29,3 +29,7 @@ jw-editor table.mondrian {
     width: 65vh;
     height: 50vh;
 }
+
+.jw_selected_image {
+    outline: 1px red solid;
+}
