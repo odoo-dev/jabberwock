@@ -231,14 +231,15 @@ export class DomReconciliationEngine {
         // Insert object dom nodes who don't have direct object with nodeName
         // and not added by the updateDom because his parent have no diff.
         for (const id of objectToInsert) {
-            let item = this._objects[id];
-            while (item && !item.object.tag) {
-                item = this._objects[item.parent];
+            const item = this._objects[id];
+            let parent = this._objects[item.parent];
+            while (parent && !parent.object.tag) {
+                parent = this._objects[parent.parent];
             }
-            if (item) {
-                const parentDomNode = item.dom[0] as Element;
+            if (parent) {
+                const parentDomNode = parent.dom[0] as Element;
                 const domNodes: Node[] = [];
-                for (const childId of item.children) {
+                for (const childId of parent.children) {
                     domNodes.push(...this._getDomChild(childId, parentDomNode));
                 }
                 if (domNodes.length) {
@@ -461,38 +462,46 @@ export class DomReconciliationEngine {
             position = RelativePosition.INSIDE;
         }
 
-        let id = this._renderedNodes.get(reference);
-        if (!id) {
-            return;
-        }
-
-        let object = this._objects[id];
-        let locations = this._locations.get(object.object);
+        let object: DomObjectMapping;
+        let locations: VNode[];
 
         // use the location
-        if (!locations.includes(reference)) {
-            let hasLocate: number;
-            const ids = [id];
-            while (ids.length && (!hasLocate || position === RelativePosition.AFTER)) {
-                const id = ids.pop();
-                const child = this._objects[id];
-                if (this._locations.get(child.object).includes(reference)) {
-                    hasLocate = id;
+        let domNodes: Node[];
+        while (!domNodes && reference) {
+            let id = this._renderedNodes.get(reference);
+            if (id) {
+                object = this._objects[id];
+                locations = this._locations.get(object.object);
+
+                if (!locations.includes(reference)) {
+                    let hasLocate: number;
+                    const ids = [id];
+                    while (ids.length && (!hasLocate || position === RelativePosition.AFTER)) {
+                        const id = ids.pop();
+                        const child = this._objects[id];
+                        if (this._locations.get(child.object).includes(reference)) {
+                            hasLocate = id;
+                        }
+                        if (child.children) {
+                            ids.push(...[...child.children].reverse());
+                        }
+                    }
+                    id = hasLocate;
+                    object = this._objects[id];
+                    locations = this._locations.get(object.object);
                 }
-                if (child.children) {
-                    ids.push(...[...child.children].reverse());
+                if (object.dom.length) {
+                    domNodes = object.dom;
+                } else {
+                    domNodes = this._getchildrenDomNodes(id);
                 }
             }
-            id = hasLocate;
-            object = this._objects[id];
-            locations = this._locations.get(object.object);
-        }
 
-        let domNodes: Node[];
-        if (object.dom.length) {
-            domNodes = object.dom;
-        } else {
-            domNodes = this._getchildrenDomNodes(id);
+            if (!domNodes?.length || !domNodes[0].parentNode) {
+                position = RelativePosition.BEFORE;
+                reference = reference.nextLeaf();
+                domNodes = null;
+            }
         }
 
         let domNode: Node;

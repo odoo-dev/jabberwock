@@ -2790,6 +2790,39 @@ describe('DomLayout', () => {
 
                 expect(mutationNumber).to.equal(0);
             });
+            it('should delete a starting char of a paragraph and a linebreak in altered dom', async () => {
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+
+                const p = div.firstChild();
+                const lineBreak = new LineBreakNode();
+                const d = p.children()[3];
+                p.children()[2].after(lineBreak);
+
+                editor.selection.setAt(d, RelativePosition.AFTER);
+
+                await engine.redraw(p, lineBreak);
+
+                d.remove();
+                const pDom = container.querySelector('p');
+                const text = pDom.firstChild;
+                const br = pDom.childNodes[1];
+                const text2 = pDom.lastChild;
+                text2.textContent = 'ef';
+                engine.markForRedraw(new Set([br, text2]));
+
+                mutationNumber = 0;
+                const promise = engine.redraw(p, d);
+
+                pDom.removeChild(br);
+
+                await promise;
+
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                expect(pDom.firstChild === text).to.equal(true, 'Use same text');
+                expect(pDom.innerHTML).to.equal('abc<br>ef');
+
+                expect(mutationNumber).to.equal(3);
+            });
             it('should add style on char', async () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const pDom = container.querySelector('p');
