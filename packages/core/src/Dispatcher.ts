@@ -46,9 +46,11 @@ export class Dispatcher {
             const args = { ...params, context };
 
             // Call command handler.
-            await command.handler(args);
+            const result = await command.handler(args);
 
             await this._dispatchHooks(commandId, args);
+
+            return result;
         }
     }
 

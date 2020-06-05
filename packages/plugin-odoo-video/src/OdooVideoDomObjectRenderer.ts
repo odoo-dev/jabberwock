@@ -1,5 +1,7 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { OdooVideoNode } from './OdooVideoNode';
+import { Core } from '../../core/src/Core';
+import { Direction } from '../../core/src/VSelection';
 import {
     DomObjectRenderingEngine,
     DomObject,
@@ -11,6 +13,21 @@ export class OdooVideoHtmlDomRenderer extends AbstractRenderer<DomObject> {
     predicate = OdooVideoNode;
 
     async render(node: OdooVideoNode): Promise<DomObject> {
+        const setSelection = (): void => {
+            this.engine.editor.nextEventMutex(() => {
+                this.engine.editor.execCommand<Core>('setSelection', {
+                    vSelection: {
+                        anchorNode: node,
+                        direction: Direction.FORWARD,
+                    },
+                });
+            });
+        };
+        const openMedia = (): void => {
+            this.engine.editor.nextEventMutex(() => {
+                this.engine.editor.execCommand('openMedia');
+            });
+        };
         const wrapper: DomObject = {
             tag: 'DIV',
             attributes: { class: 'media_iframe_video', 'data-oe-expression': node.src },
@@ -19,6 +36,14 @@ export class OdooVideoHtmlDomRenderer extends AbstractRenderer<DomObject> {
                     tag: 'DIV',
                     attributes: { class: 'css_editable_mode_display' },
                     children: [{ text: '\u00A0' }],
+                    attach: (el: HTMLElement): void => {
+                        el.addEventListener('click', setSelection);
+                        el.addEventListener('dblclick', openMedia);
+                    },
+                    detach: (el: HTMLElement): void => {
+                        el.removeEventListener('click', setSelection);
+                        el.removeEventListener('dblclick', openMedia);
+                    },
                 },
                 {
                     tag: 'DIV',
