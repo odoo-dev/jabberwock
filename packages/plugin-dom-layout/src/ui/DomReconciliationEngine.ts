@@ -63,23 +63,27 @@ export class DomReconciliationEngine {
         // Found the potential old values (they could become children of the current node).
         // In old values the renderer are may be merge some object, we want to found the
         // children object in old value to campare it with the newest.
-        const nodeToDomObject = new Map<VNode, GenericDomObject>();
         const unfilterdOldObjectMap = new Map<GenericDomObject, DomObjectID[]>();
-        const locatedMap = new Map<GenericDomObject, GenericDomObject>();
         for (const [node, domObject] of rendered) {
             let oldObjects = unfilterdOldObjectMap.get(domObject);
             if (!oldObjects) {
                 this._addLocations(domObject, locations, node);
                 oldObjects = [];
                 unfilterdOldObjectMap.set(domObject, oldObjects);
-                locatedMap.set(domObject, domObject);
             }
-            for (const node of this._nodes.get(domObject)) {
-                nodeToDomObject.set(node, domObject);
-                const id = this._renderedNodes.get(node);
+            for (const linkedNode of this._nodes.get(domObject)) {
+                const id = this._renderedNodes.get(linkedNode);
                 if (id && !oldObjects.includes(id)) {
                     oldObjects.push(id);
                 }
+            }
+        }
+
+        // prepare mapping for diff
+        const nodeToDomObject = new Map<VNode, GenericDomObject>();
+        for (const [node, domObject] of rendered) {
+            for (const node of this._nodes.get(domObject)) {
+                nodeToDomObject.set(node, domObject);
             }
             // re-instert just after if available but the id can change
             this._renderedIds.delete(this._renderedNodes.get(node));
@@ -88,12 +92,11 @@ export class DomReconciliationEngine {
         // Make diff.
         this._rendererTreated.clear();
         for (const [node, domObject] of rendered) {
-            const locatedObject = locatedMap.get(domObject);
-            if (!this._rendererTreated.has(locatedObject)) {
-                const oldObjects = unfilterdOldObjectMap.get(locatedObject);
+            if (!this._rendererTreated.has(domObject)) {
+                const oldObjects = unfilterdOldObjectMap.get(domObject);
                 const oldRefId = this._fromNode.get(node);
                 const parent = this._objects[this._objects[oldRefId]?.parent];
-                const id = this._diffObject(nodeToDomObject, locatedObject, true, oldObjects);
+                const id = this._diffObject(nodeToDomObject, domObject, true, oldObjects);
                 if (id) {
                     this._renderedIds.add(id);
                     if (oldRefId && parent && id !== oldRefId) {
@@ -674,7 +677,7 @@ export class DomReconciliationEngine {
                 if (this._rendererTreated.has(domObject)) {
                     childId = oldChildId;
                 } else if (!domObject) {
-                    throw new Error('No rendering for: ' + child.name);
+                    throw new Error('No rendering for the node(' + child.id + '): ' + child.name);
                 } else {
                     childId = this._diffObject(
                         nodeToDomObject,
@@ -1231,7 +1234,6 @@ export class DomReconciliationEngine {
                 domNodes.push(...this._getDomChild(childId, parentDomNode));
             }
             if (domObject.tag && domNodes.length) {
-                // ?object.nodeName
                 this._insertDomChildren(domNodes, parentDomNode);
             }
         }
@@ -1409,17 +1411,18 @@ export class DomReconciliationEngine {
     private _getAvailableElement(id: DomObjectID): void | HTMLElement {
         const object = this._objects[id];
         const domObject = object.object;
+        const tagName = domObject.tag.toUpperCase();
         const diff = this._diff[id];
         if (object.parentDomNode) {
             for (const domNode of object.parentDomNode.childNodes) {
-                if (domObject.tag === nodeName(domNode) && this.isAvailableNode(id, domNode)) {
+                if (tagName === nodeName(domNode) && this.isAvailableNode(id, domNode)) {
                     return domNode as HTMLElement;
                 }
             }
         }
         if (diff) {
             for (const domNode of diff.dom) {
-                if (domObject.tag === nodeName(domNode) && this.isAvailableNode(id, domNode)) {
+                if (tagName === nodeName(domNode) && this.isAvailableNode(id, domNode)) {
                     return domNode as HTMLElement;
                 }
             }

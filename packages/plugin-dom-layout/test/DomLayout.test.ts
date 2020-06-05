@@ -3938,6 +3938,192 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
+            it('should redraw to changed nodes with the same layout', async () => {
+                class CustomNode extends ContainerNode {}
+                const span = new CustomNode();
+                const a = new CharNode({ char: 'a' });
+                span.append(a);
+
+                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                    static id = DomObjectRenderingEngine.id;
+                    engine: DomObjectRenderingEngine;
+                    predicate = CustomNode;
+                    async render(node: CustomNode): Promise<DomObject> {
+                        const domObject: DomObject = {
+                            tag: 'DIV',
+                            children: [
+                                {
+                                    tag: 'SPAN',
+                                    children: node.children(),
+                                },
+                            ],
+                        };
+                        return domObject;
+                    }
+                }
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [span];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Renderer & Layout> = {
+                        components: [Component],
+                        renderers: [CustomHtmlObjectRenderer],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+
+                await editor.start();
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+
+                const a2 = new CharNode({ char: 'a' });
+                a.after(a2);
+                a.remove();
+
+                // redraw with changes but identical result
+                mutationNumber = 0;
+                await engine.redraw(span, a, a2);
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><span>a</span></div></jw-editor>',
+                );
+                expect(mutationNumber).to.equal(0);
+
+                await editor.stop();
+            });
+            it('should redraw to changed nodes with the same layout and have lowerCase tag', async () => {
+                class CustomNode extends ContainerNode {}
+                const span = new CustomNode();
+                const a = new CharNode({ char: 'a' });
+                span.append(a);
+
+                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                    static id = DomObjectRenderingEngine.id;
+                    engine: DomObjectRenderingEngine;
+                    predicate = CustomNode;
+                    async render(node: CustomNode): Promise<DomObject> {
+                        const domObject: DomObject = {
+                            tag: 'DIV',
+                            children: [
+                                {
+                                    tag: 'span',
+                                    children: node.children(),
+                                },
+                            ],
+                        };
+                        return domObject;
+                    }
+                }
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [span];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Renderer & Layout> = {
+                        components: [Component],
+                        renderers: [CustomHtmlObjectRenderer],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+
+                await editor.start();
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+
+                const a2 = new CharNode({ char: 'a' });
+                a.after(a2);
+                a.remove();
+
+                // redraw with changes but identical result
+                mutationNumber = 0;
+                await engine.redraw(span, a, a2);
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><span>a</span></div></jw-editor>',
+                );
+                expect(mutationNumber).to.equal(0);
+
+                await editor.stop();
+            });
+            it('should redraw to changed nodes with changind tag', async () => {
+                class CustomNode extends ContainerNode {}
+                const span = new CustomNode();
+                const a = new CharNode({ char: 'a' });
+                span.append(a);
+
+                let render = 0;
+
+                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                    static id = DomObjectRenderingEngine.id;
+                    engine: DomObjectRenderingEngine;
+                    predicate = CustomNode;
+                    async render(node: CustomNode): Promise<DomObject> {
+                        const domObject: DomObject = {
+                            tag: 'DIV',
+                            children: [
+                                {
+                                    tag: render++ ? 'font' : 'span',
+                                    children: node.children(),
+                                },
+                            ],
+                        };
+                        return domObject;
+                    }
+                }
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [span];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Renderer & Layout> = {
+                        components: [Component],
+                        renderers: [CustomHtmlObjectRenderer],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+
+                await editor.start();
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><span>a</span></div></jw-editor>',
+                );
+
+                const a2 = new CharNode({ char: 'a' });
+                a.after(a2);
+                a.remove();
+
+                // redraw with changes but identical result
+                mutationNumber = 0;
+                await engine.redraw(span, a, a2);
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><font>a</font></div></jw-editor>',
+                );
+                expect(mutationNumber).to.equal(3);
+
+                await editor.stop();
+            });
             describe('style nodes', () => {
                 let editor: JWEditor;
                 let div: VNode;
