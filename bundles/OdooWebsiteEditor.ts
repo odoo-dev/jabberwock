@@ -111,7 +111,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Italic],
                 [Underline],
                 [Link],
-                [Divider],
+                [Divider, { breakable: false }],
                 [Image],
                 [Subscript],
                 [Superscript],
