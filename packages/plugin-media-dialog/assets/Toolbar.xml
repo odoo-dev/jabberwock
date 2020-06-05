@@ -1,0 +1,53 @@
+<templates>
+    <!-- MAIN -->
+    <jw-toolbar t-name="toolbar">
+        <t t-foreach="config" t-as="group"
+            t-key="group_index">
+            <t t-if="group === '|'">
+                <jw-separator role="separator"/>
+            </t>
+            <t t-elif="isString(group)">
+                <span><t t-esc="group"/></span>
+            </t>
+            <t t-else="">
+                <toolbar-group>
+                    <t t-foreach="group" t-as="toolbarItem" t-key="toolbarItem_index">
+                        <t t-if="toolbarItem === '|'">
+                            <jw-separator role="separator"/>
+                        </t>
+                        <t t-elif="isString(toolbarItem)">
+                            <span><t t-esc="toolbarItem"/></span>
+                        </t>
+                        <t t-elif="isArray(toolbarItem)">
+                            <select t-on-change="onDropdownChange(toolbarItem)">
+                                <option/>
+                                <t t-foreach="toolbarItem" t-as="dropDownItem" t-key="dropdownItem_index">
+                                    <t t-if="isString(dropDownItem)">
+                                        <option disabled="true"><t t-esc="dropDownItem"/></option>
+                                    </t>
+                                    <t t-else="">
+                                        <option t-if="isEnabled(toolbarItem)"
+                                            t-attf-class="{{dropDownItem.class}}"
+                                            t-attf-value="{{dropDownItem.title}}"
+                                            t-att-selected="isSelected(dropDownItem)">
+                                            <t t-esc="dropDownItem.title"/>
+                                        </option>
+                                    </t>
+                                </t>
+                            </select>
+                        </t>
+                        <t t-else="">
+                            <button t-if="isEnabled(toolbarItem)" t-attf-class="fa {{toolbarItem.class}} fa-fw"
+                                t-att-class="{
+                                    pressed: isSelected(toolbarItem),
+                                }"
+                                t-attf-title="{{toolbarItem.title}}"
+                                t-att-aria-pressed="isSelected(toolbarItem)"
+                                t-on-click="execCommand(toolbarItem.commandId, toolbarItem.commandArgs)"/>
+                        </t>
+                    </t>
+                </toolbar-group>
+            </t>
+        </t>
+    </jw-toolbar>
+</templates>

@@ -1630,15 +1630,20 @@ export class EventNormalizer {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
         if (this._mousedownInEditable && ev.target instanceof Element) {
-            // When the users clicks in the DOM, the range is set in the next
-            // tick. The observation of the resulting range must thus be delayed
-            // to the next tick as well. Store the data we have now before it
-            // gets invalidated by the redrawing of the DOM.
-            this._initialCaretPosition = this._getEventCaretPosition(ev);
-            this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
-                return this._analyzeSelectionChange(ev);
-            });
-            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
+            try {
+                // When the users clicks in the DOM, the range is set in the next
+                // tick. The observation of the resulting range must thus be delayed
+                // to the next tick as well. Store the data we have now before it
+                // gets invalidated by the redrawing of the DOM.
+                this._initialCaretPosition = this._getEventCaretPosition(ev);
+                this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+                    return this._analyzeSelectionChange(ev);
+                });
+                this._triggerEventBatch(this._pointerSelectionTimeout.promise);
+            } catch (e) {
+                this._mousedownInEditable = false;
+                this._initialCaretPosition = undefined;
+            }
         }
     }
     /**
