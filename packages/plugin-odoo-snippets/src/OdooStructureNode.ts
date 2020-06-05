@@ -7,6 +7,7 @@ export interface OdooStructureNodeParams extends VElementParams {
 export class OdooStructureNode extends VElement {
     xpath: string;
     viewId: string;
+    breakable = false;
 
     constructor(params: OdooStructureNodeParams) {
         super(params);
