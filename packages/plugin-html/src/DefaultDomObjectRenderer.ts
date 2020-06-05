@@ -12,7 +12,7 @@ export class DefaultDomObjectRenderer extends AbstractRenderer<DomObject> {
     async render(node: VNode): Promise<DomObject> {
         let domObject: DomObject;
         if (node.tangible) {
-            if (node.is(VElement)) {
+            if (node.is(VElement) && node.htmlTag[0] !== '#') {
                 domObject = {
                     tag: node.htmlTag,
                     children: await this.engine.renderChildren(node),
