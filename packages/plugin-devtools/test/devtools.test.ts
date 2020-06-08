@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { DevTools } from '../src/DevTools';
 import { click, nextTickFrame, keydown } from '../../utils/src/testUtils';
