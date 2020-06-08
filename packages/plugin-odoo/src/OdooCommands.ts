@@ -24,7 +24,7 @@ interface ExecCommandHelpers {
 
 export type HtmlPoint = [Node, RelativePosition];
 
-export function createExecCommandHelpersForOdoo(editor: JWEditor): ExecCommandHelpers {
+export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const layout = editor.plugins.get(Layout);
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
