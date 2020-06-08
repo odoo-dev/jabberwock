@@ -4,7 +4,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('core', () => {

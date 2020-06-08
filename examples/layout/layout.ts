@@ -1,4 +1,4 @@
-import { BasicEditor } from '../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundles/BasicEditor/BasicEditor';
 import { jabberwocky } from '../utils/jabberwocky';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';

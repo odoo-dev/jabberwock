@@ -3,7 +3,7 @@ import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
 import { ModeError } from '../../utils/src/errors';
 import { testEditor } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('core', () => {
