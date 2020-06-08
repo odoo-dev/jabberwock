@@ -1,5 +1,4 @@
 import JWEditor from '../../core/src/JWEditor';
-import { VElement } from '../../core/src/VNodes/VElement';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Char, InsertHtmlParams } from '../../plugin-char/src/Char';
 import { EmptyParams, WrapParams, ReplaceParams } from './OdooSnippet';
@@ -28,15 +27,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const layout = editor.plugins.get(Layout);
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
-    function _getVElements(domNode: Node): VElement[] {
-        const nodes = domEngine.getNodes(domNode);
-        for (const node of nodes) {
-            if (!(node instanceof VElement)) {
-                throw new Error('VNode is not a VElement');
-            }
-        }
-        return nodes as VElement[];
-    }
     const odooCommands = {
         hasVNode(domNode: Node): boolean {
             const nodes = domEngine.getNodes(domNode);
@@ -44,14 +34,14 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
         },
         async addClasses(domNode: Node, classes: string[]): Promise<void> {
             const params: AddClassParams = {
-                elements: _getVElements(domNode),
+                nodes: domEngine.getNodes(domNode),
                 classes,
             };
             await editor.execCommand<OdooSnippet>('addClasses', params);
         },
         async removeClasses(domNode: Node, classes: string[]): Promise<void> {
             const params: RemoveClassParams = {
-                elements: _getVElements(domNode),
+                nodes: domEngine.getNodes(domNode),
                 classes,
             };
             await editor.execCommand<OdooSnippet>('removeClasses', params);
@@ -74,7 +64,7 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
             attributeValue: string,
         ): Promise<void> {
             const params: SetAttributeParams = {
-                elements: _getVElements(domNode),
+                nodes: domEngine.getNodes(domNode),
                 attributeName,
                 attributeValue,
             };
