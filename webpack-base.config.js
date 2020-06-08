@@ -4,10 +4,7 @@ const glob = require('glob');
 const fs = require('fs');
 /* eslint-enable @typescript-eslint/no-var-requires */
 
-const integrationDevPath = path.resolve(
-    __dirname,
-    'packages/build-odoo-integration/odoo-integration.ts',
-);
+const integrationDevPath = path.resolve(__dirname, 'bundles/OdooWebsiteEditor/odoo-integration.ts');
 
 const mainConfig = {
     mode: 'development',
