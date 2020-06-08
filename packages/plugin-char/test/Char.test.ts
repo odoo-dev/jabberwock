@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { Char } from '../src/Char';
 import { CharNode } from '../src/CharNode';
 import { describePlugin } from '../../utils/src/testUtils';

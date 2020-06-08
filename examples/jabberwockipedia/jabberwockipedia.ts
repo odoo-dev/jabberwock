@@ -1,4 +1,4 @@
-import { BasicEditor } from '../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundles/BasicEditor/BasicEditor';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 
 const target = document.getElementById('example');

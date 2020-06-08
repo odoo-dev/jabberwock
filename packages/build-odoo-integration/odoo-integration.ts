@@ -1,4 +1,4 @@
-import { BasicEditor } from './../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundles/BasicEditor/BasicEditor';
 import { DevTools } from '../plugin-devtools/src/DevTools';
 import { OdooWebsiteEditor } from '../../bundles/OdooWebsiteEditor';
 import { VRange, withRange } from '../core/src/VRange';

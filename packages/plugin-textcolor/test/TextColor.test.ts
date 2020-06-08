@@ -2,7 +2,7 @@ import { describePlugin } from '../../utils/src/testUtils';
 import { TextColor } from '../src/TextColor';
 import { Char } from '../../plugin-char/src/Char';
 import JWEditor from '../../core/src/JWEditor';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 
 const colorText = async function(editor: JWEditor, color: string): Promise<void> {
     await editor.execCommand<TextColor>('colorText', {

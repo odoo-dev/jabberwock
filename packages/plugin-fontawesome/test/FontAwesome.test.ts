@@ -1,6 +1,6 @@
 import { describePlugin } from '../../utils/src/testUtils';
 import { FontAwesome } from '../src/FontAwesome';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
 
