@@ -1,4 +1,4 @@
-import { Attributes } from './../../plugin-xml/src/Attributes';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
