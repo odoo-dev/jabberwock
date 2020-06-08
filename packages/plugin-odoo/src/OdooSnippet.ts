@@ -4,7 +4,6 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { VElement } from '../../core/src/VNodes/VElement';
 import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
 import JWEditor from '../../core/src/JWEditor';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
@@ -21,11 +20,11 @@ import { Inline } from '../../plugin-inline/src/Inline';
 import { CharNode } from '../../plugin-char/src/CharNode';
 
 export interface RemoveClassParams extends CommandParams {
-    elements: VElement[];
+    nodes: VNode[];
     classes: string[];
 }
 export interface AddClassParams extends CommandParams {
-    elements?: VElement[];
+    nodes?: VNode[];
     classes: string[];
 }
 export interface AddClassToLinkParams extends CommandParams {
@@ -40,13 +39,13 @@ export interface ToggleClassParams {
     set?: boolean;
 }
 export interface SetAttributeParams {
-    elements: VElement[];
+    nodes: VNode[];
     attributeName: string;
     attributeValue: string;
 }
 export interface SetStyleParams {
     /**
-     * The `VElement`s whose style we want to change.
+     * The `VNode`s whose style we want to change.
      */
     nodes: VNode[];
     /**
@@ -158,18 +157,18 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
     //--------------------------------------------------------------------------
 
     removeClasses(params: RemoveClassParams): void {
-        // todo: use range rather than params.elements
-        for (const element of params.elements) {
+        // todo: use range rather than params.nodes
+        for (const element of params.nodes) {
             for (const className of params.classes) {
                 element.modifiers.get(Attributes).classList.remove(className);
             }
         }
     }
     addClasses(params: AddClassParams): void {
-        // todo: remove elements and only use a range.
+        // todo: remove nodes and only use a range.
         let nodes: VNode[];
-        if (params.elements) {
-            nodes = params.elements;
+        if (params.nodes) {
+            nodes = params.nodes;
         } else {
             nodes = params.context?.range.selectedNodes() || [];
         }
@@ -200,7 +199,7 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         }
     }
     setAttribute(params: SetAttributeParams): void {
-        for (const element of params.elements) {
+        for (const element of params.nodes) {
             element.modifiers.get(Attributes).set(params.attributeName, params.attributeValue);
         }
     }
