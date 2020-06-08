@@ -182,8 +182,9 @@ export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPl
     }
     addClassToLink(params: AddClassToLinkParams): void {
         const nodes = params.context.range.targetedNodes(InlineNode);
-        for (const node of nodes) {
-            node.modifiers.get(Attributes).set('class', params.classes);
+        const links = nodes.map(node => node.modifiers.find(LinkFormat)).filter(f => f);
+        for (const link of links) {
+            link.modifiers.get(Attributes).set('class', params.classes);
         }
     }
     toggleClass(params: ToggleClassParams): void {
