@@ -1,6 +1,6 @@
 import { BasicEditor } from '../../bundles/BasicEditor/BasicEditor';
 import { DevTools } from '../plugin-devtools/src/DevTools';
-import { OdooWebsiteEditor } from '../../bundles/OdooWebsiteEditor';
+import { OdooWebsiteEditor } from '../../bundles/OdooWebsiteEditor/OdooWebsiteEditor';
 import { VRange, withRange } from '../core/src/VRange';
 import { DomLayoutEngine } from '../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../plugin-layout/src/Layout';
