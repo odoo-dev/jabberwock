@@ -1,5 +1,5 @@
 import { testEditor } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
 describe('VRange', () => {

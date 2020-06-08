@@ -26,7 +26,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 import { DomLayoutEngine } from '../src/ui/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 import { Inline } from '../../plugin-inline/src/Inline';
 import {

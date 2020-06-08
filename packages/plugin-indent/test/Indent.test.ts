@@ -2,7 +2,7 @@ import { describePlugin, unformat } from '../../utils/src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
 import { Indent } from '../src/Indent';
 import { withRange, VRange } from '../../core/src/VRange';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
 const indent = async (editor: JWEditor): Promise<void> =>

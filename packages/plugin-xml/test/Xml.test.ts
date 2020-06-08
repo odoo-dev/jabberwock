@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { describePlugin, testEditor } from '../../utils/src/testUtils';
 import { Xml } from '../src/Xml';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
 import { Attributes } from '../src/Attributes';
 import { CssStyle } from '../src/CssStyle';
 import { ClassList } from '../src/ClassList';
