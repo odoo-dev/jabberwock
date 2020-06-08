@@ -35,7 +35,7 @@ import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable'
 import { VNode } from '../../packages/core/src/VNodes/VNode';
 
 import '../basicLayout.css';
-import { OdooSnippet } from '../../packages/plugin-odoo-snippets/src/OdooSnippet';
+import { OdooSnippet } from '../../packages/plugin-odoo/src/OdooSnippet';
 
 import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';
 import { ParagraphButton } from '../../packages/plugin-heading/src/HeadingButtons';
@@ -53,13 +53,13 @@ import { OrderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { UnorderedListButton } from '../../packages/plugin-list/src/ListButtons';
 import { IndentButton } from '../../packages/plugin-indent/src/IndentButtons';
 import { OutdentButton } from '../../packages/plugin-indent/src/IndentButtons';
-import { SaveButton } from '../../packages/plugin-odoo-snippets/src/SaveButton';
+import { SaveButton } from '../../packages/plugin-odoo/src/SaveButton';
 import { HtmlNode } from '../../packages/plugin-html/src/HtmlNode';
-import { MediaButton } from '../../packages/plugin-odoo-snippets/src/MediaButton';
+import { MediaButton } from '../../packages/plugin-odoo/src/MediaButton';
 import { CommandImplementation, CommandIdentifier } from '../../packages/core/src/Dispatcher';
 import { JWPlugin } from '../../packages/core/src/JWPlugin';
 import { OdooVideo } from '../../packages/plugin-odoo-video/src/OdooVideo';
-import { LinkButton } from '../../packages/plugin-odoo-snippets/src/LinkButton';
+import { LinkButton } from '../../packages/plugin-odoo/src/LinkButton';
 import { DomZonePosition } from '../../packages/plugin-layout/src/LayoutEngine';
 import { HtmlDomRenderingEngine } from '../../packages/plugin-html/src/HtmlDomRenderingEngine';
 import {
