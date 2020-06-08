@@ -275,6 +275,7 @@ export class JWEditor {
         this.preventRenders.add(callback);
         await callback();
         this.preventRenders.delete(callback);
+        this.dispatcher.dispatchHooks('@JWEditor.execBatch');
     }
 
     /**
@@ -297,7 +298,7 @@ export class JWEditor {
         callback: () => Promise<void>,
     ): Promise<void> {
         await callback();
-        await this.dispatcher.dispatchCustom();
+        this.dispatcher.dispatchHooks('@JWEditor.execCustomCommand');
     }
 
     /**
