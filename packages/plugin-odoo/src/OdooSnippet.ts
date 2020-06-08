@@ -12,7 +12,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { OdooStructureNode } from './OdooStructureNode';
 import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
-import { OdooImageHtmlDomRenderer } from './OdooImageHtmlDomRenderer';
+import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
@@ -101,7 +101,7 @@ interface SelectedLinkInfo {
 export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [OdooStructureXmlDomParser],
-        renderers: [OdooImageHtmlDomRenderer],
+        renderers: [OdooImageDomObjectRenderer],
         shortcuts: [],
     };
     commands = {
