@@ -48,17 +48,10 @@ export class Dispatcher {
             // Call command handler.
             const result = await command.handler(args);
 
-            await this._dispatchHooks(commandId, args);
+            await this.dispatchHooks(commandId, args);
 
             return result;
         }
-    }
-
-    /**
-     * Trigger the dispatcher for a custom command.
-     */
-    async dispatchCustom(): Promise<void> {
-        return this._dispatchHooks('@custom');
     }
 
     /**
@@ -90,11 +83,11 @@ export class Dispatcher {
     /**
      * Dispatch to all registred `commandHooks`.
      */
-    private async _dispatchHooks(commandId: CommandIdentifier, args?): Promise<void> {
-        const hooks = this.commandHooks[commandId] || [];
+    async dispatchHooks(signal: string, args?): Promise<void> {
+        const hooks = this.commandHooks[signal] || [];
         const globalHooks = this.commandHooks['*'] || [];
         for (const hookCallback of [...hooks, ...globalHooks]) {
-            await hookCallback(args, commandId);
+            await hookCallback(args, signal);
         }
     }
 }
