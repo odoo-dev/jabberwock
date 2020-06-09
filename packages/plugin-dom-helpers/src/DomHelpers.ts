@@ -18,10 +18,6 @@ export interface RemoveClassParams extends CommandParams {
     nodes: VNode[];
     classes: string[];
 }
-export interface AddClassParams extends CommandParams {
-    nodes?: VNode[];
-    classes: string[];
-}
 export interface AddClassToLinkParams extends CommandParams {
     /**
      * The class attribute to attatch to the link.
@@ -93,47 +89,49 @@ interface SelectedLinkInfo {
 }
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
+    layout = this.editor.plugins.get(Layout);
+    domEngine = this.layout.engines.dom as DomLayoutEngine;
     commands = {
-        removeClasses: {
-            handler: this.removeClasses.bind(this),
+        'dom.addClass': {
+            handler: this.addClass.bind(this),
         },
-        addClasses: {
-            handler: this.addClasses.bind(this),
+        'dom.removeClass': {
+            handler: this.removeClass.bind(this),
         },
-        addClassToLink: {
+        'dom.addClassToLink': {
             handler: this.addClassToLink.bind(this),
         },
-        toggleClass: {
+        'dom.toggleClass': {
             handler: this.toggleClass.bind(this),
         },
-        setAttribute: {
+        'dom.setAttribute': {
             handler: this.setAttribute.bind(this),
         },
-        setStyle: {
+        'dom.setStyle': {
             handler: this.setStyle.bind(this),
         },
-        move: {
+        'dom.move': {
             handler: this.move.bind(this),
         },
-        remove: {
+        'dom.remove': {
             handler: this.remove.bind(this),
         },
-        empty: {
+        'dom.empty': {
             handler: this.empty.bind(this),
         },
-        wrap: {
+        'dom.wrap': {
             handler: this.wrap.bind(this),
         },
-        replace: {
+        'dom.replace': {
             handler: this.replace.bind(this),
         },
-        getStructures: {
+        'dom.getStructures': {
             handler: this.getStructures.bind(this),
         },
-        getRecordCover: {
+        'dom.getRecordCover': {
             handler: this.getRecordCover.bind(this),
         },
-        getLinkInfo: {
+        'dom.getLinkInfo': {
             handler: this.getLinkInfo.bind(this),
         },
     };
@@ -142,26 +140,28 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Add a class or a list of classes to a DOM node or a list of DOM nodes.
+     *
+     * @param params
+     */
+    addClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
+        const classes = Array.isArray(params.class) ? params.class : [params.class];
+        for (const node of this._getVNodes(params.domNode)) {
+            node.modifiers.get(Attributes).classList.add(...classes);
+        }
+    }
+    removeClasses(params: RemoveClassParams): void {
+            for (const className of params.class) {
+                node.modifiers.get(Attributes).classList.add(className);
+            }
+        }
+    }
     removeClasses(params: RemoveClassParams): void {
         // todo: use range rather than params.nodes
         for (const element of params.nodes) {
             for (const className of params.classes) {
                 element.modifiers.get(Attributes).classList.remove(className);
-            }
-        }
-    }
-    addClasses(params: AddClassParams): void {
-        // todo: remove nodes and only use a range.
-        let nodes: VNode[];
-        if (params.nodes) {
-            nodes = params.nodes;
-        } else {
-            nodes = params.context?.range.selectedNodes() || [];
-        }
-
-        for (const node of nodes) {
-            for (const className of params.classes) {
-                node.modifiers.get(Attributes).classList.add(className);
             }
         }
     }
@@ -319,9 +319,15 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         div.innerHTML = content;
         return (await domParser.parse(div))[0].children();
     }
-    _getVNode(domNode: Node): VNode {
-        const layout = this.editor.plugins.get(Layout);
-        const domEngine = layout.engines.dom as DomLayoutEngine;
-        return domEngine.getNodes(domNode)[0];
+    _getVNodes(domNode: Node | Node[]): VNode[] {
+        let nodes: VNode[] = [];
+        if (Array.isArray(domNode)) {
+            for (const oneDomNode of domNode) {
+                nodes.push(...this.domEngine.getNodes(oneDomNode));
+            }
+        } else {
+            nodes = this.domEngine.getNodes(domNode);
+        }
+        return nodes;
     }
 }
