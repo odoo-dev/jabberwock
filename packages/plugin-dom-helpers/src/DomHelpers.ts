@@ -14,11 +14,6 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export interface SetAttributeParams {
-    nodes: VNode[];
-    attributeName: string;
-    attributeValue: string;
-}
 export interface SetStyleParams {
     /**
      * The `VNode`s whose style we want to change.
@@ -154,9 +149,14 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.modifiers.get(Attributes).classList.toggle(...classes);
         }
     }
-    setAttribute(params: SetAttributeParams): void {
-        for (const element of params.nodes) {
-            element.modifiers.get(Attributes).set(params.attributeName, params.attributeValue);
+    /**
+     * Set an attribute on a DOM node or a list of DOM nodes.
+     *
+     * @param params
+     */
+    setAttribute(params: { domNode: Node | Node[]; name: string; value: string }): void {
+        for (const node of this._getNodes(params.domNode)) {
+            node.modifiers.get(Attributes).set(params.name, params.value);
         }
     }
     setStyle(params: SetStyleParams): void {
