@@ -1,4 +1,4 @@
-import { BasicEditor } from '../../bundles/BasicEditor';
+import { BasicEditor } from '../../packages/bundle-basic-editor/BasicEditor';
 import { FontAwesome } from '../../packages/plugin-fontawesome/src/FontAwesome';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 import template from './demo-odoo-fields.xml';
