@@ -90,12 +90,14 @@ export class ClassList {
     /**
      * Remove the given class(es) from the set.
      *
-     * @param className
+     * @param classNames
      */
-    remove(className: string): void {
-        const classes = this.parseClassName(className);
-        for (const name of classes) {
-            this._classList.delete(name);
+    remove(...classNames: string[]): void {
+        for (const className of classNames) {
+            const classes = this.parseClassName(className);
+            for (const name of classes) {
+                this._classList.delete(name);
+            }
         }
     }
     /**
