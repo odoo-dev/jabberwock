@@ -68,6 +68,7 @@ import {
     AlignRightButton,
     AlignJustifyButton,
 } from '../plugin-align/src/AlignButtons';
+import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -123,6 +124,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Pre],
                 [TextColor],
                 [BackgroundColor],
+                [DomHelpers],
                 [OdooSnippet],
                 [OdooVideo],
                 [CustomPlugin],
