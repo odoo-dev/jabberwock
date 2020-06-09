@@ -5,7 +5,6 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
 import {
-    AddClassParams,
     MoveParams,
     DomHelpers,
     RemoveClassParams,
@@ -30,19 +29,12 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
     const odooCommands = {
-        async addClasses(domNode: Node, classes: string[]): Promise<void> {
-            const params: AddClassParams = {
-                nodes: domEngine.getNodes(domNode),
-                classes,
-            };
-            await editor.execCommand<DomHelpers>('addClasses', params);
-        },
         async removeClasses(domNode: Node, classes: string[]): Promise<void> {
             const params: RemoveClassParams = {
                 nodes: domEngine.getNodes(domNode),
                 classes,
             };
-            await editor.execCommand<DomHelpers>('removeClasses', params);
+            await editor.execCommand<DomHelpers>('dom.removeClasses', params);
         },
         async toggleClass(domNode: Node, klass: string, set?: boolean): Promise<void> {
             const nodes = domEngine.getNodes(domNode);
@@ -54,7 +46,7 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 class: klass,
                 set,
             };
-            await editor.execCommand<DomHelpers>('toggleClass', params);
+            await editor.execCommand<DomHelpers>('dom.toggleClass', params);
         },
         async setAttribute(
             domNode: Node,
@@ -66,7 +58,7 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 attributeName,
                 attributeValue,
             };
-            await editor.execCommand<DomHelpers>('setAttribute', params);
+            await editor.execCommand<DomHelpers>('dom.setAttribute', params);
         },
         async setStyle(
             domNode: Node,
@@ -80,7 +72,7 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 value,
                 important,
             };
-            await editor.execCommand<DomHelpers>('setStyle', params);
+            await editor.execCommand<DomHelpers>('dom.setStyle', params);
         },
         // todo: sometimes i need to append. Because the implementation of the insertHTML append
         // it when the RelativePosition is 'inside', it work. But this is unclear that it will
@@ -101,7 +93,7 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 from: fromNode,
                 to: [toNode, RelativePosition.BEFORE],
             };
-            return await editor.execCommand<DomHelpers>('move', params);
+            return await editor.execCommand<DomHelpers>('dom.move', params);
         },
         async moveAfter(fromDomNode: Node, toDomNode: Node): Promise<void> {
             const fromNode = domEngine.getNodes(fromDomNode)[0];
@@ -110,13 +102,13 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 from: fromNode,
                 to: [toNode, RelativePosition.AFTER],
             };
-            return await editor.execCommand<DomHelpers>('move', params);
+            return await editor.execCommand<DomHelpers>('dom.move', params);
         },
         async remove(domNode: Node): Promise<void> {
             const params: RemoveParams = {
                 nodes: domEngine.getNodes(domNode),
             };
-            return await editor.execCommand<DomHelpers>('remove', params);
+            return await editor.execCommand<DomHelpers>('dom.remove', params);
         },
         exists(domNode: Node): boolean {
             return !!domEngine.getNodes(domNode);
@@ -125,7 +117,7 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
             const params: EmptyParams = {
                 nodes: domEngine.getNodes(domNode),
             };
-            return await editor.execCommand<DomHelpers>('empty', params);
+            return await editor.execCommand<DomHelpers>('dom.empty', params);
         },
         async wrap(domNode: Node, html: string): Promise<void> {
             const container = domEngine.getNodes(domNode)[0];
@@ -138,14 +130,14 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 container,
                 html,
             };
-            return await editor.execCommand<DomHelpers>('empty', params);
+            return await editor.execCommand<DomHelpers>('dom.empty', params);
         },
         async replace(domNode: Node, html: string): Promise<void> {
             const params: ReplaceParams = {
                 nodes: domEngine.getNodes(domNode),
                 html,
             };
-            return await editor.execCommand<DomHelpers>('replace', params);
+            return await editor.execCommand<DomHelpers>('dom.replace', params);
         },
     };
     return odooCommands;
