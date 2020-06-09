@@ -7,7 +7,6 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import {
     MoveParams,
     DomHelpers,
-    RemoveClassParams,
     RemoveParams,
     SetAttributeParams,
     SetStyleParams,
@@ -29,13 +28,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
     const odooCommands = {
-        async removeClasses(domNode: Node, classes: string[]): Promise<void> {
-            const params: RemoveClassParams = {
-                nodes: domEngine.getNodes(domNode),
-                classes,
-            };
-            await editor.execCommand<DomHelpers>('dom.removeClasses', params);
-        },
         async toggleClass(domNode: Node, klass: string, set?: boolean): Promise<void> {
             const nodes = domEngine.getNodes(domNode);
             if (!nodes) {
