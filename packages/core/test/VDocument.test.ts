@@ -3,7 +3,7 @@ import { testEditor } from '../../utils/src/testUtils';
 import { Char } from '../../plugin-char/src/Char';
 import { VRange, withRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Core } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
 

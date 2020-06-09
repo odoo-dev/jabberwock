@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { TableNode } from '../src/TableNode';
 import { Table } from '../src/Table';
 import { TableRowNode } from '../src/TableRowNode';

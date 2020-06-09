@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { HeadingNode } from '../src/HeadingNode';
 import { Heading } from '../src/Heading';
 import { describePlugin } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
