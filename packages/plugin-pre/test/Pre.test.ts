@@ -1,6 +1,6 @@
 import { describePlugin } from '../../utils/src/testUtils';
 import { Pre } from '../src/Pre';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';

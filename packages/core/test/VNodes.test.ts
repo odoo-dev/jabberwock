@@ -8,7 +8,7 @@ import { FragmentNode } from '../src/VNodes/FragmentNode';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
 import { testEditor } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { nodeName } from '../../utils/src/utils';
 import { ContainerNode } from '../src/VNodes/ContainerNode';
