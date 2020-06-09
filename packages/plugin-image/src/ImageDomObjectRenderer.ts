@@ -36,7 +36,7 @@ export class ImageDomObjectRenderer extends InlineFormatDomObjectRenderer {
             if (isSelected) {
                 const classlist = (image.attributes?.class || '').split(/\s+/);
                 classlist.push('jw_selected_image');
-                image.attributes.class = classlist.join('');
+                image.attributes.class = classlist.join(' ');
             }
             this.engine.locate([node], image);
             return image;
