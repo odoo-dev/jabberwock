@@ -14,10 +14,6 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export interface RemoveClassParams extends CommandParams {
-    nodes: VNode[];
-    classes: string[];
-}
 export interface AddClassToLinkParams extends CommandParams {
     /**
      * The class attribute to attatch to the link.
@@ -151,18 +147,15 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.modifiers.get(Attributes).classList.add(...classes);
         }
     }
-    removeClasses(params: RemoveClassParams): void {
-            for (const className of params.class) {
-                node.modifiers.get(Attributes).classList.add(className);
-            }
-        }
-    }
-    removeClasses(params: RemoveClassParams): void {
-        // todo: use range rather than params.nodes
-        for (const element of params.nodes) {
-            for (const className of params.classes) {
-                element.modifiers.get(Attributes).classList.remove(className);
-            }
+    /**
+     * Remove a class or a list of classes from a DOM node or a list of DOM nodes.
+     *
+     * @param params
+     */
+    removeClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
+        const classes = Array.isArray(params.class) ? params.class : [params.class];
+        for (const node of this._getVNodes(params.domNode)) {
+            node.modifiers.get(Attributes).classList.remove(...classes);
         }
     }
     addClassToLink(params: AddClassToLinkParams): void {
