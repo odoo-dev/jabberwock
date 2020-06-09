@@ -20,11 +20,6 @@ export interface AddClassToLinkParams extends CommandParams {
      */
     classes: string;
 }
-export interface ToggleClassParams {
-    nodes: VNode[];
-    class: string;
-    set?: boolean;
-}
 export interface SetAttributeParams {
     nodes: VNode[];
     attributeName: string;
@@ -156,23 +151,23 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.modifiers.get(Attributes).classList.remove(...classes);
         }
     }
+    /**
+     * Add or remove a class or a list of classes from a DOM node or a list of
+     * DOM nodes.
+     *
+     * @param params
+     */
+    toggleClass(params: { domNode: Node | Node[]; class: string }): void {
+        const classes = Array.isArray(params.class) ? params.class : [params.class];
+        for (const node of this._getNodes(params.domNode)) {
+            node.modifiers.get(Attributes).classList.toggle(...classes);
+        }
+    }
     addClassToLink(params: AddClassToLinkParams): void {
         const nodes = params.context.range.targetedNodes(InlineNode);
         const links = nodes.map(node => node.modifiers.find(LinkFormat)).filter(f => f);
         for (const link of links) {
             link.modifiers.get(Attributes).set('class', params.classes);
-        }
-    }
-    toggleClass(params: ToggleClassParams): void {
-        for (const node of params.nodes) {
-            const classList = node.modifiers.get(Attributes).classList;
-            const value =
-                typeof params.set !== 'undefined' ? params.set : !classList.has(params.class);
-            if (value) {
-                classList.add(params.class);
-            } else {
-                classList.remove(params.class);
-            }
         }
     }
     setAttribute(params: SetAttributeParams): void {
