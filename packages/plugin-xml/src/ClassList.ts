@@ -130,12 +130,14 @@ export class ClassList {
      */
     toggle(...classes: string[]): void {
         for (const className of classes) {
-            const parsed = this.parseClassName(className);
-            for (const name of parsed) {
-                if (this._classList.has(name)) {
-                    this._classList.delete(name);
-                } else {
-                    this._classList.add(name);
+            if (className) {
+                const parsed = this.parseClassName(className);
+                for (const name of parsed) {
+                    if (this._classList.has(name)) {
+                        this._classList.delete(name);
+                    } else {
+                        this._classList.add(name);
+                    }
                 }
             }
         }
