@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { ListNode, ListType } from '../../plugin-list/src/ListNode';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { CommandImplementation } from '../src/Dispatcher';
 import { expect } from 'chai';

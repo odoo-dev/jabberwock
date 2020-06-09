@@ -6,7 +6,7 @@ import { Renderer } from '../src/Renderer';
 import { AbstractRenderer } from '../src/AbstractRenderer';
 import { RenderingEngine } from '../src/RenderingEngine';
 import { testEditor } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Html } from '../../plugin-html/src/Html';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 

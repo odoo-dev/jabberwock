@@ -1,6 +1,6 @@
 import { describePlugin } from '../../utils/src/testUtils';
 import { Align, AlignType } from '../src/Align';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 

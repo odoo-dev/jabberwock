@@ -3,7 +3,7 @@ import { Inline } from '../src/Inline';
 import JWEditor from '../../core/src/JWEditor';
 import { Constructor } from '../../utils/src/utils';
 import { Format } from '../src/Format';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 
 const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
