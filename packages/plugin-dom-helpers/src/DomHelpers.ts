@@ -85,8 +85,6 @@ interface SelectedLinkInfo {
 }
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    layout = this.editor.plugins.get(Layout);
-    domEngine = this.layout.engines.dom as DomLayoutEngine;
     commands = {
         'dom.addClass': {
             handler: this.addClass.bind(this),
@@ -143,7 +141,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     addClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
         const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this._getVNodes(params.domNode)) {
+        for (const node of this._getNodes(params.domNode)) {
             node.modifiers.get(Attributes).classList.add(...classes);
         }
     }
@@ -154,7 +152,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     removeClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
         const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this._getVNodes(params.domNode)) {
+        for (const node of this._getNodes(params.domNode)) {
             node.modifiers.get(Attributes).classList.remove(...classes);
         }
     }
@@ -312,14 +310,16 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         div.innerHTML = content;
         return (await domParser.parse(div))[0].children();
     }
-    _getVNodes(domNode: Node | Node[]): VNode[] {
+    _getNodes(domNode: Node | Node[]): VNode[] {
+        const layout = this.editor.plugins.get(Layout);
+        const domEngine = layout.engines.dom as DomLayoutEngine;
         let nodes: VNode[] = [];
         if (Array.isArray(domNode)) {
             for (const oneDomNode of domNode) {
-                nodes.push(...this.domEngine.getNodes(oneDomNode));
+                nodes.push(...domEngine.getNodes(oneDomNode));
             }
         } else {
-            nodes = this.domEngine.getNodes(domNode);
+            nodes = domEngine.getNodes(domNode);
         }
         return nodes;
     }
