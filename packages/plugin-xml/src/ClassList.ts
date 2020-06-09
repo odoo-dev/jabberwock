@@ -75,14 +75,16 @@ export class ClassList {
         return Array.from(this._classList);
     }
     /**
-     * Add the given class(s) to the set.
+     * Add the given class(es) to the set.
      *
-     * @param className
+     * @param classNames
      */
-    add(className: string): void {
-        const classes = this.parseClassName(className);
-        for (const name of classes) {
-            this._classList.add(name);
+    add(...classNames: string[]): void {
+        for (const className of classNames) {
+            const classes = this.parseClassName(className);
+            for (const name of classes) {
+                this._classList.add(name);
+            }
         }
     }
     /**
