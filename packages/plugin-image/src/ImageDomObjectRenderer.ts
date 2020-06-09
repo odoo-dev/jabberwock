@@ -1,12 +1,13 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { InlineFormatDomObjectRenderer } from '../../plugin-inline/src/InlineFormatDomObjectRenderer';
 import { ImageNode } from './ImageNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { Format } from '../../plugin-inline/src/Format';
 
-export class ImageDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ImageDomObjectRenderer extends InlineFormatDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ImageNode;
@@ -37,6 +38,7 @@ export class ImageDomObjectRenderer extends AbstractRenderer<DomObject> {
             classlist.push('jw_selected_image');
             image.attributes.class = classlist.join('');
         }
-        return image;
+        this.engine.locate([node], image);
+        return this.renderFormats(node.modifiers.filter(Format), image);
     }
 }
