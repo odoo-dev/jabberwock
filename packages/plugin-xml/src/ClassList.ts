@@ -81,9 +81,11 @@ export class ClassList {
      */
     add(...classNames: string[]): void {
         for (const className of classNames) {
-            const classes = this.parseClassName(className);
-            for (const name of classes) {
-                this._classList.add(name);
+            if (className) {
+                const classes = this.parseClassName(className);
+                for (const name of classes) {
+                    this._classList.add(name);
+                }
             }
         }
     }
@@ -94,9 +96,11 @@ export class ClassList {
      */
     remove(...classNames: string[]): void {
         for (const className of classNames) {
-            const classes = this.parseClassName(className);
-            for (const name of classes) {
-                this._classList.delete(name);
+            if (className) {
+                const classes = this.parseClassName(className);
+                for (const name of classes) {
+                    this._classList.delete(name);
+                }
             }
         }
     }
