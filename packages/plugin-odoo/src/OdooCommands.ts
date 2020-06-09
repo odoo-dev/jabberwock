@@ -8,8 +8,6 @@ import {
     MoveParams,
     DomHelpers,
     RemoveParams,
-    SetAttributeParams,
-    SetStyleParams,
     EmptyParams,
     WrapParams,
     ReplaceParams,
