@@ -1,4 +1,4 @@
-import { BasicEditor } from '../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../packages/bundle-basic-editor/BasicEditor';
 import { jabberwocky } from '../utils/jabberwocky';
 import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';

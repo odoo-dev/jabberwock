@@ -3,7 +3,7 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { testEditor, renderTextualSelection } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { CharXmlDomParser } from '../../plugin-char/src/CharXmlDomParser';
 import { HeadingXmlDomParser } from '../../plugin-heading/src/HeadingXmlDomParser';
 import { LineBreakXmlDomParser } from '../../plugin-linebreak/src/LineBreakXmlDomParser';

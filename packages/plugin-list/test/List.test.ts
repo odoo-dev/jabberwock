@@ -3,7 +3,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
 import { ListType, ListNode } from '../src/ListNode';
 import { describePlugin, keydown, unformat, click } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { List } from '../src/List';
 import { ListXmlDomParser } from '../src/ListXmlDomParser';

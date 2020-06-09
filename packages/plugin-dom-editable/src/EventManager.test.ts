@@ -1,5 +1,5 @@
 import { spy } from 'sinon';
-import { BasicEditor } from '../../../bundles/BasicEditor/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { testEditor } from '../../utils/src/testUtils';
 import { expect } from 'chai';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
