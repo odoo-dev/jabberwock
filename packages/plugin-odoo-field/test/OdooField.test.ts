@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { describePlugin, testEditor } from '../../utils/src/testUtils';
 import { OdooField } from '../../plugin-odoo-field/src/OdooField';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Char } from '../../plugin-char/src/Char';
 import JWEditor from '../../core/src/JWEditor';
 import { fieldValidators } from '../src/OdooField';
