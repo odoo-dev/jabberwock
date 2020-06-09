@@ -30,10 +30,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
     const odooCommands = {
-        hasVNode(domNode: Node): boolean {
-            const nodes = domEngine.getNodes(domNode);
-            return !!(nodes && nodes.length);
-        },
         async addClasses(domNode: Node, classes: string[]): Promise<void> {
             const params: AddClassParams = {
                 nodes: domEngine.getNodes(domNode),
