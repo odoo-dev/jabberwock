@@ -10,7 +10,6 @@ import {
     RemoveParams,
     SetAttributeParams,
     SetStyleParams,
-    ToggleClassParams,
     EmptyParams,
     WrapParams,
     ReplaceParams,
@@ -28,18 +27,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
     const odooCommands = {
-        async toggleClass(domNode: Node, klass: string, set?: boolean): Promise<void> {
-            const nodes = domEngine.getNodes(domNode);
-            if (!nodes) {
-                throw new Error('nodes are empty');
-            }
-            const params: ToggleClassParams = {
-                nodes: nodes,
-                class: klass,
-                set,
-            };
-            await editor.execCommand<DomHelpers>('dom.toggleClass', params);
-        },
         async setAttribute(
             domNode: Node,
             attributeName: string,
