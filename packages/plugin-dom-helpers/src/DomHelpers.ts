@@ -14,21 +14,6 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export interface SetStyleParams {
-    /**
-     * The `VNode`s whose style we want to change.
-     */
-    nodes: VNode[];
-    /**
-     * The css property.
-     */
-    property: string;
-    /**
-     * The css value.
-     */
-    value: string;
-    important?: boolean;
-}
 export interface MoveParams {
     from: VNode;
     to: Point;
@@ -159,10 +144,20 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.modifiers.get(Attributes).set(params.name, params.value);
         }
     }
-    setStyle(params: SetStyleParams): void {
-        for (const node of params.nodes) {
+    /**
+     * Set
+     *
+     * @param params
+     */
+    setStyle(params: {
+        domNode: Node | Node[];
+        name: string;
+        value: string;
+        important?: boolean;
+    }): void {
+        for (const node of this._getNodes(params.domNode)) {
             const value = params.important ? params.value + ' !important' : params.value;
-            node.modifiers.get(Attributes).style.set(params.property, value);
+            node.modifiers.get(Attributes).style.set(params.name, value);
         }
     }
     move(params: MoveParams): void {

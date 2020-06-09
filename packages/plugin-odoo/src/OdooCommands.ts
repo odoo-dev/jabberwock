@@ -27,20 +27,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
     const odooCommands = {
-        async setStyle(
-            domNode: Node,
-            property: string,
-            value: string,
-            important = false,
-        ): Promise<void> {
-            const params: SetStyleParams = {
-                nodes: domEngine.getNodes(domNode),
-                property,
-                value,
-                important,
-            };
-            await editor.execCommand<DomHelpers>('dom.setStyle', params);
-        },
         // todo: sometimes i need to append. Because the implementation of the insertHTML append
         // it when the RelativePosition is 'inside', it work. But this is unclear that it will
         // append.
