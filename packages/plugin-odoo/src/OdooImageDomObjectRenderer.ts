@@ -10,7 +10,9 @@ export class OdooImageDomObjectRenderer extends ImageDomObjectRenderer {
         if (image && 'tag' in image) {
             const savedAttach = image.attach;
             image.attach = (el: HTMLElement): void => {
-                savedAttach(el);
+                if (savedAttach) {
+                    savedAttach(el);
+                }
                 el.addEventListener('dblclick', () => {
                     const params = { image: node };
                     this.engine.editor.execCommand('openMedia', params);
