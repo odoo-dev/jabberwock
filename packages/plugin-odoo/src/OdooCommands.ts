@@ -27,18 +27,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
     const domEngine = layout.engines.dom as DomLayoutEngine;
 
     const odooCommands = {
-        async setAttribute(
-            domNode: Node,
-            attributeName: string,
-            attributeValue: string,
-        ): Promise<void> {
-            const params: SetAttributeParams = {
-                nodes: domEngine.getNodes(domNode),
-                attributeName,
-                attributeValue,
-            };
-            await editor.execCommand<DomHelpers>('dom.setAttribute', params);
-        },
         async setStyle(
             domNode: Node,
             property: string,
