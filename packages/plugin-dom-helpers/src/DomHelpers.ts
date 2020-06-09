@@ -14,12 +14,6 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export interface AddClassToLinkParams extends CommandParams {
-    /**
-     * The class attribute to attatch to the link.
-     */
-    classes: string;
-}
 export interface SetAttributeParams {
     nodes: VNode[];
     attributeName: string;
@@ -86,9 +80,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         },
         'dom.removeClass': {
             handler: this.removeClass.bind(this),
-        },
-        'dom.addClassToLink': {
-            handler: this.addClassToLink.bind(this),
         },
         'dom.toggleClass': {
             handler: this.toggleClass.bind(this),
@@ -161,13 +152,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const classes = Array.isArray(params.class) ? params.class : [params.class];
         for (const node of this._getNodes(params.domNode)) {
             node.modifiers.get(Attributes).classList.toggle(...classes);
-        }
-    }
-    addClassToLink(params: AddClassToLinkParams): void {
-        const nodes = params.context.range.targetedNodes(InlineNode);
-        const links = nodes.map(node => node.modifiers.find(LinkFormat)).filter(f => f);
-        for (const link of links) {
-            link.modifiers.get(Attributes).set('class', params.classes);
         }
     }
     setAttribute(params: SetAttributeParams): void {
