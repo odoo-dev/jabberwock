@@ -19,14 +19,13 @@ describePlugin(Inline, testEditor => {
                 contentBefore:
                     '<p>a<span class="outer">bc<span class="inner">de</span>fg</span>h</p>',
                 contentAfter:
-                    '<p>a<span class="outer">bc</span><span class="outer"><span class="inner">de</span></span><span class="outer">fg</span>h</p>',
+                    '<p>a<span class="outer">bc<span class="inner">de</span>fg</span>h</p>',
             });
         });
         it('should parse some nested formats in order', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>ab<b>cd<i>ef<u>gh</u>ij</i>kl</b>mn</p>',
-                contentAfter:
-                    '<p>ab<b>cd</b><b><i>ef</i></b><b><i><u>gh</u></i></b><b><i>ij</i></b><b>kl</b>mn</p>',
+                contentAfter: '<p>ab<b>cd<i>ef<u>gh</u>ij</i>kl</b>mn</p>',
             });
         });
     });

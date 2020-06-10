@@ -14,13 +14,13 @@ export class InlineFormatDomObjectRenderer extends AbstractRenderer<DomObject> {
 
     async render(node: InlineNode): Promise<DomObject> {
         const inline = await this.super.render(node);
-        return this.renderFormats(node.modifiers.filter(Format), inline as DomObject);
+        return this.renderFormats(inline, ...node.modifiers.filter(Format));
     }
     /**
      * Render an inline node's formats and return them in a fragment.
      *
      */
-    async renderFormats(formats: Format[], rendering: DomObject): Promise<DomObject> {
+    async renderFormats(rendering: DomObject, ...formats: Format[]): Promise<DomObject> {
         let children: Array<DomObject | VNode> = [];
         if ('tag' in rendering || 'text' in rendering) {
             children = [rendering];
