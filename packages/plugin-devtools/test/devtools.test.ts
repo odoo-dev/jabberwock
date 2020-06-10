@@ -24,8 +24,9 @@ let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
     await click(wrapper.querySelector('devtools-navbar'));
     await nextTickFrame(); // redraw
+
     document
-        .evaluate('//jw-devtools//devtools-node//devtools-nodename[text()="Zone: main"]', wrapper)
+        .evaluate('//jw-devtools//devtools-node[3]//devtools-nodename[text()="Zone"]', wrapper)
         .iterateNext()
         .parentElement.classList.add('zone-main'); // add for test query selector
 }
@@ -225,7 +226,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-infotitle>👪 My Family</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
-                '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>ZoneNode: main</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>ZoneNode</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td><devtools-list><devtools-listitem>' +
                 root.children()[0].name +
                 '</devtools-listitem><devtools-listitem>' +
@@ -680,11 +681,11 @@ describe('Plugin: DevTools', () => {
             expect(
                 [...path.querySelectorAll('devtools-pathnode')].map(n => n.textContent),
             ).to.deep.equal([
-                'ZoneNode: root',
+                'ZoneNode',
                 'LayoutContainer',
                 'VElement',
                 'VElement',
-                'ZoneNode: main',
+                'ZoneNode',
                 'VElement',
                 'ParagraphNode',
                 'i.i',
@@ -699,11 +700,11 @@ describe('Plugin: DevTools', () => {
             expect(
                 [...path.querySelectorAll('devtools-pathnode')].map(n => n.textContent),
             ).to.deep.equal([
-                'ZoneNode: root',
+                'ZoneNode',
                 'LayoutContainer',
                 'VElement',
                 'VElement',
-                'ZoneNode: main',
+                'ZoneNode',
                 'VElement',
                 'ParagraphNode',
                 'u.u',

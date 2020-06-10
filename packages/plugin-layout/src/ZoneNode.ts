@@ -11,10 +11,6 @@ export class ZoneNode extends ContainerNode {
         super();
     }
 
-    get name(): string {
-        return super.name + ': ' + this.managedZones.join();
-    }
-
     hide(child: VNode): void {
         this.hidden.set(child, true);
         return;

@@ -910,11 +910,11 @@ describe('core', () => {
                                     'ParagraphNode',
                                     'HeadingNode: 1',
                                     'VElement',
-                                    'ZoneNode: main',
+                                    'ZoneNode',
                                     'VElement',
                                     'VElement',
                                     'LayoutContainer',
-                                    'ZoneNode: root',
+                                    'ZoneNode',
                                 ]);
                             },
                         });
@@ -932,11 +932,11 @@ describe('core', () => {
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
                                     'VElement',
-                                    'ZoneNode: main',
+                                    'ZoneNode',
                                     'VElement',
                                     'VElement',
                                     'LayoutContainer',
-                                    'ZoneNode: root',
+                                    'ZoneNode',
                                 ]);
                             },
                         });
