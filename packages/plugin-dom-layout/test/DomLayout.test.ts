@@ -1573,15 +1573,17 @@ describe('DomLayout', () => {
                     );
 
                     const renderedText0 = await renderer.render('dom/object', textNodes[0]);
-                    expect(renderedText0).to.deep.equal({ text: 'a' });
-                    const renderedText1 = await renderer.render('dom/object', textNodes[1]);
-                    expect(renderedText1).to.deep.equal({
-                        tag: 'I',
-                        attributes: {},
-                        children: [{ text: 'b' }],
+                    expect(renderedText0).to.deep.equal({
+                        children: [
+                            { text: 'a' },
+                            {
+                                tag: 'I',
+                                attributes: {},
+                                children: [{ text: 'b' }],
+                            },
+                            { text: 'c' },
+                        ],
                     });
-                    const renderedText2 = await renderer.render('dom/object', textNodes[2]);
-                    expect(renderedText2).to.deep.equal({ text: 'c' });
                 },
                 contentAfter: 'a[<i>b]</i>c',
             });
@@ -1635,14 +1637,20 @@ describe('DomLayout', () => {
 
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
-                            tag: 'B',
-                            attributes: {},
                             children: [
+                                { text: 'a' },
                                 {
-                                    tag: 'I',
+                                    tag: 'B',
                                     attributes: {},
-                                    children: [{ text: 'b' }],
+                                    children: [
+                                        {
+                                            tag: 'I',
+                                            attributes: {},
+                                            children: [{ text: 'b' }],
+                                        },
+                                    ],
                                 },
+                                { text: 'c' },
                             ],
                         });
                     },
@@ -3851,6 +3859,22 @@ describe('DomLayout', () => {
                 expect(mutationNumber).to.equal(1);
 
                 await editor.stop();
+            });
+            it('should remove some attributes on everything', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<p style="background-color: red;">[a<span style="background-color: white;">b</span>c<span style="color: green; background-color: yellow;">d</span>e]</p>',
+                    stepFunction: async editor => {
+                        await nextTick();
+                        mutationNumber = 0;
+                        await editor.execCommand('uncolorBackground');
+                        expect(mutationNumber).to.equal(
+                            5,
+                            'remove 3 formats + remove 2 empty styles.',
+                        );
+                    },
+                    contentAfter: '<p>[a<span>b</span>c<span style="color: green;">d</span>e]</p>',
+                });
             });
             it('should not have mutation when redraw a custom fragment with children who have same rendering', async () => {
                 class CustomNode extends AtomicNode {}

@@ -71,7 +71,8 @@ export class DomReconciliationEngine {
                 oldObjects = [];
                 unfilterdOldObjectMap.set(domObject, oldObjects);
             }
-            for (const linkedNode of this._nodes.get(domObject)) {
+            const nodes = this._nodes.get(domObject);
+            for (const linkedNode of nodes) {
                 const id = this._renderedNodes.get(linkedNode);
                 if (id && !oldObjects.includes(id)) {
                     oldObjects.push(id);
@@ -1256,13 +1257,22 @@ export class DomReconciliationEngine {
         return newNode;
     }
     private _getDomChild(id: DomObjectID, parentDomNode: Element | ShadowRoot): Node[] {
-        const child = this._objects[id];
-        child.parentDomNode = parentDomNode;
-        if (this._diff[id]) {
-            this._updateDom(id);
+        // Apply diff for descendents if needed.
+        const descendents = [id];
+        for (const id of descendents) {
+            const descendent = this._objects[id];
+            descendent.parentDomNode = parentDomNode;
+            if (this._diff[id]) {
+                this._updateDom(id);
+            } else if (!('tag' in descendent.object) && descendent.children) {
+                // Get children if it's a fragment.
+                descendents.push(...descendent.children);
+            }
         }
+        // Get the dom representing this child.
         let domNodes: Node[] = [];
         if (parentDomNode) {
+            const child = this._objects[id];
             if (child.dom.length) {
                 domNodes = child.dom;
             } else {

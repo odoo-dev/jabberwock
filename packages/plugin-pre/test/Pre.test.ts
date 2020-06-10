@@ -55,7 +55,7 @@ describePlugin(Pre, testEditor => {
                 [c]</i></b>
                 de</pre>`,
                 contentAfter:
-                    '<pre><b>a</b><b><i>b</i></b>\n' +
+                    '<pre><b>a<i>b</i></b>\n' +
                     '<b><i>                [c]</i></b>\n' +
                     '                de</pre>',
             });
