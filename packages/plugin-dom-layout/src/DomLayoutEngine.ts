@@ -157,7 +157,12 @@ export class DomLayoutEngine extends LayoutEngine {
         return nodes;
     }
     async redraw(...nodes: VNode[]): Promise<void> {
-        if (this.editor.enableRender && this.editor.preventRenders.size) return;
+        if (
+            !this.editor.enableRender ||
+            (this.editor.preventRenders && this.editor.preventRenders.size)
+        ) {
+            return;
+        }
         if (this._currentlyRedrawing) {
             throw new Error('Double redraw detected');
         }
