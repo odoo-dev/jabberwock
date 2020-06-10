@@ -39,6 +39,6 @@ export class ImageDomObjectRenderer extends InlineFormatDomObjectRenderer {
             image.attributes.class = classlist.join(' ');
         }
         this.engine.locate([node], image);
-        return this.renderFormats(node.modifiers.filter(Format), image);
+        return this.renderFormats(image, ...node.modifiers.filter(Format));
     }
 }
