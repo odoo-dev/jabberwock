@@ -11,12 +11,11 @@ Temporarily replace the library with the following script.
 cp dev/odoo-integration-dev.js <your_odoo_path>/addons/web_editor/static/lib/jabberwock/jabberwock.js
 ```
 `odoo-integration-dev.js` will load the script `build-full.js`.
-The default loaded script is `http://localhost:8095/odoo-integration.js`.
-You might want to change the port if your development port is not "8095".
+The default loaded script is `http://localhost:8080/odoo-integration.js`.
 
-Launch the development server (on port 8095):
+Launch the development server (the default port is 80):
 ```bash
-npm run dev -- --port 8095
+npm run dev
 ```
 
 Once finished developing, rebuild the source and put it back in Odoo.
