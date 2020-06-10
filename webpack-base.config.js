@@ -122,17 +122,21 @@ module.exports.odoo = {
     plugins: [
         {
             apply: compiler => {
-                compiler.hooks.afterEmit.tap('AfterEmitBuildOdooIntegration', async compilation => {
+                compiler.hooks.afterEmit.tap('AfterEmitBuildOdooIntegration', async () => {
                     const filename = path.resolve(odooBuildPath, odooBuildFilename);
-                    const content = await fs.promises.readFile(filename);
-                    const newContent = [
-                        "odoo.define('web_editor.jabberwock', function(require) {",
-                        "'use strict';",
-                        content,
-                        'return JWEditor',
-                        '});',
-                    ].join('\n');
-                    await fs.promises.writeFile(filename, newContent);
+                    fs.readFile(filename, (error, content) => {
+                        if (error) throw new Error(error);
+                        const newContent = [
+                            "odoo.define('web_editor.jabberwock', function(require) {",
+                            "'use strict';",
+                            content,
+                            'return JWEditor',
+                            '});',
+                        ].join('\n');
+                        fs.writeFile(filename, newContent, error => {
+                            if (error) throw new Error(error);
+                        });
+                    });
                 });
             },
         },
