@@ -218,7 +218,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const covers = editableNode.descendants(node => {
             const attributes = node.modifiers.find(Attributes);
 
-            if (attributes.length && typeof attributes.get('class') === 'string') {
+            if (attributes && attributes.length && typeof attributes.get('class') === 'string') {
                 return attributes.classList.has('o_record_cover_container');
             }
         });
