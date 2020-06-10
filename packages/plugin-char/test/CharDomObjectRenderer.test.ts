@@ -8,7 +8,7 @@ import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { testEditor } from '../../utils/src/testUtils';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 
 describe('CharDomObjectRenderer', () => {
     describe('render', () => {
