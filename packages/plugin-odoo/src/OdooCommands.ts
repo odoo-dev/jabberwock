@@ -7,7 +7,6 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import {
     MoveParams,
     DomHelpers,
-    EmptyParams,
     WrapParams,
     ReplaceParams,
 } from '../../plugin-dom-helpers/src/DomHelpers';
@@ -56,12 +55,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
         },
         exists(domNode: Node): boolean {
             return !!domEngine.getNodes(domNode);
-        },
-        async empty(domNode: Node): Promise<void> {
-            const params: EmptyParams = {
-                nodes: domEngine.getNodes(domNode),
-            };
-            return await editor.execCommand<DomHelpers>('dom.empty', params);
         },
         async wrap(domNode: Node, html: string): Promise<void> {
             const container = domEngine.getNodes(domNode)[0];
