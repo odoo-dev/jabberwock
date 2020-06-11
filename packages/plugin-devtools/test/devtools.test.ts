@@ -856,7 +856,6 @@ describe('Plugin: DevTools', () => {
                 'deleteForward',
                 'hide',
                 'insert',
-                'insertHtml',
                 'insertParagraphBreak',
                 'insertText',
                 'selectAll',
