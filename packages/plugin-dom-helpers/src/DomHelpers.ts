@@ -22,10 +22,6 @@ export interface WrapParams {
     container: ContainerNode;
     html: string;
 }
-export interface ReplaceParams {
-    nodes: VNode[];
-    html: string;
-}
 interface SelectedLinkInfo {
     /**
      * The selected text
@@ -173,6 +169,22 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.empty();
         }
     }
+    /**
+     * Replace a DOM node or a list of DOM nodes with the given HTML content.
+     *
+     * @param params
+     */
+    async replace(params: { domNodes: Node | Node[]; html: string }): Promise<void> {
+        const nodes = this._getNodes(params.domNodes);
+        const parsedNodes = await this._parseHTMLString(params.html);
+        const firstNode = nodes[0];
+        for (const parsedNode of parsedNodes) {
+            firstNode.before(parsedNode);
+        }
+        for (const node of nodes) {
+            node.remove();
+        }
+    }
     move(params: MoveParams): void {
         switch (params.to[1]) {
             case RelativePosition.AFTER:
@@ -206,14 +218,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         params.container.append(wrapNode);
     }
 
-    async replace(params: ReplaceParams): Promise<void> {
-        const parsedNodes = await this._parseHTMLString(params.html);
-        const firstNode = params.nodes[0];
-        parsedNodes.forEach(firstNode.before.bind(firstNode));
-        for (const node of params.nodes) {
-            node.remove();
-        }
-    }
     async getRecordCover(): Promise<Node> {
         const layout = this.editor.plugins.get(Layout);
         const domLayout = layout.engines.dom as DomLayoutEngine;
