@@ -224,7 +224,7 @@ jw-devtools devtools-nodename.inline {
 devtools-tree devtools-nodename.block {
     color: #76526c;
     width: 100%;
-    display: inline-block;
+    display: block;
 }
 
 devtools-tree devtools-nodename.line-break:after {
