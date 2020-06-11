@@ -6,7 +6,6 @@ import { DomLayoutEngine } from '../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { Layout } from '../plugin-layout/src/Layout';
 import { Renderer } from '../plugin-renderer/src/Renderer';
 import { ImageNode } from '../plugin-image/src/ImageNode';
-import { getOdooCommands } from '../plugin-odoo/src/OdooCommands';
 
 export {
     OdooWebsiteEditor,
@@ -18,5 +17,4 @@ export {
     ImageNode,
     withRange,
     VRange,
-    getOdooCommands,
 };
