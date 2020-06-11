@@ -3,7 +3,6 @@ import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Char, InsertHtmlParams } from '../../plugin-char/src/Char';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { MoveParams, DomHelpers } from '../../plugin-dom-helpers/src/DomHelpers';
 
 interface ExecCommandHelpers {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,24 +27,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 html,
             };
             return await editor.execCommand<Char>('insertHtml', params);
-        },
-        async moveBefore(fromDomNode: Node, toDomNode: Node): Promise<void> {
-            const fromNode = domEngine.getNodes(fromDomNode)[0];
-            const toNode = domEngine.getNodes(toDomNode)[0];
-            const params: MoveParams = {
-                from: fromNode,
-                to: [toNode, RelativePosition.BEFORE],
-            };
-            return await editor.execCommand<DomHelpers>('dom.move', params);
-        },
-        async moveAfter(fromDomNode: Node, toDomNode: Node): Promise<void> {
-            const fromNode = domEngine.getNodes(fromDomNode)[0];
-            const toNode = domEngine.getNodes(toDomNode)[0];
-            const params: MoveParams = {
-                from: fromNode,
-                to: [toNode, RelativePosition.AFTER],
-            };
-            return await editor.execCommand<DomHelpers>('dom.move', params);
         },
         exists(domNode: Node): boolean {
             return !!domEngine.getNodes(domNode);
