@@ -15,42 +15,6 @@ import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    commands = {
-        'dom.addClass': {
-            handler: this.addClass.bind(this),
-        },
-        'dom.removeClass': {
-            handler: this.removeClass.bind(this),
-        },
-        'dom.toggleClass': {
-            handler: this.toggleClass.bind(this),
-        },
-        'dom.setAttribute': {
-            handler: this.setAttribute.bind(this),
-        },
-        'dom.setStyle': {
-            handler: this.setStyle.bind(this),
-        },
-        'dom.remove': {
-            handler: this.remove.bind(this),
-        },
-        'dom.empty': {
-            handler: this.empty.bind(this),
-        },
-        'dom.replace': {
-            handler: this.replace.bind(this),
-        },
-        'dom.wrap': {
-            handler: this.wrap.bind(this),
-        },
-        'dom.moveBefore': {
-            handler: this.moveBefore.bind(this),
-        },
-        'dom.moveAfter': {
-            handler: this.moveAfter.bind(this),
-        },
-    };
-
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
