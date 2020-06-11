@@ -4,12 +4,7 @@ import { Char, InsertHtmlParams } from '../../plugin-char/src/Char';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
-import {
-    MoveParams,
-    DomHelpers,
-    WrapParams,
-    ReplaceParams,
-} from '../../plugin-dom-helpers/src/DomHelpers';
+import { MoveParams, DomHelpers, WrapParams } from '../../plugin-dom-helpers/src/DomHelpers';
 
 interface ExecCommandHelpers {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,13 +63,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 html,
             };
             return await editor.execCommand<DomHelpers>('dom.empty', params);
-        },
-        async replace(domNode: Node, html: string): Promise<void> {
-            const params: ReplaceParams = {
-                nodes: domEngine.getNodes(domNode),
-                html,
-            };
-            return await editor.execCommand<DomHelpers>('dom.replace', params);
         },
     };
     return odooCommands;
