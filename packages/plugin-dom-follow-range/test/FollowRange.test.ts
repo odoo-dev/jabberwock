@@ -11,6 +11,9 @@ import { BasicEditor } from '../../../bundles/BasicEditor';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { setSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 import { parseEditable } from '../../utils/src/configuration';
+import { ShadowNode } from '../../plugin-shadow/src/ShadowNode';
+import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
+import { Shadow } from '../../plugin-shadow/src/Shadow';
 
 function waitToolbarRedraw(): Promise<void> {
     return new Promise(r => setTimeout(r, 5));
@@ -196,6 +199,102 @@ describe('FollowRange', async () => {
         const range = container.querySelector('jw-follow-range') as HTMLElement;
 
         const i = container.querySelector('p i');
+        setSelection(i.firstChild, 10, i.firstChild, 10);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('none');
+
+        setSelection(i.firstChild, 10, i.firstChild, 14);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('');
+        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
+        expect(parseInt(range.style.left, 10)).to.be.within(110, 120);
+
+        setSelection(i.firstChild, 10, i.firstChild, 20);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('');
+        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
+        expect(parseInt(range.style.left, 10)).to.be.within(145, 160);
+
+        setSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('');
+        expect(parseInt(range.style.top, 10)).to.be.within(40, 50);
+        expect(parseInt(range.style.left, 10)).to.be.within(130, 145);
+
+        setSelection(i.firstChild, 20, i.firstChild, 20);
+        await waitToolbarRedraw();
+        expect(range.style.display).to.equal('none');
+    });
+    it('should display the follow range container when select a text in a shadow dom', async () => {
+        section.innerHTML = `
+            <p style="margin: 0; padding: 0;">
+                <span class="drop-cap">’T</span>was brillig, and the slithy toves<br/>
+                Did gyre and gimble in the wabe:<br/>
+                All mimsy were the borogoves,<br/>
+                And the mome raths outgrabe.<br/>
+                <br/>
+                <i>“Beware the Jabberwock, my son!<br/>
+                The jaws that bite, the claws that catch!<br/>
+                Beware the Jubjub bird, and shun<br/>
+                The frumious Bandersnatch!”</i><br/>
+                <br/>
+                He took his vorpal sword in hand;<br/>
+                Long time the manxome foe he sought—<br/>
+                So rested he by the Tumtum tree<br/>
+                And stood awhile in thought.<br/>
+                <br/>
+            </p>
+        `;
+
+        editor = new BasicEditor();
+        editor.load(DomEditable);
+        editor.load(FollowRange);
+        editor.load(Shadow);
+        editor.load(DomLayout, {
+            components: [
+                {
+                    id: 'editor',
+                    async render(editor: JWEditor): Promise<VNode[]> {
+                        const template = `<jw-editor>
+                            <t-range><t t-zone="range"/></t-range>
+                            <main><t t-zone="main"/></main>
+                            <t t-zone="default"/>
+                            </jw-editor>`;
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+                {
+                    id: 'editable',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        const shadow = new ShadowNode();
+                        const style = new MetadataNode({ htmlTag: 'STYLE' });
+                        style.contents = '* {margin: 0; padding: 0; border: 1px #aaa dotted;}';
+                        const nodes = await parseEditable(editor, section);
+                        shadow.append(style, ...nodes);
+                        return [shadow];
+                    },
+                },
+                {
+                    id: 'custom',
+                    async render(): Promise<VNode[]> {
+                        const template = `<section style="width: 20px; height: 20px; background: red;">-</section>`;
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                },
+            ],
+            componentZones: [
+                ['editor', 'root'],
+                ['editable', 'main'],
+                ['custom', 'range'],
+            ],
+            location: [section, 'replace'],
+        });
+        await editor.start();
+
+        const range = container.querySelector('jw-follow-range') as HTMLElement;
+        const shadowRoot = container.querySelector('jw-shadow').shadowRoot;
+
+        const i = shadowRoot.querySelector('p i');
         setSelection(i.firstChild, 10, i.firstChild, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('none');

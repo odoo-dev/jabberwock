@@ -4,6 +4,7 @@ import {
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { FollowRangeZoneNode } from './FollowRangeZoneNode';
+import { targetDeepest } from '../../utils/src/Dom';
 
 import '../assets/FollowRange.css';
 
@@ -19,6 +20,7 @@ export class FollowRangeZoneDomObjectRenderer extends AbstractRenderer<DomObject
             const followRange: DomObject = {
                 tag: 'JW-FOLLOW-RANGE',
                 children: node.children(),
+                attributes: { style: 'display: none;' },
                 attach: (el: HTMLElement): void => {
                     followRangeDebounced = (): void => {
                         window.clearTimeout(debounce);
@@ -27,12 +29,10 @@ export class FollowRangeZoneDomObjectRenderer extends AbstractRenderer<DomObject
                             3,
                         );
                     };
-                    el.style.display = 'none';
-                    document.addEventListener('selectionchange', followRangeDebounced, true);
+                    document.addEventListener('selectionchange', followRangeDebounced, false);
                 },
-                detach: (el: HTMLElement): void => {
-                    el.style.display = 'none';
-                    document.removeEventListener('selectionchange', followRangeDebounced, true);
+                detach: (): void => {
+                    document.removeEventListener('selectionchange', followRangeDebounced, false);
                 },
             };
             return followRange;
@@ -42,8 +42,26 @@ export class FollowRangeZoneDomObjectRenderer extends AbstractRenderer<DomObject
     }
 
     private _followChangedSelection(container: HTMLElement): void {
-        const selection = window.getSelection();
-        if (selection.rangeCount && !selection.isCollapsed) {
+        let selection: Selection;
+        let doc: Document | ShadowRoot = document;
+        let isCollapsed = true;
+        do {
+            selection = doc.getSelection();
+            doc = null;
+            // don't use selection.isCollapsed because in shadowRoot the value
+            // is every time true.
+            isCollapsed =
+                selection.anchorNode === selection.focusNode &&
+                selection.anchorOffset === selection.focusOffset;
+            if (selection.rangeCount && isCollapsed) {
+                const [el] = targetDeepest(selection.anchorNode, selection.anchorOffset);
+                if (el instanceof Element && el.shadowRoot) {
+                    doc = el.shadowRoot;
+                }
+            }
+        } while (doc);
+
+        if (selection.rangeCount && !isCollapsed) {
             container.style.display = '';
             const size = container.getBoundingClientRect();
             const range = selection.getRangeAt(0);

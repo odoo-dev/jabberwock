@@ -58,17 +58,6 @@ editor.configure(DomLayout, {
                 return [shadow];
             },
         },
-        {
-            id: 'editable',
-            async render(editor: JWEditor): Promise<VNode[]> {
-                const shadow = new ShadowNode();
-                const style = new MetadataNode({ htmlTag: 'STYLE' });
-                style.contents = '* {border: 1px #aaa dotted;}';
-                const nodes = await parseEditable(editor, target);
-                shadow.append(style, ...nodes);
-                return [shadow];
-            },
-        },
     ],
     locations: [
         ['domHeader', [document.body, 'prepend']],
