@@ -18,9 +18,6 @@ export interface MoveParams {
     from: VNode;
     to: Point;
 }
-export interface EmptyParams {
-    nodes: VNode[];
-}
 export interface WrapParams {
     container: ContainerNode;
     html: string;
@@ -166,6 +163,16 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.remove();
         }
     }
+    /**
+     * Remove the contents of a DOM node or of a list of DOM nodes.
+     *
+     * @param params
+     */
+    empty(params: { domNode: Node | Node[] }): void {
+        for (const node of this._getNodes(params.domNode)) {
+            node.empty();
+        }
+    }
     move(params: MoveParams): void {
         switch (params.to[1]) {
             case RelativePosition.AFTER:
@@ -177,11 +184,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             case RelativePosition.INSIDE:
                 params.from.append(params.to[0]);
                 break;
-        }
-    }
-    empty(params: EmptyParams): void {
-        for (const vnode of params.nodes) {
-            vnode.empty();
         }
     }
     getStructures(): OdooStructureNode[] {
