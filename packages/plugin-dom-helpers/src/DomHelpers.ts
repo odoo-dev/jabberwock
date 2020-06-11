@@ -14,26 +14,6 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-interface SelectedLinkInfo {
-    /**
-     * The selected text
-     */
-    text: string;
-    /**
-     * The url of the link
-     */
-    url: string;
-    /**
-     * The css class associated with the link
-     */
-    class: string;
-    /**
-     * The target of an html anchor.
-     * Could be "_blank", "_self" ,"_parent", "_top" or the framename.
-     */
-    target: string;
-}
-
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
         'dom.addClass': {
@@ -68,9 +48,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         },
         'dom.moveAfter': {
             handler: this.moveAfter.bind(this),
-        },
-        'dom.getLinkInfo': {
-            handler: this.getLinkInfo.bind(this),
         },
     };
 
@@ -213,48 +190,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         for (const fromNode of this._getNodes(params.fromDomNode).reverse()) {
             fromNode.after(toNode);
         }
-    }
-    async getSelectedText(params: CommandParams): Promise<string> {
-        const selectedNode = params.context.range.selectedNodes().map(node => node.clone());
-        const container = new ContainerNode();
-        container.append(...selectedNode);
-        const renderer = this.editor.plugins.get(Renderer);
-        const renderedNode = await renderer.render<HTMLElement[]>(
-            HtmlDomRenderingEngine.id,
-            container,
-        );
-        // todo: what if there is more rendered nodes?
-        return renderedNode ? renderedNode[0].innerText : '';
-    }
-    async getSelectedLink(params: CommandParams): Promise<string> {
-        const selectedNode = params.context.range.selectedNodes().map(node => node.clone());
-        const nodeWithFormat: InlineNode = selectedNode.find(
-            node =>
-                node.is(InlineNode) &&
-                node.modifiers.find(modifier => modifier instanceof LinkFormat),
-        ) as InlineNode;
-        const linkFormat: LinkFormat =
-            nodeWithFormat &&
-            (nodeWithFormat.modifiers.find(
-                modifier => modifier instanceof LinkFormat,
-            ) as LinkFormat);
-        return linkFormat ? linkFormat.url : '';
-    }
-    getLinkInfo(params: CommandParams): SelectedLinkInfo {
-        const targettedNodes = params.context.range.targetedNodes(CharNode);
-        const text = targettedNodes.map(x => x.char).join('');
-        //
-        const inline = this.editor.plugins.get(Inline);
-        const modifiers = inline.getCurrentModifiers(params.context.range);
-        return {
-            text: text,
-            url: modifiers.get(LinkFormat)?.url,
-            class: modifiers.get(Attributes)?.get('class'),
-            target: modifiers
-                .get(LinkFormat)
-                ?.modifiers?.get(Attributes)
-                ?.get('target'),
-        } as SelectedLinkInfo;
     }
 
     //--------------------------------------------------------------------------
