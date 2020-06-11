@@ -18,10 +18,6 @@ export interface MoveParams {
     from: VNode;
     to: Point;
 }
-
-export interface RemoveParams {
-    nodes: VNode[];
-}
 export interface EmptyParams {
     nodes: VNode[];
 }
@@ -145,7 +141,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         }
     }
     /**
-     * Set
+     * Set a style key/value pair on a DOM node or a list of DOM nodes.
      *
      * @param params
      */
@@ -160,6 +156,16 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.modifiers.get(Attributes).style.set(params.name, value);
         }
     }
+    /**
+     * Remove a DOM node or a list of DOM nodes.
+     *
+     * @param params
+     */
+    remove(params: { domNode: Node | Node[] }): void {
+        for (const node of this._getNodes(params.domNode)) {
+            node.remove();
+        }
+    }
     move(params: MoveParams): void {
         switch (params.to[1]) {
             case RelativePosition.AFTER:
@@ -171,11 +177,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             case RelativePosition.INSIDE:
                 params.from.append(params.to[0]);
                 break;
-        }
-    }
-    remove(params: RemoveParams): void {
-        for (const vnode of params.nodes) {
-            vnode.remove();
         }
     }
     empty(params: EmptyParams): void {
