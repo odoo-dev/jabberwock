@@ -1,15 +1,19 @@
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
 
 export type ZoneIdentifier = string;
+export interface ZoneNodeParams extends AbstractNodeParams {
+    managedZones: ZoneIdentifier[];
+}
 
 export class ZoneNode extends ContainerNode {
     hidden: Map<VNode, boolean> = new Map();
     breakable = false;
     managedZones: ZoneIdentifier[];
 
-    constructor(params: { managedZones: ZoneIdentifier[] }) {
-        super();
+    constructor(params: ZoneNodeParams) {
+        super(params);
         this.managedZones = params.managedZones;
     }
 

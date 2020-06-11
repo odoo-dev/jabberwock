@@ -1,11 +1,15 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Modifier } from '../../core/src/Modifier';
+import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
 
 export enum ListType {
     ORDERED = 'ORDERED',
     UNORDERED = 'UNORDERED',
     CHECKLIST = 'CHECKLIST',
+}
+export interface ListNodeParams extends AbstractNodeParams {
+    listType: ListType;
 }
 
 export class IsChecked extends Modifier {}
@@ -23,8 +27,8 @@ export class ListNode extends ContainerNode {
         return node && node.is(ListNode) && node.listType === ListType.CHECKLIST;
     }
     listType: ListType;
-    constructor(params: { listType: ListType }) {
-        super();
+    constructor(params: ListNodeParams) {
+        super(params);
         this.listType = params.listType;
     }
     get name(): string {

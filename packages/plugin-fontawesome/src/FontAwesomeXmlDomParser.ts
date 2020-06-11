@@ -14,7 +14,7 @@ export class FontAwesomeXmlDomParser extends AbstractParser<Node> {
     };
 
     async parse(item: Element): Promise<FontAwesomeNode[]> {
-        const fontawesome = new FontAwesomeNode(nodeName(item));
+        const fontawesome = new FontAwesomeNode({ htmlTag: nodeName(item) });
         fontawesome.modifiers.append(this.engine.parseAttributes(item));
         return [fontawesome];
     }

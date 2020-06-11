@@ -2,6 +2,11 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+
+export interface TableCellNodeParams extends AbstractNodeParams {
+    header: boolean;
+}
 
 export class TableCellNode extends ContainerNode {
     breakable = false;
@@ -10,8 +15,8 @@ export class TableCellNode extends ContainerNode {
     __managerCell: TableCellNode;
     __managedCells = new Set<TableCellNode>();
 
-    constructor(params?: { header: boolean }) {
-        super();
+    constructor(params?: TableCellNodeParams) {
+        super(params);
         this.header = params?.header || false;
     }
 

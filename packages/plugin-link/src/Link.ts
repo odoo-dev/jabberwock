@@ -61,7 +61,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             {
                 id: 'link',
                 async render(): Promise<OwlNode[]> {
-                    return [new OwlNode(LinkComponent, {})];
+                    return [new OwlNode({ Component: LinkComponent, props: {} })];
                 },
             },
             {

@@ -4,6 +4,11 @@ import { ContainerNode } from './ContainerNode';
 import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
 import { EventMixin } from '../../../utils/src/EventMixin';
+import { Modifier } from '../Modifier';
+
+export interface AbstractNodeParams {
+    modifiers?: Modifiers | Array<Modifier | Constructor<Modifier>>;
+}
 
 let id = 0;
 export abstract class AbstractNode extends EventMixin {
@@ -25,9 +30,16 @@ export abstract class AbstractNode extends EventMixin {
         return predicate.prototype instanceof AbstractNode;
     }
 
-    constructor() {
+    constructor(params?: AbstractNodeParams) {
         super();
         id++;
+        if (params?.modifiers) {
+            if (params.modifiers instanceof Modifiers) {
+                this.modifiers = params.modifiers;
+            } else {
+                this.modifiers.append(...params.modifiers);
+            }
+        }
     }
 
     get name(): string {

@@ -1,21 +1,22 @@
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { Modifiers } from '../../core/src/Modifiers';
+import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+
+export interface CharNodeParams extends AbstractNodeParams {
+    char: string;
+}
 
 export class CharNode extends InlineNode {
     static readonly atomic = true;
     readonly char: string;
-    constructor(params: { char: string; modifiers?: Modifiers }) {
-        super();
+    constructor(params: CharNodeParams) {
+        super(params);
         if (params.char.length !== 1) {
             throw new Error(
                 'Cannot make a CharNode out of anything else than a string of length 1.',
             );
         }
         this.char = params.char;
-        if (params.modifiers) {
-            this.modifiers = params.modifiers;
-        }
     }
 
     //--------------------------------------------------------------------------
