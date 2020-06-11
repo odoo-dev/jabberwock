@@ -4,6 +4,7 @@ import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 export class DefaultDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = 'dom/object';
@@ -22,6 +23,8 @@ export class DefaultDomObjectRenderer extends AbstractRenderer<DomObject> {
                 domObject = {
                     children: await this.engine.renderChildren(node),
                 };
+            } else if (node.is(AtomicNode)) {
+                domObject = { children: [] };
             } else {
                 domObject = {
                     tag: node.name,

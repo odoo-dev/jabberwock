@@ -3,6 +3,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { SpanFormat } from './SpanFormat';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
+import { InlineNode } from '../../plugin-inline/src/InlineNode';
 
 export class SpanXmlDomParser extends FormatParser {
     static id = XmlDomParsingEngine.id;
@@ -21,6 +22,10 @@ export class SpanXmlDomParser extends FormatParser {
         const span = new SpanFormat(nodeName(item) as 'SPAN' | 'FONT');
         span.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
+        // Handle empty spans.
+        if (!children.length) {
+            children.push(new InlineNode());
+        }
         this.applyFormat(span, children);
 
         return children;
