@@ -436,7 +436,7 @@ describe('DomShadow', async () => {
                         render: async (editor: JWEditor): Promise<VNode[]> => {
                             const nodes = await parseEditable(editor, section);
                             const shadow = new ShadowNode();
-                            const style = new MetadataNode('STYLE');
+                            const style = new MetadataNode({ htmlTag: 'STYLE' });
                             style.contents = 'p {color: red;}';
                             shadow.append(style, ...nodes);
 
@@ -468,13 +468,13 @@ describe('DomShadow', async () => {
                         render: async (editor: JWEditor): Promise<VNode[]> => {
                             const nodes = await parseEditable(editor, section);
                             const shadow = new ShadowNode();
-                            const link1 = new MetadataNode('LINK');
+                            const link1 = new MetadataNode({ htmlTag: 'LINK' });
                             const attributes1 = new Attributes();
                             attributes1.set('rel', 'stylesheet');
                             attributes1.set('href', '#1');
                             link1.modifiers.prepend(attributes1);
                             shadow.append(link1);
-                            const link2 = new MetadataNode('LINK');
+                            const link2 = new MetadataNode({ htmlTag: 'LINK' });
                             const attributes2 = new Attributes();
                             attributes2.set('rel', 'stylesheet');
                             attributes2.set('href', '#2');

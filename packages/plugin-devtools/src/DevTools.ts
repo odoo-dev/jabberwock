@@ -17,7 +17,7 @@ export class DevTools<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
             {
                 id: 'devTools',
                 async render(): Promise<OwlNode[]> {
-                    return [new OwlNode(DevToolsComponent, {})];
+                    return [new OwlNode({ Component: DevToolsComponent, props: {} })];
                 },
             },
         ],

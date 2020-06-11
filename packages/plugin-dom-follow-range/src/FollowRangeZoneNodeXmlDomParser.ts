@@ -17,6 +17,6 @@ export class FollowRangeZoneNodeXmlDomParser extends AbstractParser<Node> {
         for (const child of item.querySelectorAll('t[t-zone]')) {
             zones.push(child.getAttribute('t-zone'));
         }
-        return [new FollowRangeZoneNode(zones)];
+        return [new FollowRangeZoneNode({ managedZones: zones })];
     }
 }
