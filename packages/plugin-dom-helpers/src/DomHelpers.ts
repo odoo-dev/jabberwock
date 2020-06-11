@@ -69,9 +69,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         'dom.moveAfter': {
             handler: this.moveAfter.bind(this),
         },
-        'dom.getStructures': {
-            handler: this.getStructures.bind(this),
-        },
         'dom.getRecordCover': {
             handler: this.getRecordCover.bind(this),
         },
@@ -219,12 +216,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         for (const fromNode of this._getNodes(params.fromDomNode).reverse()) {
             fromNode.after(toNode);
         }
-    }
-    getStructures(): OdooStructureNode[] {
-        const layout = this.editor.plugins.get(Layout);
-        const domLayout = layout.engines.dom;
-        const editable = domLayout.components.get('editable')[0];
-        return editable.descendants(OdooStructureNode);
     }
 
     async getRecordCover(): Promise<Node> {
