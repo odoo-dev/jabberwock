@@ -11,6 +11,7 @@ import { LinkFormat } from '../plugin-link/src/LinkFormat';
 import { Attributes } from '../plugin-xml/src/Attributes';
 import { OdooStructureNode } from '../plugin-odoo/src/OdooStructureNode';
 import { Inline } from '../plugin-inline/src/Inline';
+import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { getOdooCommands } from '../plugin-odoo/src/OdooCommands';
 
 export {
@@ -29,4 +30,5 @@ export {
     Attributes,
     OdooStructureNode,
     Inline,
+    DomHelpers,
 };
