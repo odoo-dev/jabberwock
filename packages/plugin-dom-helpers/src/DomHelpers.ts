@@ -18,10 +18,6 @@ export interface MoveParams {
     from: VNode;
     to: Point;
 }
-export interface WrapParams {
-    container: ContainerNode;
-    html: string;
-}
 interface SelectedLinkInfo {
     /**
      * The selected text
@@ -185,6 +181,23 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             node.remove();
         }
     }
+    /**
+     * Wrap the given HTML content within a DOM container.
+     *
+     * @param params
+     */
+    async wrap(params: { domContainer: Node; html: string }): Promise<void> {
+        const container = this._getNodes(params.domContainer)[0];
+        if (!(container instanceof ContainerNode)) {
+            throw new Error(
+                'The provided container must be a ContainerNode in the Jabberwock structure.',
+            );
+        }
+        const parsedNodes = await this._parseHTMLString(params.html);
+        for (const parsedNode of parsedNodes) {
+            container.wrap(parsedNode);
+        }
+    }
     move(params: MoveParams): void {
         switch (params.to[1]) {
             case RelativePosition.AFTER:
@@ -203,19 +216,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const domLayout = layout.engines.dom;
         const editable = domLayout.components.get('editable')[0];
         return editable.descendants(OdooStructureNode);
-    }
-    async wrap(params: WrapParams): Promise<void> {
-        const parsedNodes = await this._parseHTMLString(params.html);
-        const wrapNode = parsedNodes[0];
-        const containerVNodes = [...params.container.childVNodes];
-        if (!(wrapNode instanceof ContainerNode)) {
-            throw new Error('Impossible to wrap without a ContainerNode. Check "params.html".');
-        }
-        let vnode: VNode;
-        while ((vnode = containerVNodes.shift())) {
-            wrapNode.append(vnode);
-        }
-        params.container.append(wrapNode);
     }
 
     async getRecordCover(): Promise<Node> {
