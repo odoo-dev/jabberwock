@@ -12,7 +12,6 @@ import { Attributes } from '../plugin-xml/src/Attributes';
 import { OdooStructureNode } from '../plugin-odoo/src/OdooStructureNode';
 import { Inline } from '../plugin-inline/src/Inline';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
-import { getOdooCommands } from '../plugin-odoo/src/OdooCommands';
 
 export {
     OdooWebsiteEditor,
@@ -24,7 +23,6 @@ export {
     ImageNode,
     withRange,
     VRange,
-    getOdooCommands,
     InlineNode,
     LinkFormat,
     Attributes,
