@@ -14,10 +14,6 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export interface MoveParams {
-    from: VNode;
-    to: Point;
-}
 interface SelectedLinkInfo {
     /**
      * The selected text
@@ -55,20 +51,23 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         'dom.setStyle': {
             handler: this.setStyle.bind(this),
         },
-        'dom.move': {
-            handler: this.move.bind(this),
-        },
         'dom.remove': {
             handler: this.remove.bind(this),
         },
         'dom.empty': {
             handler: this.empty.bind(this),
         },
+        'dom.replace': {
+            handler: this.replace.bind(this),
+        },
         'dom.wrap': {
             handler: this.wrap.bind(this),
         },
-        'dom.replace': {
-            handler: this.replace.bind(this),
+        'dom.moveBefore': {
+            handler: this.moveBefore.bind(this),
+        },
+        'dom.moveAfter': {
+            handler: this.moveAfter.bind(this),
         },
         'dom.getStructures': {
             handler: this.getStructures.bind(this),
@@ -198,17 +197,27 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             container.wrap(parsedNode);
         }
     }
-    move(params: MoveParams): void {
-        switch (params.to[1]) {
-            case RelativePosition.AFTER:
-                params.from.after(params.to[0]);
-                break;
-            case RelativePosition.BEFORE:
-                params.from.before(params.to[0]);
-                break;
-            case RelativePosition.INSIDE:
-                params.from.append(params.to[0]);
-                break;
+    /**
+     * Move a DOM Node before another.
+     *
+     * @param params
+     */
+    moveBefore(params: { fromDomNode: Node; toDomNode: Node }): void {
+        const toNode = this._getNodes(params.toDomNode)[0];
+        for (const fromNode of this._getNodes(params.fromDomNode)) {
+            fromNode.before(toNode);
+        }
+    }
+    /**
+     * Move a DOM Node after another.
+     *
+     * @param params
+     */
+    moveAfter(params: { fromDomNode: Node; toDomNode: Node }): void {
+        const toNodes = this._getNodes(params.toDomNode);
+        const toNode = toNodes[toNodes.length - 1];
+        for (const fromNode of this._getNodes(params.fromDomNode).reverse()) {
+            fromNode.after(toNode);
         }
     }
     getStructures(): OdooStructureNode[] {
