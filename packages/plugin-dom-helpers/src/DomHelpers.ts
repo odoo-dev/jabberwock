@@ -24,9 +24,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    addClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
-        const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this.getNodes(params.domNode)) {
+    addClass(domNode: Node | Node[], className: string | string[]): void {
+        const classes = Array.isArray(className) ? className : [className];
+        for (const node of this.getNodes(domNode)) {
             node.modifiers.get(Attributes).classList.add(...classes);
         }
     }
@@ -35,9 +35,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    removeClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
-        const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this.getNodes(params.domNode)) {
+    removeClass(domNode: Node | Node[], className: string | string[]): void {
+        const classes = Array.isArray(className) ? className : [className];
+        for (const node of this.getNodes(domNode)) {
             node.modifiers.get(Attributes).classList.remove(...classes);
         }
     }
@@ -47,9 +47,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    toggleClass(params: { domNode: Node | Node[]; class: string }): void {
-        const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this.getNodes(params.domNode)) {
+    toggleClass(domNode: Node | Node[], className: string): void {
+        const classes = Array.isArray(className) ? className : [className];
+        for (const node of this.getNodes(domNode)) {
             node.modifiers.get(Attributes).classList.toggle(...classes);
         }
     }
@@ -58,9 +58,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    setAttribute(params: { domNode: Node | Node[]; name: string; value: string }): void {
-        for (const node of this.getNodes(params.domNode)) {
-            node.modifiers.get(Attributes).set(params.name, params.value);
+    setAttribute(domNode: Node | Node[], name: string, value: string): void {
+        for (const node of this.getNodes(domNode)) {
+            node.modifiers.get(Attributes).set(name, value);
         }
     }
     /**
@@ -68,15 +68,10 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    setStyle(params: {
-        domNode: Node | Node[];
-        name: string;
-        value: string;
-        important?: boolean;
-    }): void {
-        for (const node of this.getNodes(params.domNode)) {
-            const value = params.important ? params.value + ' !important' : params.value;
-            node.modifiers.get(Attributes).style.set(params.name, value);
+    setStyle(domNode: Node | Node[], name: string, value: string, important?: boolean): void {
+        for (const node of this.getNodes(domNode)) {
+            value = important ? value + ' !important' : value;
+            node.modifiers.get(Attributes).style.set(name, value);
         }
     }
     /**
@@ -84,8 +79,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    remove(params: { domNode: Node | Node[] }): void {
-        for (const node of this.getNodes(params.domNode)) {
+    remove(domNode: Node | Node[]): void {
+        for (const node of this.getNodes(domNode)) {
             node.remove();
         }
     }
@@ -94,8 +89,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    empty(params: { domNode: Node | Node[] }): void {
-        for (const node of this.getNodes(params.domNode)) {
+    empty(domNode: Node | Node[]): void {
+        for (const node of this.getNodes(domNode)) {
             node.empty();
         }
     }
@@ -104,9 +99,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async replace(params: { domNodes: Node | Node[]; html: string }): Promise<void> {
-        const nodes = this.getNodes(params.domNodes);
-        const parsedNodes = await this._parseHtmlString(params.html);
+    async replace(domNodes: Node | Node[], html: string): Promise<void> {
+        const nodes = this.getNodes(domNodes);
+        const parsedNodes = await this._parseHtmlString(html);
         const firstNode = nodes[0];
         for (const parsedNode of parsedNodes) {
             firstNode.before(parsedNode);
@@ -120,14 +115,14 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async wrap(params: { domContainer: Node; html: string }): Promise<void> {
-        const container = this.getNodes(params.domContainer)[0];
+    async wrap(domContainer: Node, html: string): Promise<void> {
+        const container = this.getNodes(domContainer)[0];
         if (!(container instanceof ContainerNode)) {
             throw new Error(
                 'The provided container must be a ContainerNode in the Jabberwock structure.',
             );
         }
-        const parsedNodes = await this._parseHtmlString(params.html);
+        const parsedNodes = await this._parseHtmlString(html);
         for (const parsedNode of parsedNodes) {
             container.wrap(parsedNode);
         }
@@ -137,9 +132,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    moveBefore(params: { fromDomNode: Node; toDomNode: Node }): void {
-        const toNode = this.getNodes(params.toDomNode)[0];
-        for (const fromNode of this.getNodes(params.fromDomNode)) {
+    moveBefore(fromDomNode: Node, toDomNode: Node): void {
+        const toNode = this.getNodes(toDomNode)[0];
+        for (const fromNode of this.getNodes(fromDomNode)) {
             fromNode.before(toNode);
         }
     }
@@ -148,10 +143,10 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    moveAfter(params: { fromDomNode: Node; toDomNode: Node }): void {
-        const toNodes = this.getNodes(params.toDomNode);
+    moveAfter(fromDomNode: Node, toDomNode: Node): void {
+        const toNodes = this.getNodes(toDomNode);
         const toNode = toNodes[toNodes.length - 1];
-        for (const fromNode of this.getNodes(params.fromDomNode).reverse()) {
+        for (const fromNode of this.getNodes(fromDomNode).reverse()) {
             fromNode.after(toNode);
         }
     }
@@ -161,22 +156,17 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async insertHtml(params: {
-        html: string;
-        domNode?: Node;
-        position?: RelativePosition;
-    }): Promise<VNode[]> {
+    async insertHtml(html: string, domNode?: Node, position?: RelativePosition): Promise<VNode[]> {
         let nodes: VNode[];
-        let position: RelativePosition;
-        if (params.domNode) {
-            nodes = this.getNodes(params.domNode);
-            position = params.position || RelativePosition.BEFORE;
+        if (domNode) {
+            nodes = this.getNodes(domNode);
+            position = position || RelativePosition.BEFORE;
         } else {
             this.editor.selection.range.empty();
             nodes = [this.editor.selection.range.start];
             position = RelativePosition.BEFORE;
         }
-        const parsedNodes = await this._parseHtmlString(params.html);
+        const parsedNodes = await this._parseHtmlString(html);
         switch (position.toUpperCase()) {
             case RelativePosition.BEFORE.toUpperCase():
                 for (const parsedNode of parsedNodes) {
