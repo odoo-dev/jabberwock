@@ -13,7 +13,7 @@ import { Italic } from '../../plugin-italic/src/Italic';
 import { Underline } from '../../plugin-underline/src/Underline';
 import { CharNode } from '../../plugin-char/src/CharNode';
 
-import template from '../../../bundles/basicLayout.xml';
+import template from '../../bundle-basic-editor/basicLayout.xml';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { nodeName } from '../../utils/src/utils';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
