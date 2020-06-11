@@ -104,6 +104,11 @@ export class DomLayoutEngine extends LayoutEngine {
     getNodes(domNode: Node): VNode[] {
         return this._domReconciliationEngine.fromDom(domNode);
     }
+    /**
+     * Return the DOM Node(s) corresponding to the given VNode.
+     *
+     * @param node
+     */
     getDomNodes(node: VNode): Node[] {
         return this._domReconciliationEngine.toDom(node);
     }
