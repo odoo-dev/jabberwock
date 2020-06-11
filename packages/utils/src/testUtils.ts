@@ -12,7 +12,6 @@ import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseEditable } from './configuration';
 
 export interface TestEditorSpec {
