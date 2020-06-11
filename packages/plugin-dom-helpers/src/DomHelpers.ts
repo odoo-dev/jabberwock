@@ -69,9 +69,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         'dom.moveAfter': {
             handler: this.moveAfter.bind(this),
         },
-        'dom.getRecordCover': {
-            handler: this.getRecordCover.bind(this),
-        },
         'dom.getLinkInfo': {
             handler: this.getLinkInfo.bind(this),
         },
@@ -216,21 +213,6 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         for (const fromNode of this._getNodes(params.fromDomNode).reverse()) {
             fromNode.after(toNode);
         }
-    }
-
-    async getRecordCover(): Promise<Node> {
-        const layout = this.editor.plugins.get(Layout);
-        const domLayout = layout.engines.dom as DomLayoutEngine;
-        const editableNode = domLayout.components.get('editable')[0] as ContainerNode;
-        const covers = editableNode.descendants(node => {
-            const attributes = node.modifiers.find(Attributes);
-
-            if (attributes && attributes.length && typeof attributes.get('class') === 'string') {
-                return attributes.classList.has('o_record_cover_container');
-            }
-        });
-        const cover = covers && covers[0];
-        if (cover) return domLayout.getDomNodes(cover)[0];
     }
     async getSelectedText(params: CommandParams): Promise<string> {
         const selectedNode = params.context.range.selectedNodes().map(node => node.clone());
