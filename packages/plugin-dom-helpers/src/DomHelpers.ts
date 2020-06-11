@@ -142,7 +142,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async replace(params: { domNodes: Node | Node[]; html: string }): Promise<void> {
         const nodes = this.getNodes(params.domNodes);
-        const parsedNodes = await this._parseHTMLString(params.html);
+        const parsedNodes = await this._parseHtmlString(params.html);
         const firstNode = nodes[0];
         for (const parsedNode of parsedNodes) {
             firstNode.before(parsedNode);
@@ -163,7 +163,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
                 'The provided container must be a ContainerNode in the Jabberwock structure.',
             );
         }
-        const parsedNodes = await this._parseHTMLString(params.html);
+        const parsedNodes = await this._parseHtmlString(params.html);
         for (const parsedNode of parsedNodes) {
             container.wrap(parsedNode);
         }
@@ -212,7 +212,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             nodes = [this.editor.selection.range.start];
             position = RelativePosition.BEFORE;
         }
-        const parsedNodes = await this._parseHTMLString(params.html);
+        const parsedNodes = await this._parseHtmlString(params.html);
         switch (position.toUpperCase()) {
             case RelativePosition.BEFORE.toUpperCase():
                 for (const parsedNode of parsedNodes) {
@@ -255,16 +255,21 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
     // Private
     //--------------------------------------------------------------------------
 
-    async _parseHTMLString(content: string): Promise<VNode[]> {
+    /**
+     * Parse an HTML string and return the resulting `VNodes`.
+     *
+     * @param html
+     */
+    async _parseHtmlString(html: string): Promise<VNode[]> {
         const parser = this.editor.plugins.get(Parser);
-        const domParser = parser && parser.engines.dom;
+        const domParser = parser && parser.engines['dom/html'];
         if (!domParser) {
             // TODO: remove this when the editor can be instantiated on
             // something else than DOM.
             throw new Error(`No DOM parser installed.`);
         }
         const div = document.createElement('div');
-        div.innerHTML = content;
+        div.innerHTML = html;
         return (await domParser.parse(div))[0].children();
     }
 }
