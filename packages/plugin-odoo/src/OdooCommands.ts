@@ -7,7 +7,6 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import {
     MoveParams,
     DomHelpers,
-    RemoveParams,
     EmptyParams,
     WrapParams,
     ReplaceParams,
@@ -54,12 +53,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
                 to: [toNode, RelativePosition.AFTER],
             };
             return await editor.execCommand<DomHelpers>('dom.move', params);
-        },
-        async remove(domNode: Node): Promise<void> {
-            const params: RemoveParams = {
-                nodes: domEngine.getNodes(domNode),
-            };
-            return await editor.execCommand<DomHelpers>('dom.remove', params);
         },
         exists(domNode: Node): boolean {
             return !!domEngine.getNodes(domNode);
