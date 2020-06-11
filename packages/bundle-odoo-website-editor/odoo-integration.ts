@@ -9,6 +9,7 @@ import { ImageNode } from '../plugin-image/src/ImageNode';
 import { InlineNode } from '../plugin-inline/src/InlineNode';
 import { LinkFormat } from '../plugin-link/src/LinkFormat';
 import { Attributes } from '../plugin-xml/src/Attributes';
+import { OdooStructureNode } from '../plugin-odoo/src/OdooStructureNode';
 import { getOdooCommands } from '../plugin-odoo/src/OdooCommands';
 
 export {
@@ -25,4 +26,5 @@ export {
     InlineNode,
     LinkFormat,
     Attributes,
+    OdooStructureNode,
 };
