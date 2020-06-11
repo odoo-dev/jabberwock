@@ -192,6 +192,7 @@ export type DomObjectElement = {
     children?: Array<DomObject | VNode>;
     attach?: (domNode: Element) => void;
     detach?: (domNode: Element) => void;
+    shadowRoot?: boolean;
 };
 export type DomObjectFragment = {
     children: Array<DomObject | VNode>;

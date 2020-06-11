@@ -1110,6 +1110,9 @@ export class DomReconciliationEngine {
 
         if (domObject.tag) {
             let domNode = this._getAvailableElement(id);
+            if (domNode && !domObject.shadowRoot !== !domNode.shadowRoot) {
+                domNode = null;
+            }
             if (domNode) {
                 if (diff.askCompleteRedrawing) {
                     for (const attr of domNode.attributes) {
@@ -1152,6 +1155,9 @@ export class DomReconciliationEngine {
                             domNode.setAttribute(name, value);
                         }
                     }
+                }
+                if (domObject.shadowRoot) {
+                    domNode.attachShadow({ mode: 'open' });
                 }
             }
 
@@ -1244,6 +1250,9 @@ export class DomReconciliationEngine {
             let parentDomNode = object.parentDomNode;
             if (domObject.tag) {
                 parentDomNode = object.dom[0] as Element;
+                if (domObject.shadowRoot) {
+                    parentDomNode = parentDomNode.shadowRoot;
+                }
             }
             const domNodes: Node[] = [];
             for (const childId of object.children) {
