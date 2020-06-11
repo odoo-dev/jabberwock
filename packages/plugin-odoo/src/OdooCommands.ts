@@ -1,10 +1,9 @@
 import JWEditor from '../../core/src/JWEditor';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Char, InsertHtmlParams } from '../../plugin-char/src/Char';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { MoveParams, DomHelpers, WrapParams } from '../../plugin-dom-helpers/src/DomHelpers';
+import { MoveParams, DomHelpers } from '../../plugin-dom-helpers/src/DomHelpers';
 
 interface ExecCommandHelpers {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,19 +49,6 @@ export function getOdooCommands(editor: JWEditor): ExecCommandHelpers {
         },
         exists(domNode: Node): boolean {
             return !!domEngine.getNodes(domNode);
-        },
-        async wrap(domNode: Node, html: string): Promise<void> {
-            const container = domEngine.getNodes(domNode)[0];
-            if (!(container instanceof ContainerNode)) {
-                throw new Error(
-                    'The provided node must be a ContainerNode in the jabberwock structure',
-                );
-            }
-            const params: WrapParams = {
-                container,
-                html,
-            };
-            return await editor.execCommand<DomHelpers>('dom.empty', params);
         },
     };
     return odooCommands;
