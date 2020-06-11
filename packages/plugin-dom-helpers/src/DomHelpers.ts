@@ -62,7 +62,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     addClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
         const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             node.modifiers.get(Attributes).classList.add(...classes);
         }
     }
@@ -73,7 +73,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     removeClass(params: { domNode: Node | Node[]; class: string | string[] }): void {
         const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             node.modifiers.get(Attributes).classList.remove(...classes);
         }
     }
@@ -85,7 +85,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     toggleClass(params: { domNode: Node | Node[]; class: string }): void {
         const classes = Array.isArray(params.class) ? params.class : [params.class];
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             node.modifiers.get(Attributes).classList.toggle(...classes);
         }
     }
@@ -95,7 +95,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     setAttribute(params: { domNode: Node | Node[]; name: string; value: string }): void {
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             node.modifiers.get(Attributes).set(params.name, params.value);
         }
     }
@@ -110,7 +110,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         value: string;
         important?: boolean;
     }): void {
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             const value = params.important ? params.value + ' !important' : params.value;
             node.modifiers.get(Attributes).style.set(params.name, value);
         }
@@ -121,7 +121,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     remove(params: { domNode: Node | Node[] }): void {
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             node.remove();
         }
     }
@@ -131,7 +131,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     empty(params: { domNode: Node | Node[] }): void {
-        for (const node of this._getNodes(params.domNode)) {
+        for (const node of this.getNodes(params.domNode)) {
             node.empty();
         }
     }
@@ -141,7 +141,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async replace(params: { domNodes: Node | Node[]; html: string }): Promise<void> {
-        const nodes = this._getNodes(params.domNodes);
+        const nodes = this.getNodes(params.domNodes);
         const parsedNodes = await this._parseHTMLString(params.html);
         const firstNode = nodes[0];
         for (const parsedNode of parsedNodes) {
@@ -157,7 +157,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async wrap(params: { domContainer: Node; html: string }): Promise<void> {
-        const container = this._getNodes(params.domContainer)[0];
+        const container = this.getNodes(params.domContainer)[0];
         if (!(container instanceof ContainerNode)) {
             throw new Error(
                 'The provided container must be a ContainerNode in the Jabberwock structure.',
@@ -174,8 +174,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     moveBefore(params: { fromDomNode: Node; toDomNode: Node }): void {
-        const toNode = this._getNodes(params.toDomNode)[0];
-        for (const fromNode of this._getNodes(params.fromDomNode)) {
+        const toNode = this.getNodes(params.toDomNode)[0];
+        for (const fromNode of this.getNodes(params.fromDomNode)) {
             fromNode.before(toNode);
         }
     }
@@ -185,11 +185,70 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     moveAfter(params: { fromDomNode: Node; toDomNode: Node }): void {
-        const toNodes = this._getNodes(params.toDomNode);
+        const toNodes = this.getNodes(params.toDomNode);
         const toNode = toNodes[toNodes.length - 1];
-        for (const fromNode of this._getNodes(params.fromDomNode).reverse()) {
+        for (const fromNode of this.getNodes(params.fromDomNode).reverse()) {
             fromNode.after(toNode);
         }
+    }
+    /**
+     * Insert html content before, after or inside a DOM Node. If no DOM Node
+     * was provided, empty the range and insert the html content before the it.
+     *
+     * @param params
+     */
+    async insertHtml(params: {
+        html: string;
+        domNode?: Node;
+        position?: RelativePosition;
+    }): Promise<VNode[]> {
+        let nodes: VNode[];
+        let position: RelativePosition;
+        if (params.domNode) {
+            nodes = this.getNodes(params.domNode);
+            position = params.position || RelativePosition.BEFORE;
+        } else {
+            this.editor.selection.range.empty();
+            nodes = [this.editor.selection.range.start];
+            position = RelativePosition.BEFORE;
+        }
+        const parsedNodes = await this._parseHTMLString(params.html);
+        switch (position.toUpperCase()) {
+            case RelativePosition.BEFORE.toUpperCase():
+                for (const parsedNode of parsedNodes) {
+                    nodes[0].before(parsedNode);
+                }
+                break;
+            case RelativePosition.AFTER.toUpperCase():
+                for (const parsedNode of parsedNodes.reverse()) {
+                    nodes[nodes.length - 1].after(parsedNode);
+                }
+                break;
+            case RelativePosition.INSIDE.toUpperCase():
+                for (const parsedNode of parsedNodes.reverse()) {
+                    nodes[nodes.length - 1].append(parsedNode);
+                }
+                break;
+        }
+        return parsedNodes;
+    }
+    /**
+     * Return the `VNode`(s) matching a DOM Node or a list of DOM Nodes.
+     *
+     * @param domNode
+     */
+    getNodes(domNode: Node | Node[]): VNode[] {
+        const layout = this.editor.plugins.get(Layout);
+        const domEngine = layout.engines.dom as DomLayoutEngine;
+        let nodes: VNode[] = [];
+        if (Array.isArray(domNode)) {
+            for (const oneDomNode of domNode) {
+                nodes.push(...domEngine.getNodes(oneDomNode));
+            }
+        } else {
+            nodes = domEngine.getNodes(domNode);
+        }
+        return nodes;
     }
 
     //--------------------------------------------------------------------------
@@ -207,18 +266,5 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const div = document.createElement('div');
         div.innerHTML = content;
         return (await domParser.parse(div))[0].children();
-    }
-    _getNodes(domNode: Node | Node[]): VNode[] {
-        const layout = this.editor.plugins.get(Layout);
-        const domEngine = layout.engines.dom as DomLayoutEngine;
-        let nodes: VNode[] = [];
-        if (Array.isArray(domNode)) {
-            for (const oneDomNode of domNode) {
-                nodes.push(...domEngine.getNodes(oneDomNode));
-            }
-        } else {
-            nodes = domEngine.getNodes(domNode);
-        }
-        return nodes;
     }
 }
