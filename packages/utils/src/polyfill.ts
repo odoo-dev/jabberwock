@@ -34,10 +34,12 @@ export function caretPositionFromPoint(x: number, y: number): CaretPosition {
     } else if (root instanceof ShadowRoot) {
         // Find the nearest node leaf or char in leaf.
         const position = caretPositionFromPointInShadowDom(x, y, element);
-        caretPosition = {
-            offsetNode: position.node,
-            offset: position.offset,
-        };
+        if (position) {
+            caretPosition = {
+                offsetNode: position.node,
+                offset: position.offset,
+            };
+        }
     } else {
         const carretRange = root.caretRangeFromPoint(x, y);
         caretPosition = {
