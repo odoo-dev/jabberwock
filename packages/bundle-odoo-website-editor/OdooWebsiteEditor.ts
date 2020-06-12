@@ -47,6 +47,7 @@ import { HtmlDomRenderingEngine } from '../plugin-html/src/HtmlDomRenderingEngin
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { Odoo } from '../plugin-odoo/src/Odoo';
 import { parseEditable } from '../utils/src/configuration';
+import { Dialog } from '../plugin-dialog/src/Dialog';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -102,6 +103,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Pre],
                 [TextColor],
                 [BackgroundColor],
+                [Dialog],
                 [DomHelpers],
                 [Odoo],
                 [OdooSnippet],
@@ -134,8 +136,7 @@ export class OdooWebsiteEditor extends JWEditor {
         });
 
         const defaultTemplate = `
-        <t t-zone="float"/>
-        <t t-zone="default"/>
+        <t-dialog><t t-zone="default"/></t-dialog>
         <div class="wrap_editor d-flex flex-column">
             <div class="d-flex flex-row overflow-auto">
                 <t t-zone="main_sidebar"/>
