@@ -48,6 +48,7 @@ import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { Odoo } from '../plugin-odoo/src/Odoo';
 import { parseEditable } from '../utils/src/configuration';
 import { Dialog } from '../plugin-dialog/src/Dialog';
+import { Shadow } from '../plugin-shadow/src/Shadow';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -104,6 +105,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [TextColor],
                 [BackgroundColor],
                 [Dialog],
+                [Shadow],
                 [DomHelpers],
                 [Odoo],
                 [OdooSnippet],
