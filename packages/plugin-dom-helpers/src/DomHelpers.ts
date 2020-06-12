@@ -1,17 +1,9 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { CommandParams } from '../../core/src/Dispatcher';
-import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
+import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { InlineNode } from '../../plugin-inline/src/InlineNode';
-import { LinkFormat } from '../../plugin-link/src/LinkFormat';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { OdooStructureNode } from '../../plugin-odoo/src/OdooStructureNode';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
-import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { HtmlDomRenderingEngine } from '../../plugin-html/src/HtmlDomRenderingEngine';
-import { CharNode } from '../../plugin-char/src/CharNode';
-import { Inline } from '../../plugin-inline/src/Inline';
 import { Parser } from '../../plugin-parser/src/Parser';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -220,6 +212,24 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             nodes = domEngine.getNodes(domNode);
         }
         return nodes;
+    }
+    /**
+     * Return the DOM Node(s) matching a VNode or a list of VNodes.
+     *
+     * @param node
+     */
+    getDomNodes(node: VNode | VNode[]): Node[] {
+        const layout = this.editor.plugins.get(Layout);
+        const domEngine = layout.engines.dom as DomLayoutEngine;
+        let domNodes: Node[] = [];
+        if (Array.isArray(node)) {
+            for (const oneNode of node) {
+                domNodes.push(...domEngine.getDomNodes(oneNode));
+            }
+        } else {
+            domNodes = domEngine.getDomNodes(node);
+        }
+        return domNodes;
     }
 
     //--------------------------------------------------------------------------
