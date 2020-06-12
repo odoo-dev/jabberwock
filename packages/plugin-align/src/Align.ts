@@ -133,9 +133,8 @@ function alignButton(type: AlignType): ActionableNode {
         commandId: 'align',
         commandArgs: { type: type } as AlignParams,
         selected: (editor: JWEditor): boolean => {
-            return editor.selection.range
-                .targetedNodes(node => node.is(ContainerNode))
-                .every(node => isAligned(node, type));
+            const nodes = editor.selection.range.targetedNodes(ContainerNode);
+            return nodes.length && nodes.every(node => isAligned(node, type));
         },
     });
     button.modifiers.append(

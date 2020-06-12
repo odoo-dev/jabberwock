@@ -109,7 +109,10 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandArgs: { type: ListType.ORDERED } as ListParams,
                         selected: (editor: JWEditor): boolean => {
                             const targetedNodes = editor.selection.range.targetedNodes();
-                            return targetedNodes.every(List.isInList.bind(List, ListType.ORDERED));
+                            return (
+                                targetedNodes.length &&
+                                targetedNodes.every(List.isInList.bind(List, ListType.ORDERED))
+                            );
                         },
                         modifiers: [new Attributes({ class: 'fas fa-list-ol fa-fw' })],
                     });
@@ -126,8 +129,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandArgs: { type: ListType.UNORDERED } as ListParams,
                         selected: (editor: JWEditor): boolean => {
                             const targetedNodes = editor.selection.range.targetedNodes();
-                            return targetedNodes.every(
-                                List.isInList.bind(List, ListType.UNORDERED),
+                            return (
+                                targetedNodes.length &&
+                                targetedNodes.every(List.isInList.bind(List, ListType.UNORDERED))
                             );
                         },
                         modifiers: [new Attributes({ class: 'fas fa-list-ul fa-fw' })],
@@ -145,8 +149,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandArgs: { type: ListType.CHECKLIST } as ListParams,
                         selected: (editor: JWEditor): boolean => {
                             const targetedNodes = editor.selection.range.targetedNodes();
-                            return targetedNodes.every(
-                                List.isInList.bind(List, ListType.CHECKLIST),
+                            return (
+                                targetedNodes.length &&
+                                targetedNodes.every(List.isInList.bind(List, ListType.CHECKLIST))
                             );
                         },
                         modifiers: [new Attributes({ class: 'fas far fa-check-square fa-fw' })],
