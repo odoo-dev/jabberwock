@@ -190,6 +190,11 @@ devtools-command {
     display: block;
 }
 
+devtools-td.numbering {
+    color: grey;
+}
+
+
 /* tree */
 
 devtools-tree {
