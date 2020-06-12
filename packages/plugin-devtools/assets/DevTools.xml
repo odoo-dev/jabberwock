@@ -296,7 +296,7 @@
     </devtools-panel>
 
     <t t-name="commandArgs">
-        <devtools-table>
+        <devtools-table t-if="payload">
             <devtools-tbody>
                 <t t-foreach="Object.keys(payload)" t-as="key" t-key="key_index">
                     <devtools-tr t-if="key !== 'context'">
@@ -312,6 +312,7 @@
                 </t>
             </devtools-tbody>
         </devtools-table>
+        <p t-else="">None</p>
     </t>
 
     <t t-name="payloadVSelection">
@@ -347,7 +348,7 @@
 
     <t t-name="selectedCommandTable">
         <devtools-infotitle>Command definitions</devtools-infotitle>
-        <devtools-table>
+        <devtools-table t-if="selectedCommandImplementations">
             <devtools-tbody>
                 <devtools-tr t-foreach="selectedCommandImplementations"
                     t-as="selectedCommandImplementation" t-key="selectedCommandImplementation_index"
@@ -360,6 +361,7 @@
                 </devtools-tr>
             </devtools-tbody>
         </devtools-table>
+        <p t-else="">None</p>
         <t t-set="mappings" t-value="matchingMappings(state.selectedCommandIdentifier)"/>
         <t t-if="mappings.length">
             <devtools-infotitle>Shortcuts</devtools-infotitle>
