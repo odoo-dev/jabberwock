@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { InlineFormatDomObjectRenderer } from '../../plugin-inline/src/InlineFormatDomObjectRenderer';
 import { ImageNode } from './ImageNode';
 import {
     DomObjectRenderingEngine,
@@ -6,16 +6,21 @@ import {
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class ImageDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ImageDomObjectRenderer extends InlineFormatDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ImageNode;
+    createSpanForAttributes = false;
 
-    async render(node: ImageNode): Promise<DomObject> {
-        const image: DomObject = {
-            tag: 'IMG',
-        };
-        this.engine.renderAttributes(Attributes, node, image);
-        return image;
+    async renderInline(nodes: ImageNode[]): Promise<DomObject[]> {
+        const rendering = nodes.map(node => {
+            const image: DomObject = {
+                tag: 'IMG',
+            };
+            this.engine.renderAttributes(Attributes, node, image);
+            this.engine.locate([node], image);
+            return image;
+        });
+        return Promise.all(rendering);
     }
 }
