@@ -7,7 +7,7 @@ import { FollowRange } from '../src/FollowRange';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { setSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 import { parseEditable } from '../../utils/src/configuration';

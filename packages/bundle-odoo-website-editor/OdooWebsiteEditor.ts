@@ -38,37 +38,14 @@ import './odooLayout.css';
 import { OdooSnippet } from '../plugin-odoo/src/OdooSnippet';
 
 import { Toolbar } from '../plugin-toolbar/src/Toolbar';
-import { ParagraphButton } from '../plugin-heading/src/HeadingButtons';
-import { Heading1Button } from '../plugin-heading/src/HeadingButtons';
-import { Heading2Button } from '../plugin-heading/src/HeadingButtons';
-import { Heading3Button } from '../plugin-heading/src/HeadingButtons';
-import { Heading4Button } from '../plugin-heading/src/HeadingButtons';
-import { Heading5Button } from '../plugin-heading/src/HeadingButtons';
-import { Heading6Button } from '../plugin-heading/src/HeadingButtons';
-import { PreButton } from '../plugin-pre/src/PreButtons';
-import { BoldButton } from '../plugin-bold/src/BoldButtons';
-import { ItalicButton } from '../plugin-italic/src/ItalicButtons';
-import { UnderlineButton } from '../plugin-underline/src/UnderlineButtons';
-import { OrderedListButton } from '../plugin-list/src/ListButtons';
-import { UnorderedListButton } from '../plugin-list/src/ListButtons';
-import { IndentButton } from '../plugin-indent/src/IndentButtons';
-import { OutdentButton } from '../plugin-indent/src/IndentButtons';
-import { SaveButton } from '../plugin-odoo/src/SaveButton';
 import { HtmlNode } from '../plugin-html/src/HtmlNode';
-import { MediaButton } from '../plugin-odoo/src/MediaButton';
 import { CommandImplementation, CommandIdentifier } from '../core/src/Dispatcher';
 import { JWPlugin } from '../core/src/JWPlugin';
 import { OdooVideo } from '../plugin-odoo-video/src/OdooVideo';
-import { LinkButton } from '../plugin-odoo/src/LinkButton';
 import { DomZonePosition } from '../plugin-layout/src/LayoutEngine';
 import { HtmlDomRenderingEngine } from '../plugin-html/src/HtmlDomRenderingEngine';
-import {
-    AlignLeftButton,
-    AlignCenterButton,
-    AlignRightButton,
-    AlignJustifyButton,
-} from '../plugin-align/src/AlignButtons';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
+import { Odoo } from '../plugin-odoo/src/Odoo';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -125,6 +102,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [TextColor],
                 [BackgroundColor],
                 [DomHelpers],
+                [Odoo],
                 [OdooSnippet],
                 [OdooVideo],
                 [CustomPlugin],
@@ -134,23 +112,23 @@ export class OdooWebsiteEditor extends JWEditor {
             layout: [
                 [
                     [
-                        ParagraphButton,
-                        Heading1Button,
-                        Heading2Button,
-                        Heading3Button,
-                        Heading4Button,
-                        Heading5Button,
-                        Heading6Button,
-                        PreButton,
+                        'ParagraphButton',
+                        'Heading1Button',
+                        'Heading2Button',
+                        'Heading3Button',
+                        'Heading4Button',
+                        'Heading5Button',
+                        'Heading6Button',
+                        'PreButton',
                     ],
                 ],
-                [BoldButton, ItalicButton, UnderlineButton],
-                [AlignLeftButton, AlignCenterButton, AlignRightButton, AlignJustifyButton],
-                [OrderedListButton, UnorderedListButton],
-                [IndentButton, OutdentButton],
-                [LinkButton],
-                [MediaButton],
-                ...(options.saveButton ? [[SaveButton]] : []),
+                ['BoldButton', 'ItalicButton', 'UnderlineButton'],
+                ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
+                ['OrderedListButton', 'UnorderedListButton'],
+                ['IndentButton', 'OutdentButton'],
+                ['OdooLinkButton'],
+                ['OdooMediaButton'],
+                ...(options.saveButton ? [['OdooSaveButton']] : []),
             ],
         });
 
