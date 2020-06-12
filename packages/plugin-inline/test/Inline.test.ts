@@ -28,7 +28,7 @@ describePlugin(Inline, testEditor => {
                 contentAfter: '<p>ab<b>cd<i>ef<u>gh</u>ij</i>kl</b>mn</p>',
             });
         });
-        it.only('should parse empty spans', async () => {
+        it('should parse empty spans', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p><span class="outer"><span class="inner"></span></span></p>',
                 contentAfter: '<p><span class="outer"><span class="inner"></span></span></p>',
