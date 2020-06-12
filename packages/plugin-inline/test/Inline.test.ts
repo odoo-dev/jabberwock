@@ -79,4 +79,84 @@ describePlugin(Inline, testEditor => {
             });
         });
     });
+    describe('format and attributes', () => {
+        it('should keep formats in order', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[]ga</i></b>',
+                contentAfter: '<b><i>g[]ga</i></b>',
+            });
+        });
+        it('should keep formats in order with inline node who use the inline renderer like image', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[]g<img src="#"></i></b>',
+                contentAfter: '<b><i>g[]g<img src="#"></i></b>',
+            });
+        });
+        it('should keep formats in order with inlines nodes who use the inline renderer like image', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[]g<img src="#1"><img src="#2"></i></b>',
+                contentAfter: '<b><i>g[]g<img src="#1"><img src="#2"></i></b>',
+            });
+        });
+        it('should keep formats and attributes in order', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><span a="b">g[]g</span></b>',
+                contentAfter: '<b><span a="b">g[]g</span></b>',
+            });
+        });
+        it('should keep nested formats in order', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[g</i>o]o</b>',
+                contentAfter: '<b><i>g[g</i>o]o</b>',
+            });
+        });
+        it('should keep nested formats and attributes in order', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><span a="b">g[g</span>o]o</b>',
+                contentAfter: '<b><span a="b">g[g</span>o]o</b>',
+            });
+        });
+        it('should nest identical formats', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[g</i></b><b><i>o]o</i></b>',
+                contentAfter: '<b><i>g[go]o</i></b>',
+            });
+        });
+        it('should nest identical formats and attributes', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><span a="b">g[g</span></b><b><span a="b">o]o</span></b>',
+                contentAfter: '<b><span a="b">g[go]o</span></b>',
+            });
+        });
+        it('should nest ordered formats', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[g</i></b><b>o]o</b>',
+                contentAfter: '<b><i>g[g</i>o]o</b>',
+            });
+        });
+        it('should nest ordered formats and attributes', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><span a="b">g[g</span></b><b>o]o</b>',
+                contentAfter: '<b><span a="b">g[g</span>o]o</b>',
+            });
+        });
+        it('should not nest unordered formats', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><i>g[g</i></b><i><b>o]o</b></i>',
+                contentAfter: '<b><i>g[g</i></b><i><b>o]o</b></i>',
+            });
+        });
+        it('should not nest formats with different attributes', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b>g[g</b><b a="b">o]o</b>',
+                contentAfter: '<b>g[g</b><b a="b">o]o</b>',
+            });
+        });
+        it('should not nest unordered formats and attributes', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<b><span a="b">g[g</span></b><span a="b"><b>o]o</b></span>',
+                contentAfter: '<b><span a="b">g[g</span></b><span a="b"><b>o]o</b></span>',
+            });
+        });
+    });
 });
