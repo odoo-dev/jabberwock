@@ -49,6 +49,7 @@ import { Odoo } from '../plugin-odoo/src/Odoo';
 import { parseEditable } from '../utils/src/configuration';
 import { Dialog } from '../plugin-dialog/src/Dialog';
 import { Shadow } from '../plugin-shadow/src/Shadow';
+import { Dialog } from '../plugin-dialog/src/Dialog';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
