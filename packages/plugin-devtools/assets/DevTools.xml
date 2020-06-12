@@ -247,6 +247,7 @@
                                     selected: state.selectedCommandIndex == commandIndex,
                                 }"
                                 t-on-click="selectCommandByIndex(commandIndex)">
+                                <devtools-td class="numbering"><t t-esc="commandIndex + 1"/></devtools-td>
                                 <devtools-td><t t-esc="props.commands[commandIndex][0]"/></devtools-td>
                             </devtools-tr>
                         </devtools-tbody>
