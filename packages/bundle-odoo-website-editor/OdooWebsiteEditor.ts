@@ -46,6 +46,7 @@ import { DomZonePosition } from '../plugin-layout/src/LayoutEngine';
 import { HtmlDomRenderingEngine } from '../plugin-html/src/HtmlDomRenderingEngine';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { Odoo } from '../plugin-odoo/src/Odoo';
+import { parseEditable } from '../utils/src/configuration';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -181,11 +182,18 @@ export class OdooWebsiteEditor extends JWEditor {
                         return Promise.resolve([node]);
                     },
                 },
+                {
+                    id: 'editable',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        return parseEditable(editor, options.source);
+                    },
+                },
             ],
             componentZones: [
                 ['main_template', 'root'],
                 ['snippet_menu', 'main_sidebar'],
                 ['snippetManipulators', 'snippetManipulators'],
+                ['editable', 'main'],
             ],
             location: options.location,
             afterRender: options.afterRender,
