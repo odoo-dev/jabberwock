@@ -80,6 +80,14 @@ const alphabetsContainingSpaces = new RegExp(
 );
 
 /**
+ * Spell-checking on mobile devices does not stop at inline tags like b, i, u
+ * but it hits a barrier on different nodes like div for example. The code
+ * below constructs a crude selector to match if the node is such a barrier.
+ */
+const spellCheckingIgnoredTags = ['a', 'b', 'i', 'u', 'span', 'font', 'superscript', 'subscript'];
+const spellCheckingBarrier = spellCheckingIgnoredTags.map(t => `:not(${t})`).join('');
+
+/**
  * These javascript event types might, in case of safari or spell-checking
  * keyboard, trigger dom events in multiple javascript stacks. They will require
  * to observe events during two ticks rather than after a single tick.
@@ -941,8 +949,11 @@ export class EventNormalizer {
         | DeleteWordAction
         | DeleteHardLineAction
         | DeleteContentAction {
-        const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
-        if (isInsertOrRemoveAction) {
+        const isMutationAction = hasMutatedElements && !inputTypeCommands.has(inputType);
+        // These two particular keys might have been defaultPrevented to avoid
+        // flickering and thus trigger no mutation but still need to be handled.
+        const isRemoveAction = key === 'Backspace' || key === 'Delete';
+        if (isMutationAction || isRemoveAction) {
             if (key === 'Backspace' || key === 'Delete') {
                 return this._getRemoveAction(key, inputType);
             } else if (key === 'Enter') {
@@ -1599,6 +1610,26 @@ export class EventNormalizer {
         const selection = this._getSelection();
         const [offsetNode, offset] = targetDeepest(selection.anchorNode, selection.anchorOffset);
         this._initialCaretPosition = { offsetNode, offset };
+
+        // Backspace cannot always be prevented as preventing a backspace in a
+        // text node would throw off spell-checking on mobile for example.
+        if (ev.key === 'Backspace') {
+            const forward = selection.direction === Direction.FORWARD;
+            const start = forward ? selection.anchorNode : selection.focusNode;
+            const startOffset = forward ? selection.anchorOffset : selection.focusOffset;
+            if (
+                (startOffset === 0 && !start.previousSibling) ||
+                selection.anchorNode.parentElement.closest(spellCheckingBarrier) !==
+                    selection.focusNode.parentElement.closest(spellCheckingBarrier)
+            ) {
+                // Allowed cases for preventing is:
+                // 1. At the start of the node
+                // 2. When the anchor and focus of the selection are set in
+                // nodes that are separated of each other by a node that is
+                // considered to be a barrier for spell-checking purposes.
+                ev.preventDefault();
+            }
+        }
     }
     /**
      * Set internal properties of the pointer down event to retrieve them later
