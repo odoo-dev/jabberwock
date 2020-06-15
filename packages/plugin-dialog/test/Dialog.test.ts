@@ -6,10 +6,10 @@ import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Dialog } from '../src/Dialog';
 import { click } from '../../utils/src/testUtils';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DialogZoneNode } from '../src/ui/DialogZoneNode';
+import { DialogZoneNode } from '../src/DialogZoneNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 
 const container = document.createElement('div');
 container.classList.add('container');

@@ -5,7 +5,7 @@ import { Platform, Keymap, LEVEL, ConfiguredCommand } from '../src/Keymap';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { testEditor, keydown } from '../../utils/src/testUtils';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { VNode } from '../../core/src/VNodes/VNode';

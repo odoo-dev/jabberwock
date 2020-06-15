@@ -1,9 +1,9 @@
 import { QWeb } from '@odoo/owl';
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
-import { OwlDomObjectRenderer } from './ui/OwlDomObjectRenderer';
+import { OwlDomObjectRenderer } from './OwlDomObjectRenderer';
 import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { OwlEnv, OwlComponent } from './ui/OwlComponent';
+import { OwlEnv, OwlComponent } from './OwlComponent';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Browser } from '@odoo/owl/dist/types/browser';
 

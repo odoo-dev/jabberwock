@@ -3,7 +3,7 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
-import { ActionableNode } from './ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class ActionableDomObjectRenderer extends AbstractRenderer<DomObject> {

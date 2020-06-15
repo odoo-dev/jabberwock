@@ -1,7 +1,7 @@
 import { Component } from '@odoo/owl';
 import { useState } from '@odoo/owl';
 import { Env } from '@odoo/owl/dist/types/component/component';
-import JWEditor from '../../../core/src/JWEditor';
+import JWEditor from '../../core/src/JWEditor';
 
 export interface OwlEnv extends Env {
     editor: JWEditor;

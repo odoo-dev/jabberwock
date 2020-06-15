@@ -4,7 +4,7 @@ import {
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { LabelNode } from './LabelNode';
+import { LabelNode } from '../../plugin-layout/src/LabelNode';
 
 export class LabelDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

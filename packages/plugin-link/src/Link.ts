@@ -13,10 +13,10 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Layout } from '../../plugin-layout/src/Layout';
 import linkForm from '../assets/LinkForm.xml';
-import { OwlNode } from '../../plugin-owl/src/ui/OwlNode';
+import { OwlNode } from '../../plugin-owl/src/OwlNode';
 import { LinkComponent } from './components/LinkComponent';
 import { Owl } from '../../plugin-owl/src/Owl';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface LinkParams extends CommandParams {

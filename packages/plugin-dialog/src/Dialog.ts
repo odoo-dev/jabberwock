@@ -1,8 +1,8 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Loadables } from '../../core/src/JWEditor';
-import { DialogZoneDomObjectRenderer } from './ui/DialogZoneDomObjectRenderer';
-import { DialogZoneXmlDomParser } from './ui/DialogZoneXmlDomParser';
+import { DialogZoneDomObjectRenderer } from './DialogZoneDomObjectRenderer';
+import { DialogZoneXmlDomParser } from './DialogZoneXmlDomParser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 

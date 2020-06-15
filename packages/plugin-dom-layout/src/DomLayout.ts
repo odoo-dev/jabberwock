@@ -3,19 +3,24 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutLocation, DomLayoutEngine } from './ui/DomLayoutEngine';
+import { DomLayoutLocation, DomLayoutEngine } from './DomLayoutEngine';
 import {
     DomZonePosition,
     ComponentDefinition,
     ComponentId,
 } from '../../plugin-layout/src/LayoutEngine';
 import { Html } from '../../plugin-html/src/Html';
-import { ZoneDomObjectRenderer } from './ui/ZoneDomObjectRenderer';
-import { ZoneXmlDomParser } from './ui/ZoneXmlDomParser';
-import { LayoutContainerDomObjectRenderer } from './ui/LayoutContainerDomObjectRenderer';
+import { ZoneDomObjectRenderer } from './ZoneDomObjectRenderer';
+import { ZoneXmlDomParser } from './ZoneXmlDomParser';
+import { LayoutContainerDomObjectRenderer } from './LayoutContainerDomObjectRenderer';
 import { ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CommandIdentifier } from '../../core/src/Dispatcher';
+import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
+import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRenderer';
+import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
+import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
+import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 
 export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
@@ -27,7 +32,15 @@ export interface DomLayoutConfig extends JWPluginConfig {
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
     static dependencies = [Html, Parser, Renderer, Layout, Keymap];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
-        renderers: [ZoneDomObjectRenderer, LayoutContainerDomObjectRenderer],
+        renderers: [
+            ZoneDomObjectRenderer,
+            LayoutContainerDomObjectRenderer,
+            ActionableGroupSelectItemDomObjectRenderer,
+            ActionableGroupDomObjectRenderer,
+            ActionableDomObjectRenderer,
+            LabelDomObjectRenderer,
+            SeparatorDomObjectRenderer,
+        ],
         parsers: [ZoneXmlDomParser],
         layoutEngines: [],
         components: [],

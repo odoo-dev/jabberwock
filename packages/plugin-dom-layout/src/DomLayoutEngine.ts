@@ -1,20 +1,20 @@
-import { VNode } from '../../../core/src/VNodes/VNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 import {
     LayoutEngine,
     ComponentId,
     DomZonePosition,
     ComponentDefinition,
-} from '../../../plugin-layout/src/LayoutEngine';
-import { Parser } from '../../../plugin-parser/src/Parser';
-import { Renderer } from '../../../plugin-renderer/src/Renderer';
-import { ZoneNode, ZoneIdentifier } from '../../../plugin-layout/src/ZoneNode';
-import { Direction, VSelectionDescription } from '../../../core/src/VSelection';
-import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
-import { DomSelectionDescription } from '../../../plugin-dom-editable/src/EventNormalizer';
-import JWEditor from '../../../core/src/JWEditor';
+} from '../../plugin-layout/src/LayoutEngine';
+import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { ZoneNode, ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
+import { Direction, VSelectionDescription } from '../../core/src/VSelection';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
+import JWEditor from '../../core/src/JWEditor';
 import { DomReconciliationEngine } from './DomReconciliationEngine';
 import { LayoutContainer } from './LayoutContainerNode';
-import { DomObject } from '../../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];

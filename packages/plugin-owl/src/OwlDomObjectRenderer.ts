@@ -1,11 +1,11 @@
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../../plugin-html/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
-import { Renderer } from '../../../plugin-renderer/src/RenderingEngine';
+} from '../../plugin-html/src/DomObjectRenderingEngine';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { Renderer } from '../../plugin-renderer/src/RenderingEngine';
 import { OwlNode } from './OwlNode';
-import { Owl } from '../Owl';
+import { Owl } from './Owl';
 import { OwlEnv } from './OwlComponent';
 
 export class OwlDomObjectRenderer extends AbstractRenderer<DomObject> {

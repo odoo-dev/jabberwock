@@ -1,16 +1,16 @@
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../../plugin-html/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
+} from '../../plugin-html/src/DomObjectRenderingEngine';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { DialogZoneNode } from './DialogZoneNode';
-import { VNode } from '../../../core/src/VNodes/VNode';
-import { ComponentId } from '../../../plugin-layout/src/LayoutEngine';
-import { Layout } from '../../../plugin-layout/src/Layout';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { ComponentId } from '../../plugin-layout/src/LayoutEngine';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 
-import template from './Dialog.xml';
-import './Dialog.css';
-import { MetadataNode } from '../../../plugin-metadata/src/MetadataNode';
+import template from '../assets/Dialog.xml';
+import '../assets/Dialog.css';
 
 const container = document.createElement('jw-container');
 container.innerHTML = template;

@@ -16,7 +16,7 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import template from '../../../bundles/basicLayout.xml';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { nodeName } from '../../utils/src/utils';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { QWeb } from '@odoo/owl';
 import { parseEditable } from '../../utils/src/configuration';
@@ -469,6 +469,7 @@ describe('Plugin: DevTools', () => {
             );
             const name = p.firstElementChild;
             const pchildren = p.lastElementChild;
+
             const pos = name.getBoundingClientRect();
             name.dispatchEvent(
                 new MouseEvent('dblclick', { clientX: pos.left, clientY: pos.top, bubbles: true }),
@@ -899,7 +900,11 @@ describe('Plugin: DevTools', () => {
             const subpanel = wrapper.querySelector(
                 'jw-devtools devtools-panel.active mainpane-contents',
             );
-            expect(subpanel.textContent).to.equal('2insertText1setSelection');
+            expect(
+                [...subpanel.querySelectorAll('devtools-td:not(.numbering)')].map(
+                    td => td.textContent,
+                ),
+            ).to.deep.equal(['insertText', 'setSelection']);
         });
         it('should select "hide"', async () => {
             await openDevTools();

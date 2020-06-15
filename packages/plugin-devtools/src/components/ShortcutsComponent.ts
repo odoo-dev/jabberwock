@@ -1,4 +1,4 @@
-import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
+import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { Keymap } from '../../../plugin-keymap/src/Keymap';
 import { argsRepr } from '../utils';
 

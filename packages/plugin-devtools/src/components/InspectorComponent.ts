@@ -1,10 +1,10 @@
 import { InfoComponent } from './InfoComponent';
 import { PathComponent } from './PathComponent';
 import { TreeComponent } from './TreeComponent';
-import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
+import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { Layout } from '../../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../../plugin-dom-layout/src/DomLayoutEngine';
 import { caretPositionFromPoint } from '../../../utils/src/polyfill';
 import { CharNode } from '../../../plugin-char/src/CharNode';
 

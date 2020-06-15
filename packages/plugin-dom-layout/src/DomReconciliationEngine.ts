@@ -1,10 +1,10 @@
-import { VNode, Point, RelativePosition } from '../../../core/src/VNodes/VNode';
-import { nodeName, nodeLength, FlattenUnion } from '../../../utils/src/utils';
-import { styleToObject } from '../../../utils/src/Dom';
-import { AbstractNode } from '../../../core/src/VNodes/AbstractNode';
-import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
-import { DomPoint } from '../../../plugin-dom-layout/src/ui/DomLayoutEngine';
-import { DomObject } from '../../../plugin-html/src/DomObjectRenderingEngine';
+import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
+import { nodeName, nodeLength, FlattenUnion } from '../../utils/src/utils';
+import { styleToObject } from '../../utils/src/Dom';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { DomPoint } from './DomLayoutEngine';
+import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
 
 //--------------------------------------------------------------------------
 // Internal objects
