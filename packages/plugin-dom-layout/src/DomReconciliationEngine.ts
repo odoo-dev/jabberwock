@@ -115,7 +115,7 @@ export class DomReconciliationEngine {
                                 dom: parent.object.dom || [],
                             };
                             this._diff[parent.id].removedChildren.push(oldRefId);
-                            this._objects[id].parent = parent.id;
+                            this._objects[id].parent = parent.parent;
                         }
                     }
                 }
@@ -123,6 +123,29 @@ export class DomReconciliationEngine {
         }
 
         const diffs = Object.values(this._diff);
+
+        // Prepare path for fragment insertion in the dom.
+        const objectsPath: Record<DomObjectID, [Element, number][]> = {};
+        for (const diff of diffs) {
+            const object = this._objects[diff.id];
+            const nodes = diff.dom.length ? diff.dom : this._getchildrenDomNodes(diff.id);
+            const path: [Element, number][] = [];
+            let parent = this._objects[object.parent];
+            while (parent && !parent.object.tag) {
+                parent = this._objects[parent.parent];
+            }
+            if (!parent) {
+                let domNode = nodes[0];
+                while (domNode && domNode.parentElement && domNode !== document.body) {
+                    path.push([
+                        domNode.parentElement,
+                        [].indexOf.call(domNode.parentElement.childNodes, domNode),
+                    ]);
+                    domNode = domNode.parentElement;
+                }
+            }
+            objectsPath[diff.id] = path;
+        }
 
         // Select removed objects.
         const removeObjects: DomObjectID[] = [];
@@ -233,19 +256,39 @@ export class DomReconciliationEngine {
         // Insert object dom nodes who don't have direct object with nodeName
         // and not added by the updateDom because his parent have no diff.
         for (const id of objectToInsert) {
+            const path = objectsPath[id] || [];
             const item = this._objects[id];
-            let parent = this._objects[item.parent];
-            while (parent && !parent.object.tag) {
+            let parent = this._objects[item.parent] || item;
+            while (!parent.object.tag && parent.parent) {
                 parent = this._objects[parent.parent];
             }
-            if (parent) {
-                const parentDomNode = parent.dom[0] as Element;
-                const domNodes: Node[] = [];
-                for (const childId of parent.children) {
-                    domNodes.push(...this._getDomChild(childId, parentDomNode));
-                }
-                if (domNodes.length) {
-                    this._insertDomChildren(domNodes, parentDomNode);
+            const parentDomNode = parent.dom[0] as Element;
+            const domNodes: Node[] = [];
+            for (const childId of parent.children) {
+                domNodes.push(...this._getDomChild(childId, parentDomNode));
+            }
+
+            if (domNodes.length) {
+                if (parent !== item && parent.object.tag) {
+                    this._insertDomChildren(domNodes, parentDomNode, parentDomNode.firstChild);
+                } else {
+                    let parentDomNode: Element;
+                    let firstDomNode: Node;
+                    while (!parentDomNode && path.length) {
+                        const pathItem = path.shift();
+                        const isAvailableParent =
+                            pathItem[0].ownerDocument.contains(pathItem[0]) &&
+                            !domNodes.find(
+                                domNode => pathItem[0] === domNode || domNode.contains(pathItem[0]),
+                            );
+                        if (isAvailableParent) {
+                            parentDomNode = pathItem[0];
+                            firstDomNode = parentDomNode.childNodes[pathItem[1]];
+                        }
+                    }
+                    if (parentDomNode) {
+                        this._insertDomChildren(domNodes, parentDomNode, firstDomNode);
+                    }
                 }
             }
         }
@@ -899,7 +942,7 @@ export class DomReconciliationEngine {
                     attributes: diffAttributes,
                     style: diffStyle,
                     classList: diffClassList,
-                    dom: old?.dom || [],
+                    dom: domNodes,
                     parentDomNode: old?.parentDomNode,
                     removedChildren: removedChildren,
                 };
@@ -1256,13 +1299,14 @@ export class DomReconciliationEngine {
             }
             const domNodes: Node[] = [];
             for (const childId of object.children) {
-                if (!domObject.tag && this._diff[childId]) {
-                    newNode = true;
-                }
                 domNodes.push(...this._getDomChild(childId, parentDomNode));
             }
-            if (domObject.tag && domNodes.length) {
-                this._insertDomChildren(domNodes, parentDomNode);
+            if (domNodes.length) {
+                if (domObject.tag) {
+                    this._insertDomChildren(domNodes, parentDomNode, parentDomNode.firstChild);
+                } else {
+                    newNode = true;
+                }
             }
         }
 
@@ -1286,13 +1330,11 @@ export class DomReconciliationEngine {
         }
         // Get the dom representing this child.
         let domNodes: Node[] = [];
-        if (parentDomNode) {
-            const child = this._objects[id];
-            if (child.dom.length) {
-                domNodes = child.dom;
-            } else {
-                domNodes = this._getchildrenDomNodes(id);
-            }
+        const child = this._objects[id];
+        if (child.dom.length) {
+            domNodes = child.dom;
+        } else {
+            domNodes = this._getchildrenDomNodes(id);
         }
         return domNodes;
     }
@@ -1428,14 +1470,13 @@ export class DomReconciliationEngine {
     /**
      * Insert missing domNodes in this element.
      */
-    private _insertDomChildren(domNodes: Node[], parentNode: Node): void {
-        let childDomNode: Node = parentNode.firstChild;
+    private _insertDomChildren(domNodes: Node[], parentNode: Node, insertBefore: Node): void {
         for (const domNode of domNodes) {
-            if (childDomNode) {
-                if (childDomNode === domNode) {
-                    childDomNode = childDomNode.nextSibling;
+            if (insertBefore) {
+                if (insertBefore === domNode) {
+                    insertBefore = insertBefore.nextSibling;
                 } else {
-                    parentNode.insertBefore(domNode, childDomNode);
+                    parentNode.insertBefore(domNode, insertBefore);
                 }
             } else {
                 parentNode.appendChild(domNode);
