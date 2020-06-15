@@ -899,7 +899,7 @@ describe('Plugin: DevTools', () => {
             const subpanel = wrapper.querySelector(
                 'jw-devtools devtools-panel.active mainpane-contents',
             );
-            expect(subpanel.textContent).to.equal('insertTextsetSelection');
+            expect(subpanel.textContent).to.equal('2insertText1setSelection');
         });
         it('should select "hide"', async () => {
             await openDevTools();
