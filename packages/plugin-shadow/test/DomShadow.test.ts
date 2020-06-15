@@ -14,7 +14,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { Shadow } from '../src/Shadow';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { VElement } from '../../core/src/VNodes/VElement';

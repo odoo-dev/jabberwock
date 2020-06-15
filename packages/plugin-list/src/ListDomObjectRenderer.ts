@@ -6,7 +6,7 @@ import {
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-import './ui/checklist.css';
+import '../assets/checklist.css';
 
 export class ListDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

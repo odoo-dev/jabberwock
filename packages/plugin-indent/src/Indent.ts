@@ -11,7 +11,7 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export type IndentParams = CommandParams;

@@ -4,7 +4,7 @@ import {
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { ActionableGroupNode } from './ActionableGroupNode';
+import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 
 export class ActionableGroupDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

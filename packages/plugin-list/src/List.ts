@@ -17,7 +17,7 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { distinct } from '../../utils/src/utils';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export interface ListParams extends CommandParams {

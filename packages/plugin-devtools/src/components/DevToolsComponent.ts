@@ -1,7 +1,7 @@
 import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { ShortcutsComponent } from './ShortcutsComponent';
-import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
+import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
 import { hooks } from '@odoo/owl';

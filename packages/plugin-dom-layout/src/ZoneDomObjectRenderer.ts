@@ -1,9 +1,9 @@
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../../plugin-html/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
-import { ZoneNode } from '../../../plugin-layout/src/ZoneNode';
+} from '../../plugin-html/src/DomObjectRenderingEngine';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 
 export class ZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

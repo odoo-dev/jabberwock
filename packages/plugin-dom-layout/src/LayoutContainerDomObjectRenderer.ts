@@ -1,8 +1,8 @@
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../../plugin-html/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../../plugin-renderer/src/AbstractRenderer';
+} from '../../plugin-html/src/DomObjectRenderingEngine';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { LayoutContainer } from './LayoutContainerNode';
 
 export class LayoutContainerDomObjectRenderer extends AbstractRenderer<DomObject> {

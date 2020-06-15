@@ -10,7 +10,7 @@ import { targetDeepest } from './Dom';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable } from './configuration';
 

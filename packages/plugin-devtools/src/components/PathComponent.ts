@@ -1,4 +1,4 @@
-import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
+import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { Format } from '../../../plugin-inline/src/Format';
 

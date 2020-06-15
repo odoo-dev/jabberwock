@@ -1,8 +1,8 @@
-import { VNode } from '../../../core/src/VNodes/VNode';
-import { XmlDomParsingEngine } from '../../../plugin-xml/src/XmlDomParsingEngine';
-import { AbstractParser } from '../../../plugin-parser/src/AbstractParser';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
+import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { DialogZoneNode } from './DialogZoneNode';
-import { nodeName } from '../../../utils/src/utils';
+import { nodeName } from '../../utils/src/utils';
 
 export class DialogZoneXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;

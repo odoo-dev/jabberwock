@@ -1,6 +1,6 @@
 import { OwlComponent } from './OwlComponent';
-import { AtomicNode } from '../../../core/src/VNodes/AtomicNode';
-import { AbstractNodeParams } from '../../../core/src/VNodes/AbstractNode';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
 
 export interface OwlNodeParams extends AbstractNodeParams {
     Component: typeof OwlComponent;

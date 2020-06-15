@@ -10,7 +10,7 @@ import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/Core';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 

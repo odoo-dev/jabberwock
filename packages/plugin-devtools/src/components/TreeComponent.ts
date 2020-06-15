@@ -1,5 +1,5 @@
 import { toUnicode } from '../../../utils/src/utils';
-import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
+import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';

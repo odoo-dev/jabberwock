@@ -1,4 +1,4 @@
-import { OwlComponent } from '../../../plugin-owl/src/ui/OwlComponent';
+import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode';
 import { LinkFormat } from '../LinkFormat';
 import { LinkParams } from '../Link';

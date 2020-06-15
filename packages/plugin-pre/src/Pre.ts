@@ -10,7 +10,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { PreCharDomObjectRenderer } from './PreCharDomObjectRenderer';
 import { PreSeparatorDomObjectRenderer } from './PreSeparatorDomObjectRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {

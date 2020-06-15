@@ -24,7 +24,7 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { Image } from '../../plugin-image/src/Image';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
-import { DomLayoutEngine } from '../src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { BasicEditor } from '../../../bundles/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
@@ -1608,8 +1608,6 @@ describe('DomLayout', () => {
                             FormatClass: BoldFormat,
                         });
 
-                        expect(mutationNumber).to.equal(3, 'add <b>, move <i>, toolbar update');
-
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                         const editable = domEngine.components.get('editable')[0];
 
@@ -1623,6 +1621,8 @@ describe('DomLayout', () => {
                         expect(
                             rendered && 'children' in rendered && rendered.children,
                         ).to.deep.equal(textNodes);
+
+                        expect(mutationNumber).to.equal(3, 'add <b>, move <i>, toolbar update');
 
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({

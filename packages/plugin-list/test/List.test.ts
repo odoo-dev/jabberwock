@@ -22,7 +22,7 @@ import { Char } from '../../plugin-char/src/Char';
 import { LinkXmlDomParser } from '../../plugin-link/src/LinkXmlDomParser';
 import { SuperscriptXmlDomParser } from '../../plugin-superscript/src/SuperscriptXmlDomParser';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>

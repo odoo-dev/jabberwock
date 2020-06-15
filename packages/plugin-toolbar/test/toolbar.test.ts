@@ -11,7 +11,7 @@ import { Underline } from '../../plugin-underline/src/Underline';
 import { Heading } from '../../plugin-heading/src/Heading';
 import { Paragraph } from '../../plugin-paragraph/src/Paragraph';
 import { Indent } from '../../plugin-indent/src/Indent';
-import { ActionableNode } from '../src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Pre } from '../../plugin-pre/src/Pre';
 

@@ -17,7 +17,7 @@ import { BoldXmlDomParser } from '../../plugin-bold/src/BoldXmlDomParser';
 import { UnderlineXmlDomParser } from '../../plugin-underline/src/UnderlineXmlDomParser';
 import { SpanXmlDomParser } from '../../plugin-span/src/SpanXmlDomParser';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 
 describe('utils', () => {
     describe('Parser', () => {

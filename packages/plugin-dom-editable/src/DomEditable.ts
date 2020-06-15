@@ -6,7 +6,7 @@ import { CommandIdentifier } from '../../core/src/Dispatcher';
 import { InsertTextParams } from '../../plugin-char/src/Char';
 import { VSelectionParams } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { JWEditor } from '../../core/src/JWEditor';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';

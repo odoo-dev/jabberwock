@@ -6,7 +6,7 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { ToolbarNode } from './ToolbarNode';
+import { ToolbarNode } from '../../plugin-toolbar/src/ToolbarNode';
 
 export class SeparatorDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

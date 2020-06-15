@@ -3,12 +3,12 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-html/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
-import { ActionableNode } from './ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { ActionableGroupNode } from './ActionableGroupNode';
+import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { LabelNode } from './LabelNode';
+import { LabelNode } from '../../plugin-layout/src/LabelNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 
 export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer<DomObject> {
