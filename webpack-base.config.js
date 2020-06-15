@@ -37,7 +37,7 @@ const mainConfig = {
                 options: {
                     name: '[name].[ext]',
                     outputPath: '/fonts',
-                    publicPath: 'http://localhost:8095/fonts',
+                    publicPath: 'http://localhost:8080/fonts',
                 },
             },
         ],
