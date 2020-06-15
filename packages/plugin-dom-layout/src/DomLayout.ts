@@ -117,6 +117,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             await this.configuration.afterRender?.();
         }
     }
+
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------

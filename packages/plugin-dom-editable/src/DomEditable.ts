@@ -76,9 +76,19 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         const ancestorContentEditable = node?.closest(
             node => !!node.modifiers.find(Attributes)?.get('contentEditable'),
         );
-        return (
-            ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') === 'true'
-        );
+        if (this.editor.mode && this.editor.mode.definition.checkEditable) {
+            return (
+                node &&
+                this.editor.mode.isNodeEditable(node) &&
+                ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') ===
+                    'true'
+            );
+        } else {
+            return (
+                ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') ===
+                'true'
+            );
+        }
     }
 
     /**

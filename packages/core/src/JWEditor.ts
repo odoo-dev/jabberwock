@@ -5,12 +5,14 @@ import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { ModeError } from '../../utils/src/errors';
+import { StageError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
+import { ModePlugin } from '../../plugin-mode/src/ModePlugin';
+import { Mode, ModeIdentifier } from '../../plugin-mode/src/Mode';
 
-export enum Mode {
+export enum EditorStage {
     CONFIGURATION = 'configuration',
     EDITION = 'edition',
 }
@@ -30,6 +32,11 @@ type CommandParams<T extends JWPlugin, K extends string> = K extends Commands<T>
     : never;
 
 export interface JWEditorConfig {
+    /**
+     * The mode with which the editor gets started.
+     * @see class `Mode`
+     */
+    mode?: ModeIdentifier;
     defaults?: {
         Container?: new () => ContainerNode;
         Atomic?: new () => AtomicNode;
@@ -44,11 +51,13 @@ export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
 }
 
 export class JWEditor {
-    private _mode: Mode = Mode.CONFIGURATION;
+    private _stage: EditorStage = EditorStage.CONFIGURATION;
     dispatcher: Dispatcher;
+    mode: Mode;
     contextManager: ContextManager;
     plugins: PluginMap = new Map();
     configuration: JWEditorConfig = {
+        mode: 'default',
         defaults: {
             Container: ContainerNode,
             Atomic: AtomicNode,
@@ -57,7 +66,7 @@ export class JWEditor {
         plugins: [],
         loadables: {},
     };
-    selection = new VSelection();
+    selection = new VSelection(this);
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
     // Use a set so that when asynchronous functions are called we ensure that
@@ -76,6 +85,7 @@ export class JWEditor {
         // the commands supported in the core of the editor and the VDocument.
         this.load(Core);
         this.load(Keymap);
+        this.load(ModePlugin);
     }
 
     async nextEventMutex(next: (...args) => void): Promise<void> {
@@ -85,7 +95,7 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
-        this._mode = Mode.EDITION;
+        this._stage = EditorStage.EDITION;
         this._loadPlugins();
 
         // Load editor-level loadables.
@@ -97,6 +107,8 @@ export class JWEditor {
                 }
             }
         }
+
+        this.setMode(this.configuration.mode);
 
         for (const plugin of this.plugins.values()) {
             await plugin.start();
@@ -120,8 +132,8 @@ export class JWEditor {
         config?: ConstructorParameters<P>[1],
     ): void {
         // Actual loading is deferred to `start`.
-        if (this._mode !== Mode.CONFIGURATION) {
-            throw new ModeError(Mode.CONFIGURATION);
+        if (this._stage !== EditorStage.CONFIGURATION) {
+            throw new StageError(EditorStage.CONFIGURATION);
         } else if (isConstructor(PluginOrLoadables, JWPlugin)) {
             // Add the plugin to the configuration.
             const Plugin = PluginOrLoadables;
@@ -231,8 +243,8 @@ export class JWEditor {
         PluginOrEditorConfig: JWEditorConfig | T,
         pluginConfig?: ConstructorParameters<T>[1],
     ): void {
-        if (this._mode !== Mode.CONFIGURATION) {
-            throw new ModeError(Mode.CONFIGURATION);
+        if (this._stage !== EditorStage.CONFIGURATION) {
+            throw new StageError(EditorStage.CONFIGURATION);
         } else if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
             // Configure the plugin.
             const Plugin = PluginOrEditorConfig;
@@ -310,7 +322,15 @@ export class JWEditor {
         }
         // Clear loaders.
         this.loaders = {};
-        this._mode = Mode.CONFIGURATION;
+        this._stage = EditorStage.CONFIGURATION;
+    }
+
+    /**
+     * Set the mode of the editor.
+     */
+    setMode(modeId: ModeIdentifier): void {
+        // todo: Improve mode to use ReactiveValue when it will be implemented.
+        this.mode = this.plugins.get(ModePlugin).getMode(modeId);
     }
 }
 

@@ -5,6 +5,7 @@ import { Constructor } from '../../utils/src/utils';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AbstractNode } from './VNodes/AbstractNode';
+import JWEditor from './JWEditor';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -69,11 +70,12 @@ export class VRange {
         ];
     }
 
-    constructor(boundaryPoints?: [Point, Point]) {
+    constructor(public readonly editor: JWEditor, boundaryPoints?: [Point, Point]) {
         // If a range context is given, adapt this range to match it.
         if (boundaryPoints) {
             const [start, end] = boundaryPoints;
             const [startNode, startPosition] = start;
+            if (start === end && !editor.mode.isNodeEditable(startNode)) return;
             const [endNode, endPosition] = end;
             if (endPosition === RelativePosition.AFTER) {
                 this.setEnd(endNode, endPosition);
@@ -118,8 +120,11 @@ export class VRange {
         while ((node = node.next()) && node !== bound) {
             if (!endContainers.includes(node)) {
                 let selectedNode: VNode = node;
-                while (!selectedNode?.test(FragmentNode) && selectedNode?.test(predicate)) {
-                    if (selectedNode.editable) {
+                while (selectedNode?.test(predicate)) {
+                    if (
+                        !selectedNode.parent ||
+                        (selectedNode?.parent && this._isNodeEditable(selectedNode.parent))
+                    ) {
                         selectedNodes.push(selectedNode);
                     }
                     // Find the next ancestor whose children are all selected
@@ -145,7 +150,7 @@ export class VRange {
     targetedNodes(predicate?: Predicate): VNode[] {
         const targetedNodes: VNode[] = this.traversedNodes(predicate);
         const closestStartAncestor = this.start.ancestor(predicate);
-        if (closestStartAncestor?.editable) {
+        if (closestStartAncestor && this._isNodeEditable(closestStartAncestor)) {
             targetedNodes.unshift(closestStartAncestor);
         } else if (closestStartAncestor) {
             const children = [...closestStartAncestor.childVNodes].reverse();
@@ -168,7 +173,12 @@ export class VRange {
         let node = this.start;
         const bound = this.end.next();
         while ((node = node.next()) && node !== bound) {
-            if (node.editable && node.test(predicate)) {
+            if (
+                node?.parent &&
+                this._isNodeEditable(node) &&
+                this._isNodeEditable(node.parent) &&
+                node.test(predicate)
+            ) {
                 traversedNodes.push(node);
             }
         }
@@ -346,12 +356,20 @@ export class VRange {
                 if (ancestor.children().length > 1) {
                     ancestor.splitAt(this.endContainer);
                 }
-                if (this.endContainer.breakable) {
+                if (
+                    this.endContainer.breakable &&
+                    this.startContainer.editableAttributes &&
+                    this.editor.mode.isNodeEditable(this.startContainer)
+                ) {
                     this.endContainer.mergeWith(ancestor);
                 }
                 ancestor = ancestor.parent;
             }
-            if (this.endContainer.breakable) {
+            if (
+                this.endContainer.breakable &&
+                this.startContainer.editableAttributes &&
+                this.editor.mode.isNodeEditable(this.endContainer)
+            ) {
                 this.endContainer.mergeWith(this.startContainer);
             }
         }
@@ -362,6 +380,15 @@ export class VRange {
     remove(): void {
         this.start.remove();
         this.end.remove();
+    }
+
+    /**
+     * Check wether the node is editable relative to the `_mode`.
+     * Editable means that the children can be modified.
+     */
+    _isNodeEditable(node: VNode): boolean {
+        if (!this.editor.mode) return true;
+        return this.editor.mode.isNodeEditable(node);
     }
 }
 
@@ -374,10 +401,11 @@ export class VRange {
  * @param callback The callback to call with the newly created range.
  */
 export async function withRange<T>(
+    editor: JWEditor,
     bounds: [Point, Point],
     callback: (range: VRange) => T,
 ): Promise<T> {
-    const range = new VRange(bounds);
+    const range = new VRange(editor, bounds);
     const result = await callback(range);
     range.remove();
     return result;

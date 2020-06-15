@@ -1,10 +1,10 @@
-import JWEditor, { Mode } from '../src/JWEditor';
+import JWEditor, { EditorStage } from '../src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import { expect } from 'chai';
-import { ModeError } from '../../utils/src/errors';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { StageError } from '../../utils/src/errors';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -15,7 +15,7 @@ describe('core', () => {
                 class A<T extends JWPluginConfig> extends JWPlugin<T> {}
                 expect(() => {
                     editor.load(A);
-                }).to.throw(ModeError, Mode.CONFIGURATION);
+                }).to.throw(StageError, EditorStage.CONFIGURATION);
             });
             it('should load a plugin configuration', async () => {
                 const editor = new JWEditor();
@@ -57,7 +57,7 @@ describe('core', () => {
                 await editor.start();
                 expect(() => {
                     editor.configure({});
-                }).to.throw(ModeError, Mode.CONFIGURATION);
+                }).to.throw(StageError, EditorStage.CONFIGURATION);
             });
             it('should update a plugin configuration', async () => {
                 const editor = new JWEditor();
@@ -122,6 +122,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
                         'Keymap',
+                        'ModePlugin',
                         'A',
                         'B',
                         'C',
@@ -138,6 +139,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
                         'Keymap',
+                        'ModePlugin',
                         'A',
                         'B',
                         'C',
@@ -157,6 +159,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
                         'Keymap',
+                        'ModePlugin',
                         'A',
                         'B',
                         'D',
@@ -176,6 +179,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
                         'Keymap',
+                        'ModePlugin',
                         'A',
                         'B',
                         'C',
@@ -196,6 +200,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
                         'Keymap',
+                        'ModePlugin',
                         'A',
                         'D',
                         'C',
@@ -217,6 +222,7 @@ describe('core', () => {
                     expect(plugins.map(p => p.constructor.name)).to.eql([
                         'Core',
                         'Keymap',
+                        'ModePlugin',
                         'A',
                         'D',
                         'E',

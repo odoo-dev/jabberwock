@@ -476,7 +476,6 @@ export class EventNormalizer {
     ) {
         this.initNextObservation();
 
-        // const document = this.editable.ownerDocument;
         this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
         this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
         this._bindEventInEditable(root, 'compositionend', this._registerEvent);
@@ -575,12 +574,13 @@ export class EventNormalizer {
         });
     }
     /**
-     * Register given event on the this.currentStackObservation._events queue. If the queue is not yet
-     * initialized or has been cleared prior to this call, re-initialize it.
-     * After a tick (setTimeout 0ms) the '_processEvents' method is called. All
-     * events that happened during the tick are read from the queue and the
-     * analysis tries to extract the actions desired by the user such as insert,
-     * delete, backspace, spell checking, special characters, etc.
+     * Register given event on the this.currentStackObservation._events queue.
+     * If the queue is not yet initialized or has been cleared prior to this
+     * call, re-initialize it. After a tick (setTimeout 0ms) the
+     * '_processEvents' method is called. All events that happened during the
+     * tick are read from the queue and the analysis tries to extract the
+     * actions desired by the user such as insert, delete, backspace, spell
+     * checking, special characters, etc.
      *
      * @see _processEvents
      */
@@ -610,11 +610,25 @@ export class EventNormalizer {
             // TODO: no rendering in editable can happen before the analysis of
             // the selection. There should be a mechanism here that can be used
             // by the normalizer to block the rendering until this resolves.
+            const currentDomSelection = this._getSelection();
             this._keyboardSelectionTimeout = new Timeout<EventBatch>(
                 async (): Promise<EventBatch> => {
+                    const newDomSelection = this._getSelection();
+                    const collapsed =
+                        newDomSelection.anchorNode === newDomSelection.focusNode &&
+                        newDomSelection.anchorOffset === newDomSelection.focusOffset;
+
+                    let domSelection;
+                    if (collapsed && !this._isInEditable(newDomSelection.anchorNode)) {
+                        // Prevent a collapsed selection outside the editable
+                        // context: keep the current selection.
+                        domSelection = currentDomSelection;
+                    } else {
+                        domSelection = newDomSelection;
+                    }
                     const setSelectionAction: SetSelectionAction = {
                         type: 'setSelection',
-                        domSelection: this._getSelection(),
+                        domSelection: domSelection,
                     };
                     return { actions: [setSelectionAction], mutatedElements: new Set([]) };
                 },
@@ -1644,6 +1658,22 @@ export class EventNormalizer {
                 this._mousedownInEditable = false;
                 this._initialCaretPosition = undefined;
             }
+        } else if (ev.target instanceof Element) {
+            // Prevent a collapsed selection outside the editable context:
+            // remove all ranges.
+            // TODO: remove them from the VDocument as well.
+            new Timeout<EventBatch>(() => {
+                const selection = this._getSelection();
+                const collapsed =
+                    selection.anchorNode === selection.focusNode &&
+                    selection.anchorOffset === selection.focusOffset;
+                if (collapsed) {
+                    document.getSelection().removeAllRanges();
+                }
+                return {
+                    actions: [],
+                };
+            });
         }
     }
     /**

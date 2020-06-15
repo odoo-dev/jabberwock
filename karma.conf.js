@@ -59,7 +59,10 @@ module.exports = function(config) {
         optimization: {
             removeAvailableModules: false,
             removeEmptyChunks: false,
-            splitChunks: false,
+            splitChunks: {
+                chunks: 'async',
+                maxSize: 10000,
+            }
         },
     }
 

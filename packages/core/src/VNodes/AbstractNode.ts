@@ -5,6 +5,7 @@ import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
 import { EventMixin } from '../../../utils/src/EventMixin';
 import { Modifier } from '../Modifier';
+import { Attributes } from '../../../plugin-xml/src/Attributes';
 
 export interface AbstractNodeParams {
     modifiers?: Modifiers | Array<Modifier | Constructor<Modifier>>;
@@ -13,8 +14,32 @@ export interface AbstractNodeParams {
 let id = 0;
 export abstract class AbstractNode extends EventMixin {
     readonly id = id;
-    editable = true;
+    /**
+     * If it's attributes are editable.
+     * It does not propagate to the children.
+     */
+    editableAttributes = true;
+    get editable(): boolean {
+        const editable = this.modifiers.find(Attributes)?.get('contenteditable');
+        return typeof editable === 'undefined' || editable === '' || editable === 'true'
+            ? true
+            : false;
+    }
+    set editable(state: boolean) {
+        if (state === true) {
+            this.modifiers.get(Attributes).set('contenteditable', 'true');
+        } else {
+            this.modifiers.find(Attributes)?.remove('contenteditable');
+        }
+    }
+    /**
+     * If the node has some meaning for the representation in the dom.
+     * For instance, makers are not tangible.
+     */
     tangible = true;
+    /**
+     * If we can split or remove the node in some circumstances.
+     */
     breakable = true;
     parent: VNode;
     modifiers = new Modifiers();

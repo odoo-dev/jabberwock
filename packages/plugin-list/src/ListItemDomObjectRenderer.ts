@@ -73,7 +73,7 @@ export class ListItemDomObjectRenderer extends AbstractRenderer<DomObject> {
                 if (ev.offsetX < 0) {
                     ev.stopImmediatePropagation();
                     ev.preventDefault();
-                    withRange(VRange.at(node.firstChild() || node), range => {
+                    withRange(this.engine.editor, VRange.at(node.firstChild() || node), range => {
                         return this.engine.editor.execCommand('toggleChecked', {
                             context: {
                                 range: range,
