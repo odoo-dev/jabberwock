@@ -3431,6 +3431,181 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
+            it('should redraw a wrapped item', async () => {
+                const p = new VElement({ htmlTag: 'P' });
+                p.append(new CharNode({ char: 'a' }));
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [p];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const pDom = container.querySelector('p');
+                const text = pDom.firstChild;
+
+                const area = new VElement({ htmlTag: 'custom' });
+                p.wrap(area);
+
+                mutationNumber = 0;
+                await engine.redraw(area, area.parent, p);
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><custom><p>a</p></custom></jw-editor>',
+                );
+
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                expect(pDom.firstChild === text).to.equal(true, 'Use same text');
+
+                expect(mutationNumber).to.equal(2, 'insert custom node, move p into custom');
+
+                await editor.stop();
+            });
+            it('should redraw a unwrapped item', async () => {
+                const p = new VElement({ htmlTag: 'P' });
+                p.append(new CharNode({ char: 'a' }));
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [p];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const pDom = container.querySelector('p');
+                const text = pDom.firstChild;
+
+                const area = new VElement({ htmlTag: 'custom' });
+                p.wrap(area);
+                await engine.redraw(area, p.parent, p);
+
+                area.unwrap();
+
+                mutationNumber = 0;
+                await engine.redraw(area, p.parent, p);
+                expect(container.innerHTML).to.equal('<jw-editor><p>a</p></jw-editor>');
+
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                expect(pDom.firstChild === text).to.equal(true, 'Use same text');
+
+                expect(mutationNumber).to.equal(3);
+
+                await editor.stop();
+            });
+            it('should redraw the wrapped layoutContainer children', async () => {
+                const p = new VElement({ htmlTag: 'P' });
+                p.append(new CharNode({ char: 'a' }));
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [p];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const pDom = container.querySelector('p');
+                const text = pDom.firstChild;
+
+                const area = new VElement({ htmlTag: 'custom' });
+                engine.root
+                    .firstChild()
+                    .firstChild()
+                    .wrap(area);
+
+                mutationNumber = 0;
+                await engine.redraw(area, area.parent, p);
+                expect(container.innerHTML).to.equal(
+                    '<custom><jw-editor><p>a</p></jw-editor></custom>',
+                );
+
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                expect(pDom.firstChild === text).to.equal(true, 'Use same text');
+
+                expect(mutationNumber).to.equal(2, 'insert custom node, move p into custom');
+
+                await editor.stop();
+            });
+            it('should redraw the unwrapped layoutContainer children', async () => {
+                const p = new VElement({ htmlTag: 'P' });
+                p.append(new CharNode({ char: 'a' }));
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [p];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const pDom = container.querySelector('p');
+                const text = pDom.firstChild;
+
+                const area = new VElement({ htmlTag: 'custom' });
+                const layoutContainer = engine.root.firstChild();
+                const layoutchild = layoutContainer.firstChild();
+                layoutchild.wrap(area);
+                await engine.redraw(layoutContainer, area, layoutchild);
+
+                area.unwrap();
+
+                mutationNumber = 0;
+                await engine.redraw(layoutContainer, area, layoutchild);
+                expect(container.innerHTML).to.equal('<jw-editor><p>a</p></jw-editor>');
+
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                expect(pDom.firstChild === text).to.equal(true, 'Use same text');
+
+                expect(mutationNumber).to.equal(3);
+
+                await editor.stop();
+            });
             it('should not have mutation when redraw a custom node without change', async () => {
                 class CustomNode extends ContainerNode {
                     sectionAttr = 1;
@@ -4645,18 +4820,6 @@ describe('DomLayout', () => {
             await editor.plugins.get(Layout).remove('aaa');
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
-    });
-});
-
-describe('DomLayout', () => {
-    before(() => {
-        document.body.appendChild(container);
-        container.appendChild(target);
-    });
-    after(() => {
-        document.body.removeChild(container);
-        container.innerHTML = '';
-        target.innerHTML = '';
     });
     describe('redraw with attach/detach', () => {
         class CustomNode extends ContainerNode {
