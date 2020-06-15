@@ -49,6 +49,7 @@ import { Odoo } from '../plugin-odoo/src/Odoo';
 import { parseEditable } from '../utils/src/configuration';
 import { Dialog } from '../plugin-dialog/src/Dialog';
 import { Shadow } from '../plugin-shadow/src/Shadow';
+import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -92,6 +93,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Italic],
                 [Underline],
                 [Link],
+                [FontAwesome],
                 [Divider, { breakable: false }],
                 [Image],
                 [Subscript],
