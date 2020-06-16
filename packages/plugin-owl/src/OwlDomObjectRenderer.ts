@@ -21,9 +21,8 @@ export class OwlDomObjectRenderer extends AbstractRenderer<DomObject> {
 
     async render(node: OwlNode): Promise<DomObject> {
         const components = this.engine.editor.plugins.get(Owl).components;
-        if (components.get(node)) {
-            components.get(node).destroy();
-        }
+        const oldOwlComponent = components.get(node);
+
         const placeholder = document.createElement('jw-placeholer');
         document.body.appendChild(placeholder);
         node.Component.env = this.env;
@@ -32,8 +31,18 @@ export class OwlDomObjectRenderer extends AbstractRenderer<DomObject> {
         await component.mount(placeholder);
         placeholder.remove();
 
+        const domNodes = [...placeholder.childNodes];
+
+        if (oldOwlComponent) {
+            if (oldOwlComponent.el.parentNode) {
+                for (const domNode of domNodes) {
+                    oldOwlComponent.el.parentNode.insertBefore(domNode, oldOwlComponent.el);
+                }
+            }
+            oldOwlComponent.destroy();
+        }
         return {
-            dom: [...placeholder.childNodes],
+            dom: domNodes,
         };
     }
 }
