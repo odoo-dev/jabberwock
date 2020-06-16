@@ -1,4 +1,3 @@
-<t-range><t t-zone="tools"/></t-range>
 <b>replace the target, zone "custom" just after this bold tag, and zone "main" after without any container</b>
 <my-custom-zone><t t-zone="custom"/></my-custom-zone>
 <table width="100%">
