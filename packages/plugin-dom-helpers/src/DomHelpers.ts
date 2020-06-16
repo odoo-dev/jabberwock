@@ -168,6 +168,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         let nodes: VNode[];
         if (domNode) {
             nodes = this.getNodes(domNode);
+            if (!nodes.length) {
+                throw new Error('The given DOM node does not have a corresponding VNode.');
+            }
             position = position || RelativePosition.BEFORE;
         } else {
             this.editor.selection.range.empty();
