@@ -10,6 +10,7 @@ import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LabelNode } from '../../plugin-layout/src/LabelNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
+import { DomObjectActionable } from './ActionableDomObjectRenderer';
 
 export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -17,44 +18,42 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
     predicate = (node: VNode): boolean => node.ancestors(ActionableGroupNode).length >= 2;
 
     async render(item: VNode): Promise<DomObject> {
-        const editor = this.engine.editor;
         let domObject: DomObject;
         if (item instanceof ActionableNode) {
             let updateOption: () => void;
-            let execCommand: (ev: Event) => void;
-            domObject = {
+            let handler: (ev: Event) => void;
+            const domObjectActionable: DomObjectActionable = {
                 tag: 'OPTION',
                 attributes: {
                     value: item.buttonName,
                 },
+                children: item.label ? [{ text: item.label }] : [],
+                handler: (): void => {
+                    if (item.commandId) {
+                        this.engine.editor.execCommand(item.commandId, item.commandArgs);
+                    }
+                },
                 attach: (el: HTMLOptionElement): void => {
                     const select = el.closest('select');
-                    execCommand = (ev: Event): void => {
+                    handler = (ev: Event): void => {
                         const option = select.querySelector('option:checked');
                         if (option === el) {
                             ev.stopImmediatePropagation();
-                            this.engine.editor.execCommand(item.commandId, item.commandArgs);
+                            domObjectActionable.handler();
                         }
                     };
-                    select.addEventListener('change', execCommand);
+                    select.addEventListener('change', handler);
                     updateOption = this._updateOption.bind(this, item, el);
+                    updateOption();
                     this.engine.editor.dispatcher.registerCommandHook('*', updateOption);
                 },
                 detach: (el: HTMLOptionElement): void => {
                     const select = el.closest('select');
-                    select.removeEventListener('change', execCommand);
+                    select.removeEventListener('change', handler);
                     this.engine.editor.dispatcher.removeCommandHook('*', updateOption);
                 },
             };
-            if (item.label) {
-                domObject.children = [{ text: item.label }];
-            }
-            if (!item.enabled(editor)) {
-                domObject.attributes.disabled = 'true';
-            }
-            if (item.selected(editor)) {
-                domObject.attributes.selected = 'true';
-            }
+            domObject = domObjectActionable;
         } else if (item instanceof ActionableGroupNode) {
             if (item.ancestors(ActionableGroupNode).length <= 2) {
                 const title = item.modifiers.find(Attributes)?.get('title');
@@ -115,8 +114,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
         const select = button.selected(editor);
         const enable = button.enabled(editor);
         const attrSelected = element.getAttribute('selected');
-        const domSelect = attrSelected === 'true';
-        if (select !== domSelect) {
+        if (select.toString() !== attrSelected) {
             if (select) {
                 element.setAttribute('selected', 'true');
                 element.closest('select').value = element.getAttribute('value');

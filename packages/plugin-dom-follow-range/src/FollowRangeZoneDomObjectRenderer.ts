@@ -30,9 +30,11 @@ export class FollowRangeZoneDomObjectRenderer extends AbstractRenderer<DomObject
                         );
                     };
                     document.addEventListener('selectionchange', followRangeDebounced, false);
+                    window.addEventListener('resize', followRangeDebounced);
                 },
                 detach: (): void => {
                     document.removeEventListener('selectionchange', followRangeDebounced, false);
+                    window.removeEventListener('resize', followRangeDebounced);
                 },
             };
             return followRange;

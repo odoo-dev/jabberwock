@@ -42,6 +42,7 @@ import template from './basicLayout.xml';
 import './basicLayout.css';
 import { OdooField } from '../packages/plugin-odoo-field/src/OdooField';
 import { parseEditable, createEditable } from '../packages/utils/src/configuration';
+import { Fullscreen } from '../packages/plugin-fullsreen/src/Fullscreen';
 
 export class BasicEditor extends JWEditor {
     constructor(params?: { editable?: HTMLElement }) {
@@ -87,6 +88,7 @@ export class BasicEditor extends JWEditor {
                 [Input],
                 [Dialog],
                 [FollowRange],
+                [Fullscreen, { component: 'editor' }],
                 [OdooField],
             ],
         });

@@ -15,12 +15,14 @@ import footerTemplate from './footer.xml';
 import { ShadowNode } from '../../packages/plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
 import { parseEditable } from '../../packages/utils/src/configuration';
+import { Fullscreen } from '../../packages/plugin-fullsreen/src/Fullscreen';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
 
 const editor = new BasicEditor();
 editor.load(Shadow);
+editor.configure(Fullscreen, { component: 'editable' });
 editor.configure(DomLayout, {
     components: [
         {
@@ -30,7 +32,7 @@ editor.configure(DomLayout, {
             },
         },
         {
-            id: 'domMain',
+            id: 'editor',
             render(editor: JWEditor): Promise<VNode[]> {
                 return editor.plugins.get(Parser).parse('text/html', mainTemplate);
             },
@@ -61,7 +63,7 @@ editor.configure(DomLayout, {
     ],
     locations: [
         ['domHeader', [document.body, 'prepend']],
-        ['domMain', [target, 'replace']],
+        ['editor', [target, 'replace']],
         ['domOther', [target, 'after']],
         ['domFooter', [document.body, 'append']],
     ],
