@@ -31,7 +31,7 @@ export class Italic<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         commandArgs: { FormatClass: ItalicFormat } as FormatParams,
                         selected: (editor: JWEditor): boolean =>
                             editor.plugins.get(Inline).isAllFormat(ItalicFormat),
-                        modifiers: [new Attributes({ class: 'fas fa-italic fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-italic fa-fw' })],
                     });
                     return [button];
                 },

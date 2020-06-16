@@ -114,7 +114,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                                 targetedNodes.every(List.isInList.bind(List, ListType.ORDERED))
                             );
                         },
-                        modifiers: [new Attributes({ class: 'fas fa-list-ol fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-list-ol fa-fw' })],
                     });
                     return [button];
                 },
@@ -134,7 +134,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                                 targetedNodes.every(List.isInList.bind(List, ListType.UNORDERED))
                             );
                         },
-                        modifiers: [new Attributes({ class: 'fas fa-list-ul fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-list-ul fa-fw' })],
                     });
                     return [button];
                 },
@@ -154,7 +154,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                                 targetedNodes.every(List.isInList.bind(List, ListType.CHECKLIST))
                             );
                         },
-                        modifiers: [new Attributes({ class: 'fas far fa-check-square fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa far fa-check-square fa-fw' })],
                     });
                     return [button];
                 },

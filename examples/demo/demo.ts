@@ -11,6 +11,8 @@ import template from './demo.xml';
 import './demo.css';
 import { VNode } from '../../packages/core/src/VNodes/VNode';
 
+import '../utils/fontawesomeAssets';
+
 const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';
 target.style.paddingLeft = '8px';

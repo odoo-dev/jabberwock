@@ -6,6 +6,8 @@ import './demo-odoo-fields.css';
 import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 
+import '../utils/fontawesomeAssets';
+
 const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';
 target.style.paddingLeft = '8px';

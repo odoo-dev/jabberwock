@@ -43,59 +43,59 @@ describePlugin(FontAwesome, testEditor => {
         });
         it('should parse a solid fontawesome', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p><i class="fas fa-pastafarianism"></i></span></p>',
-                contentAfter: '<p>\u200b<i class="fas fa-pastafarianism"></i>\u200b</p>',
+                contentBefore: '<p><i class=" fa-pastafarianism"></i></span></p>',
+                contentAfter: '<p>\u200b<i class="fa fa-pastafarianism"></i>\u200b</p>',
             });
         });
         it('should parse a fontawesome in a <span>', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p><span class="fas fa-pastafarianism"></span></p>',
-                contentAfter: '<p>\u200b<span class="fas fa-pastafarianism"></span>\u200b</p>',
+                contentBefore: '<p><span class="fa fa-pastafarianism"></span></p>',
+                contentAfter: '<p>\u200b<span class="fa fa-pastafarianism"></span>\u200b</p>',
             });
         });
         it('should parse a fontawesome in a <i>', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p><i class="fas fa-pastafarianism"></i></i></p>',
-                contentAfter: '<p>\u200b<i class="fas fa-pastafarianism"></i>\u200b</p>',
+                contentBefore: '<p><i class="fa fa-pastafarianism"></i></i></p>',
+                contentAfter: '<p>\u200b<i class="fa fa-pastafarianism"></i>\u200b</p>',
             });
         });
         it('should parse a fontawesome with more classes', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p><i class="red fas bordered fa-pastafarianism big"></i></p>',
+                contentBefore: '<p><i class="red fa bordered fa-pastafarianism big"></i></p>',
                 contentAfter:
-                    '<p>\u200b<i class="red fas bordered fa-pastafarianism big"></i>\u200b</p>',
+                    '<p>\u200b<i class="red fa bordered fa-pastafarianism big"></i>\u200b</p>',
             });
         });
         it('should parse a fontawesome with multi-line classes', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: `<p><i class="fas
+                contentBefore: `<p><i class="fa
                                 fa-pastafarianism"></i></p>`,
-                contentAfter: `<p>\u200b<i class="fas fa-pastafarianism"></i>\u200b</p>`,
+                contentAfter: `<p>\u200b<i class="fa fa-pastafarianism"></i>\u200b</p>`,
             });
         });
         it('should parse a fontawesome with more multi-line classes', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: `<p><i class="red fas bordered
+                contentBefore: `<p><i class="red fa bordered
                                 big fa-pastafarianism scary"></i></p>`,
-                contentAfter: `<p>\u200b<i class="red fas bordered big fa-pastafarianism scary"></i>\u200b</p>`,
+                contentAfter: `<p>\u200b<i class="red fa bordered big fa-pastafarianism scary"></i>\u200b</p>`,
             });
         });
         it('should parse a fontawesome at the beginning of a paragraph', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p><i class="fas fa-pastafarianism"></i>a[b]c</p>',
-                contentAfter: '<p>\u200b<i class="fas fa-pastafarianism"></i>\u200ba[b]c</p>',
+                contentBefore: '<p><i class="fa fa-pastafarianism"></i>a[b]c</p>',
+                contentAfter: '<p>\u200b<i class="fa fa-pastafarianism"></i>\u200ba[b]c</p>',
             });
         });
         it('should parse a fontawesome in the middle of a paragraph', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>a[b]c<i class="fas fa-pastafarianism"></i>def</p>',
-                contentAfter: '<p>a[b]c\u200b<i class="fas fa-pastafarianism"></i>\u200bdef</p>',
+                contentBefore: '<p>a[b]c<i class="fa fa-pastafarianism"></i>def</p>',
+                contentAfter: '<p>a[b]c\u200b<i class="fa fa-pastafarianism"></i>\u200bdef</p>',
             });
         });
         it('should parse a fontawesome at the end of a paragraph', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>a[b]c<i class="fas fa-pastafarianism"></i></p>',
-                contentAfter: '<p>a[b]c\u200b<i class="fas fa-pastafarianism"></i>\u200b</p>',
+                contentBefore: '<p>a[b]c<i class="fa fa-pastafarianism"></i></p>',
+                contentAfter: '<p>a[b]c\u200b<i class="fa fa-pastafarianism"></i>\u200b</p>',
             });
         });
     });
@@ -104,17 +104,17 @@ describePlugin(FontAwesome, testEditor => {
             describe('Basic', () => {
                 it('should delete a fontawesome', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab[]<i class="fas fa-pastafarianism"></i>cd</p>',
+                        contentBefore: '<p>ab[]<i class="fa fa-pastafarianism"></i>cd</p>',
                         stepFunction: deleteForward,
                         contentAfter: '<p>ab[]cd</p>',
                     });
                 });
                 it('should not delete a fontawesome', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab<i class="fas fa-pastafarianism"></i>[]cd</p>',
+                        contentBefore: '<p>ab<i class="fa fa-pastafarianism"></i>[]cd</p>',
                         stepFunction: deleteForward,
                         contentAfter:
-                            '<p>ab\u200b<i class="fas fa-pastafarianism"></i>\u200b[]d</p>',
+                            '<p>ab\u200b<i class="fa fa-pastafarianism"></i>\u200b[]d</p>',
                     });
                 });
             });
@@ -124,13 +124,13 @@ describePlugin(FontAwesome, testEditor => {
                 it('should delete a fontawesome', async () => {
                     // Forward selection
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab[<i class="fas fa-pastafarianism"></i>]cd</p>',
+                        contentBefore: '<p>ab[<i class="fa fa-pastafarianism"></i>]cd</p>',
                         stepFunction: deleteForward,
                         contentAfter: '<p>ab[]cd</p>',
                     });
                     // Backward selection
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab]<i class="fas fa-pastafarianism"></i>[cd</p>',
+                        contentBefore: '<p>ab]<i class="fa fa-pastafarianism"></i>[cd</p>',
                         stepFunction: deleteForward,
                         contentAfter: '<p>ab[]cd</p>',
                     });
@@ -143,17 +143,17 @@ describePlugin(FontAwesome, testEditor => {
             describe('Basic', () => {
                 it('should delete a fontawesome', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab<i class="fas fa-pastafarianism"></i>[]cd</p>',
+                        contentBefore: '<p>ab<i class="fa fa-pastafarianism"></i>[]cd</p>',
                         stepFunction: deleteBackward,
                         contentAfter: '<p>ab[]cd</p>',
                     });
                 });
                 it('should not delete a fontawesome', async () => {
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab[]<i class="fas fa-pastafarianism"></i>cd</p>',
+                        contentBefore: '<p>ab[]<i class="fa fa-pastafarianism"></i>cd</p>',
                         stepFunction: deleteBackward,
                         contentAfter:
-                            '<p>a[]\u200b<i class="fas fa-pastafarianism"></i>\u200bcd</p>',
+                            '<p>a[]\u200b<i class="fa fa-pastafarianism"></i>\u200bcd</p>',
                     });
                 });
             });
@@ -163,13 +163,13 @@ describePlugin(FontAwesome, testEditor => {
                 it('should delete a fontawesome', async () => {
                     // Forward selection
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab[<i class="fas fa-pastafarianism"></i>]cd</p>',
+                        contentBefore: '<p>ab[<i class="fa fa-pastafarianism"></i>]cd</p>',
                         stepFunction: deleteBackward,
                         contentAfter: '<p>ab[]cd</p>',
                     });
                     // Backward selection
                     await testEditor(BasicEditor, {
-                        contentBefore: '<p>ab]<i class="fas fa-pastafarianism"></i>[cd</p>',
+                        contentBefore: '<p>ab]<i class="fa fa-pastafarianism"></i>[cd</p>',
                         stepFunction: deleteBackward,
                         contentAfter: '<p>ab[]cd</p>',
                     });

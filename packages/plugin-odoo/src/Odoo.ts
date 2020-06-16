@@ -25,7 +25,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                             const node = range.start.nextSibling() || range.start.previousSibling();
                             return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
                         },
-                        modifiers: [new Attributes({ class: 'fas fa-link fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
                     });
                     return [button];
                 },
@@ -37,7 +37,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'media',
                         label: 'Media',
                         commandId: 'openMedia',
-                        modifiers: [new Attributes({ class: 'fas fa-file-image-o fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-file-image-o fa-fw' })],
                     });
                     return [button];
                 },
@@ -50,7 +50,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Save',
                         commandId: 'saveOdoo',
                         modifiers: [
-                            new Attributes({ class: 'fas fa-save fa-fw jw-primary-button' }),
+                            new Attributes({ class: 'fa fa-save fa-fw jw-primary-button' }),
                         ],
                     });
                     return [button];

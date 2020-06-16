@@ -63,7 +63,7 @@ describe('Toolbar', async () => {
                                     name: 'test',
                                     label: 'Test',
                                     modifiers: [
-                                        new Attributes({ class: 'fas fa-align-test fa-fw' }),
+                                        new Attributes({ class: 'fa fa-align-test fa-fw' }),
                                     ],
                                 }),
                             ];
@@ -117,7 +117,7 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
@@ -141,7 +141,7 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<button name="test" class="fas fa-align-test fa-fw" aria-pressed="false" title="Test"></button>',
+                    '<button name="test" class="fa fa-align-test fa-fw" aria-pressed="false" title="Test"></button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
@@ -154,7 +154,7 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
@@ -168,7 +168,7 @@ describe('Toolbar', async () => {
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -202,7 +202,7 @@ describe('Toolbar', async () => {
                     '<jw-group>',
                     '<select>',
                     '<option></option>',
-                    '<option value="bold" class="fas fa-bold fa-fw">Toggle bold</option>',
+                    '<option value="bold" class="fa fa-bold fa-fw">Toggle bold</option>',
                     '</select>',
                     '</jw-group>',
                     '</jw-toolbar>',
@@ -221,7 +221,7 @@ describe('Toolbar', async () => {
                     '<select>',
                     '<option></option>',
                     '<optgroup>',
-                    '<option value="bold" class="fas fa-bold fa-fw">Toggle bold</option>',
+                    '<option value="bold" class="fa fa-bold fa-fw">Toggle bold</option>',
                     '</optgroup>',
                     '</select>',
                     '</jw-group>',
@@ -239,8 +239,8 @@ describe('Toolbar', async () => {
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
-                    '<button name="italic" class="fas fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="italic" class="fa fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -256,9 +256,9 @@ describe('Toolbar', async () => {
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
                     '<span>custom label</span>',
-                    '<button name="italic" class="fas fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
+                    '<button name="italic" class="fa fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -290,9 +290,9 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
                     '<jw-separator role="separator"></jw-separator>',
-                    '<button name="italic" class="fas fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
+                    '<button name="italic" class="fa fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
@@ -307,9 +307,9 @@ describe('Toolbar', async () => {
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                    '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
                     '<jw-separator role="separator"></jw-separator>',
-                    '<button name="italic" class="fas fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
+                    '<button name="italic" class="fa fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -327,9 +327,9 @@ describe('Toolbar', async () => {
                     '<jw-group>',
                     '<select>',
                     '<option></option>',
-                    '<option value="bold" class="fas fa-bold fa-fw">Toggle bold</option>',
+                    '<option value="bold" class="fa fa-bold fa-fw">Toggle bold</option>',
                     '<option role="separator" disabled="true"></option>',
-                    '<option value="italic" class="fas fa-italic fa-fw">Toggle italic</option>',
+                    '<option value="italic" class="fa fa-italic fa-fw">Toggle italic</option>',
                     '</select>',
                     '</jw-group>',
                     '</jw-toolbar>',
@@ -399,15 +399,15 @@ describe('Toolbar', async () => {
                         '<jw-separator role="separator"></jw-separator>',
                         '<button name="heading1" class="h1" aria-pressed="false">Heading1</button>',
                         '<jw-group>',
-                            '<button name="bold" class="fas fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
-                            '<button name="italic" class="fas fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
-                            '<button name="underline" class="fas fa-underline fa-fw" aria-pressed="false" title="Toggle underline"></button>',
+                            '<button name="bold" class="fa fa-bold fa-fw" aria-pressed="false" title="Toggle bold"></button>',
+                            '<button name="italic" class="fa fa-italic fa-fw" aria-pressed="false" title="Toggle italic"></button>',
+                            '<button name="underline" class="fa fa-underline fa-fw" aria-pressed="false" title="Toggle underline"></button>',
                         '</jw-group>',
                         '<span>custom label</span>',
                         '<jw-group>',
-                            '<button name="indent" class="fas fa-indent fa-fw" aria-pressed="false" title="Indent"></button>',
+                            '<button name="indent" class="fa fa-indent fa-fw" aria-pressed="false" title="Indent"></button>',
                             '<jw-separator role="separator"></jw-separator>',
-                            '<button name="outdent" class="fas fa-outdent fa-fw" aria-pressed="false" title="Outdent"></button>',
+                            '<button name="outdent" class="fa fa-outdent fa-fw" aria-pressed="false" title="Outdent"></button>',
                         '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
