@@ -17,6 +17,8 @@ import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
 import { parseEditable } from '../../packages/utils/src/configuration';
 import { Fullscreen } from '../../packages/plugin-fullsreen/src/Fullscreen';
 
+import '../utils/fontawesomeAssets';
+
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
 

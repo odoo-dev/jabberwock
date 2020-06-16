@@ -4,6 +4,8 @@ import { DevTools } from '../../packages/plugin-devtools/src/DevTools';
 import '../utils/jabberwocky.css';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 
+import '../utils/fontawesomeAssets';
+
 const target = document.getElementById('contentToEdit');
 target.style.textAlign = 'center';
 jabberwocky.init(target);

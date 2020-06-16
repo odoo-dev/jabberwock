@@ -7,6 +7,8 @@ import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { OdooVideo } from '../../packages/plugin-odoo-video/src/OdooVideo';
 
+import '../utils/fontawesomeAssets';
+
 const target = document.getElementById('wrapper');
 target.innerHTML = template;
 

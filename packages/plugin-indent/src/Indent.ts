@@ -49,7 +49,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         name: 'indent',
                         label: 'Indent',
                         commandId: 'indent',
-                        modifiers: [new Attributes({ class: 'fas fa-indent fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-indent fa-fw' })],
                     });
                     return [button];
                 },
@@ -61,7 +61,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         name: 'outdent',
                         label: 'Outdent',
                         commandId: 'outdent',
-                        modifiers: [new Attributes({ class: 'fas fa-outdent fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-outdent fa-fw' })],
                     });
                     return [button];
                 },

@@ -31,7 +31,7 @@ export class Bold<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandArgs: { FormatClass: BoldFormat } as FormatParams,
                         selected: (editor: JWEditor): boolean =>
                             editor.plugins.get(Inline).isAllFormat(BoldFormat),
-                        modifiers: [new Attributes({ class: 'fas fa-bold fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-bold fa-fw' })],
                     });
                     return [button];
                 },

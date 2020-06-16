@@ -31,7 +31,7 @@ export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
                         commandArgs: { FormatClass: UnderlineFormat } as FormatParams,
                         selected: (editor: JWEditor): boolean =>
                             editor.plugins.get(Inline).isAllFormat(UnderlineFormat),
-                        modifiers: [new Attributes({ class: 'fas fa-underline fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-underline fa-fw' })],
                     });
                     return [button];
                 },

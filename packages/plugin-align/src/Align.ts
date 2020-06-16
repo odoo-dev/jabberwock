@@ -139,7 +139,7 @@ function alignButton(type: AlignType): ActionableNode {
     });
     button.modifiers.append(
         new Attributes({
-            class: 'fas fa-align-' + type + ' fa-fw',
+            class: 'fa fa-align-' + type + ' fa-fw',
         }),
     );
     return button;
