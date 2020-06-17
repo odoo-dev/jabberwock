@@ -23,10 +23,6 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
      */
     async parse(item: Element): Promise<VNode[]> {
         const children = Array.from(item.childNodes);
-        // A list item with no children should be skipped.
-        if (!children.length) {
-            return [];
-        }
         const nodes: VNode[] = [];
         let inlinesContainer: VNode;
         // Parse the list item's attributes into the node's ListItemAttributes,

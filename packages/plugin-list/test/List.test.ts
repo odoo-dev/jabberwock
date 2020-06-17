@@ -427,7 +427,7 @@ describePlugin(List, testEditor => {
                     '    <ul class="checklist">', // li4
                     '        <li class="unchecked">c.1</li>', // li4_0
                     '        <li class="checked">c.2</li>', // li4_1
-                    '        <li class="checked"></li>',
+                    '        <li class="checked"></li>', // li4_2
                     '    </ol>',
                     '</ul>',
                 ].join('\n');
@@ -537,7 +537,7 @@ describePlugin(List, testEditor => {
                 const li4 = list.children()[4] as ListNode;
                 expect(li4.toString()).to.equal('ListNode: ' + ListType.CHECKLIST);
                 expect(li4.listType).to.equal(ListType.CHECKLIST);
-                expect(li4.children().length).to.equal(2);
+                expect(li4.children().length).to.equal(3);
 
                 const li4_0 = li4.children()[0];
                 expect(li4_0.toString()).to.equal('ParagraphNode');
@@ -552,6 +552,10 @@ describePlugin(List, testEditor => {
                 expect(li4_1.children()[0].toString()).to.equal('c');
                 expect(li4_1.children()[1].toString()).to.equal('.');
                 expect(li4_1.children()[2].toString()).to.equal('2');
+
+                const li4_2 = li4.children()[2];
+                expect(li4_2.toString()).to.equal('ParagraphNode');
+                expect(li4_2.children().length).to.equal(0);
                 /* eslint-enable @typescript-eslint/camelcase */
             });
             it('should parse a list item with several blocks, inlines and whitespace', async () => {
