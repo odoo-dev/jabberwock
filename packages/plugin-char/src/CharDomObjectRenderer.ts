@@ -11,6 +11,7 @@ export class CharDomObjectRenderer extends InlineFormatDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = CharNode;
+    createSpanForAttributes = true;
 
     async renderInline(charNodes: CharNode[]): Promise<DomObjectText[]> {
         // Create textObject.

@@ -10,7 +10,6 @@ export class ImageDomObjectRenderer extends InlineFormatDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ImageNode;
-    createSpanForAttributes = false;
 
     async renderInline(nodes: ImageNode[]): Promise<DomObject[]> {
         const rendering = nodes.map(node => {

@@ -16,7 +16,7 @@ export class InlineFormatDomObjectRenderer extends AbstractRenderer<DomObject> {
     engine: DomObjectRenderingEngine;
     predicate: Predicate = InlineNode;
     // TODO: this is specific to CharNode and should only be handled for them.
-    createSpanForAttributes = true;
+    createSpanForAttributes = false;
 
     /**
      * Render formatted inline nodes. Don't override this method if you want to
