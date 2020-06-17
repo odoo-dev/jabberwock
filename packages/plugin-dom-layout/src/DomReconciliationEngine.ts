@@ -800,7 +800,9 @@ export class DomReconciliationEngine {
         if (domNodesChildrenProcess) {
             domNodesChildren = [];
             for (const [ref, position, nodes] of domNodesChildrenProcess) {
-                const nodeIds: DomObjectID[] = nodes.map(node => this._fromNode.get(node));
+                const nodeIds: DomObjectID[] = nodes
+                    .map(node => this._fromNode.get(node))
+                    .filter(id => id);
                 domNodesChildren.push([ref, position, nodeIds]);
             }
         }
