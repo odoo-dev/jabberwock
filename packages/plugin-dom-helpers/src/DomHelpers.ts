@@ -179,18 +179,18 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         }
         const parsedNodes = await this._parseHtmlString(html);
         switch (position.toUpperCase()) {
-            case RelativePosition.BEFORE.toUpperCase():
+            case RelativePosition.BEFORE:
                 for (const parsedNode of parsedNodes) {
                     nodes[0].before(parsedNode);
                 }
                 break;
-            case RelativePosition.AFTER.toUpperCase():
-                for (const parsedNode of parsedNodes.reverse()) {
+            case RelativePosition.AFTER:
+                for (const parsedNode of [...parsedNodes].reverse()) {
                     nodes[nodes.length - 1].after(parsedNode);
                 }
                 break;
-            case RelativePosition.INSIDE.toUpperCase():
-                for (const parsedNode of parsedNodes.reverse()) {
+            case RelativePosition.INSIDE:
+                for (const parsedNode of [...parsedNodes]) {
                     nodes[nodes.length - 1].append(parsedNode);
                 }
                 break;
