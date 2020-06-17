@@ -10,7 +10,7 @@ export class ShadowXmlDomParser extends AbstractParser<Node> {
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && nodeName(item) === 'JW-SHADOW';
+        return item instanceof Element && nodeName(item) === 'T-SHADOW';
     };
 
     /**

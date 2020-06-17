@@ -44,14 +44,14 @@ describe('DomShadow', async () => {
 
     describe('parse', async () => {
         describe('parse text/html', async () => {
-            it('should parse a template with <jw-shadow>', async () => {
+            it('should parse a template with <t-shadow>', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Html);
                 editor.load(Shadow);
                 await editor.start();
 
-                const template = '<div><jw-shadow></jw-shadow><t t-zone="default"/></div>';
+                const template = '<div><t-shadow></t-shadow><t t-zone="default"/></div>';
                 const nodes = await editor.plugins.get(Parser).parse('text/html', template);
                 const node = nodes[0];
 
@@ -62,7 +62,7 @@ describe('DomShadow', async () => {
                 expect(shadow.is(ShadowNode)).to.equal(true);
                 expect(shadow.firstChild()).to.equal(undefined);
             });
-            it('should parse a template with <jw-shadow> who have content', async () => {
+            it('should parse a template with <t-shadow> who have content', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Html);
@@ -70,7 +70,7 @@ describe('DomShadow', async () => {
                 await editor.start();
 
                 const template =
-                    '<div><jw-shadow><section>aaa</section></jw-shadow><t t-zone="default"/></div>';
+                    '<div><t-shadow><section>aaa</section></t-shadow><t t-zone="default"/></div>';
                 const nodes = await editor.plugins.get(Parser).parse('text/html', template);
                 const node = nodes[0];
 
@@ -81,7 +81,7 @@ describe('DomShadow', async () => {
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
                 expect(section.firstChild().is(CharNode)).to.equal(true);
             });
-            it('should parse a template with <jw-shadow> with style tag', async () => {
+            it('should parse a template with <t-shadow> with style tag', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Metadata);
@@ -90,7 +90,7 @@ describe('DomShadow', async () => {
                 await editor.start();
 
                 const template =
-                    '<div><jw-shadow><style>* { color: red; }</style><section>aaa</section></jw-shadow><t t-zone="default"/></div>';
+                    '<div><t-shadow><style>* { color: red; }</style><section>aaa</section></t-shadow><t t-zone="default"/></div>';
                 const nodes = await editor.plugins.get(Parser).parse('text/html', template);
                 const node = nodes[0];
 
@@ -103,7 +103,7 @@ describe('DomShadow', async () => {
                 const section = shadow.firstChild();
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
             });
-            it('should parse a template with <jw-shadow> with link tag', async () => {
+            it('should parse a template with <t-shadow> with link tag', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Metadata);
@@ -112,11 +112,11 @@ describe('DomShadow', async () => {
                 await editor.start();
 
                 const template =
-                    '<div><jw-shadow>' +
+                    '<div><t-shadow>' +
                     '<link rel="stylesheet" href="#href1"/>' +
                     '<link rel="stylesheet" href="#href2"/>' +
                     '<link rel="help" href="/help/"/>' +
-                    '<section>aaa</section></jw-shadow><t t-zone="default"/>' +
+                    '<section>aaa</section></t-shadow><t t-zone="default"/>' +
                     '</div>';
                 const nodes = await editor.plugins.get(Parser).parse('text/html', template);
                 const node = nodes[0];
@@ -143,7 +143,7 @@ describe('DomShadow', async () => {
                 const section = shadow.firstChild();
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
             });
-            it('should parse a template with <jw-shadow> with style and link tag', async () => {
+            it('should parse a template with <t-shadow> with style and link tag', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Metadata);
@@ -152,11 +152,11 @@ describe('DomShadow', async () => {
                 await editor.start();
 
                 const template =
-                    '<div><jw-shadow>' +
+                    '<div><t-shadow>' +
                     '<link rel="stylesheet" href="#href1"/>' +
                     '<style>* { color: red; }</style>' +
                     '<link rel="stylesheet" href="#href2"/>' +
-                    '<section>aaa</section></jw-shadow><t t-zone="default"/>' +
+                    '<section>aaa</section></t-shadow><t t-zone="default"/>' +
                     '</div>';
                 const nodes = await editor.plugins.get(Parser).parse('text/html', template);
                 const node = nodes[0];
