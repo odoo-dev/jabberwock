@@ -8,7 +8,7 @@ import { Constructor } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifiers } from '../../core/src/Modifiers';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
-import JWEditor, { Loadables } from '../../core/src/JWEditor';
+import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { InlineFormatDomObjectRenderer } from './InlineFormatDomObjectRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
@@ -47,11 +47,8 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         label: 'Remove format',
                         commandId: 'removeFormat',
                         commandArgs: {} as RemoveFormatParams,
-                        selected: (editor: JWEditor): boolean =>
-                            editor.selection.range
-                                .selectedNodes()
-                                .every(node => !node.modifiers.length),
-                        modifiers: [new Attributes({ class: 'fa fa-remove-format fa-fw' })],
+                        selected: (): boolean => false,
+                        modifiers: [new Attributes({ class: 'fa fa-eraser fa-fw' })],
                     });
                     return [button];
                 },

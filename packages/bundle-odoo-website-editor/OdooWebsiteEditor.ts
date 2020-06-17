@@ -129,7 +129,7 @@ export class OdooWebsiteEditor extends JWEditor {
                         'PreButton',
                     ],
                 ],
-                ['BoldButton', 'ItalicButton', 'UnderlineButton'],
+                ['BoldButton', 'ItalicButton', 'UnderlineButton', 'RemoveFormatButton'],
                 ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
                 ['OrderedListButton', 'UnorderedListButton'],
                 ['IndentButton', 'OutdentButton'],

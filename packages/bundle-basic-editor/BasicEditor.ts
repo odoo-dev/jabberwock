@@ -137,12 +137,11 @@ export class BasicEditor extends JWEditor {
                         'PreButton',
                     ],
                 ],
-                ['BoldButton', 'ItalicButton', 'UnderlineButton'],
+                ['BoldButton', 'ItalicButton', 'UnderlineButton', 'RemoveFormatButton'],
                 ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
                 ['OrderedListButton', 'UnorderedListButton', 'CheckboxListButton'],
                 ['IndentButton', 'OutdentButton'],
                 ['LinkButton', 'UnlinkButton'],
-                ['RemoveFormatButton'],
             ],
         });
     }
