@@ -8,13 +8,17 @@ import { Constructor } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifiers } from '../../core/src/Modifiers';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
-import { Loadables } from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { InlineFormatDomObjectRenderer } from './InlineFormatDomObjectRenderer';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
+export type RemoveFormatParams = CommandParams;
+
 interface InlineCache {
     modifiers: Modifiers | null;
     style: CssStyle | null;
@@ -25,12 +29,35 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         toggleFormat: {
             handler: this.toggleFormat,
         },
+        removeFormat: {
+            handler: this.removeFormat,
+        },
     };
     commandHooks = {
         setSelection: this.resetCache,
     };
-    loadables: Loadables<Renderer> = {
+    loadables: Loadables<Renderer & Layout> = {
         renderers: [InlineFormatDomObjectRenderer],
+        components: [
+            {
+                id: 'RemoveFormatButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'removeFormat',
+                        label: 'Remove format',
+                        commandId: 'removeFormat',
+                        commandArgs: {} as RemoveFormatParams,
+                        selected: (editor: JWEditor): boolean =>
+                            editor.selection.range
+                                .selectedNodes()
+                                .every(node => !node.modifiers.length),
+                        modifiers: [new Attributes({ class: 'fa fa-remove-format fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+        ],
+        componentZones: [['RemoveFormatButton', 'actionables']],
     };
     /**
      * When applying a modifier on a collapsed range, cache the calculation of
@@ -160,5 +187,17 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             modifiers: null,
             style: null,
         };
+    }
+    /**
+     * Remove the formatting of the nodes in the range.
+     *
+     * @param params
+     */
+    removeFormat(params: RemoveFormatParams): void {
+        const nodes = params.context.range.selectedNodes();
+        for (const node of nodes) {
+            // TODO: some formats might be on the parent...
+            node.modifiers.empty();
+        }
     }
 }

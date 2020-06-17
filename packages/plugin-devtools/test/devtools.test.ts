@@ -858,6 +858,7 @@ describe('Plugin: DevTools', () => {
                 'insert',
                 'insertParagraphBreak',
                 'insertText',
+                'removeFormat',
                 'selectAll',
                 'setSelection',
                 'show',

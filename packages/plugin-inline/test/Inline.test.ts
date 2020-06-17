@@ -11,6 +11,9 @@ const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>):
         FormatClass: FormatClass,
     });
 };
+const removeFormat = async (editor: JWEditor): Promise<void> => {
+    await editor.execCommand<Inline>('removeFormat', {});
+};
 
 describePlugin(Inline, testEditor => {
     describe('FormatDomParser', () => {
@@ -156,6 +159,30 @@ describePlugin(Inline, testEditor => {
             await testEditor(BasicEditor, {
                 contentBefore: '<b><span a="b">g[g</span></b><span a="b"><b>o]o</b></span>',
                 contentAfter: '<b><span a="b">g[g</span></b><span a="b"><b>o]o</b></span>',
+            });
+        });
+    });
+    describe('removeFormat', () => {
+        it('should remove a format', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<h1><font style="color: red;">ab[cd]ef</font></h1>',
+                stepFunction: async (editor: JWEditor) => {
+                    await removeFormat(editor);
+                },
+                // TODO: the range placement is weird
+                contentAfter:
+                    '<h1><font style="color: red;">ab[</font>cd]<font style="color: red;">ef</font></h1>',
+            });
+        });
+        it('should remove multiple formats', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<h1><i><font style="color: red;">ab[cd]ef</font></i></h1>',
+                stepFunction: async (editor: JWEditor) => {
+                    await removeFormat(editor);
+                },
+                // TODO: the range placement is weird
+                contentAfter:
+                    '<h1><i><font style="color: red;">ab[</font></i>cd]<i><font style="color: red;">ef</font></i></h1>',
             });
         });
     });

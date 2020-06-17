@@ -258,6 +258,14 @@ export class Modifiers {
         return allAinB && allBinA;
     }
     /**
+     * Remove all modifiers.
+     */
+    empty(): void {
+        if (this._contents) {
+            this._contents.length = 0;
+        }
+    }
+    /**
      * Proxy for the native `some` method of `Array`, called on `this._contents`.
      *
      * @see Array.some
