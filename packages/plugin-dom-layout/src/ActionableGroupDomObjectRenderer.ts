@@ -17,7 +17,7 @@ export class ActionableGroupDomObjectRenderer extends AbstractRenderer<DomObject
                 .length
         ) {
             return { children: [] };
-        } else if (group.parent instanceof ActionableGroupNode) {
+        } else if (group.ancestor(ActionableGroupNode)) {
             return this._renderSelect(group);
         } else {
             return this._renderGroup(group);

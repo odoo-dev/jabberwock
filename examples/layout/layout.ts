@@ -16,6 +16,8 @@ import { ShadowNode } from '../../packages/plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
 import { parseEditable } from '../../packages/utils/src/configuration';
 import { Fullscreen } from '../../packages/plugin-fullsreen/src/Fullscreen';
+import { Theme } from '../../packages/plugin-theme/src/Theme';
+import { Toolbar, ToolbarConfig } from '../../packages/plugin-toolbar/src/Toolbar';
 
 import '../utils/fontawesomeAssets';
 
@@ -23,7 +25,37 @@ const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
 
 const editor = new BasicEditor();
+editor.load(DevTools);
 editor.load(Shadow);
+editor.configure(Theme, {
+    components: [
+        {
+            id: 'default',
+            label: 'Custom Theme',
+            render: async (editor: JWEditor): Promise<VNode[]> => {
+                return editor.plugins.get(Parser).parse(
+                    'text/html',
+                    `<table width="100%">
+                        <tr>
+                            <td width="10%">TD cell</td>
+                            <td width="80%" style="border: 1px solid red;"><t-placeholder/></td>
+                            <td width="10%">TD cell</td>
+                        </tr>
+                    </table>`,
+                );
+            },
+        },
+        {
+            id: 'custom',
+            label: 'Custom Theme',
+            render: async (editor: JWEditor): Promise<VNode[]> => {
+                return editor.plugins
+                    .get(Parser)
+                    .parse('text/html', `<div style="background: blue;"><t-placeholder/></div>`);
+            },
+        },
+    ],
+});
 editor.configure(Fullscreen, { component: 'editable' });
 editor.configure(DomLayout, {
     components: [
@@ -72,5 +104,10 @@ editor.configure(DomLayout, {
     componentZones: [['editable', 'main']],
 });
 
-editor.load(DevTools);
+const toolbarConfig = editor.configuration.plugins.find(
+    config => config[0] === Toolbar,
+)[1] as ToolbarConfig;
+toolbarConfig.layout.push(['ThemeButton']);
+editor.configure(Toolbar, toolbarConfig);
+
 editor.start();
