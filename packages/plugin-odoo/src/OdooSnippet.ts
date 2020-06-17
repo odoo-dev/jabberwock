@@ -5,11 +5,12 @@ import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
 import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
+import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
 
 export class OdooSnippet<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [OdooStructureXmlDomParser],
-        renderers: [OdooImageDomObjectRenderer],
+        renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
         shortcuts: [],
     };
 }
