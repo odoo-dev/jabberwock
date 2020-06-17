@@ -246,14 +246,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async _parseHtmlString(html: string): Promise<VNode[]> {
         const parser = this.editor.plugins.get(Parser);
-        const domParser = parser && parser.engines['dom/html'];
-        if (!domParser) {
-            // TODO: remove this when the editor can be instantiated on
-            // something else than DOM.
-            throw new Error(`No DOM parser installed.`);
-        }
         const div = document.createElement('div');
         div.innerHTML = html;
-        return (await domParser.parse(div))[0].children();
+        return parser.parse('dom/html', ...div.childNodes);
     }
 }

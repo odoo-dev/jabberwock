@@ -10,14 +10,18 @@ export class Parser<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     };
 
     async parse(engineId: string, ...items): Promise<VNode[]> {
-        return this.engines[engineId].parse(...items);
+        const engine = this.engines[engineId];
+        if (!engine) {
+            throw new Error(`No parsing engine for ${engineId} installed.`);
+        }
+        return engine.parse(...items);
     }
 
     loadParsingEngines(parsingEngines: ParsingEngineConstructor[]): void {
         for (const EngineClass of parsingEngines) {
             const id = EngineClass.id;
             if (this.engines[id]) {
-                throw new Error(`Rendering engine ${id} already registered.`);
+                throw new Error(`Parsing engine ${id} already registered.`);
             }
             const engine = new EngineClass(this.editor);
             this.engines[id] = engine;
