@@ -59,6 +59,23 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
+
+    /**
+     * Update the attributes with the given dictionnary and clear all previous
+     * attributes.
+     */
+    async updateAttributes(
+        domNode: Node | Node[],
+        attributes: { [key: string]: string },
+    ): Promise<void> {
+        for (const node of this.getNodes(domNode)) {
+            node.modifiers.get(Attributes).clear();
+            for (const [name, value] of Object.entries(attributes)) {
+                node.modifiers.get(Attributes).set(name, value);
+            }
+        }
+        await this.editor.dispatcher.dispatchHooks('@redraw');
+    }
     /**
      * Set a style key/value pair on a DOM node or a list of DOM nodes.
      *
