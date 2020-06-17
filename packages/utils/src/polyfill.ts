@@ -7,7 +7,7 @@ export function elementFromPoint(x: number, y: number): Node {
     if (element) {
         let root: Document | ShadowRoot;
         root = element.ownerDocument;
-        while (element.shadowRoot) {
+        while (element.shadowRoot && element.shadowRoot !== root) {
             root = element.shadowRoot;
             element = root.elementFromPoint(x, y);
         }
