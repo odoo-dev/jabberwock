@@ -15,6 +15,7 @@ export class FontAwesomeDomObjectRenderer extends InlineFormatDomObjectRenderer 
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = FontAwesomeNode;
+    createSpanForAttributes = false;
 
     async renderInline(nodes: FontAwesomeNode[]): Promise<DomObject[]> {
         const rendering = nodes.map(node => {
