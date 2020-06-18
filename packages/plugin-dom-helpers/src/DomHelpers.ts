@@ -3,7 +3,7 @@ import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {

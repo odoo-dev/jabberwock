@@ -2,7 +2,7 @@ import { BasicEditor } from '../bundle-basic-editor/BasicEditor';
 import { DevTools } from '../plugin-devtools/src/DevTools';
 import { OdooWebsiteEditor } from './OdooWebsiteEditor';
 import { VRange, withRange } from '../core/src/VRange';
-import { DomLayoutEngine } from '../plugin-dom-layout/src/ui/DomLayoutEngine';
+import { DomLayoutEngine } from '../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../plugin-layout/src/Layout';
 import { Renderer } from '../plugin-renderer/src/Renderer';
 import { ImageNode } from '../plugin-image/src/ImageNode';
