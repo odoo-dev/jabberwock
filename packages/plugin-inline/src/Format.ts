@@ -31,27 +31,6 @@ export class Format extends Modifier {
     // Public
     //--------------------------------------------------------------------------
 
-    // TODO: remove this reference to DOM.
-    render(): Element {
-        const domNode = document.createElement(this.htmlTag);
-        const attributes = this.modifiers.find(Attributes);
-        if (attributes) {
-            for (const name of attributes.keys()) {
-                domNode.setAttribute(name, attributes.get(name));
-            }
-            if (attributes.style.length) {
-                for (const name of attributes.style.keys().sort()) {
-                    domNode.style.setProperty(name, attributes.style.get(name));
-                }
-            }
-            if (attributes.classList.length) {
-                for (const className of attributes.classList.items()) {
-                    domNode.classList.add(className);
-                }
-            }
-        }
-        return domNode;
-    }
     clone(): this {
         const clone = new this.constructor();
         clone.htmlTag = this.htmlTag;

@@ -33,15 +33,6 @@ export class LinkFormat extends Format {
     /**
      * @override
      */
-    render(): Element {
-        const element = super.render();
-        element.setAttribute('href', this.url);
-        return element;
-    }
-
-    /**
-     * @override
-     */
     clone(): this {
         const clone = super.clone();
         clone.url = this.url;
