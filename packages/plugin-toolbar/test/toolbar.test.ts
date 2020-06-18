@@ -90,7 +90,7 @@ describe('Toolbar', async () => {
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
-                '<jw-toolbar><jw-group><span>label</span></jw-group></jw-toolbar>',
+                '<jw-toolbar><jw-group><span class="label">label</span></jw-group></jw-toolbar>',
             );
         });
         it('should display the bold button in the toolbar form "actionables" zone', async () => {
@@ -258,7 +258,7 @@ describe('Toolbar', async () => {
                     '<jw-toolbar>',
                     '<jw-group>',
                     '<button name="bold" class="fa fa-bold fa-fw" title="Toggle bold" aria-pressed="false"></button>',
-                    '<span>custom label</span>',
+                    '<span class="label">custom label</span>',
                     '<button name="italic" class="fa fa-italic fa-fw" title="Toggle italic" aria-pressed="false"></button>',
                     '</jw-group>',
                     '</jw-toolbar>',
@@ -275,7 +275,7 @@ describe('Toolbar', async () => {
                     '<jw-group>',
                     '<select>',
                     '<option></option>',
-                    '<option disabled="true">label</option>',
+                    '<option class="label" disabled="true">label</option>',
                     '</select>',
                     '</jw-group>',
                     '</jw-toolbar>',
@@ -392,7 +392,7 @@ describe('Toolbar', async () => {
                                 '<option value="paragraph" class="p" selected="true">Paragraph</option>',
                                 '<option value="heading1" class="h1">Heading1</option>',
                                 '<option value="heading2" class="h2">Heading2</option>',
-                                '<option disabled="true">custom label in select</option>',
+                                '<option class="label" disabled="true">custom label in select</option>',
                                 '<option value="heading6" class="h6">Heading6</option>',
                                 '<option value="pre" class="pre">Pre</option>',
                             '</select>',
@@ -404,7 +404,7 @@ describe('Toolbar', async () => {
                             '<button name="italic" class="fa fa-italic fa-fw" title="Toggle italic" aria-pressed="false"></button>',
                             '<button name="underline" class="fa fa-underline fa-fw" title="Toggle underline" aria-pressed="false"></button>',
                         '</jw-group>',
-                        '<span>custom label</span>',
+                        '<span class="label">custom label</span>',
                         '<jw-group>',
                             '<button name="indent" class="fa fa-indent fa-fw" title="Indent" aria-pressed="false"></button>',
                             '<jw-separator role="separator"></jw-separator>',

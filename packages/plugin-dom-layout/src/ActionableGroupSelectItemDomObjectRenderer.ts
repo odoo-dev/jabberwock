@@ -81,7 +81,10 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
         } else if (item instanceof LabelNode) {
             domObject = {
                 tag: 'OPTION',
-                attributes: { disabled: 'true' },
+                attributes: {
+                    class: 'label',
+                    disabled: 'true',
+                },
                 children: [{ text: item.label }],
             };
         } else if (item instanceof ZoneNode) {
@@ -125,9 +128,9 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
         const domEnable = !element.getAttribute('disabled');
         if (enable !== domEnable) {
             if (enable) {
-                element.removeAttribute('disable');
+                element.removeAttribute('disabled');
             } else {
-                element.setAttribute('disable', 'true');
+                element.setAttribute('disabled', 'true');
             }
         }
     }
