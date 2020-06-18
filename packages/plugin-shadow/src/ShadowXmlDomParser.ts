@@ -3,7 +3,6 @@ import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { ShadowNode } from './ShadowNode';
 import { nodeName } from '../../utils/src/utils';
-import { HtmlNode } from '../../plugin-html/src/HtmlDomParsingEngine';
 
 export class ShadowXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -21,8 +20,7 @@ export class ShadowXmlDomParser extends AbstractParser<Node> {
     async parse(item: Element): Promise<VNode[]> {
         const shadow = new ShadowNode();
         shadow.modifiers.append(this.engine.parseAttributes(item));
-        const childNodes = Array.from(item.childNodes) as HtmlNode[];
-        const nodes = await this.engine.parse(...childNodes);
+        const nodes = await this.engine.parse(...item.childNodes);
         shadow.append(...nodes);
         return [shadow];
     }
