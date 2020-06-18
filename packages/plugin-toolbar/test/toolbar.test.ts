@@ -117,7 +117,7 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<button name="removeFormat" class="pressed fa fa-remove-format fa-fw" aria-pressed="true" title="Remove format"></button>',
+                    '<button name="removeFormat" class="fa fa-eraser fa-fw" title="Remove format" aria-pressed="false"></button>',
                     '<button name="bold" class="fa fa-bold fa-fw" title="Toggle bold" aria-pressed="false"></button>',
                     '</jw-toolbar>',
                 ].join(''),
