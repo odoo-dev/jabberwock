@@ -68,11 +68,15 @@ export class DomReconciliationEngine {
         for (const [node, domObject] of rendered) {
             let oldObjects = unfilterdOldObjectMap.get(domObject);
             if (!oldObjects) {
-                this._addLocations(domObject, locations, node);
+                this._addLocations(domObject, locations);
                 oldObjects = [];
                 unfilterdOldObjectMap.set(domObject, oldObjects);
             }
             const nodes = this._nodes.get(domObject);
+            if (!nodes.includes(node)) {
+                nodes.push(node);
+                this._locations.set(domObject, [node]);
+            }
             for (const linkedNode of nodes) {
                 const id = this._renderedNodes.get(linkedNode);
                 if (id && !oldObjects.includes(id)) {
@@ -1114,7 +1118,6 @@ export class DomReconciliationEngine {
     private _addLocations(
         domObject: GenericDomObject,
         locations: Map<GenericDomObject, VNode[]>,
-        node?: VNode,
     ): VNode[] {
         const nodes = locations.get(domObject);
         if (nodes) {
@@ -1133,13 +1136,7 @@ export class DomReconciliationEngine {
                 }
             }
         }
-        if (node) {
-            if (node && !allNodes.includes(node)) {
-                allNodes.push(node);
-                this._locations.set(domObject, [node]);
-            }
-            this._nodes.set(domObject, allNodes);
-        }
+        this._nodes.set(domObject, allNodes);
         return allNodes;
     }
     private _updateDom(id: DomObjectID): boolean {
