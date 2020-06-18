@@ -14,6 +14,7 @@ export class LabelDomObjectRenderer extends AbstractRenderer<DomObject> {
     async render(label: LabelNode): Promise<DomObject> {
         const objectLabel: DomObject = {
             tag: 'SPAN',
+            attributes: { class: 'label' },
             children: [{ text: label.label }],
         };
         this.engine.renderAttributes(Attributes, label, objectLabel);

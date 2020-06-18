@@ -1622,7 +1622,7 @@ describe('DomLayout', () => {
                             rendered && 'children' in rendered && rendered.children,
                         ).to.deep.equal(textNodes);
 
-                        expect(mutationNumber).to.equal(6, 'add <b>, move <i>, 4 toolbar update');
+                        expect(mutationNumber).to.equal(4, 'add <b>, move <i>, 2 toolbar update');
 
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
@@ -4033,8 +4033,8 @@ describe('DomLayout', () => {
                         mutationNumber = 0;
                         await editor.execCommand('uncolorBackground');
                         expect(mutationNumber).to.equal(
-                            7,
-                            'remove 3 formats + remove 2 empty styles + 2 update toolbar',
+                            5,
+                            'remove 3 formats + remove 2 empty styles',
                         );
                     },
                     contentAfter: '<p>[a<span>b</span>c<span style="color: green;">d</span>e]</p>',

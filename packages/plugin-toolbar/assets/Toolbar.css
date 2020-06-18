@@ -54,7 +54,7 @@ jw-toolbar select, jw-toolbar option {
     height: 30px !important;
 }
 
-jw-toolbar option:disabled {
+jw-toolbar option.label {
     background-color: #875A7B;
     color: white;
     font-weight: bold;

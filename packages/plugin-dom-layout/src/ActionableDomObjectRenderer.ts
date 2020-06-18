@@ -78,9 +78,9 @@ export class ActionableDomObjectRenderer extends AbstractRenderer<DomObject> {
         const domEnable = !element.getAttribute('disabled');
         if (enable !== domEnable) {
             if (enable) {
-                element.removeAttribute('disable');
+                element.removeAttribute('disabled');
             } else {
-                element.setAttribute('disable', 'true');
+                element.setAttribute('disabled', 'true');
             }
         }
     }
