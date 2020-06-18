@@ -34,7 +34,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
                     }
                 },
                 attach: (el: HTMLOptionElement): void => {
-                    const select = el.closest('select');
+                    const select = el.closest('select') || el.parentElement;
                     handler = (ev: Event): void => {
                         const option = select.querySelector('option:checked');
                         if (option === el) {
@@ -48,7 +48,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
                     this.engine.editor.dispatcher.registerCommandHook('*', updateOption);
                 },
                 detach: (el: HTMLOptionElement): void => {
-                    const select = el.closest('select');
+                    const select = el.closest('select') || el.parentElement;
                     select.removeEventListener('change', handler);
                     this.engine.editor.dispatcher.removeCommandHook('*', updateOption);
                 },

@@ -14,12 +14,16 @@ import otherTemplate from './other.xml';
 import footerTemplate from './footer.xml';
 import { ShadowNode } from '../../packages/plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
-import { parseEditable } from '../../packages/utils/src/configuration';
+import { parseEditable, createEditable } from '../../packages/utils/src/configuration';
 import { Fullscreen } from '../../packages/plugin-fullsreen/src/Fullscreen';
 import { Theme } from '../../packages/plugin-theme/src/Theme';
 import { Toolbar, ToolbarConfig } from '../../packages/plugin-toolbar/src/Toolbar';
 
 import '../utils/fontawesomeAssets';
+import { Template } from '../../packages/plugin-template/src/Template';
+import { ZoneNode } from '../../packages/plugin-layout/src/ZoneNode';
+import { ParagraphNode } from '../../packages/plugin-paragraph/src/ParagraphNode';
+import { ThemeNode } from '../../packages/plugin-theme/src/ThemeNode';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
@@ -27,11 +31,49 @@ jabberwocky.init(target);
 const editor = new BasicEditor();
 editor.load(DevTools);
 editor.load(Shadow);
+editor.configure(Template, {
+    components: [
+        {
+            id: 'jabberwocky',
+            render: async (editor: JWEditor): Promise<VNode[]> => {
+                const nodes = await parseEditable(editor, target);
+                const theme = new ThemeNode({ theme: 'custom' });
+                theme.append(...nodes);
+                return [theme];
+            },
+        },
+        {
+            id: 'empty-document',
+            render: async (): Promise<VNode[]> => {
+                const p = new ParagraphNode();
+                const theme = new ThemeNode();
+                theme.append(p);
+                return [theme];
+            },
+        },
+    ],
+    templateConfigurations: {
+        basic: {
+            label: 'Empty document',
+            componentId: 'empty-document',
+            thumbnailZoneId: 'main',
+            zoneId: 'content-editable',
+            thumbnail: '/assets/img/basic_thumb_large.png',
+        },
+        default: {
+            label: 'Jabberwocky',
+            componentId: 'jabberwocky',
+            thumbnailZoneId: 'main',
+            zoneId: 'content-editable',
+            thumbnail: '/assets/img/default_thumb_large.png',
+        },
+    },
+});
 editor.configure(Theme, {
     components: [
         {
             id: 'default',
-            label: 'Custom Theme',
+            label: 'Theme table',
             render: async (editor: JWEditor): Promise<VNode[]> => {
                 return editor.plugins.get(Parser).parse(
                     'text/html',
@@ -47,11 +89,14 @@ editor.configure(Theme, {
         },
         {
             id: 'custom',
-            label: 'Custom Theme',
+            label: 'Theme color blue',
             render: async (editor: JWEditor): Promise<VNode[]> => {
                 return editor.plugins
                     .get(Parser)
-                    .parse('text/html', `<div style="background: blue;"><t-placeholder/></div>`);
+                    .parse(
+                        'text/html',
+                        `<div style="background: lightblue; height: 100%;"><t-placeholder/></div>`,
+                    );
             },
         },
     ],
@@ -89,8 +134,10 @@ editor.configure(DomLayout, {
                 const shadow = new ShadowNode();
                 const style = new MetadataNode({ htmlTag: 'STYLE' });
                 style.contents = '* {border: 1px #aaa dotted;}';
-                const nodes = await parseEditable(editor, target);
-                shadow.append(style, ...nodes);
+                const [node] = await createEditable(editor, true);
+                const zone = new ZoneNode({ managedZones: ['content-editable'] });
+                node.append(zone);
+                shadow.append(style, node);
                 return [shadow];
             },
         },
@@ -107,7 +154,7 @@ editor.configure(DomLayout, {
 const toolbarConfig = editor.configuration.plugins.find(
     config => config[0] === Toolbar,
 )[1] as ToolbarConfig;
-toolbarConfig.layout.push(['ThemeButton']);
+toolbarConfig.layout.push(['ThemeButton'], ['TemplateSelector']);
 editor.configure(Toolbar, toolbarConfig);
 
 editor.start();

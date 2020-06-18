@@ -6,13 +6,14 @@ import {
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { Predicate } from '../../core/src/VNodes/VNode';
 
 export type DomObjectActionable = DomObjectElement & { handler: () => void };
 
 export class ActionableDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
-    predicate = ActionableNode;
+    predicate: Predicate = ActionableNode;
 
     async render(button: ActionableNode): Promise<DomObjectActionable> {
         let updateButton: () => void;
