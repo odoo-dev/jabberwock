@@ -140,7 +140,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 },
             },
             {
-                id: 'CheckboxListButton',
+                id: 'ChecklistButton',
                 async render(): Promise<ActionableNode[]> {
                     const button = new ActionableNode({
                         name: 'checkbox',
@@ -163,7 +163,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         componentZones: [
             ['OrderedListButton', 'actionables'],
             ['UnorderedListButton', 'actionables'],
-            ['CheckboxListButton', 'actionables'],
+            ['ChecklistButton', 'actionables'],
         ],
     };
 
