@@ -99,28 +99,25 @@ export class DomReconciliationEngine {
         this._rendererTreated.clear();
         for (const [node, domObject] of rendered) {
             if (!this._rendererTreated.has(domObject)) {
+                const nodes = this._nodes.get(domObject);
                 const oldObjects = unfilterdOldObjectMap.get(domObject);
                 const oldRefId = this._fromNode.get(node);
-                const parent = this._objects[this._objects[oldRefId]?.parent];
-                const id = this._diffObject(nodeToDomObject, domObject, true, oldObjects);
+                const parentId = this._objects[oldRefId]?.parent;
+                const id = this._diffObject(nodeToDomObject, domObject, true, nodes, oldObjects);
                 if (id) {
                     this._renderedIds.add(id);
-                    if (oldRefId && parent && id !== oldRefId) {
-                        const index = parent.children.indexOf(oldRefId);
-                        if (index !== -1) {
-                            parent.children.splice(index, 1, id);
-                            this._diff[parent.id] = this._diff[parent.id] || {
-                                id: parent.id,
-                                removedChildren: [],
-                                attributes: {},
-                                style: {},
-                                classList: {},
-                                parentDomNode: parent.parentDomNode,
-                                dom: parent.object.dom || [],
-                            };
-                            this._diff[parent.id].removedChildren.push(oldRefId);
-                            this._objects[id].parent = parent.parent;
-                        }
+                }
+                if (id !== oldRefId && !this._diff[parentId] && !nodeToDomObject.get(node.parent)) {
+                    const ancestorWithRendering = node.ancestor(
+                        ancestor => !!this._fromNode.get(ancestor),
+                    );
+                    const ancestorObjectId = this._fromNode.get(ancestorWithRendering);
+                    if (ancestorObjectId) {
+                        const parentObject = this._objects[ancestorObjectId];
+                        const nodes = this._nodes.get(parentObject.object);
+                        this._diffObject(nodeToDomObject, parentObject.object, true, nodes, [
+                            ancestorObjectId,
+                        ]);
                     }
                 }
             }
@@ -179,12 +176,12 @@ export class DomReconciliationEngine {
             if (typeof old.object.detach === 'function') {
                 old.object.detach(...old.dom);
             }
-            for (const node of this._locations.get(old.object)) {
+            for (const node of this._locations.get(old.object) || []) {
                 if (this._fromNode.get(node) === id) {
                     this._fromNode.delete(node);
                 }
             }
-            for (const node of this._nodes.get(old.object)) {
+            for (const node of this._nodes.get(old.object) || []) {
                 if (this._renderedNodes.get(node) === id) {
                     this._renderedNodes.delete(node);
                 }
@@ -204,6 +201,8 @@ export class DomReconciliationEngine {
             delete this._diff[id];
             delete this._objects[id];
             this._renderedIds.delete(id);
+            this._nodes.delete(old.object);
+            this._locations.delete(old.object);
         }
 
         // Unvalidate object linked to domNodesToRedraw;
@@ -524,12 +523,13 @@ export class DomReconciliationEngine {
 
         // use the location
         let domNodes: Node[];
+        const alreadyCheck = new Set<VNode>();
         while (!domNodes && reference) {
+            alreadyCheck.add(reference);
             let id = this._renderedNodes.get(reference);
             if (id) {
                 object = this._objects[id];
                 locations = this._locations.get(object.object);
-
                 if (!locations.includes(reference)) {
                     let hasLocate: number;
                     const ids = [id];
@@ -555,8 +555,14 @@ export class DomReconciliationEngine {
             }
 
             if (!domNodes?.length || !domNodes[0].parentNode) {
-                position = RelativePosition.BEFORE;
-                reference = reference.nextLeaf();
+                const next = reference.nextLeaf();
+                if (next && !alreadyCheck.has(next)) {
+                    position = RelativePosition.BEFORE;
+                    reference = next;
+                } else {
+                    position = RelativePosition.INSIDE;
+                    reference = reference.parent;
+                }
                 domNodes = null;
             }
         }
@@ -596,10 +602,12 @@ export class DomReconciliationEngine {
     // Private
     //--------------------------------------------------------------------------
 
+    // eslint-disable-next-line max-params
     private _diffObject(
         nodeToDomObject: Map<VNode, GenericDomObject>,
         domObject: GenericDomObject,
-        fromRenderedNode: boolean,
+        isRootRendered: boolean,
+        fromNodes: VNode[],
         oldIds: DomObjectID[],
         childrenMapping?: Map<GenericDomObject, DomObjectID>,
     ): DomObjectID {
@@ -629,9 +637,6 @@ export class DomReconciliationEngine {
         const diffClassList: Record<string, boolean> = {};
 
         const nodes: VNode[] = this._locations.get(domObject) || [];
-        const allNodes: VNode[] = this._nodes.get(domObject) || [];
-        let textContent: string;
-        let nodename: string;
         const attributes: Record<string, string> = {};
         const children: DomObjectID[] = [];
         let domNodes: Node[] = [];
@@ -669,7 +674,7 @@ export class DomReconciliationEngine {
 
             if (havePlaceholder) {
                 const placeholderVNodes: [Element, VNode][] = [];
-                const allNodes = [...this._locations.get(domObject)];
+                const allNodes = [...fromNodes];
                 for (const node of allNodes) {
                     allNodes.push(...node.childVNodes);
                 }
@@ -740,17 +745,26 @@ export class DomReconciliationEngine {
             if (child instanceof AbstractNode) {
                 const oldChildId = this._renderedNodes.get(child);
                 const domObject = nodeToDomObject.get(child);
+                const nodes = this._nodes.get(domObject);
                 if (this._rendererTreated.has(domObject)) {
                     childId = oldChildId;
                 } else if (!domObject) {
-                    throw new Error('No rendering for the node(' + child.id + '): ' + child.name);
+                    if (oldChildId) {
+                        childId = oldChildId;
+                    } else {
+                        throw new Error(
+                            'No rendering for the node(' + child.id + '): ' + child.name,
+                        );
+                    }
                 } else {
                     childId = this._diffObject(
                         nodeToDomObject,
                         domObject,
                         true,
+                        nodes,
                         oldChildId ? [oldChildId] : [],
                     );
+                    this._renderedIds.add(childId);
                 }
             } else {
                 const oldChildId = childrenMapping.get(child);
@@ -758,6 +772,7 @@ export class DomReconciliationEngine {
                     nodeToDomObject,
                     child,
                     false,
+                    nodes,
                     oldChildId ? [oldChildId] : [],
                     childrenMapping,
                 );
@@ -794,7 +809,6 @@ export class DomReconciliationEngine {
             if (!old || domObject.tag !== old.object.tag) {
                 hasChanged = true;
             }
-            nodename = domObject.tag;
             // Update attributes.
             const newAttributes: Record<string, string> = domObject.attributes || {};
             const oldAttributes: Record<string, string> = old?.object.attributes || {};
@@ -862,12 +876,21 @@ export class DomReconciliationEngine {
             if (!old || domObject.text !== old.object.text) {
                 hasChanged = true;
             }
-            textContent = domObject.text;
         } else if (!domNodes.length && old?.dom.length) {
             hasChanged = true;
         }
 
         // remove old referencies
+        if (isRootRendered) {
+            for (const id of oldIds) {
+                const old = this._objects[id];
+                for (const node of this._nodes.get(old.object)) {
+                    if (this._renderedNodes.get(node) === id) {
+                        this._renderedNodes.delete(node);
+                    }
+                }
+            }
+        }
         if (old) {
             for (const node of this._nodes.get(old.object)) {
                 if (this._fromNode.get(node) === old.id) {
@@ -881,88 +904,58 @@ export class DomReconciliationEngine {
                 old.object.detach(...old.dom);
             }
         }
-        if (fromRenderedNode) {
+
+        // Add new referencies.
+        for (const node of nodes) {
+            this._fromNode.set(node, id);
+        }
+        if (isRootRendered) {
+            for (const node of fromNodes) {
+                this._renderedNodes.set(node, id);
+            }
+        }
+        if (!this._nodes.get(domObject)) {
+            this._nodes.set(domObject, []);
+        }
+        if (!this._locations.get(domObject)) {
+            this._locations.set(domObject, []);
+        }
+        this._objects[id] = {
+            id: id,
+            object: domObject,
+            parent: old?.parent,
+            children: children,
+            dom: domNodes,
+            domNodes: allDomNodes,
+            domNodesChildren: domNodesChildren,
+            parentDomNode: old?.parentDomNode,
+        };
+
+        if (hasChanged) {
+            domNodes = old?.dom ? [...old.dom] : [];
             for (const id of oldIds) {
-                const old = this._objects[id];
-                for (const node of this._nodes.get(old.object)) {
-                    if (this._renderedNodes.get(node) === id) {
-                        this._renderedNodes.delete(node);
+                for (const domNode of this._objects[id].dom) {
+                    if (!domNodes.includes(domNode)) {
+                        domNodes.push(domNode);
                     }
                 }
             }
-        }
-
-        if (
-            nodename ||
-            textContent ||
-            allDomNodes.length ||
-            children.length ||
-            old?.dom.length ||
-            old?.children.length
-        ) {
-            // Add new referencies.
-            for (const node of nodes) {
-                this._fromNode.set(node, id);
-            }
-            if (fromRenderedNode) {
-                for (const node of allNodes) {
-                    this._renderedNodes.set(node, id);
-                }
-            }
-
-            if (old) {
-                this._nodes.delete(old.object);
-                this._locations.delete(old.object);
-            }
-            if (!this._nodes.get(domObject)) {
-                this._nodes.set(domObject, []);
-            }
-            if (!this._locations.get(domObject)) {
-                this._locations.set(domObject, []);
-            }
-
-            this._objects[id] = {
+            this._diff[id] = {
                 id: id,
-                object: domObject,
-                parent: old?.parent,
-                children: children,
+                attributes: diffAttributes,
+                style: diffStyle,
+                classList: diffClassList,
                 dom: domNodes,
-                domNodes: allDomNodes,
-                domNodesChildren: domNodesChildren,
                 parentDomNode: old?.parentDomNode,
+                removedChildren: removedChildren,
             };
-
-            if (hasChanged) {
-                domNodes = old?.dom ? [...old.dom] : [];
-                for (const id of oldIds) {
-                    for (const domNode of this._objects[id].dom) {
-                        if (!domNodes.includes(domNode)) {
-                            domNodes.push(domNode);
-                        }
-                    }
-                }
-                this._diff[id] = {
-                    id: id,
-                    attributes: diffAttributes,
-                    style: diffStyle,
-                    classList: diffClassList,
-                    dom: domNodes,
-                    parentDomNode: old?.parentDomNode,
-                    removedChildren: removedChildren,
-                };
-            } else {
-                this._objects[id].dom = old.dom;
-                if (typeof domObject.attach === 'function') {
-                    domObject.attach(...old.dom);
-                }
-            }
-            return id;
-        } else if (old?.parent) {
-            const children = this._objects[old.parent].children;
-            if (children.includes(id)) {
-                children.splice(id, 1);
+        } else {
+            this._objects[id].dom = old.dom;
+            if (typeof domObject.attach === 'function') {
+                domObject.attach(...old.dom);
             }
         }
+        return id;
     }
     private _diffObjectAssociateChildrenMap(
         objectA: GenericDomObject,
@@ -1073,7 +1066,7 @@ export class DomReconciliationEngine {
                         currentRatio = 1;
                     }
                 } else if (objectA.children) {
-                    if (itemB.children && !objectB.text) {
+                    if (itemB.children && !objectB.text && !objectB.tag) {
                         currentRatio = 1;
                     }
                 }
@@ -1120,9 +1113,7 @@ export class DomReconciliationEngine {
         locations: Map<GenericDomObject, VNode[]>,
     ): VNode[] {
         const nodes = locations.get(domObject);
-        if (nodes) {
-            this._locations.set(domObject, [...nodes]);
-        }
+        this._locations.set(domObject, nodes ? [...nodes] : []);
         const allNodes: VNode[] = this._locations.get(domObject)
             ? [...this._locations.get(domObject)]
             : [];

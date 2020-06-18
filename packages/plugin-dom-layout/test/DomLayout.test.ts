@@ -1436,7 +1436,7 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
-        describe('complexe location', () => {
+        describe('complex location', () => {
             it('should redraw a selection in a custom fragment with children who have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
@@ -4342,6 +4342,109 @@ describe('DomLayout', () => {
                     '<jw-editor><div><font>a</font></div></jw-editor>',
                 );
                 expect(mutationNumber).to.equal(3);
+
+                await editor.stop();
+            });
+            it('should redraw with custom node with a structure who change', async () => {
+                class CustomNode extends ContainerNode {
+                    layout = 0;
+                }
+                const custom = new CustomNode();
+                const article = new VElement({ htmlTag: 'ARTICLE' });
+                custom.append(article);
+
+                class CustomDomObjectRenderer extends AbstractRenderer<DomObject> {
+                    static id = DomObjectRenderingEngine.id;
+                    engine: DomObjectRenderingEngine;
+                    predicate = CustomNode;
+                    async render(custom: CustomNode): Promise<DomObject> {
+                        let domObject: DomObject;
+                        if (custom.layout) {
+                            domObject = {
+                                tag: 'DIV',
+                                children: [
+                                    {
+                                        tag: 'HEAD',
+                                        children: [{ text: 'a' }],
+                                    },
+                                    {
+                                        tag: 'CONTENT',
+                                        children: custom.children(),
+                                    },
+                                    {
+                                        tag: 'FOOT',
+                                        children: [{ text: 'b' }],
+                                    },
+                                ],
+                            };
+                        } else {
+                            domObject = {
+                                tag: 'SECTION',
+                                children: custom.children(),
+                            };
+                        }
+                        return domObject;
+                    }
+                }
+
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [custom];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Renderer & Layout> = {
+                        components: [Component],
+                        renderers: [CustomDomObjectRenderer],
+                        componentZones: [['test', 'main']],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+
+                await editor.start();
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><section><article><br></article></section></jw-editor>',
+                    'after start',
+                );
+
+                custom.layout = 1;
+                mutationNumber = 0;
+                await engine.redraw(custom);
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><head>a</head><content><article><br></article></content><foot>b</foot></div></jw-editor>',
+                    'first change',
+                );
+                expect(mutationNumber).to.equal(3, 'add {div}, move {article}, remove {section}');
+
+                custom.layout = 0;
+                mutationNumber = 0;
+                await engine.redraw(custom);
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><section><article><br></article></section></jw-editor>',
+                    'second change',
+                );
+                expect(mutationNumber).to.equal(
+                    8,
+                    'add {section}, move {article}, remove {div, head, a, content, foot, b}',
+                );
+
+                custom.layout = 1;
+                mutationNumber = 0;
+                await engine.redraw(custom);
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><head>a</head><content><article><br></article></content><foot>b</foot></div></jw-editor>',
+                    'third change',
+                );
+                expect(mutationNumber).to.equal(
+                    3,
+                    'second time: add {div}, move {article}, remove {section}',
+                );
 
                 await editor.stop();
             });
