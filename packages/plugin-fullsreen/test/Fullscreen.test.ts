@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BasicEditor } from '../../../bundles/BasicEditor';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Fullscreen } from '../src/Fullscreen';
 import { click } from '../../utils/src/testUtils';
 import { Toolbar } from '../../plugin-toolbar/src/Toolbar';
