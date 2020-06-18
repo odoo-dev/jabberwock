@@ -30,9 +30,9 @@ export class ImageDomObjectRenderer extends InlineFormatDomObjectRenderer {
                 },
             };
             this.engine.renderAttributes(Attributes, node, image);
-            const isSelected = !!this.engine.editor.selection.range.selectedNodes(
+            const isSelected = this.engine.editor.selection.range.selectedNodes(
                 selectedNode => selectedNode === node,
-            );
+            ).length;
             if (isSelected) {
                 const classlist = (image.attributes?.class || '').split(/\s+/);
                 classlist.push('jw_selected_image');
