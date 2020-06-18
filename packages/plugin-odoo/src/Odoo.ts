@@ -8,10 +8,17 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Link } from '../../plugin-link/src/Link';
 import { Xml } from '../../plugin-xml/src/Xml';
+import { Parser } from '../../plugin-parser/src/Parser';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
+import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
+import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
-    readonly loadables: Loadables<Layout> = {
+    readonly loadables: Loadables<Parser & Renderer & Layout> = {
+        parsers: [OdooStructureXmlDomParser],
+        renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
         components: [
             {
                 id: 'OdooLinkButton',

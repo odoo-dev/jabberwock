@@ -33,10 +33,6 @@ import { Layout } from '../plugin-layout/src/Layout';
 import { DomLayout } from '../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../plugin-dom-editable/src/DomEditable';
 import { VNode } from '../core/src/VNodes/VNode';
-
-import './odooLayout.css';
-import { OdooSnippet } from '../plugin-odoo/src/OdooSnippet';
-
 import { Toolbar } from '../plugin-toolbar/src/Toolbar';
 import { HtmlNode } from '../plugin-html/src/HtmlNode';
 import { CommandImplementation, CommandIdentifier } from '../core/src/Dispatcher';
@@ -50,6 +46,7 @@ import { parseEditable } from '../utils/src/configuration';
 import { Dialog } from '../plugin-dialog/src/Dialog';
 import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
+import './odooLayout.css';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -110,7 +107,6 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Shadow],
                 [DomHelpers],
                 [Odoo],
-                [OdooSnippet],
                 [OdooVideo],
                 [CustomPlugin],
             ],
