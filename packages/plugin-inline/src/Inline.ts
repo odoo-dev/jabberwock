@@ -12,7 +12,7 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { InlineFormatDomObjectRenderer } from './InlineFormatDomObjectRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;

@@ -1,5 +1,5 @@
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
-import { ActionableNode } from '../../plugin-toolbar/src/ActionableNode';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from '../../plugin-link/src/LinkFormat';
 import { Attributes } from '../../plugin-xml/src/Attributes';
