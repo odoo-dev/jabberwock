@@ -15,8 +15,9 @@ export class LinkXmlDomParser extends FormatParser {
 
     async parse(item: Element): Promise<VNode[]> {
         const link = new LinkFormat(item.getAttribute('href'));
-        link.modifiers.append(this.engine.parseAttributes(item));
-        link.modifiers.find(Attributes)?.remove('href'); // href is on link.url
+        // TODO: Link should not have an `Attributes` modifier outside of XML.
+        // In XML context we need to conserve the order of attributes.
+        link.modifiers.replace(Attributes, this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(link, children);
 
