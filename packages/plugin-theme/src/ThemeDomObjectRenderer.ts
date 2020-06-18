@@ -5,6 +5,7 @@ import {
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { ThemeNode } from './ThemeNode';
 import { Theme } from './Theme';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 export class ThemeDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -23,14 +24,13 @@ export class ThemeDomObjectRenderer extends AbstractRenderer<DomObject> {
                 domObjects.push(domObject);
             }
         }
-        return { children: domObjects };
+        return this._removeRef({ children: domObjects });
     }
     private async _resolvePlaceholder(theme: ThemeNode, domObject: DomObject): Promise<void> {
         await this.engine.resolveChildren(domObject);
         let placeholderFound = false;
         const domObjects: DomObject[] = [domObject];
         for (const domObject of domObjects) {
-            this.engine.locations.delete(domObject);
             if ('tag' in domObject && domObject.tag === 'T-PLACEHOLDER') {
                 if (!placeholderFound) {
                     delete domObject.tag;
@@ -59,5 +59,21 @@ export class ThemeDomObjectRenderer extends AbstractRenderer<DomObject> {
                 domObjects.push(...(domObject.children as DomObject[]));
             }
         }
+    }
+    private _removeRef(domObject: DomObject): DomObject {
+        const domObjects = [domObject];
+        for (const domObject of domObjects) {
+            if ('children' in domObject) {
+                for (let index = 0; index < domObject.children.length; index++) {
+                    const child = domObject.children[index];
+                    if (!(child instanceof AbstractNode)) {
+                        domObject.children[index] = Object.create(child);
+                        // Recursively apply on children in one stack.
+                        domObjects.push(child);
+                    }
+                }
+            }
+        }
+        return Object.create(domObject);
     }
 }

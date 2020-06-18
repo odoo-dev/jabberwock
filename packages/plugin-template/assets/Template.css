@@ -1,0 +1,51 @@
+jw-group[name="templates"] .label {
+    width: 90px;
+}
+jw-templates {
+    font-size: 12px;
+    color: black;
+    background-color: #ffffff;
+    padding: 3px;
+    display: block;
+}
+jw-templates ~ * {
+    display: none;
+}
+jw-templates > jw-label {
+    display: block;
+    text-align: center;
+    font-size: 2em;
+    font-weight: 600;
+}
+jw-templates jw-template {
+    padding: 10px 10px;
+    margin: 0;
+    float: left;
+    clear: none;
+    width: 100%;
+    max-width: 25%;
+    transition: all 0.3s ease 0s;
+}
+jw-templates jw-template jw-label {
+    display: block;
+    position: absolute;
+}
+jw-templates jw-template jw-thumb {
+    display: block;
+    padding-top: 107%;
+    cursor: pointer;
+    border: 1px solid #4e525b;
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.8);
+    will-change: transform;
+    backface-visibility: hidden;
+    transition: all 0.3s ease 0s;
+    background-size: cover;
+}
+jw-templates jw-template:hover jw-thumb {
+    box-shadow: 0 5px 30px 1px rgba(0, 0, 0, 0.6);
+}
+
+jw-templates jw-template img {
+    width: 100%;
+}
