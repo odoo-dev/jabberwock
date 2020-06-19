@@ -16,7 +16,7 @@ export class FullsreenButtonDomObjectRenderer extends AbstractRenderer<DomObject
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>
-        node instanceof ActionableNode && node.buttonName === 'fullscreen';
+        node instanceof ActionableNode && node.actionName === 'fullscreen';
 
     /**
      * Render the FullscreenNode.
