@@ -13,14 +13,14 @@ interface ActionableNodeParams extends AbstractNodeParams {
 }
 
 export class ActionableNode extends AtomicNode {
-    buttonName: string;
+    actionName: string;
     label: string;
     commandId?: string;
     commandArgs?: CommandParams;
 
     constructor(params: ActionableNodeParams) {
         super(params);
-        this.buttonName = params.name;
+        this.actionName = params.name;
         this.label = params.label;
         this.commandId = params.commandId;
         this.commandArgs = params.commandArgs;
@@ -33,7 +33,7 @@ export class ActionableNode extends AtomicNode {
     }
 
     get name(): string {
-        return super.name + ': ' + this.buttonName;
+        return super.name + ': ' + this.actionName;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

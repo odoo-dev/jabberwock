@@ -25,7 +25,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer
             const domObjectActionable: DomObjectActionable = {
                 tag: 'OPTION',
                 attributes: {
-                    value: item.buttonName,
+                    value: item.actionName,
                 },
                 children: item.label ? [{ text: item.label }] : [],
                 handler: (): void => {

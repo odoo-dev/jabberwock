@@ -20,7 +20,7 @@ export class ActionableDomObjectRenderer extends AbstractRenderer<DomObject> {
         const objectButton: DomObjectActionable = {
             tag: 'BUTTON',
             attributes: {
-                name: button.buttonName,
+                name: button.actionName,
             },
             handler: (): void => {
                 if (button.commandId) {
