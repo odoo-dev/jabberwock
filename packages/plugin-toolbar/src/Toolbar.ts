@@ -56,12 +56,7 @@ export class Toolbar<T extends ToolbarConfig = {}> extends JWPlugin<T> {
                 if (item === '|') {
                     node.append(new SeparatorNode());
                 } else if (domEngine.hasConfiguredComponents(item)) {
-                    const last = node.lastChild();
-                    if (last instanceof ZoneNode) {
-                        last.managedZones.push(item);
-                    } else {
-                        node.append(new ZoneNode({ managedZones: [item] }));
-                    }
+                    node.append(new ZoneNode({ managedZones: [item] }));
                 } else {
                     node.append(new LabelNode({ label: item }));
                 }
