@@ -256,7 +256,7 @@ export class DomReconciliationEngine {
             }
         }
 
-        // Insert object dom nodes who don't have direct object with nodeName
+        // Insert object dom nodes which don't have direct object with nodeName
         // and not added by the updateDom because his parent have no diff.
         for (const id of objectToInsert) {
             const path = objectsPath[id] || [];
@@ -1215,7 +1215,7 @@ export class DomReconciliationEngine {
                 this._fromDom.set(domNode, id);
             }
 
-            // Insert children in the dom who locate with the placeholder.
+            // Insert children in the dom which locate with the placeholder.
             for (const [ref, position, childIds] of object.domNodesChildren) {
                 if (position === RelativePosition.INSIDE) {
                     const childDomNodes = childIds

@@ -1157,7 +1157,7 @@ export class EventNormalizer {
             (insert === '' || alphabetsContainingSpaces.test(insert)) &&
             (remove === '' || alphabetsContainingSpaces.test(remove))
         ) {
-            // the word is write in a alphabet who contain space, search
+            // the word is write in a alphabet which contain space, search
             // to complete the change and include the rest of the word
             const beginWord = match[1];
             remove = beginWord + remove;

@@ -756,7 +756,7 @@ describe('DomEditable', () => {
             };
             expect(execSpy.args).to.eql([['command-b', params]]);
         });
-        it('should trigger a select all, with an other editor who have a shortcut', async () => {
+        it('should trigger a select all, with an other editor which have a shortcut', async () => {
             editor = new JWEditor();
             editor.load(Char);
             editor.load(LineBreak);

@@ -62,7 +62,7 @@ describe('DomShadow', async () => {
                 expect(shadow.is(ShadowNode)).to.equal(true);
                 expect(shadow.firstChild()).to.equal(undefined);
             });
-            it('should parse a template with <t-shadow> who have content', async () => {
+            it('should parse a template with <t-shadow> which have content', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Html);
@@ -232,7 +232,7 @@ describe('DomShadow', async () => {
                 expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
                 expect(section.firstChild().is(CharNode)).to.equal(true);
             });
-            it('should parse a HtmlDocument with shadow container who have content', async () => {
+            it('should parse a HtmlDocument with shadow container which have content', async () => {
                 const editor = new JWEditor();
                 editor.load(Char);
                 editor.load(Html);

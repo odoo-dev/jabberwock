@@ -89,7 +89,7 @@ describe('utils', () => {
                 expect(d.modifiers.map(f => f.name)).to.deep.equal(['i']);
             });
         });
-        describe('parse() who use selection', () => {
+        describe('parse() which use selection', () => {
             describe('Selection collapsed', () => {
                 it('selection before a char in paragraph', async () => {
                     await testEditor(BasicEditor, {
