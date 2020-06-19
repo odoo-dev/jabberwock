@@ -159,7 +159,7 @@ describe('DomLayout', () => {
             await editor.stop();
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
         });
-        it('should replace the target by the template who contains string', async () => {
+        it('should replace the target by the template which contains string', async () => {
             const editor = new JWEditor();
             editor.load(Char);
             editor.configure(DomLayout, {
@@ -180,7 +180,7 @@ describe('DomLayout', () => {
             await editor.stop();
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
         });
-        it('should replace the target by the template who contains string and format', async () => {
+        it('should replace the target by the template which contains string and format', async () => {
             const editor = new JWEditor();
             editor.load(Char);
             editor.configure(DomLayout, {
@@ -565,7 +565,7 @@ describe('DomLayout', () => {
             await editor.stop();
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
         });
-        it('should use a theme with template who use custom location', async () => {
+        it('should use a theme with template which use custom location', async () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout & DomLayout> = {
                     components: [
@@ -1022,7 +1022,7 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
-        it('should parse the selection who target a children offset node', async () => {
+        it('should parse the selection which target a children offset node', async () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 async render(editor: JWEditor): Promise<VNode[]> {
@@ -1069,7 +1069,7 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
-        it('should parse the selection who target a sibling node add only in the DOM (without any renderer)', async () => {
+        it('should parse the selection which target a sibling node add only in the DOM (without any renderer)', async () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 async render(editor: JWEditor): Promise<VNode[]> {
@@ -1119,7 +1119,7 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
-        it('should parse the selection who target a existing child node', async () => {
+        it('should parse the selection which target a existing child node', async () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 render(editor: JWEditor): Promise<VNode[]> {
@@ -1437,7 +1437,7 @@ describe('DomLayout', () => {
             await editor.stop();
         });
         describe('complex location', () => {
-            it('should redraw a selection in a custom fragment with children who have same rendering', async () => {
+            it('should redraw a selection in a custom fragment with children which have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
                 class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
@@ -1522,7 +1522,7 @@ describe('DomLayout', () => {
         });
     });
     describe('render', () => {
-        it('should render text who contain range', async () => {
+        it('should render text which contain range', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: 'a[b]c',
                 stepFunction: async (editor: JWEditor) => {
@@ -2461,7 +2461,7 @@ describe('DomLayout', () => {
                 expect(pDom.outerHTML).to.equal('<p>1.00.0</p>');
                 expect(mutationNumber).to.equal(1);
             });
-            it('should merge 2 paragraphs who contains simple text', async () => {
+            it('should merge 2 paragraphs which contains simple text', async () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
@@ -2508,7 +2508,7 @@ describe('DomLayout', () => {
 
                 expect(mutationNumber).to.equal(2, 'add <br>, remove text');
             });
-            it('should merge to paragraphs who contains br and text', async () => {
+            it('should merge to paragraphs which contains br and text', async () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const pDom = container.querySelector('p');
                 const text2 = pDom.nextElementSibling.firstChild;
@@ -3010,7 +3010,7 @@ describe('DomLayout', () => {
             });
         });
         describe('nodes', () => {
-            it('should add a item who return a fragment dom object', async () => {
+            it('should add a item which return a fragment dom object', async () => {
                 class CustomNode extends AtomicNode {}
                 class CustomDomRenderer extends AbstractRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
@@ -3059,7 +3059,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should redraw an item from an empty DOM who use DOM renderer', async () => {
+            it('should redraw an item from an empty DOM which use DOM renderer', async () => {
                 class CustomNode extends AtomicNode {}
                 const div = document.createElement('div');
                 let index = 0;
@@ -3104,7 +3104,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should redraw an item by an empty DOM who use DOM renderer', async () => {
+            it('should redraw an item by an empty DOM which use DOM renderer', async () => {
                 class CustomNode extends AtomicNode {}
                 const div = document.createElement('div');
                 let index = 0;
@@ -3149,7 +3149,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should redraw twice an item by an empty DOM who use DOM renderer', async () => {
+            it('should redraw twice an item by an empty DOM which use DOM renderer', async () => {
                 class CustomNode extends AtomicNode {}
                 class CustomDomRenderer extends AbstractRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
@@ -3191,7 +3191,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should redraw an item from an empty DOM who use Object Render domNodes', async () => {
+            it('should redraw an item from an empty DOM which use Object Render domNodes', async () => {
                 class CustomNode extends AtomicNode {}
                 let index = 0;
                 class CustomObjectRenderer extends AbstractRenderer<DomObject> {
@@ -3237,7 +3237,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should redraw an item to an empty DOM who use Object Render domNodes', async () => {
+            it('should redraw an item to an empty DOM which use Object Render domNodes', async () => {
                 class CustomNode extends AtomicNode {}
                 let index = 0;
                 class CustomObjectRenderer extends AbstractRenderer<DomObject> {
@@ -3283,7 +3283,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should toggle redraw an item emtpty/none-empty who use Object Render domNodes', async () => {
+            it('should toggle redraw an item emtpty/none-empty which use Object Render domNodes', async () => {
                 class CustomNode extends AtomicNode {}
                 let index = 0;
                 class CustomObjectRenderer extends AbstractRenderer<DomObject> {
@@ -4040,7 +4040,7 @@ describe('DomLayout', () => {
                     contentAfter: '<p>[a<span>b</span>c<span style="color: green;">d</span>e]</p>',
                 });
             });
-            it('should not have mutation when redraw a custom fragment with children who have same rendering', async () => {
+            it('should not have mutation when redraw a custom fragment with children which have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
                 class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
@@ -4096,7 +4096,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should not have mutation when redraw a custom fragment (with siblings) with children who have same rendering', async () => {
+            it('should not have mutation when redraw a custom fragment (with siblings) with children which have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
                 class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
@@ -4345,7 +4345,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should redraw with custom node with a structure who change', async () => {
+            it('should redraw with custom node with a structure which change', async () => {
                 class CustomNode extends ContainerNode {
                     layout = 0;
                 }

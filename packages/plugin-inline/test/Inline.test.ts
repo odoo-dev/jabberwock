@@ -89,13 +89,13 @@ describePlugin(Inline, testEditor => {
                 contentAfter: '<b><i>g[]ga</i></b>',
             });
         });
-        it('should keep formats in order with inline node who use the inline renderer like image', async () => {
+        it('should keep formats in order with inline node which use the inline renderer like image', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<b><i>g[]g<img src="#"></i></b>',
                 contentAfter: '<b><i>g[]g<img src="#"></i></b>',
             });
         });
-        it('should keep formats in order with inlines nodes who use the inline renderer like image', async () => {
+        it('should keep formats in order with inlines nodes which use the inline renderer like image', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<b><i>g[]g<img src="#1"><img src="#2"></i></b>',
                 contentAfter: '<b><i>g[]g<img src="#1"><img src="#2"></i></b>',
