@@ -3,6 +3,7 @@ import { DefaultDomObjectRenderer } from './DefaultDomObjectRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -268,5 +269,28 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
         const placeholder = document.createElement('jw-domobject-vnode');
         placeholder.id = child.id.toString();
         return placeholder;
+    }
+    /**
+     * Convert every VNode children into domObjects
+     *
+     * @param domObject
+     */
+    async resolveChildren(domObject: DomObject): Promise<void> {
+        const stack = [domObject];
+        for (const domObject of stack) {
+            if ('children' in domObject) {
+                const children: DomObject[] = [];
+                for (const index in domObject.children) {
+                    const child = domObject.children[index];
+                    const childObject =
+                        child instanceof AbstractNode ? await this.render(child) : child;
+                    if (!stack.includes(childObject)) {
+                        children.push(childObject);
+                        stack.push(childObject);
+                    }
+                }
+                domObject.children = children;
+            }
+        }
     }
 }
