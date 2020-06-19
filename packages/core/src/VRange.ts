@@ -116,19 +116,27 @@ export class VRange {
         const bound = this.end.next();
         const endContainers = this.end.ancestors();
         while ((node = node.next()) && node !== bound) {
-            if (!endContainers.includes(node)) {
-                let selectedNode: VNode = node;
-                while (!selectedNode?.test(FragmentNode) && selectedNode?.test(predicate)) {
-                    if (selectedNode.editable) {
-                        selectedNodes.push(selectedNode);
+            if (
+                !endContainers.includes(node) &&
+                !(node instanceof FragmentNode) &&
+                node.editable &&
+                node?.test(predicate)
+            ) {
+                selectedNodes.push(node);
+            }
+        }
+        const alreadyTested = new Set<VNode>();
+        for (const selectedNode of selectedNodes) {
+            // Find the next ancestor whose children are all selected
+            // and add it to the list.
+            // TODO: Ideally, selected nodes should be returned in DFS order.
+            const ancestor = selectedNode.parent;
+            if (ancestor && !alreadyTested.has(ancestor)) {
+                alreadyTested.add(ancestor);
+                if (ancestor.children().every(child => selectedNodes.includes(child))) {
+                    if (!selectedNodes.includes(ancestor)) {
+                        selectedNodes.push(ancestor);
                     }
-                    // Find the next ancestor whose children are all selected
-                    // and add it to the list.
-                    selectedNode = selectedNode.ancestor(ancestor => {
-                        return ancestor.children().every(child => {
-                            return selectedNodes.includes(child);
-                        });
-                    });
                 }
             }
         }
