@@ -176,6 +176,19 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
     /**
+     * Prepend a DOM Node inside the child of another.
+     *
+     * @param params
+     */
+    async prepend(fromDomNode: Node, toDomNode: Node): Promise<void> {
+        const toNodes = this.getNodes(toDomNode);
+        const toNode = toNodes[toNodes.length - 1];
+        for (const fromNode of this.getNodes(fromDomNode).reverse()) {
+            fromNode.prepend(toNode);
+        }
+        await this.editor.dispatcher.dispatchHooks('@redraw');
+    }
+    /**
      * Insert html content before, after or inside a DOM Node. If no DOM Node
      * was provided, empty the range and insert the html content before the it.
      *
