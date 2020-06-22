@@ -1497,7 +1497,7 @@ describe('DomLayout', () => {
                 });
 
                 document.getSelection().removeAllRanges();
-                await engine.redraw(custom.parent, ...custom.childVNodes);
+                await engine.redraw(custom.parent, custom.previous(), custom.next());
 
                 const domEditor = container.getElementsByTagName('jw-editor')[0];
 
@@ -2136,7 +2136,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, f, e);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2185,7 +2185,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, a, b);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2209,7 +2209,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, c, d);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2235,7 +2235,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, c, d);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
@@ -2266,7 +2266,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, b, c, d);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>aef</p><p>123456</p></div></jw-editor>',
@@ -2292,7 +2292,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, c, d);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
@@ -2320,7 +2320,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, x, c, d);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2346,7 +2346,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, f);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2370,7 +2370,7 @@ describe('DomLayout', () => {
                 x.after(x2);
                 x2.after(x3);
 
-                await engine.redraw(p, x, x2, x3);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abcxxxdef</p><p>123456</p></div></jw-editor>',
@@ -2381,7 +2381,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, x2);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2419,7 +2419,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(add0, p);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2454,7 +2454,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, char0);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2603,7 +2603,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, f, e, newP);
+                await engine.redraw(p, ...p.childVNodes, newP, ...newP.childVNodes);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abcd</p><p>ef</p><p>123456</p></div></jw-editor>',
@@ -2667,7 +2667,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, f, e, newP);
+                await engine.redraw(p, ...p.childVNodes, newP, ...newP.childVNodes);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p><b>abcd</b></p><p><b>ef</b></p><p>123456</p></div></jw-editor>',
@@ -2690,7 +2690,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, lineBreak);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2709,7 +2709,7 @@ describe('DomLayout', () => {
                 const lineBreak = new LineBreakNode();
                 p.children()[2].after(lineBreak);
 
-                await engine.redraw(p, lineBreak);
+                await engine.redraw(p, ...p.childVNodes);
 
                 lineBreak.remove();
 
@@ -2720,7 +2720,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, lineBreak);
+                await engine.redraw(p, ...p.childVNodes);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
 
@@ -2797,7 +2797,7 @@ describe('DomLayout', () => {
 
                 editor.selection.setAt(d, RelativePosition.AFTER);
 
-                await engine.redraw(p, lineBreak);
+                await engine.redraw(p, ...p.childVNodes);
 
                 d.remove();
                 const pDom = container.querySelector('p');
@@ -2808,7 +2808,7 @@ describe('DomLayout', () => {
                 engine.markForRedraw(new Set([br, text2]));
 
                 mutationNumber = 0;
-                const promise = engine.redraw(p, d);
+                const promise = engine.redraw(p, ...p.childVNodes);
 
                 pDom.removeChild(br);
 
@@ -2925,7 +2925,11 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const nodesWithChanges = new Set([pDom, textDom, newPDom, newTextDom, divDom]);
                 engine.markForRedraw(nodesWithChanges);
-                await engine.redraw(p2, div, ...p2.childVNodes);
+                await engine.redraw(
+                    div,
+                    ...div.childVNodes,
+                    ...div.childVNodes.map(n => n.childVNodes).flat(),
+                );
 
                 expect(sectionDom.innerHTML).to.equal('<div><p>ab</p><p>cdz</p></div>');
                 expect(container.querySelector('section') === sectionDom).to.equal(
@@ -2983,7 +2987,7 @@ describe('DomLayout', () => {
                 const section = domLayout.components.get('test')[0];
                 const div = section.firstChild();
                 const p = div.firstChild();
-                const p2 = p.splitAt(p.childVNodes[2]);
+                p.splitAt(p.childVNodes[2]);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2992,7 +2996,11 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const nodesWithChanges = new Set([pDom, textDom, newPDom, newTextDom, divDom]);
                 engine.markForRedraw(nodesWithChanges);
-                await engine.redraw(p2, div, ...p2.childVNodes);
+                await engine.redraw(
+                    div,
+                    ...div.childVNodes,
+                    ...div.childVNodes.map(n => n.childVNodes).flat(),
+                );
 
                 expect(sectionDom.innerHTML).to.equal('<div><p>ab</p><p>cd</p></div>');
                 expect(container.querySelector('section') === sectionDom).to.equal(
@@ -3419,7 +3427,7 @@ describe('DomLayout', () => {
                 mutationNumber = 0;
 
                 expect(container.innerHTML).to.equal('<jw-editor><p>abc</p><p>def</p></jw-editor>');
-                await engine.redraw(area);
+                await engine.redraw(area.parent, ...area.parent.childVNodes);
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><p>ab<custom><br></custom>c</p><p>def</p></jw-editor>',
                 );
@@ -4149,7 +4157,7 @@ describe('DomLayout', () => {
                 custom.after(new CharNode({ char: 'Y' }));
 
                 mutationNumber = 0;
-                await engine.redraw(custom.parent, ...custom.childVNodes);
+                await engine.redraw(custom.parent, custom.previous(), custom.next());
                 expect(mutationNumber).to.equal(2, 'add 2 text');
 
                 // redraw without changes
@@ -5139,7 +5147,7 @@ describe('DomLayout', () => {
             child.sectionAttr = 2;
             custom.append(child);
 
-            await engine.redraw(custom);
+            await engine.redraw(custom, child);
 
             flag = 0;
             await click(container.querySelector('section'));

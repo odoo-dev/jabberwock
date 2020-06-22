@@ -120,9 +120,11 @@ export class DomLayoutEngine extends LayoutEngine {
         // Filter out children of nodes that we are already going to redraw.
         const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
         for (const node of nodeToRedraw) {
-            // only used if the zone want to return a Node but hide the component (eg: a panel)
-            await this.redraw(node);
+            nodeToRedraw.push(...node.childVNodes);
         }
+        // only used if the zone want to return a Node but hide the component (eg: a panel)
+        // TODO: adapt when add memory
+        await this.redraw(...nodeToRedraw);
         return nodes;
     }
     /**
@@ -132,9 +134,8 @@ export class DomLayoutEngine extends LayoutEngine {
      */
     async remove(componentId: ComponentId): Promise<ZoneNode[]> {
         const zones = await super.remove(componentId);
-        for (const zone of zones) {
-            await this.redraw(zone);
-        }
+        // TODO: adapt when add memory
+        await this.redraw(...zones);
         return zones;
     }
     /**
@@ -144,9 +145,15 @@ export class DomLayoutEngine extends LayoutEngine {
      */
     async show(componentId: ComponentId): Promise<VNode[]> {
         const nodes = await super.show(componentId);
-        for (const node of nodes) {
-            await this.redraw(node.ancestor(ZoneNode));
+        const nodeToRedraw = [...nodes];
+        for (const node of nodeToRedraw) {
+            nodeToRedraw.push(...node.childVNodes);
         }
+        for (const node of nodes) {
+            nodeToRedraw.push(node.ancestor(ZoneNode));
+        }
+        // TODO: adapt when add memory
+        await this.redraw(...nodeToRedraw);
         return nodes;
     }
     /**
@@ -156,9 +163,12 @@ export class DomLayoutEngine extends LayoutEngine {
      */
     async hide(componentId: ComponentId): Promise<VNode[]> {
         const nodes = await super.hide(componentId);
+        const nodeToRedraw = [...nodes];
         for (const node of nodes) {
-            await this.redraw(node.ancestor(ZoneNode));
+            nodeToRedraw.push(node.ancestor(ZoneNode));
         }
+        // TODO: adapt when add memory
+        await this.redraw(...nodeToRedraw);
         return nodes;
     }
     async redraw(...nodes: VNode[]): Promise<void> {
@@ -174,8 +184,7 @@ export class DomLayoutEngine extends LayoutEngine {
         this._currentlyRedrawing = true;
 
         if (nodes.length) {
-            for (const index in nodes) {
-                let node = nodes[index];
+            for (let node of nodes) {
                 while (
                     (this._domReconciliationEngine.getRenderedWith(node).length !== 1 ||
                         !this._domReconciliationEngine.toDom(node).length) &&
@@ -183,13 +192,21 @@ export class DomLayoutEngine extends LayoutEngine {
                 ) {
                     // If the node are redererd with some other nodes then redraw parent.
                     // If not in layout then redraw the parent.
-                    node = nodes[index] = node.parent;
+                    node = node.parent;
+                    if (!nodes.includes(node)) {
+                        nodes.push(node);
+                    }
                 }
             }
         } else {
             // Redraw all.
             for (const componentId in this.locations) {
                 nodes.push(...this.components.get(componentId));
+            }
+            for (const node of nodes) {
+                if (node instanceof ContainerNode) {
+                    nodes.push(...node.childVNodes);
+                }
             }
         }
 
@@ -198,17 +215,11 @@ export class DomLayoutEngine extends LayoutEngine {
             return ancestor?.managedZones.includes('root');
         });
 
-        // TODO: adapt when add memory
-        for (const node of nodes) {
-            if (node instanceof ContainerNode) {
-                nodes.push(...node.childVNodes);
-            }
-        }
-
         // Render nodes.
         const renderer = this.editor.plugins.get(Renderer);
         const map = new Map<VNode, DomObject>();
         const renderings = await renderer.render<DomObject>('dom/object', nodes);
+
         for (const index in nodes) {
             map.set(nodes[index], renderings[index]);
         }

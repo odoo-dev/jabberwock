@@ -169,7 +169,6 @@ describe('Theme', () => {
         const dom = container.querySelector('[name="theme-third"]');
         await click(dom);
 
-        await editor.execCommand('changeTheme', { theme: 'third' });
         expect(container.innerHTML).to.equal(
             [
                 '<jw-editor>',
