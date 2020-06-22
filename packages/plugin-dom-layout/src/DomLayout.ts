@@ -21,6 +21,7 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
@@ -121,12 +122,20 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     }
 
     async redraw(): Promise<void> {
-        // TODO update this method to use JSON renderer feature (update also show, hide, add, remove)
+        // TODO: adapt when add memory
+        // * redraw node with change
+        // * redraw children if add or remove children (except for selection)
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         const editables = domLayoutEngine.components.get('editable');
         if (editables?.length) {
-            await domLayoutEngine.redraw(editables[0]);
+            const nodes = [...editables];
+            for (const node of nodes) {
+                if (node instanceof ContainerNode) {
+                    nodes.push(...node.childVNodes);
+                }
+            }
+            await domLayoutEngine.redraw(...nodes);
             await this.configuration.afterRender?.();
         }
     }
