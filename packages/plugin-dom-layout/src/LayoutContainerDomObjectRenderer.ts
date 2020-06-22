@@ -12,7 +12,7 @@ export class LayoutContainerDomObjectRenderer extends AbstractRenderer<DomObject
 
     async render(node: LayoutContainer): Promise<DomObject> {
         return {
-            children: [...node.children()],
+            children: [...node.childVNodes],
         };
     }
 }

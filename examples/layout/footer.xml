@@ -1,2 +1,8 @@
 <b>zone "debug" and "dialog" just after this bold tag (append in body)<br/>Content after a br tag</b>
+<style>
+jw-devtools {
+    position: absolute;
+    width: 100%;
+}
+</style>
 <t t-zone="debug"/>
