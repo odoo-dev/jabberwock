@@ -4,6 +4,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 export class LinkFormat extends Format {
     constructor(url = '#', target = '') {
         super('A');
+        this.preserve = false;
         this.url = url;
         this.target = target;
     }
