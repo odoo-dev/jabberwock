@@ -47,7 +47,7 @@ export class DialogZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
         clone.addEventListener('click', (ev: MouseEvent): void => {
             const target = ev.target as Element;
             if (target.classList.contains('jw-close')) {
-                this.engine.editor.execCommand('hide', { componentID: componentId });
+                this.engine.editor.execCommand('hide', { componentId: componentId });
             }
         });
         return clone;

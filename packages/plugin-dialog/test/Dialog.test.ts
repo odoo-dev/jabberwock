@@ -78,7 +78,7 @@ describe('Dialog', async () => {
 
         it('should add a vNode in the dialog and show it', async () => {
             await editor.plugins.get(Layout).add('aaa', 'float');
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-editor>',
@@ -97,7 +97,7 @@ describe('Dialog', async () => {
         });
         it('should add a vNode in dialog because dialog is the default zone', async () => {
             await editor.plugins.get(Layout).add('aaa', 'not available zone');
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-editor>',
@@ -116,10 +116,10 @@ describe('Dialog', async () => {
         });
         it('should add 2 vNodes in the dialog and show it', async () => {
             await editor.plugins.get(Layout).add('aaa', 'float');
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
 
             await editor.plugins.get(Layout).add('bbb', 'not available zone');
-            await editor.execCommand('show', { componentID: 'bbb' });
+            await editor.execCommand('show', { componentId: 'bbb' });
 
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
@@ -147,10 +147,10 @@ describe('Dialog', async () => {
         });
         it('should close 2 dialogs with the X button', async () => {
             await editor.plugins.get(Layout).add('aaa', 'float');
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
 
             await editor.plugins.get(Layout).add('bbb', 'not available zone');
-            await editor.execCommand('show', { componentID: 'bbb' });
+            await editor.execCommand('show', { componentId: 'bbb' });
 
             await click(
                 Array.from(container.querySelectorAll('jw-dialog jw-button.jw-close')).pop(),
@@ -190,10 +190,10 @@ describe('Dialog', async () => {
         });
         it('should close 2 dialogs it with the backdrop', async () => {
             await editor.plugins.get(Layout).add('aaa', 'float');
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
 
             await editor.plugins.get(Layout).add('bbb', 'not available zone');
-            await editor.execCommand('show', { componentID: 'bbb' });
+            await editor.execCommand('show', { componentId: 'bbb' });
 
             await click(
                 Array.from(container.querySelectorAll('jw-dialog jw-backdrop.jw-close')).pop(),
@@ -232,7 +232,7 @@ describe('Dialog', async () => {
         });
         it('should close a dialog and re-open a dialog', async () => {
             await editor.plugins.get(Layout).add('aaa', 'float');
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
 
             await click(
                 Array.from(container.querySelectorAll('jw-dialog jw-button.jw-close')).pop(),
@@ -243,7 +243,7 @@ describe('Dialog', async () => {
             );
 
             await editor.plugins.get(Layout).add('bbb', 'not available zone');
-            await editor.execCommand('show', { componentID: 'bbb' });
+            await editor.execCommand('show', { componentId: 'bbb' });
 
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
@@ -264,7 +264,7 @@ describe('Dialog', async () => {
         });
         it('should not close the dialog if click in content', async () => {
             await editor.plugins.get(Layout).add('bbb', 'not available zone');
-            await editor.execCommand('show', { componentID: 'bbb' });
+            await editor.execCommand('show', { componentId: 'bbb' });
 
             await click(Array.from(container.querySelectorAll('jw-dialog jw-content')).pop());
 
@@ -288,13 +288,13 @@ describe('Dialog', async () => {
         it('should hide a vNode in dialog (without remove the vNode)', async () => {
             await editor.plugins.get(Layout).add('bbb', 'not available zone');
 
-            await editor.execCommand('hide', { componentID: 'bbb' });
+            await editor.execCommand('hide', { componentId: 'bbb' });
 
             expect(container.innerHTML).to.equal(
                 ['<jw-editor>', '<main></main>', '</jw-editor>'].join(''),
             );
 
-            await editor.execCommand('show', { componentID: 'bbb' });
+            await editor.execCommand('show', { componentId: 'bbb' });
 
             expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
@@ -383,7 +383,7 @@ describe('Dialog', async () => {
             const domLayoutEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
             const vNode = domLayoutEngine.getNodes(container.querySelector('section')).pop();
 
-            await editor.execCommand('hide', { componentID: 'custom' });
+            await editor.execCommand('hide', { componentId: 'custom' });
             expect(container.innerHTML).to.equal(
                 ['<jw-editor>', '<main></main>', '</jw-editor>'].join(''),
             );
