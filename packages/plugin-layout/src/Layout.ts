@@ -56,12 +56,12 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
     /**
      * Remove a component (instance or clonse) from the zone.
      *
-     * @param componentID
+     * @param componentId
      */
-    async remove(componentID: ComponentId): Promise<void> {
+    async remove(componentId: ComponentId): Promise<void> {
         const promises = [];
         for (const layoutEngine of Object.values(this.engines)) {
-            promises.push(layoutEngine.remove(componentID));
+            promises.push(layoutEngine.remove(componentId));
         }
         await Promise.all(promises);
     }
@@ -70,10 +70,10 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
      *
      * @param params
      */
-    async show(params: { componentID: ComponentId }): Promise<void> {
+    async show(params: { componentId: ComponentId }): Promise<void> {
         const promises = [];
         for (const layoutEngine of Object.values(this.engines)) {
-            promises.push(layoutEngine.show(params.componentID));
+            promises.push(layoutEngine.show(params.componentId));
         }
         await Promise.all(promises);
     }
@@ -82,10 +82,10 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
      *
      * @param params
      */
-    async hide(params: { componentID: ComponentId }): Promise<void> {
+    async hide(params: { componentId: ComponentId }): Promise<void> {
         const promises = [];
         for (const layoutEngine of Object.values(this.engines)) {
-            promises.push(layoutEngine.hide(params.componentID));
+            promises.push(layoutEngine.hide(params.componentId));
         }
         await Promise.all(promises);
     }

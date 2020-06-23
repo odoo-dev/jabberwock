@@ -4890,13 +4890,13 @@ describe('DomLayout', () => {
         });
         it('should hide a component', async () => {
             await editor.plugins.get(Layout).add('aaa', 'main');
-            await editor.execCommand('hide', { componentID: 'aaa' });
+            await editor.execCommand('hide', { componentId: 'aaa' });
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
         it('should show a component', async () => {
             await editor.plugins.get(Layout).add('aaa', 'main');
-            await editor.execCommand('hide', { componentID: 'aaa' });
-            await editor.execCommand('show', { componentID: 'aaa' });
+            await editor.execCommand('hide', { componentId: 'aaa' });
+            await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
         });
         it('should remove a component', async () => {
@@ -4912,7 +4912,7 @@ describe('DomLayout', () => {
             await layout.add('aaa', 'main');
             const node = zoneMain.children().pop();
             expect(!!zoneMain.hidden.get(node)).to.equal(false, 'Component is visible');
-            await editor.execCommand('hide', { componentID: 'aaa' });
+            await editor.execCommand('hide', { componentId: 'aaa' });
             expect(zoneMain.hidden.get(node)).to.equal(true, 'Component is hidden');
             await layout.remove('aaa');
             expect(zoneMain.hidden.get(node)).to.equal(undefined);
