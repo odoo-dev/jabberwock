@@ -8,6 +8,7 @@ import { Constructor } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifiers } from '../../core/src/Modifiers';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { InlineFormatDomObjectRenderer } from './InlineFormatDomObjectRenderer';
@@ -147,7 +148,10 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
 
         let inlineToCopyModifiers: VNode;
         if (range.isCollapsed()) {
-            inlineToCopyModifiers = range.start.previousSibling() || range.start.nextSibling();
+            // TODO: LineBreakNode should have the formats as well.
+            inlineToCopyModifiers =
+                range.start.previousSibling(node => !node.test(LineBreakNode)) ||
+                range.start.nextSibling();
         } else {
             inlineToCopyModifiers = range.start.nextSibling();
         }
