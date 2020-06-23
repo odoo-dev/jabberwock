@@ -8,6 +8,7 @@ export interface Modifier {
     constructor: ModifierConstructor & this;
 }
 export class Modifier {
+    preserve = true;
     get name(): string {
         return '';
     }

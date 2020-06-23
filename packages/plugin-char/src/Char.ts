@@ -47,7 +47,12 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const range = params.context.range;
         const text = params.text;
         const inline = this.editor.plugins.get(Inline);
-        const modifiers = inline.getCurrentModifiers(range);
+        let modifiers = inline.getCurrentModifiers(range);
+        // Ony preserved modifiers are applied at the start of a container.
+        const previousSibling = range.start.previousSibling();
+        if (!previousSibling) {
+            modifiers = new Modifiers(...modifiers.filter(mod => mod.preserve));
+        }
         if (params.formats) {
             modifiers.set(...params.formats.map(format => format.clone()));
         }
