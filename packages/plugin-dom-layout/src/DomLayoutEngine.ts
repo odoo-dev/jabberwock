@@ -115,8 +115,8 @@ export class DomLayoutEngine extends LayoutEngine {
      *
      * @override
      */
-    async add(componentId: ComponentId, zoneId: ZoneIdentifier): Promise<VNode[]> {
-        const nodes = await super.add(componentId, zoneId);
+    async add(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
+        const nodes = await super.add(componentId, zoneId, props);
         // Filter out children of nodes that we are already going to redraw.
         const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
         for (const node of nodeToRedraw) {

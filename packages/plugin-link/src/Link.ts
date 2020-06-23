@@ -37,7 +37,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             node = link;
         }
         const format = node.is(InlineNode) && node.modifiers.find(LinkFormat);
-        return link instanceof AbstractNode ? !!format : format === link;
+        return link instanceof AbstractNode ? !!format : link.isSameAs(format);
     }
     static dependencies = [Inline];
     commands = {
@@ -65,8 +65,8 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         components: [
             {
                 id: 'link',
-                async render(): Promise<OwlNode[]> {
-                    return [new OwlNode({ Component: LinkComponent, props: {} })];
+                async render(editor: JWEditor, props?: {}): Promise<OwlNode[]> {
+                    return [new OwlNode({ Component: LinkComponent, props: props })];
                 },
             },
             {
@@ -118,12 +118,18 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
 
     async link(params: LinkParams): Promise<void> {
         // If the url is undefined, ask the user to provide one.
+        const range = params.context.range;
+        const selectedInlines = range.selectedNodes(InlineNode);
+        const label = params.label || selectedInlines.map(node => node.textContent).join('');
+
         if (!params.url) {
+            const firstLink = selectedInlines.find(node => node.modifiers.find(LinkFormat));
+            const link = firstLink && firstLink.modifiers.find(LinkFormat).clone();
+            const url = link?.url || '';
+
             const layout = this.editor.plugins.get(Layout);
             await layout.remove('link');
-            await layout.add('link');
-
-            return this.editor.execCommand('show', { componentID: 'link' });
+            return layout.add('link', undefined, { label: label, url: url });
         }
 
         // Otherwise create a link and insert it.
@@ -132,23 +138,43 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             link.modifiers.get(Attributes).set('target', params.target);
         }
         return this.editor.execCommand<Char>('insertText', {
-            text: params.label || link.url,
+            text: label || link.url,
             formats: new Modifiers(link),
-            select: true,
             context: params.context,
         });
     }
     unlink(params: LinkParams): void {
         const range = params.context.range;
-        const node = range.start.previousSibling() || range.start.nextSibling();
-        if (!node.is(InlineNode)) return;
 
-        const link = node.modifiers.find(LinkFormat);
-        if (!link) return;
+        if (range.isCollapsed()) {
+            // If no range is selected and we are in a Link : remove the complete link.
+            const previousNode = range.start.previousSibling();
+            const nextNode = range.start.nextSibling();
+            const node = Link.isLink(previousNode) ? previousNode : nextNode;
+            if (!Link.isLink(node)) return;
 
-        const sameLink: Typeguard<InlineNode> = Link.isLink.bind(Link, link);
-        for (const inline of [node, ...node.adjacents(sameLink)]) {
-            inline.modifiers.remove(link);
+            const link = node.modifiers.find(LinkFormat);
+            const sameLink: Typeguard<InlineNode> = Link.isLink.bind(Link, link);
+            this._removeLinkOnNodes([node, ...node.adjacents(sameLink)]);
+        } else {
+            // If a range is selected : remove any link on the selected range.
+            const selectedNodes = range.selectedNodes(InlineNode);
+            // Remove the format 'LinkFormat' for all nodes.
+            this._removeLinkOnNodes(selectedNodes);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Remove all link modifiers on the provided nodes.
+     * This method is mainly use by the unlink function of the editor.
+     */
+    _removeLinkOnNodes(nodes: VNode[]): void {
+        for (const node of nodes) {
+            node.modifiers.remove(LinkFormat);
         }
     }
 }

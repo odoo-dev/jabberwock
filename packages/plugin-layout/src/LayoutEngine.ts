@@ -8,7 +8,7 @@ export type DomZonePosition = 'after' | 'prepend' | 'append' | 'replace';
 
 export interface ComponentDefinition {
     id: ComponentId;
-    render: (editor: JWEditor) => Promise<VNode[]>;
+    render: (editor: JWEditor, props?: {}) => Promise<VNode[]>;
 }
 
 export abstract class LayoutEngine {
@@ -81,17 +81,22 @@ export abstract class LayoutEngine {
      * the default zone.
      * Return every created instance
      *
-     * @param componentDefinition
+     * @param componentId
      * @param zoneId
+     * @param props
      */
-    async add(componentId: ComponentId, zoneId: ZoneIdentifier): Promise<VNode[]> {
+    async add(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
         const allZones = [this.root, ...this.root.descendants(ZoneNode)];
         let matchingZones = allZones.filter(node => node.managedZones.includes(zoneId));
         if (!matchingZones.length) {
             matchingZones = allZones.filter(zone => zone.managedZones.includes('default'));
         }
         const componentDefinition = this.componentDefinitions[componentId];
-        const newComponents = await this._instantiateComponent(componentDefinition, matchingZones);
+        const newComponents = await this._instantiateComponent(
+            componentDefinition,
+            matchingZones,
+            props,
+        );
         return this._fillZones(newComponents);
     }
     /**
@@ -219,12 +224,13 @@ export abstract class LayoutEngine {
     private async _instantiateComponent(
         componentDefinition: ComponentDefinition,
         zones: ZoneNode[],
+        props?: {},
     ): Promise<VNode[]> {
         const components = this.components.get(componentDefinition.id) || [];
         // Add into the container.
         const newComponents: VNode[] = [];
         for (const zone of zones) {
-            const nodes = await componentDefinition.render(this.editor);
+            const nodes = await componentDefinition.render(this.editor, props);
             components.push(...nodes);
             newComponents.push(...nodes);
             zone.append(...nodes);

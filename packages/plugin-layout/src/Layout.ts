@@ -40,10 +40,18 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
      *
      * @param componentId
      * @param zoneId
+     * @param props
      */
-    async add(componentId: ComponentId, zoneId: ZoneIdentifier = 'default'): Promise<void> {
-        const engines = Object.values(this.engines);
-        await Promise.all(engines.map(engine => engine.add(componentId, zoneId)));
+    async add(
+        componentId: ComponentId,
+        zoneId: ZoneIdentifier = 'default',
+        props?: {},
+    ): Promise<void> {
+        const promises = [];
+        for (const layoutEngine of Object.values(this.engines)) {
+            promises.push(layoutEngine.add(componentId, zoneId, props));
+        }
+        await Promise.all(promises);
     }
     /**
      * Remove a component (instance or clonse) from the zone.
