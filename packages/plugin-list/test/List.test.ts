@@ -662,6 +662,12 @@ describePlugin(List, testEditor => {
                 expect(li.children()[14].toString()).to.equal('h');
                 expect(mapFormats(li.children()[14])).to.deep.equal(['SpanFormat', 'LinkFormat']);
             });
+            it('should wrap inlines and siblings into a container', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><a href="#">...</a><div>anything</div></li></ul>',
+                    contentAfter: '<ul><li><a href="#">...</a><div>anything</div></li></ul>',
+                });
+            });
         });
     });
     describe('toggleList', () => {

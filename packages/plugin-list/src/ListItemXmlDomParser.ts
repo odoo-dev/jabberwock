@@ -45,11 +45,17 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     }
                     inlinesContainer.append(...parsedChild);
                 } else {
-                    inlinesContainer = null; // Close the inlinesContainer.
-                    for (const child of parsedChild) {
-                        child.modifiers.set(new ListItemAttributes(itemModifiers.get(Attributes)));
+                    if (inlinesContainer && !['UL', 'OL'].includes(nodeName(domChild))) {
+                        inlinesContainer.append(...parsedChild);
+                    } else {
+                        inlinesContainer = null; // Close the inlinesContainer.
+                        for (const child of parsedChild) {
+                            child.modifiers.set(
+                                new ListItemAttributes(itemModifiers.get(Attributes)),
+                            );
+                        }
+                        nodes.push(...parsedChild);
                     }
-                    nodes.push(...parsedChild);
                 }
             }
         }
