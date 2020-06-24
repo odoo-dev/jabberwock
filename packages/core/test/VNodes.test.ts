@@ -20,6 +20,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine';
 import { VNode } from '../src/VNodes/VNode';
 import { parseEditable } from '../../utils/src/configuration';
+import { Html } from '../../plugin-html/src/Html';
 
 describe('core', () => {
     describe('src', () => {
@@ -1181,6 +1182,7 @@ describe('core', () => {
                             parsers: [MyCustomParser],
                         };
                     }
+                    editor.load(Html);
                     editor.load(DomEditable);
                     editor.load(DomLayout, {
                         location: [root, 'replace'],

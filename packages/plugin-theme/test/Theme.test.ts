@@ -14,9 +14,10 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import {
     DomObject,
     DomObjectRenderingEngine,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { Html } from '../../plugin-html/src/Html';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -30,6 +31,7 @@ describe('Theme', () => {
         container.appendChild(target);
 
         editor = new JWEditor();
+        editor.load(Html);
         editor.load(Char);
         editor.configure(Theme, {
             components: [

@@ -2,7 +2,7 @@ import { PreNode } from './PreNode';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { CharDomObjectRenderer } from '../../plugin-char/src/CharDomObjectRenderer';
-import { DomObjectText } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObjectText } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class PreCharDomObjectRenderer extends CharDomObjectRenderer {
     predicate: Predicate = (item: VNode): boolean =>

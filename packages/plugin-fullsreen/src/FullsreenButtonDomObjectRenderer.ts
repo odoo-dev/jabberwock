@@ -2,7 +2,7 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 import '../assets/Fullscreen.css';
 import { VNode } from '../../core/src/VNodes/VNode';

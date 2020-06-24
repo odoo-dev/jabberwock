@@ -10,6 +10,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { Toolbar } from '../../plugin-toolbar/src/Toolbar';
 import { click, nextTickFrame } from '../../utils/src/testUtils';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
+import { Html } from '../../plugin-html/src/Html';
 
 const container = document.createElement('div');
 const target = document.createElement('div');
@@ -23,6 +24,7 @@ describe('Template', () => {
         container.appendChild(target);
         editor = new JWEditor();
         editor.load(Char);
+        editor.load(Html);
         editor.configure(Template, {
             components: [
                 {

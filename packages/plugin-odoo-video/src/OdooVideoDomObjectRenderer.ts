@@ -5,7 +5,7 @@ import { Direction } from '../../core/src/VSelection';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class OdooVideoHtmlDomRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

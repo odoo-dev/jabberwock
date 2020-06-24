@@ -6,7 +6,7 @@ import { List } from './List';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { ListItemAttributes } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
 

@@ -3,7 +3,7 @@ import { InputNode } from './InputNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class InputDomObjectRenderer extends AbstractRenderer<DomObject> {

@@ -20,6 +20,7 @@ import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { QWeb } from '@odoo/owl';
 import { parseEditable } from '../../utils/src/configuration';
+import { Html } from '../../plugin-html/src/Html';
 
 let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
@@ -53,6 +54,7 @@ describe('Plugin: DevTools', () => {
         });
 
         editor = new JWEditor();
+        editor.load(Html);
         editor.load(Char);
         editor.load(Bold);
         editor.load(Italic);

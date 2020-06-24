@@ -14,6 +14,7 @@ import { parseEditable } from '../../utils/src/configuration';
 import { ShadowNode } from '../../plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { Shadow } from '../../plugin-shadow/src/Shadow';
+import { Html } from '../../plugin-html/src/Html';
 
 function waitToolbarRedraw(): Promise<void> {
     return new Promise(r => setTimeout(r, 5));
@@ -45,6 +46,7 @@ describe('FollowRange', async () => {
 
     it('should add a vNode in the follow range container', async () => {
         editor = new JWEditor();
+        editor.load(Html);
         editor.load(Char);
         editor.load(FollowRange);
         editor.load(DomLayout, {
@@ -96,6 +98,7 @@ describe('FollowRange', async () => {
     });
     it('should add automatically component in the follow range container', async () => {
         editor = new JWEditor();
+        editor.load(Html);
         editor.load(Char);
         editor.load(FollowRange);
         editor.load(DomLayout, {

@@ -46,6 +46,7 @@ describe('DomShadow', async () => {
         describe('parse text/html', async () => {
             it('should parse a template with <t-shadow>', async () => {
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(Html);
                 editor.load(Shadow);
@@ -64,6 +65,7 @@ describe('DomShadow', async () => {
             });
             it('should parse a template with <t-shadow> which have content', async () => {
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(Html);
                 editor.load(Shadow);
@@ -83,6 +85,7 @@ describe('DomShadow', async () => {
             });
             it('should parse a template with <t-shadow> with style tag', async () => {
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(Metadata);
                 editor.load(Html);
@@ -105,6 +108,7 @@ describe('DomShadow', async () => {
             });
             it('should parse a template with <t-shadow> with link tag', async () => {
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(Metadata);
                 editor.load(Html);
@@ -145,6 +149,7 @@ describe('DomShadow', async () => {
             });
             it('should parse a template with <t-shadow> with style and link tag', async () => {
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(Metadata);
                 editor.load(Html);
@@ -1102,6 +1107,7 @@ describe('DomShadow', async () => {
             section.innerHTML = '<div>abcd</div>';
             setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Shadow);
             editor.load(DomEditable);

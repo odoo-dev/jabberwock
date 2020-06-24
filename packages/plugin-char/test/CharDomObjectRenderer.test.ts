@@ -4,7 +4,7 @@ import { Char } from '../src/Char';
 import { CharNode } from '../src/CharNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { VNode } from '../../core/src/VNodes/VNode';
 

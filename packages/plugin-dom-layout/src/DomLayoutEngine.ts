@@ -5,7 +5,6 @@ import {
     DomZonePosition,
     ComponentDefinition,
 } from '../../plugin-layout/src/LayoutEngine';
-import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { ZoneNode, ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
 import { Direction, VSelectionDescription } from '../../core/src/VSelection';
@@ -14,7 +13,8 @@ import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNorm
 import JWEditor from '../../core/src/JWEditor';
 import { DomReconciliationEngine } from './DomReconciliationEngine';
 import { LayoutContainer } from './LayoutContainerNode';
-import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { VElement } from '../../core/src/VNodes/VElement';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
@@ -33,9 +33,11 @@ export class DomLayoutEngine extends LayoutEngine {
 
     defaultRootComponent: ComponentDefinition = {
         id: 'editor',
-        render(editor: JWEditor): Promise<VNode[]> {
-            const layout = '<jw-editor><t t-zone="main"/><t t-zone="default"/></jw-editor>';
-            return editor.plugins.get(Parser).parse('text/html', layout);
+        async render(): Promise<VNode[]> {
+            const editor = new VElement({ htmlTag: 'JW-EDITOR' });
+            editor.append(new ZoneNode({ managedZones: ['main'] }));
+            editor.append(new ZoneNode({ managedZones: ['default'] }));
+            return [editor];
         },
     };
 

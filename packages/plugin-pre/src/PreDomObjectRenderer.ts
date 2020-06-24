@@ -2,7 +2,7 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { PreNode } from './PreNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 

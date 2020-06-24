@@ -4,7 +4,7 @@ import { TableRowNode } from './TableRowNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TableSectionAttributes } from './TableRowXmlDomParser';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 

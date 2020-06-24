@@ -1,5 +1,5 @@
 import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
-import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { FontAwesomeDomObjectRenderer } from '../../plugin-fontawesome/src/FontAwesomeDomObjectRenderer';
 
 export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRenderer {

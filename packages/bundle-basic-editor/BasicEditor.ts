@@ -1,6 +1,7 @@
 import JWEditor, { JWEditorConfig, Loadables } from '../../packages/core/src/JWEditor';
 import { Parser } from '../../packages/plugin-parser/src/Parser';
-import { Html } from '../../packages/plugin-html/src/Html';
+import { DomObjectRenderer } from '../plugin-renderer-dom-object/src/DomObjectRenderer';
+import { Html } from '../plugin-html/src/Html';
 import { Char } from '../../packages/plugin-char/src/Char';
 import { LineBreak } from '../../packages/plugin-linebreak/src/LineBreak';
 import { Heading } from '../../packages/plugin-heading/src/Heading';
@@ -58,6 +59,7 @@ export class BasicEditor extends JWEditor {
                 [Renderer],
                 [Layout],
                 [Keymap],
+                [DomObjectRenderer],
                 [Html],
                 [DomLayout],
                 [DomEditable],

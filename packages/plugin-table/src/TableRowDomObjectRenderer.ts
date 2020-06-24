@@ -3,7 +3,7 @@ import { TableRowNode } from './TableRowNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableRowDomObjectRenderer extends AbstractRenderer<DomObject> {

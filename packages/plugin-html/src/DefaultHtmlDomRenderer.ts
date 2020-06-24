@@ -2,7 +2,10 @@ import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { HtmlDomRenderingEngine } from './HtmlDomRenderingEngine';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {

@@ -1,7 +1,7 @@
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-object/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { InlineNode } from './InlineNode';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
