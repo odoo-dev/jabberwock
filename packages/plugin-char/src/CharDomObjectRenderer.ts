@@ -3,7 +3,7 @@ import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import {
     DomObjectRenderingEngine,
     DomObjectText,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { InlineFormatDomObjectRenderer } from '../../plugin-inline/src/InlineFormatDomObjectRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
 

@@ -7,12 +7,12 @@ import { JWPlugin } from '../../core/src/JWPlugin';
 import { DevTools } from '../../plugin-devtools/src/DevTools';
 import { SuiteFunction, Suite } from 'mocha';
 import { targetDeepest } from './Dom';
-import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable } from './configuration';
+import { Html } from '../../plugin-html/src/Html';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -153,9 +153,8 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
         document.getSelection().removeAllRanges();
     }
     const editor = new Editor();
-    // Configure the plugin to add domEditable is missing but without loose
-    // previous configuration.
-    editor.load(DomEditable);
+    // Add Html plugin to use parseEditable utils.
+    editor.load(Html);
     editor.configure(DomLayout, {
         location: [target, 'replace'],
         components: [

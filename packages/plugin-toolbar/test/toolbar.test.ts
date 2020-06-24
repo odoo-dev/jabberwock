@@ -14,6 +14,7 @@ import { Indent } from '../../plugin-indent/src/Indent';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Pre } from '../../plugin-pre/src/Pre';
+import { Html } from '../../plugin-html/src/Html';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -34,6 +35,7 @@ describe('Toolbar', async () => {
         let editor: JWEditor;
         beforeEach(() => {
             editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Toolbar);
             editor.load(DomLayout, {

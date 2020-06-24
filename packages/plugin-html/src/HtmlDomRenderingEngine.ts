@@ -2,7 +2,7 @@ import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { DefaultHtmlDomRenderer } from './DefaultHtmlDomRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { DomObjectRenderingEngine } from './DomObjectRenderingEngine';
+import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
     static id = 'dom/html';

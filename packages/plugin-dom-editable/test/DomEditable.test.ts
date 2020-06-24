@@ -11,6 +11,7 @@ import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { renderTextualSelection } from '../../utils/src/testUtils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable, createEditable } from '../../utils/src/configuration';
+import { Html } from '../../plugin-html/src/Html';
 
 async function selectAllWithKeyA(container: HTMLElement): Promise<void> {
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
@@ -77,6 +78,7 @@ describe('DomEditable', () => {
         });
         it('should use the target of DomLayout as editable', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(DomEditable);
             editor.configure(DomLayout, {
@@ -121,6 +123,7 @@ describe('DomEditable', () => {
         });
         it('should automatically keep the range of the DomLayout target', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(DomEditable);
             editor.configure(DomLayout, {
@@ -155,6 +158,7 @@ describe('DomEditable', () => {
         describe('handle user events with EventNormalizer', () => {
             beforeEach(async () => {
                 editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(LineBreak);
                 editor.load(DomEditable);
@@ -721,6 +725,7 @@ describe('DomEditable', () => {
         });
         it('should trigger a shortcut', async () => {
             editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(LineBreak);
             editor.load(DomEditable);
@@ -758,6 +763,7 @@ describe('DomEditable', () => {
         });
         it('should trigger a select all, with an other editor which have a shortcut', async () => {
             editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(LineBreak);
             const container1 = document.createElement('div');
@@ -793,6 +799,7 @@ describe('DomEditable', () => {
             const execSpy = spy(editor, 'execCommand');
 
             const editor2 = new JWEditor();
+            editor2.load(Html);
             editor2.load(Char);
             editor2.load(LineBreak);
             const container2 = document.createElement('div');
@@ -832,6 +839,7 @@ describe('DomEditable', () => {
             section.innerHTML = '<div>abcd</div>';
             setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
             editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(DomEditable);
             editor.configure(DomLayout, {

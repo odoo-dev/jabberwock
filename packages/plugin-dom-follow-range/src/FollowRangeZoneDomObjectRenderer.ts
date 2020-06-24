@@ -1,7 +1,7 @@
 import {
     DomObjectRenderingEngine,
     DomObject,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { FollowRangeZoneNode } from './FollowRangeZoneNode';
 import { targetDeepest } from '../../utils/src/Dom';

@@ -35,7 +35,7 @@ import {
     DomObjectFragment,
     DomObjectText,
     DomObjectElement,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Bold } from '../../plugin-bold/src/Bold';
 import { Italic } from '../../plugin-italic/src/Italic';
 import { Underline } from '../../plugin-underline/src/Underline';
@@ -44,6 +44,7 @@ import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseElement } from '../../utils/src/configuration';
+import { Html } from '../../plugin-html/src/Html';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -116,6 +117,7 @@ describe('DomLayout', () => {
     describe('custom layout template', () => {
         it('should throw an error if the layout default zone is missing', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -140,6 +142,7 @@ describe('DomLayout', () => {
         });
         it('should replace the target by the template (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -161,6 +164,7 @@ describe('DomLayout', () => {
         });
         it('should replace the target by the template which contains string', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -182,6 +186,7 @@ describe('DomLayout', () => {
         });
         it('should replace the target by the template which contains string and format', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -205,6 +210,7 @@ describe('DomLayout', () => {
         });
         it('should add the template after the target (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -228,6 +234,7 @@ describe('DomLayout', () => {
         });
         it('should add the template in all layouts', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(Layout, {
                 components: [
@@ -253,6 +260,7 @@ describe('DomLayout', () => {
         });
         it('should add 2 templates after & after the target (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -321,6 +329,7 @@ describe('DomLayout', () => {
         });
         it('should add 2 templates after & replace the target (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -355,6 +364,7 @@ describe('DomLayout', () => {
         });
         it('should add 2 templates replace & after the target (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -389,6 +399,7 @@ describe('DomLayout', () => {
         });
         it('should add 2 templates replace & replace the target (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -423,6 +434,7 @@ describe('DomLayout', () => {
         });
         it('should add 2 templates after the target, prepend container (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -457,6 +469,7 @@ describe('DomLayout', () => {
         });
         it('should add 3 templates replace the target, prepend container, append container (template as string)', async () => {
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -507,6 +520,7 @@ describe('DomLayout', () => {
             });
 
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, {
                 components: [
@@ -557,6 +571,7 @@ describe('DomLayout', () => {
                 async start(): Promise<void> {}
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Plugin);
             editor.configure(DomLayout, { location: [target, 'replace'] });
@@ -593,6 +608,7 @@ describe('DomLayout', () => {
                 async start(): Promise<void> {}
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Plugin);
             editor.configure(DomLayout, { location: [target, 'after'] });
@@ -684,6 +700,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -722,6 +739,7 @@ describe('DomLayout', () => {
             }
 
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -836,6 +854,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -991,6 +1010,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1038,6 +1058,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Image);
             editor.configure(DomLayout, { location: [target, 'replace'] });
@@ -1083,6 +1104,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1135,6 +1157,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1199,6 +1222,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1227,6 +1251,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1277,6 +1302,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Image);
             editor.configure(DomLayout, { location: [target, 'replace'] });
@@ -1327,6 +1353,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1377,6 +1404,7 @@ describe('DomLayout', () => {
                 };
             }
             const editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.configure(DomLayout, { location: [target, 'replace'] });
             editor.load(Plugin);
@@ -1662,6 +1690,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
@@ -1702,6 +1731,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
@@ -1744,6 +1774,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
@@ -1783,6 +1814,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'after'] });
                 editor.load(Plugin);
@@ -1827,6 +1859,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, {
                     components: [
@@ -1888,6 +1921,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, {
                     components: [
@@ -1951,6 +1985,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, {
                     components: [
@@ -2005,6 +2040,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'after'] });
                 editor.load(Plugin);
@@ -2057,6 +2093,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, {
                     components: [
@@ -2097,6 +2134,7 @@ describe('DomLayout', () => {
             let div: VNode;
             beforeEach(async () => {
                 editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.load(Bold);
                 editor.load(Italic);
@@ -2888,6 +2926,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
@@ -2961,6 +3000,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
@@ -3410,6 +3450,7 @@ describe('DomLayout', () => {
                     };
                 }
                 const editor = new JWEditor();
+                editor.load(Html);
                 editor.load(Char);
                 editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
@@ -4461,6 +4502,7 @@ describe('DomLayout', () => {
                 let div: VNode;
                 beforeEach(async () => {
                     editor = new JWEditor();
+                    editor.load(Html);
                     editor.load(Char);
                     editor.configure(DomLayout, {
                         location: [target, 'replace'],
@@ -4693,6 +4735,7 @@ describe('DomLayout', () => {
                 let div: VNode;
                 beforeEach(async () => {
                     editor = new JWEditor();
+                    editor.load(Html);
                     editor.load(Char);
                     editor.configure(DomLayout, {
                         location: [target, 'replace'],
@@ -4867,6 +4910,8 @@ describe('DomLayout', () => {
         });
         it('should add an existing component in unknown zone (go in default)', async () => {
             await editor.stop();
+            editor.load(Html);
+
             editor.load(Layout, {
                 components: [
                     {

@@ -4,7 +4,7 @@ import { styleToObject } from '../../utils/src/Dom';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomPoint } from './DomLayoutEngine';
-import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 //--------------------------------------------------------------------------
 // Internal objects

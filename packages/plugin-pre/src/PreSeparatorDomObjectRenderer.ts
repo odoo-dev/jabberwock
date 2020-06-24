@@ -5,7 +5,7 @@ import {
     DomObjectRenderingEngine,
     DomObject,
     DomObjectFragment,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class PreSeparatorDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

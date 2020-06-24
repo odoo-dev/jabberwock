@@ -1,6 +1,6 @@
 import { ImageDomObjectRenderer } from '../../plugin-image/src/ImageDomObjectRenderer';
 import { ImageNode } from '../../plugin-image/src/ImageNode';
-import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class OdooImageDomObjectRenderer extends ImageDomObjectRenderer {
     predicate = ImageNode;

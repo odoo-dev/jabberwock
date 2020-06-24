@@ -1,6 +1,9 @@
 import { OdooFieldDomObjectRenderer } from './OdooFieldDomObjectRenderer';
 import { OdooMonetaryFieldNode, CurrencyPosition } from './OdooMonetaryFieldNode';
-import { DomObjectElement, DomObjectText } from '../../plugin-html/src/DomObjectRenderingEngine';
+import {
+    DomObjectElement,
+    DomObjectText,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class OdooMonetaryFieldDomObjectRenderer extends OdooFieldDomObjectRenderer {
     predicate = OdooMonetaryFieldNode;

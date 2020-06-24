@@ -28,7 +28,7 @@ describe('Renderer', () => {
                 };
             }
             const editor = new JWEditor();
-            editor.load(Html, { target: document.createElement('p') });
+            editor.load(Html);
             editor.load(VNodePlugin);
             editor.load(Renderer);
             await editor.start();

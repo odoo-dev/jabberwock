@@ -6,7 +6,7 @@ import {
     DomObjectFragment,
     DomObjectText,
     DomObjectElement,
-} from '../../plugin-html/src/DomObjectRenderingEngine';
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 const zeroWidthSpace = '\u200b';

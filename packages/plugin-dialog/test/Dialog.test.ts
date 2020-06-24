@@ -10,6 +10,7 @@ import { DialogZoneNode } from '../src/DialogZoneNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
+import { Html } from '../../plugin-html/src/Html';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -30,6 +31,7 @@ describe('Dialog', async () => {
         let editor: JWEditor;
         before(() => {
             editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Dialog);
             editor.load(DomLayout, {
@@ -347,6 +349,7 @@ describe('Dialog', async () => {
         let editor: JWEditor;
         before(() => {
             editor = new JWEditor();
+            editor.load(Html);
             editor.load(Char);
             editor.load(Dialog);
             editor.load(DomLayout, {

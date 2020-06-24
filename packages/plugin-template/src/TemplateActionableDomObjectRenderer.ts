@@ -1,4 +1,4 @@
-import { DomObjectRenderingEngine } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Template } from './Template';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';

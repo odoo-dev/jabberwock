@@ -3,17 +3,19 @@ import JWEditor from '../../core/src/JWEditor';
 import { LineBreak } from '../src/LineBreak';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { LineBreakNode } from '../src/LineBreakNode';
-import { Html } from '../../plugin-html/src/Html';
+import { DomObjectRenderer } from '../../plugin-renderer-dom-object/src/DomObjectRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { nodeName } from '../../utils/src/utils';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { Html } from '../../plugin-html/src/Html';
 
 describe('LineBreakDomRenderer', () => {
     describe('render', () => {
         let editor: JWEditor;
         beforeEach(async () => {
             editor = new JWEditor();
-            editor.load(Html, { target: document.createElement('div') });
+            editor.load(Html);
+            editor.load(DomObjectRenderer, { target: document.createElement('div') });
             editor.load(LineBreak);
             await editor.start();
         });

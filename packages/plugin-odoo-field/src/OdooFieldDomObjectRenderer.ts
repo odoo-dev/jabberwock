@@ -3,9 +3,9 @@ import { OdooFieldNode } from './OdooFieldNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Predicate } from '../../core/src/VNodes/VNode';
-import { DomObjectRenderingEngine } from '../../plugin-html/src/DomObjectRenderingEngine';
-import { DomObject } from '../../plugin-html/src/DomObjectRenderingEngine';
-import { DomObjectElement } from '../../plugin-html/src/DomObjectRenderingEngine';
+import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { DomObjectElement } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class OdooFieldDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

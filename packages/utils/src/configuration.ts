@@ -12,6 +12,9 @@ import { VElement } from '../../core/src/VNodes/VElement';
 export async function parseElement(editor: JWEditor, element: HTMLElement): Promise<VNode[]> {
     const parser = editor.plugins.get(Parser);
     const domParserEngine = parser.engines['dom/html'] as ParsingEngine<Node>;
+    if (!domParserEngine) {
+        throw new Error('To use this parsing utils you must add the Html plugin.');
+    }
     const parsedVNodes = await domParserEngine.parse(element);
     const domSelection = element.ownerDocument.getSelection();
     const anchorNode = domSelection.anchorNode;

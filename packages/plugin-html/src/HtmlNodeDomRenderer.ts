@@ -1,6 +1,9 @@
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { HtmlNode } from './HtmlNode';
-import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
+import {
+    DomObjectRenderingEngine,
+    DomObject,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
 export class HtmlHtmlDomRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

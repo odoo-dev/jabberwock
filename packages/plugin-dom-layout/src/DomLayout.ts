@@ -9,7 +9,7 @@ import {
     ComponentDefinition,
     ComponentId,
 } from '../../plugin-layout/src/LayoutEngine';
-import { Html } from '../../plugin-html/src/Html';
+import { DomObjectRenderer } from '../../plugin-renderer-dom-object/src/DomObjectRenderer';
 import { ZoneDomObjectRenderer } from './ZoneDomObjectRenderer';
 import { ZoneXmlDomParser } from './ZoneXmlDomParser';
 import { LayoutContainerDomObjectRenderer } from './LayoutContainerDomObjectRenderer';
@@ -32,7 +32,7 @@ export interface DomLayoutConfig extends JWPluginConfig {
 }
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
-    static dependencies = [Html, Parser, Renderer, Layout, Keymap];
+    static dependencies = [DomObjectRenderer, Parser, Renderer, Layout, Keymap];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
         renderers: [
             ZoneDomObjectRenderer,
