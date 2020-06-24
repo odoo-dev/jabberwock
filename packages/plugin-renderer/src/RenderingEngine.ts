@@ -4,10 +4,12 @@ import JWEditor from '../../core/src/JWEditor';
 
 export type RenderingIdentifier = string;
 
-export interface Renderer<T = {}> {
+export interface Renderer<T> {
     predicate?: Predicate;
     render: (node: VNode) => Promise<T>;
+    renderBatch: (nodes: VNode[]) => Promise<T[]>;
     constructor: RendererConstructor<T>;
+    super: Renderer<T>;
 }
 
 export type RendererConstructor<T = {}> = {
@@ -15,22 +17,13 @@ export type RendererConstructor<T = {}> = {
     id: RenderingIdentifier;
 };
 
-class SuperRenderer<T> implements Renderer<T> {
-    static id = 'super';
-    constructor(public render: (node: VNode) => Promise<T>) {}
-}
-
-interface SuperRenderer<T = {}> {
-    constructor: RendererConstructor<T>;
-}
-
 export class RenderingEngine<T = {}> {
     static readonly id: RenderingIdentifier;
     static readonly extends: RenderingIdentifier[] = [];
     static readonly defaultRenderer: RendererConstructor;
     readonly editor: JWEditor;
     readonly renderers: Renderer<T>[] = [];
-    readonly renderings: Map<VNode, [Renderer<T>, Promise<T>, boolean][]> = new Map();
+    readonly renderings: Map<VNode, Promise<T>> = new Map();
     readonly locations: Map<T, VNode[]> = new Map();
 
     constructor(editor: JWEditor) {
@@ -42,7 +35,6 @@ export class RenderingEngine<T = {}> {
             this.renderers.push(defaultRenderer);
         }
     }
-
     /**
      * Register the given renderer by instantiating it with this rendering
      * engine. The renderer constructor will receive a special second parameter
@@ -52,9 +44,8 @@ export class RenderingEngine<T = {}> {
      * @param RendererClass
      */
     register(RendererClass: RendererConstructor<T>): void {
-        const superRenderer: Renderer<T> = new SuperRenderer(this._render.bind(this));
         if (RendererClass.id === this.constructor.id) {
-            this.renderers.unshift(new RendererClass(this, superRenderer));
+            this.renderers.unshift(new RendererClass(this));
         } else {
             const supportedTypes = [this.constructor.id, ...this.constructor.extends];
             const priorRendererIds = supportedTypes.slice(
@@ -64,50 +55,30 @@ export class RenderingEngine<T = {}> {
             const postRendererIndex = this.renderers.findIndex(
                 parser => !priorRendererIds.includes(parser.constructor.id),
             );
-            this.renderers.splice(postRendererIndex, 0, new RendererClass(this, superRenderer));
+            this.renderers.splice(postRendererIndex, 0, new RendererClass(this));
         }
     }
-
     /**
      * Render the given node. If a prior rendering already exists for this node
      * in this run, return it directly.
      *
      * @param node
      */
-    async render(node: VNode): Promise<T> {
-        const renderings = this.renderings.get(node);
-        if (renderings && renderings.length) {
-            return renderings[0][1];
-        } else {
-            return this._render(node);
-        }
-    }
-
-    /**
-     * Return the rendering of several nodes, so as to skip rendering them again
-     * later in the process.
-     *
-     * @param nodes
-     * @param rendering
-     */
-    async rendered(nodes: VNode[], renderer: Renderer<T>, rendered: Promise<T>): Promise<T> {
-        for (const node of nodes) {
-            let renderings = this.renderings.get(node);
-            if (!renderings) {
-                renderings = [];
-                this.renderings.set(node, renderings);
-            }
-            const index = renderings.findIndex(rendering => rendering[0] === renderer);
-            if (index === -1) {
-                renderings.push([renderer, rendered, true]);
-            } else {
-                renderings[index][1] = rendered;
-                renderings[index][2] = true;
+    async render(nodes: VNode[]): Promise<T[]> {
+        const groups = this.renderBatched(nodes);
+        for (const [nodes, promiseBatch] of groups) {
+            for (const index in nodes) {
+                const node = nodes[index];
+                const promise = new Promise<T>(resolve => {
+                    promiseBatch.then(values => {
+                        resolve(values[index]);
+                    });
+                });
+                this.renderings.set(node, promise);
             }
         }
-        return rendered;
+        return Promise.all(nodes.map(node => this.renderings.get(node)));
     }
-
     /**
      * Indicates the location of the nodes in the rendering performed.
      *
@@ -123,41 +94,41 @@ export class RenderingEngine<T = {}> {
     locate(nodes: VNode[], domObject: T): void {
         this.locations.set(domObject, nodes);
     }
-
     /**
-     * Trigger the rendering of the given node by the next compatible renderer
-     * that has not yet produced a rendering for this run.
+     * Group the nodes and call the renderer 'renderBatch' method with the
+     * different groups of nodes. By default each group is composed with only
+     * one node.
+     * The indices of the DomObject list match the indices of the given nodes
+     * list.
+     *
+     * @see renderBatch
+     *
+     * @param nodes
+     * @param rendered
+     */
+    renderBatched(nodes: VNode[], rendered?: Renderer<T>): [VNode[], Promise<T[]>][] {
+        const groups: [VNode[], Promise<T[]>][] = [];
+        for (const node of nodes) {
+            const renderer = this.getCompatibleRenderer(node, rendered);
+            groups.push([[node], renderer.renderBatch(nodes)]);
+        }
+        return groups;
+    }
+    /**
+     * Return the first matche Renderer for this VNode, starting from the
+     * previous renderer.
      *
      * @param node
+     * @param previousRenderer
      */
-    async _render(node: VNode): Promise<T> {
-        const renderings = this.renderings.get(node) || [];
-        // TODO: test all renders with predicates before no predicates
-        const lastRendering = renderings[renderings.length - 1];
-        const lastRenderer = lastRendering && lastRendering[0];
-        let nextRendererIndex = this.renderers.indexOf(lastRenderer) + 1;
+    getCompatibleRenderer(node: VNode, previousRenderer: Renderer<T>): Renderer<T> {
+        let nextRendererIndex = this.renderers.indexOf(previousRenderer) + 1;
         let nextRenderer: Renderer<T>;
         do {
             nextRenderer = this.renderers[nextRendererIndex];
             nextRendererIndex++;
         } while (nextRenderer && !node.test(nextRenderer.predicate));
-        if (!nextRenderer) return;
-
-        // This promise will be returned synchronously and will be resolved
-        // later with the same return value as the asynchronous render call.
-        const rendererProm = new Promise<T>((resolve): void => {
-            Promise.resolve().then(() => {
-                const rendering = renderings.find(rendering => rendering[0] === nextRenderer);
-                const promise = rendering[2] ? rendering[1] : nextRenderer.render(node);
-                promise.then((n: T) => {
-                    rendering[2] = true;
-                    resolve(n);
-                });
-            });
-        });
-        renderings.push([nextRenderer, rendererProm, false]);
-        this.renderings.set(node, renderings);
-        return rendererProm;
+        return nextRenderer;
     }
 }
 export type RenderingEngineConstructor<T = {}> = {

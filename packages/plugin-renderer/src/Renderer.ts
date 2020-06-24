@@ -16,8 +16,8 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
 
     async render<T>(renderingId: string, node: VNode): Promise<T | void>;
     async render<T>(renderingId: string, nodes: VNode[]): Promise<T[] | void>;
-    async render<T>(renderingId: string, nodes: VNode | VNode[]): Promise<T[] | T | void> {
-        const engine = this.engines[renderingId];
+    async render<T>(renderingId: string, nodes: VNode | VNode[]): Promise<T | T[] | void> {
+        const engine = this.engines[renderingId] as RenderingEngine<T>;
         if (!engine) {
             // The caller might want to fallback on another rendering.
             return;
@@ -25,10 +25,9 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
         engine.renderings.clear();
         engine.locations.clear();
         if (nodes instanceof Array) {
-            const renderings = nodes.map(node => engine.render(node) as Promise<T>);
-            return Promise.all(renderings);
+            return engine.render(nodes);
         } else {
-            return engine.render(nodes) as Promise<T>;
+            return (await engine.render([nodes]))[0];
         }
     }
 

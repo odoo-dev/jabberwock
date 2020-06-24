@@ -1,4 +1,4 @@
-import { Format } from '../../plugin-inline/src/Format';
+import { Format } from '../../core/src/Format';
 
 export class SpanFormat extends Format {
     constructor(htmlTag: 'SPAN' | 'FONT' = 'SPAN') {

@@ -3,7 +3,6 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
-import { Renderer } from '../../plugin-renderer/src/RenderingEngine';
 import { OwlNode } from './OwlNode';
 import { Owl } from './Owl';
 import { OwlEnv } from './OwlComponent';
@@ -14,8 +13,8 @@ export class OwlDomObjectRenderer extends AbstractRenderer<DomObject> {
     predicate = OwlNode;
     env: OwlEnv;
 
-    constructor(engine: DomObjectRenderingEngine, superRenderer: Renderer<DomObject>) {
-        super(engine, superRenderer);
+    constructor(engine: DomObjectRenderingEngine) {
+        super(engine);
         this.env = this.engine.editor.plugins.get(Owl).env;
     }
 

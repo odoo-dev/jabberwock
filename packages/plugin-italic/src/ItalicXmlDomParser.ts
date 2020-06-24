@@ -1,13 +1,9 @@
-import { FormatParser } from '../../plugin-inline/src/FormatParser';
+import { FormatXmlDomParser } from '../../plugin-inline/src/FormatXmlDomParser';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ItalicFormat } from './ItalicFormat';
-import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
 
-export class ItalicXmlDomParser extends FormatParser {
-    static id = XmlDomParsingEngine.id;
-    engine: XmlDomParsingEngine;
-
+export class ItalicXmlDomParser extends FormatXmlDomParser {
     predicate = (item: Node): boolean => {
         return item instanceof Element && (nodeName(item) === 'I' || nodeName(item) === 'EM');
     };

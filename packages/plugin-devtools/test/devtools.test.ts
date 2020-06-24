@@ -545,7 +545,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ b ]</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ b, Attributes: {} ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
                 vNodeChar.textContent +

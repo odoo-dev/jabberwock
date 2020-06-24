@@ -1,6 +1,6 @@
 import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
-import { Format } from '../../../plugin-inline/src/Format';
+import { Format } from '../../../core/src/Format';
 
 export class PathComponent extends OwlComponent<{}> {
     getNodeRepr(vNode: VNode): string {

@@ -1,13 +1,9 @@
-import { FormatParser } from '../../plugin-inline/src/FormatParser';
+import { FormatXmlDomParser } from '../../plugin-inline/src/FormatXmlDomParser';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { UnderlineFormat } from './UnderlineFormat';
-import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
 
-export class UnderlineXmlDomParser extends FormatParser {
-    static id = XmlDomParsingEngine.id;
-    engine: XmlDomParsingEngine;
-
+export class UnderlineXmlDomParser extends FormatXmlDomParser {
     predicate = (item: Node): boolean => {
         return item instanceof Element && nodeName(item) === 'U';
     };

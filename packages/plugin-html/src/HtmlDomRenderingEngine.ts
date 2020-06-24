@@ -13,11 +13,17 @@ export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
      *
      * @param node
      */
-    async render(node: VNode): Promise<Node[]> {
+    async render(node: VNode): Promise<Node[]>;
+    async render(nodes: VNode[]): Promise<Node[][]>;
+    async render(nodes: VNode | VNode[]): Promise<Node[][] | Node[]> {
         const renderer = this.editor.plugins.get(Renderer);
         const objectEngine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
         objectEngine.renderings.clear();
         objectEngine.locations.clear();
-        return super.render(node);
+        if (nodes instanceof Array) {
+            return super.render(nodes);
+        } else {
+            return super.render([nodes])[0];
+        }
     }
 }

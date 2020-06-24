@@ -1,5 +1,5 @@
-import { Modifier } from '../../core/src/Modifier';
-import { Modifiers } from '../../core/src/Modifiers';
+import { Modifier } from './Modifier';
+import { Modifiers } from './Modifiers';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class Format extends Modifier {

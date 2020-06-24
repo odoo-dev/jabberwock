@@ -2,18 +2,43 @@ import { CharNode } from './CharNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import {
     DomObjectRenderingEngine,
-    DomObjectText,
+    DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { InlineFormatDomObjectRenderer } from '../../plugin-inline/src/InlineFormatDomObjectRenderer';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class CharDomObjectRenderer extends InlineFormatDomObjectRenderer {
+export class CharDomObjectRenderer extends AbstractRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = CharNode;
-    createSpanForAttributes = true;
 
-    async renderInline(charNodes: CharNode[]): Promise<DomObjectText[]> {
+    async render(charNode: CharNode): Promise<DomObject> {
+        return this._renderText([charNode], charNode.modifiers.get(Attributes));
+    }
+    async renderBatch(charNodes: CharNode[]): Promise<DomObject[]> {
+        const domObjects: DomObject[] = [];
+        const groups = this._groupByAttributes(charNodes);
+        for (const [charNodes, attr] of groups) {
+            const domObject = this._renderText(charNodes, attr);
+            for (let i = 0; i < charNodes.length; i++) domObjects.push(domObject);
+        }
+        return domObjects;
+    }
+    private _groupByAttributes(charNodes: CharNode[]): [CharNode[], Attributes][] {
+        const groups: [CharNode[], Attributes][] = [];
+        for (const charNode of charNodes) {
+            const attr = charNode.modifiers.get(Attributes);
+            const last = groups[groups.length - 1];
+            if (!last || (!last[1] && !attr) || (attr && !attr.isSameAs(last[1]))) {
+                groups.push([[charNode], attr]);
+            } else {
+                last[0].push(charNode);
+            }
+        }
+        return groups;
+    }
+    private _renderText(charNodes: CharNode[], attr: Attributes): DomObject {
         // Create textObject.
         const texts = [];
         for (const charNode of charNodes) {
@@ -35,8 +60,18 @@ export class CharDomObjectRenderer extends InlineFormatDomObjectRenderer {
         if (!next || !next.is(InlineNode)) {
             texts[texts.length - 1] = texts[texts.length - 1].replace(/^ /g, '\u00A0');
         }
-        const domObject = { text: texts.join('') };
-        this.engine.locate(charNodes, domObject);
-        return [domObject];
+        const textObject = { text: texts.join('') };
+        this.engine.locate(charNodes, textObject);
+
+        if (attr.keys().length) {
+            const domObject = {
+                tag: 'SPAN',
+                children: [textObject],
+            };
+            this.engine.renderAttributes(Attributes, charNodes[0], domObject);
+            return domObject;
+        } else {
+            return textObject;
+        }
     }
 }

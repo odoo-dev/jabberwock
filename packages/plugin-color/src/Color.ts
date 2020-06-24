@@ -4,7 +4,7 @@ import { Inline } from '../../plugin-inline/src/Inline';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
-import { Format } from '../../plugin-inline/src/Format';
+import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
 
