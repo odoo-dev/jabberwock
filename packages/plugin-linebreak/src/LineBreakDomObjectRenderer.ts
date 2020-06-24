@@ -16,12 +16,15 @@ export class LineBreakDomObjectRenderer extends AbstractRenderer<DomObject> {
      */
     async render(node: LineBreakNode): Promise<DomObject> {
         const br: DomObject = { tag: 'BR' };
+        this.engine.locate([node], br);
         this.engine.renderAttributes(Attributes, node, br);
-        const domObject = { nodes: [node], children: [br] };
+        const domObject = { children: [br] };
         if (!node.nextSibling()) {
             // If a LineBreakNode has no next sibling, it must be rendered
             // as two BRs in order for it to be visible.
-            domObject.children.push({ tag: 'BR' });
+            const br = { tag: 'BR' };
+            domObject.children.push(br);
+            this.engine.locate([node], br);
         }
         return domObject;
     }

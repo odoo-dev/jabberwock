@@ -222,6 +222,17 @@ export class DomLayoutEngine extends LayoutEngine {
                     }
                 }
             }
+            for (const node of [...nodes]) {
+                // Add direct siblings nodes for batched nodes with format.
+                const previous = node.previous();
+                if (previous && !nodes.includes(previous)) {
+                    nodes.push(previous);
+                }
+                const next = node.next();
+                if (next && !nodes.includes(next)) {
+                    nodes.push(next);
+                }
+            }
         } else {
             // Redraw all.
             for (const componentId in this.locations) {
@@ -242,10 +253,10 @@ export class DomLayoutEngine extends LayoutEngine {
         // Render nodes.
         const renderer = this.editor.plugins.get(Renderer);
         const map = new Map<VNode, DomObject>();
-        const renderings = await renderer.render<DomObject>('dom/object', nodes);
+        const domObjects = await renderer.render<DomObject>('dom/object', nodes);
 
         for (const index in nodes) {
-            map.set(nodes[index], renderings[index]);
+            map.set(nodes[index], domObjects[index]);
         }
         const locations = renderer.engines['dom/object'].locations as Map<DomObject, VNode[]>;
         this._domReconciliationEngine.update(map, locations, this._markedForRedraw);

@@ -5,26 +5,23 @@ import { FontAwesomeDomObjectRenderer } from '../../plugin-fontawesome/src/FontA
 export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRenderer {
     predicate = FontAwesomeNode;
 
-    async renderInline(nodes: FontAwesomeNode[]): Promise<DomObject[]> {
-        const rendering: DomObject[] = await super.renderInline(nodes);
-        for (let index = 0; index < nodes.length; index++) {
-            const domObject = rendering[index];
-            if (domObject && 'children' in domObject) {
-                const fa = domObject.children[1];
-                if ('tag' in fa) {
-                    const savedAttach = fa.attach;
-                    fa.attach = (el: HTMLElement): void => {
-                        if (savedAttach) {
-                            savedAttach(el);
-                        }
-                        el.addEventListener('dblclick', () => {
-                            const params = { image: nodes[index] };
-                            this.engine.editor.execCommand('openMedia', params);
-                        });
-                    };
-                }
+    async render(node: FontAwesomeNode): Promise<DomObject> {
+        const domObject: DomObject = await super.render(node);
+        if (domObject && 'children' in domObject) {
+            const fa = domObject.children[1];
+            if ('tag' in fa) {
+                const savedAttach = fa.attach;
+                fa.attach = (el: HTMLElement): void => {
+                    if (savedAttach) {
+                        savedAttach(el);
+                    }
+                    el.addEventListener('dblclick', () => {
+                        const params = { image: node };
+                        this.engine.editor.execCommand('openMedia', params);
+                    });
+                };
             }
         }
-        return rendering;
+        return domObject;
     }
 }

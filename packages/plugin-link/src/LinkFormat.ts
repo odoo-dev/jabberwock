@@ -1,4 +1,4 @@
-import { Format } from '../../plugin-inline/src/Format';
+import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class LinkFormat extends Format {

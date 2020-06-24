@@ -1,14 +1,10 @@
-import { FormatParser } from '../../plugin-inline/src/FormatParser';
-import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
+import { FormatXmlDomParser } from '../../plugin-inline/src/FormatXmlDomParser';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LinkFormat } from './LinkFormat';
 import { nodeName } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class LinkXmlDomParser extends FormatParser {
-    static id = XmlDomParsingEngine.id;
-    engine: XmlDomParsingEngine;
-
+export class LinkXmlDomParser extends FormatXmlDomParser {
     predicate = (item: Node): boolean => {
         return item instanceof Element && nodeName(item) === 'A';
     };

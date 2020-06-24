@@ -16,13 +16,9 @@ export class ThemeDomObjectRenderer extends AbstractRenderer<DomObject> {
         const themePlugin = this.engine.editor.plugins.get(Theme);
         const component = themePlugin.themes[themeNode.themeName];
         const nodes = await component.render(this.engine.editor);
-        const domObjects: DomObject[] = [];
-        for (const node of nodes) {
-            const domObject = await this.engine.render(node);
-            if (!domObjects.includes(domObject)) {
-                await this._resolvePlaceholder(themeNode, domObject);
-                domObjects.push(domObject);
-            }
+        const domObjects: DomObject[] = await this.engine.render(nodes);
+        for (const domObject of domObjects) {
+            await this._resolvePlaceholder(themeNode, domObject);
         }
         return this._removeRef({ children: domObjects });
     }

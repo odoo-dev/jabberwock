@@ -10,7 +10,7 @@ import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Constructor } from '../../utils/src/utils';
-import { Format } from '../../plugin-inline/src/Format';
+import { Format } from '../../core/src/Format';
 import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
 import { Modifiers } from '../../core/src/Modifiers';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';

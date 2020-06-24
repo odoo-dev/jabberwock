@@ -2,7 +2,7 @@ import { describePlugin } from '../../utils/src/testUtils';
 import { Inline } from '../src/Inline';
 import JWEditor from '../../core/src/JWEditor';
 import { Constructor } from '../../utils/src/utils';
-import { Format } from '../src/Format';
+import { Format } from '../../core/src/Format';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 

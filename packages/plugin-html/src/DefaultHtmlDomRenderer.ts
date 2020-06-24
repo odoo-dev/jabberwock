@@ -15,10 +15,18 @@ export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {
     async render(node: VNode): Promise<Node[]> {
         const renderer = this.engine.editor.plugins.get(Renderer);
         const objectEngine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
-        const domObject = await objectEngine.render(node);
-        await objectEngine.resolveChildren(domObject);
-        const domNode = this._objectToDom(domObject);
-        return domNode instanceof DocumentFragment ? [...domNode.childNodes] : [domNode];
+        const domObjects = await objectEngine.render([node]);
+        const domNodes: Node[] = [];
+        for (const domObject of domObjects) {
+            await objectEngine.resolveChildren(domObject);
+            const domNode = this._objectToDom(domObject);
+            if (domNode instanceof DocumentFragment) {
+                domNodes.push(...domNode.childNodes);
+            } else {
+                domNodes.push(domNode);
+            }
+        }
+        return domNodes;
     }
     private _objectToDom(domObject: DomObject): Node {
         let domNode: Node;

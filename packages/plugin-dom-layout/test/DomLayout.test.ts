@@ -1585,24 +1585,52 @@ describe('DomLayout', () => {
                     const rendered = await renderer.render<DomObject>('dom/object', editable);
                     const textNodes = editable.children();
 
-                    expect(rendered && 'children' in rendered && rendered.children).to.deep.equal(
-                        textNodes,
-                    );
+                    expect(
+                        rendered &&
+                            'children' in rendered &&
+                            rendered.children.map(n => 'id' in n && n.id),
+                    ).to.deep.equal(textNodes.map(n => n.id));
 
                     const renderedText0 = await renderer.render('dom/object', textNodes[0]);
-                    expect(renderedText0).to.deep.equal({
+                    expect(renderedText0).to.deep.equal({ text: 'a' });
+
+                    const renderedText1 = await renderer.render('dom/object', textNodes[1]);
+                    expect(renderedText1).to.deep.equal({
+                        tag: 'I',
+                        attributes: {},
+                        children: [{ text: 'b' }],
+                    });
+                    const renderedText2 = await renderer.render('dom/object', textNodes[2]);
+                    expect(renderedText2).to.deep.equal({ text: 'c' });
+                },
+                contentAfter: 'a[<i>b]</i>c',
+            });
+        });
+        it('should render text and linebreak with format', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: 'a[b<br>c]d',
+                stepFunction: async (editor: JWEditor) => {
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.get('editable')[0];
+
+                    const renderer = editor.plugins.get(Renderer);
+                    const br = editable.children()[2];
+                    new BoldFormat().applyTo(br);
+
+                    await editor.execCommand<Inline>('toggleFormat', {
+                        FormatClass: BoldFormat,
+                    });
+                    expect(await renderer.render('dom/object', br)).to.deep.equal({
+                        tag: 'B',
+                        attributes: {},
                         children: [
-                            { text: 'a' },
-                            {
-                                tag: 'I',
-                                attributes: {},
-                                children: [{ text: 'b' }],
-                            },
+                            { text: 'b' },
+                            { children: [{ tag: 'BR', attributes: {} }] },
                             { text: 'c' },
                         ],
                     });
                 },
-                contentAfter: 'a[<i>b]</i>c',
+                contentAfter: 'a[<b>b<br>c]</b>d',
             });
         });
     });
@@ -1654,20 +1682,14 @@ describe('DomLayout', () => {
 
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
+                            tag: 'B',
+                            attributes: {},
                             children: [
-                                { text: 'a' },
                                 {
-                                    tag: 'B',
+                                    tag: 'I',
                                     attributes: {},
-                                    children: [
-                                        {
-                                            tag: 'I',
-                                            attributes: {},
-                                            children: [{ text: 'b' }],
-                                        },
-                                    ],
+                                    children: [{ text: 'b' }],
                                 },
-                                { text: 'c' },
                             ],
                         });
                     },
@@ -2651,7 +2673,7 @@ describe('DomLayout', () => {
 
                 expect(mutationNumber).to.equal(2, 'update text; add <p> & text');
             });
-            it('should make bold all a chars', async () => {
+            it('should make bold all chars', async () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
@@ -2680,6 +2702,28 @@ describe('DomLayout', () => {
                 expect(pDom2.firstChild.firstChild).to.equal(text2);
 
                 expect(mutationNumber).to.equal(4, 'add bold & text; add bold & text');
+            });
+            it('should make bold p', async () => {
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const pDom = container.querySelector('p');
+
+                const p = div.firstChild();
+                const p2 = div.lastChild();
+
+                new BoldFormat().applyTo(p);
+                new BoldFormat().applyTo(p2);
+
+                await nextTick();
+                mutationNumber = 0;
+
+                await engine.redraw(p, p2);
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><div><b><p>abcdef</p><p>123456</p></b></div></jw-editor>',
+                );
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+
+                expect(mutationNumber).to.equal(3, 'parent bold, move into bold');
             });
             it('should split a paragraph within a format node', async () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;

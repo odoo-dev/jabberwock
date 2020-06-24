@@ -1,6 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
-import { Format } from './Format';
+import { Format } from '../../core/src/Format';
 import { Modifier } from '../../core/src/Modifier';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { InlineNode } from './InlineNode';
@@ -11,7 +11,6 @@ import { CssStyle } from '../../plugin-xml/src/CssStyle';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { InlineFormatDomObjectRenderer } from './InlineFormatDomObjectRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 
@@ -38,7 +37,6 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         setSelection: this.resetCache,
     };
     loadables: Loadables<Renderer & Layout> = {
-        renderers: [InlineFormatDomObjectRenderer],
         components: [
             {
                 id: 'RemoveFormatButton',
