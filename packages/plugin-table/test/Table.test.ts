@@ -373,6 +373,48 @@ describePlugin(Table, testEditor => {
                 /* eslint-enable prettier/prettier */
             });
         });
+        it('should parse and render a table with inconsistent cell numbers', async () => {
+            await testEditor(BasicEditor, {
+                /* eslint-disable prettier/prettier */
+                contentBefore: [
+                    '<table>',
+                        '<thead>',
+                            '<tr>',
+                                '<td>ab</td>',
+                                '<td>cd</td>',
+                            '</tr>',
+                        '</thead>',
+                        '<tr>',
+                            '<td>ef</td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>gh</td>',
+                        '</tr>',
+                    '</table>',
+                ].join(''),
+                contentAfter: [
+                    '<table>',
+                        '<thead>',
+                            '<tr>',
+                                '<td>ab</td>',
+                                '<td>cd</td>',
+                            '</tr>',
+                        '</thead>',
+                        '<tbody>',
+                            '<tr>',
+                                '<td>ef</td>',
+                                '<td><br></td>',
+                            '</tr>',
+                            '<tr>',
+                                '<td>gh</td>',
+                                '<td><br></td>',
+                            '</tr>',
+                        '</tbody>',
+                    '</table>',
+                ].join(''),
+                /* eslint-enable prettier/prettier */
+            });
+        });
     });
     describe('parse string and render in the DOM', () => {
         let editor: BasicEditor;
@@ -779,6 +821,52 @@ describePlugin(Table, testEditor => {
                     '<tbody>',
                         '<tr>',
                             '<td>hi</td>',
+                        '</tr>',
+                    '</tbody>',
+                '</table>',
+            ].join(''));
+            /* eslint-enable prettier/prettier */
+        });
+        it('should parse and render a table with inconsistent cell numbers', async () => {
+            /* eslint-disable prettier/prettier */
+            const vNodes = await editor.plugins.get(Parser).parse('text/html', [
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<td>ab</td>',
+                            '<td>cd</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tr>',
+                        '<td>ef</td>',
+                    '</tr>',
+                    '<tr>',
+                        '<td>gh</td>',
+                    '</tr>',
+                '</table>',
+            ].join(''));
+            expect(vNodes.length).to.equal(1);
+
+            const renderer = editor.plugins.get(Renderer);
+            const domNodes = await renderer.render('dom/html', vNodes[0]);
+            const table = domNodes[0] as HTMLTableElement;
+            /* eslint-disable prettier/prettier */
+            expect(table.outerHTML).to.equal([
+                '<table>',
+                    '<thead>',
+                        '<tr>',
+                            '<td>ab</td>',
+                            '<td>cd</td>',
+                        '</tr>',
+                    '</thead>',
+                    '<tbody>',
+                        '<tr>',
+                            '<td>ef</td>',
+                            '<td><br></td>',
+                        '</tr>',
+                        '<tr>',
+                            '<td>gh</td>',
+                            '<td><br></td>',
                         '</tr>',
                     '</tbody>',
                 '</table>',
