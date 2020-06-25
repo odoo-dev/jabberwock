@@ -142,6 +142,8 @@ export class TableXmlDomParser extends AbstractParser<Node> {
                 }
             }
         }
-        return grid;
+
+        // Replace every empty element of the grid with an empty cell.
+        return grid.map(row => Array.from(row, cell => cell || new TableCellNode()));
     }
 }
