@@ -91,13 +91,13 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             ...[1, 2, 3, 4, 5, 6].map(headingButton),
         ],
         componentZones: [
-            ['ParagraphButton', 'actionables'],
-            ['Heading1Button', 'actionables'],
-            ['Heading2Button', 'actionables'],
-            ['Heading3Button', 'actionables'],
-            ['Heading4Button', 'actionables'],
-            ['Heading5Button', 'actionables'],
-            ['Heading6Button', 'actionables'],
+            ['ParagraphButton', ['actionables']],
+            ['Heading1Button', ['actionables']],
+            ['Heading2Button', ['actionables']],
+            ['Heading3Button', ['actionables']],
+            ['Heading4Button', ['actionables']],
+            ['Heading5Button', ['actionables']],
+            ['Heading6Button', ['actionables']],
         ],
     };
 

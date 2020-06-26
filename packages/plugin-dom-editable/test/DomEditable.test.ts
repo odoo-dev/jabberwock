@@ -66,7 +66,7 @@ describe('DomEditable', () => {
                             createEditable(editor),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             await editor.start();
             expect(container.innerHTML).to.equal(
@@ -88,7 +88,7 @@ describe('DomEditable', () => {
                             parseEditable(editor, section),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
 
             await editor.start();
@@ -111,7 +111,7 @@ describe('DomEditable', () => {
                             createEditable(editor, true),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             section.ownerDocument.getSelection().removeAllRanges();
             await editor.start();
@@ -132,7 +132,7 @@ describe('DomEditable', () => {
                             parseEditable(editor, section, true),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
 
             section.ownerDocument.getSelection().removeAllRanges();
@@ -167,7 +167,7 @@ describe('DomEditable', () => {
                                 parseEditable(editor, section),
                         },
                     ],
-                    componentZones: [['editable', 'main']],
+                    componentZones: [['editable', ['main']]],
                 });
                 section.innerHTML = '<div>abcd</div>';
                 setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
@@ -733,7 +733,7 @@ describe('DomEditable', () => {
                             parseEditable(editor, section, true),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             section.innerHTML = '<div>abcd</div>';
             editor.configure(Keymap, { platform: Platform.PC });
@@ -774,7 +774,7 @@ describe('DomEditable', () => {
                             parseEditable(editor, section, true),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             section.innerHTML = '<div>abcd</div>';
             editor.configure(Keymap, { platform: Platform.PC });
@@ -809,7 +809,7 @@ describe('DomEditable', () => {
                             parseEditable(editor, article, true),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             article.innerHTML = '<div>abcd</div>';
             await editor2.start();
@@ -843,7 +843,7 @@ describe('DomEditable', () => {
                             parseEditable(editor, section),
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             editor.configure(Keymap, { platform: Platform.PC });
             editor.load(

@@ -10,7 +10,7 @@ import { ZoneIdentifier } from './ZoneNode';
 
 export interface LayoutConfig extends JWPluginConfig {
     components?: ComponentDefinition[];
-    componentZones?: [ComponentId, ZoneIdentifier][];
+    componentZones?: [ComponentId, ZoneIdentifier[]][];
 }
 
 export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
@@ -36,32 +36,54 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
         this.loadComponentsZones(this.configuration.componentZones || []);
     }
     /**
-     * Add a Component in a zone.
+     * Prepend a Component in a zone.
      *
      * @param componentId
      * @param zoneId
      * @param props
      */
-    async add(
+    async prepend(
         componentId: ComponentId,
         zoneId: ZoneIdentifier = 'default',
         props?: {},
     ): Promise<void> {
-        const promises = [];
-        for (const layoutEngine of Object.values(this.engines)) {
-            promises.push(layoutEngine.add(componentId, zoneId, props));
-        }
-        await Promise.all(promises);
+        const engines = Object.values(this.engines);
+        await Promise.all(engines.map(engine => engine.prepend(componentId, zoneId, props)));
+    }
+    /**
+     * Append a Component in a zone.
+     *
+     * @param componentId
+     * @param zoneId
+     */
+    async append(
+        componentId: ComponentId,
+        zoneId: ZoneIdentifier = 'default',
+        props?: {},
+    ): Promise<void> {
+        const engines = Object.values(this.engines);
+        await Promise.all(engines.map(engine => engine.append(componentId, zoneId, props)));
+    }
+    /**
+     * Clear a zone content.
+     *
+     * @param zoneId
+     */
+    async clear(zoneId: ZoneIdentifier): Promise<void> {
+        const engines = Object.values(this.engines);
+        await Promise.all(engines.map(engine => engine.clear(zoneId)));
     }
     /**
      * Remove a component (instance or clonse) from the zone.
      *
      * @param componentId
+     * @param zoneId specifying a zone if it is necessary to remove the
+     *      component from this zone only
      */
-    async remove(componentId: ComponentId): Promise<void> {
+    async remove(componentId: ComponentId, zoneId?: ZoneIdentifier): Promise<void> {
         const promises = [];
         for (const layoutEngine of Object.values(this.engines)) {
-            promises.push(layoutEngine.remove(componentId));
+            promises.push(layoutEngine.remove(componentId, zoneId));
         }
         await Promise.all(promises);
     }
@@ -121,8 +143,8 @@ export class Layout<T extends LayoutConfig = LayoutConfig> extends JWPlugin<T> {
      *
      * @param componentsZones
      */
-    private loadComponentsZones(componentsZones: [ComponentId, ZoneIdentifier][]): void {
-        const zones: Record<ComponentId, ZoneIdentifier> = {};
+    private loadComponentsZones(componentsZones: [ComponentId, ZoneIdentifier[]][]): void {
+        const zones: Record<ComponentId, ZoneIdentifier[]> = {};
         for (const [id, zone] of componentsZones) {
             zones[id] = zone;
         }

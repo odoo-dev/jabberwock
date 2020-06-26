@@ -34,7 +34,7 @@ const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
                 },
             },
         ],
-        componentZones: [['editor', 'root']],
+        componentZones: [['editor', ['root']]],
     },
 };
 editor.configure(config);

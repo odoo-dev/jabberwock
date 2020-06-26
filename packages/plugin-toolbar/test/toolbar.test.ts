@@ -70,7 +70,7 @@ describe('Toolbar', async () => {
                         },
                     },
                 ],
-                componentZones: [['template', 'root']],
+                componentZones: [['template', ['root']]],
                 location: [section, 'replace'],
             });
         });
@@ -109,7 +109,7 @@ describe('Toolbar', async () => {
                         },
                     },
                 ],
-                componentZones: [['template', 'root']],
+                componentZones: [['template', ['root']]],
                 location: [section, 'replace'],
             });
             await editor.start();

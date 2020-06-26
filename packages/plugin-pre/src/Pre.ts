@@ -45,7 +45,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
                 },
             },
         ],
-        componentZones: [['PreButton', 'actionables']],
+        componentZones: [['PreButton', ['actionables']]],
     };
 
     //--------------------------------------------------------------------------

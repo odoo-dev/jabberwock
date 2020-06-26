@@ -105,9 +105,9 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             },
         ],
         componentZones: [
-            ['link', 'float'],
-            ['LinkButton', 'actionables'],
-            ['UnlinkButton', 'actionables'],
+            ['link', ['float']],
+            ['LinkButton', ['actionables']],
+            ['UnlinkButton', ['actionables']],
         ],
         owlTemplates: [linkForm],
     };
@@ -129,7 +129,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
 
             const layout = this.editor.plugins.get(Layout);
             await layout.remove('link');
-            return layout.add('link', undefined, { label: label, url: url });
+            return layout.append('link', undefined, { label: label, url: url });
         }
 
         // Otherwise create a link and insert it.

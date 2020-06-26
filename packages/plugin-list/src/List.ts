@@ -161,9 +161,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             },
         ],
         componentZones: [
-            ['OrderedListButton', 'actionables'],
-            ['UnorderedListButton', 'actionables'],
-            ['ChecklistButton', 'actionables'],
+            ['OrderedListButton', ['actionables']],
+            ['UnorderedListButton', ['actionables']],
+            ['ChecklistButton', ['actionables']],
         ],
     };
 

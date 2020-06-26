@@ -40,7 +40,7 @@ export class Toolbar<T extends ToolbarConfig = {}> extends JWPlugin<T> {
                 },
             },
         ],
-        componentZones: [['toolbar', 'tools']],
+        componentZones: [['toolbar', ['tools']]],
     };
     configuration = { layout: [], ...this.configuration };
     addToolbarItems(toolbar: ToolbarNode, layout: ToolbarLayout): void;

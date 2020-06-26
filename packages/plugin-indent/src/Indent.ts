@@ -68,8 +68,8 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             },
         ],
         componentZones: [
-            ['IndentButton', 'actionables'],
-            ['OutdentButton', 'actionables'],
+            ['IndentButton', ['actionables']],
+            ['OutdentButton', ['actionables']],
         ],
     };
     tab = '    ';

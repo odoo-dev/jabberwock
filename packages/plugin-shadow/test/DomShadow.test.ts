@@ -411,7 +411,7 @@ describe('DomShadow', async () => {
                         },
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
@@ -444,7 +444,7 @@ describe('DomShadow', async () => {
                         },
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
@@ -486,7 +486,7 @@ describe('DomShadow', async () => {
                         },
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             await editor.start();
             expect(container.innerHTML).to.equal('<jw-editor><jw-shadow></jw-shadow></jw-editor>');
@@ -522,7 +522,7 @@ describe('DomShadow', async () => {
                             },
                         },
                     ],
-                    componentZones: [['editable', 'main']],
+                    componentZones: [['editable', ['main']]],
                 });
 
                 section.innerHTML = '<div>abcd</div>';
@@ -1118,7 +1118,7 @@ describe('DomShadow', async () => {
                         },
                     },
                 ],
-                componentZones: [['editable', 'main']],
+                componentZones: [['editable', ['main']]],
             });
             editor.configure(Keymap, { platform: Platform.PC });
             editor.load(

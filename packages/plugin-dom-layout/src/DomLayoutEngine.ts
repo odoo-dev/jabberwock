@@ -46,14 +46,18 @@ export class DomLayoutEngine extends LayoutEngine {
     async start(): Promise<void> {
         for (const componentId in this.locations) {
             this.renderingMap[componentId] = [];
-            this.componentZones[componentId] = 'root';
+            this.componentZones[componentId] = ['root'];
             if (!this.componentDefinitions[componentId]) {
                 throw new Error('Layout component "' + componentId + '" not found.');
             }
         }
-        if (!Object.values(this.componentZones).includes('root')) {
+        if (
+            !Object.values(this.componentZones)
+                .flat()
+                .includes('root')
+        ) {
             this.componentDefinitions.editor = this.defaultRootComponent;
-            this.componentZones.editor = 'root';
+            this.componentZones.editor = ['root'];
         }
         for (const componentId in this.componentDefinitions) {
             this._prepareLayoutContainerAndLocation(this.componentDefinitions[componentId]);
@@ -115,8 +119,26 @@ export class DomLayoutEngine extends LayoutEngine {
      *
      * @override
      */
-    async add(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const nodes = await super.add(componentId, zoneId, props);
+    async prepend(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
+        const nodes = await super.prepend(componentId, zoneId, props);
+        // Filter out children of nodes that we are already going to redraw.
+        const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
+        for (const node of nodeToRedraw) {
+            nodeToRedraw.push(...node.childVNodes);
+        }
+        // only used if the zone want to return a Node but hide the component (eg: a panel)
+        // TODO: adapt when add memory
+        await this.redraw(...nodeToRedraw);
+        return nodes;
+    }
+    /**
+     * Redraw the layout component after insertion.
+     * If the target zone is the root, prepare its location before redrawing.
+     *
+     * @override
+     */
+    async append(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
+        const nodes = await super.append(componentId, zoneId, props);
         // Filter out children of nodes that we are already going to redraw.
         const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
         for (const node of nodeToRedraw) {
@@ -441,7 +463,7 @@ export class DomLayoutEngine extends LayoutEngine {
     }
     private _prepareLayoutContainerAndLocation(componentDefinition: ComponentDefinition): void {
         const zone = this.componentZones[componentDefinition.id];
-        if (zone === 'root') {
+        if (zone?.includes('root')) {
             // automatically wrap the child into a layoutContainer to keep location of all nodes
             // when update the template and redraw
             this.componentDefinitions[componentDefinition.id] = {

@@ -55,7 +55,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 },
             },
         ],
-        componentZones: [['RemoveFormatButton', 'actionables']],
+        componentZones: [['RemoveFormatButton', ['actionables']]],
     };
     /**
      * When applying a modifier on a collapsed range, cache the calculation of

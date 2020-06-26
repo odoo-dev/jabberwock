@@ -1191,7 +1191,7 @@ describe('core', () => {
                                     parseEditable(editor, root),
                             },
                         ],
-                        componentZones: [['editable', 'main']],
+                        componentZones: [['editable', ['main']]],
                     });
                     editor.load(MyCustomPlugin);
                     await editor.start();

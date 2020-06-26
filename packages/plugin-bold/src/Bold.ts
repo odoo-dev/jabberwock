@@ -37,6 +37,6 @@ export class Bold<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 },
             },
         ],
-        componentZones: [['BoldButton', 'actionables']],
+        componentZones: [['BoldButton', ['actionables']]],
     };
 }
