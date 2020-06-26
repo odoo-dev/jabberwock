@@ -47,6 +47,7 @@ import { Dialog } from '../plugin-dialog/src/Dialog';
 import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
 import './odooLayout.css';
+import { OdooField } from '../plugin-odoo-field/src/OdooField';
 
 interface OdooWebsiteEditorOption {
     source: HTMLElement;
@@ -108,6 +109,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [DomHelpers],
                 [Odoo],
                 [OdooVideo],
+                [OdooField],
                 [CustomPlugin],
             ],
         });
