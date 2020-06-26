@@ -28,7 +28,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
 
     async start(): Promise<void> {
         this.eventNormalizer = new EventNormalizer(
-            this._isInEditable.bind(this),
+            this.dependencies.get(DomLayout).isInEditable.bind(this),
             this._onNormalizedEvent.bind(this),
         );
 
@@ -59,27 +59,6 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
-
-    private _isInEditable(target: Node): boolean {
-        const layout = this.dependencies.get(Layout);
-        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-        let nodes = domLayoutEngine.getNodes(target);
-        while (!nodes.length && target) {
-            if (target.previousSibling) {
-                target = target.previousSibling;
-            } else {
-                target = target.parentNode;
-            }
-            nodes = domLayoutEngine.getNodes(target);
-        }
-        const node = nodes?.pop();
-        const ancestorContentEditable = node?.closest(
-            node => !!node.modifiers.find(Attributes)?.get('contentEditable'),
-        );
-        return (
-            ancestorContentEditable?.modifiers.find(Attributes).get('contentEditable') === 'true'
-        );
-    }
 
     /**
      * Handle the received signal and dispatch the corresponding editor command,
