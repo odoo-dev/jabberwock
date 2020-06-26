@@ -101,7 +101,7 @@ describe('DomLayout', () => {
             const editor = new JWEditor();
             editor.load(Char);
             editor.load(Layout, {
-                componentZones: [['test', 'root']],
+                componentZones: [['test', ['root']]],
             });
             editor.configure(DomLayout, { location: [target, 'replace'] });
             let hasError = false;
@@ -552,7 +552,7 @@ describe('DomLayout', () => {
                             },
                         },
                     ],
-                    componentZones: [['aaa', 'root']],
+                    componentZones: [['aaa', ['root']]],
                 };
                 async start(): Promise<void> {}
             }
@@ -586,8 +586,8 @@ describe('DomLayout', () => {
                     ],
                     domLocations: [['bbb', [container, 'prepend']]],
                     componentZones: [
-                        ['aaa', 'root'],
-                        ['bbb', 'root'],
+                        ['aaa', ['root']],
+                        ['bbb', ['root']],
                     ],
                 };
                 async start(): Promise<void> {}
@@ -630,7 +630,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -655,7 +655,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -680,7 +680,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -717,7 +717,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
 
@@ -767,7 +767,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -806,7 +806,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -832,7 +832,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -890,7 +890,7 @@ describe('DomLayout', () => {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
                     renderers: [CustomHtmlObjectRenderer],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -945,7 +945,7 @@ describe('DomLayout', () => {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
                     renderers: [CustomDomRenderer],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -987,7 +987,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1034,7 +1034,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1079,7 +1079,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1131,7 +1131,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1195,7 +1195,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1223,7 +1223,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1273,7 +1273,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1323,7 +1323,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1373,7 +1373,7 @@ describe('DomLayout', () => {
             class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Layout> = {
                     components: [Component],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             const editor = new JWEditor();
@@ -1474,7 +1474,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1658,7 +1658,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1698,7 +1698,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1740,7 +1740,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1779,7 +1779,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1823,7 +1823,7 @@ describe('DomLayout', () => {
                                 },
                             },
                         ],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1839,7 +1839,7 @@ describe('DomLayout', () => {
                             },
                         },
                     ],
-                    componentZones: [['template', 'root']],
+                    componentZones: [['template', ['root']]],
                     location: [target, 'replace'],
                 });
                 editor.load(Plugin);
@@ -1884,7 +1884,7 @@ describe('DomLayout', () => {
                                 },
                             },
                         ],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -1900,7 +1900,7 @@ describe('DomLayout', () => {
                             },
                         },
                     ],
-                    componentZones: [['template', 'root']],
+                    componentZones: [['template', ['root']]],
                     location: [target, 'replace'],
                 });
                 editor.load(Plugin);
@@ -1947,7 +1947,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -2001,7 +2001,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -2052,7 +2052,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomDomRenderer],
                     };
                 }
@@ -2115,7 +2115,7 @@ describe('DomLayout', () => {
                             },
                         },
                     ],
-                    componentZones: [['aaa', 'main']],
+                    componentZones: [['aaa', ['main']]],
                 });
                 await editor.start();
             });
@@ -2884,7 +2884,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -2957,7 +2957,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3039,7 +3039,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomDomRenderer],
                     };
                 }
@@ -3090,7 +3090,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomDomRenderer],
                     };
                 }
@@ -3135,7 +3135,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomDomRenderer],
                     };
                 }
@@ -3177,7 +3177,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomDomRenderer],
                     };
                 }
@@ -3223,7 +3223,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomObjectRenderer],
                     };
                 }
@@ -3269,7 +3269,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomObjectRenderer],
                     };
                 }
@@ -3315,7 +3315,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomObjectRenderer],
                     };
                 }
@@ -3368,7 +3368,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                         renderers: [CustomDomRenderer],
                     };
                 }
@@ -3406,7 +3406,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3452,7 +3452,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3494,7 +3494,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3537,7 +3537,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3582,7 +3582,7 @@ describe('DomLayout', () => {
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
                     loadables: Loadables<Layout> = {
                         components: [Component],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3659,7 +3659,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3728,7 +3728,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3797,7 +3797,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3867,7 +3867,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -3937,7 +3937,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4007,7 +4007,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4085,7 +4085,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4141,7 +4141,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4201,7 +4201,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4261,7 +4261,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4323,7 +4323,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomHtmlObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4405,7 +4405,7 @@ describe('DomLayout', () => {
                     loadables: Loadables<Renderer & Layout> = {
                         components: [Component],
                         renderers: [CustomDomObjectRenderer],
-                        componentZones: [['test', 'main']],
+                        componentZones: [['test', ['main']]],
                     };
                 }
                 const editor = new JWEditor();
@@ -4475,7 +4475,7 @@ describe('DomLayout', () => {
                                 },
                             },
                         ],
-                        componentZones: [['aaa', 'main']],
+                        componentZones: [['aaa', ['main']]],
                     });
                     await editor.start();
                 });
@@ -4707,7 +4707,7 @@ describe('DomLayout', () => {
                                 },
                             },
                         ],
-                        componentZones: [['aaa', 'main']],
+                        componentZones: [['aaa', ['main']]],
                     });
                     await editor.start();
                 });
@@ -4861,7 +4861,7 @@ describe('DomLayout', () => {
             await editor.stop();
         });
         it('should add a component in a zone', async () => {
-            await editor.plugins.get(Layout).add('aaa', 'main');
+            await editor.plugins.get(Layout).append('aaa', 'main');
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
             await editor.stop();
         });
@@ -4878,13 +4878,13 @@ describe('DomLayout', () => {
                         },
                     },
                 ],
-                componentZones: [['template', 'root']],
+                componentZones: [['template', ['root']]],
             });
             await editor.start();
 
             expect(container.innerHTML).to.equal('<div class="a"></div><div class="b"></div>');
 
-            await editor.plugins.get(Layout).add('aaa', 'totoZone');
+            await editor.plugins.get(Layout).append('aaa', 'totoZone');
 
             expect(container.innerHTML).to.equal(
                 '<div class="a"></div><div class="b"><div><area></div></div>',
@@ -4893,23 +4893,23 @@ describe('DomLayout', () => {
             await editor.stop();
         });
         it('should add a component and show it by default', async () => {
-            await editor.plugins.get(Layout).add('aaa', 'main');
+            await editor.plugins.get(Layout).append('aaa', 'main');
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
         });
         it('should hide a component', async () => {
-            await editor.plugins.get(Layout).add('aaa', 'main');
+            await editor.plugins.get(Layout).append('aaa', 'main');
             await editor.execCommand('hide', { componentId: 'aaa' });
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
         it('should show a component', async () => {
-            await editor.plugins.get(Layout).add('aaa', 'main');
+            await editor.plugins.get(Layout).append('aaa', 'main');
             await editor.execCommand('hide', { componentId: 'aaa' });
             await editor.execCommand('show', { componentId: 'aaa' });
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
         });
         it('should remove a component', async () => {
             const layout = editor.plugins.get(Layout);
-            await layout.add('aaa', 'main');
+            await layout.append('aaa', 'main');
             await layout.remove('aaa');
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
         });
@@ -4917,7 +4917,7 @@ describe('DomLayout', () => {
             const layout = editor.plugins.get(Layout);
             const root = layout.engines.dom.root;
             const zoneMain = root.descendants(ZoneNode).find(n => n.managedZones.includes('main'));
-            await layout.add('aaa', 'main');
+            await layout.append('aaa', 'main');
             const node = zoneMain.children().pop();
             expect(!!zoneMain.hidden.get(node)).to.equal(false, 'Component is visible');
             await editor.execCommand('hide', { componentId: 'aaa' });
@@ -4926,7 +4926,7 @@ describe('DomLayout', () => {
             expect(zoneMain.hidden.get(node)).to.equal(undefined);
         });
         it('should remove a component in all layout engines', async () => {
-            await editor.plugins.get(Layout).add('aaa', 'main');
+            await editor.plugins.get(Layout).append('aaa', 'main');
             expect(container.innerHTML).to.equal('<jw-editor><div><area></div></jw-editor>');
             await editor.plugins.get(Layout).remove('aaa');
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
@@ -4991,7 +4991,7 @@ describe('DomLayout', () => {
                 loadables: Loadables<Renderer & Layout> = {
                     components: [Component],
                     renderers: [CustomHtmlObjectRenderer],
-                    componentZones: [['test', 'main']],
+                    componentZones: [['test', ['main']]],
                 };
             }
             editor = new JWEditor();

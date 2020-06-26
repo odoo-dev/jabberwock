@@ -75,7 +75,7 @@ describe('Plugin: DevTools', () => {
                 },
             ],
             locations: [['basicLayout', [root, 'replace']]],
-            componentZones: [['editable', 'main']],
+            componentZones: [['editable', ['main']]],
         });
 
         await editor.start();

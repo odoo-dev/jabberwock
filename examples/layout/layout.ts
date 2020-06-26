@@ -101,7 +101,7 @@ editor.configure(DomLayout, {
         ['domOther', [target, 'after']],
         ['domFooter', [document.body, 'append']],
     ],
-    componentZones: [['editable', 'main']],
+    componentZones: [['editable', ['main']]],
 });
 
 const toolbarConfig = editor.configuration.plugins.find(

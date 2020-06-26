@@ -40,7 +40,7 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
                 },
             },
         ],
-        componentZones: [['ThemeButton', 'actionables']],
+        componentZones: [['ThemeButton', ['actionables']]],
     };
     commands = {
         changeTheme: {
@@ -64,7 +64,7 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
         }
         for (const name in this.themes) {
             this.loadables.components.push(this._createThemeButton(name));
-            this.loadables.componentZones.push(['Theme' + name + 'Button', 'themeButtons']);
+            this.loadables.componentZones.push(['Theme' + name + 'Button', ['themeButtons']]);
         }
     }
     /**

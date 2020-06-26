@@ -164,7 +164,7 @@ function initSpec(Editor: typeof JWEditor, spec: TestEditorSpec, container: HTML
                 render: async (editor: JWEditor): Promise<VNode[]> => parseEditable(editor, target),
             },
         ],
-        componentZones: [['editable', 'main']],
+        componentZones: [['editable', ['main']]],
     });
     return editor;
 }

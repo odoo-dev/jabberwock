@@ -65,9 +65,9 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             },
         ],
         componentZones: [
-            ['OdooLinkButton', 'actionables'],
-            ['OdooMediaButton', 'actionables'],
-            ['OdooSaveButton', 'actionables'],
+            ['OdooLinkButton', ['actionables']],
+            ['OdooMediaButton', ['actionables']],
+            ['OdooSaveButton', ['actionables']],
         ],
     };
 }

@@ -21,7 +21,7 @@ export class DevTools<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
                 },
             },
         ],
-        componentZones: [['devTools', 'debug']],
+        componentZones: [['devTools', ['debug']]],
         owlTemplates: [devtoolsTemplates],
     };
 }

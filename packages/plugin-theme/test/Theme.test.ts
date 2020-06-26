@@ -77,7 +77,7 @@ describe('Theme', () => {
                     },
                 },
             ],
-            componentZones: [['editable', 'main']],
+            componentZones: [['editable', ['main']]],
             location: [target, 'replace'],
         });
         const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
@@ -92,7 +92,7 @@ describe('Theme', () => {
                         },
                     },
                 ],
-                componentZones: [['editor', 'root']],
+                componentZones: [['editor', ['root']]],
             },
         };
         editor.configure(config);
@@ -121,7 +121,7 @@ describe('Theme', () => {
                         },
                     },
                 ],
-                componentZones: [['editor', 'root']],
+                componentZones: [['editor', ['root']]],
             },
         };
         editor.configure(config);

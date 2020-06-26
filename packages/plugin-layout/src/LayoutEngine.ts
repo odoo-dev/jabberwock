@@ -14,7 +14,7 @@ export interface ComponentDefinition {
 export abstract class LayoutEngine {
     static readonly id: LayoutEngineId;
     protected componentDefinitions: Record<ComponentId, ComponentDefinition> = {};
-    protected componentZones: Record<ComponentId, ZoneIdentifier> = {};
+    protected componentZones: Record<ComponentId, ZoneIdentifier[]> = {};
     readonly root = new ZoneNode({ managedZones: ['root'] });
 
     components: Map<ComponentId, VNode[]> = new Map();
@@ -30,7 +30,7 @@ export abstract class LayoutEngine {
      */
     async start(): Promise<void> {
         let allZones = [this.root, ...this.root.descendants(ZoneNode)];
-        await this._fillZones(allZones);
+        await this.fillZones(allZones);
         allZones = [this.root, ...this.root.descendants(ZoneNode)];
         if (!allZones.find(zone => zone.managedZones.includes('default'))) {
             // Add into the default zone if no valid zone could be found.
@@ -72,12 +72,12 @@ export abstract class LayoutEngine {
      *
      * @param componentZones
      */
-    loadComponentZones(componentZones: Record<ComponentId, ZoneIdentifier>): void {
+    loadComponentZones(componentZones: Record<ComponentId, ZoneIdentifier[]>): void {
         Object.assign(this.componentZones, componentZones);
     }
 
     /**
-     * Add the given node in the given zone if it exists. Otherwise, add it in
+     * Prepend the given node in the given zone if it exists. Otherwise, add it in
      * the default zone.
      * Return every created instance
      *
@@ -85,7 +85,30 @@ export abstract class LayoutEngine {
      * @param zoneId
      * @param props
      */
-    async add(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
+    async prepend(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
+        const allZones = [this.root, ...this.root.descendants(ZoneNode)];
+        let matchingZones = allZones.filter(node => node.managedZones.includes(zoneId));
+        if (!matchingZones.length) {
+            matchingZones = allZones.filter(zone => zone.managedZones.includes('default'));
+        }
+        const componentDefinition = this.componentDefinitions[componentId];
+        const newComponents = await this._instantiateComponent(
+            componentDefinition,
+            matchingZones,
+            props,
+            true,
+        );
+        return this.fillZones(newComponents);
+    }
+    /**
+     * Append the given node in the given zone if it exists. Otherwise, add it in
+     * the default zone.
+     * Return every created instance
+     *
+     * @param componentDefinition
+     * @param zoneId
+     */
+    async append(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
         const allZones = [this.root, ...this.root.descendants(ZoneNode)];
         let matchingZones = allZones.filter(node => node.managedZones.includes(zoneId));
         if (!matchingZones.length) {
@@ -97,38 +120,47 @@ export abstract class LayoutEngine {
             matchingZones,
             props,
         );
-        return this._fillZones(newComponents);
+        return this.fillZones(newComponents);
     }
     /**
      *
      * Remove the component identified by the given reference from all zones.
      *
      * @param componentId
+     * @param zoneId specifying a zone if it is necessary to remove the
+     *      component from this zone only
      */
-    async remove(componentId: ComponentId): Promise<ZoneNode[]> {
-        const components = this.components.get(componentId) || [];
+    async remove(componentId: ComponentId, zoneId?: ZoneIdentifier): Promise<ZoneNode[]> {
+        const components = [...(this.components.get(componentId) || [])];
         const zones: ZoneNode[] = [];
         let component: VNode;
         while ((component = components.pop())) {
-            // Remove all instances in the zone children.
-            for (const zone of component.descendants(ZoneNode)) {
-                for (const child of zone.children()) {
-                    zone.removeChild(child);
-                    for (const component of this.components) {
-                        const nodes = component[1];
-                        if (nodes.includes(child)) {
-                            nodes.splice(nodes.indexOf(child), 1);
-                            break;
-                        }
-                    }
+            // filter by zone if needed
+            if (
+                !zoneId ||
+                component.ancestor(
+                    ancestor =>
+                        ancestor instanceof ZoneNode && ancestor.managedZones.includes(zoneId),
+                )
+            ) {
+                // Remove all instances in the zone children.
+                this._clear(component);
+                // Remove the instance.
+                const zone = component.ancestor(ZoneNode);
+                if (zone && !zones.includes(zone)) {
+                    zones.push(zone);
                 }
+                component.remove();
             }
-            // Remove the instance.
-            const zone = component.ancestor(ZoneNode);
-            if (zone && !zones.includes(zone)) {
-                zones.push(zone);
-            }
-            component.remove();
+        }
+        return zones;
+    }
+    async clear(zoneId: ZoneIdentifier): Promise<ZoneNode[]> {
+        const zones = this.root
+            .descendants(ZoneNode)
+            .filter(zone => zone.managedZones.includes(zoneId));
+        for (const zone of zones) {
+            this._clear(zone);
         }
         return zones;
     }
@@ -141,13 +173,14 @@ export abstract class LayoutEngine {
     async show(componentId: ComponentId): Promise<VNode[]> {
         const components = this.components.get(componentId);
         if (!components?.length) {
-            console.warn('No component to show. Add it in a zone first.');
+            console.warn('No component to show. Prepend or append it in a zone first.');
+        } else {
+            for (const component of components) {
+                const zone = component.ancestor(ZoneNode);
+                zone.show(component);
+            }
         }
-        for (const component of components) {
-            const zone = component.ancestor(ZoneNode);
-            zone.show(component);
-        }
-        return components;
+        return components || [];
     }
     /**
      *
@@ -156,12 +189,16 @@ export abstract class LayoutEngine {
      * @param componentId
      */
     async hide(componentId: ComponentId): Promise<VNode[]> {
-        const components = this.components.get(componentId) || [];
-        for (const component of components) {
-            const zone = component.ancestor(ZoneNode);
-            zone.hide(component);
+        const components = this.components.get(componentId);
+        if (!components?.length) {
+            console.warn('No component to hide. Prepend or append it in a zone first.');
+        } else {
+            for (const component of components) {
+                const zone = component.ancestor(ZoneNode);
+                zone.hide(component);
+            }
         }
-        return components;
+        return components || [];
     }
     /**
      * Check if the string is a zone id where at leat one component will be
@@ -172,19 +209,20 @@ export abstract class LayoutEngine {
     hasConfiguredComponents(zoneId: string): boolean {
         // Check the zone list.
         for (const componentId in this.componentZones) {
-            if (this.componentZones[componentId] === zoneId) {
+            if (this.componentZones[componentId]?.includes(zoneId)) {
                 return true;
             }
         }
         // The components all have at least one zone equal to their id.
         return !!this.componentDefinitions[zoneId];
     }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    private async _fillZones(nodes: VNode[]): Promise<VNode[]> {
+    /**
+     * Search into this new nodes if they are some ZoneNode and automatically
+     * fill it by the components which match with this zones.
+     *
+     * @param nodes
+     */
+    async fillZones(nodes: VNode[]): Promise<VNode[]> {
         const newComponents: VNode[] = [];
         const stack = [...nodes];
         while (stack.length) {
@@ -195,12 +233,12 @@ export abstract class LayoutEngine {
             }
 
             for (const componentId in this.componentDefinitions) {
-                const zoneId = this.componentZones[componentId];
+                const zoneIds = this.componentZones[componentId];
                 const layoutComponent = this.componentDefinitions[componentId];
                 // Filter the zones corresponding to the given identifier.
                 let matchingZones = zones.filter(
                     zone =>
-                        zone.managedZones.includes(zoneId) ||
+                        (zoneIds && zone.managedZones.find(zoneId => zoneIds.includes(zoneId))) ||
                         zone.managedZones.includes(componentId),
                 );
                 const components = this.components.get(componentId);
@@ -221,10 +259,16 @@ export abstract class LayoutEngine {
         }
         return newComponents;
     }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     private async _instantiateComponent(
         componentDefinition: ComponentDefinition,
         zones: ZoneNode[],
         props?: {},
+        prepend = false,
     ): Promise<VNode[]> {
         const components = this.components.get(componentDefinition.id) || [];
         // Add into the container.
@@ -233,7 +277,11 @@ export abstract class LayoutEngine {
             const nodes = await componentDefinition.render(this.editor, props);
             components.push(...nodes);
             newComponents.push(...nodes);
-            zone.append(...nodes);
+            if (prepend) {
+                zone.prepend(...nodes);
+            } else {
+                zone.append(...nodes);
+            }
         }
 
         // Set the local reference.
@@ -241,6 +289,24 @@ export abstract class LayoutEngine {
 
         // Return the components that were newly created.
         return newComponents;
+    }
+    private _clear(component: VNode): void {
+        const zones = component.descendants(ZoneNode);
+        if (component instanceof ZoneNode) {
+            zones.push(component);
+        }
+        for (const zone of zones) {
+            for (const child of zone.children()) {
+                zone.removeChild(child);
+                for (const component of this.components) {
+                    const nodes = component[1];
+                    if (nodes.includes(child)) {
+                        nodes.splice(nodes.indexOf(child), 1);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 export interface LayoutEngine {

@@ -37,6 +37,6 @@ export class Italic<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 },
             },
         ],
-        componentZones: [['ItalicButton', 'actionables']],
+        componentZones: [['ItalicButton', ['actionables']]],
     };
 }

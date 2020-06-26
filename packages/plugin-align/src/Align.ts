@@ -76,10 +76,10 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             },
         ],
         componentZones: [
-            ['AlignLeftButton', 'actionables'],
-            ['AlignCenterButton', 'actionables'],
-            ['AlignRightButton', 'actionables'],
-            ['AlignJustifyButton', 'actionables'],
+            ['AlignLeftButton', ['actionables']],
+            ['AlignCenterButton', ['actionables']],
+            ['AlignRightButton', ['actionables']],
+            ['AlignJustifyButton', ['actionables']],
         ],
     };
 

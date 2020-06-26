@@ -76,12 +76,12 @@ describe('FollowRange', async () => {
                     },
                 },
             ],
-            componentZones: [['template', 'root']],
+            componentZones: [['template', ['root']]],
             location: [section, 'replace'],
         });
         await editor.start();
-        await editor.plugins.get(Layout).add('aaa', 'range');
-        await editor.plugins.get(Layout).add('bbb', 'range');
+        await editor.plugins.get(Layout).append('aaa', 'range');
+        await editor.plugins.get(Layout).append('bbb', 'range');
         expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
             [
                 '<jw-editor>',
@@ -119,8 +119,8 @@ describe('FollowRange', async () => {
                 },
             ],
             componentZones: [
-                ['template', 'root'],
-                ['custom', 'range'],
+                ['template', ['root']],
+                ['custom', ['range']],
             ],
             location: [section, 'replace'],
         });
@@ -188,9 +188,9 @@ describe('FollowRange', async () => {
                 },
             ],
             componentZones: [
-                ['editor', 'root'],
-                ['editable', 'main'],
-                ['custom', 'range'],
+                ['editor', ['root']],
+                ['editable', ['main']],
+                ['custom', ['range']],
             ],
             location: [section, 'replace'],
         });
@@ -283,9 +283,9 @@ describe('FollowRange', async () => {
                 },
             ],
             componentZones: [
-                ['editor', 'root'],
-                ['editable', 'main'],
-                ['custom', 'range'],
+                ['editor', ['root']],
+                ['editable', ['main']],
+                ['custom', ['range']],
             ],
             location: [section, 'replace'],
         });

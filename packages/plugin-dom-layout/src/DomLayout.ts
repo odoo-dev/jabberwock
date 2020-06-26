@@ -27,7 +27,7 @@ export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
     locations?: [ComponentId, DomLayoutLocation][];
     components?: ComponentDefinition[];
-    componentZones?: [ComponentId, ZoneIdentifier][];
+    componentZones?: [ComponentId, ZoneIdentifier[]][];
     afterRender?: Function;
 }
 
@@ -66,7 +66,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         for (const component of this.configuration.components || []) {
             domLayoutEngine.loadComponent(component);
         }
-        const zones: Record<ComponentId, ZoneIdentifier> = {};
+        const zones: Record<ComponentId, ZoneIdentifier[]> = {};
         for (const [id, zone] of this.configuration.componentZones || []) {
             zones[id] = zone;
         }

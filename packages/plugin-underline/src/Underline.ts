@@ -37,6 +37,6 @@ export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
                 },
             },
         ],
-        componentZones: [['UnderlineButton', 'actionables']],
+        componentZones: [['UnderlineButton', ['actionables']]],
     };
 }

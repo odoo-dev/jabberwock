@@ -405,7 +405,7 @@ describe('Keymap', () => {
                                 render: async (): Promise<VNode[]> => createEditable(editor),
                             },
                         ],
-                        componentZones: [['editable', 'main']],
+                        componentZones: [['editable', ['main']]],
                     });
 
                     editor.configure(Keymap, { platform: Platform.PC });

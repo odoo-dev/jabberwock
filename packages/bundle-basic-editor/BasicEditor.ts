@@ -103,7 +103,7 @@ export class BasicEditor extends JWEditor {
                         },
                     },
                 ],
-                componentZones: [['editor', 'root']],
+                componentZones: [['editor', ['root']]],
             },
         };
         this.configure(config);
@@ -121,7 +121,7 @@ export class BasicEditor extends JWEditor {
                     },
                 },
             ],
-            componentZones: [['editable', 'main']],
+            componentZones: [['editable', ['main']]],
         });
         this.configure(Toolbar, {
             layout: [

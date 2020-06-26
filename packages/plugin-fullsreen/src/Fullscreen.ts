@@ -28,7 +28,7 @@ export class Fullscreen<T extends FullscreenConfig = FullscreenConfig> extends J
                 },
             },
         ],
-        componentZones: [['FullscreenButton', 'actionables']],
+        componentZones: [['FullscreenButton', ['actionables']]],
     };
     isFullscreen = false;
 }
