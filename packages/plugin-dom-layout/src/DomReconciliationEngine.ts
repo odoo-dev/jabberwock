@@ -443,7 +443,7 @@ export class DomReconciliationEngine {
      * @param container
      * @param offset
      */
-    locate(domNode: Node, domOffset: number): Point {
+    locate(domNode: Node, domOffset: number): Point | void {
         let forceAfter = false;
         let forcePrepend = false;
         let container = domNode;
@@ -493,10 +493,12 @@ export class DomReconciliationEngine {
                 forceAfter = true;
                 container = container.previousSibling;
                 offset = nodeLength(container) - 1;
-            } else {
+            } else if (container.parentNode) {
                 forcePrepend = true;
                 offset = [].indexOf.call(container.parentNode.childNodes, container);
                 container = container.parentNode;
+            } else {
+                return;
             }
         }
 
