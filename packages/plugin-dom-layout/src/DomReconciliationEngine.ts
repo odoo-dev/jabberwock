@@ -1,5 +1,5 @@
 import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
-import { nodeName, nodeLength, FlattenUnion } from '../../utils/src/utils';
+import { nodeName, nodeLength, FlattenUnion, flat } from '../../utils/src/utils';
 import { styleToObject } from '../../utils/src/Dom';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
@@ -1218,16 +1218,18 @@ export class DomReconciliationEngine {
             // Insert children in the dom which locate with the placeholder.
             for (const [ref, position, childIds] of object.domNodesChildren) {
                 if (position === RelativePosition.INSIDE) {
-                    const childDomNodes = childIds
-                        .map(childId => this._getDomChild(childId, ref as Element | ShadowRoot))
-                        .flat();
+                    const childDomNodes = flat(
+                        childIds.map(childId =>
+                            this._getDomChild(childId, ref as Element | ShadowRoot),
+                        ),
+                    );
                     for (const domNode of childDomNodes) {
                         ref.appendChild(domNode);
                     }
                 } else {
-                    const childDomNodes = childIds
-                        .map(childId => this._getDomChild(childId, ref.parentElement))
-                        .flat();
+                    const childDomNodes = flat(
+                        childIds.map(childId => this._getDomChild(childId, ref.parentElement)),
+                    );
                     if (position === RelativePosition.BEFORE) {
                         for (const domNode of childDomNodes) {
                             ref.parentElement.insertBefore(domNode, ref);

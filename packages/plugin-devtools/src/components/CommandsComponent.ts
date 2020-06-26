@@ -2,7 +2,7 @@ import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
-import { nodeName } from '../../../utils/src/utils';
+import { nodeName, flat } from '../../../utils/src/utils';
 import { Keymap, Mapping } from '../../../plugin-keymap/src/Keymap';
 import { argsRepr } from '../utils';
 
@@ -107,9 +107,8 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
      * @param commandIdentifier
      */
     matchingMappings(commandIdentifier: string): Mapping[] {
-        return this.env.editor.plugins
-            .get(Keymap)
-            .mappings.flat()
-            .filter(mapping => mapping.configuredCommand.commandId === commandIdentifier);
+        return flat(this.env.editor.plugins.get(Keymap).mappings).filter(
+            mapping => mapping.configuredCommand.commandId === commandIdentifier,
+        );
     }
 }

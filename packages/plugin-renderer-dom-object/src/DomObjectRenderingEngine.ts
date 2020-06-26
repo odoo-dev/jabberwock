@@ -5,6 +5,7 @@ import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Format } from '../../core/src/Format';
+import { flat } from '../../utils/src/utils';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -378,12 +379,12 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
 
                 // Render wrapped nodes.
                 const renderingGroups = this._renderBatched(newRenderingUnits);
-                const nodes = renderingGroups.map(u => u[0]).flat();
+                const nodes = flat(renderingGroups.map(u => u[0]));
 
                 const promises = renderingGroups.map(u => u[1]);
                 const promise = Promise.all(promises);
                 const unitPromise = promise.then(async domObjectLists => {
-                    const flatten = domObjectLists.flat();
+                    const flatten = flat(domObjectLists);
                     const domObjects: DomObject[] = [];
                     for (const domObject of flatten) {
                         if (!domObjects.includes(domObject)) {

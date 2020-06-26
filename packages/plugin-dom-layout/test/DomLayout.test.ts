@@ -45,6 +45,7 @@ import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseElement } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
+import { flat } from '../../utils/src/utils';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -3011,7 +3012,7 @@ describe('DomLayout', () => {
                 await engine.redraw(
                     div,
                     ...div.childVNodes,
-                    ...div.childVNodes.map(n => n.childVNodes).flat(),
+                    ...flat(div.childVNodes.map(n => n.childVNodes)),
                 );
 
                 expect(sectionDom.innerHTML).to.equal('<div><p>ab</p><p>cdz</p></div>');
@@ -3083,7 +3084,7 @@ describe('DomLayout', () => {
                 await engine.redraw(
                     div,
                     ...div.childVNodes,
-                    ...div.childVNodes.map(n => n.childVNodes).flat(),
+                    ...flat(div.childVNodes.map(n => n.childVNodes)),
                 );
 
                 expect(sectionDom.innerHTML).to.equal('<div><p>ab</p><p>cd</p></div>');
