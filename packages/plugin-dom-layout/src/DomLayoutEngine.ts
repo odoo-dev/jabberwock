@@ -147,10 +147,16 @@ export class DomLayoutEngine extends LayoutEngine {
             selection.anchorNode,
             selection.anchorOffset,
         );
+        if (!start) {
+            return;
+        }
         const end = this._domReconciliationEngine.locate(
             selection.focusNode,
             selection.focusOffset,
         );
+        if (!end) {
+            return;
+        }
         const [startVNode, startPosition] = start;
         const [endVNode, endPosition] = end;
 

@@ -18,6 +18,8 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { OwlNode } from '../../plugin-owl/src/OwlNode';
 import { LinkComponent } from './components/LinkComponent';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { BootstrapButtonLinkMailObjectModifierRenderer } from './BootstrapButtonLinkMailObjectModifierRenderer';
 
 export interface LinkParams extends CommandParams {
     label?: string;
@@ -48,8 +50,9 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             handler: this.unlink,
         },
     };
-    readonly loadables: Loadables<Parser & Keymap & Layout & Owl> = {
+    readonly loadables: Loadables<Parser & Renderer & Keymap & Layout & Owl> = {
         parsers: [LinkXmlDomParser],
+        renderers: [BootstrapButtonLinkMailObjectModifierRenderer],
         shortcuts: [
             {
                 pattern: 'CTRL+K',

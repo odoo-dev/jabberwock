@@ -45,7 +45,7 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
         }
         if (nodes instanceof Array) {
             const cache = await engine.render(nodes);
-            nodes.map(node => cache.renderings.get(node));
+            return nodes.map(node => cache.renderings.get(node));
         } else {
             const cache = await engine.render([nodes]);
             return cache.renderings.get(nodes);

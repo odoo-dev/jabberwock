@@ -12,7 +12,7 @@ export class ZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     predicate = ZoneNode;
 
     async render(node: ZoneNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
-        const children = node.children();
+        const children = node.childVNodes;
         const domObject: DomObject = { children: [] };
         for (let index = 0, len = children.length; index < len; index++) {
             const child = children[index];

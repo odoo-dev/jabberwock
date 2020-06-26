@@ -82,7 +82,12 @@ export class CssStyle extends VersionableObject {
      * Return the style value as record.
      */
     toJSON(): Record<string, string> {
-        return Object.assign({}, this._style);
+        const style = {};
+        const _style = this._style;
+        for (const key in _style) {
+            style[key] = _style[key];
+        }
+        return style;
     }
 
     //--------------------------------------------------------------------------

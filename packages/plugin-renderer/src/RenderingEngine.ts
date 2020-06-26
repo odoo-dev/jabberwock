@@ -11,28 +11,32 @@ export type RenderingIdentifier = string;
 
 let modifierId = 0;
 
-export class RenderingEngine<T = {}> {
+export class RenderingEngine<T> {
     static readonly id: RenderingIdentifier;
     static readonly extends: RenderingIdentifier[] = [];
-    static readonly defaultRenderer: RendererConstructor;
-    static readonly defaultModifierRenderer: ModifierRendererConstructor;
+    static readonly defaultRenderer?: RendererConstructor;
+    static readonly defaultModifierRenderer?: ModifierRendererConstructor;
     readonly editor: JWEditor;
     readonly renderers: NodeRenderer<T>[] = [];
     readonly modifierRenderers: ModifierRenderer<T>[] = [];
 
     constructor(editor: JWEditor) {
         this.editor = editor;
-        const defaultRenderer = new this.constructor.defaultRenderer(this);
-        if (defaultRenderer.predicate) {
-            throw new Error(`Default renderer cannot have a predicate.`);
-        } else {
-            this.renderers.push(defaultRenderer);
+        if (this.constructor.defaultRenderer) {
+            const defaultRenderer = new this.constructor.defaultRenderer(this);
+            if (defaultRenderer.predicate) {
+                throw new Error(`Default renderer cannot have a predicate.`);
+            } else {
+                this.renderers.push(defaultRenderer);
+            }
         }
-        const defaultModifierRenderer = new this.constructor.defaultModifierRenderer(this);
-        if (defaultModifierRenderer.predicate) {
-            throw new Error(`Default renderer cannot have a predicate.`);
-        } else {
-            this.modifierRenderers.push(defaultModifierRenderer);
+        if (this.constructor.defaultModifierRenderer) {
+            const defaultModifierRenderer = new this.constructor.defaultModifierRenderer(this);
+            if (defaultModifierRenderer.predicate) {
+                throw new Error(`Default renderer cannot have a predicate.`);
+            } else {
+                this.modifierRenderers.push(defaultModifierRenderer);
+            }
         }
     }
     /**
@@ -298,8 +302,8 @@ export type RenderingEngineConstructor<T = {}> = {
     new (...args: ConstructorParameters<typeof RenderingEngine>): RenderingEngine;
     id: RenderingIdentifier;
     extends: RenderingIdentifier[];
-    defaultRenderer: RendererConstructor<T>;
-    defaultModifierRenderer: ModifierRendererConstructor<T>;
+    defaultRenderer?: RendererConstructor<T>;
+    defaultModifierRenderer?: ModifierRendererConstructor<T>;
 };
 export interface RenderingEngine<T = {}> {
     constructor: RenderingEngineConstructor<T>;

@@ -4,7 +4,7 @@ import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
 import { VersionableArray } from '../../core/src/Memory/VersionableArray';
 
-export const FontAwesomeRegex = /(?:^|\s|\n)(fa[bdlrs]?)(?:.|\n)*?(fa-.*?)(?:\s|\n|$)/;
+export const FontAwesomeRegex = /(?:^|\s|\n)(fa(?:([bdlrs]?)|(-.*?)))/;
 
 export class FontAwesomeXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -18,7 +18,12 @@ export class FontAwesomeXmlDomParser extends AbstractParser<Node> {
         const attributes = this.engine.parseAttributes(item);
         // Remove fa classes to avoid having them spread to nearby nodes.
         // They will be put back at renderng time.
-        const faClasses = item.className.match(FontAwesomeRegex).slice(1);
+        const faClasses: string[] = [];
+        for (const className of attributes.classList.items()) {
+            if (FontAwesomeRegex.test(className)) {
+                faClasses.push(className);
+            }
+        }
         const fontawesome = new FontAwesomeNode({
             htmlTag: nodeName(item),
             faClasses: new VersionableArray(...faClasses),

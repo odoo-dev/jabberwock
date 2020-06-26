@@ -1,0 +1,24 @@
+<jw-editor style="height: 100vh;">
+    <t t-zone="tools"/>
+    <t-range><t t-zone="tools"/></t-range>
+    <jw-body style="height: 100%; overflow: auto;">
+        <table width="100%">
+            <tr>
+                <td width="50%" style="text-align: center;">Edition mode (with stylesheet)</td>
+                <td width="50%" style="text-align: center;">Mail (without stylesheet)</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top;"><t-shadow><t t-zone="main"/></t-shadow></td>
+                <td style="vertical-align: top;"><t-shadow id="shadow-preview"/></td>
+            </tr>
+        </table>
+    </jw-body>
+    <jw-footer>
+        <t t-zone="status"/>
+    </jw-footer>
+    <t-dialog>
+        <t t-zone="dialog"/>
+        <t t-zone="default"/>
+    </t-dialog>
+    <t t-zone="debug"/>
+</jw-editor>

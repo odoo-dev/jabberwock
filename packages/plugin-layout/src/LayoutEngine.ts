@@ -301,7 +301,7 @@ export abstract class LayoutEngine {
             zones.push(component);
         }
         for (const zone of zones) {
-            for (const child of zone.children()) {
+            for (const child of zone.childVNodes) {
                 zone.removeChild(child);
                 for (const id in this.components) {
                     const nodes = this.components[id];

@@ -8,6 +8,7 @@ import { TableDomObjectRenderer } from './TableDomObjectRenderer';
 import { TableRowDomObjectRenderer } from './TableRowDomObjectRenderer';
 import { TableCellDomObjectRenderer } from './TableCellDomObjectRenderer';
 import { TableSectionAttributesDomObjectModifierRenderer } from './TableSectionAttributesDomObjectModifierRenderer';
+import { TableCellMailObjectRenderer } from './TableCellMailObjectRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { TableCellNode } from './TableCellNode';
 import { CommandParams } from '../../core/src/Dispatcher';
@@ -43,6 +44,7 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
             TableDomObjectRenderer,
             TableRowDomObjectRenderer,
             TableCellDomObjectRenderer,
+            TableCellMailObjectRenderer,
             TableSectionAttributesDomObjectModifierRenderer,
         ],
         components: [

@@ -26,8 +26,8 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
         // Render the cell and its contents.
         const domObject: DomObject = {
             tag: cell.header ? 'TH' : 'TD',
-            children: await this.engine.renderChildren(cell),
             attributes: {},
+            children: await this.engine.renderChildren(cell),
         };
 
         // Colspan and rowspan are handled differently from other attributes:
