@@ -12,6 +12,7 @@ import { Attributes } from '../plugin-xml/src/Attributes';
 import { OdooStructureNode } from '../plugin-odoo/src/OdooStructureNode';
 import { Inline } from '../plugin-inline/src/Inline';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
+import { OdooFieldNode } from '../plugin-odoo-field/src/OdooFieldNode';
 
 export {
     OdooWebsiteEditor,
@@ -27,6 +28,7 @@ export {
     LinkFormat,
     Attributes,
     OdooStructureNode,
+    OdooFieldNode,
     Inline,
     DomHelpers,
 };
