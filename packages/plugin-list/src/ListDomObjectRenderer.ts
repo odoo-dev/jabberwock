@@ -28,7 +28,7 @@ export class ListDomObjectRenderer extends AbstractRenderer<DomObject> {
             }
         }
         const renderedChildren = await this.engine.renderChildren(node);
-        domObject.children.push(...renderedChildren.flat());
+        domObject.children.push(...renderedChildren);
         return domObject;
     }
 }

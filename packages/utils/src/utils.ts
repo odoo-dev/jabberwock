@@ -35,6 +35,13 @@ export function deepEqualObjects(a: object, b: object): boolean {
 }
 
 /**
+ * Creates a new array with all sub-array elements concatenated into it.
+ */
+export function flat<T>(arr: T[][]): T[] {
+    return [].concat(...arr);
+}
+
+/**
  * Convert certain special characters to unicode.
  */
 export function toUnicode(string: string): string {

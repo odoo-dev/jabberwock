@@ -1,6 +1,7 @@
 import { Renderer, RenderingIdentifier, RendererConstructor } from './RenderingEngine';
 import { RenderingEngine } from './RenderingEngine';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
+import { flat } from '../../utils/src/utils';
 
 class SuperRenderer<T> implements Renderer<T> {
     static id = 'super';
@@ -26,7 +27,7 @@ class SuperRenderer<T> implements Renderer<T> {
         for (const [, rendering] of groups) {
             renderings.push(rendering);
         }
-        return (await Promise.all(renderings)).flat();
+        return flat(await Promise.all(renderings));
     }
 }
 

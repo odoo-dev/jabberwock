@@ -15,6 +15,7 @@ import { DomReconciliationEngine } from './DomReconciliationEngine';
 import { LayoutContainer } from './LayoutContainerNode';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { flat } from '../../utils/src/utils';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
@@ -53,11 +54,7 @@ export class DomLayoutEngine extends LayoutEngine {
                 throw new Error('Layout component "' + componentId + '" not found.');
             }
         }
-        if (
-            !Object.values(this.componentZones)
-                .flat()
-                .includes('root')
-        ) {
+        if (!flat(Object.values(this.componentZones)).includes('root')) {
             this.componentDefinitions.editor = this.defaultRootComponent;
             this.componentZones.editor = ['root'];
         }
