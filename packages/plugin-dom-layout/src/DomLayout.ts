@@ -13,7 +13,7 @@ import { DomObjectRenderer } from '../../plugin-renderer-dom-object/src/DomObjec
 import { ZoneDomObjectRenderer } from './ZoneDomObjectRenderer';
 import { ZoneXmlDomParser } from './ZoneXmlDomParser';
 import { LayoutContainerDomObjectRenderer } from './LayoutContainerDomObjectRenderer';
-import { ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
+import { ZoneIdentifier, ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CommandIdentifier } from '../../core/src/Dispatcher';
 import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
@@ -21,6 +21,7 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export interface DomLayoutConfig extends JWPluginConfig {
@@ -97,14 +98,12 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
      * @param event
      */
     async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
-        const layout = this.dependencies.get(Layout);
-        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-
-        if (event.target && !domLayoutEngine.getNodes(event.target as Node).length) {
-            // Don't process keydown if the user is outside the current editor
+        // If target == null we bypass the editable zone check.
+        // This should only occurs when we receive an inferredKeydownEvent created from an InputEvent send by a mobile device.
+        if (event.target && !this.isInEditable(event.target as Node)) {
+            // Don't process keydown if the user is outside the current editor editable Zone.
             return;
         }
-
         const keymap = this.dependencies.get(Keymap);
         const commands = keymap.match(event);
         const [command, context] = this.editor.contextManager.match(commands);
@@ -139,6 +138,30 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             await this.configuration.afterRender?.();
         }
     }
+
+    /**
+     * return True if target node is inside JB main editable Zone
+     *
+     * @param target: Node
+     */
+    isInEditable(target: Node): boolean {
+        const layout = this.dependencies.get(Layout);
+        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        let nodes = domLayoutEngine.getNodes(target);
+        while (!nodes.length && target) {
+            if (target.previousSibling) {
+                target = target.previousSibling;
+            } else {
+                target = target.parentNode;
+            }
+            nodes = domLayoutEngine.getNodes(target);
+        }
+        const node = nodes?.pop();
+        // We cannot always expect a 'contentEditable' attribute on the main ancestor.
+        // So we expect to find the main editor ZoneNode if we are in the editable part of JB
+        return node && node.ancestor(ZoneNode).managedZones.includes('main');
+    }
+
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
