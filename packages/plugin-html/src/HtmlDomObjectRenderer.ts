@@ -5,7 +5,7 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
-export class HtmlHtmlDomRenderer extends NodeRenderer<DomObject> {
+export class HtmlDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = HtmlNode;

@@ -33,7 +33,7 @@ describe('CharDomObjectRenderer', () => {
                 root.append(new CharNode({ char: 'b' }));
 
                 const renderer = editor.plugins.get(Renderer);
-                const engine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
+                const engine = renderer.engines['object/html'] as DomObjectRenderingEngine;
                 const cache = await engine.render(root.childVNodes);
                 const rendered = cache.renderings.get(char);
                 expect(rendered).to.deep.equal({ text: 'a \u00A0b' });
@@ -52,7 +52,7 @@ describe('CharDomObjectRenderer', () => {
                 root.append(new CharNode({ char: 'b' }));
 
                 const renderer = editor.plugins.get(Renderer);
-                const engine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
+                const engine = renderer.engines['object/html'] as DomObjectRenderingEngine;
                 const cache = await engine.render(root.childVNodes);
                 const rendered = cache.renderings.get(char);
                 expect(rendered).to.deep.equal({ text: 'a \u00A0 \u00A0b' });

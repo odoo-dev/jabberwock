@@ -1747,7 +1747,7 @@ describe('DomLayout', () => {
                     const editable = domEngine.components.editable[0];
 
                     const renderer = editor.plugins.get(Renderer);
-                    const rendered = await renderer.render<DomObject>('dom/object', editable);
+                    const rendered = await renderer.render<DomObject>('object/html', editable);
                     const textNodes = editable.children();
 
                     expect(rendered && 'children' in rendered && rendered.children).to.deep.equal(
@@ -1755,7 +1755,7 @@ describe('DomLayout', () => {
                     );
 
                     const renderedText = await renderer.render<DomObject>(
-                        'dom/object',
+                        'object/html',
                         textNodes[1],
                     );
                     expect(renderedText).to.deep.equal({ text: 'b' });
@@ -1771,7 +1771,7 @@ describe('DomLayout', () => {
                     const editable = domEngine.components.editable[0];
 
                     const renderer = editor.plugins.get(Renderer);
-                    const rendered = await renderer.render<DomObject>('dom/object', editable);
+                    const rendered = await renderer.render<DomObject>('object/html', editable);
                     const textNodes = editable.children();
 
                     expect(
@@ -1780,15 +1780,15 @@ describe('DomLayout', () => {
                             rendered.children.map(n => 'id' in n && n.id),
                     ).to.deep.equal(textNodes.map(n => n.id));
 
-                    const renderedText0 = await renderer.render('dom/object', textNodes[0]);
+                    const renderedText0 = await renderer.render('object/html', textNodes[0]);
                     expect(renderedText0).to.deep.equal({ text: 'a' });
 
-                    const renderedText1 = await renderer.render('dom/object', textNodes[1]);
+                    const renderedText1 = await renderer.render('object/html', textNodes[1]);
                     expect(renderedText1).to.deep.equal({
                         tag: 'I',
                         children: [{ text: 'b' }],
                     });
-                    const renderedText2 = await renderer.render('dom/object', textNodes[2]);
+                    const renderedText2 = await renderer.render('object/html', textNodes[2]);
                     expect(renderedText2).to.deep.equal({ text: 'c' });
                 },
                 contentAfter: 'a[<i>b]</i>c',
@@ -1808,7 +1808,7 @@ describe('DomLayout', () => {
                             FormatClass: BoldFormat,
                         });
                     });
-                    expect(await renderer.render('dom/object', br)).to.deep.equal({
+                    expect(await renderer.render('object/html', br)).to.deep.equal({
                         tag: 'B',
                         children: [{ tag: 'BR' }],
                     });
@@ -2461,7 +2461,7 @@ describe('DomLayout', () => {
                         expect(domEditable.innerHTML).to.equal('a<b><i>b</i></b>c');
 
                         const renderer = editor.plugins.get(Renderer);
-                        const rendered = await renderer.render<DomObject>('dom/object', editable);
+                        const rendered = await renderer.render<DomObject>('object/html', editable);
                         const textNodes = editable.children();
 
                         expect(
@@ -2470,7 +2470,7 @@ describe('DomLayout', () => {
 
                         expect(mutationNumber).to.equal(5, 'add <b>, move <i>, 3 toolbar update');
 
-                        const renderedText1 = await renderer.render('dom/object', textNodes[1]);
+                        const renderedText1 = await renderer.render('object/html', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
                             tag: 'B',
                             children: [
@@ -2579,7 +2579,7 @@ describe('DomLayout', () => {
                             new BoldFormat().applyTo(br);
                         });
 
-                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                        expect(await renderer.render('object/html', br)).to.deep.equal({
                             tag: 'B',
                             children: [{ tag: 'BR' }],
                         });
@@ -2609,7 +2609,7 @@ describe('DomLayout', () => {
 
                         const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                         expect(domEditable.innerHTML).to.equal('ab<b><br></b>cd');
-                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                        expect(await renderer.render('object/html', br)).to.deep.equal({
                             tag: 'B',
                             children: [{ tag: 'BR' }],
                         });
@@ -2625,7 +2625,7 @@ describe('DomLayout', () => {
                         });
 
                         expect(domEditable.innerHTML).to.equal('a<b>b<br>c</b>d');
-                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                        expect(await renderer.render('object/html', br)).to.deep.equal({
                             tag: 'B',
                             children: [{ tag: 'BR' }],
                         });
@@ -2659,7 +2659,7 @@ describe('DomLayout', () => {
 
                         const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                         expect(domEditable.innerHTML).to.equal('a<b>b<br>c</b>d');
-                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                        expect(await renderer.render('object/html', br)).to.deep.equal({
                             tag: 'B',
                             children: [{ tag: 'BR' }],
                         });
@@ -2690,7 +2690,7 @@ describe('DomLayout', () => {
                         expect(domEditable.innerHTML).to.equal('a<b>b<br>c</b>d');
 
                         const renderer = editor.plugins.get(Renderer);
-                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                        expect(await renderer.render('object/html', br)).to.deep.equal({
                             tag: 'B',
                             children: [{ tag: 'BR' }],
                         });

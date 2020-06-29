@@ -14,7 +14,7 @@ export class DefaultHtmlDomRenderer extends NodeRenderer<Node[]> {
 
     async render(node: VNode): Promise<Node[]> {
         const renderer = this.engine.editor.plugins.get(Renderer);
-        const objectEngine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
+        const objectEngine = renderer.engines['object/html'] as DomObjectRenderingEngine;
         const cache = await objectEngine.render([node]);
         const domNodes: Node[] = [];
         for (const [, domObject] of cache.renderings) {

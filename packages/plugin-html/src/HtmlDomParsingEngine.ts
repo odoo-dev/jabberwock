@@ -5,5 +5,5 @@ export type HtmlNode = HTMLElement | CharacterData;
 
 export class HtmlDomParsingEngine<T extends HtmlNode = HtmlNode> extends XmlDomParsingEngine<T> {
     static readonly id: ParsingIdentifier = 'dom/html';
-    static extends = ['dom/xml'];
+    static extends = [XmlDomParsingEngine.id];
 }
