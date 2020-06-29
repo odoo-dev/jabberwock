@@ -6,14 +6,15 @@ import { HtmlTextParsingEngine } from './HtmlTextParsingEngine';
 import { HtmlDomParsingEngine } from './HtmlDomParsingEngine';
 import { Xml } from '../../plugin-xml/src/Xml';
 import { HtmlDomRenderingEngine } from './HtmlDomRenderingEngine';
-import { HtmlHtmlDomRenderer } from './HtmlNodeDomRenderer';
+import { HtmlTextRendereringEngine } from './HtmlTextRendereringEngine';
+import { HtmlDomObjectRenderer } from './HtmlDomObjectRenderer';
 import { DomObjectRenderer } from '../../plugin-renderer-dom-object/src/DomObjectRenderer';
 
 export class Html<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser, DomObjectRenderer, Xml];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsingEngines: [HtmlDomParsingEngine, HtmlTextParsingEngine],
-        renderingEngines: [HtmlDomRenderingEngine],
-        renderers: [HtmlHtmlDomRenderer],
+        renderingEngines: [HtmlDomRenderingEngine, HtmlTextRendereringEngine],
+        renderers: [HtmlDomObjectRenderer],
     };
 }

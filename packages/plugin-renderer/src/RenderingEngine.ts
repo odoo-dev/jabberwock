@@ -82,19 +82,7 @@ export class RenderingEngine<T = {}> {
         optimizeModifiersRendering?: boolean,
     ): Promise<RenderingEngineCache<T>> {
         if (!cache) {
-            cache = new RenderingEngineCache();
-            cache.worker = {
-                depends: this._depends.bind(this, cache),
-                renderBatched: this.renderBatched.bind(this, cache),
-                getCompatibleRenderer: this.getCompatibleRenderer.bind(this, cache),
-                getCompatibleModifierRenderer: this.getCompatibleModifierRenderer.bind(this, cache),
-                locate: this.locate.bind(this, cache),
-                getRendering: (node): T => cache.renderings.get(node),
-                render: async (nodes: VNode[]): Promise<T[]> => {
-                    await this.render(nodes, cache);
-                    return nodes.map(node => cache.renderings.get(node));
-                },
-            };
+            cache = new RenderingEngineCache(this);
         }
         if (typeof optimizeModifiersRendering === 'boolean') {
             cache.optimizeModifiersRendering = optimizeModifiersRendering;
@@ -146,8 +134,8 @@ export class RenderingEngine<T = {}> {
             const renderings = renderer.renderBatch(nodes, cache.worker);
             const promise = renderings.then(values => {
                 const value = values[0];
-                this._depends(cache, node, value);
-                this._depends(cache, value, node);
+                this.depends(cache, node, value);
+                this.depends(cache, value, node);
                 this._addDefaultLocation(cache, node, value);
                 cache.renderings.set(node, value);
             });
@@ -157,7 +145,7 @@ export class RenderingEngine<T = {}> {
         return promises;
     }
     /**
-     * Return the first matche Renderer for this VNode, starting from the
+     * Return the the first matching Renderer for this VNode, starting from the
      * previous renderer.
      *
      * @param node
@@ -185,7 +173,7 @@ export class RenderingEngine<T = {}> {
         return nextRenderer;
     }
     /**
-     * Return the first matche Renderer for this VNode, starting from the
+     * Return the the first matching Renderer for this VNode, starting from the
      * previous renderer.
      *
      * @param node
@@ -218,7 +206,7 @@ export class RenderingEngine<T = {}> {
         cacheCompatible.set(previousRenderer, nextRenderer);
         return nextRenderer;
     }
-    protected _depends(
+    depends(
         cache: RenderingEngineCache<T>,
         dependent: T | VNode | Modifier,
         dependency: T | VNode | Modifier,

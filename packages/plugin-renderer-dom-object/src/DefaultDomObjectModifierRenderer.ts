@@ -3,7 +3,7 @@ import { Modifier } from '../../core/src/Modifier';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
 
 export class DefaultDomObjectModifierRenderer extends ModifierRenderer<DomObject> {
-    static id = 'dom/object';
+    static id = 'object/html';
     engine: DomObjectRenderingEngine;
 
     /**

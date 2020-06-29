@@ -226,7 +226,7 @@ export type DomObject = DomObjectElement | DomObjectFragment | DomObjectText | D
 type RenderingBatchUnit = [VNode, Modifier[], NodeRenderer<DomObject>];
 
 export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
-    static readonly id: RenderingIdentifier = 'dom/object';
+    static readonly id: RenderingIdentifier = 'object/html';
     static readonly defaultRenderer = DefaultDomObjectRenderer;
     static readonly defaultModifierRenderer = DefaultDomObjectModifierRenderer;
 
@@ -391,8 +391,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                             const origins = cache.renderingDependent.get(domObject);
                             if (origins) {
                                 for (const origin of origins) {
-                                    this._depends(cache, origin, wrap);
-                                    this._depends(cache, wrap, origin);
+                                    this.depends(cache, origin, wrap);
+                                    this.depends(cache, wrap, origin);
                                 }
                             }
                             if ('children' in domObject) {
@@ -403,8 +403,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                                 }
                             }
                         }
-                        this._depends(cache, modifier, wrap);
-                        this._depends(cache, wrap, modifier);
+                        this.depends(cache, modifier, wrap);
+                        this.depends(cache, wrap, modifier);
                     }
 
                     // Update the renderings promise.
@@ -444,8 +444,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                                 for (const index in siblings) {
                                     const node = siblings[index];
                                     const value = domObjects[index];
-                                    this._depends(cache, node, value);
-                                    this._depends(cache, value, node);
+                                    this.depends(cache, node, value);
+                                    this.depends(cache, value, node);
                                     this._addDefaultLocation(cache, node, value);
                                     cache.renderings.set(node, value);
                                 }

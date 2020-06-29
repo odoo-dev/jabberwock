@@ -191,7 +191,7 @@ export class DomLayoutEngine extends LayoutEngine {
         const updatedNodes = [...this._getInvalidNodes(params)];
 
         const layout = this.editor.plugins.get(Renderer);
-        const engine = layout.engines['dom/object'] as DomObjectRenderingEngine;
+        const engine = layout.engines['object/html'] as DomObjectRenderingEngine;
         const cache = (this._rendererCache = await engine.render(
             updatedNodes,
             this._rendererCache,

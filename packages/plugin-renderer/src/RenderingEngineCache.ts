@@ -2,6 +2,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifier } from '../../core/src/Modifier';
 import { ModifierRenderer } from './ModifierRenderer';
 import { NodeRenderer } from './NodeRenderer';
+import { RenderingEngine } from './RenderingEngine';
 
 export type ModifierId = number;
 export type ModifierPairId = string;
@@ -75,4 +76,19 @@ export class RenderingEngineCache<T> {
     worker?: RenderingEngineWorker<T>;
 
     optimizeModifiersRendering = true;
+
+    constructor(engine: RenderingEngine<T>) {
+        this.worker = {
+            depends: engine.depends.bind(engine, this),
+            renderBatched: engine.renderBatched.bind(engine, this),
+            getCompatibleRenderer: engine.getCompatibleRenderer.bind(engine, this),
+            getCompatibleModifierRenderer: engine.getCompatibleModifierRenderer.bind(engine, this),
+            locate: engine.locate.bind(engine, this),
+            getRendering: (node): T => this.renderings.get(node),
+            render: async (nodes: VNode[]): Promise<T[]> => {
+                await engine.render(nodes, this);
+                return nodes.map(node => this.renderings.get(node));
+            },
+        };
+    }
 }

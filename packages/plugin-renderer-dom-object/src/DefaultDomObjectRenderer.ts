@@ -6,7 +6,7 @@ import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine'
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
-    static id = 'dom/object';
+    static id = 'object/html';
     engine: DomObjectRenderingEngine;
 
     async render(node: VNode): Promise<DomObject> {
