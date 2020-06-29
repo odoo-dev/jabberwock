@@ -58,6 +58,7 @@ interface OdooWebsiteEditorOption {
     snippetManipulators?: HTMLElement;
     template?: string;
     // todo: Remove when configuring the toolbar in another way.
+    discardButton?: boolean;
     saveButton?: boolean;
 }
 
@@ -133,6 +134,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 ['IndentButton', 'OutdentButton'],
                 ['OdooLinkButton'],
                 ['OdooMediaButton'],
+                ...(options.discardButton ? [['OdooDiscardButton']] : []),
                 ...(options.saveButton ? [['OdooSaveButton']] : []),
             ],
         });

@@ -50,6 +50,20 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 },
             },
             {
+                id: 'OdooDiscardButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'discard',
+                        label: 'Discard',
+                        commandId: 'discardOdoo',
+                        modifiers: [
+                            new Attributes({ class: 'fa fa-times fa-fw jw-danger-button' }),
+                        ],
+                    });
+                    return [button];
+                },
+            },
+            {
                 id: 'OdooSaveButton',
                 async render(): Promise<ActionableNode[]> {
                     const button = new ActionableNode({
@@ -67,6 +81,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         componentZones: [
             ['OdooLinkButton', ['actionables']],
             ['OdooMediaButton', ['actionables']],
+            ['OdooDiscardButton', ['actionables']],
             ['OdooSaveButton', ['actionables']],
         ],
     };
