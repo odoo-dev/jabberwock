@@ -4,10 +4,12 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Xml } from '../../plugin-xml/src/Xml';
 import { DomObjectRenderingEngine } from './DomObjectRenderingEngine';
+import { FormatDomObjectModifierRenderer } from './FormatDomObjectModifierRenderer';
 
 export class DomObjectRenderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser, Renderer, Xml];
     readonly loadables: Loadables<Parser & Renderer> = {
         renderingEngines: [DomObjectRenderingEngine],
+        renderers: [FormatDomObjectModifierRenderer],
     };
 }

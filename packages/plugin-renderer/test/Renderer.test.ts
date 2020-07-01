@@ -9,6 +9,9 @@ import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Html } from '../../plugin-html/src/Html';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { AbstractModifierRenderer } from '../src/AbstractModifierRenderer';
+import { Modifier } from '../../core/src/Modifier';
+import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 
 describe('Renderer', () => {
     describe('render', () => {
@@ -18,9 +21,17 @@ describe('Renderer', () => {
                     return node;
                 }
             }
+            class ModifierRenderer extends AbstractModifierRenderer<VNode> {
+                async render(modifier: Modifier, renderings: VNode[]): Promise<VNode> {
+                    const fragment = new FragmentNode();
+                    fragment.append(...renderings);
+                    return fragment;
+                }
+            }
             class VNodeRenderingEngine extends RenderingEngine<VNode> {
                 static id = 'VNode';
                 static defaultRenderer = VNodeRenderer;
+                static defaultModifierRenderer = ModifierRenderer;
             }
             class VNodePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Renderer> = {

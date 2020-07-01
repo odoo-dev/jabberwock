@@ -1,5 +1,6 @@
 import { RenderingEngine } from '../../plugin-renderer/src/RenderingEngine';
 import { DefaultHtmlDomRenderer } from './DefaultHtmlDomRenderer';
+import { DefaultHtmlDomModifierRenderer } from './DefaultHtmlDomModifierRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
@@ -7,6 +8,7 @@ import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/D
 export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
     static id = 'dom/html';
     static readonly defaultRenderer = DefaultHtmlDomRenderer;
+    static readonly defaultModifierRenderer = DefaultHtmlDomModifierRenderer;
 
     /**
      * Render the given node.
