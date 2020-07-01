@@ -1,11 +1,9 @@
-import { Renderer, RenderingIdentifier, RendererConstructor } from './RenderingEngine';
+import { RenderingIdentifier } from './RenderingEngine';
 import { RenderingEngine } from './RenderingEngine';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 import { flat } from '../../utils/src/utils';
 
-class SuperRenderer<T> implements Renderer<T> {
-    static id = 'super';
-    super: Renderer<T> = null;
+class SuperRenderer<T> {
     constructor(public renderer: AbstractRenderer<T>) {}
     /**
      * Render the given node.
@@ -35,11 +33,11 @@ interface SuperRenderer<T = {}> {
     constructor: RendererConstructor<T>;
 }
 
-export abstract class AbstractRenderer<T> implements Renderer<T> {
+export abstract class AbstractRenderer<T> {
     static id: RenderingIdentifier;
     readonly predicate?: Predicate;
     readonly engine: RenderingEngine<T>;
-    readonly super: Renderer<T>;
+    readonly super: SuperRenderer<T>;
     constructor(engine: RenderingEngine<T>) {
         this.engine = engine;
         this.super = new SuperRenderer(this);
@@ -65,3 +63,8 @@ export abstract class AbstractRenderer<T> implements Renderer<T> {
 export interface AbstractRenderer<T = {}> {
     constructor: RendererConstructor<T>;
 }
+
+export type RendererConstructor<T = {}> = {
+    new (engine: RenderingEngine<T>): AbstractRenderer<T>;
+    id: RenderingIdentifier;
+};

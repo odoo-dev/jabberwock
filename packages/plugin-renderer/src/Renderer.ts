@@ -1,11 +1,12 @@
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
 import {
-    RendererConstructor,
     RenderingIdentifier,
     RenderingEngine,
     RenderingEngineConstructor,
 } from './RenderingEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { ModifierRendererConstructor } from './AbstractModifierRenderer';
+import { RendererConstructor } from './AbstractRenderer';
 
 export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     loaders = {
@@ -22,8 +23,7 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
             // The caller might want to fallback on another rendering.
             return;
         }
-        engine.renderings.clear();
-        engine.locations.clear();
+        engine.clear();
         if (nodes instanceof Array) {
             return engine.render(nodes);
         } else {
@@ -42,8 +42,8 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
         }
     }
 
-    loadRenderers(renderers: RendererConstructor[]): void {
-        renderers = [...renderers].reverse();
+    loadRenderers(renderers: RendererConstructor[] | ModifierRendererConstructor[]): void {
+        renderers = [...renderers].reverse() as RendererConstructor[];
         for (const RendererClass of renderers) {
             for (const id in this.engines) {
                 const renderingEngine = this.engines[id];

@@ -1,28 +1,20 @@
-import { VNode, Predicate } from '../../core/src/VNodes/VNode';
-import { Constructor } from '../../utils/src/utils';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { isConstructor } from '../../utils/src/utils';
 import JWEditor from '../../core/src/JWEditor';
+import { Modifier } from '../../core/src/Modifier';
+import { AbstractModifierRenderer, ModifierRendererConstructor } from './AbstractModifierRenderer';
+import { AbstractRenderer, RendererConstructor } from './AbstractRenderer';
 
 export type RenderingIdentifier = string;
-
-export interface Renderer<T> {
-    predicate?: Predicate;
-    render: (node: VNode) => Promise<T>;
-    renderBatch: (nodes: VNode[]) => Promise<T[]>;
-    constructor: RendererConstructor<T>;
-    super: Renderer<T>;
-}
-
-export type RendererConstructor<T = {}> = {
-    new (...args): Renderer<T>;
-    id: RenderingIdentifier;
-};
 
 export class RenderingEngine<T = {}> {
     static readonly id: RenderingIdentifier;
     static readonly extends: RenderingIdentifier[] = [];
     static readonly defaultRenderer: RendererConstructor;
+    static readonly defaultModifierRenderer: ModifierRendererConstructor;
     readonly editor: JWEditor;
-    readonly renderers: Renderer<T>[] = [];
+    readonly renderers: AbstractRenderer<T>[] = [];
+    readonly modifierRenderers: AbstractModifierRenderer<T>[] = [];
     readonly renderings: Map<VNode, Promise<T>> = new Map();
     readonly locations: Map<T, VNode[]> = new Map();
 
@@ -34,6 +26,12 @@ export class RenderingEngine<T = {}> {
         } else {
             this.renderers.push(defaultRenderer);
         }
+        const defaultModifierRenderer = new this.constructor.defaultModifierRenderer(this);
+        if (defaultModifierRenderer.predicate) {
+            throw new Error(`Default renderer cannot have a predicate.`);
+        } else {
+            this.modifierRenderers.push(defaultModifierRenderer);
+        }
     }
     /**
      * Register the given renderer by instantiating it with this rendering
@@ -43,19 +41,29 @@ export class RenderingEngine<T = {}> {
      *
      * @param RendererClass
      */
-    register(RendererClass: RendererConstructor<T>): void {
+    register(RendererClass: RendererConstructor<T> | ModifierRendererConstructor<T>): void {
+        // Both input parameter types have the same features with respect to
+        // what we are doing in this function. However, Typescript requires a
+        // stronger typing for inserting them into an array. We chose to use a
+        // blind, somewhat wrong, typecast to reduce the scope of the types
+        // in order to avoid duplicating the logic of this function.
+        const renderers = (isConstructor(RendererClass, AbstractRenderer)
+            ? this.renderers
+            : this.modifierRenderers) as AbstractRenderer<T>[];
+        RendererClass = RendererClass as RendererConstructor<T>;
+
         if (RendererClass.id === this.constructor.id) {
-            this.renderers.unshift(new RendererClass(this));
+            renderers.unshift(new RendererClass(this));
         } else {
             const supportedTypes = [this.constructor.id, ...this.constructor.extends];
             const priorRendererIds = supportedTypes.slice(
                 0,
                 supportedTypes.indexOf(RendererClass.id),
             );
-            const postRendererIndex = this.renderers.findIndex(
+            const postRendererIndex = renderers.findIndex(
                 parser => !priorRendererIds.includes(parser.constructor.id),
             );
-            this.renderers.splice(postRendererIndex, 0, new RendererClass(this));
+            renderers.splice(postRendererIndex, 0, new RendererClass(this));
         }
     }
     /**
@@ -106,7 +114,7 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendered
      */
-    renderBatched(nodes: VNode[], rendered?: Renderer<T>): [VNode[], Promise<T[]>][] {
+    renderBatched(nodes: VNode[], rendered?: AbstractRenderer<T>): [VNode[], Promise<T[]>][] {
         const groups: [VNode[], Promise<T[]>][] = [];
         for (const node of nodes) {
             const renderer = this.getCompatibleRenderer(node, rendered);
@@ -121,21 +129,56 @@ export class RenderingEngine<T = {}> {
      * @param node
      * @param previousRenderer
      */
-    getCompatibleRenderer(node: VNode, previousRenderer: Renderer<T>): Renderer<T> {
+    getCompatibleRenderer(node: VNode, previousRenderer: AbstractRenderer<T>): AbstractRenderer<T> {
         let nextRendererIndex = this.renderers.indexOf(previousRenderer) + 1;
-        let nextRenderer: Renderer<T>;
+        let nextRenderer: AbstractRenderer<T>;
         do {
             nextRenderer = this.renderers[nextRendererIndex];
             nextRendererIndex++;
         } while (nextRenderer && !node.test(nextRenderer.predicate));
         return nextRenderer;
     }
+    /**
+     * Return the first matche Renderer for this VNode, starting from the
+     * previous renderer.
+     *
+     * @param node
+     * @param previousRenderer
+     */
+    getCompatibleModifierRenderer(
+        modifier: Modifier,
+        nodes: VNode[],
+        previousRenderer?: AbstractModifierRenderer<T>,
+    ): AbstractModifierRenderer<T> {
+        let nextRendererIndex = this.modifierRenderers.indexOf(previousRenderer) + 1;
+        let nextRenderer: AbstractModifierRenderer<T>;
+        do {
+            nextRenderer = this.modifierRenderers[nextRendererIndex];
+            nextRendererIndex++;
+        } while (
+            nextRenderer.predicate &&
+            !(isConstructor(nextRenderer.predicate, Modifier)
+                ? modifier instanceof nextRenderer.predicate
+                : nextRenderer.predicate(modifier, nodes))
+        );
+        return nextRenderer;
+    }
+    /**
+     * Clear the cache.
+     *
+     */
+    clear(): void {
+        this.renderings.clear();
+        this.locations.clear();
+    }
 }
+
 export type RenderingEngineConstructor<T = {}> = {
     new (...args: ConstructorParameters<typeof RenderingEngine>): RenderingEngine;
     id: RenderingIdentifier;
     extends: RenderingIdentifier[];
-    defaultRenderer: Constructor<Renderer<T>>;
+    defaultRenderer: RendererConstructor<T>;
+    defaultModifierRenderer: ModifierRendererConstructor<T>;
 };
 export interface RenderingEngine<T = {}> {
     constructor: RenderingEngineConstructor<T>;

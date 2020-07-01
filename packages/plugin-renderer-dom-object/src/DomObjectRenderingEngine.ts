@@ -1,11 +1,13 @@
-import { RenderingEngine, Renderer } from '../../plugin-renderer/src/RenderingEngine';
+import { RenderingEngine, RenderingIdentifier } from '../../plugin-renderer/src/RenderingEngine';
 import { DefaultDomObjectRenderer } from './DefaultDomObjectRenderer';
+import { DefaultDomObjectModifierRenderer } from './DefaultDomObjectModifierRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Format } from '../../core/src/Format';
 import { flat } from '../../utils/src/utils';
+import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -214,11 +216,12 @@ export type DomObjectNative = {
 };
 export type DomObject = DomObjectElement | DomObjectFragment | DomObjectText | DomObjectNative;
 
-type RenderingBatchUnit = [VNode, Format[], Renderer<DomObject>];
+type RenderingBatchUnit = [VNode, Format[], AbstractRenderer<DomObject>];
 
 export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
-    static readonly id = 'dom/object';
+    static readonly id: RenderingIdentifier = 'dom/object';
     static readonly defaultRenderer = DefaultDomObjectRenderer;
+    static readonly defaultModifierRenderer = DefaultDomObjectModifierRenderer;
     /**
      * Render the attributes of the given VNode onto the given DOM Element.
      *
@@ -306,39 +309,13 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
         }
     }
     /**
-     * Wrap list of DomObject into a formating DomObject.
-     *
-     * @param renderings
-     * @param format
-     */
-    async renderFormat(renderings: DomObject[], format: Format): Promise<DomObject> {
-        if (format) {
-            const domObject: DomObject = {
-                tag: format.htmlTag.toUpperCase(),
-                attributes: {},
-                children: renderings,
-            };
-            const attributes = format.modifiers.find(Attributes);
-            if (attributes) {
-                for (const name of attributes.keys()) {
-                    domObject.attributes[name] = attributes.get(name);
-                }
-            }
-            return domObject;
-        } else if (renderings.length === 1) {
-            return renderings[0];
-        } else {
-            return { children: renderings };
-        }
-    }
-    /**
      * Group the nodes by renderer, siblings and format.
      *
      * @override
      */
     renderBatched(
         nodes: VNode[],
-        rendered?: Renderer<DomObject>,
+        rendered?: AbstractRenderer<DomObject>,
     ): [VNode[], Promise<DomObject[]>][] {
         const renderingUnits = this._getRenderingUnits(nodes, rendered);
         return this._renderBatched(renderingUnits);
@@ -392,13 +369,14 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                         }
                     }
                     // Create format.
-                    const rendering = await this.renderFormat(domObjects, format);
+                    const modifierRenderer = this.getCompatibleModifierRenderer(format, nodes);
+                    const rendering = await modifierRenderer.render(format, domObjects, nodes);
                     return flatten.map(() => rendering);
                 });
                 renderings.push([nodes, unitPromise]);
             } else {
                 // Render each node.
-                let currentRenderer: Renderer<DomObject>;
+                let currentRenderer: AbstractRenderer<DomObject>;
                 let renderingUnit: RenderingBatchUnit;
                 const siblings: VNode[] = [];
                 while (
@@ -433,7 +411,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      */
     private _getRenderingUnits(
         nodes: VNode[],
-        rendered?: Renderer<DomObject>,
+        rendered?: AbstractRenderer<DomObject>,
     ): RenderingBatchUnit[] {
         // Consecutive char nodes are rendered in same time.
         const renderingUnits: RenderingBatchUnit[] = [];
