@@ -1,0 +1,5 @@
+<pre style="border: 1px orange solid">Pre should be editable.</pre>
+<div style="border: 1px red solid;">
+  Div should not be editable.
+  <pre style="border: 1px blue solid">Pre inside div should not be editable.</pre>
+</div>
