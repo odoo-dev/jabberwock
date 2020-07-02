@@ -17,7 +17,7 @@ import { Shadow } from '../../plugin-shadow/src/Shadow';
 import { Html } from '../../plugin-html/src/Html';
 
 function waitToolbarRedraw(): Promise<void> {
-    return new Promise(r => setTimeout(r, 5));
+    return new Promise(r => setTimeout(r, 20));
 }
 
 const container = document.createElement('div');
