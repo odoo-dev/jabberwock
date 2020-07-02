@@ -9,6 +9,7 @@ export interface ZoneNodeParams extends AbstractNodeParams {
 
 export class ZoneNode extends ContainerNode {
     hidden: Map<VNode, boolean> = new Map();
+    editable = false;
     breakable = false;
     managedZones: ZoneIdentifier[];
 
