@@ -49,7 +49,7 @@ import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
 import './odooLayout.css';
 import { OdooField } from '../plugin-odoo-field/src/OdooField';
 
-interface OdooWebsiteEditorOption {
+interface OdooWebsiteEditorOptions {
     source: HTMLElement;
     location: [Node, DomZonePosition];
     customCommands: Record<CommandIdentifier, CommandImplementation>;
@@ -63,7 +63,7 @@ interface OdooWebsiteEditorOption {
 }
 
 export class OdooWebsiteEditor extends JWEditor {
-    constructor(options: OdooWebsiteEditorOption) {
+    constructor(options: OdooWebsiteEditorOptions) {
         super();
         class CustomPlugin extends JWPlugin {
             commands = options.customCommands;

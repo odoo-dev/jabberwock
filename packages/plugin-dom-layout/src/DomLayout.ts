@@ -21,7 +21,6 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 export interface DomLayoutConfig extends JWPluginConfig {
@@ -99,7 +98,8 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
      */
     async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
         // If target == null we bypass the editable zone check.
-        // This should only occurs when we receive an inferredKeydownEvent created from an InputEvent send by a mobile device.
+        // This should only occurs when we receive an inferredKeydownEvent
+        // created from an InputEvent send by a mobile device.
         if (event.target && !this.isInEditable(event.target as Node)) {
             // Don't process keydown if the user is outside the current editor editable Zone.
             return;
@@ -140,7 +140,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     }
 
     /**
-     * return True if target node is inside JB main editable Zone
+     * Return true if the target node is inside Jabberwock's main editable Zone.
      *
      * @param target: Node
      */
@@ -157,9 +157,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             nodes = domLayoutEngine.getNodes(target);
         }
         const node = nodes?.pop();
-        // We cannot always expect a 'contentEditable' attribute on the main ancestor.
-        // So we expect to find the main editor ZoneNode if we are in the editable part of JB
-        return node && node.ancestor(ZoneNode).managedZones.includes('main');
+        // We cannot always expect a 'contentEditable' attribute on the main
+        // ancestor. So we expect to find the main editor ZoneNode if we are in
+        // the editable part of Jabberwock.
+        return node?.ancestor(ZoneNode).managedZones.includes('main') || false;
     }
 
     //--------------------------------------------------------------------------

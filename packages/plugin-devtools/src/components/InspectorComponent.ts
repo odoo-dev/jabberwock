@@ -122,7 +122,7 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
      *
      * @param ev
      */
-    inpectDom(): void {
+    inspectDom(): void {
         window.addEventListener('mousemove', this._onInspectorMouseMove, true);
         window.addEventListener('mouseleave', this._onInspectorMouseLeave, true);
         window.addEventListener('mousedown', this._onInspectorMouseDown, true);

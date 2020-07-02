@@ -12,7 +12,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
  */
 function align(type: AlignType) {
     return async function(editor: BasicEditor): Promise<void> {
-        await editor.execCommand('align', { type: type });
+        await editor.execCommand<Align>('align', { type: type });
     };
 }
 
@@ -26,7 +26,7 @@ describePlugin(Align, testEditor => {
                     contentAfter: '<p>ab</p><p style="text-align: left;">c[]d</p>',
                 });
             });
-            it('should not align left an imeditable node', async () => {
+            it('should not align left a non-editable node', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p>c[]d</p>',
                     stepFunction: (editor: JWEditor) => {
@@ -39,7 +39,7 @@ describePlugin(Align, testEditor => {
                     contentAfter: '<p>ab</p><p><span style="text-align: left;">c[]d</span></p>',
                 });
             });
-            it('should not change align style of an imeditable node', async () => {
+            it('should not change align style of a non-editable node', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p style="text-align: right;">c[]d</p>',
                     stepFunction: (editor: JWEditor) => {

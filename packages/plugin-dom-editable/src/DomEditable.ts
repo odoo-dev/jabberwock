@@ -9,7 +9,6 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { JWEditor } from '../../core/src/JWEditor';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [DomLayout, Layout];
@@ -27,8 +26,9 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
     }
 
     async start(): Promise<void> {
+        const domLayout = this.dependencies.get(DomLayout);
         this.eventNormalizer = new EventNormalizer(
-            this.dependencies.get(DomLayout).isInEditable.bind(this),
+            domLayout.isInEditable.bind(domLayout),
             this._onNormalizedEvent.bind(this),
         );
 

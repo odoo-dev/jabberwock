@@ -5,6 +5,7 @@ import { Constructor } from '../../utils/src/utils';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AbstractNode } from './VNodes/AbstractNode';
+import { TableCellNode } from '../../plugin-table/src/TableCellNode';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -133,10 +134,17 @@ export class VRange {
             const ancestor = selectedNode.parent;
             if (ancestor && !alreadyTested.has(ancestor)) {
                 alreadyTested.add(ancestor);
-                if (ancestor.children().every(child => selectedNodes.includes(child))) {
-                    if (!selectedNodes.includes(ancestor)) {
-                        selectedNodes.push(ancestor);
-                    }
+                const allChildrenSelected = ancestor
+                    .children()
+                    .every(child => selectedNodes.includes(child));
+                if (
+                    allChildrenSelected &&
+                    !selectedNodes.includes(ancestor) &&
+                    !(ancestor instanceof FragmentNode) &&
+                    ancestor.editable &&
+                    ancestor.test(predicate)
+                ) {
+                    selectedNodes.push(ancestor);
                 }
             }
         }
@@ -163,7 +171,7 @@ export class VRange {
         } else if (closestStartAncestor) {
             const children = [...closestStartAncestor.childVNodes].reverse();
             for (const child of children) {
-                if (!targetedNodes.includes(child) && child.test(predicate)) {
+                if (!targetedNodes.includes(child) && child.editable && child.test(predicate)) {
                     targetedNodes.unshift(child);
                 }
             }
@@ -343,8 +351,8 @@ export class VRange {
      */
     empty(): void {
         const removableNodes = this.selectedNodes(node => {
-            // TODO: Replace this check by complex table selection support.
-            return node.breakable || node.parent?.breakable || node.parent?.is(FragmentNode);
+            // TODO: Replace Table check with complex table selection support.
+            return node.editable && !node.is(TableCellNode);
         });
         // Remove selected nodes without touching the start range's ancestors.
         const startAncestors = this.start.ancestors();
@@ -359,12 +367,20 @@ export class VRange {
                 if (ancestor.children().length > 1) {
                     ancestor.splitAt(this.endContainer);
                 }
-                if (this.endContainer.breakable) {
+                if (
+                    this.endContainer.breakable &&
+                    this.startContainer.editable &&
+                    this.endContainer.editable
+                ) {
                     this.endContainer.mergeWith(ancestor);
                 }
                 ancestor = ancestor.parent;
             }
-            if (this.endContainer.breakable) {
+            if (
+                this.endContainer.breakable &&
+                this.startContainer.editable &&
+                this.endContainer.editable
+            ) {
                 this.endContainer.mergeWith(this.startContainer);
             }
         }

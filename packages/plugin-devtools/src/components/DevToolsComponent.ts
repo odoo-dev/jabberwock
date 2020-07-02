@@ -60,9 +60,9 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
      *
      * @param ev
      */
-    inpectDom(): void {
+    inspectDom(): void {
         this.state.currentTab = 'inspector';
-        (this.inspectorRef.comp as InspectorComponent).inpectDom();
+        (this.inspectorRef.comp as InspectorComponent)?.inspectDom();
     }
     /**
      * Refresh this component with respect to the recent dispatching of the

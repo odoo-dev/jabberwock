@@ -235,13 +235,13 @@ export class DomReconciliationEngine {
         diffs.sort((da, db) => {
             let aLen = 0;
             let a = this._objects[da.id];
-            while (a.parent) {
+            while (a?.parent) {
                 aLen++;
                 a = this._objects[a.parent];
             }
             let bLen = 0;
             let b = this._objects[db.id];
-            while (b.parent) {
+            while (b?.parent) {
                 bLen++;
                 b = this._objects[b.parent];
             }
