@@ -3,13 +3,8 @@ import { DividerXmlDomParser } from './DividerXmlDomParser';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 
-export interface DividerConfig extends JWPluginConfig {
-    breakable?: boolean;
-}
-
-export class Divider<T extends DividerConfig = DividerConfig> extends JWPlugin<T> {
+export class Divider<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser> = {
         parsers: [DividerXmlDomParser],
     };
-    configuration = { breakable: true, ...this.configuration };
 }

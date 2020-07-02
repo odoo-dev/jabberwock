@@ -46,8 +46,8 @@ import { parseEditable } from '../utils/src/configuration';
 import { Dialog } from '../plugin-dialog/src/Dialog';
 import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
+import { ModeDefinition } from '../plugin-mode/src/Mode';
 import './odooLayout.css';
-import { OdooField } from '../plugin-odoo-field/src/OdooField';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -57,6 +57,7 @@ interface OdooWebsiteEditorOptions {
     snippetMenuElement?: HTMLElement;
     snippetManipulators?: HTMLElement;
     template?: string;
+    mode?: ModeDefinition;
     // todo: Remove when configuring the toolbar in another way.
     discardButton?: boolean;
     saveButton?: boolean;
@@ -93,7 +94,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Underline],
                 [Link],
                 [FontAwesome],
-                [Divider, { breakable: false }],
+                [Divider],
                 [Image],
                 [Subscript],
                 [Superscript],
@@ -207,6 +208,12 @@ export class OdooWebsiteEditor extends JWEditor {
             autoFocus: true,
             source: options.source.firstElementChild as HTMLElement,
         });
+        if (options.mode) {
+            this.load({
+                modes: [options.mode],
+            });
+            this.configure({ mode: options.mode.id });
+        }
     }
 
     /**
