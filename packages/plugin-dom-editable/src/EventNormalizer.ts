@@ -476,7 +476,6 @@ export class EventNormalizer {
     ) {
         this.initNextObservation();
 
-        // const document = this.editable.ownerDocument;
         this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
         this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
         this._bindEventInEditable(root, 'compositionend', this._registerEvent);
@@ -575,12 +574,13 @@ export class EventNormalizer {
         });
     }
     /**
-     * Register given event on the this.currentStackObservation._events queue. If the queue is not yet
-     * initialized or has been cleared prior to this call, re-initialize it.
-     * After a tick (setTimeout 0ms) the '_processEvents' method is called. All
-     * events that happened during the tick are read from the queue and the
-     * analysis tries to extract the actions desired by the user such as insert,
-     * delete, backspace, spell checking, special characters, etc.
+     * Register given event on the this.currentStackObservation._events queue.
+     * If the queue is not yet initialized or has been cleared prior to this
+     * call, re-initialize it. After a tick (setTimeout 0ms) the
+     * '_processEvents' method is called. All events that happened during the
+     * tick are read from the queue and the analysis tries to extract the
+     * actions desired by the user such as insert, delete, backspace, spell
+     * checking, special characters, etc.
      *
      * @see _processEvents
      */

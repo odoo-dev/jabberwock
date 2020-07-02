@@ -13,8 +13,20 @@ export interface AbstractNodeParams {
 let id = 0;
 export abstract class AbstractNode extends EventMixin {
     readonly id = id;
+    /**
+     * True if the node is editable.
+     * A node that is editable can have its modifiers edited, be moved, removed,
+     * and a selection can be made within it.
+     */
     editable = true;
+    /**
+     * True If the node will have a representation in the dom. Eg: markers are
+     * not tangible.
+     */
     tangible = true;
+    /**
+     * True if the node can be split.
+     */
     breakable = true;
     parent: VNode;
     modifiers = new Modifiers();
