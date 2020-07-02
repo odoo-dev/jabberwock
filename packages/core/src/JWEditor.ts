@@ -5,12 +5,12 @@ import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
 import { isConstructor } from '../../utils/src/utils';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { ModeError } from '../../utils/src/errors';
+import { StageError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
 
-export enum Mode {
+export enum EditorStage {
     CONFIGURATION = 'configuration',
     EDITION = 'edition',
 }
@@ -44,7 +44,7 @@ export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
 }
 
 export class JWEditor {
-    private _mode: Mode = Mode.CONFIGURATION;
+    private _stage: EditorStage = EditorStage.CONFIGURATION;
     dispatcher: Dispatcher;
     contextManager: ContextManager;
     plugins: PluginMap = new Map();
@@ -85,7 +85,7 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
-        this._mode = Mode.EDITION;
+        this._stage = EditorStage.EDITION;
         this._loadPlugins();
 
         // Load editor-level loadables.
@@ -120,8 +120,8 @@ export class JWEditor {
         config?: ConstructorParameters<P>[1],
     ): void {
         // Actual loading is deferred to `start`.
-        if (this._mode !== Mode.CONFIGURATION) {
-            throw new ModeError(Mode.CONFIGURATION);
+        if (this._stage !== EditorStage.CONFIGURATION) {
+            throw new StageError(EditorStage.CONFIGURATION);
         } else if (isConstructor(PluginOrLoadables, JWPlugin)) {
             // Add the plugin to the configuration.
             const Plugin = PluginOrLoadables;
@@ -231,8 +231,8 @@ export class JWEditor {
         PluginOrEditorConfig: JWEditorConfig | T,
         pluginConfig?: ConstructorParameters<T>[1],
     ): void {
-        if (this._mode !== Mode.CONFIGURATION) {
-            throw new ModeError(Mode.CONFIGURATION);
+        if (this._stage !== EditorStage.CONFIGURATION) {
+            throw new StageError(EditorStage.CONFIGURATION);
         } else if (isConstructor(PluginOrEditorConfig, JWPlugin)) {
             // Configure the plugin.
             const Plugin = PluginOrEditorConfig;
@@ -310,7 +310,7 @@ export class JWEditor {
         }
         // Clear loaders.
         this.loaders = {};
-        this._mode = Mode.CONFIGURATION;
+        this._stage = EditorStage.CONFIGURATION;
     }
 }
 
