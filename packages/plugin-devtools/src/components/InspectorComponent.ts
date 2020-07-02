@@ -95,7 +95,15 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         this.selectedNode = this.getNode(this.state.selectedID);
     }
     getNode(id: number): VNode {
-        return this.domEngine.root.descendants(node => node.id === id)[0] || this.domEngine.root;
+        const stack: VNode[] = [this.domEngine.root];
+        for (const node of stack) {
+            if (node.id === id) {
+                return node;
+            } else {
+                stack.push(...node.childVNodes);
+            }
+        }
+        return this.domEngine.root;
     }
     /**
      * Return the path between the given `vNode` and the root vNode, as an array
