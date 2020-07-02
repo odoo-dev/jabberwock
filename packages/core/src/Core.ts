@@ -77,11 +77,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly preceding the range.
             const previousSibling = range.start.previousSibling();
-            if (
-                previousSibling &&
-                range.startContainer.breakable &&
-                range.startContainer.editable
-            ) {
+            if (previousSibling && range.startContainer.editable && previousSibling.editable) {
                 previousSibling.removeBackward();
             } else if (range.startContainer.breakable && range.startContainer.editable) {
                 // Otherwise set range start at previous valid leaf.
@@ -109,7 +105,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly following the range.
             const nextSibling = range.end.nextSibling();
-            if (nextSibling && range.endContainer.breakable && range.endContainer.editable) {
+            if (nextSibling && range.endContainer.editable && nextSibling.editable) {
                 nextSibling.removeForward();
             } else if (range.endContainer.breakable && range.endContainer.editable) {
                 // Otherwise set range end at next valid leaf.
