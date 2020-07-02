@@ -54,32 +54,18 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
             const currentCache = inline.cache.style || {};
             inline.cache.style = new CssStyle({ ...currentCache, [this.styleName]: color });
         } else {
-            const selectedNodes = params.context.range.selectedNodes();
-            // Skip if the node already has the right color, through an
-            // ancestor or a format.
-            const notColoredYet = selectedNodes.filter(node => {
+            const selectedNodes = params.context.range.selectedNodes((node: VNode): boolean => {
+                // Skip if the node already has the right color, through an
+                // ancestor or a format.
                 if (this.hasColor(color, node)) return false;
                 const colorAncestor = node.ancestor(this.hasColor.bind(this));
-                return !colorAncestor || !this.hasColor(color, colorAncestor);
+                return node.editable && (!colorAncestor || !this.hasColor(color, colorAncestor));
             });
-            for (const node of notColoredYet) {
+            for (const node of selectedNodes.filter(node => !selectedNodes.includes(node.parent))) {
                 // Apply the style to the node or its first format.
                 this._nodeOrFirstFormat(node)
                     .modifiers.get(Attributes)
                     .style.set(this.styleName, color);
-
-                // If there are ancestors of this node whose children all have
-                // this style, style these ancestors instead of their
-                // descendants.
-                let parent = node.parent;
-                while (parent && parent.editable && this._isAllColored(parent, color)) {
-                    parent.modifiers.get(Attributes).style.set(this.styleName, color);
-                    // TODO: not remove the children's styles when we have modifiers.
-                    for (const child of parent.children()) {
-                        child.modifiers.find(Attributes)?.style.remove(this.styleName);
-                    }
-                    parent = parent.parent;
-                }
             }
         }
     }

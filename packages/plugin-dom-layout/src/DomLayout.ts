@@ -147,6 +147,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     isInEditable(target: Node): boolean {
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        target = this._getDeepestTarget(target);
         let nodes = domLayoutEngine.getNodes(target);
         while (!nodes.length && target) {
             if (target.previousSibling) {
@@ -173,5 +174,26 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         for (const [id, location] of locations) {
             domLayoutEngine.locations[id] = location;
         }
+    }
+    /**
+     * Return the deepest target, based on the given target and the current
+     * selection. The selection can be used only if it is indeed contained
+     * within the target.
+     *
+     * @param target
+     */
+    private _getDeepestTarget(target: Node): Node {
+        const selection = target.ownerDocument?.getSelection();
+        const anchorNode = selection?.anchorNode;
+        let node = anchorNode;
+        let isAnchorDescendantOfTarget = false;
+        while (node) {
+            if (node === target) {
+                isAnchorDescendantOfTarget = true;
+                break;
+            }
+            node = node.parentElement;
+        }
+        return isAnchorDescendantOfTarget ? anchorNode : target;
     }
 }

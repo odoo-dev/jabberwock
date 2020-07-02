@@ -1,7 +1,7 @@
 import { ContainerNode } from './ContainerNode';
 
 export class FragmentNode extends ContainerNode {
-    readonly editable = true;
+    readonly editable = false;
     readonly breakable = false;
 
     set parent(parent: ContainerNode) {

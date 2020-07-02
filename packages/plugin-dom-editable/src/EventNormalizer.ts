@@ -547,7 +547,7 @@ export class EventNormalizer {
      */
     _bindEventInEditable(target: Document | ShadowRoot, type: string, listener: Function): void {
         const boundListener = (ev: EventToProcess): void => {
-            const eventTarget = 'target' in ev && (ev.target as Element);
+            let eventTarget = 'target' in ev && (ev.target as Node);
             const shadowRoot = eventTarget instanceof Element && eventTarget.shadowRoot;
             if (shadowRoot) {
                 if (!this._shadowNormalizers.get(shadowRoot)) {
@@ -558,8 +558,15 @@ export class EventNormalizer {
                     );
                     this._shadowNormalizers.set(shadowRoot, eventNormalizer);
                 }
-            } else if (!eventTarget || this._isInEditable(eventTarget)) {
-                listener.call(this, ev);
+            } else {
+                if (eventTarget && (ev instanceof MouseEvent || ev instanceof TouchEvent)) {
+                    eventTarget = this._getEventTarget(ev);
+                } else {
+                    eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
+                }
+                if (!eventTarget || this._isInEditable(eventTarget)) {
+                    listener.call(this, ev);
+                }
             }
         };
         this._bindEvent(target, type, boundListener);
@@ -610,11 +617,25 @@ export class EventNormalizer {
             // TODO: no rendering in editable can happen before the analysis of
             // the selection. There should be a mechanism here that can be used
             // by the normalizer to block the rendering until this resolves.
+            const currentDomSelection = this._getSelection();
             this._keyboardSelectionTimeout = new Timeout<EventBatch>(
                 async (): Promise<EventBatch> => {
+                    const newDomSelection = this._getSelection();
+                    const collapsed =
+                        newDomSelection.anchorNode === newDomSelection.focusNode &&
+                        newDomSelection.anchorOffset === newDomSelection.focusOffset;
+
+                    let domSelection;
+                    if (collapsed && !this._isInEditable(newDomSelection.anchorNode)) {
+                        // Prevent a collapsed selection outside the editable
+                        // context: keep the current selection.
+                        domSelection = currentDomSelection;
+                    } else {
+                        domSelection = newDomSelection;
+                    }
                     const setSelectionAction: SetSelectionAction = {
                         type: 'setSelection',
-                        domSelection: this._getSelection(),
+                        domSelection: domSelection,
                     };
                     return { actions: [setSelectionAction], mutatedElements: new Set([]) };
                 },
@@ -1472,8 +1493,7 @@ export class EventNormalizer {
      * @param side from which to look for textual nodes ('start' or 'end')
      */
     _isAtVisibleEdge(node: Node, side: 'start' | 'end'): boolean {
-        const element = node instanceof Element ? node : node.parentElement;
-        const editable: Element = element.closest('[contentEditable=true]');
+        const editable: Element = this._getClosestElement(node).closest('[contentEditable=true]');
 
         // Start from the top and do a depth-first search trying to find a
         // visible node that would be in editable and beyond the given element.
@@ -1520,8 +1540,7 @@ export class EventNormalizer {
         if (nodeName(el) === 'BR' && !el.nextSibling) {
             return false;
         }
-        const element = el.nodeType === Node.TEXT_NODE ? el.parentElement : el;
-        const style = window.getComputedStyle(element as Element);
+        const style = window.getComputedStyle(this._getClosestElement(el));
         if (style.display === 'none' || style.visibility === 'hidden') {
             return false;
         }
@@ -1537,7 +1556,7 @@ export class EventNormalizer {
         const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
         const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
         let caretPosition = caretPositionFromPoint(x, y);
-        if (!caretPosition || !this._isInEditable(caretPosition.offsetNode)) {
+        if (!caretPosition) {
             caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
         return caretPosition;
@@ -1611,9 +1630,10 @@ export class EventNormalizer {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
         const target = this._getEventTarget(ev);
-        if (target && this._isInEditable(target)) {
+        const caretPosition = this._getEventCaretPosition(ev);
+        if (target && this._isInEditable(caretPosition.offsetNode)) {
             this._mousedownInEditable = true;
-            this._initialCaretPosition = this._getEventCaretPosition(ev);
+            this._initialCaretPosition = caretPosition;
             this._selectionHasChanged = false;
             this._followsPointerAction = true;
         } else {
@@ -1644,6 +1664,24 @@ export class EventNormalizer {
                 this._mousedownInEditable = false;
                 this._initialCaretPosition = undefined;
             }
+        } else if (ev.target instanceof Element) {
+            // When within a contenteditable element but in a non-editable
+            // context, prevent a collapsed selection by removing all ranges.
+            // TODO: remove them from the VDocument as well.
+            this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+                const selection = this._getSelection();
+                const collapsed =
+                    selection.anchorNode === selection.focusNode &&
+                    selection.anchorOffset === selection.focusOffset;
+                const target = this._getClosestElement(selection.focusNode);
+                if (collapsed && !!target.closest('[contentEditable=true]')) {
+                    document.getSelection().removeAllRanges();
+                }
+                return {
+                    actions: [],
+                };
+            });
+            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
         }
     }
     /**
@@ -1664,6 +1702,14 @@ export class EventNormalizer {
             eventBatch.actions.push(setSelectionAction);
         }
         return eventBatch;
+    }
+    /**
+     * Return a node's parent if it's not an instance of `Element`.
+     *
+     * @param node
+     */
+    _getClosestElement(node: Node): Element {
+        return node instanceof Element ? node : node.parentElement;
     }
     /**
      * If the drag start event is observed by the normalizer, it means the
