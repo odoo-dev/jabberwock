@@ -1,4 +1,4 @@
-import { Mode } from '../../core/src/JWEditor';
+import { EditorStage } from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 
 /**
@@ -25,10 +25,10 @@ export class CustomError extends Error {
  * Creates an instance representing an error that occurs when a function only
  * allowed to be called in a specific mode is called in a different mode.
  */
-export class ModeError extends CustomError {
-    constructor(mode: Mode, ...params) {
+export class StageError extends CustomError {
+    constructor(stage: EditorStage, ...params) {
         super(...params);
-        this.message = `This operation is only allowed in ${mode} mode.`;
+        this.message = `This operation is only allowed in ${stage} stage.`;
     }
 }
 
