@@ -13,11 +13,12 @@ import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
 import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
 import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
+import { OdooTranslationXmlDomParser } from './OdooTranslationXmlDomParser';
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
-        parsers: [OdooStructureXmlDomParser],
+        parsers: [OdooStructureXmlDomParser, OdooTranslationXmlDomParser],
         renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
         components: [
             {

@@ -33,10 +33,10 @@ import { Layout } from '../plugin-layout/src/Layout';
 import { DomLayout } from '../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../plugin-dom-editable/src/DomEditable';
 import { VNode } from '../core/src/VNodes/VNode';
-import { Toolbar } from '../plugin-toolbar/src/Toolbar';
+import { Toolbar, ToolbarLayout } from '../plugin-toolbar/src/Toolbar';
 import { HtmlNode } from '../plugin-html/src/HtmlNode';
 import { CommandImplementation, CommandIdentifier } from '../core/src/Dispatcher';
-import { JWPlugin } from '../core/src/JWPlugin';
+import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { OdooVideo } from '../plugin-odoo-video/src/OdooVideo';
 import { DomZonePosition } from '../plugin-layout/src/LayoutEngine';
 import { HtmlDomRenderingEngine } from '../plugin-html/src/HtmlDomRenderingEngine';
@@ -46,7 +46,7 @@ import { parseEditable } from '../utils/src/configuration';
 import { Dialog } from '../plugin-dialog/src/Dialog';
 import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
-import { ModeDefinition } from '../plugin-mode/src/Mode';
+import { ModeDefinition } from '../core/src/Mode';
 import './odooLayout.css';
 
 interface OdooWebsiteEditorOptions {
@@ -57,12 +57,34 @@ interface OdooWebsiteEditorOptions {
     snippetMenuElement?: HTMLElement;
     snippetManipulators?: HTMLElement;
     template?: string;
+    toolbarLayout?: ToolbarLayout;
     mode?: ModeDefinition;
     // todo: Remove when configuring the toolbar in another way.
     discardButton?: boolean;
     saveButton?: boolean;
+    plugins?: [typeof JWPlugin, JWPluginConfig?][];
 }
 
+const defaultToolbarLayout = [
+    [
+        [
+            'ParagraphButton',
+            'Heading1Button',
+            'Heading2Button',
+            'Heading3Button',
+            'Heading4Button',
+            'Heading5Button',
+            'Heading6Button',
+            'PreButton',
+        ],
+    ],
+    ['BoldButton', 'ItalicButton', 'UnderlineButton', 'RemoveFormatButton'],
+    ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
+    ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
+    ['IndentButton', 'OutdentButton'],
+    ['OdooLinkButton'],
+    ['OdooMediaButton'],
+];
 export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOptions) {
         super();
@@ -111,32 +133,15 @@ export class OdooWebsiteEditor extends JWEditor {
                 [DomHelpers],
                 [Odoo],
                 [OdooVideo],
-                [OdooField],
                 [CustomPlugin],
+                ...(options.plugins || []),
             ],
         });
         this.configure(Toolbar, {
             layout: [
-                [
-                    [
-                        'ParagraphButton',
-                        'Heading1Button',
-                        'Heading2Button',
-                        'Heading3Button',
-                        'Heading4Button',
-                        'Heading5Button',
-                        'Heading6Button',
-                        'PreButton',
-                    ],
-                ],
-                ['BoldButton', 'ItalicButton', 'UnderlineButton', 'RemoveFormatButton'],
-                ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
-                ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
-                ['IndentButton', 'OutdentButton'],
-                ['OdooLinkButton'],
-                ['OdooMediaButton'],
-                ...(options.discardButton ? [['OdooDiscardButton']] : []),
+                ...(options.toolbarLayout || defaultToolbarLayout),
                 ...(options.saveButton ? [['OdooSaveButton']] : []),
+                ...(options.discardButton ? [['OdooDiscardButton']] : []),
             ],
         });
 
@@ -209,7 +214,7 @@ export class OdooWebsiteEditor extends JWEditor {
             source: options.source.firstElementChild as HTMLElement,
         });
         if (options.mode) {
-            this.load({
+            this.configure({
                 modes: [options.mode],
             });
             this.configure({ mode: options.mode.id });
