@@ -215,7 +215,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ Attributes: { style: "display: block;", contentEditable: "true" } ]</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ Attributes: { style: "display: block;", contenteditable: "true" } ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>23</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
                 root.textContent +
