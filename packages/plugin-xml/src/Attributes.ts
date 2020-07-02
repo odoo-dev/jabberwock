@@ -77,7 +77,7 @@ export class Attributes extends Modifier {
      * @param key
      */
     has(key: string): boolean {
-        return this.keys().includes(key);
+        return this.keys().includes(key.toLowerCase());
     }
     /**
      * Return an array containing all the keys in the record.
@@ -114,6 +114,7 @@ export class Attributes extends Modifier {
      * @param name
      */
     get(name: string): string {
+        name = name.toLowerCase();
         if (name === 'style') {
             return this.style.cssText;
         } else if (name === 'class') {
@@ -129,6 +130,7 @@ export class Attributes extends Modifier {
      * @param value
      */
     set(name: string, value: string): void {
+        name = name.toLowerCase();
         if (name === 'style') {
             this.style.reset(value);
             // Use `get` for its value but record its position in the record.
@@ -147,7 +149,8 @@ export class Attributes extends Modifier {
      * @param names
      */
     remove(...names: string[]): void {
-        for (const name of names) {
+        for (let name of names) {
+            name = name.toLowerCase();
             if (name === 'style') {
                 this.style.clear();
             } else if (name === 'class') {
