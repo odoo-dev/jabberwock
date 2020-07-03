@@ -38,7 +38,8 @@ import { HtmlNode } from '../plugin-html/src/HtmlNode';
 import { CommandImplementation, CommandIdentifier } from '../core/src/Dispatcher';
 import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { OdooVideo } from '../plugin-odoo-video/src/OdooVideo';
-import { DomZonePosition } from '../plugin-layout/src/LayoutEngine';
+import { DomZonePosition, ComponentDefinition } from '../plugin-layout/src/LayoutEngine';
+import { HtmlDomRenderingEngine } from '../plugin-html/src/HtmlDomRenderingEngine';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { Odoo } from '../plugin-odoo/src/Odoo';
 import { parseEditable } from '../utils/src/configuration';
@@ -57,6 +58,9 @@ import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
 import { Button } from '../plugin-button/src/Button';
 import { Loadables } from '../core/src/JWEditor';
+import { Mail } from '../plugin-mail/src/Mail';
+import { Theme, ThemeComponent } from '../plugin-theme/src/Theme';
+import { Template, TemplateName, TemplateConfiguration } from '../plugin-template/src/Template';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -65,7 +69,12 @@ interface OdooWebsiteEditorOptions {
     afterRender?: Function;
     snippetMenuElement?: HTMLElement;
     snippetManipulators?: HTMLElement;
-    template?: string;
+    interface?: string;
+    templates?: {
+        components: ComponentDefinition[];
+        templateConfigurations: Record<TemplateName, TemplateConfiguration>;
+    };
+    themes?: ThemeComponent[];
     toolbarLayout?: ToolbarLayout;
     mode?: ModeDefinition;
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
@@ -147,6 +156,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [BackgroundColor],
                 [Dialog],
                 [Shadow],
+                [Mail],
                 [DomHelpers],
                 [Odoo],
                 [OdooVideo],
@@ -199,7 +209,7 @@ export class OdooWebsiteEditor extends JWEditor {
                     render(editor: JWEditor): Promise<VNode[]> {
                         return editor.plugins
                             .get(Parser)
-                            .parse('text/html', options.template || defaultTemplate);
+                            .parse('text/html', options.interface || defaultTemplate);
                     },
                 },
                 {
@@ -224,7 +234,14 @@ export class OdooWebsiteEditor extends JWEditor {
                     id: 'editable',
                     render: async (editor: JWEditor): Promise<VNode[]> => {
                         const theme = new ThemeNode();
-                        const contents = await parseEditable(editor, options.source, true);
+                        let contents: VNode[];
+                        if (typeof options.source === 'string') {
+                            contents = await editor.plugins
+                                .get(Parser)
+                                .parse('text/html', options.source);
+                        } else {
+                            contents = await parseEditable(editor, options.source);
+                        }
                         theme.append(...contents);
                         return [theme];
                     },
@@ -263,17 +280,28 @@ export class OdooWebsiteEditor extends JWEditor {
             });
             this.configure({ mode: options.mode.id });
         }
+        if (options.templates) {
+            this.configure(Template, {
+                components: options.templates.components,
+                templateConfigurations: options.templates.templateConfigurations,
+            });
+        }
+        if (options.themes) {
+            this.configure(Theme, {
+                components: options.themes,
+            });
+        }
     }
 
     /**
      * Get the value by rendering the "editable" component of the editor.
      */
-    async getValue(): Promise<Node> {
+    async getValue<T>(format = HtmlDomRenderingEngine.id): Promise<T> {
         const renderer = this.plugins.get(Renderer);
         const layout = this.plugins.get(Layout);
         const domLayout = layout.engines.dom;
         const editable = domLayout.components.editable[0];
-        const nodes = await renderer.render<Node[]>('dom/html', editable);
+        const nodes = await renderer.render<T>(format, editable);
         return nodes && nodes[0];
     }
 }

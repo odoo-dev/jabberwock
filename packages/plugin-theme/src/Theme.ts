@@ -13,7 +13,7 @@ import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 
-interface ThemeComponent extends ComponentDefinition {
+export interface ThemeComponent extends ComponentDefinition {
     label?: string;
 }
 interface ThemeConfig extends JWPluginConfig {

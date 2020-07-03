@@ -2,6 +2,7 @@ jw-group[name="templates"] .label {
     width: 90px;
 }
 jw-templates {
+    width: 100%;
     font-size: 12px;
     color: black;
     background-color: #ffffff;
@@ -9,7 +10,9 @@ jw-templates {
     display: block;
 }
 jw-templates ~ * {
-    display: none;
+    display: none !important;
+    position: absolute !important;
+    z-index: -1 !important;
 }
 jw-templates > jw-label {
     display: block;
