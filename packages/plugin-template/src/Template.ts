@@ -12,9 +12,9 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { TemplateThumbnailSelectorNode } from './TemplateThumbnailSelectorNode';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 
-type TemplateName = string;
+export type TemplateName = string;
 
-interface TemplateConfiguration {
+export interface TemplateConfiguration {
     componentId: ComponentId;
     zoneId: ZoneIdentifier; // Zone to insert the content
     label: string;
