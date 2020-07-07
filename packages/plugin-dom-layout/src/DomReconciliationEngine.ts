@@ -817,7 +817,7 @@ export class DomReconciliationEngine {
 
             for (const name in oldAttributes) {
                 const value = oldAttributes[name] || '';
-                if (!newAttributes[name]) {
+                if (typeof newAttributes[name] !== 'string') {
                     hasChanged = true;
                     if (name === 'style') {
                         const oldStyle = styleToObject(value);

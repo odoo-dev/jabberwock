@@ -35,7 +35,7 @@ describePlugin(Link, testEditor => {
                     stepFunction: async editor => {
                         await insertLink(editor);
                     },
-                    contentAfter: '<p>a<a href="url">label[]</a>c</p>',
+                    contentAfter: '<p>a<a href="url" target="">label[]</a>c</p>',
                 });
             });
             it('should insert a link and write a character at the end of the link', async () => {
@@ -45,7 +45,7 @@ describePlugin(Link, testEditor => {
                         await insertLink(editor);
                         await insertText(editor, 'b');
                     },
-                    contentAfter: '<p>a<a href="url">labelb[]</a>c</p>',
+                    contentAfter: '<p>a<a href="url" target="">labelb[]</a>c</p>',
                 });
             });
             it('should write two characters in the link', async () => {
@@ -56,7 +56,7 @@ describePlugin(Link, testEditor => {
                         await insertText(editor, 'b');
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p>a<a href="url">labelbc[]</a>d</p>',
+                    contentAfter: '<p>a<a href="url" target="">labelbc[]</a>d</p>',
                 });
             });
             it('should insert a link and write a character at the end of the link then create a new <p>', async () => {
@@ -67,7 +67,7 @@ describePlugin(Link, testEditor => {
                         await insertText(editor, 'b');
                         await insertParagraphBreak(editor);
                     },
-                    contentAfter: '<p>a<a href="url">labelb</a></p><p>[]c</p>',
+                    contentAfter: '<p>a<a href="url" target="">labelb</a></p><p>[]c</p>',
                 });
             });
             it('should insert a link and write a character a new <p> and another character', async () => {
@@ -79,7 +79,7 @@ describePlugin(Link, testEditor => {
                         await insertParagraphBreak(editor);
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p>a<a href="url">labelb</a></p><p>c[]d</p>',
+                    contentAfter: '<p>a<a href="url" target="">labelb</a></p><p>c[]d</p>',
                 });
             });
             it.skip('should insert a link and write a character at the end of the link then insert a <br>', async () => {
@@ -90,7 +90,7 @@ describePlugin(Link, testEditor => {
                         await insertText(editor, 'b');
                         await insertLineBreak(editor);
                     },
-                    contentAfter: '<p>a<a href="url">labelb<br>[]</a>c</p>',
+                    contentAfter: '<p>a<a href="url" target="">labelb<br>[]</a>c</p>',
                 });
             });
             it.skip('should insert a link and write a character insert a <br> and another character', async () => {
@@ -102,7 +102,7 @@ describePlugin(Link, testEditor => {
                         await insertLineBreak(editor);
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p>a<a href="url">labelb<br>c[]</a>d</p>',
+                    contentAfter: '<p>a<a href="url" target="">labelb<br>c[]</a>d</p>',
                 });
             });
         });
@@ -113,7 +113,7 @@ describePlugin(Link, testEditor => {
                     stepFunction: async editor => {
                         await convertToLink(editor);
                     },
-                    contentAfter: '<p>a<a href="url">bc[]</a>d</p>',
+                    contentAfter: '<p>a<a href="url" target="">bc[]</a>d</p>',
                 });
             });
             it('should set the link on two existing characters, loose range and add a character', async () => {
@@ -123,7 +123,7 @@ describePlugin(Link, testEditor => {
                         await convertToLink(editor);
                         await insertText(editor, 'd');
                     },
-                    contentAfter: '<p>a<a href="url">bcd[]</a>e</p>',
+                    contentAfter: '<p>a<a href="url" target="">bcd[]</a>e</p>',
                 });
             });
         });
