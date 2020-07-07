@@ -337,6 +337,12 @@ export class DomLayoutEngine extends LayoutEngine {
         if (!domNodes.length) {
             return;
         }
+        if (
+            selection.anchor.ancestors().pop() !== this.root ||
+            selection.focus.ancestors().pop() !== this.root
+        ) {
+            throw new Error('Cannot render a selection that is outside the Layout.');
+        }
         const anchor = this._domReconciliationEngine.getLocations(selection.anchor);
         const focus = this._domReconciliationEngine.getLocations(selection.focus);
 
