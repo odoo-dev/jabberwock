@@ -17,7 +17,7 @@ function align(type: AlignType) {
 }
 
 describePlugin(Align, testEditor => {
-    describe('align', () => {
+    describe.only('align', () => {
         describe('left', () => {
             it('should align left', async () => {
                 await testEditor(BasicEditor, {
@@ -103,6 +103,15 @@ describePlugin(Align, testEditor => {
                     contentAfter: '<div style="text-align: left;"><p>ab</p><p>c[d]e</p></div>',
                 });
             });
+            it('should left align a container within an editable that is center-aligned', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<div contenteditable="true" style="text-align: center;"><h1>a[]b</h1></div>',
+                    stepFunction: align(AlignType.LEFT),
+                    contentAfter:
+                        '<div contenteditable="true" style="text-align: center;"><h1 style="text-align: left;">a[]b</h1></div>',
+                });
+            });
         });
         describe('center', () => {
             it('should align center', async () => {
@@ -160,6 +169,15 @@ describePlugin(Align, testEditor => {
                     contentBefore: '<div style="text-align: center;"><p>ab</p><p>c[d]e</p></div>',
                     stepFunction: align(AlignType.CENTER),
                     contentAfter: '<div style="text-align: center;"><p>ab</p><p>c[d]e</p></div>',
+                });
+            });
+            it('should center align a left-aligned container within an editable that is center-aligned', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<div contenteditable="true" style="text-align: center;"><h1 style="text-align: left;">a[]b</h1></div>',
+                    stepFunction: align(AlignType.CENTER),
+                    contentAfter:
+                        '<div contenteditable="true" style="text-align: center;"><h1 style="text-align: center;">a[]b</h1></div>',
                 });
             });
         });
@@ -221,6 +239,15 @@ describePlugin(Align, testEditor => {
                     contentAfter: '<div style="text-align: right;"><p>ab</p><p>c[d]e</p></div>',
                 });
             });
+            it('should right align a container within an editable that is center-aligned', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<div contenteditable="true" style="text-align: center;"><h1>a[]b</h1></div>',
+                    stepFunction: align(AlignType.RIGHT),
+                    contentAfter:
+                        '<div contenteditable="true" style="text-align: center;"><h1 style="text-align: right;">a[]b</h1></div>',
+                });
+            });
         });
         describe('justify', () => {
             it('should align justify', async () => {
@@ -278,6 +305,15 @@ describePlugin(Align, testEditor => {
                     contentBefore: '<div style="text-align: justify;"><p>ab</p><p>c[d]e</p></div>',
                     stepFunction: align(AlignType.JUSTIFY),
                     contentAfter: '<div style="text-align: justify;"><p>ab</p><p>c[d]e</p></div>',
+                });
+            });
+            it('should justify align a container within an editable that is center-aligned', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<div contenteditable="true" style="text-align: center;"><h1>a[]b</h1></div>',
+                    stepFunction: align(AlignType.JUSTIFY),
+                    contentAfter:
+                        '<div contenteditable="true" style="text-align: center;"><h1 style="text-align: justify;">a[]b</h1></div>',
                 });
             });
         });

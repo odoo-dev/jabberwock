@@ -107,7 +107,7 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
         });
         const type = params.type;
         for (const node of nodes) {
-            const alignedAncestor = node.ancestor(Align.isAligned);
+            const alignedAncestor = node.closest(Align.isAligned);
 
             // Compute current alignment.
             const currentAlignment = alignedAncestor?.modifiers
@@ -123,7 +123,7 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
 
 function alignButton(type: AlignType): ActionableNode {
     function isAligned(node: VNode, type: AlignType): boolean {
-        const alignedAncestor = node.ancestor(Align.isAligned);
+        const alignedAncestor = node.closest(Align.isAligned);
         return Align.isAligned(alignedAncestor || node, type);
     }
 
