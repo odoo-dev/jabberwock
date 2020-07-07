@@ -1,0 +1,20 @@
+jw-resizer{
+    display: block;
+    height: 7px;
+    background-color: #eee;
+    border-top: 1px solid #999;
+    text-align: center;
+    width: 100%;
+    line-height: 6px;
+    position: absolute;
+    bottom: 0;
+    cursor: row-resize;
+}
+
+jw-resizer::before {
+    content: "☰";
+    font-size: 6px;
+    margin-top: 1px;
+    display: inline-block;
+    transform: scale(5,1);
+}
