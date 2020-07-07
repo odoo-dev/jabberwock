@@ -3,6 +3,7 @@
     <jw-body><t t-zone="main"/></jw-body>
     <jw-footer>
         <t t-zone="status"/>
+        <t t-zone="resizer"/>
     </jw-footer>
     <t-dialog>
         <t t-zone="dialog"/>
