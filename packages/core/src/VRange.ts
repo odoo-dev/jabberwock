@@ -152,6 +152,11 @@ export class VRange {
     targetedNodes(predicate?: Predicate): VNode[];
     targetedNodes(predicate?: Predicate): VNode[] {
         const targetedNodes: VNode[] = this.traversedNodes(predicate);
+        if (!this.end.previousSibling()) {
+            // When selecting a container and the space between it and the next
+            // one (eg. triple click), don't return the next container as well.
+            targetedNodes.pop();
+        }
         const closestStartAncestor = this.start.ancestor(predicate);
         if (closestStartAncestor?.editable) {
             targetedNodes.unshift(closestStartAncestor);
