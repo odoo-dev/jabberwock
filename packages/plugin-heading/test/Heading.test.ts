@@ -45,6 +45,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<p>a[b</p><p>cd</p><p>e]f</p>',
                 });
             });
+            it('should turn a heading 1 into a paragraph after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1>[ab</h1><h2>]cd</h2>',
+                    stepFunction: applyHeadingStyle(0),
+                    contentAfter: '<p>[ab</p><h2>]cd</h2>',
+                });
+            });
         });
         describe('level 1', () => {
             it('should turn a paragraph into a heading 1', async () => {
@@ -66,6 +73,13 @@ describePlugin(Heading, testEditor => {
                     contentBefore: '<p>a[b</p><h1>cd</h1><h2>e]f</h2>',
                     stepFunction: applyHeadingStyle(1),
                     contentAfter: '<h1>a[b</h1><h1>cd</h1><h1>e]f</h1>',
+                });
+            });
+            it('should turn a paragraph into a heading 1 after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[ab</p><h2>]cd</h2>',
+                    stepFunction: applyHeadingStyle(1),
+                    contentAfter: '<h1>[ab</h1><h2>]cd</h2>',
                 });
             });
         });
@@ -91,6 +105,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<h2>a[b</h2><h2>cd</h2><h2>e]f</h2>',
                 });
             });
+            it('should turn a paragraph into a heading 2 after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[ab</p><h1>]cd</h1>',
+                    stepFunction: applyHeadingStyle(2),
+                    contentAfter: '<h2>[ab</h2><h1>]cd</h1>',
+                });
+            });
         });
         describe('level 3', () => {
             it('should turn a heading 1 into a heading 3', async () => {
@@ -112,6 +133,13 @@ describePlugin(Heading, testEditor => {
                     contentBefore: '<h1>a[b</h1><p>cd</p><h2>e]f</h2>',
                     stepFunction: applyHeadingStyle(3),
                     contentAfter: '<h3>a[b</h3><h3>cd</h3><h3>e]f</h3>',
+                });
+            });
+            it('should turn a paragraph into a heading 3 after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[ab</p><h1>]cd</h1>',
+                    stepFunction: applyHeadingStyle(3),
+                    contentAfter: '<h3>[ab</h3><h1>]cd</h1>',
                 });
             });
         });
@@ -137,6 +165,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<h4>a[b</h4><h4>cd</h4><h4>e]f</h4>',
                 });
             });
+            it('should turn a paragraph into a heading 4 after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[ab</p><h1>]cd</h1>',
+                    stepFunction: applyHeadingStyle(4),
+                    contentAfter: '<h4>[ab</h4><h1>]cd</h1>',
+                });
+            });
         });
         describe('level 5', () => {
             it('should turn a heading 1 into a heading 5', async () => {
@@ -160,6 +195,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<h5>a[b</h5><h5>cd</h5><h5>e]f</h5>',
                 });
             });
+            it('should turn a paragraph into a heading 5 after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[ab</p><h1>]cd</h1>',
+                    stepFunction: applyHeadingStyle(5),
+                    contentAfter: '<h5>[ab</h5><h1>]cd</h1>',
+                });
+            });
         });
         describe('level 6', () => {
             it('should turn a heading 1 into a heading 6', async () => {
@@ -181,6 +223,13 @@ describePlugin(Heading, testEditor => {
                     contentBefore: '<h1>a[b</h1><p>cd</p><h2>e]f</h2>',
                     stepFunction: applyHeadingStyle(6),
                     contentAfter: '<h6>a[b</h6><h6>cd</h6><h6>e]f</h6>',
+                });
+            });
+            it('should turn a paragraph into a heading 6 after a triple click', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[ab</p><h1>]cd</h1>',
+                    stepFunction: applyHeadingStyle(6),
+                    contentAfter: '<h6>[ab</h6><h1>]cd</h1>',
                 });
             });
         });
