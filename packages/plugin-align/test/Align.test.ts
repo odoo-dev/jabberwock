@@ -3,7 +3,6 @@ import { Align, AlignType } from '../src/Align';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 /**
  * Return a function that takes an editor and executes the 'align' command with
@@ -29,18 +28,9 @@ describePlugin(Align, testEditor => {
             });
             it('should not align left a non-editable node', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<p>ab</p><p>c[]d</p>',
-                    stepFunction: (editor: JWEditor) => {
-                        const domEngine = editor.plugins.get(Layout).engines.dom;
-                        const editable = domEngine.components.get('editable')[0];
-                        const root = editable;
-                        root.lastChild()
-                            .modifiers.get(Attributes)
-                            .set('contentEditable', 'false');
-                        return align(AlignType.LEFT)(editor);
-                    },
-                    contentAfter:
-                        '<p>ab</p><p contenteditable="false"><span style="text-align: left;">c[]d</span></p>',
+                    contentBefore: '<p>ab</p><div contenteditable="false"><p>c[]d</p></div>',
+                    stepFunction: (editor: JWEditor) => align(AlignType.LEFT)(editor),
+                    contentAfter: '<p>ab</p><div contenteditable="false"><p>c[]d</p></div>',
                 });
             });
             it('should not change align style of a non-editable node', async () => {
@@ -53,8 +43,7 @@ describePlugin(Align, testEditor => {
                         root.lastChild().editable = false;
                         return align(AlignType.LEFT)(editor);
                     },
-                    contentAfter:
-                        '<p>ab</p><p style="text-align: right;"><span style="text-align: left;">c[]d</span></p>',
+                    contentAfter: '<p>ab</p><p style="text-align: right;">c[]d</p>',
                 });
             });
             it('should align several paragraphs left', async () => {
