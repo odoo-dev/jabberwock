@@ -2,8 +2,8 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { isConstructor } from '../../utils/src/utils';
 import JWEditor from '../../core/src/JWEditor';
 import { Modifier } from '../../core/src/Modifier';
-import { AbstractModifierRenderer, ModifierRendererConstructor } from './AbstractModifierRenderer';
-import { AbstractRenderer, RendererConstructor } from './AbstractRenderer';
+import { ModifierRenderer, ModifierRendererConstructor } from './ModifierRenderer';
+import { NodeRenderer, RendererConstructor } from './NodeRenderer';
 
 export type RenderingIdentifier = string;
 
@@ -13,8 +13,8 @@ export class RenderingEngine<T = {}> {
     static readonly defaultRenderer: RendererConstructor;
     static readonly defaultModifierRenderer: ModifierRendererConstructor;
     readonly editor: JWEditor;
-    readonly renderers: AbstractRenderer<T>[] = [];
-    readonly modifierRenderers: AbstractModifierRenderer<T>[] = [];
+    readonly renderers: NodeRenderer<T>[] = [];
+    readonly modifierRenderers: ModifierRenderer<T>[] = [];
     readonly renderings: Map<VNode, Promise<T>> = new Map();
     readonly locations: Map<T, VNode[]> = new Map();
 
@@ -47,9 +47,9 @@ export class RenderingEngine<T = {}> {
         // stronger typing for inserting them into an array. We chose to use a
         // blind, somewhat wrong, typecast to reduce the scope of the types
         // in order to avoid duplicating the logic of this function.
-        const renderers = (isConstructor(RendererClass, AbstractRenderer)
+        const renderers = (isConstructor(RendererClass, NodeRenderer)
             ? this.renderers
-            : this.modifierRenderers) as AbstractRenderer<T>[];
+            : this.modifierRenderers) as NodeRenderer<T>[];
         RendererClass = RendererClass as RendererConstructor<T>;
 
         if (RendererClass.id === this.constructor.id) {
@@ -114,7 +114,7 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendered
      */
-    renderBatched(nodes: VNode[], rendered?: AbstractRenderer<T>): [VNode[], Promise<T[]>][] {
+    renderBatched(nodes: VNode[], rendered?: NodeRenderer<T>): [VNode[], Promise<T[]>][] {
         const groups: [VNode[], Promise<T[]>][] = [];
         for (const node of nodes) {
             const renderer = this.getCompatibleRenderer(node, rendered);
@@ -129,9 +129,9 @@ export class RenderingEngine<T = {}> {
      * @param node
      * @param previousRenderer
      */
-    getCompatibleRenderer(node: VNode, previousRenderer: AbstractRenderer<T>): AbstractRenderer<T> {
+    getCompatibleRenderer(node: VNode, previousRenderer: NodeRenderer<T>): NodeRenderer<T> {
         let nextRendererIndex = this.renderers.indexOf(previousRenderer) + 1;
-        let nextRenderer: AbstractRenderer<T>;
+        let nextRenderer: NodeRenderer<T>;
         do {
             nextRenderer = this.renderers[nextRendererIndex];
             nextRendererIndex++;
@@ -148,10 +148,10 @@ export class RenderingEngine<T = {}> {
     getCompatibleModifierRenderer(
         modifier: Modifier,
         nodes: VNode[],
-        previousRenderer?: AbstractModifierRenderer<T>,
-    ): AbstractModifierRenderer<T> {
+        previousRenderer?: ModifierRenderer<T>,
+    ): ModifierRenderer<T> {
         let nextRendererIndex = this.modifierRenderers.indexOf(previousRenderer) + 1;
-        let nextRenderer: AbstractModifierRenderer<T>;
+        let nextRenderer: ModifierRenderer<T>;
         do {
             nextRenderer = this.modifierRenderers[nextRendererIndex];
             nextRendererIndex++;

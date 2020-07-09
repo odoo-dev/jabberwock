@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { LineBreakNode } from './LineBreakNode';
 import {
     DomObjectRenderingEngine,
@@ -6,7 +6,7 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class LineBreakDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class LineBreakDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = LineBreakNode;

@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
@@ -6,7 +6,7 @@ import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine'
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
-export class DefaultDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = 'dom/object';
     engine: DomObjectRenderingEngine;
 

@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import {
@@ -8,7 +8,7 @@ import {
 import { TableSectionAttributes } from './TableRowXmlDomParser';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class TableDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = TableNode;

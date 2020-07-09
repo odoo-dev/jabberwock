@@ -3,12 +3,12 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { ResizerNode } from './ResizerNode';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 
-export class ResizerDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ResizerNode;

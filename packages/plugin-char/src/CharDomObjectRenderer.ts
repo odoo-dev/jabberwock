@@ -4,11 +4,11 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class CharDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = CharNode;

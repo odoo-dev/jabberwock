@@ -2,12 +2,12 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ThemeNode } from './ThemeNode';
 import { Theme } from './Theme';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
-export class ThemeDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ThemeNode;

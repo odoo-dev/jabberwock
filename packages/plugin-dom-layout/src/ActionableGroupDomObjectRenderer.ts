@@ -2,11 +2,11 @@ import {
     DomObject,
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 
-export class ActionableGroupDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ActionableGroupNode;

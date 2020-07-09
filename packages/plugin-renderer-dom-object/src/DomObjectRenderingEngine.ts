@@ -7,7 +7,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Format } from '../../core/src/Format';
 import { flat } from '../../utils/src/utils';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -216,7 +216,7 @@ export type DomObjectNative = {
 };
 export type DomObject = DomObjectElement | DomObjectFragment | DomObjectText | DomObjectNative;
 
-type RenderingBatchUnit = [VNode, Format[], AbstractRenderer<DomObject>];
+type RenderingBatchUnit = [VNode, Format[], NodeRenderer<DomObject>];
 
 export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
     static readonly id: RenderingIdentifier = 'dom/object';
@@ -315,7 +315,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      */
     renderBatched(
         nodes: VNode[],
-        rendered?: AbstractRenderer<DomObject>,
+        rendered?: NodeRenderer<DomObject>,
     ): [VNode[], Promise<DomObject[]>][] {
         const renderingUnits = this._getRenderingUnits(nodes, rendered);
         return this._renderBatched(renderingUnits);
@@ -376,7 +376,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 renderings.push([nodes, unitPromise]);
             } else {
                 // Render each node.
-                let currentRenderer: AbstractRenderer<DomObject>;
+                let currentRenderer: NodeRenderer<DomObject>;
                 let renderingUnit: RenderingBatchUnit;
                 const siblings: VNode[] = [];
                 while (
@@ -411,7 +411,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      */
     private _getRenderingUnits(
         nodes: VNode[],
-        rendered?: AbstractRenderer<DomObject>,
+        rendered?: NodeRenderer<DomObject>,
     ): RenderingBatchUnit[] {
         // Consecutive char nodes are rendered in same time.
         const renderingUnits: RenderingBatchUnit[] = [];

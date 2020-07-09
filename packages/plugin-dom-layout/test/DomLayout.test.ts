@@ -18,7 +18,7 @@ import {
 import { Direction } from '../../core/src/VSelection';
 import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
 import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { Image } from '../../plugin-image/src/Image';
@@ -888,7 +888,7 @@ describe('DomLayout', () => {
         });
         it('should parse the selection inside a child node create by the renderer (only his parent is linked to VNode)', async () => {
             class CustomNode extends ContainerNode {}
-            class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+            class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                 static id = DomObjectRenderingEngine.id;
                 engine: DomObjectRenderingEngine;
                 predicate = CustomNode;
@@ -944,7 +944,7 @@ describe('DomLayout', () => {
         });
         it('should parse the selection inside a child node create by the renderer (only his parent is linked to VNode, only htmlDom renderer)', async () => {
             class CustomNode extends ContainerNode {}
-            class CustomDomRenderer extends AbstractRenderer<DomObject> {
+            class CustomDomRenderer extends NodeRenderer<DomObject> {
                 static id = DomObjectRenderingEngine.id;
                 engine: DomObjectRenderingEngine;
                 predicate = CustomNode;
@@ -1469,7 +1469,7 @@ describe('DomLayout', () => {
             it('should redraw a selection in a custom fragment with children which have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -2092,7 +2092,7 @@ describe('DomLayout', () => {
                 class CustomNode extends AtomicNode {}
                 const div = document.createElement('div');
                 let index = 0;
-                class CustomDomRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3105,7 +3105,7 @@ describe('DomLayout', () => {
         describe('nodes', () => {
             it('should add a item which return a fragment dom object', async () => {
                 class CustomNode extends AtomicNode {}
-                class CustomDomRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3156,7 +3156,7 @@ describe('DomLayout', () => {
                 class CustomNode extends AtomicNode {}
                 const div = document.createElement('div');
                 let index = 0;
-                class CustomDomRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3201,7 +3201,7 @@ describe('DomLayout', () => {
                 class CustomNode extends AtomicNode {}
                 const div = document.createElement('div');
                 let index = 0;
-                class CustomDomRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3244,7 +3244,7 @@ describe('DomLayout', () => {
             });
             it('should redraw twice an item by an empty DOM which use DOM renderer', async () => {
                 class CustomNode extends AtomicNode {}
-                class CustomDomRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3287,7 +3287,7 @@ describe('DomLayout', () => {
             it('should redraw an item from an empty DOM which use Object Render domNodes', async () => {
                 class CustomNode extends AtomicNode {}
                 let index = 0;
-                class CustomObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3333,7 +3333,7 @@ describe('DomLayout', () => {
             it('should redraw an item to an empty DOM which use Object Render domNodes', async () => {
                 class CustomNode extends AtomicNode {}
                 let index = 0;
-                class CustomObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3379,7 +3379,7 @@ describe('DomLayout', () => {
             it('should toggle redraw an item emtpty/none-empty which use Object Render domNodes', async () => {
                 class CustomNode extends AtomicNode {}
                 let index = 0;
-                class CustomObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3433,7 +3433,7 @@ describe('DomLayout', () => {
                 class CustomNode extends AtomicNode {}
                 const div = document.createElement('div');
                 let index = 0;
-                class CustomDomRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3708,7 +3708,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
                 custom.append(customChild);
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3777,7 +3777,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
                 custom.append(customChild);
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3846,7 +3846,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
                 custom.append(customChild);
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3916,7 +3916,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
                 custom.append(customChild);
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -3986,7 +3986,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
                 custom.append(customChild);
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4056,7 +4056,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
                 custom.append(customChild);
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4137,7 +4137,7 @@ describe('DomLayout', () => {
             it('should not have mutation when redraw a custom fragment with children which have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4193,7 +4193,7 @@ describe('DomLayout', () => {
             it('should not have mutation when redraw a custom fragment (with siblings) with children which have same rendering', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4259,7 +4259,7 @@ describe('DomLayout', () => {
                 const a = new CharNode({ char: 'a' });
                 span.append(a);
 
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4319,7 +4319,7 @@ describe('DomLayout', () => {
                 const a = new CharNode({ char: 'a' });
                 span.append(a);
 
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4381,7 +4381,7 @@ describe('DomLayout', () => {
 
                 let render = 0;
 
-                class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -4447,7 +4447,7 @@ describe('DomLayout', () => {
                 const article = new VElement({ htmlTag: 'ARTICLE' });
                 custom.append(article);
 
-                class CustomDomObjectRenderer extends AbstractRenderer<DomObject> {
+                class CustomDomObjectRenderer extends NodeRenderer<DomObject> {
                     static id = DomObjectRenderingEngine.id;
                     engine: DomObjectRenderingEngine;
                     predicate = CustomNode;
@@ -5032,7 +5032,7 @@ describe('DomLayout', () => {
         let custom: CustomNode;
         let customChild: CustomNode;
         before(() => {
-            class CustomHtmlObjectRenderer extends AbstractRenderer<DomObject> {
+            class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
                 static id = DomObjectRenderingEngine.id;
                 engine: DomObjectRenderingEngine;
                 predicate = CustomNode;

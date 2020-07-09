@@ -1,8 +1,8 @@
-import { AbstractModifierRenderer } from '../../plugin-renderer/src/AbstractModifierRenderer';
+import { ModifierRenderer } from '../../plugin-renderer/src/ModifierRenderer';
 import { Modifier } from '../../core/src/Modifier';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
 
-export class DefaultDomObjectModifierRenderer extends AbstractModifierRenderer<DomObject> {
+export class DefaultDomObjectModifierRenderer extends ModifierRenderer<DomObject> {
     static id = 'dom/object';
     engine: DomObjectRenderingEngine;
 

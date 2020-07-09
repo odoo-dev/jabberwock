@@ -1,13 +1,13 @@
 import { PreNode } from './PreNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import {
     DomObjectRenderingEngine,
     DomObject,
     DomObjectFragment,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
-export class PreSeparatorDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class PreSeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
 

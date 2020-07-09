@@ -2,13 +2,13 @@ import {
     DomObject,
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ToolbarNode } from '../../plugin-toolbar/src/ToolbarNode';
 
-export class SeparatorDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class SeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>

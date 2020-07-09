@@ -3,14 +3,14 @@ import {
     DomObjectRenderingEngine,
     DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Predicate } from '../../core/src/VNodes/VNode';
 
 export type DomObjectActionable = DomObjectElement & { handler: () => void };
 
-export class ActionableDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = ActionableNode;

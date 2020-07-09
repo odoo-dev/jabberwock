@@ -2,7 +2,7 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { DialogZoneNode } from './DialogZoneNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ComponentId } from '../../plugin-layout/src/LayoutEngine';
@@ -16,7 +16,7 @@ const container = document.createElement('jw-container');
 container.innerHTML = template;
 const dialog = container.firstElementChild;
 
-export class DialogZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class DialogZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = DialogZoneNode;

@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
@@ -7,7 +7,7 @@ import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/D
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomObjectElement } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
-export class OdooFieldDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = OdooFieldNode;
