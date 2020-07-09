@@ -6,8 +6,10 @@ import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Format } from '../../core/src/Format';
+import { Modifier } from '../../core/src/Modifier';
 import { flat } from '../../utils/src/utils';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
+import { ModifierRenderer } from '../../plugin-renderer/src/ModifierRenderer';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -216,12 +218,14 @@ export type DomObjectNative = {
 };
 export type DomObject = DomObjectElement | DomObjectFragment | DomObjectText | DomObjectNative;
 
-type RenderingBatchUnit = [VNode, Format[], NodeRenderer<DomObject>];
+type RenderingBatchUnit = [VNode, [Format, ModifierRenderer<DomObject>][], NodeRenderer<DomObject>];
 
 export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
     static readonly id: RenderingIdentifier = 'dom/object';
     static readonly defaultRenderer = DefaultDomObjectRenderer;
     static readonly defaultModifierRenderer = DefaultDomObjectModifierRenderer;
+    readonly cachedSameModifier: Map<Modifier, Map<Modifier, boolean>> = new Map();
+
     /**
      * Render the attributes of the given VNode onto the given DOM Element.
      *
@@ -321,6 +325,26 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
         return this._renderBatched(renderingUnits);
     }
     /**
+     * @override
+     */
+    invalidateRendererCache(objects: Set<VNode | Modifier>): void {
+        super.invalidateRendererCache(objects);
+        for (const object of objects) {
+            if (object instanceof Modifier) {
+                const modifiers = this.cachedSameModifier.get(object);
+                if (modifiers) {
+                    this.cachedSameModifier.delete(object);
+                    for (const [modifier] of modifiers) {
+                        const cache = this.cachedSameModifier.get(modifier);
+                        cache.delete(object);
+                    }
+                }
+            }
+        }
+
+        // TODO: invalidate for linked rendering
+    }
+    /**
      * Group the nodes by format and by renderer and call 'renderBatch' with
      * the different group. Wrap the created domObject into the fromated
      * domObjectElement if needed.
@@ -340,18 +364,18 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
             const unit = renderingUnits[unitIndex];
             if (unit[1].length) {
                 // Group same formating.
-                const format = unit[1].shift();
+                const [modifier, modifierRenderer] = unit[1].shift();
                 const newRenderingUnits: RenderingBatchUnit[] = [unit];
-                let lastUnit: RenderingBatchUnit = unit;
                 let nextUnit: RenderingBatchUnit;
                 while (
                     (nextUnit = renderingUnits[nextUnitIndex + 1]) &&
-                    lastUnit[0].parent === nextUnit[0].parent &&
-                    format.isSameAs(nextUnit[1][0])
+                    unit[0].parent === nextUnit[0].parent &&
+                    nextUnit[1][0] &&
+                    modifierRenderer === nextUnit[1][0][1] &&
+                    this._getSameModifier(modifier, nextUnit[1][0][0])
                 ) {
+                    newRenderingUnits.push([nextUnit[0], nextUnit[1].slice(1), nextUnit[2]]);
                     nextUnitIndex++;
-                    lastUnit = renderingUnits[nextUnitIndex];
-                    newRenderingUnits.push([lastUnit[0], lastUnit[1].slice(1), lastUnit[2]]);
                 }
 
                 // Render wrapped nodes.
@@ -369,8 +393,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                         }
                     }
                     // Create format.
-                    const modifierRenderer = this.getCompatibleModifierRenderer(format, nodes);
-                    const rendering = await modifierRenderer.render(format, domObjects, nodes);
+                    const rendering = await modifierRenderer.render(modifier, domObjects, nodes);
                     return flatten.map(() => rendering);
                 });
                 renderings.push([nodes, unitPromise]);
@@ -423,7 +446,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
             if (node.hasChildren()) {
                 const renderer = this.getCompatibleRenderer(node, rendered);
                 if (renderer) {
-                    renderingUnits.push([node, node.modifiers.filter(Format), renderer]);
+                    const modifierRenderers = this._getFormatRenderer(node);
+                    renderingUnits.push([node, modifierRenderers, renderer]);
                 }
                 selected.add(node);
             } else {
@@ -432,7 +456,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                     // Render node like MarkerNode.
                     const renderer = this.getCompatibleRenderer(node, rendered);
                     if (renderer) {
-                        renderingUnits.push([node, node.modifiers.filter(Format), renderer]);
+                        const modifierRenderers = this._getFormatRenderer(node);
+                        renderingUnits.push([node, modifierRenderers, renderer]);
                     }
                     selected.add(node);
                 } else {
@@ -440,11 +465,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                         if (!selected.has(sibling)) {
                             const renderer = this.getCompatibleRenderer(sibling, rendered);
                             if (renderer) {
-                                renderingUnits.push([
-                                    sibling,
-                                    sibling.modifiers.filter(Format),
-                                    renderer,
-                                ]);
+                                const modifierRenderers = this._getFormatRenderer(sibling);
+                                renderingUnits.push([sibling, modifierRenderers, renderer]);
                             }
                         }
                         selected.add(sibling);
@@ -453,5 +475,33 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
             }
         }
         return renderingUnits;
+    }
+    private _getFormatRenderer(node: VNode): [Format, ModifierRenderer<DomObject>][] {
+        const modifierRenderers: [Format, ModifierRenderer<DomObject>][] = [];
+        node.modifiers.map(modifier => {
+            if (modifier instanceof Format) {
+                modifierRenderers.push([modifier, this.getCompatibleModifierRenderer(modifier)]);
+            }
+        });
+        return modifierRenderers;
+    }
+    private _getSameModifier(a: Modifier, b: Modifier): boolean {
+        let aValues = this.cachedSameModifier.get(a);
+        if (!aValues) {
+            aValues = new Map();
+            this.cachedSameModifier.set(a, aValues);
+        } else if (aValues.has(b)) {
+            return aValues.get(b);
+        }
+        let bValues = this.cachedSameModifier.get(b);
+        if (!bValues) {
+            bValues = new Map();
+            this.cachedSameModifier.set(b, bValues);
+        }
+        const value = a.isSameAs(b) && b.isSameAs(a);
+
+        aValues.set(b, value);
+        bValues.set(a, value);
+        return value;
     }
 }

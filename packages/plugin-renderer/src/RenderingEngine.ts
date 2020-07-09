@@ -21,6 +21,10 @@ export class RenderingEngine<T = {}> {
         VNode,
         Map<NodeRenderer<T>, NodeRenderer<T>>
     > = new Map();
+    readonly cachedCompatibleModifierRenderer: Map<
+        Modifier,
+        Map<ModifierRenderer<T>, ModifierRenderer<T>>
+    > = new Map();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -159,9 +163,16 @@ export class RenderingEngine<T = {}> {
      */
     getCompatibleModifierRenderer(
         modifier: Modifier,
-        nodes: VNode[],
         previousRenderer?: ModifierRenderer<T>,
     ): ModifierRenderer<T> {
+        let cache = this.cachedCompatibleModifierRenderer.get(modifier);
+        if (!cache) {
+            cache = new Map();
+            this.cachedCompatibleModifierRenderer.set(modifier, cache);
+        } else if (cache.get(previousRenderer)) {
+            return cache.get(previousRenderer);
+        }
+
         let nextRendererIndex = this.modifierRenderers.indexOf(previousRenderer) + 1;
         let nextRenderer: ModifierRenderer<T>;
         do {
@@ -171,8 +182,9 @@ export class RenderingEngine<T = {}> {
             nextRenderer.predicate &&
             !(isConstructor(nextRenderer.predicate, Modifier)
                 ? modifier instanceof nextRenderer.predicate
-                : nextRenderer.predicate(modifier, nodes))
+                : nextRenderer.predicate(modifier))
         );
+        cache.set(previousRenderer, nextRenderer);
         return nextRenderer;
     }
     /**
@@ -184,15 +196,19 @@ export class RenderingEngine<T = {}> {
         this.locations.clear();
     }
     /**
-     * Clear the renderer in cache for this node. The cache renderer is added
-     * only for performance at redrawing time. The invalidation are
-     * automatically made from memory changes.
+     * Clear the renderer in cache for this node or modifier. The cache
+     * renderer is added only for performance at redrawing time. The
+     * invalidation are automatically made from memory changes.
      *
      * @param nodes
      */
-    invalidateRendererCache(nodes: VNode[]): void {
-        for (const node of nodes) {
-            this.cachedCompatibleRenderer.delete(node);
+    invalidateRendererCache(objects: Set<VNode | Modifier>): void {
+        for (const object of objects) {
+            if (object instanceof Modifier) {
+                this.cachedCompatibleModifierRenderer.delete(object);
+            } else {
+                this.cachedCompatibleRenderer.delete(object);
+            }
         }
 
         // TODO: invalidate for linked rendering

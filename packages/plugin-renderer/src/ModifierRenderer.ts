@@ -17,7 +17,6 @@ class SuperModifierRenderer<T> {
     render(modifier: Modifier, contents: T[], batch: VNode[]): Promise<T> {
         const nextRenderer = this.renderer.engine.getCompatibleModifierRenderer(
             modifier,
-            batch,
             this.renderer,
         );
         return nextRenderer?.render(modifier, contents, batch);

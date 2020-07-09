@@ -23,6 +23,7 @@ import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
@@ -153,44 +154,49 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     private async _redraw(): Promise<void> {
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-        const pathChanges = new Map(this.editor.memory.getChangedVersionables());
-        if (pathChanges.size) {
+        const changedPath = new Map<AbstractNode, string[][]>();
+        const pathChanges = this.editor.memory.getChanges();
+        for (const [object, path] of pathChanges) {
+            if (object instanceof AbstractNode) {
+                if (!changedPath.has(object)) {
+                    changedPath.set(object, []);
+                }
+                changedPath.get(object).push(path);
+            }
+            for (const [parent, path] of this.editor.memory.getParents(object)) {
+                if (parent instanceof AbstractNode) {
+                    if (!changedPath.has(parent)) {
+                        changedPath.set(parent, []);
+                    }
+                    changedPath.set(parent as VNode, path);
+                }
+            }
+        }
+        if (changedPath.size) {
             const nodes = [];
-            for (const [root] of pathChanges) {
-                if (
-                    !(root instanceof AbstractNode) ||
-                    root === this.editor.selection.anchor ||
-                    root === this.editor.selection.focus
-                ) {
+            for (const [root] of changedPath) {
+                if (root === this.editor.selection.anchor || root === this.editor.selection.focus) {
                     // Filter not VNode changes and selection change.
-                    pathChanges.delete(root);
+                    changedPath.delete(root);
                 }
             }
             let removedNode = false;
-            for (const [root] of pathChanges) {
-                if (root instanceof AbstractNode) {
-                    nodes.push(root);
-                    if (!root.parent) {
-                        removedNode = true;
-                    }
+            for (const [root] of changedPath) {
+                nodes.push(root);
+                if (!root.parent) {
+                    removedNode = true;
                 }
             }
             if (removedNode) {
                 // Need to force redrawing of children if remove a child.
-                for (const [root, paths] of pathChanges) {
-                    if (root instanceof AbstractNode) {
-                        if (paths.find(path => path[0] === 'childVNodes')) {
-                            for (const node of [...nodes]) {
-                                if (node instanceof ContainerNode) {
-                                    for (const child of node.childVNodes) {
-                                        const index = nodes.indexOf(child);
-                                        if (index !== -1) {
-                                            nodes.splice(index, 1);
-                                        }
-                                        nodes.push(child);
-                                    }
-                                }
+                for (const [node, paths] of changedPath) {
+                    if (paths.find(path => path[0] === 'childVNodes')) {
+                        for (const child of node.childVNodes) {
+                            const index = nodes.indexOf(child);
+                            if (index !== -1) {
+                                nodes.splice(index, 1);
                             }
+                            nodes.push(child);
                         }
                     }
                 }

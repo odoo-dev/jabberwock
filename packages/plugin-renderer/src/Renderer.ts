@@ -8,6 +8,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { ModifierRendererConstructor } from './ModifierRenderer';
 import { RendererConstructor } from './NodeRenderer';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { Modifier } from '../../core/src/Modifier';
 
 export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     loaders = {
@@ -61,15 +62,26 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
     }
 
     private _invalidCache(): void {
-        const nodes: VNode[] = [];
-        const pathChanges = new Map(this.editor.memory.getChangedVersionables());
-        for (const [node] of pathChanges) {
-            if (node instanceof AbstractNode) {
-                nodes.push(node as VNode);
+        const objects = new Set<VNode | Modifier>();
+        const pathChanges = this.editor.memory.getChanges();
+        for (const [object] of pathChanges) {
+            if (object instanceof AbstractNode) {
+                objects.add(object as VNode);
+            }
+            if (object instanceof Modifier) {
+                objects.add(object);
+            }
+            for (const [parent] of this.editor.memory.getParents(object)) {
+                if (parent instanceof AbstractNode) {
+                    objects.add(parent as VNode);
+                }
+                if (parent instanceof Modifier) {
+                    objects.add(parent);
+                }
             }
         }
         for (const engine of Object.values(this.engines)) {
-            engine.invalidateRendererCache(nodes);
+            engine.invalidateRendererCache(objects);
         }
     }
 }
