@@ -17,7 +17,7 @@ function align(type: AlignType) {
 }
 
 describePlugin(Align, testEditor => {
-    describe.only('align', () => {
+    describe('align', () => {
         describe('left', () => {
             it('should align left', async () => {
                 await testEditor(BasicEditor, {
