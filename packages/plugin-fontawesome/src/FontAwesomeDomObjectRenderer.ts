@@ -7,7 +7,6 @@ import {
     DomObjectText,
     DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 const zeroWidthSpace = '\u200b';
 
@@ -18,7 +17,6 @@ export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(node: FontAwesomeNode): Promise<DomObject> {
         const fontawesome: DomObjectElement = { tag: node.htmlTag };
-        this.engine.renderAttributes(Attributes, node, fontawesome);
         // Surround the fontawesome with two invisible characters so the
         // selection can navigate around it.
         const domObject: DomObjectFragment = {

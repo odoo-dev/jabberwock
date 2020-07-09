@@ -12,11 +12,7 @@ export class DefaultDomObjectModifierRenderer extends ModifierRenderer<DomObject
      * @param modifier
      * @param contents
      */
-    async render(modifier: Modifier, contents: DomObject[]): Promise<DomObject> {
-        if (contents.length === 1) {
-            return contents[0];
-        } else {
-            return { children: contents };
-        }
+    async render(modifier: Modifier, contents: DomObject[]): Promise<DomObject[]> {
+        return contents;
     }
 }

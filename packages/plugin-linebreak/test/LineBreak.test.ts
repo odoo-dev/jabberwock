@@ -10,6 +10,8 @@ import { LineBreakXmlDomParser } from '../src/LineBreakXmlDomParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { Parser } from '../../plugin-parser/src/Parser';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<LineBreak>('insertLineBreak');
@@ -51,6 +53,38 @@ describePlugin(LineBreak, testEditor => {
             const engine = new XmlDomParsingEngine(new JWEditor());
             const span = document.createElement('span');
             expect(new LineBreakXmlDomParser(engine).predicate(span)).to.be.false;
+        });
+    });
+    describe('parse & render', () => {
+        it('2 <br> into a paragraph', async () => {
+            class Custom extends BasicEditor {
+                constructor(params?: { editable?: HTMLElement }) {
+                    super(params);
+                    const config = {
+                        loadables: {
+                            components: [
+                                {
+                                    id: 'editor',
+                                    render(editor: JWEditor): Promise<VNode[]> {
+                                        return editor.plugins
+                                            .get(Parser)
+                                            .parse(
+                                                'text/html',
+                                                '<jw-editor><t t-zone="main"/><t t-zone="default"/></jw-editor>',
+                                            );
+                                    },
+                                },
+                            ],
+                            componentZones: [['editor', ['root']]],
+                        },
+                    };
+                    this.configure(config);
+                }
+            }
+            await testEditor(Custom, {
+                contentBefore: '<p><br><br></p>',
+                contentAfter: '<p><br><br></p>',
+            });
         });
     });
     describe('LineBreakNode', () => {

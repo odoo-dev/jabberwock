@@ -5,7 +5,6 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ShadowNode } from './ShadowNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class ShadowDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -18,7 +17,6 @@ export class ShadowDomObjectRenderer extends NodeRenderer<DomObject> {
             shadowRoot: true,
             children: shadow.childVNodes.filter(child => child.tangible || child.is(MetadataNode)),
         };
-        this.engine.renderAttributes(Attributes, shadow, domObject);
         return domObject;
     }
 }

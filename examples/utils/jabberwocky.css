@@ -10,7 +10,7 @@ jw-editable {
     text-align: center;
 }
 
-jw-editable .drop-cap {
+.drop-cap {
     font-size: 4.5em;
     margin-top: .15em;
     vertical-align: middle;

@@ -13,7 +13,10 @@ import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNorm
 import JWEditor from '../../core/src/JWEditor';
 import { DomReconciliationEngine } from './DomReconciliationEngine';
 import { LayoutContainer } from './LayoutContainerNode';
-import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import {
+    DomObject,
+    DomObjectRenderingEngine,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { flat } from '../../utils/src/utils';
 
@@ -249,14 +252,15 @@ export class DomLayoutEngine extends LayoutEngine {
 
         // Render nodes.
         const renderer = this.editor.plugins.get(Renderer);
-        const map = new Map<VNode, DomObject>();
         const domObjects = await renderer.render<DomObject>('dom/object', nodes);
+        const engine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
 
-        for (const index in nodes) {
-            map.set(nodes[index], domObjects[index]);
-        }
-        const locations = renderer.engines['dom/object'].locations as Map<DomObject, VNode[]>;
-        this._domReconciliationEngine.update(map, locations, this._markedForRedraw);
+        this._domReconciliationEngine.update(
+            domObjects || [],
+            engine.locations,
+            engine.from,
+            this._markedForRedraw,
+        );
         this._markedForRedraw = new Set();
 
         // Append in dom if needed.

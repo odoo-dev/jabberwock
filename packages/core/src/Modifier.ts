@@ -31,7 +31,7 @@ export class Modifier {
     applyTo(node: VNode): void {
         node.modifiers.prepend(this);
     }
-    isSameAs(otherModifier: Modifier): boolean {
+    isSameAs(otherModifier: Modifier | void): boolean {
         return this === otherModifier;
     }
     clone(): this {

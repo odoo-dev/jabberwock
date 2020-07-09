@@ -310,6 +310,10 @@ describe('DomEditable', () => {
                         '<div>abocd</div>' +
                         '</section></jw-editor>',
                 );
+                expect(container.querySelector('div').childNodes.length).to.equal(
+                    1,
+                    'Only one text node',
+                );
                 const domSelection = section.ownerDocument.getSelection();
                 expect({
                     anchorNode: domSelection.anchorNode,

@@ -67,7 +67,9 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             return new CharNode({ char: char, modifiers: modifiers.clone() });
         });
         charNodes.forEach(charNode => {
-            charNode.modifiers.get(Attributes).style = style;
+            if (style.length) {
+                charNode.modifiers.get(Attributes).style = style;
+            }
             range.start.before(charNode);
         });
         if (params.select && charNodes.length) {

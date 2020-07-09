@@ -7,6 +7,7 @@ import { TableCellXmlDomParser } from './TableCellXmlDomParser';
 import { TableDomObjectRenderer } from './TableDomObjectRenderer';
 import { TableRowDomObjectRenderer } from './TableRowDomObjectRenderer';
 import { TableCellDomObjectRenderer } from './TableCellDomObjectRenderer';
+import { TableSectionAttributesDomObjectModifierRenderer } from './TableSectionAttributesDomObjectModifierRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { TableCellNode } from './TableCellNode';
 import { CommandParams } from '../../core/src/Dispatcher';
@@ -19,7 +20,12 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
         parsers: [TableXmlDomParser, TableRowXmlDomParser, TableCellXmlDomParser],
-        renderers: [TableDomObjectRenderer, TableRowDomObjectRenderer, TableCellDomObjectRenderer],
+        renderers: [
+            TableDomObjectRenderer,
+            TableRowDomObjectRenderer,
+            TableCellDomObjectRenderer,
+            TableSectionAttributesDomObjectModifierRenderer,
+        ],
         shortcuts: [
             {
                 pattern: 'CTRL+<Slash>',

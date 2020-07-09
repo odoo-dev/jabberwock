@@ -12,11 +12,7 @@ export class DefaultHtmlDomModifierRenderer extends ModifierRenderer<Node[]> {
      * @param modifier
      * @param contents
      */
-    async render(modifier: Modifier, contents: Node[][]): Promise<Node[]> {
-        const flatten: Node[] = [];
-        for (const nodes of contents) {
-            flatten.push(...nodes);
-        }
-        return flatten;
+    async render(modifier: Modifier, contents: Node[][]): Promise<Node[][]> {
+        return contents;
     }
 }

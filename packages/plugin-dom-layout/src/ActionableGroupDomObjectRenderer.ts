@@ -3,7 +3,6 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 
 export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
@@ -28,7 +27,6 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
             tag: 'SELECT',
             children: [{ tag: 'OPTION' }, ...group.children()],
         };
-        this.engine.renderAttributes(Attributes, group, objectSelect);
         return objectSelect;
     }
     private _renderGroup(group: ActionableGroupNode): DomObject {
@@ -36,7 +34,6 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
             tag: 'JW-GROUP',
             children: group.children(),
         };
-        this.engine.renderAttributes(Attributes, group, objectGroup);
         return objectGroup;
     }
 }

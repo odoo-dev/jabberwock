@@ -54,7 +54,7 @@ describePlugin(OdooField, () => {
                 contentBefore:
                     '<p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>',
                 contentAfter:
-                    '<p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text" class="jw-odoo-field">Sample text</span></p>',
+                    '<p><span class="jw-odoo-field" data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Sample text</span></p>',
             });
         });
         it('should parse an odoo field "html"', async () => {
@@ -62,7 +62,7 @@ describePlugin(OdooField, () => {
                 contentBefore:
                     '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><p>Content.</p></div>',
                 contentAfter:
-                    '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html" class="jw-odoo-field"><h2>Title</h2><p>Content.</p></div>',
+                    '<div class="jw-odoo-field" data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><p>Content.</p></div>',
             });
         });
         it('should parse an odoo field "integer"', async () => {
@@ -70,7 +70,7 @@ describePlugin(OdooField, () => {
                 contentBefore:
                     '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10</span></p>',
                 contentAfter:
-                    '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-odoo-field">10</span></p>',
+                    '<p><span class="jw-odoo-field" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10</span></p>',
             });
         });
         it('should parse an odoo field "float"', async () => {
@@ -78,7 +78,7 @@ describePlugin(OdooField, () => {
                 contentBefore:
                     '<p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,000.0</span></p>',
                 contentAfter:
-                    '<p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float" class="jw-odoo-field">1,000.0</span></p>',
+                    '<p><span class="jw-odoo-field" data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,000.0</span></p>',
             });
         });
         it('should parse an odoo field "monetary" with currency symbol on right', async () => {
@@ -123,9 +123,9 @@ describePlugin(OdooField, () => {
                     await insertText(editor, 'a');
                 },
                 contentAfter: [
-                    '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field jw-odoo-field-invalid">10a[]</span></p>',
-                    '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field jw-odoo-field-invalid">10a</span></p>',
-                    '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field jw-odoo-field-invalid">10a</span></p>',
+                    '<p><span class="jw-focus jw-odoo-field jw-odoo-field-invalid" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10a[]</span></p>',
+                    '<p><span class="jw-focus jw-odoo-field jw-odoo-field-invalid" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10a</span></p>',
+                    '<p><span class="jw-focus jw-odoo-field jw-odoo-field-invalid" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">10a</span></p>',
                 ].join(''),
             });
         });
@@ -144,9 +144,9 @@ describePlugin(OdooField, () => {
                         await insertText(editor, 'a');
                     },
                     contentAfter: [
-                        '<p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text" class="jw-focus jw-odoo-field">Samplea[] text</span></p>',
-                        '<p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text" class="jw-focus jw-odoo-field">Samplea text</span></p>',
-                        '<p><span data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text" class="jw-focus jw-odoo-field">Samplea text</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Samplea[] text</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Samplea text</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.text_field" data-oe-field="text_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="text">Samplea text</span></p>',
                     ].join(''),
                 });
             });
@@ -163,9 +163,9 @@ describePlugin(OdooField, () => {
                         await insertText(editor, 'a');
                     },
                     contentAfter: [
-                        '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html" class="jw-focus jw-odoo-field"><h2>Title</h2><p>Contenta[].</p></div>',
-                        '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html" class="jw-focus jw-odoo-field"><h2>Title</h2><p>Contenta.</p></div>',
-                        '<div data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html" class="jw-focus jw-odoo-field"><h2>Title</h2><p>Contenta.</p></div>',
+                        '<div class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><p>Contenta[].</p></div>',
+                        '<div class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><p>Contenta.</p></div>',
+                        '<div class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.html_test_field" data-oe-field="html_test_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="html"><h2>Title</h2><p>Contenta.</p></div>',
                     ].join(''),
                 });
             });
@@ -182,9 +182,9 @@ describePlugin(OdooField, () => {
                         await insertText(editor, '0');
                     },
                     contentAfter: [
-                        '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field">100[]</span></p>',
-                        '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field">100</span></p>',
-                        '<p><span data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer" class="jw-focus jw-odoo-field">100</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">100[]</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">100</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.integer_field" data-oe-field="integer_field" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="integer">100</span></p>',
                     ].join(''),
                 });
             });
@@ -201,9 +201,9 @@ describePlugin(OdooField, () => {
                         await insertText(editor, '0');
                     },
                     contentAfter: [
-                        '<p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float" class="jw-focus jw-odoo-field">1,0000[].0</span></p>',
-                        '<p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float" class="jw-focus jw-odoo-field">1,0000.0</span></p>',
-                        '<p><span data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float" class="jw-focus jw-odoo-field">1,0000.0</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,0000[].0</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,0000.0</span></p>',
+                        '<p><span class="jw-focus jw-odoo-field" data-oe-expression="odoo_model.float_wigget_duration" data-oe-field="float_wigget_duration" data-oe-id="1" data-oe-model="odoo_module.odoo_model" data-oe-type="float">1,0000.0</span></p>',
                     ].join(''),
                 });
             });

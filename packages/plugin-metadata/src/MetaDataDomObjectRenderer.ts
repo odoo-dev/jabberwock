@@ -4,7 +4,6 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { MetadataNode } from './MetadataNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class MetadataDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -16,7 +15,6 @@ export class MetadataDomObjectRenderer extends NodeRenderer<DomObject> {
             tag: node.htmlTag,
             children: [{ text: node.contents }],
         };
-        this.engine.renderAttributes(Attributes, node, meta);
         return meta;
     }
 }

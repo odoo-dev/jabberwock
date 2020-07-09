@@ -3,7 +3,6 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { LabelNode } from '../../plugin-layout/src/LabelNode';
 
 export class LabelDomObjectRenderer extends NodeRenderer<DomObject> {
@@ -17,7 +16,6 @@ export class LabelDomObjectRenderer extends NodeRenderer<DomObject> {
             attributes: { class: 'label' },
             children: [{ text: label.label }],
         };
-        this.engine.renderAttributes(Attributes, label, objectLabel);
         return objectLabel;
     }
 }

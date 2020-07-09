@@ -43,10 +43,10 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
                 this.engine.editor.dispatcher.removeCommandHook('*', updateButton);
             },
         };
-        this.engine.renderAttributes(Attributes, button, objectButton);
-
-        if (objectButton.attributes.class?.includes(' fa-')) {
-            if (!objectButton.attributes.title) {
+        const attributes = button.modifiers.find(Attributes);
+        const className = attributes?.get('class');
+        if (className?.includes(' fa-')) {
+            if (!attributes.get('title')) {
                 objectButton.attributes.title = button.label;
             }
         } else {

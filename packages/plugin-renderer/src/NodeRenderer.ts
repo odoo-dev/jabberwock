@@ -1,7 +1,6 @@
 import { RenderingIdentifier } from './RenderingEngine';
 import { RenderingEngine } from './RenderingEngine';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
-import { flat } from '../../utils/src/utils';
 
 class SuperRenderer<T> {
     constructor(public renderer: NodeRenderer<T>) {}
@@ -20,12 +19,8 @@ class SuperRenderer<T> {
      * @param node
      */
     async renderBatch(nodes: VNode[]): Promise<T[]> {
-        const renderings: Promise<T[]>[] = [];
-        const groups = this.renderer.engine.renderBatched(nodes, this.renderer);
-        for (const [, rendering] of groups) {
-            renderings.push(rendering);
-        }
-        return flat(await Promise.all(renderings));
+        await Promise.all(this.renderer.engine.renderBatched(nodes, this.renderer));
+        return nodes.map(node => this.renderer.engine.renderings.get(node));
     }
 }
 

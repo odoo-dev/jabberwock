@@ -11,7 +11,6 @@ import { Html } from '../../plugin-html/src/Html';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { ModifierRenderer } from '../src/ModifierRenderer';
 import { Modifier } from '../../core/src/Modifier';
-import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 
 describe('Renderer', () => {
     describe('render', () => {
@@ -22,10 +21,8 @@ describe('Renderer', () => {
                 }
             }
             class CustomRenderer extends ModifierRenderer<VNode> {
-                async render(modifier: Modifier, renderings: VNode[]): Promise<VNode> {
-                    const fragment = new FragmentNode();
-                    fragment.append(...renderings);
-                    return fragment;
+                async render(modifier: Modifier, renderings: VNode[]): Promise<VNode[]> {
+                    return renderings;
                 }
             }
             class VNodeRenderingEngine extends RenderingEngine<VNode> {

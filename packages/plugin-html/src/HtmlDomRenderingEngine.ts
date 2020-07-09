@@ -20,8 +20,7 @@ export class HtmlDomRenderingEngine extends RenderingEngine<Node[]> {
     async render(nodes: VNode | VNode[]): Promise<Node[][] | Node[]> {
         const renderer = this.editor.plugins.get(Renderer);
         const objectEngine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
-        objectEngine.renderings.clear();
-        objectEngine.locations.clear();
+        objectEngine.clear();
         if (nodes instanceof Array) {
             return super.render(nodes);
         } else {

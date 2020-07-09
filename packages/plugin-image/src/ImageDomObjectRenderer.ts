@@ -4,7 +4,6 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class ImageDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -28,14 +27,11 @@ export class ImageDomObjectRenderer extends NodeRenderer<DomObject> {
                 el.removeEventListener('click', select);
             },
         };
-        this.engine.renderAttributes(Attributes, node, image);
         const isSelected = this.engine.editor.selection.range.selectedNodes(
             selectedNode => selectedNode === node,
         ).length;
         if (isSelected) {
-            const classlist = (image.attributes?.class || '').split(/\s+/);
-            classlist.push('jw_selected_image');
-            image.attributes.class = classlist.join(' ');
+            image.attributes = { class: 'jw_selected_image' };
         }
         this.engine.locate([node], image);
         return image;
