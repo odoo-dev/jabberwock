@@ -196,39 +196,73 @@ export class Memory {
         this._create(sliceKey, this._sliceKey);
         return this;
     }
-    getRootVersionables(proxy: LoopObject | LoopArray | LoopSet): Set<AllowedObject> {
+    getRootVersionables(proxy: AllowedObject): Set<AllowedObject> {
         const roots: Set<AllowedObject> = new Set();
-        const pathToRoot = this._getRootVersionables(this._sliceKey, proxy);
-        for (const path of pathToRoot) {
-            roots.add(path.proxy);
+
+        const nodeID = proxy[memoryProxyPramsKey].ID;
+        const pathList: [ProxyUniqID, string[]][] = [[nodeID, []]];
+        while (pathList.length) {
+            const path = pathList.pop();
+            const [nodeID, pathToNode] = path;
+            if (this._rootProxies[nodeID as number]) {
+                roots.add(this._proxies[nodeID as number]);
+                continue;
+            }
+            this._getProxyParentedPath(this._sliceKey, nodeID).forEach(path => {
+                const parentNodeID = path.split(parentedPathSeparator, 1)[0];
+                const partPath = path.slice(parentNodeID.length + 1);
+                pathList.push([+parentNodeID, [partPath].concat(pathToNode)]);
+            });
         }
         return roots;
     }
-    getChangedVersionables(sliceKey: sliceKey = this._sliceKey): Map<AllowedObject, string[][]> {
+    getParents(proxy: AllowedObject): Map<AllowedObject, string[][]> {
         const pathChanges = new Map<AllowedObject, string[][]>();
+        const nodeID = proxy[memoryProxyPramsKey].ID;
+        const pathList: [ProxyUniqID, string[]][] = [[nodeID, []]];
+        while (pathList.length) {
+            const path = pathList.pop();
+            const [nodeID, pathToNode] = path;
+
+            const parentProxy: AllowedObject = this._proxies[nodeID as number];
+            let paths: string[][] = pathChanges.get(parentProxy);
+            if (!paths) {
+                paths = [];
+                pathChanges.set(parentProxy, paths);
+            }
+            paths.push(path[1]);
+
+            if (this._rootProxies[nodeID as number]) {
+                continue;
+            }
+            this._getProxyParentedPath(this._sliceKey, nodeID).forEach(path => {
+                const parentNodeID = path.split(parentedPathSeparator, 1)[0];
+                const partPath = path.slice(parentNodeID.length + 1);
+                pathList.push([+parentNodeID, [partPath].concat(pathToNode)]);
+            });
+        }
+        return pathChanges;
+    }
+    getChanges(sliceKey: sliceKey = this._sliceKey): Map<AllowedObject, string[]> {
+        const pathChanges = new Map<AllowedObject, string[]>();
         const slice = this._references[sliceKey].slice;
         for (const id in slice) {
             const item = slice[id];
-            const proxy = this._proxies[id] as LoopObject | LoopArray | LoopSet;
-            this._getRootVersionables(this._sliceKey, proxy).forEach(pathToRoot => {
-                let paths: string[][];
-                if (
-                    (item instanceof MemoryTypeObject || item instanceof MemoryTypeArray) &&
-                    Object.keys(item.props).length
-                ) {
-                    paths = [];
-                    for (const key in item.props) {
-                        paths.push(pathToRoot.path.concat([key]));
-                    }
-                } else {
-                    paths = [pathToRoot.path];
-                }
-                if (pathChanges.get(pathToRoot.proxy)) {
-                    pathChanges.get(pathToRoot.proxy).push(...paths);
-                } else {
-                    pathChanges.set(pathToRoot.proxy, paths);
-                }
-            });
+            const proxy = this._proxies[id] as AllowedObject;
+            let paths: string[];
+            if (
+                (item instanceof MemoryTypeObject || item instanceof MemoryTypeArray) &&
+                Object.keys(item.props).length
+            ) {
+                paths = Object.keys(item.props);
+            } else {
+                paths = [];
+            }
+            if (pathChanges.get(proxy)) {
+                pathChanges.get(proxy).push(...paths);
+            } else {
+                pathChanges.set(proxy, paths);
+            }
         }
         return pathChanges;
     }
@@ -414,28 +448,6 @@ export class Memory {
     // private
     /////////////////////////////////////////////////////
 
-    private _getRootVersionables(
-        sliceKey: sliceKey,
-        proxy: LoopObject | LoopArray | LoopSet,
-    ): { proxy: AllowedObject; path: string[] }[] {
-        const roots: { proxy: AllowedObject; path: string[] }[] = [];
-        const nodeID = proxy[memoryProxyPramsKey].ID;
-        const pathList: [ProxyUniqID, string[]][] = [[nodeID, []]];
-        while (pathList.length) {
-            const path = pathList.pop();
-            const [nodeID, pathToNode] = path;
-            if (this._rootProxies[nodeID as number]) {
-                roots.push({ proxy: this._proxies[nodeID as number], path: path[1] });
-                continue;
-            }
-            this._getProxyParentedPath(sliceKey, nodeID).forEach(path => {
-                const parentNodeID = path.split(parentedPathSeparator, 1)[0];
-                const partPath = path.slice(parentNodeID.length + 1);
-                pathList.push([+parentNodeID, [partPath].concat(pathToNode)]);
-            });
-        }
-        return roots;
-    }
     private _addSliceProxyParent(
         ID: ProxyUniqID,
         parentID: ProxyUniqID,

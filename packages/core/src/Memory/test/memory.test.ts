@@ -2424,12 +2424,12 @@ describe('core', () => {
                     memory.create('test-1');
                     memory.switchTo('test-1');
 
-                    expect(memory.getChangedVersionables('test-1').size).to.deep.equal(0);
+                    expect(memory.getChanges('test-1').size).to.deep.equal(0);
 
                     obj.toto.titi.tata.m = 4;
                     obj.tutu.a = 6;
 
-                    const pathChanges = memory.getChangedVersionables('test-1');
+                    const pathChanges = memory.getChanges('test-1');
                     expect([...pathChanges.keys()]).to.deep.equal([obj.tutu, obj.toto]);
                     expect([...pathChanges.values()]).to.deep.equal([
                         [['a'], ['tata', 'm']],
