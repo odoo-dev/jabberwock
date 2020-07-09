@@ -10,7 +10,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { Toolbar } from '../../plugin-toolbar/src/Toolbar';
 import { click } from '../../utils/src/testUtils';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import {
     DomObject,
     DomObjectRenderingEngine,
@@ -189,7 +189,7 @@ describe('Theme', () => {
     });
     it('should change the theme with domObjectNative', async () => {
         class CustomNode extends ContainerNode {}
-        class CustomDomRenderer extends AbstractRenderer<DomObject> {
+        class CustomDomRenderer extends NodeRenderer<DomObject> {
             static id = DomObjectRenderingEngine.id;
             engine: DomObjectRenderingEngine;
             predicate = CustomNode;

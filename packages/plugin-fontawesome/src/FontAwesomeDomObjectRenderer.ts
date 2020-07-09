@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { FontAwesomeNode } from './FontAwesomeNode';
 import {
     DomObjectRenderingEngine,
@@ -11,7 +11,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 
 const zeroWidthSpace = '\u200b';
 
-export class FontAwesomeDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = FontAwesomeNode;

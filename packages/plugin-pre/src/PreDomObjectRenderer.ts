@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import {
     DomObjectRenderingEngine,
     DomObject,
@@ -6,7 +6,7 @@ import {
 import { PreNode } from './PreNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class PreDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class PreDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = PreNode;

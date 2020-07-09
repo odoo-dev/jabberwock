@@ -2,10 +2,10 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 
-export class ZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ZoneNode;

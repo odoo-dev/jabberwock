@@ -3,25 +3,25 @@ import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
 import { Renderer } from '../src/Renderer';
-import { AbstractRenderer } from '../src/AbstractRenderer';
+import { NodeRenderer } from '../src/NodeRenderer';
 import { RenderingEngine } from '../src/RenderingEngine';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Html } from '../../plugin-html/src/Html';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { AbstractModifierRenderer } from '../src/AbstractModifierRenderer';
+import { ModifierRenderer } from '../src/ModifierRenderer';
 import { Modifier } from '../../core/src/Modifier';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 
 describe('Renderer', () => {
     describe('render', () => {
         it('should return a rendering or void', async () => {
-            class VNodeRenderer extends AbstractRenderer<VNode> {
+            class VNodeRenderer extends NodeRenderer<VNode> {
                 async render(node: VNode): Promise<VNode> {
                     return node;
                 }
             }
-            class ModifierRenderer extends AbstractModifierRenderer<VNode> {
+            class CustomRenderer extends ModifierRenderer<VNode> {
                 async render(modifier: Modifier, renderings: VNode[]): Promise<VNode> {
                     const fragment = new FragmentNode();
                     fragment.append(...renderings);
@@ -31,7 +31,7 @@ describe('Renderer', () => {
             class VNodeRenderingEngine extends RenderingEngine<VNode> {
                 static id = 'VNode';
                 static defaultRenderer = VNodeRenderer;
-                static defaultModifierRenderer = ModifierRenderer;
+                static defaultModifierRenderer = CustomRenderer;
             }
             class VNodePlugin<T extends JWPluginConfig> extends JWPlugin<T> {
                 loadables: Loadables<Renderer> = {

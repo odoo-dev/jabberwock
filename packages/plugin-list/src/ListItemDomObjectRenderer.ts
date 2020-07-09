@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ListNode, ListType } from './ListNode';
 import { VElement } from '../../core/src/VNodes/VElement';
@@ -10,7 +10,7 @@ import {
 import { ListItemAttributes } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
 
-export class ListItemDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ListItemDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = List.isListItem;

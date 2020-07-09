@@ -5,8 +5,8 @@ import {
     RenderingEngineConstructor,
 } from './RenderingEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { ModifierRendererConstructor } from './AbstractModifierRenderer';
-import { RendererConstructor } from './AbstractRenderer';
+import { ModifierRendererConstructor } from './ModifierRenderer';
+import { RendererConstructor } from './NodeRenderer';
 
 export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     loaders = {

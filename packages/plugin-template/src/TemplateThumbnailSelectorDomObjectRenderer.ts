@@ -2,14 +2,14 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { TemplateThumbnailSelectorNode } from './TemplateThumbnailSelectorNode';
 
 import '../assets/Template.css';
 
-export class TemplateThumbnailSelectorDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class TemplateThumbnailSelectorDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = TemplateThumbnailSelectorNode;

@@ -1,9 +1,9 @@
-import { AbstractModifierRenderer } from '../../plugin-renderer/src/AbstractModifierRenderer';
+import { ModifierRenderer } from '../../plugin-renderer/src/ModifierRenderer';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
 import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class FormatDomObjectModifierRenderer extends AbstractModifierRenderer<DomObject> {
+export class FormatDomObjectModifierRenderer extends ModifierRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = Format;

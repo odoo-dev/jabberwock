@@ -2,11 +2,11 @@ import {
     DomObject,
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ToolbarNode } from './ToolbarNode';
 
-export class ToolbarZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ToolbarZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ToolbarNode;

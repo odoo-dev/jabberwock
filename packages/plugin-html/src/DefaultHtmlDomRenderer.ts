@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { HtmlDomRenderingEngine } from './HtmlDomRenderingEngine';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
@@ -8,7 +8,7 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
-export class DefaultHtmlDomRenderer extends AbstractRenderer<Node[]> {
+export class DefaultHtmlDomRenderer extends NodeRenderer<Node[]> {
     static id = 'dom/html';
     engine: HtmlDomRenderingEngine;
 

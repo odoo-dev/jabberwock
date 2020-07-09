@@ -2,13 +2,13 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { FollowRangeZoneNode } from './FollowRangeZoneNode';
 import { targetDeepest } from '../../utils/src/Dom';
 
 import '../assets/FollowRange.css';
 
-export class FollowRangeZoneDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = FollowRangeZoneNode;

@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ListNode, ListType } from './ListNode';
 import {
     DomObjectRenderingEngine,
@@ -8,7 +8,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 
 import '../assets/checklist.css';
 
-export class ListDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ListNode;

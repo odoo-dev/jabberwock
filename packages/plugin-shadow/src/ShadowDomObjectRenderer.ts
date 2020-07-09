@@ -2,12 +2,12 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ShadowNode } from './ShadowNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
-export class ShadowDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ShadowDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ShadowNode;

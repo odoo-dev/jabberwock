@@ -5,7 +5,7 @@ import { ModifierPredicate } from '../../core/src/Modifier';
 import { VNode } from '../../core/src/VNodes/VNode';
 
 class SuperModifierRenderer<T> {
-    constructor(public renderer: AbstractModifierRenderer<T>) {}
+    constructor(public renderer: ModifierRenderer<T>) {}
     /**
      * Render the given modifier and wrap the list of DomObject into a
      * formating DomObject.
@@ -24,7 +24,7 @@ class SuperModifierRenderer<T> {
     }
 }
 
-export abstract class AbstractModifierRenderer<T> {
+export abstract class ModifierRenderer<T> {
     static id: RenderingIdentifier;
     readonly predicate?: ModifierPredicate;
     readonly engine: RenderingEngine<T>;
@@ -44,11 +44,11 @@ export abstract class AbstractModifierRenderer<T> {
     abstract render(modifier: Modifier, renderings: T[], batch: VNode[]): Promise<T>;
 }
 
-export interface AbstractModifierRenderer<T = {}> {
+export interface ModifierRenderer<T = {}> {
     constructor: ModifierRendererConstructor<T>;
 }
 
 export type ModifierRendererConstructor<T = {}> = {
-    new (engine: RenderingEngine<T>): AbstractModifierRenderer<T>;
+    new (engine: RenderingEngine<T>): ModifierRenderer<T>;
     id: RenderingIdentifier;
 };

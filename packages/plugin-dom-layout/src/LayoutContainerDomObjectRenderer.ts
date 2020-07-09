@@ -2,10 +2,10 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { LayoutContainer } from './LayoutContainerNode';
 
-export class LayoutContainerDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class LayoutContainerDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = LayoutContainer;

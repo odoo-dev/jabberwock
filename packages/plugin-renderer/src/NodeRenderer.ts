@@ -4,7 +4,7 @@ import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 import { flat } from '../../utils/src/utils';
 
 class SuperRenderer<T> {
-    constructor(public renderer: AbstractRenderer<T>) {}
+    constructor(public renderer: NodeRenderer<T>) {}
     /**
      * Render the given node.
      *
@@ -33,7 +33,7 @@ interface SuperRenderer<T = {}> {
     constructor: RendererConstructor<T>;
 }
 
-export abstract class AbstractRenderer<T> {
+export abstract class NodeRenderer<T> {
     static id: RenderingIdentifier;
     readonly predicate?: Predicate;
     readonly engine: RenderingEngine<T>;
@@ -60,11 +60,11 @@ export abstract class AbstractRenderer<T> {
     }
 }
 
-export interface AbstractRenderer<T = {}> {
+export interface NodeRenderer<T = {}> {
     constructor: RendererConstructor<T>;
 }
 
 export type RendererConstructor<T = {}> = {
-    new (engine: RenderingEngine<T>): AbstractRenderer<T>;
+    new (engine: RenderingEngine<T>): NodeRenderer<T>;
     id: RenderingIdentifier;
 };

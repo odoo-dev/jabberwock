@@ -1,4 +1,4 @@
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import {
     DomObjectRenderingEngine,
     DomObject,
@@ -12,7 +12,7 @@ import { Fullscreen } from './Fullscreen';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { DomObjectActionable } from '../../plugin-dom-layout/src/ActionableDomObjectRenderer';
 
-export class FullsreenButtonDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class FullsreenButtonDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>

@@ -2,7 +2,7 @@ import {
     DomObject,
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractRenderer } from '../../plugin-renderer/src/AbstractRenderer';
+import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
@@ -12,7 +12,7 @@ import { LabelNode } from '../../plugin-layout/src/LabelNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { DomObjectActionable } from './ActionableDomObjectRenderer';
 
-export class ActionableGroupSelectItemDomObjectRenderer extends AbstractRenderer<DomObject> {
+export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean => node.ancestors(ActionableGroupNode).length >= 2;
