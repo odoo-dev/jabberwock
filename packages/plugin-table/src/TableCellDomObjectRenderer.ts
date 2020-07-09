@@ -4,7 +4,6 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -20,6 +19,7 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
         const domObject: DomObject = {
             tag: cell.header ? 'TH' : 'TD',
             children: await this.engine.renderChildren(cell),
+            attributes: {},
         };
 
         // Render attributes.
@@ -28,15 +28,11 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
         // cells. Render them here. If their value is 1 or less, they are
         // insignificant so no need to render them.
         if (cell.colspan > 1) {
-            cell.modifiers.get(Attributes).set('colspan', '' + cell.colspan);
+            domObject.attributes.colspan = cell.colspan.toString();
         }
         if (cell.rowspan > 1) {
-            cell.modifiers.get(Attributes).set('rowspan', '' + cell.rowspan);
+            domObject.attributes.rowspan = cell.rowspan.toString();
         }
-        this.engine.renderAttributes(Attributes, cell, domObject);
-        cell.modifiers.get(Attributes).remove('colspan');
-        cell.modifiers.get(Attributes).remove('rowspan');
-
         return domObject;
     }
 }

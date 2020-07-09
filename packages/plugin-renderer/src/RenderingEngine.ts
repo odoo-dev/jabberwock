@@ -15,8 +15,10 @@ export class RenderingEngine<T = {}> {
     readonly editor: JWEditor;
     readonly renderers: NodeRenderer<T>[] = [];
     readonly modifierRenderers: ModifierRenderer<T>[] = [];
-    readonly renderings: Map<VNode, Promise<T>> = new Map();
+    readonly renderings: Map<VNode, T> = new Map();
+    readonly renderingPromises: Map<VNode, Promise<void>> = new Map();
     readonly locations: Map<T, VNode[]> = new Map();
+    readonly from: Map<T, Array<VNode | Modifier>> = new Map();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -73,19 +75,12 @@ export class RenderingEngine<T = {}> {
      * @param node
      */
     async render(nodes: VNode[]): Promise<T[]> {
-        const groups = this.renderBatched(nodes);
-        for (const [nodes, promiseBatch] of groups) {
-            for (const index in nodes) {
-                const node = nodes[index];
-                const promise = new Promise<T>(resolve => {
-                    promiseBatch.then(values => {
-                        resolve(values[index]);
-                    });
-                });
-                this.renderings.set(node, promise);
-            }
-        }
-        return Promise.all(nodes.map(node => this.renderings.get(node)));
+        const promises = this.renderBatched(
+            nodes.filter(node => !this.renderingPromises.get(node)),
+        );
+        await Promise.all(promises); // wait the newest promises
+        await Promise.all(nodes.map(node => this.renderingPromises.get(node))); // wait indifidual promise
+        return nodes.map(node => this.renderings.get(node)); // return result
     }
     /**
      * Indicates the location of the nodes in the rendering performed.
@@ -99,8 +94,8 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendering
      */
-    locate(nodes: VNode[], domObject: T): void {
-        this.locations.set(domObject, nodes);
+    locate(nodes: VNode[], value: T): void {
+        this.locations.set(value, nodes);
     }
     /**
      * Group the nodes and call the renderer 'renderBatch' method with the
@@ -114,13 +109,21 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendered
      */
-    renderBatched(nodes: VNode[], rendered?: NodeRenderer<T>): [VNode[], Promise<T[]>][] {
-        const groups: [VNode[], Promise<T[]>][] = [];
+    renderBatched(nodes: VNode[], rendered?: NodeRenderer<T>): Promise<void>[] {
+        const promises: Promise<void>[] = [];
         for (const node of nodes) {
             const renderer = this.getCompatibleRenderer(node, rendered);
-            groups.push([[node], renderer.renderBatch(nodes)]);
+            const renderings = renderer.renderBatch(nodes);
+            const promise = renderings.then(values => {
+                const value = values[0];
+                this._addOrigin(node, value);
+                this._addDefaultLocation(node, value);
+                this.renderings.set(node, value);
+            });
+            this.renderingPromises.set(node, promise);
+            promises.push(promise);
         }
-        return groups;
+        return promises;
     }
     /**
      * Return the first matche Renderer for this VNode, starting from the
@@ -169,7 +172,22 @@ export class RenderingEngine<T = {}> {
      */
     clear(): void {
         this.renderings.clear();
+        this.renderingPromises.clear();
         this.locations.clear();
+        this.from.clear();
+    }
+    protected _addOrigin(node: VNode | Modifier, value: T): void {
+        const from = this.from.get(value);
+        if (from) {
+            if (!from.includes(node)) {
+                from.push(node);
+            }
+        } else {
+            this.from.set(value, [node]);
+        }
+    }
+    protected _addDefaultLocation(node: VNode, value: T): void {
+        this.locations.set(value, [node]);
     }
 }
 

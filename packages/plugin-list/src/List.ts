@@ -3,7 +3,7 @@ import { ListNode, ListType } from './ListNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { ListDomObjectRenderer } from './ListDomObjectRenderer';
-import { ListItemDomObjectRenderer } from './ListItemDomObjectRenderer';
+import { ListItemAttributesDomObjectModifierRenderer } from './ListItemAttributesDomObjectModifierRenderer';
 import { ListXmlDomParser } from './ListXmlDomParser';
 import { ListItemXmlDomParser, ListItemAttributes } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
@@ -27,7 +27,7 @@ export type toggleCheckedParams = CommandParams;
 
 export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static isListItem(node: VNode): boolean {
-        return node.parent && node.parent.is(ListNode);
+        return node.parent && node.parent instanceof ListNode;
     }
     static isInList(type: ListType, node: VNode): boolean {
         return node?.ancestor(ListNode)?.listType === type;
@@ -68,7 +68,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     };
     readonly loadables: Loadables<Parser & Renderer & Keymap & Layout> = {
         parsers: [ListXmlDomParser, ListItemXmlDomParser],
-        renderers: [ListItemDomObjectRenderer, ListDomObjectRenderer],
+        renderers: [ListDomObjectRenderer, ListItemAttributesDomObjectModifierRenderer],
         shortcuts: [
             {
                 pattern: 'CTRL+SHIFT+<Digit7>',
@@ -176,11 +176,11 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      *
      * @param params
      */
-    toggleList(params: ListParams): void {
+    toggleList(params: ListParams): Promise<void> {
         const type = params.type;
         const range = params.context.range;
 
-        withRange(this.editor, VRange.clone(range), range => {
+        return withRange(this.editor, VRange.clone(range), range => {
             // Extend the range to cover the entirety of its containers.
             if (range.startContainer.hasChildren()) {
                 range.setStart(range.startContainer.firstChild());

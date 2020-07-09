@@ -4,7 +4,6 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableRowDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -19,7 +18,6 @@ export class TableRowDomObjectRenderer extends NodeRenderer<DomObject> {
             tag: 'TR',
             children: row.children(),
         };
-        this.engine.renderAttributes(Attributes, row, objectRow);
         return objectRow;
     }
 }

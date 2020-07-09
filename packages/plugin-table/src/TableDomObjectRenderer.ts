@@ -6,7 +6,6 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TableSectionAttributes } from './TableRowXmlDomParser';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -49,7 +48,6 @@ export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
                 };
             }
         }
-        this.engine.renderAttributes(Attributes, table, objectTable);
         return objectTable;
     }
 }

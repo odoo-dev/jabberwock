@@ -14,18 +14,18 @@ export class FormatDomObjectModifierRenderer extends ModifierRenderer<DomObject>
      * @param format
      * @param contents
      */
-    async render(format: Format, contents: DomObject[]): Promise<DomObject> {
+    async render(format: Format, contents: DomObject[]): Promise<DomObject[]> {
         const domObject: DomObject = {
             tag: format.htmlTag.toUpperCase(),
-            attributes: {},
             children: contents,
         };
         const attributes = format.modifiers.find(Attributes);
-        if (attributes) {
+        if (attributes && attributes.keys().length) {
+            domObject.attributes = {};
             for (const name of attributes.keys()) {
                 domObject.attributes[name] = attributes.get(name);
             }
         }
-        return domObject;
+        return [domObject];
     }
 }

@@ -6,7 +6,6 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -14,31 +13,15 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     predicate: Predicate = CharNode;
 
     async render(charNode: CharNode): Promise<DomObject> {
-        return this._renderText([charNode], charNode.modifiers.get(Attributes));
+        return this._renderText([charNode]);
     }
     async renderBatch(charNodes: CharNode[]): Promise<DomObject[]> {
         const domObjects: DomObject[] = [];
-        const groups = this._groupByAttributes(charNodes);
-        for (const [charNodes, attr] of groups) {
-            const domObject = this._renderText(charNodes, attr);
-            for (let i = 0; i < charNodes.length; i++) domObjects.push(domObject);
-        }
+        const domObject = this._renderText(charNodes);
+        for (let i = 0; i < charNodes.length; i++) domObjects.push(domObject);
         return domObjects;
     }
-    private _groupByAttributes(charNodes: CharNode[]): [CharNode[], Attributes][] {
-        const groups: [CharNode[], Attributes][] = [];
-        for (const charNode of charNodes) {
-            const attr = charNode.modifiers.get(Attributes);
-            const last = groups[groups.length - 1];
-            if (!last || (!last[1] && !attr) || (attr && !attr.isSameAs(last[1]))) {
-                groups.push([[charNode], attr]);
-            } else {
-                last[0].push(charNode);
-            }
-        }
-        return groups;
-    }
-    private _renderText(charNodes: CharNode[], attr: Attributes): DomObject {
+    private _renderText(charNodes: CharNode[]): DomObject {
         // Create textObject.
         const texts = [];
         for (const charNode of charNodes) {
@@ -62,16 +45,6 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
         }
         const textObject = { text: texts.join('') };
         this.engine.locate(charNodes, textObject);
-
-        if (attr.keys().length) {
-            const domObject = {
-                tag: 'SPAN',
-                children: [textObject],
-            };
-            this.engine.renderAttributes(Attributes, charNodes[0], domObject);
-            return domObject;
-        } else {
-            return textObject;
-        }
+        return textObject;
     }
 }

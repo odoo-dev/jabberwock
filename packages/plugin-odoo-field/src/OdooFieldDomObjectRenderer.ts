@@ -1,7 +1,6 @@
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { OdooFieldNode } from './OdooFieldNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Predicate } from '../../core/src/VNodes/VNode';
 import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
@@ -14,7 +13,6 @@ export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(node: OdooFieldNode): Promise<DomObject> {
         const domObject: DomObjectElement = { tag: node.htmlTag };
-        this.engine.renderAttributes(Attributes, node, domObject);
         await this._renderValue(node, domObject);
         return domObject;
     }

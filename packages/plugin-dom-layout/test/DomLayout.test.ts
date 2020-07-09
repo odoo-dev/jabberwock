@@ -1532,6 +1532,7 @@ describe('DomLayout', () => {
 
                 let childNodes = [...domEditor.childNodes] as Node[];
                 let domSelection = target.ownerDocument.getSelection();
+
                 expect(childNodes.indexOf(domSelection.anchorNode)).to.deep.equal(3);
                 expect(domSelection.anchorOffset).to.deep.equal(1);
 
@@ -1598,40 +1599,12 @@ describe('DomLayout', () => {
                     const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                     expect(renderedText1).to.deep.equal({
                         tag: 'I',
-                        attributes: {},
                         children: [{ text: 'b' }],
                     });
                     const renderedText2 = await renderer.render('dom/object', textNodes[2]);
                     expect(renderedText2).to.deep.equal({ text: 'c' });
                 },
                 contentAfter: 'a[<i>b]</i>c',
-            });
-        });
-        it('should render text and linebreak with format', async () => {
-            await testEditor(BasicEditor, {
-                contentBefore: 'a[b<br>c]d',
-                stepFunction: async (editor: JWEditor) => {
-                    const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
-
-                    const renderer = editor.plugins.get(Renderer);
-                    const br = editable.children()[2];
-                    new BoldFormat().applyTo(br);
-
-                    await editor.execCommand<Inline>('toggleFormat', {
-                        FormatClass: BoldFormat,
-                    });
-                    expect(await renderer.render('dom/object', br)).to.deep.equal({
-                        tag: 'B',
-                        attributes: {},
-                        children: [
-                            { text: 'b' },
-                            { children: [{ tag: 'BR', attributes: {} }] },
-                            { text: 'c' },
-                        ],
-                    });
-                },
-                contentAfter: 'a[<b>b<br>c]</b>d',
             });
         });
     });
@@ -1684,11 +1657,9 @@ describe('DomLayout', () => {
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
                             tag: 'B',
-                            attributes: {},
                             children: [
                                 {
                                     tag: 'I',
-                                    attributes: {},
                                     children: [{ text: 'b' }],
                                 },
                             ],
@@ -2197,7 +2168,7 @@ describe('DomLayout', () => {
                 await nextTick();
                 mutationNumber = 0;
 
-                await engine.redraw(p, ...p.childVNodes);
+                await engine.redraw(p, f, e);
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -2922,7 +2893,10 @@ describe('DomLayout', () => {
                     '<jw-editor><div><p>a<b>bc</b>def</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
-                expect(mutationNumber).to.equal(3, 'update text, add bold, add text');
+                expect(mutationNumber).to.equal(
+                    5,
+                    'update text, move text in bold, add text, add bold, add text',
+                );
             });
             it('should remove style on char', async () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
@@ -2952,6 +2926,132 @@ describe('DomLayout', () => {
                     3,
                     'remove bold, update text, remove text in removed <b>',
                 );
+            });
+        });
+        describe('modifier', () => {
+            it('should render linebreak with format', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: 'a[b<br>c]d',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.get('editable')[0];
+
+                        const renderer = editor.plugins.get(Renderer);
+                        const br = editable.children()[2];
+                        new BoldFormat().applyTo(br);
+
+                        mutationNumber = 0;
+
+                        await domEngine.redraw(br);
+
+                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                            tag: 'B',
+                            children: [{ tag: 'BR' }],
+                        });
+                        expect(mutationNumber).to.equal(2, 'add b, move br');
+                    },
+                    contentAfter: 'a[b<b><br></b>c]d',
+                });
+            });
+            it('should render linebreak with format then the siblings char', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: 'a[b<br>c]d',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.get('editable')[0];
+
+                        const renderer = editor.plugins.get(Renderer);
+                        const br = editable.children()[2];
+                        new BoldFormat().applyTo(br);
+
+                        mutationNumber = 0;
+
+                        await domEngine.redraw(br);
+
+                        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                        expect(domEditable.innerHTML).to.equal('ab<b><br></b>cd');
+                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                            tag: 'B',
+                            children: [{ tag: 'BR' }],
+                        });
+                        expect(mutationNumber).to.equal(2, 'remove br, add b');
+
+                        mutationNumber = 0;
+
+                        await editor.execCommand<Inline>('toggleFormat', {
+                            FormatClass: BoldFormat,
+                        });
+
+                        expect(domEditable.innerHTML).to.equal('a<b>b<br>c</b>d');
+                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                            tag: 'B',
+                            children: [{ text: 'b' }, { tag: 'BR' }, { text: 'c' }],
+                        });
+                        expect(mutationNumber).to.equal(
+                            8,
+                            'change text, add b, create text, add text, remove br, create text, add text, change text',
+                        );
+                    },
+                    contentAfter: 'a[<b>b<br>c]</b>d',
+                });
+            });
+            it('should render text and linebreak with format', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: 'a[b<br>c]d',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.get('editable')[0];
+
+                        const renderer = editor.plugins.get(Renderer);
+                        const br = editable.children()[2];
+                        new BoldFormat().applyTo(br);
+
+                        mutationNumber = 0;
+
+                        await editor.execCommand<Inline>('toggleFormat', {
+                            FormatClass: BoldFormat,
+                        });
+
+                        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                        expect(domEditable.innerHTML).to.equal('a<b>b<br>c</b>d');
+                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                            tag: 'B',
+                            children: [{ text: 'b' }, { tag: 'BR' }, { text: 'c' }],
+                        });
+                        expect(mutationNumber).to.equal(
+                            8,
+                            'change text, add b, crete text, add text, move br, create text, add text, change text',
+                        );
+                    },
+                    contentAfter: 'a[<b>b<br>c]</b>d',
+                });
+            });
+            it('should render a linebreak with format between formatted char', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: 'a<b>[b</b><br><b>c]</b>d',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.get('editable')[0];
+
+                        const br = editable.children()[2];
+                        new BoldFormat().applyTo(br);
+
+                        mutationNumber = 0;
+
+                        await domEngine.redraw(br);
+
+                        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                        expect(domEditable.innerHTML).to.equal('a<b>b<br>c</b>d');
+
+                        const renderer = editor.plugins.get(Renderer);
+                        expect(await renderer.render('dom/object', br)).to.deep.equal({
+                            tag: 'B',
+                            children: [{ text: 'b' }, { tag: 'BR' }, { text: 'c' }],
+                        });
+                        expect(mutationNumber).to.equal(5, 'remove second b, move br, move text');
+                    },
+                    contentAfter: 'a[<b>b<br>c]</b>d',
+                });
             });
         });
         describe('update VNodes and DomNodes with minimum mutations', () => {
@@ -4524,8 +4624,8 @@ describe('DomLayout', () => {
                     'second change',
                 );
                 expect(mutationNumber).to.equal(
-                    8,
-                    'add {section}, move {article}, remove {div, head, a, content, foot, b}',
+                    6,
+                    'add {section}, move {article}, remove {div, head, content, foot}',
                 );
 
                 custom.layout = 1;

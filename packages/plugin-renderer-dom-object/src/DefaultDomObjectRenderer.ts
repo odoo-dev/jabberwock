@@ -3,7 +3,6 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
 export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
@@ -18,7 +17,6 @@ export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
                     tag: node.htmlTag,
                     children: await this.engine.renderChildren(node),
                 };
-                this.engine.renderAttributes(Attributes, node, domObject);
             } else if (node.test(FragmentNode)) {
                 domObject = {
                     children: await this.engine.renderChildren(node),

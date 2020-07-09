@@ -508,7 +508,7 @@ export abstract class AbstractNode extends EventMixin {
      */
     before(node: VNode): void {
         if (!this.parent) {
-            throw 'Cannot insert a VNode before a VNode with no parent.';
+            throw new Error('Cannot insert a VNode before a VNode with no parent.');
         }
         this.parent.insertBefore(node, this as VNode);
     }
@@ -519,7 +519,7 @@ export abstract class AbstractNode extends EventMixin {
      */
     after(node: VNode): void {
         if (!this.parent) {
-            throw 'Cannot insert a VNode after a VNode with no parent.';
+            throw new Error('Cannot insert a VNode after a VNode with no parent.');
         }
         this.parent.insertAfter(node, this as VNode);
     }

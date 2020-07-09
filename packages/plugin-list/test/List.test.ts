@@ -78,6 +78,22 @@ describePlugin(List, testEditor => {
                     contentAfter: '<ul class="checklist"><li class="checked">a</li></ul>',
                 });
             });
+            it('should parse a custom class', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<ul class="checklist"><li class="custom">a</li><li class="custom checked">a</li></ul>',
+                    contentAfter:
+                        '<ul class="checklist"><li class="custom unchecked">a</li><li class="custom checked">a</li></ul>',
+                });
+            });
+            it('should parse an attribute on li', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<ul class="checklist"><li toto="1">a</li><li toto="1" class="checked">a</li></ul>',
+                    contentAfter:
+                        '<ul class="checklist"><li toto="1" class="unchecked">a</li><li toto="1" class="checked">a</li></ul>',
+                });
+            });
             it('should parse a checked class on empty checklist item (without any content/container)', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<ul class="checklist"><li class="checked"><br></li></ul>',
@@ -94,7 +110,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li style="list-style: none;">
@@ -114,7 +129,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li class="checked">2</li>
@@ -135,7 +149,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li class="checked">3</li>
@@ -156,7 +169,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li class="checked">4</li>
@@ -178,7 +190,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li class="unchecked">5</li>
@@ -203,7 +214,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li class="checked">6</li>
@@ -232,7 +242,6 @@ describePlugin(List, testEditor => {
                                 </ul>
                             </li>
                         </ul>`),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(`
                         <ul class="checklist">
                             <li class="unchecked">7</li>
@@ -307,7 +316,6 @@ describePlugin(List, testEditor => {
                             </li>
                         </ul>`,
                     ),
-                    stepFunction: toggleChecklist,
                     contentAfter: unformat(
                         `<ul class="checklist">
                             <li style="list-style: none;">
@@ -664,8 +672,10 @@ describePlugin(List, testEditor => {
             });
             it('should wrap inlines and siblings into a container', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<ul><li><a href="#">...</a><div>anything</div></li></ul>',
-                    contentAfter: '<ul><li><a href="#">...</a><div>anything</div></li></ul>',
+                    contentBefore:
+                        '<ul><li toto="1"><a href="#">...</a><div>anything</div></li></ul>',
+                    contentAfter:
+                        '<ul><li toto="1"><a href="#">...</a><div>anything</div></li></ul>',
                 });
             });
         });

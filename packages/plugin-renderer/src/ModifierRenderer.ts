@@ -7,14 +7,15 @@ import { VNode } from '../../core/src/VNodes/VNode';
 class SuperModifierRenderer<T> {
     constructor(public renderer: ModifierRenderer<T>) {}
     /**
-     * Render the given modifier and wrap the list of DomObject into a
-     * formating DomObject.
+     * Render the given modifier and return a list of DomObject witch
+     * the applied modifier. The list can have an other len of the given
+     * list of DomObject.
      *
      * @param modifier
      * @param contents
      * @param batch
      */
-    render(modifier: Modifier, contents: T[], batch: VNode[]): Promise<T> {
+    render(modifier: Modifier, contents: T[], batch: VNode[]): Promise<T[]> {
         const nextRenderer = this.renderer.engine.getCompatibleModifierRenderer(
             modifier,
             batch,
@@ -34,14 +35,15 @@ export abstract class ModifierRenderer<T> {
         this.super = new SuperModifierRenderer(this);
     }
     /**
-     * Render the given modifier and wrap the list of DomObject into a
-     * formating DomObject.
+     * Render the given modifier and return a list of DomObject witch
+     * the applied modifier. The list can have an other len of the given
+     * list of DomObject.
      *
      * @param modifier
      * @param contents
      * @param batch
      */
-    abstract render(modifier: Modifier, renderings: T[], batch: VNode[]): Promise<T>;
+    abstract render(modifier: Modifier, renderings: T[], batch: VNode[]): Promise<T[]>;
 }
 
 export interface ModifierRenderer<T = {}> {

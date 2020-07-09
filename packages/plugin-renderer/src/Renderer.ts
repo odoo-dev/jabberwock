@@ -42,7 +42,7 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
         }
     }
 
-    loadRenderers(renderers: RendererConstructor[] | ModifierRendererConstructor[]): void {
+    loadRenderers(renderers: Array<RendererConstructor | ModifierRendererConstructor>): void {
         renderers = [...renderers].reverse() as RendererConstructor[];
         for (const RendererClass of renderers) {
             for (const id in this.engines) {

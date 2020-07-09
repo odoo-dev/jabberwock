@@ -98,11 +98,6 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
                 children: [{ text: item.textContent }],
             };
         }
-
-        if ('tag' in domObject && domObject.tag === 'OPTION') {
-            this.engine.renderAttributes(Attributes, item, domObject);
-        }
-
         return domObject;
     }
     /**

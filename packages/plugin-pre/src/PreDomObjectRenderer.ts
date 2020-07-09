@@ -4,7 +4,6 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { PreNode } from './PreNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class PreDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -19,7 +18,6 @@ export class PreDomObjectRenderer extends NodeRenderer<DomObject> {
             tag: 'PRE',
             children: await this.engine.renderChildren(node),
         };
-        this.engine.renderAttributes(Attributes, node, pre);
         return pre;
     }
 }

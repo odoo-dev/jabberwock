@@ -4,7 +4,6 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -23,10 +22,6 @@ export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
                 value: node.value,
             },
         };
-        const attributes = node.modifiers.find(Attributes);
-        if (attributes) {
-            this.engine.renderAttributes(Attributes, node, input);
-        }
         return input;
     }
 }

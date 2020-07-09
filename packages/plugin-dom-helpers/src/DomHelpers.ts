@@ -31,7 +31,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
     async removeClass(domNode: Node | Node[], className: string | string[]): Promise<void> {
         const classes = Array.isArray(className) ? className : [className];
         for (const node of this.getNodes(domNode)) {
-            node.modifiers.get(Attributes).classList.remove(...classes);
+            node.modifiers.find(Attributes)?.classList.remove(...classes);
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
