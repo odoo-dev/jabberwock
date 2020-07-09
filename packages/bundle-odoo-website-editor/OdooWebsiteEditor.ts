@@ -214,12 +214,9 @@ export class OdooWebsiteEditor extends JWEditor {
         const renderer = this.plugins.get(Renderer);
         const layout = this.plugins.get(Layout);
         const domLayout = layout.engines.dom;
-        const domRenderingEngine = renderer.engines[
-            HtmlDomRenderingEngine.id
-        ] as HtmlDomRenderingEngine;
         const editable = domLayout.components.get('editable')[0];
-        const nodes = await domRenderingEngine.render(editable);
-        return nodes[0];
+        const nodes = await renderer.render<Node[]>('dom/html', editable);
+        return nodes && nodes[0];
     }
 
     async render(): Promise<void> {
