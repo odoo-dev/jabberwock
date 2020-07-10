@@ -48,6 +48,8 @@ import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
 import { ModeDefinition } from '../core/src/Mode';
 import './odooLayout.css';
+import { OdooField } from '../plugin-odoo-field/src/OdooField';
+import { Textarea } from '../plugin-textarea/src/Textarea';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -109,6 +111,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Heading],
                 [Paragraph],
                 [List],
+                [Textarea],
                 [Indent],
                 [Span],
                 [Bold],

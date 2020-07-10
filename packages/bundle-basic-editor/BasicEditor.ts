@@ -38,6 +38,7 @@ import { Input } from '../../packages/plugin-input/src/Input';
 import { Dialog } from '../../packages/plugin-dialog/src/Dialog';
 import { FollowRange } from '../../packages/plugin-dom-follow-range/src/FollowRange';
 import { Toolbar } from '../../packages/plugin-toolbar/src/Toolbar';
+import { Textarea } from '../plugin-textarea/src/Textarea';
 
 import template from './basicLayout.xml';
 import './basicLayout.css';
@@ -68,6 +69,7 @@ export class BasicEditor extends JWEditor {
                 [LineBreak],
                 [Heading],
                 [Paragraph],
+                [Textarea],
                 [List],
                 [Indent],
                 [Span],
