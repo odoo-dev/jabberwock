@@ -59,7 +59,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // ancestor or a format.
                 if (this.hasColor(color, node)) return false;
                 const colorAncestor = node.ancestor(this.hasColor.bind(this));
-                return node.editable && (!colorAncestor || !this.hasColor(color, colorAncestor));
+                return !colorAncestor || !this.hasColor(color, colorAncestor);
             });
             for (const node of selectedNodes.filter(node => !selectedNodes.includes(node.parent))) {
                 // Apply the style to the node or its first format.

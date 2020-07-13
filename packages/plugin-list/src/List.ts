@@ -180,7 +180,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const type = params.type;
         const range = params.context.range;
 
-        withRange(VRange.clone(range), range => {
+        withRange(this.editor, VRange.clone(range), range => {
             // Extend the range to cover the entirety of its containers.
             if (range.startContainer.hasChildren()) {
                 range.setStart(range.startContainer.firstChild());

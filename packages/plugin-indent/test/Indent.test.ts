@@ -956,7 +956,7 @@ describePlugin(Indent, testEditor => {
                     const editable = domEngine.components.get('editable')[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
-                    await withRange(VRange.selecting(bNode, dNode), async range => {
+                    await withRange(editor, VRange.selecting(bNode, dNode), async range => {
                         await editor.execCommand<Indent>('indent', {
                             context: {
                                 range: range,
@@ -1043,7 +1043,7 @@ describePlugin(Indent, testEditor => {
                     const editable = domEngine.components.get('editable')[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
-                    await withRange(VRange.selecting(bNode, dNode), async range => {
+                    await withRange(editor, VRange.selecting(bNode, dNode), async range => {
                         await editor.execCommand<Indent>('outdent', {
                             context: {
                                 range: range,

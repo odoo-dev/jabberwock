@@ -6,6 +6,8 @@ import { FragmentNode } from './VNodes/FragmentNode';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AbstractNode } from './VNodes/AbstractNode';
 import { TableCellNode } from '../../plugin-table/src/TableCellNode';
+import { Mode, RuleProperty } from './Mode';
+import JWEditor from './JWEditor';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -70,7 +72,11 @@ export class VRange {
         ];
     }
 
-    constructor(boundaryPoints?: [Point, Point]) {
+    constructor(
+        public readonly editor: JWEditor,
+        boundaryPoints?: [Point, Point],
+        private readonly _mode?: Mode,
+    ) {
         // If a range context is given, adapt this range to match it.
         if (boundaryPoints) {
             const [start, end] = boundaryPoints;
@@ -84,6 +90,10 @@ export class VRange {
                 this.setEnd(endNode, endPosition);
             }
         }
+    }
+
+    get mode(): Mode {
+        return this._mode || this.editor.mode;
     }
 
     //--------------------------------------------------------------------------
@@ -120,7 +130,7 @@ export class VRange {
             if (
                 !endContainers.includes(node) &&
                 !(node instanceof FragmentNode) &&
-                node.editable &&
+                this.mode.is(node, RuleProperty.EDITABLE) &&
                 node?.test(predicate)
             ) {
                 selectedNodes.push(node);
@@ -141,7 +151,7 @@ export class VRange {
                     allChildrenSelected &&
                     !selectedNodes.includes(ancestor) &&
                     !(ancestor instanceof FragmentNode) &&
-                    ancestor.editable &&
+                    this.mode.is(ancestor, RuleProperty.EDITABLE) &&
                     ancestor.test(predicate)
                 ) {
                     selectedNodes.push(ancestor);
@@ -166,12 +176,16 @@ export class VRange {
             targetedNodes.pop();
         }
         const closestStartAncestor = this.start.ancestor(predicate);
-        if (closestStartAncestor?.editable) {
+        if (closestStartAncestor && this.mode.is(closestStartAncestor, RuleProperty.EDITABLE)) {
             targetedNodes.unshift(closestStartAncestor);
         } else if (closestStartAncestor) {
             const children = [...closestStartAncestor.childVNodes].reverse();
             for (const child of children) {
-                if (!targetedNodes.includes(child) && child.editable && child.test(predicate)) {
+                if (
+                    !targetedNodes.includes(child) &&
+                    this.mode.is(child, RuleProperty.EDITABLE) &&
+                    child.test(predicate)
+                ) {
                     targetedNodes.unshift(child);
                 }
             }
@@ -189,7 +203,7 @@ export class VRange {
         let node = this.start;
         const bound = this.end.next();
         while ((node = node.next()) && node !== bound) {
-            if (node.editable && node.test(predicate)) {
+            if (this.mode.is(node, RuleProperty.EDITABLE) && node.test(predicate)) {
                 traversedNodes.push(node);
             }
         }
@@ -352,7 +366,7 @@ export class VRange {
     empty(): void {
         const removableNodes = this.selectedNodes(node => {
             // TODO: Replace Table check with complex table selection support.
-            return node.editable && !node.is(TableCellNode);
+            return this.mode.is(node, RuleProperty.EDITABLE) && !node.is(TableCellNode);
         });
         // Remove selected nodes without touching the start range's ancestors.
         const startAncestors = this.start.ancestors();
@@ -368,18 +382,18 @@ export class VRange {
                     ancestor.splitAt(this.endContainer);
                 }
                 if (
-                    this.endContainer.breakable &&
-                    this.startContainer.editable &&
-                    this.endContainer.editable
+                    this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
+                    this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
+                    this.mode.is(this.endContainer, RuleProperty.EDITABLE)
                 ) {
                     this.endContainer.mergeWith(ancestor);
                 }
                 ancestor = ancestor.parent;
             }
             if (
-                this.endContainer.breakable &&
-                this.startContainer.editable &&
-                this.endContainer.editable
+                this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
+                this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
+                this.mode.is(this.endContainer, RuleProperty.EDITABLE)
             ) {
                 this.endContainer.mergeWith(this.startContainer);
             }
@@ -403,10 +417,12 @@ export class VRange {
  * @param callback The callback to call with the newly created range.
  */
 export async function withRange<T>(
+    editor: JWEditor,
     bounds: [Point, Point],
     callback: (range: VRange) => T,
+    mode?: Mode,
 ): Promise<T> {
-    const range = new VRange(bounds);
+    const range = new VRange(editor, bounds, mode);
     const result = await callback(range);
     range.remove();
     return result;

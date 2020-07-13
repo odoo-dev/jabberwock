@@ -102,16 +102,10 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      * Align text.
      */
     align(params: AlignParams): void {
-        const nodes = params.context.range.targetedNodes().flatMap(node => {
-            if (node.editable) {
-                return node;
-            } else {
-                // If the node is not editable, align its editable children.
-                return node.children(child => child.editable);
-            }
-        });
+        const range = params.context.range;
+        const nodes = range.targetedNodes();
         const type = params.type;
-        for (const node of nodes) {
+        for (const node of nodes.filter(node => !nodes.includes(node.parent))) {
             const alignedAncestor = node.closest(Align.isAligned);
 
             // Compute current alignment.

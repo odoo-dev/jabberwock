@@ -22,6 +22,8 @@ import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSel
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { RuleProperty } from '../../core/src/Mode';
+import { isContentEditable } from '../../utils/src/utils';
 
 export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
@@ -161,7 +163,12 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         // We cannot always expect a 'contentEditable' attribute on the main
         // ancestor. So we expect to find the main editor ZoneNode if we are in
         // the editable part of Jabberwock.
-        return node?.ancestor(ZoneNode).managedZones.includes('main') || false;
+        return (
+            (node &&
+                (isContentEditable(node) || this.editor.mode.is(node, RuleProperty.EDITABLE)) &&
+                node.ancestor(ZoneNode).managedZones.includes('main')) ||
+            false
+        );
     }
 
     //--------------------------------------------------------------------------
