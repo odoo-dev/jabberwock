@@ -2,6 +2,7 @@ import { VRange } from './VRange';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
 import { AbstractNode } from './VNodes/AbstractNode';
+import JWEditor from './JWEditor';
 
 export const ANCHOR_CHAR = '[';
 export const FOCUS_CHAR = ']';
@@ -20,8 +21,9 @@ export interface VSelectionDescription {
 }
 
 export class VSelection {
-    readonly range: VRange = new VRange();
+    readonly range: VRange = new VRange(this.editor);
     _direction: Direction = Direction.FORWARD;
+    constructor(public readonly editor: JWEditor) {}
 
     get anchor(): MarkerNode {
         return this.direction === Direction.FORWARD ? this.range.start : this.range.end;

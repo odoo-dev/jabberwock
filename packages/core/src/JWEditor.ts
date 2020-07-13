@@ -9,6 +9,7 @@ import { StageError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
+import { ModeIdentifier, ModeDefinition, Mode } from './Mode';
 
 export enum EditorStage {
     CONFIGURATION = 'configuration',
@@ -30,6 +31,16 @@ type CommandParams<T extends JWPlugin, K extends string> = K extends Commands<T>
     : never;
 
 export interface JWEditorConfig {
+    /**
+     * The modes that the editor will support.
+     * @see class `Mode`
+     */
+    modes?: ModeDefinition[];
+    /**
+     * The mode with which the editor gets started.
+     * @see class `Mode`
+     */
+    mode?: ModeIdentifier;
     defaults?: {
         Container?: new () => ContainerNode;
         Atomic?: new () => AtomicNode;
@@ -57,13 +68,20 @@ export class JWEditor {
         plugins: [],
         loadables: {},
     };
-    selection = new VSelection();
+    selection = new VSelection(this);
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
     // Use a set so that when asynchronous functions are called we ensure that
     // each command batch is waited for.
     preventRenders: Set<Function> = new Set();
     enableRender = true;
+    private _modes: Record<ModeIdentifier, Mode> = {
+        default: new Mode({
+            id: 'default',
+            rules: [],
+        }),
+    };
+    mode: Mode = this._modes.default;
 
     constructor() {
         this.dispatcher = new Dispatcher(this);
@@ -76,6 +94,13 @@ export class JWEditor {
         // the commands supported in the core of the editor and the VDocument.
         this.load(Core);
         this.load(Keymap);
+    }
+
+    /**
+     * Set the current mode of the editor.
+     */
+    setMode(modeIdentifier: ModeIdentifier): void {
+        this.mode = this._modes[modeIdentifier];
     }
 
     async nextEventMutex(next: (...args) => void): Promise<void> {
@@ -96,6 +121,13 @@ export class JWEditor {
                     this.loaders[loadableId](loadable, this.configuration);
                 }
             }
+        }
+
+        for (const mode of this.configuration.modes || []) {
+            this._modes[mode.id] = new Mode(mode);
+        }
+        if (this.configuration.mode) {
+            this.setMode(this.configuration.mode);
         }
 
         for (const plugin of this.plugins.values()) {

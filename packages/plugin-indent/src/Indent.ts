@@ -106,7 +106,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             for (const segmentBreak of segmentBreaks) {
                 // Insert 4 spaces at the start of next segment.
                 const [node, position] = this._nextSegmentStart(segmentBreak);
-                await withRange(VRange.at(node, position), async range => {
+                await withRange(this.editor, VRange.at(node, position), async range => {
                     await this.editor.execCommand<Char>('insertText', {
                         text: this.tab,
                         context: {

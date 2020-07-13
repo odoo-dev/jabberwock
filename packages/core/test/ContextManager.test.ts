@@ -283,7 +283,7 @@ describe('core', () => {
                         const check = (context: CheckingContext): boolean => !!context;
                         const checkSpy1 = sinon.spy(check);
                         const checkSpy2 = sinon.spy(check);
-                        const newSelection = new VSelection();
+                        const newSelection = new VSelection(editor);
 
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];

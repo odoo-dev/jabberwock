@@ -139,8 +139,7 @@ export async function parseEditable(
     autofocus = false,
 ): Promise<VNode[]> {
     const nodes = await parseElement(editor, element);
-    const contentEditable = element.getAttribute('contenteditable');
-    nodes[0].editable = contentEditable === '' || contentEditable?.toLowerCase() === 'true';
+    nodes[0].editable = false;
     nodes[0].breakable = false;
     nodes[0].modifiers.get(Attributes).set('contentEditable', 'true');
     if (autofocus && !editor.selection.anchor.parent) {

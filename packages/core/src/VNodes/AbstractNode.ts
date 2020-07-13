@@ -1,5 +1,10 @@
 import { VNode, RelativePosition, Predicate, Typeguard, isLeaf } from './VNode';
-import { Constructor, nodeLength } from '../../../utils/src/utils';
+import {
+    Constructor,
+    nodeLength,
+    isContentEditable,
+    hasContentEditable,
+} from '../../../utils/src/utils';
 import { ContainerNode } from './ContainerNode';
 import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
@@ -13,12 +18,25 @@ export interface AbstractNodeParams {
 let id = 0;
 export abstract class AbstractNode extends EventMixin {
     readonly id = id;
+    private _editable: boolean;
     /**
-     * True if the node is editable.
+     * True if the node is editable. Propagates to the children.
      * A node that is editable can have its modifiers edited, be moved, removed,
      * and a selection can be made within it.
+     * Can be overridden with a `Mode`.
      */
-    editable = true;
+    get editable(): boolean {
+        if (this._editable === false) return false;
+        return (
+            !this.parent ||
+            (hasContentEditable(this.parent)
+                ? isContentEditable(this.parent)
+                : this.parent.editable)
+        );
+    }
+    set editable(state: boolean) {
+        this._editable = state;
+    }
     /**
      * True If the node will have a representation in the dom. Eg: markers are
      * not tangible.
@@ -26,6 +44,7 @@ export abstract class AbstractNode extends EventMixin {
     tangible = true;
     /**
      * True if the node can be split.
+     * Can be overridden with a `Mode`.
      */
     breakable = true;
     parent: VNode;

@@ -1,3 +1,6 @@
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+
 export type Constructor<T> = new (...args) => T;
 
 /**
@@ -8,6 +11,25 @@ export type Constructor<T> = new (...args) => T;
  */
 export function isConstructor<T extends Function>(constructor, superClass: T): constructor is T {
     return constructor.prototype instanceof superClass || constructor === superClass;
+}
+/**
+ * Return true if the node has the `contentEditable` attribute.
+ *
+ * @param node
+ */
+export function hasContentEditable(node: AbstractNode): boolean {
+    return node.modifiers.find(Attributes)?.has('contentEditable') || false;
+}
+/**
+ * Return true if the node has the `contentEditable` attribute set to true. This
+ * implies that its children are editable but it is not necessarily itself
+ * editable.
+ *
+ * TODO: unbind from `Attributes`.
+ */
+export function isContentEditable(node: AbstractNode): boolean {
+    const editable = node.modifiers.find(Attributes)?.get('contentEditable');
+    return editable === '' || editable?.toLowerCase() === 'true' || false;
 }
 /**
  * Return true if object a is deep equal to object b, false otherwise.
