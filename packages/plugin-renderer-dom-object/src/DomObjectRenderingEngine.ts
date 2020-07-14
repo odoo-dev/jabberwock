@@ -8,6 +8,7 @@ import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Format } from '../../core/src/Format';
 import { flat } from '../../utils/src/utils';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
+import { RuleProperty } from '../../core/src/Mode';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -262,7 +263,10 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                     children.push(child);
                 }
             }
-        } else if (!node.is(AtomicNode)) {
+        } else if (
+            !node.is(AtomicNode) &&
+            this.editor.mode.is(node, RuleProperty.ALLOW_EMPTY) !== true
+        ) {
             children.push({ tag: 'BR' });
         }
         return children;

@@ -18,8 +18,9 @@ export interface ModeDefinition {
 export enum RuleProperty {
     EDITABLE = 'editable',
     BREAKABLE = 'breakable',
+    ALLOW_EMPTY = 'allowEmpty',
 }
-const modeProperties = ['editable', 'breakable'];
+const modeProperties = ['editable', 'breakable', 'allowEmpty'];
 
 type RuleEntries = Partial<Record<RuleProperty, ContextualEntry<boolean>[]>>;
 
