@@ -43,6 +43,10 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         this._hoveredTargets = [];
         this.selectedNode = null;
     }
+    async render(force = false): Promise<void> {
+        await super.render(force);
+        this.el.querySelector('devtools-nodename.selected')?.scrollIntoView();
+    }
 
     /**
      * Handle keyboard navigation in DevTools (arrows to move in the tree)
