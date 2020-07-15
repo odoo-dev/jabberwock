@@ -23,7 +23,7 @@ const endSpace = /[ \u3000]*$/g;
 export function removeFormattingSpace(node: Node): string {
     // TODO: check the value of the `white-space` property
     const text: string = node.textContent;
-    if (node.parentElement?.closest('PRE')) {
+    if (node.parentElement?.closest('PRE, TEXTAREA')) {
         return text;
     }
 

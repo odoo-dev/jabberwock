@@ -282,6 +282,14 @@ describe('removeFormattingSpace() util function', () => {
             'test #2',
         );
     });
+    it('should not format pre', async () => {
+        const nodes = htmlToElements('<pre> a </pre>');
+        expect(removeFormattingSpace(nodes[0].firstChild)).to.equal(' a ');
+    });
+    it('should not format textarea', async () => {
+        const nodes = htmlToElements('<textarea> a </textarea>');
+        expect(removeFormattingSpace(nodes[0].firstChild)).to.equal(' a ');
+    });
     describe('nested nodes', () => {
         it('Should return trimmed text when no space around text', async () => {
             const nodes = htmlToElements('<p><span><span><a>abc</a></span></span></p>');
