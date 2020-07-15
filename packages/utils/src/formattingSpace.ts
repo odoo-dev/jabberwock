@@ -1,6 +1,16 @@
 import { isBlock } from './isBlock';
 import { nodeName } from './utils';
 
+const spaceBeforeNewline = /([ \t])*(\n)/g;
+const spaceAfterNewline = /(\n)([ \t])*/g;
+const tabs = /\t/g;
+const newlines = /\n/g;
+const onlyTabsSpacesAndNewLines = /^[\t \n]*$/g;
+const consecutiveSpace = /  */g;
+const endWithSpace = /[ \t\n]$/g;
+const startSpace = /^ */g;
+const endSpace = /[ \u3000]*$/g;
+
 /**
  * Return a string with the value of a text node stripped of its formatting
  * space, applying the w3 rules for white space processing
@@ -16,11 +26,6 @@ export function removeFormattingSpace(node: Node): string {
     if (node.parentElement?.closest('PRE')) {
         return text;
     }
-    const spaceBeforeNewline = /([ \t])*(\n)/g;
-    const spaceAfterNewline = /(\n)([ \t])*/g;
-    const tabs = /\t/g;
-    const newlines = /\n/g;
-    const consecutiveSpace = /  */g;
 
     // (Comments refer to the w3 link provided above.)
     // Phase I: Collapsing and Transformation
@@ -45,8 +50,10 @@ export function removeFormattingSpace(node: Node): string {
     // Phase II: Trimming and Positioning
     // 1. A sequence of collapsible spaces at the beginning of a line
     //    (ignoring any intervening inline box boundaries) is removed.
-    if (_isAtSegmentBreak(node, 'start')) {
-        const startSpace = /^ */g;
+    // 1.2. The space at the beginning of the line is collapsed if
+    //    a space is present in the previous inline siblings node
+    //    see : https://www.w3.org/TR/css-text-3/#collapse
+    if (_isAtSegmentBreak(node, 'start') || _followsInlineSpace(node)) {
         newText = newText.replace(startSpace, '');
     }
     // 2. If the tab size is zero, tabs are not rendered. Otherwise, each
@@ -62,10 +69,24 @@ export function removeFormattingSpace(node: Node): string {
     //    spaces (U+3000) whose white-space value collapses spaces is
     //    removed.
     if (_isAtSegmentBreak(node, 'end')) {
-        const endSpace = /[ \u3000]*$/g;
         newText = newText.replace(endSpace, '');
     }
     return newText;
+}
+/**
+ * Return true if the given node is immediately folowing a space inside the same inline context,
+ * to see if its frontal space must be removed.
+ *
+ * @param {Element} node
+ * @returns {boolean}
+ */
+function _followsInlineSpace(node: Node): boolean {
+    let sibling = node && node.previousSibling;
+    if (_isTextNode(node) && !sibling) {
+        sibling = node.parentElement.previousSibling;
+    }
+    if (!sibling || isBlock(sibling)) return false;
+    return !!sibling.textContent.match(endWithSpace);
 }
 /**
  * Return true if the given node is immediately preceding (`side` === 'end')
@@ -113,7 +134,7 @@ function _isSegment(node: Node): boolean {
  * @param node to check
  * @param side of the block to check ('start' or 'end')
  */
-function _isBlockEdge(node: Node | Node, side: 'start' | 'end'): boolean {
+function _isBlockEdge(node: Node, side: 'start' | 'end'): boolean {
     const ancestorsUpToBlock: Node[] = [];
 
     // Move up to the first block ancestor
@@ -127,7 +148,15 @@ function _isBlockEdge(node: Node | Node, side: 'start' | 'end'): boolean {
     // sibling on the specified side
     const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
     return ancestorsUpToBlock.every(ancestor => {
-        return !ancestor[siblingSide];
+        let sibling = ancestor[siblingSide];
+        while (
+            sibling &&
+            _isTextNode(sibling) &&
+            sibling.textContent.match(onlyTabsSpacesAndNewLines)
+        ) {
+            sibling = sibling[siblingSide];
+        }
+        return !sibling;
     });
 }
 /**
