@@ -7,11 +7,21 @@ import { expect } from 'chai';
 import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 import { VNode } from '../src/VNodes/VNode';
 import { VSelection } from '../src/VSelection';
-import { Context, CheckingContext } from '../src/ContextManager';
+import { Context, CheckingContext, ContextManager } from '../src/ContextManager';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { ContainerNode } from '../src/VNodes/ContainerNode';
+import { InlineNode } from '../../plugin-inline/src/InlineNode';
 
 describe('core', () => {
     describe('ContextManager', () => {
+        describe('_matchNodes()', () => {
+            it('should have proper specificity', () => {
+                const inlineNode = new InlineNode();
+                const hierarchy = [inlineNode, new ContainerNode()];
+                const match = ContextManager._matchNodes(hierarchy, [InlineNode]);
+                expect(match).to.eql([1, [inlineNode]]);
+            });
+        });
         describe('match', () => {
             it('should match with no check', async () => {
                 await testEditor(BasicEditor, {
