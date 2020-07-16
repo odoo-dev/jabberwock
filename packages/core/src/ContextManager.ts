@@ -75,8 +75,8 @@ export class ContextManager {
 
             if (match) {
                 matches.push({
-                    lvl1Score: match[0],
-                    lvl2Score: match[1].length,
+                    lvl1Score: match[1].length,
+                    lvl2Score: match[0],
                     matched: match[1],
                     index: index,
                     entry: contextual,
@@ -88,12 +88,12 @@ export class ContextManager {
         // - from highest to lowest score
         // - when the score is the same, from highest to lowest index
         const rankedMatch = matches.sort(function(a, b) {
-            if (b.lvl1Score === a.lvl1Score && b.lvl2Score === a.lvl2Score) {
+            if (b.lvl2Score === a.lvl2Score && b.lvl1Score === a.lvl1Score) {
                 return b.index - a.index;
-            } else if (b.lvl1Score === a.lvl1Score) {
-                return b.lvl2Score - a.lvl2Score;
-            } else {
+            } else if (b.lvl2Score === a.lvl2Score) {
                 return b.lvl1Score - a.lvl1Score;
+            } else {
+                return b.lvl2Score - a.lvl2Score;
             }
         });
         return rankedMatch;
