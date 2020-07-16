@@ -138,6 +138,9 @@ export class ContextManager {
     /**
      * Check whether a hierarchy of `VNode` match with `selector`.
      *
+     * The `hierarchy` is an array from the deepest node in a tree to the
+     * shallowest.
+     *
      * Return a tuple with the first value being level of specificity lvl2 and
      * the second value being the VNnode that matched with a selector
      * (specificity lvl1).
