@@ -60,7 +60,7 @@ export class Mode {
      * @param property
      */
     is(node: VNode, property: RuleProperty): boolean {
-        const hierarchy = [...node.ancestors(), node];
+        const hierarchy = [node, ...node.ancestors()];
         const result = ContextManager.getRankedMatches(hierarchy, this._entries[property]);
         if (result.length) {
             return result[0].entry.value;
