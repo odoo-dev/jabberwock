@@ -14,6 +14,6 @@ const editor = new BasicEditor({ editable: target });
 editor.configure(DomLayout, {
     location: [target, 'replace'],
 });
-editor.load(DevTools);
+// editor.load(DevTools);
 
 editor.start();
