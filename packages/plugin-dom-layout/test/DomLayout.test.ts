@@ -46,6 +46,17 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseElement } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { flat } from '../../utils/src/utils';
+import {
+    removeNodeTemp,
+    beforeNodeTemp,
+    afterNodeTemp,
+    wrapNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
+import {
+    nextSiblingNodeTemp,
+    previousNodeTemp,
+    nextNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -544,8 +555,8 @@ describe('DomLayout', () => {
             const charNodes = domLayoutEngine.getNodes(
                 container.getElementsByTagName('t-temp')[0].firstChild as Node,
             );
-            expect(editor.selection.anchor.nextSibling()).to.equal(charNodes[1]);
-            expect(editor.selection.focus.nextSibling()).to.equal(charNodes[2]);
+            expect(nextSiblingNodeTemp(editor.selection.anchor)).to.equal(charNodes[1]);
+            expect(nextSiblingNodeTemp(editor.selection.focus)).to.equal(charNodes[2]);
             expect(editor.selection.direction).to.equal(Direction.FORWARD);
             await editor.stop();
             expect(container.innerHTML).to.equal(
@@ -754,8 +765,8 @@ describe('DomLayout', () => {
                 container.getElementsByTagName('t-temp')[0].firstChild as Node,
             );
 
-            expect(editor.selection.anchor.nextSibling()).to.equal(charNodes[1]);
-            expect(editor.selection.focus.nextSibling()).to.equal(charNodes[2]);
+            expect(nextSiblingNodeTemp(editor.selection.anchor)).to.equal(charNodes[1]);
+            expect(nextSiblingNodeTemp(editor.selection.focus)).to.equal(charNodes[2]);
             expect(editor.selection.direction).to.equal(Direction.FORWARD);
             await editor.stop();
             expect(container.innerHTML).to.equal(
@@ -1200,11 +1211,12 @@ describe('DomLayout', () => {
                     const domLayout = layout.engines.dom as DomLayoutEngine;
                     editor.memory.create('test').switchTo('test'); // Unfreeze the memory for test.
 
-                    domLayout.components
-                        .get('editable')[0]
-                        .children()[0]
-                        .children()[0]
-                        .remove();
+                    removeNodeTemp(
+                        domLayout.components
+                            .get('editable')[0]
+                            .children()[0]
+                            .children()[0],
+                    );
                     document.getSelection().removeAllRanges();
                     await domLayout.redraw();
                 },
@@ -1418,7 +1430,7 @@ describe('DomLayout', () => {
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
             const div = engine.getNodes(container.querySelector('div'))[0];
             const parent = div.parent;
-            div.remove();
+            removeNodeTemp(div);
 
             await engine.redraw([parent]);
 
@@ -1517,8 +1529,8 @@ describe('DomLayout', () => {
 
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
 
-                custom.before(new CharNode({ char: 'X' }));
-                custom.after(new CharNode({ char: 'Y' }));
+                beforeNodeTemp(custom, new CharNode({ char: 'X' }));
+                afterNodeTemp(custom, new CharNode({ char: 'Y' }));
                 editor.selection.set({
                     anchorNode: custom,
                     anchorPosition: RelativePosition.AFTER,
@@ -1528,7 +1540,11 @@ describe('DomLayout', () => {
                 });
 
                 document.getSelection().removeAllRanges();
-                await engine.redraw([custom.parent, custom.previous(), custom.next()]);
+                await engine.redraw([
+                    custom.parent,
+                    previousNodeTemp(custom),
+                    nextNodeTemp(custom),
+                ]);
 
                 const domEditor = container.getElementsByTagName('jw-editor')[0];
 
@@ -1725,7 +1741,7 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
                 const area = new VElement({ htmlTag: 'area' });
-                b.after(area);
+                afterNodeTemp(b, area);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -1766,7 +1782,7 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
                 const area = new VElement({ htmlTag: 'area' });
-                b.after(area);
+                afterNodeTemp(b, area);
 
                 expect(container.innerHTML).to.equal(
                     '<section></section><jw-editor><p>abc</p><p>def</p></jw-editor>',
@@ -1849,7 +1865,7 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
                 const area = new VElement({ htmlTag: 'area' });
-                b.after(area);
+                afterNodeTemp(b, area);
 
                 target.remove();
 
@@ -1913,7 +1929,7 @@ describe('DomLayout', () => {
                 const divDom = container.getElementsByTagName('div')[1];
                 const div = engine.getNodes(divDom)[0];
                 const area = new VElement({ htmlTag: 'area' });
-                div.after(area);
+                afterNodeTemp(div, area);
 
                 expect(container.innerHTML).to.equal(
                     '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
@@ -1975,7 +1991,7 @@ describe('DomLayout', () => {
                 const divDom = container.getElementsByTagName('div')[1];
                 const p = engine.getNodes(divDom)[0];
                 const area = new VElement({ htmlTag: 'area' });
-                p.after(area);
+                afterNodeTemp(p, area);
 
                 divDom.remove();
 
@@ -2033,7 +2049,7 @@ describe('DomLayout', () => {
                 const divDom = container.getElementsByTagName('div')[0];
                 const p = engine.getNodes(divDom)[0];
                 const area = new VElement({ htmlTag: 'area' });
-                p.after(area);
+                afterNodeTemp(p, area);
 
                 divDom.remove();
 
@@ -2194,8 +2210,8 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const f = p.children()[5];
                 const e = p.children()[4];
-                f.remove();
-                e.remove();
+                removeNodeTemp(f);
+                removeNodeTemp(e);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2218,8 +2234,8 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const f = p.children()[5];
                 const e = p.children()[4];
-                f.remove();
-                e.remove();
+                removeNodeTemp(f);
+                removeNodeTemp(e);
                 text.textContent = 'abcd';
 
                 await nextTick();
@@ -2243,8 +2259,8 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const a = p.children()[0];
                 const b = p.children()[1];
-                a.remove();
-                b.remove();
+                removeNodeTemp(a);
+                removeNodeTemp(b);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2267,8 +2283,8 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const c = p.children()[2];
                 const d = p.children()[3];
-                c.remove();
-                d.remove();
+                removeNodeTemp(c);
+                removeNodeTemp(d);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2291,8 +2307,8 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const c = p.children()[2];
                 const d = p.children()[3];
-                c.remove();
-                d.remove();
+                removeNodeTemp(c);
+                removeNodeTemp(d);
 
                 const text2 = text.splitText(3);
 
@@ -2320,9 +2336,9 @@ describe('DomLayout', () => {
                 const b = p.children()[1];
                 const c = p.children()[2];
                 const d = p.children()[3];
-                b.remove();
-                c.remove();
-                d.remove();
+                removeNodeTemp(b);
+                removeNodeTemp(c);
+                removeNodeTemp(d);
 
                 const text2 = text.splitText(2);
                 const text3 = text2.splitText(2);
@@ -2348,8 +2364,8 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const c = p.children()[2];
                 const d = p.children()[3];
-                c.remove();
-                d.remove();
+                removeNodeTemp(c);
+                removeNodeTemp(d);
 
                 const text2 = text.splitText(3);
 
@@ -2377,9 +2393,9 @@ describe('DomLayout', () => {
                 const c = p.children()[2];
                 const d = p.children()[3];
                 const x = new CharNode({ char: 'x' });
-                c.after(x);
-                c.remove();
-                d.remove();
+                afterNodeTemp(c, x);
+                removeNodeTemp(c);
+                removeNodeTemp(d);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2403,9 +2419,9 @@ describe('DomLayout', () => {
                 const f = p.children()[5];
                 const e = p.children()[4];
                 const z = new CharNode({ char: 'z' });
-                e.before(z);
-                f.remove();
-                e.remove();
+                beforeNodeTemp(e, z);
+                removeNodeTemp(f);
+                removeNodeTemp(e);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2430,9 +2446,9 @@ describe('DomLayout', () => {
                 const x = new CharNode({ char: 'x' });
                 const x2 = new CharNode({ char: 'x' });
                 const x3 = new CharNode({ char: 'x' });
-                c.after(x);
-                x.after(x2);
-                x2.after(x3);
+                afterNodeTemp(c, x);
+                afterNodeTemp(x, x2);
+                afterNodeTemp(x2, x3);
 
                 await engine.redraw([p, ...p.childVNodes]);
 
@@ -2440,7 +2456,7 @@ describe('DomLayout', () => {
                     '<jw-editor><div><p>abcxxxdef</p><p>123456</p></div></jw-editor>',
                 );
 
-                x2.remove();
+                removeNodeTemp(x2);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2478,7 +2494,7 @@ describe('DomLayout', () => {
 
                 const p = div.firstChild();
                 const add0 = new CharNode({ char: '0' });
-                p.children()[4].after(add0);
+                afterNodeTemp(p.children()[4], add0);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2513,7 +2529,7 @@ describe('DomLayout', () => {
 
                 const p = div.firstChild();
                 const char0 = p.children()[3];
-                char0.remove();
+                removeNodeTemp(char0);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2662,7 +2678,7 @@ describe('DomLayout', () => {
                 const e = p.children()[4];
                 const newP = new VElement({ htmlTag: 'P' });
                 newP.append(e, f);
-                p.after(newP);
+                afterNodeTemp(p, newP);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2748,7 +2764,7 @@ describe('DomLayout', () => {
                 const e = p.children()[4];
                 const newP = new VElement({ htmlTag: 'P' });
                 newP.append(e, f);
-                p.after(newP);
+                afterNodeTemp(p, newP);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2771,7 +2787,7 @@ describe('DomLayout', () => {
 
                 const p = div.firstChild();
                 const lineBreak = new LineBreakNode();
-                p.children()[2].after(lineBreak);
+                afterNodeTemp(p.children()[2], lineBreak);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -2793,11 +2809,11 @@ describe('DomLayout', () => {
 
                 const p = div.firstChild();
                 const lineBreak = new LineBreakNode();
-                p.children()[2].after(lineBreak);
+                afterNodeTemp(p.children()[2], lineBreak);
 
                 await engine.redraw([p, ...p.childVNodes]);
 
-                lineBreak.remove();
+                removeNodeTemp(lineBreak);
 
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><div><p>abc<br>def</p><p>123456</p></div></jw-editor>',
@@ -2819,7 +2835,7 @@ describe('DomLayout', () => {
                 expect(mutationNumber).to.equal(1, 'remove <br>');
 
                 const marker = new MarkerNode();
-                p.children()[3].after(marker);
+                afterNodeTemp(p.children()[3], marker);
                 const location = engine._domReconciliationEngine.getLocations(marker);
                 expect(location).to.deep.equal(
                     [pDom.lastChild, 1],
@@ -2879,13 +2895,13 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const lineBreak = new LineBreakNode();
                 const d = p.children()[3];
-                p.children()[2].after(lineBreak);
+                afterNodeTemp(p.children()[2], lineBreak);
 
                 editor.selection.setAt(d, RelativePosition.AFTER);
 
                 await engine.redraw([p, ...p.childVNodes]);
 
-                d.remove();
+                removeNodeTemp(d);
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
                 const br = pDom.childNodes[1];
@@ -3510,7 +3526,7 @@ describe('DomLayout', () => {
 
                 const b = engine.getNodes(pDom.firstChild)[1];
                 const area = new VElement({ htmlTag: 'custom' });
-                b.after(area);
+                afterNodeTemp(b, area);
 
                 await nextTick();
                 mutationNumber = 0;
@@ -3555,7 +3571,7 @@ describe('DomLayout', () => {
                 const text = pDom.firstChild;
 
                 const area = new VElement({ htmlTag: 'custom' });
-                p.wrap(area);
+                wrapNodeTemp(p, area);
 
                 mutationNumber = 0;
                 await engine.redraw([area, area.parent, p]);
@@ -3597,7 +3613,8 @@ describe('DomLayout', () => {
                 const text = pDom.firstChild;
 
                 const area = new VElement({ htmlTag: 'custom' });
-                p.wrap(area);
+
+                wrapNodeTemp(p, area);
                 await engine.redraw([area, p.parent, p]);
 
                 area.unwrap();
@@ -3640,10 +3657,8 @@ describe('DomLayout', () => {
                 const text = pDom.firstChild;
 
                 const area = new VElement({ htmlTag: 'custom' });
-                engine.root
-                    .firstChild()
-                    .firstChild()
-                    .wrap(area);
+
+                wrapNodeTemp(engine.root.firstChild().firstChild(), area);
 
                 mutationNumber = 0;
                 await engine.redraw([area, area.parent, p]);
@@ -3687,7 +3702,7 @@ describe('DomLayout', () => {
                 const area = new VElement({ htmlTag: 'custom' });
                 const layoutContainer = engine.root.firstChild();
                 const layoutchild = layoutContainer.firstChild();
-                layoutchild.wrap(area);
+                wrapNodeTemp(layoutchild, area);
                 await engine.redraw([layoutContainer, area, layoutchild]);
 
                 area.unwrap();
@@ -4242,11 +4257,15 @@ describe('DomLayout', () => {
 
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
 
-                custom.before(new CharNode({ char: 'X' }));
-                custom.after(new CharNode({ char: 'Y' }));
+                beforeNodeTemp(custom, new CharNode({ char: 'X' }));
+                afterNodeTemp(custom, new CharNode({ char: 'Y' }));
 
                 mutationNumber = 0;
-                await engine.redraw([custom.parent, custom.previous(), custom.next()]);
+                await engine.redraw([
+                    custom.parent,
+                    previousNodeTemp(custom),
+                    nextNodeTemp(custom),
+                ]);
                 expect(mutationNumber).to.equal(2, 'add 2 text');
 
                 // redraw without changes
@@ -4302,8 +4321,8 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
 
                 const a2 = new CharNode({ char: 'a' });
-                a.after(a2);
-                a.remove();
+                afterNodeTemp(a, a2);
+                removeNodeTemp(a);
 
                 // redraw with changes but identical result
                 mutationNumber = 0;
@@ -4362,8 +4381,8 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
 
                 const a2 = new CharNode({ char: 'a' });
-                a.after(a2);
-                a.remove();
+                afterNodeTemp(a, a2);
+                removeNodeTemp(a);
 
                 // redraw with changes but identical result
                 mutationNumber = 0;
@@ -4428,8 +4447,8 @@ describe('DomLayout', () => {
                 );
 
                 const a2 = new CharNode({ char: 'a' });
-                a.after(a2);
-                a.remove();
+                afterNodeTemp(a, a2);
+                removeNodeTemp(a);
 
                 // redraw with changes but identical result
                 mutationNumber = 0;
@@ -4763,7 +4782,7 @@ describe('DomLayout', () => {
                     const attributes2 = new Attributes();
                     attributes2.set('class', 'aaa');
                     p2.modifiers.prepend(attributes2);
-                    p.remove();
+                    removeNodeTemp(p);
                     div.prepend(p2);
 
                     await nextTick();
@@ -5244,7 +5263,7 @@ describe('DomLayout', () => {
         });
         it('should keep (detach & attach) listener when redraw when remove child', async () => {
             await editor.execBatch(async () => {
-                customChild.remove();
+                removeNodeTemp(customChild);
             });
 
             flag = 0;

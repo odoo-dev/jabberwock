@@ -1,5 +1,6 @@
 import { VElement } from '../../core/src/VNodes/VElement';
 import { TableNode } from './TableNode';
+import { ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class TableRowNode extends VElement {
     breakable = false;
@@ -39,7 +40,7 @@ export class TableRowNode extends VElement {
      * Return the index of this row in the table.
      */
     get rowIndex(): number {
-        return this.ancestor(TableNode)
+        return ancestorNodeTemp(this, TableNode)
             .children(TableRowNode)
             .indexOf(this);
     }

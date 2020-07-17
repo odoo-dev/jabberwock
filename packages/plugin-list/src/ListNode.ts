@@ -1,7 +1,11 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Modifier } from '../../core/src/Modifier';
-import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+import {
+    AbstractNodeParams,
+    isNodePredicate,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export enum ListType {
     ORDERED = 'ORDERED',
@@ -18,13 +22,13 @@ export class ListNode extends ContainerNode {
     // Typescript currently doesn't support using enum as keys in interfaces.
     // Source: https://github.com/microsoft/TypeScript/issues/13042
     static ORDERED(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType === ListType.ORDERED;
+        return node && isNodePredicate(node, ListNode) && node.listType === ListType.ORDERED;
     }
     static UNORDERED(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType === ListType.UNORDERED;
+        return node && isNodePredicate(node, ListNode) && node.listType === ListType.UNORDERED;
     }
     static CHECKLIST(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType === ListType.CHECKLIST;
+        return node && isNodePredicate(node, ListNode) && node.listType === ListType.CHECKLIST;
     }
     listType: ListType;
     constructor(params: ListNodeParams) {
@@ -45,7 +49,7 @@ export class ListNode extends ContainerNode {
             // that every one of its children is checked.
             return node.children().every(ListNode.isChecked);
         } else {
-            const indentedChild = node.nextSibling();
+            const indentedChild = nextSiblingNodeTemp(node);
             if (ListNode.CHECKLIST(indentedChild)) {
                 // If the next list item is a checklist, this list item is its
                 // title, which is checked if said checklist's children are
@@ -63,15 +67,15 @@ export class ListNode extends ContainerNode {
      */
     static check(...nodes: VNode[]): void {
         for (const node of nodes) {
-            if (node.is(ListNode)) {
+            if (isNodePredicate(node, ListNode)) {
                 // Check the list's children.
                 ListNode.check(...node.children());
             } else {
                 // Check the node itself otherwise.
                 node.modifiers.set(IsChecked);
                 // Propagate to next indented list if any.
-                const indentedChild = node.nextSibling();
-                if (indentedChild && indentedChild.is(ListNode)) {
+                const indentedChild = nextSiblingNodeTemp(node);
+                if (indentedChild && isNodePredicate(indentedChild, ListNode)) {
                     ListNode.check(indentedChild);
                 }
             }
@@ -84,7 +88,7 @@ export class ListNode extends ContainerNode {
      */
     static uncheck(...nodes: VNode[]): void {
         for (const node of nodes) {
-            if (node.is(ListNode)) {
+            if (isNodePredicate(node, ListNode)) {
                 // Uncheck the list's children.
                 ListNode.uncheck(...node.children());
             } else {
@@ -92,8 +96,8 @@ export class ListNode extends ContainerNode {
                 node.modifiers.remove(IsChecked);
 
                 // Propagate to next indented list.
-                const indentedChild = node.nextSibling();
-                if (indentedChild && indentedChild.is(ListNode)) {
+                const indentedChild = nextSiblingNodeTemp(node);
+                if (indentedChild && isNodePredicate(indentedChild, ListNode)) {
                     ListNode.uncheck(indentedChild);
                 }
             }

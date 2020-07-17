@@ -13,6 +13,12 @@ import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { previousNodeTemp, removeNodeTemp } from '../../core/src/VNodes/AbstractNode';
+import {
+    isNodePredicate,
+    testNodePredicate,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
@@ -99,7 +105,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         } else {
             // The first line of the selection is neither fully selected nor
             // traversed so its segment break was not in `range.traversedNodes`.
-            const nextSegmentBreak = range.start.previous(this._isSegmentBreak);
+            const nextSegmentBreak = previousNodeTemp(range.start, this._isSegmentBreak);
             if (nextSegmentBreak) {
                 segmentBreaks.unshift(nextSegmentBreak);
             }
@@ -129,7 +135,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         const segmentBreaks = range.traversedNodes(this._isSegmentBreak);
         // The first line of the selection is neither fully selected nor
         // traversed so its segment break was not in `range.traversedNodes`.
-        const previousSegmentBreak = range.start.previous(this._isSegmentBreak);
+        const previousSegmentBreak = previousNodeTemp(range.start, this._isSegmentBreak);
         if (previousSegmentBreak) {
             segmentBreaks.unshift(previousSegmentBreak);
         }
@@ -140,7 +146,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 for (let i = 0; i < this.tab.length; i++) {
                     const space = this._nextIndentationSpace(segmentBreak);
                     if (space) {
-                        space.remove();
+                        removeNodeTemp(space);
                     }
                 }
             });
@@ -157,7 +163,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      * @param params
      */
     _isSegmentBreak(node: VNode): boolean {
-        return node.is(ContainerNode) || node.is(LineBreakNode);
+        return isNodePredicate(node, ContainerNode) || isNodePredicate(node, LineBreakNode);
     }
     /**
      * Return the next segment start point after the given segment break.
@@ -167,8 +173,8 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     _nextSegmentStart(segmentBreak: VNode): Point {
         let reference = segmentBreak;
         let position = RelativePosition.BEFORE;
-        if (segmentBreak.is(AtomicNode)) {
-            reference = segmentBreak.nextSibling();
+        if (isNodePredicate(segmentBreak, AtomicNode)) {
+            reference = nextSiblingNodeTemp(segmentBreak);
         } else if (segmentBreak.hasChildren()) {
             reference = segmentBreak.firstChild();
         } else {
@@ -182,7 +188,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      * @param node
      */
     _isSpace(node: VNode): boolean {
-        return node.is(CharNode) && /^\s$/g.test(node.char);
+        return isNodePredicate(node, CharNode) && /^\s$/g.test(node.char);
     }
     /**
      * Return true if the given VNode can be considered to be a segment break.
@@ -191,11 +197,11 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      */
     _nextIndentationSpace(segmentBreak: VNode): VNode {
         let space: VNode;
-        if (segmentBreak.is(AtomicNode)) {
-            space = segmentBreak.nextSibling();
+        if (isNodePredicate(segmentBreak, AtomicNode)) {
+            space = nextSiblingNodeTemp(segmentBreak);
         } else {
             space = segmentBreak.firstChild();
         }
-        return space && space.test(this._isSpace) && space;
+        return space && testNodePredicate(space, this._isSpace) && space;
     }
 }

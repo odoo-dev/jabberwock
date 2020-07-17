@@ -21,8 +21,7 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { ancestorNodeTemp, AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 
 export interface DomLayoutConfig extends JWPluginConfig {
@@ -137,7 +136,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const node = nodes?.pop();
         // We cannot always expect a 'contentEditable' attribute on the main ancestor.
         // So we expect to find the main editor ZoneNode if we are in the editable part of JB
-        return node && node.ancestor(ZoneNode)?.managedZones.includes('main');
+        return node && ancestorNodeTemp(node, ZoneNode)?.managedZones.includes('main');
     }
 
     //--------------------------------------------------------------------------

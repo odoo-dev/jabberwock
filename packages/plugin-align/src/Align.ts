@@ -7,6 +7,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
+import { closestNode, isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export enum AlignType {
     LEFT = 'left',
@@ -103,11 +104,11 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     align(params: AlignParams): void {
         const nodes = params.context.range.targetedNodes((node: VNode): boolean => {
-            return node.is(ContainerNode) || (node.parent && !node.parent.editable);
+            return isNodePredicate(node, ContainerNode) || (node.parent && !node.parent.editable);
         });
         const type = params.type;
         for (const node of nodes) {
-            const alignedAncestor = node.closest(Align.isAligned);
+            const alignedAncestor = closestNode(node, Align.isAligned);
 
             // Compute current alignment.
             const currentAlignment = alignedAncestor?.modifiers
@@ -123,7 +124,7 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
 
 function alignButton(type: AlignType): ActionableNode {
     function isAligned(node: VNode, type: AlignType): boolean {
-        const alignedAncestor = node.closest(Align.isAligned);
+        const alignedAncestor = closestNode(node, Align.isAligned);
         return Align.isAligned(alignedAncestor || node, type);
     }
 

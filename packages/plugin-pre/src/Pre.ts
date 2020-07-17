@@ -12,6 +12,7 @@ import { PreSeparatorDomObjectRenderer } from './PreSeparatorDomObjectRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { replaceWith, closestNode } from '../../core/src/VNodes/AbstractNode';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -35,7 +36,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
                             return (
                                 nodes.length &&
                                 nodes.every(node => {
-                                    return node.closest(PreNode);
+                                    return closestNode(node, PreNode);
                                 })
                             );
                         },
@@ -61,7 +62,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
         for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const pre = new PreNode();
             pre.modifiers = node.modifiers.clone();
-            node.replaceWith(pre);
+            replaceWith(node, pre);
         }
     }
 }

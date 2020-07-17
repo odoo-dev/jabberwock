@@ -3,6 +3,12 @@ import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
+import { removeBackwardNodeTemp } from './VNodes/AbstractNode';
+import {
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+    beforeNodeTemp,
+} from './VNodes/AbstractNode';
 
 export type InsertParagraphBreakParams = CommandParams;
 export type DeleteBackwardParams = CommandParams;
@@ -54,7 +60,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         } else {
             // Use a separator to break paragraphs in an unbreakable.
             const Separator = this.editor.configuration.defaults.Separator;
-            range.start.before(new Separator());
+            beforeNodeTemp(range.start, new Separator());
         }
     }
     /**
@@ -67,7 +73,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (!params.context.range.isCollapsed()) {
             params.context.range.empty();
         }
-        params.context.range.start.before(params.node);
+        beforeNodeTemp(params.context.range.start, params.node);
     }
     /**
      * Delete in the backward direction (backspace key expected behavior).
@@ -76,21 +82,25 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const range = params.context.range;
         if (range.isCollapsed()) {
             // Basic case: remove the node directly preceding the range.
-            const previousSibling = range.start.previousSibling();
+            const previousSibling = previousSiblingNodeTemp(range.start);
             if (
                 previousSibling &&
                 range.startContainer.breakable &&
                 range.startContainer.editable
             ) {
-                previousSibling.removeBackward();
+                removeBackwardNodeTemp(previousSibling);
             } else if (range.startContainer.breakable && range.startContainer.editable) {
                 // Otherwise set range start at previous valid leaf.
                 let ancestor: VNode = range.start.parent;
-                while (ancestor?.breakable && ancestor.editable && !ancestor.previousSibling()) {
+                while (
+                    ancestor?.breakable &&
+                    ancestor.editable &&
+                    !previousSiblingNodeTemp(ancestor)
+                ) {
                     ancestor = ancestor.parent;
                 }
                 if (ancestor?.breakable && ancestor.editable) {
-                    const previous = ancestor.previousSibling().lastLeaf();
+                    const previous = previousSiblingNodeTemp(ancestor).lastLeaf();
                     if (previous) {
                         range.setStart(previous, RelativePosition.AFTER);
                         range.empty();
@@ -108,17 +118,17 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const range = params.context.range;
         if (range.isCollapsed()) {
             // Basic case: remove the node directly following the range.
-            const nextSibling = range.end.nextSibling();
+            const nextSibling = nextSiblingNodeTemp(range.end);
             if (nextSibling && range.endContainer.breakable && range.endContainer.editable) {
-                nextSibling.removeForward();
+                nextSiblingNodeTemp(range.end);
             } else if (range.endContainer.breakable && range.endContainer.editable) {
                 // Otherwise set range end at next valid leaf.
                 let ancestor: VNode = range.end.parent;
-                while (ancestor?.breakable && ancestor.editable && !ancestor.nextSibling()) {
+                while (ancestor?.breakable && ancestor.editable && !nextSiblingNodeTemp(ancestor)) {
                     ancestor = ancestor.parent;
                 }
                 if (ancestor?.breakable && ancestor.editable) {
-                    const next = ancestor.nextSibling().firstLeaf();
+                    const next = nextSiblingNodeTemp(ancestor).firstLeaf();
                     if (next) {
                         range.setEnd(next, RelativePosition.BEFORE);
                         range.empty();

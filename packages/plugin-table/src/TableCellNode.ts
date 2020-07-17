@@ -2,7 +2,11 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { TableNode } from './TableNode';
 import { TableRowNode } from './TableRowNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+import {
+    AbstractNodeParams,
+    isNodePredicate,
+    ancestorNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export interface TableCellNodeParams extends AbstractNodeParams {
     header: boolean;
@@ -93,19 +97,19 @@ export class TableCellNode extends ContainerNode {
      * Return the row to which this cell belongs.
      */
     get row(): TableCellNode[] {
-        return this.ancestor(TableRowNode).children(TableCellNode);
+        return ancestorNodeTemp(this, TableRowNode).children(TableCellNode);
     }
     /**
      * Return the column to which this cell belongs, as an array of cells.
      */
     get column(): TableCellNode[] {
-        return this.ancestor(TableNode).columns[this.columnIndex];
+        return ancestorNodeTemp(this, TableNode).columns[this.columnIndex];
     }
     /**
      * Return the index of the row to which this cell belongs.
      */
     get rowIndex(): number {
-        return this.ancestor(TableRowNode).rowIndex;
+        return ancestorNodeTemp(this, TableRowNode).rowIndex;
     }
     /**
      * Return the index of the column to which this cell belongs.
@@ -132,9 +136,9 @@ export class TableCellNode extends ContainerNode {
      * @override
      */
     mergeWith(newManager: VNode): void {
-        const thisTable = this.ancestor(TableNode);
-        const otherTable = newManager.ancestor(TableNode);
-        if (!newManager.is(TableCellNode) || thisTable !== otherTable) return;
+        const thisTable = ancestorNodeTemp(this, TableNode);
+        const otherTable = ancestorNodeTemp(newManager, TableNode);
+        if (!isNodePredicate(newManager, TableCellNode) || thisTable !== otherTable) return;
 
         this.__managerCell = newManager;
         newManager.manage(this);
@@ -175,12 +179,12 @@ export class TableCellNode extends ContainerNode {
         }
 
         // Copy the manager's row if an entire row was merged
-        const row = cell.ancestor(TableRowNode);
+        const row = ancestorNodeTemp(cell, TableRowNode);
         if (row) {
             const cells = row.children(TableCellNode);
             const rowIsMerged = cells.every(rowCell => rowCell.managerCell === this);
             if (rowIsMerged) {
-                const managerRow = cell.managerCell.ancestor(TableRowNode);
+                const managerRow = ancestorNodeTemp(cell.managerCell, TableRowNode);
                 row.header = managerRow.header;
                 row.modifiers = managerRow.modifiers.clone();
             }

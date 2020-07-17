@@ -7,6 +7,11 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import {
+    isNodePredicate,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -52,12 +57,12 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
         }
         // Render block edge spaces as non-breakable space (otherwise browsers
         // won't render them).
-        const previous = charNodes[0].previousSibling();
-        if (!previous || !previous.is(InlineNode)) {
+        const previous = previousSiblingNodeTemp(charNodes[0]);
+        if (!previous || !isNodePredicate(previous, InlineNode)) {
             texts[0] = texts[0].replace(/^ /g, '\u00A0');
         }
-        const next = charNodes[charNodes.length - 1].nextSibling();
-        if (!next || !next.is(InlineNode)) {
+        const next = nextSiblingNodeTemp(charNodes[charNodes.length - 1]);
+        if (!next || !isNodePredicate(next, InlineNode)) {
             texts[texts.length - 1] = texts[texts.length - 1].replace(/^ /g, '\u00A0');
         }
         const textObject = { text: texts.join('') };

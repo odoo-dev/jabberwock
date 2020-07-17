@@ -5,6 +5,7 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
+import { ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -17,7 +18,7 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
                 .length
         ) {
             return { children: [] };
-        } else if (group.ancestor(ActionableGroupNode)) {
+        } else if (ancestorNodeTemp(group, ActionableGroupNode)) {
             return this._renderSelect(group);
         } else {
             return this._renderGroup(group);

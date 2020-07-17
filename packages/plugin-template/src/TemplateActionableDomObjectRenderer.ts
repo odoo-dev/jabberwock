@@ -7,12 +7,13 @@ import {
     DomObjectActionable,
 } from '../../plugin-dom-layout/src/ActionableDomObjectRenderer';
 import { TemplateThumbnailSelectorNode } from './TemplateThumbnailSelectorNode';
+import { ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class TemplateActionableDomObjectRenderer extends ActionableDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>
-        node instanceof ActionableNode && !!node.ancestor(TemplateThumbnailSelectorNode);
+        node instanceof ActionableNode && !!ancestorNodeTemp(node, TemplateThumbnailSelectorNode);
 
     async render(node: ActionableNode): Promise<DomObjectActionable> {
         const domObject = await super.render(node);

@@ -7,6 +7,10 @@ import { Layout } from '../../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../../plugin-dom-layout/src/DomLayoutEngine';
 import { caretPositionFromPoint } from '../../../utils/src/polyfill';
 import { CharNode } from '../../../plugin-char/src/CharNode';
+import {
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../../core/src/VNodes/AbstractNode';
 
 const hoverStyle = 'box-shadow: inset 0 0 0 100vh rgba(95, 146, 204, 0.5); cursor: pointer;';
 
@@ -54,16 +58,16 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         let newSelection: VNode;
         switch (event.code) {
             case 'ArrowDown':
-                newSelection = selected.nextSibling() || selected.firstChild();
+                newSelection = nextSiblingNodeTemp(selected) || selected.firstChild();
                 break;
             case 'ArrowUp':
-                newSelection = selected.previousSibling() || selected.parent;
+                newSelection = previousSiblingNodeTemp(selected) || selected.parent;
                 break;
             case 'ArrowLeft':
-                newSelection = selected.previousSibling();
+                newSelection = previousSiblingNodeTemp(selected);
                 break;
             case 'ArrowRight':
-                newSelection = selected.nextSibling();
+                newSelection = nextSiblingNodeTemp(selected);
                 break;
             default:
                 return;

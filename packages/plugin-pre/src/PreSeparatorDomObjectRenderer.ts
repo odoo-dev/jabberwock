@@ -1,6 +1,7 @@
 import { PreNode } from './PreNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
+import { isNodePredicate, ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
@@ -13,7 +14,7 @@ export class PreSeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
 
     predicate = (item: VNode): boolean => {
         const DefaultSeparator = this.engine.editor.configuration.defaults.Separator;
-        return item.is(DefaultSeparator) && !!item.ancestor(PreNode);
+        return isNodePredicate(item, DefaultSeparator) && !!ancestorNodeTemp(item, PreNode);
     };
 
     /**

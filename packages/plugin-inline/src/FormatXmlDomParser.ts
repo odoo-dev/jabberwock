@@ -3,6 +3,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { InlineNode } from './InlineNode';
 import { Format } from '../../core/src/Format';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export abstract class FormatXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -14,7 +15,7 @@ export abstract class FormatXmlDomParser extends AbstractParser<Node> {
      */
     applyFormat(format: Format, nodes: VNode[]): void {
         for (const node of nodes) {
-            if (node.is(InlineNode)) {
+            if (isNodePredicate(node, InlineNode)) {
                 format.clone().applyTo(node);
             } else {
                 const inlineNodes = node.descendants(InlineNode);

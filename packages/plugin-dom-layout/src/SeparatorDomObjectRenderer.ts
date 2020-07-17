@@ -7,12 +7,13 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { ToolbarNode } from '../../plugin-toolbar/src/ToolbarNode';
+import { ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class SeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>
-        node instanceof SeparatorNode && !!node.ancestor(ToolbarNode);
+        node instanceof SeparatorNode && !!ancestorNodeTemp(node, ToolbarNode);
 
     async render(separator: SeparatorNode): Promise<DomObject> {
         const objectSeparator: DomObject = {

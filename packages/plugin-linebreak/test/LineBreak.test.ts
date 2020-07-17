@@ -9,7 +9,7 @@ import { describePlugin } from '../../utils/src/testUtils';
 import { LineBreakXmlDomParser } from '../src/LineBreakXmlDomParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { AbstractNode, isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<LineBreak>('insertLineBreak');
@@ -45,7 +45,7 @@ describePlugin(LineBreak, testEditor => {
                 await new LineBreakXmlDomParser(engine).parse(br1)
             )[0] as LineBreakNode;
             expect(lineBreak instanceof AbstractNode).to.be.true;
-            expect(lineBreak.is(AtomicNode)).to.equal(true);
+            expect(isNodePredicate(lineBreak, AtomicNode)).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {
             const engine = new XmlDomParsingEngine(new JWEditor());
@@ -57,7 +57,7 @@ describePlugin(LineBreak, testEditor => {
         describe('constructor', () => {
             it('should create a LineBreakNode', async () => {
                 const lineBreak = new LineBreakNode();
-                expect(lineBreak.is(AtomicNode)).to.equal(true);
+                expect(isNodePredicate(lineBreak, AtomicNode)).to.equal(true);
             });
         });
         describe('clone', () => {

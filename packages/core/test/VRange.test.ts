@@ -1,6 +1,7 @@
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { afterNodeTemp } from '../src/VNodes/AbstractNode';
 
 describe('VRange', () => {
     describe('split', () => {
@@ -13,7 +14,7 @@ describe('VRange', () => {
                         const nodes = editor.selection.range.split();
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
-                        editable.lastChild().after(nodes[0]);
+                        afterNodeTemp(editable.lastChild(), nodes[0]);
                     });
                     await editor.execCommand('refresh');
                 },

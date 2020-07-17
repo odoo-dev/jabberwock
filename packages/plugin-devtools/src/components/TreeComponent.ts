@@ -5,6 +5,7 @@ import { VSelectionDescription, Direction } from '../../../core/src/VSelection';
 import { ANCHOR_CHAR, FOCUS_CHAR } from '../../../core/src/VSelection';
 import { InlineNode } from '../../../plugin-inline/src/InlineNode';
 import { Core } from '../../../core/src/Core';
+import { isNodePredicate } from '../../../core/src/VNodes/AbstractNode';
 
 interface NodeProps {
     isRoot: boolean;
@@ -126,7 +127,10 @@ export class TreeComponent extends OwlComponent<NodeProps> {
      * @param node
      */
     isFormat(node: VNode, formatName: string): boolean {
-        return node.is(InlineNode) && !!node.modifiers.find(format => format.name === formatName);
+        return (
+            isNodePredicate(node, InlineNode) &&
+            !!node.modifiers.find(format => format.name === formatName)
+        );
     }
 
     //--------------------------------------------------------------------------

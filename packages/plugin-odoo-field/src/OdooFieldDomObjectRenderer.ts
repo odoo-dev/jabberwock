@@ -6,6 +6,7 @@ import { Predicate } from '../../core/src/VNodes/VNode';
 import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomObjectElement } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { isNodePredicate, ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -38,9 +39,11 @@ export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
         const classList = container.attributes.class?.split(' ') || [];
 
         // Instances of the field containing the range are artificially focused.
-        const focusedField = this.engine.editor.selection.range.start.ancestor(
+        const focusedField = ancestorNodeTemp(
+            this.engine.editor.selection.range.start,
             ancestor =>
-                ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,
+                isNodePredicate(ancestor, OdooFieldNode) &&
+                ancestor.fieldInfo.value === node.fieldInfo.value,
         );
         if (focusedField) {
             classList.push('jw-focus');

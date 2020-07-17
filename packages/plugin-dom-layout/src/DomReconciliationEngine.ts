@@ -1,10 +1,19 @@
 import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
 import { nodeName, nodeLength, FlattenUnion, flat } from '../../utils/src/utils';
 import { styleToObject } from '../../utils/src/Dom';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import {
+    AbstractNode,
+    isNodePredicate,
+    ancestorNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomPoint } from './DomLayoutEngine';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import {
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+    nextLeafNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -108,7 +117,8 @@ export class DomReconciliationEngine {
                     this._renderedIds.add(id);
                 }
                 if (id !== oldRefId && !this._diff[parentId] && !nodeToDomObject.get(node.parent)) {
-                    const ancestorWithRendering = node.ancestor(
+                    const ancestorWithRendering = ancestorNodeTemp(
+                        node,
                         ancestor => !!this._fromNode.get(ancestor),
                     );
                     const ancestorObjectId = this._fromNode.get(ancestorWithRendering);
@@ -461,7 +471,7 @@ export class DomReconciliationEngine {
         const locations = this._locations.get(object.object);
         if (!locations[offset]) {
             return [locations[locations.length - 1], RelativePosition.AFTER];
-        } else if (forcePrepend && locations[offset].is(ContainerNode)) {
+        } else if (forcePrepend && isNodePredicate(locations[offset], ContainerNode)) {
             return [locations[offset], RelativePosition.INSIDE];
         } else if (forceAfter) {
             return [locations[offset], RelativePosition.AFTER];
@@ -503,12 +513,12 @@ export class DomReconciliationEngine {
      * @param node
      */
     getLocations(node: VNode): DomPoint {
-        let reference = node.previousSibling();
+        let reference = previousSiblingNodeTemp(node);
         let position = RelativePosition.AFTER;
         if (reference) {
             reference = reference.lastLeaf();
         } else {
-            reference = node.nextSibling();
+            reference = nextSiblingNodeTemp(node);
             position = RelativePosition.BEFORE;
             if (reference) {
                 reference = reference.firstLeaf();
@@ -556,7 +566,7 @@ export class DomReconciliationEngine {
             }
 
             if (!domNodes?.length || !domNodes[0].parentNode) {
-                const next = reference.nextLeaf();
+                const next = nextLeafNodeTemp(reference);
                 if (next && !alreadyCheck.has(next)) {
                     position = RelativePosition.BEFORE;
                     reference = next;

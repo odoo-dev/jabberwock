@@ -4,6 +4,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { Modifier } from '../../core/src/Modifier';
 import { ModifierRenderer, ModifierRendererConstructor } from './ModifierRenderer';
 import { NodeRenderer, RendererConstructor } from './NodeRenderer';
+import { testNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export type RenderingIdentifier = string;
 
@@ -150,7 +151,7 @@ export class RenderingEngine<T = {}> {
         do {
             nextRenderer = this.renderers[nextRendererIndex];
             nextRendererIndex++;
-        } while (nextRenderer && !node.test(nextRenderer.predicate));
+        } while (nextRenderer && !testNodePredicate(node, nextRenderer.predicate));
         cache.set(previousRenderer, nextRenderer);
         return nextRenderer;
     }

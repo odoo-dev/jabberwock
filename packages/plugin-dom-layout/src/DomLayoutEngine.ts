@@ -16,6 +16,8 @@ import { LayoutContainer } from './LayoutContainerNode';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { flat } from '../../utils/src/utils';
+import { nextNodeTemp } from '../../core/src/VNodes/AbstractNode';
+import { ancestorsNodesTemp, previousNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
@@ -135,11 +137,11 @@ export class DomLayoutEngine extends LayoutEngine {
             }
             for (const node of [...nodes]) {
                 // Add direct siblings nodes for batched nodes with format.
-                const previous = node.previous();
+                const previous = previousNodeTemp(node);
                 if (previous && !nodes.includes(previous) && previous.parent === node.parent) {
                     nodes.splice(nodes.indexOf(node), 0, previous);
                 }
-                const next = node.next();
+                const next = nextNodeTemp(node);
                 if (next && !nodes.includes(next) && next.parent === node.parent) {
                     nodes.splice(nodes.indexOf(node) + 1, 0, next);
                 }
@@ -162,7 +164,7 @@ export class DomLayoutEngine extends LayoutEngine {
         }
 
         nodes = nodes.filter(node => {
-            const ancestor = node.ancestors(ZoneNode).pop();
+            const ancestor = ancestorsNodesTemp(node, ZoneNode).pop();
             return ancestor?.managedZones.includes('root');
         });
 

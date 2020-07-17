@@ -11,6 +11,7 @@ import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 
 import template from '../assets/Dialog.xml';
 import '../assets/Dialog.css';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 const container = document.createElement('jw-container');
 container.innerHTML = template;
@@ -24,7 +25,10 @@ export class DialogZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     async render(node: DialogZoneNode): Promise<DomObject> {
         const float = document.createElement('jw-dialog-container');
         for (const child of node.childVNodes) {
-            if (!node.hidden[child.id] && (child.tangible || child.is(MetadataNode))) {
+            if (
+                !node.hidden[child.id] &&
+                (child.tangible || isNodePredicate(child, MetadataNode))
+            ) {
                 float.appendChild(await this._renderDialog(child));
             }
         }

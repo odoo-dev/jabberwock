@@ -5,6 +5,12 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
+import {
+    removeNodeTemp,
+    beforeNodeTemp,
+    wrapNodeTemp,
+    afterNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------
@@ -100,7 +106,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async remove(domNode: Node | Node[]): Promise<void> {
         for (const node of this.getNodes(domNode)) {
-            node.remove();
+            removeNodeTemp(node);
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
@@ -125,10 +131,10 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const parsedNodes = await this._parseHtmlString(html);
         const firstNode = nodes[0];
         for (const parsedNode of parsedNodes) {
-            firstNode.before(parsedNode);
+            beforeNodeTemp(firstNode, parsedNode);
         }
         for (const node of nodes) {
-            node.remove();
+            removeNodeTemp(node);
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
@@ -146,7 +152,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         }
         const parsedNodes = await this._parseHtmlString(html);
         for (const parsedNode of parsedNodes) {
-            container.wrap(parsedNode);
+            wrapNodeTemp(container, parsedNode);
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
@@ -158,7 +164,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
     async moveBefore(fromDomNode: Node, toDomNode: Node): Promise<void> {
         const toNode = this.getNodes(toDomNode)[0];
         for (const fromNode of this.getNodes(fromDomNode)) {
-            fromNode.before(toNode);
+            beforeNodeTemp(fromNode, toNode);
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
@@ -171,7 +177,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const toNodes = this.getNodes(toDomNode);
         const toNode = toNodes[toNodes.length - 1];
         for (const fromNode of this.getNodes(fromDomNode).reverse()) {
-            fromNode.after(toNode);
+            afterNodeTemp(fromNode, toNode);
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
@@ -198,12 +204,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         switch (position.toUpperCase()) {
             case RelativePosition.BEFORE:
                 for (const parsedNode of parsedNodes) {
-                    nodes[0].before(parsedNode);
+                    beforeNodeTemp(nodes[0], parsedNode);
                 }
                 break;
             case RelativePosition.AFTER:
                 for (const parsedNode of [...parsedNodes].reverse()) {
-                    nodes[nodes.length - 1].after(parsedNode);
+                    afterNodeTemp(nodes[nodes.length - 1], parsedNode);
                 }
                 break;
             case RelativePosition.INSIDE:

@@ -1,5 +1,6 @@
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
+import { nextSiblingNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class LineBreakNode extends SeparatorNode {
     get name(): string {
@@ -22,7 +23,7 @@ export class LineBreakNode extends SeparatorNode {
         // When clicking on a trailing line break, we need to target after the
         // line break. The DOM represents these as 2 <br> so this is a special
         // case.
-        if (!this.nextSibling() && !domNode.nextSibling) {
+        if (!nextSiblingNodeTemp(this) && !domNode.nextSibling) {
             location[1] = RelativePosition.AFTER;
         }
         return location;

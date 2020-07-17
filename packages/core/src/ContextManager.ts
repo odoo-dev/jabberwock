@@ -1,6 +1,12 @@
 import JWEditor from './JWEditor';
 import { VRange } from './VRange';
 import { Predicate, VNode } from './VNodes/VNode';
+import { nextSiblingNodeTemp } from './VNodes/AbstractNode';
+import {
+    testNodePredicate,
+    ancestorsNodesTemp,
+    previousSiblingNodeTemp,
+} from './VNodes/AbstractNode';
 
 export interface Context {
     range?: VRange;
@@ -129,8 +135,8 @@ export class ContextManager {
             const selector = item.selector || [];
             const matches: VNode[] = [];
             const start = context.range.start;
-            const nodes = start.ancestors();
-            const node = start.previousSibling() || start.nextSibling();
+            const nodes = ancestorsNodesTemp(start);
+            const node = previousSiblingNodeTemp(start) || nextSiblingNodeTemp(start);
             if (node) {
                 nodes.unshift(node);
             }
@@ -138,7 +144,7 @@ export class ContextManager {
             for (const predicate of [...selector].reverse()) {
                 let matchFound = false;
                 while (!matchFound && index < nodes.length) {
-                    if (nodes[index].test(predicate)) {
+                    if (testNodePredicate(nodes[index], predicate)) {
                         matchFound = true;
                         matches.unshift(nodes[index]);
                         if (firstMatchDepth === -1) {

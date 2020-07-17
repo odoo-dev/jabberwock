@@ -5,6 +5,7 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { nextSiblingNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class LineBreakDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -19,7 +20,7 @@ export class LineBreakDomObjectRenderer extends NodeRenderer<DomObject> {
         this.engine.locate([node], br);
         this.engine.renderAttributes(Attributes, node, br);
         const domObject = { children: [br] };
-        if (!node.nextSibling()) {
+        if (!nextSiblingNodeTemp(node)) {
             // If a LineBreakNode has no next sibling, it must be rendered
             // as two BRs in order for it to be visible.
             const br = { tag: 'BR' };

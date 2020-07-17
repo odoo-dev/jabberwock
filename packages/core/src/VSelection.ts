@@ -1,7 +1,7 @@
 import { VRange } from './VRange';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { MarkerNode } from './VNodes/MarkerNode';
-import { AbstractNode } from './VNodes/AbstractNode';
+import { AbstractNode, previousNodeTemp, nextNodeTemp } from './VNodes/AbstractNode';
 
 export const ANCHOR_CHAR = '[';
 export const FOCUS_CHAR = ']';
@@ -147,14 +147,14 @@ export class VSelection {
         let position: RelativePosition;
         if (direction === Direction.FORWARD) {
             if (reference.hasChildren()) {
-                reference = reference.next();
+                reference = nextNodeTemp(reference);
                 reference = reference.firstLeaf();
                 position = RelativePosition.BEFORE;
             } else {
                 position = RelativePosition.AFTER;
             }
         } else {
-            reference = reference.previous();
+            reference = previousNodeTemp(reference);
             if (reference.hasChildren()) {
                 reference = reference.firstLeaf();
                 position = RelativePosition.BEFORE;

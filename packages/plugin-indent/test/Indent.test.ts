@@ -4,6 +4,7 @@ import { Indent } from '../src/Indent';
 import { withRange, VRange } from '../../core/src/VRange';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { nextNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 const indent = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Indent>('indent');
@@ -955,8 +956,8 @@ describePlugin(Indent, testEditor => {
                     await editor.execBatch(async () => {
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
-                        const bNode = editable.next(node => node.name === 'b');
-                        const dNode = editable.next(node => node.name === 'd');
+                        const bNode = nextNodeTemp(editable, node => node.name === 'b');
+                        const dNode = nextNodeTemp(editable, node => node.name === 'd');
                         await withRange(VRange.selecting(bNode, dNode), async range => {
                             await editor.execCommand<Indent>('indent', {
                                 context: {
@@ -1044,8 +1045,8 @@ describePlugin(Indent, testEditor => {
                     await editor.execBatch(async () => {
                         const domEngine = editor.plugins.get(Layout).engines.dom;
                         const editable = domEngine.components.get('editable')[0];
-                        const bNode = editable.next(node => node.name === 'b');
-                        const dNode = editable.next(node => node.name === 'd');
+                        const bNode = nextNodeTemp(editable, node => node.name === 'b');
+                        const dNode = nextNodeTemp(editable, node => node.name === 'd');
                         await withRange(VRange.selecting(bNode, dNode), async range => {
                             await editor.execCommand<Indent>('outdent', {
                                 context: {

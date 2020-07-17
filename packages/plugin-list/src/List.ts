@@ -19,6 +19,23 @@ import { distinct } from '../../utils/src/utils';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import {
+    wrapNodeTemp,
+    beforeNodeTemp,
+    afterNodeTemp,
+    testNodePredicate,
+} from '../../core/src/VNodes/AbstractNode';
+import {
+    ancestorsNodesTemp,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
+import {
+    replaceWith,
+    isNodePredicate,
+    closestNode,
+    ancestorNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -27,10 +44,10 @@ export type toggleCheckedParams = CommandParams;
 
 export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static isListItem(node: VNode): boolean {
-        return node.parent && node.parent.is(ListNode);
+        return node.parent && isNodePredicate(node.parent, ListNode);
     }
     static isInList(type: ListType, node: VNode): boolean {
-        return node?.ancestor(ListNode)?.listType === type;
+        return node && ancestorNodeTemp(node, ListNode)?.listType === type;
     }
     commands = {
         toggleList: {
@@ -93,7 +110,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 pattern: 'Backspace',
                 selector: [List.isListItem],
                 check: (context: CheckingContext): boolean => {
-                    return !context.range.start.previousSibling();
+                    return !previousSiblingNodeTemp(context.range.start);
                 },
                 commandId: 'outdent',
             },
@@ -191,14 +208,14 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             // If all targeted nodes are within a list of given type then unlist
             // them. Otherwise, convert them to the given list type.
             const targetedNodes = range.targetedNodes();
-            const ancestors = targetedNodes.map(node => node.closest(ListNode));
+            const ancestors = targetedNodes.map(node => closestNode(node, ListNode));
             const targetedLists = ancestors.filter(list => !!list);
             if (
                 targetedLists.length === targetedNodes.length &&
                 targetedLists.every(list => list.listType === type)
             ) {
                 // Unlist the targeted nodes from all its list ancestors.
-                while (range.start.ancestor(ListNode)) {
+                while (ancestorNodeTemp(range.start, ListNode)) {
                     const nodesToUnlist = range.split(ListNode);
                     for (const list of nodesToUnlist) {
                         for (const child of list.childVNodes) {
@@ -215,19 +232,19 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 const listsToConvert = lists.filter(l => l.listType !== type);
                 for (const list of listsToConvert) {
                     let newList = new ListNode({ listType: type });
-                    list.replaceWith(newList);
+                    replaceWith(list, newList);
 
                     // If the new list is after or before a list of the same
                     // type, merge them. Example:
                     // <ol><li>a</li></ol><ol><li>b</li></ol>
                     // => <ol><li>a</li><li>b</li></ol>).
-                    const previousSibling = newList.previousSibling();
-                    if (previousSibling && previousSibling.is(ListNode[type])) {
+                    const previousSibling = previousSiblingNodeTemp(newList);
+                    if (previousSibling && isNodePredicate(previousSibling, ListNode[type])) {
                         newList.mergeWith(previousSibling);
                         newList = previousSibling;
                     }
-                    const nextSibling = newList.nextSibling();
-                    if (nextSibling && nextSibling.is(ListNode[type])) {
+                    const nextSibling = nextSiblingNodeTemp(newList);
+                    if (nextSibling && isNodePredicate(nextSibling, ListNode[type])) {
                         nextSibling.mergeWith(newList);
                     }
                 }
@@ -239,10 +256,10 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 const nodesToConvert = range.split(ListNode);
                 for (const node of nodesToConvert) {
                     // Merge top-level lists instead of nesting them.
-                    if (node.is(ListNode)) {
+                    if (isNodePredicate(node, ListNode)) {
                         node.mergeWith(newList);
                     } else {
-                        node.wrap(newList);
+                        wrapNodeTemp(node, newList);
                     }
                 }
 
@@ -250,14 +267,14 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 // merge them. Example:
                 // <ol><li>a</li></ol><ol><li>b</li></ol>
                 // => <ol><li>a</li><li>b</li></ol>).
-                const previousSibling = newList.previousSibling();
-                if (previousSibling && previousSibling.is(ListNode[type])) {
+                const previousSibling = previousSiblingNodeTemp(newList);
+                if (previousSibling && isNodePredicate(previousSibling, ListNode[type])) {
                     newList.mergeWith(previousSibling);
                     newList = previousSibling;
                 }
 
-                const nextSibling = newList.nextSibling();
-                if (nextSibling && nextSibling.is(ListNode[type])) {
+                const nextSibling = nextSiblingNodeTemp(newList);
+                if (nextSibling && isNodePredicate(nextSibling, ListNode[type])) {
                     nextSibling.mergeWith(newList);
                 }
             }
@@ -271,19 +288,21 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     indent(params: IndentParams): void {
         const range = params.context.range;
-        const items = range.targetedNodes(node => node.parent instanceof ListNode);
+        const items = range.targetedNodes(
+            (node: VNode) => node.parent && testNodePredicate(node.parent, ListNode),
+        );
 
         // Do not indent items of a targeted nested list, since they
         // will automatically be indented with their list ancestor.
         const itemsToIndent = items.filter(item => {
-            return !items.includes(item.ancestor(ListNode));
+            return !items.includes(ancestorNodeTemp(item, ListNode));
         });
 
         for (const item of itemsToIndent) {
-            const prev = item.previousSibling();
-            const next = item.nextSibling();
+            const prev = previousSiblingNodeTemp(item);
+            const next = nextSiblingNodeTemp(item);
             // Indent the item by putting it into a pre-existing list sibling.
-            if (prev && prev.is(ListNode)) {
+            if (prev && isNodePredicate(prev, ListNode)) {
                 prev.append(item);
                 // The two list siblings might be rejoinable now that the lower
                 // level item breaking them into two different lists is no more.
@@ -291,12 +310,12 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 if (ListNode[listType](next) && !itemsToIndent.includes(next)) {
                     next.mergeWith(prev);
                 }
-            } else if (next?.is(ListNode) && !itemsToIndent.includes(next)) {
+            } else if (next && isNodePredicate(next, ListNode) && !itemsToIndent.includes(next)) {
                 next.prepend(item);
             } else {
                 // If no other candidate exists then wrap it in a new ListNode.
-                const listType = item.ancestor(ListNode).listType;
-                item.wrap(new ListNode({ listType: listType }));
+                const listType = ancestorNodeTemp(item, ListNode).listType;
+                wrapNodeTemp(item, new ListNode({ listType: listType }));
             }
         }
     }
@@ -308,25 +327,27 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     outdent(params: OutdentParams): void {
         const range = params.context.range;
-        const items = range.targetedNodes(node => node.parent?.is(ListNode));
+        const items = range.targetedNodes(
+            (node: VNode) => node.parent && isNodePredicate(node.parent, ListNode),
+        );
 
         // Do not outdent items of a targeted nested list, since they
         // will automatically be outdented with their list ancestor.
         const itemsToOutdent = items.filter(item => {
-            return !items.includes(item.ancestor(ListNode));
+            return !items.includes(ancestorNodeTemp(item, ListNode));
         });
 
         for (const item of itemsToOutdent) {
-            const list = item.ancestor(ListNode);
-            const previousSibling = item.previousSibling();
-            const nextSibling = item.nextSibling();
+            const list = ancestorNodeTemp(item, ListNode);
+            const previousSibling = previousSiblingNodeTemp(item);
+            const nextSibling = nextSiblingNodeTemp(item);
             if (previousSibling && nextSibling) {
                 const splitList = item.parent.splitAt(item);
-                splitList.before(item);
+                beforeNodeTemp(splitList, item);
             } else if (previousSibling) {
-                list.after(item);
+                afterNodeTemp(list, item);
             } else if (nextSibling) {
-                list.before(item);
+                beforeNodeTemp(list, item);
             } else {
                 for (const child of list.childVNodes) {
                     // TODO: automatically invalidate `li-attributes`.
@@ -346,11 +367,11 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     insertParagraphBreak(params: InsertParagraphBreakParams): void {
         const range = params.context.range;
         const listItem = range.startContainer;
-        const listNode = listItem.ancestor(ListNode);
+        const listNode = ancestorNodeTemp(listItem, ListNode);
         if (listNode.children().length === 1) {
             listNode.unwrap();
         } else {
-            listNode.after(listItem);
+            afterNodeTemp(listNode, listItem);
         }
     }
 
@@ -361,15 +382,15 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      */
     rejoin(params: DeleteBackwardParams): void {
         const range = params.context.range;
-        const listAncestors = range.start.ancestors(ListNode);
+        const listAncestors = ancestorsNodesTemp(range.start, ListNode);
         if (listAncestors.length) {
             let list: VNode = listAncestors[listAncestors.length - 1];
-            let nextSibling = list && list.nextSibling();
+            let nextSibling = list && nextSiblingNodeTemp(list);
             while (
                 list &&
                 nextSibling &&
-                list.is(ListNode) &&
-                nextSibling.is(ListNode[list.listType])
+                isNodePredicate(list, ListNode) &&
+                isNodePredicate(nextSibling, ListNode[list.listType])
             ) {
                 const nextList = list.lastChild();
                 const nextListSibling = nextSibling.firstChild();

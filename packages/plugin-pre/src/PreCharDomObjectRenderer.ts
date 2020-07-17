@@ -3,11 +3,11 @@ import { VNode, Predicate } from '../../core/src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { CharDomObjectRenderer } from '../../plugin-char/src/CharDomObjectRenderer';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { AbstractNode, ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class PreCharDomObjectRenderer extends CharDomObjectRenderer {
     predicate: Predicate = (item: VNode): boolean =>
-        item instanceof CharNode && !!item.ancestor(PreNode);
+        item instanceof CharNode && !!ancestorNodeTemp(item, PreNode);
 
     async render(charNode: CharNode): Promise<DomObject> {
         const domObject = await super.render(charNode);

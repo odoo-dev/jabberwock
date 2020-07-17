@@ -9,6 +9,7 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { previousSiblingNodeTemp, beforeNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
@@ -49,7 +50,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const inline = this.editor.plugins.get(Inline);
         let modifiers = inline.getCurrentModifiers(range);
         // Ony preserved modifiers are applied at the start of a container.
-        const previousSibling = range.start.previousSibling();
+        const previousSibling = previousSiblingNodeTemp(range.start);
         if (!previousSibling && modifiers) {
             modifiers = new Modifiers(...modifiers.filter(mod => mod.preserve));
         }
@@ -77,7 +78,7 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             if (style) {
                 charNode.modifiers.get(Attributes).style = style;
             }
-            range.start.before(charNode);
+            beforeNodeTemp(range.start, charNode);
         });
         if (params.select && charNodes.length) {
             this.editor.selection.select(charNodes[0], charNodes[charNodes.length - 1]);

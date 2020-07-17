@@ -8,6 +8,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Direction, VSelectionDescription } from '../../core/src/VSelection';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export async function parseElement(editor: JWEditor, element: HTMLElement): Promise<VNode[]> {
     const parser = editor.plugins.get(Parser);
@@ -94,7 +95,7 @@ export async function parseElement(editor: JWEditor, element: HTMLElement): Prom
             if (forceAfter) {
                 return [reference, RelativePosition.AFTER];
             }
-            if (forcePrepend && reference.is(ContainerNode)) {
+            if (forcePrepend && isNodePredicate(reference, ContainerNode)) {
                 return [reference, RelativePosition.INSIDE];
             }
 

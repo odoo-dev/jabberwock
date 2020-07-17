@@ -18,6 +18,7 @@ import { UnderlineXmlDomParser } from '../../plugin-underline/src/UnderlineXmlDo
 import { SpanXmlDomParser } from '../../plugin-span/src/SpanXmlDomParser';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
+import { previousSiblingNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 describe('utils', () => {
     describe('Parser', () => {
@@ -64,7 +65,7 @@ describe('utils', () => {
                 // Only one <br> should be parsed.
                 expect(p.children().length).to.equal(2);
                 expect(p.lastChild() instanceof LineBreakNode).to.be.true;
-                expect(p.lastChild().previousSibling().textContent).to.equal('a');
+                expect(previousSiblingNodeTemp(p.lastChild()).textContent).to.equal('a');
             });
             it('handles nested formatted nodes', async () => {
                 const element = document.createElement('div');

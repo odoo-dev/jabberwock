@@ -5,6 +5,7 @@ import { VElement } from '../../core/src/VNodes/VElement';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { isNodePredicate, testNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = 'dom/object';
@@ -13,17 +14,17 @@ export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
     async render(node: VNode): Promise<DomObject> {
         let domObject: DomObject;
         if (node.tangible) {
-            if (node.is(VElement) && node.htmlTag[0] !== '#') {
+            if (isNodePredicate(node, VElement) && node.htmlTag[0] !== '#') {
                 domObject = {
                     tag: node.htmlTag,
                     children: await this.engine.renderChildren(node),
                 };
                 this.engine.renderAttributes(Attributes, node, domObject);
-            } else if (node instanceof FragmentNode) {
+            } else if (testNodePredicate(node, FragmentNode)) {
                 domObject = {
                     children: await this.engine.renderChildren(node),
                 };
-            } else if (node.is(AtomicNode)) {
+            } else if (isNodePredicate(node, AtomicNode)) {
                 domObject = { children: [] };
             } else {
                 domObject = {

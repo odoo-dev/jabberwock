@@ -7,7 +7,11 @@ import { LinkFormat } from './LinkFormat';
 import { Char } from '../../plugin-char/src/Char';
 import { Modifiers } from '../../core/src/Modifiers';
 import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import {
+    AbstractNode,
+    isNodePredicate,
+    adjacentsNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
@@ -18,6 +22,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { OwlNode } from '../../plugin-owl/src/OwlNode';
 import { LinkComponent } from './components/LinkComponent';
+import { previousSiblingNodeTemp, nextSiblingNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export interface LinkParams extends CommandParams {
     label?: string;
@@ -36,7 +41,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (link instanceof AbstractNode) {
             node = link;
         }
-        const format = node.is(InlineNode) && node.modifiers.find(LinkFormat);
+        const format = isNodePredicate(node, InlineNode) && node.modifiers.find(LinkFormat);
         return link instanceof AbstractNode ? !!format : link.isSameAs(format);
     }
     static dependencies = [Inline];
@@ -78,8 +83,14 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'link',
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
-                            const node = range.start.nextSibling() || range.start.previousSibling();
-                            return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+                            const node =
+                                nextSiblingNodeTemp(range.start) ||
+                                previousSiblingNodeTemp(range.start);
+                            return (
+                                node &&
+                                isNodePredicate(node, InlineNode) &&
+                                !!node.modifiers.find(LinkFormat)
+                            );
                         },
                         modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
                     });
@@ -95,8 +106,14 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'unlink',
                         enabled: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
-                            const node = range.start.nextSibling() || range.start.previousSibling();
-                            return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+                            const node =
+                                nextSiblingNodeTemp(range.start) ||
+                                previousSiblingNodeTemp(range.start);
+                            return (
+                                node &&
+                                isNodePredicate(node, InlineNode) &&
+                                !!node.modifiers.find(LinkFormat)
+                            );
                         },
                         modifiers: [new Attributes({ class: 'fa fa-unlink fa-fw' })],
                     });
@@ -148,14 +165,14 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
 
         if (range.isCollapsed()) {
             // If no range is selected and we are in a Link : remove the complete link.
-            const previousNode = range.start.previousSibling();
-            const nextNode = range.start.nextSibling();
+            const previousNode = previousSiblingNodeTemp(range.start);
+            const nextNode = nextSiblingNodeTemp(range.start);
             const node = Link.isLink(previousNode) ? previousNode : nextNode;
             if (!Link.isLink(node)) return;
 
             const link = node.modifiers.find(LinkFormat);
             const sameLink: Typeguard<InlineNode> = Link.isLink.bind(Link, link);
-            this._removeLinkOnNodes([node, ...node.adjacents(sameLink)]);
+            this._removeLinkOnNodes([node, ...adjacentsNodeTemp(node, sameLink)]);
         } else {
             // If a range is selected : remove any link on the selected range.
             const selectedNodes = range.selectedNodes(InlineNode);

@@ -1,6 +1,12 @@
-import { AbstractNode } from './AbstractNode';
+import {
+    AbstractNode,
+    testNodePredicate,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from './AbstractNode';
 import { VNode, Predicate, isLeaf } from './VNode';
 import { ChildError } from '../../../utils/src/errors';
+import { removeNodeTemp, afterNodeTemp, beforeNodeTemp } from './AbstractNode';
 import { VersionableArray } from '../Memory/VersionableArray';
 
 export class ContainerNode extends AbstractNode {
@@ -17,7 +23,7 @@ export class ContainerNode extends AbstractNode {
     children(predicate?: Predicate): VNode[];
     children(predicate?: Predicate): VNode[] {
         return this.childVNodes.filter(child => {
-            return child.tangible && (!predicate || child.test(predicate));
+            return child.tangible && (!predicate || testNodePredicate(child, predicate));
         });
     }
     /**
@@ -39,8 +45,8 @@ export class ContainerNode extends AbstractNode {
     firstChild(predicate?: Predicate): VNode;
     firstChild(predicate?: Predicate): VNode {
         let child = this.childVNodes[0];
-        while (child && !(child.tangible && (!predicate || child.test(predicate)))) {
-            child = child.nextSibling();
+        while (child && !(child.tangible && (!predicate || testNodePredicate(child, predicate)))) {
+            child = nextSiblingNodeTemp(child);
         }
         return child;
     }
@@ -51,8 +57,8 @@ export class ContainerNode extends AbstractNode {
     lastChild(predicate?: Predicate): VNode;
     lastChild(predicate?: Predicate): VNode {
         let child = this.childVNodes[this.childVNodes.length - 1];
-        while (child && !(child.tangible && (!predicate || child.test(predicate)))) {
-            child = child.previousSibling();
+        while (child && !(child.tangible && (!predicate || testNodePredicate(child, predicate)))) {
+            child = previousSiblingNodeTemp(child);
         }
         return child;
     }
@@ -63,7 +69,7 @@ export class ContainerNode extends AbstractNode {
     firstLeaf(predicate?: Predicate): VNode;
     firstLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return isLeaf(node) && (!predicate || node.test(predicate));
+            return isLeaf(node) && (!predicate || testNodePredicate(node, predicate));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -78,7 +84,7 @@ export class ContainerNode extends AbstractNode {
     lastLeaf(predicate?: Predicate): VNode;
     lastLeaf(predicate?: Predicate): VNode {
         const isValidLeaf = (node: VNode): boolean => {
-            return isLeaf(node) && (!predicate || node.test(predicate));
+            return isLeaf(node) && (!predicate || testNodePredicate(node, predicate));
         };
         if (isValidLeaf(this)) {
             return this;
@@ -93,7 +99,7 @@ export class ContainerNode extends AbstractNode {
     firstDescendant(predicate?: Predicate): VNode;
     firstDescendant(predicate?: Predicate): VNode {
         let firstDescendant = this.firstChild();
-        while (firstDescendant && predicate && firstDescendant.test(predicate)) {
+        while (firstDescendant && predicate && testNodePredicate(firstDescendant, predicate)) {
             firstDescendant = this._descendantAfter(firstDescendant);
         }
         return firstDescendant;
@@ -108,7 +114,7 @@ export class ContainerNode extends AbstractNode {
         while (lastDescendant && lastDescendant.hasChildren()) {
             lastDescendant = lastDescendant.lastChild();
         }
-        while (lastDescendant && predicate && !lastDescendant.test(predicate)) {
+        while (lastDescendant && predicate && !testNodePredicate(lastDescendant, predicate)) {
             lastDescendant = this._descendantBefore(lastDescendant);
         }
         return lastDescendant;
@@ -123,7 +129,7 @@ export class ContainerNode extends AbstractNode {
         const stack = [...this.childVNodes];
         while (stack.length) {
             const node = stack.shift();
-            if (node.tangible && (!predicate || node.test(predicate))) {
+            if (node.tangible && (!predicate || testNodePredicate(node, predicate))) {
                 descendants.push(node);
             }
             if (node instanceof ContainerNode) {
@@ -202,7 +208,7 @@ export class ContainerNode extends AbstractNode {
      */
     empty(): void {
         for (const child of [...this.childVNodes]) {
-            child.remove();
+            removeNodeTemp(child);
         }
     }
     /**
@@ -230,7 +236,7 @@ export class ContainerNode extends AbstractNode {
         while (this.childVNodes.length > index) {
             duplicate.append(this.childVNodes[index]);
         }
-        this.after(duplicate);
+        afterNodeTemp(this, duplicate);
         return duplicate;
     }
     /**
@@ -245,7 +251,7 @@ export class ContainerNode extends AbstractNode {
             } else {
                 newContainer.append(...this.childVNodes);
             }
-            this.remove();
+            removeNodeTemp(this);
         }
     }
     /**
@@ -253,9 +259,9 @@ export class ContainerNode extends AbstractNode {
      */
     unwrap(): void {
         for (const child of this.childVNodes.slice()) {
-            this.before(child);
+            beforeNodeTemp(this, child);
         }
-        this.remove();
+        removeNodeTemp(this);
     }
 
     //--------------------------------------------------------------------------
@@ -269,7 +275,7 @@ export class ContainerNode extends AbstractNode {
      * @param node
      */
     _descendantBefore(node: VNode): VNode {
-        let previous = node.previousSibling();
+        let previous = previousSiblingNodeTemp(node);
         if (previous) {
             // The node before node is the last leaf of its previous sibling.
             previous = previous.lastLeaf();
@@ -291,18 +297,18 @@ export class ContainerNode extends AbstractNode {
         let next = node.firstChild();
         if (!next) {
             // If it has no children then it is its next sibling.
-            next = node.nextSibling();
+            next = nextSiblingNodeTemp(node);
         }
         if (!next) {
             // If it has no siblings either then climb up to the closest parent
             // which has a next sibiling.
             // This is similar to `next` but can't go further than `this`.
             let ancestor = node.parent;
-            while (ancestor !== this && !ancestor.nextSibling()) {
+            while (ancestor !== this && !nextSiblingNodeTemp(ancestor)) {
                 ancestor = ancestor.parent;
             }
             if (ancestor !== this) {
-                next = ancestor.nextSibling();
+                next = nextSiblingNodeTemp(ancestor);
             }
         }
         return next;

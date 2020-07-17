@@ -5,6 +5,7 @@ import { TableRowNode } from './TableRowNode';
 import { TableCellNode } from './TableCellNode';
 import { nodeName } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export class TableXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -29,7 +30,9 @@ export class TableXmlDomParser extends AbstractParser<Node> {
 
         // Build the grid.
         const dimensions = this._getTableDimensions(item);
-        const parsedRows = children.filter(row => row.is(TableRowNode)) as TableRowNode[];
+        const parsedRows = children.filter(row =>
+            isNodePredicate(row, TableRowNode),
+        ) as TableRowNode[];
         const grid = this._createTableGrid(dimensions, parsedRows);
 
         // Append the cells to the rows.
@@ -48,7 +51,7 @@ export class TableXmlDomParser extends AbstractParser<Node> {
         let rowIndex = 0;
         for (let childIndex = 0; childIndex < children.length; childIndex += 1) {
             const child = children[childIndex];
-            if (child.is(TableRowNode)) {
+            if (isNodePredicate(child, TableRowNode)) {
                 const row = rows[rowIndex];
                 table.append(row);
                 rowIndex += 1;

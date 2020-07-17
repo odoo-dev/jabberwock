@@ -4,6 +4,8 @@ import { TableRowNode } from './TableRowNode';
 import { nodeName } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Modifiers } from '../../core/src/Modifiers';
+import { VNode } from '../../core/src/VNodes/VNode';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export class TableSectionAttributes extends Attributes {}
 
@@ -40,11 +42,11 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
      * @param tableSection
      */
     async parseTableSection(tableSection: HTMLTableSectionElement): Promise<TableRowNode[]> {
-        const parsedNodes = [];
+        const parsedNodes: TableRowNode[] = [];
 
         // Parse the section's children.
         for (const child of tableSection.childNodes) {
-            parsedNodes.push(...(await this.engine.parse(child)));
+            parsedNodes.push(...((await this.engine.parse(child)) as TableRowNode[]));
         }
 
         // Parse the <tbody> or <thead>'s modifiers.
@@ -54,7 +56,7 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
         // each row.
         const name = nodeName(tableSection);
         for (const parsedNode of parsedNodes) {
-            if (parsedNode.is(TableRowNode)) {
+            if (isNodePredicate(parsedNode, TableRowNode)) {
                 parsedNode.header = name === 'THEAD';
                 parsedNode.modifiers.replace(
                     TableSectionAttributes,

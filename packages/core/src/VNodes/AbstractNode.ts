@@ -11,6 +11,16 @@ export interface AbstractNodeParams {
     modifiers?: Modifiers | Array<Modifier | Constructor<Modifier>>;
 }
 
+/**
+ * Replace this VNode with the given VNode.
+ *
+ * @param node
+ */
+export function replaceWith(current: AbstractNode, node: VNode): void {
+    beforeNodeTemp(current, node);
+    current.mergeWith(node);
+}
+
 let id = 0;
 export abstract class AbstractNode extends EventMixin {
     readonly id = id;
@@ -92,16 +102,6 @@ export abstract class AbstractNode extends EventMixin {
         return clone;
     }
 
-    /**
-     * Replace this VNode with the given VNode.
-     *
-     * @param node
-     */
-    replaceWith(node: VNode): void {
-        this.before(node);
-        this.mergeWith(node);
-    }
-
     //--------------------------------------------------------------------------
     // Properties
     //--------------------------------------------------------------------------
@@ -111,418 +111,6 @@ export abstract class AbstractNode extends EventMixin {
      */
     get length(): number {
         return this.children().length;
-    }
-    /**
-     * Return whether this node is an instance of the given VNode class.
-     *
-     * @param predicate The subclass of VNode to test this node against.
-     */
-    is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T;
-    is(predicate: Predicate): false;
-    is(predicate: Predicate): boolean {
-        if (AbstractNode.isConstructor(predicate)) {
-            return this instanceof predicate;
-        } else {
-            return predicate(this as VNode);
-        }
-    }
-    /**
-     * Test this node against the given predicate.
-     *
-     * If the predicate is falsy, return true. If the predicate is a constructor
-     * of a VNode class, return whether this node is an instance of that class.
-     * If the predicate is a standard function, return the result of this
-     * function when called with the node as parameter.
-     *
-     *
-     * @param predicate The predicate to test this node against.
-     */
-    test(predicate?: Predicate): boolean {
-        if (!predicate) {
-            return true;
-        } else if (AbstractNode.isConstructor(predicate)) {
-            return this instanceof predicate;
-        } else {
-            return predicate(this as VNode);
-        }
-    }
-    /**
-     * Return true if this VNode comes before the given VNode in the pre-order
-     * traversal.
-     *
-     * @param vNode
-     */
-    isBefore(vNode: VNode): boolean {
-        const thisPath = [this as VNode, ...this.ancestors()];
-        const nodePath = [vNode, ...vNode.ancestors()];
-        // Find the last distinct ancestors in the path to the root.
-        let thisAncestor: VNode;
-        let nodeAncestor: VNode;
-        do {
-            thisAncestor = thisPath.pop();
-            nodeAncestor = nodePath.pop();
-        } while (thisAncestor && nodeAncestor && thisAncestor === nodeAncestor);
-
-        if (thisAncestor && nodeAncestor) {
-            const thisParent = thisAncestor.parent;
-            const nodeParent = nodeAncestor.parent;
-            if (thisParent && thisParent === nodeParent) {
-                // Compare the indices of both ancestors in their shared parent.
-                const thisIndex = thisParent.childVNodes.indexOf(thisAncestor);
-                const nodeIndex = nodeParent.childVNodes.indexOf(nodeAncestor);
-                return thisIndex < nodeIndex;
-            } else {
-                // The very first ancestor of both nodes are different so
-                // they actually come from two different trees altogether.
-                return false;
-            }
-        } else {
-            // One of the nodes was in the ancestors path of the other.
-            return !thisAncestor && !!nodeAncestor;
-        }
-    }
-    /**
-     * Return true if this VNode comes after the given VNode in the pre-order
-     * traversal.
-     *
-     * @param vNode
-     */
-    isAfter(vNode: VNode): boolean {
-        return vNode.isBefore(this as VNode);
-    }
-
-    //--------------------------------------------------------------------------
-    // Browsing ancestors and siblings.
-    //--------------------------------------------------------------------------
-
-    /**
-     * Return the closest node from this node that matches the given predicate.
-     * Start with this node then go up the ancestors tree until finding a match.
-     *
-     * @param predicate
-     */
-    closest<T extends VNode>(predicate: Predicate<T>): T;
-    closest(predicate: Predicate): VNode;
-    closest(predicate: Predicate): VNode {
-        if (this.test(predicate)) {
-            return this as VNode;
-        } else {
-            return this.ancestor(predicate);
-        }
-    }
-    /**
-     * Return the first ancestor of this VNode that satisfies the given
-     * predicate.
-     *
-     * @param [predicate]
-     */
-    ancestor<T extends VNode>(predicate?: Predicate<T>): T;
-    ancestor(predicate?: Predicate): VNode;
-    ancestor(predicate?: Predicate): VNode {
-        let ancestor = this.parent;
-        while (ancestor && !ancestor.test(predicate)) {
-            ancestor = ancestor.parent;
-        }
-        return ancestor;
-    }
-    /**
-     * Return all ancestors of the current node that satisfy the given
-     * predicate. If no predicate is given return all the ancestors of the
-     * current node.
-     *
-     * @param [predicate]
-     */
-    ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
-    ancestors(predicate?: Predicate): VNode[];
-    ancestors(predicate?: Predicate): VNode[] {
-        const ancestors: VNode[] = [];
-        let parent = this.parent;
-        while (parent) {
-            if (parent.test(predicate)) {
-                ancestors.push(parent);
-            }
-            parent = parent.parent;
-        }
-        return ancestors;
-    }
-    /**
-     * Return the lowest common ancestor between this VNode and the given one.
-     *
-     * @param node
-     */
-    commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
-    commonAncestor(node: VNode, predicate?: Predicate): VNode;
-    commonAncestor(node: VNode, predicate?: Predicate): VNode {
-        if (!this.parent) {
-            return;
-        } else if (this.parent === node.parent && this.parent.test(predicate)) {
-            return this.parent;
-        }
-        const thisPath = [this as VNode, ...this.ancestors(predicate)];
-        const nodePath = [node, ...node.ancestors(predicate)];
-        let commonAncestor: VNode;
-        while (thisPath[thisPath.length - 1] === nodePath.pop()) {
-            commonAncestor = thisPath.pop();
-        }
-        return commonAncestor;
-    }
-    /**
-     * Return the siblings of this VNode which satisfy the given predicate.
-     *
-     * @param [predicate]
-     */
-    siblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    siblings(predicate?: Predicate): VNode[];
-    siblings(predicate?: Predicate): VNode[] {
-        const siblings: VNode[] = [];
-        let sibling: VNode = this.previousSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                siblings.unshift(sibling);
-            }
-            sibling = sibling.previousSibling();
-        }
-        sibling = this.nextSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                siblings.push(sibling);
-            }
-            sibling = sibling.nextSibling();
-        }
-        return siblings;
-    }
-    /**
-     * Return the nodes adjacent to this VNode that satisfy the given predicate.
-     */
-    adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
-    adjacents(predicate?: Predicate): VNode[];
-    adjacents(predicate?: Predicate): VNode[] {
-        const adjacents: VNode[] = [];
-        let sibling: VNode = this.previousSibling();
-        while (sibling && sibling.test(predicate)) {
-            adjacents.unshift(sibling);
-            sibling = sibling.previousSibling();
-        }
-        sibling = this.nextSibling();
-        while (sibling && sibling.test(predicate)) {
-            adjacents.push(sibling);
-            sibling = sibling.nextSibling();
-        }
-        return adjacents;
-    }
-    /**
-     * Return the previous sibling of this VNode that satisfies the predicate.
-     * If no predicate is given, return the previous sibling of this VNode.
-     *
-     * @param [predicate]
-     */
-    previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    previousSibling(predicate?: Predicate): VNode;
-    previousSibling(predicate?: Predicate): VNode {
-        if (!this.parent) return;
-        const index = this.parent.childVNodes.indexOf(this as VNode);
-        let sibling = this.parent.childVNodes[index - 1];
-        // Skip ignored siblings and those failing the predicate test.
-        while (sibling && !(sibling.tangible && sibling.test(predicate))) {
-            sibling = sibling.previousSibling();
-        }
-        return sibling;
-    }
-    /**
-     * Return the next sibling of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the next sibling of this VNode.
-     *
-     * @param [predicate]
-     */
-    nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
-    nextSibling(predicate?: Predicate): VNode;
-    nextSibling(predicate?: Predicate): VNode {
-        if (!this.parent) return;
-        const index = this.parent.childVNodes.indexOf(this as VNode);
-        let sibling = this.parent.childVNodes[index + 1];
-        // Skip ignored siblings and those failing the predicate test.
-        while (sibling && !(sibling.tangible && sibling.test(predicate))) {
-            sibling = sibling.nextSibling();
-        }
-        return sibling;
-    }
-    /**
-     * Return the previous node in a depth-first pre-order traversal of the
-     * tree that satisfies the given predicate. If no predicate is given return
-     * the previous node in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
-     */
-    previous<T extends VNode>(predicate?: Predicate<T>): T;
-    previous(predicate?: Predicate): VNode;
-    previous(predicate?: Predicate): VNode {
-        let previous = this.previousSibling();
-        if (previous) {
-            // The previous node is the last leaf of the previous sibling.
-            previous = previous.lastLeaf();
-        } else {
-            // If it has no previous sibling then climb up to the parent.
-            previous = this.parent;
-        }
-        while (previous && !previous.test(predicate)) {
-            previous = previous.previous();
-        }
-        return previous;
-    }
-    /**
-     * Return the next node in a depth-first pre-order traversal of the tree
-     * that satisfies the given predicate. If no predicate is given return the
-     * next node in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
-     */
-    next<T extends VNode>(predicate?: Predicate<T>): T;
-    next(predicate?: Predicate): VNode;
-    next(predicate?: Predicate): VNode {
-        // The node after node is its first child.
-        let next = this.firstChild();
-        if (!next) {
-            // If it has no children then it is its next sibling.
-            next = this.nextSibling();
-        }
-        if (!next) {
-            // If it has no siblings either then climb up to the closest parent
-            // which has a next sibiling.
-            let ancestor = this.parent;
-            while (ancestor && !ancestor.nextSibling()) {
-                ancestor = ancestor.parent;
-            }
-            next = ancestor && ancestor.nextSibling();
-        }
-        while (next && !next.test(predicate)) {
-            next = next.next();
-        }
-        return next;
-    }
-    /**
-     * Return the previous leaf in a depth-first pre-order traversal of the
-     * tree that satisfies the given predicate. If no predicate is given return
-     * the previous leaf in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
-     */
-    previousLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    previousLeaf(predicate?: Predicate): VNode;
-    previousLeaf(predicate?: Predicate): VNode {
-        return this.previous((node: VNode): boolean => {
-            return isLeaf(node) && node.test(predicate);
-        });
-    }
-    /**
-     * Return the next leaf in a depth-first pre-order traversal of the tree
-     * that satisfies the given predicate. If no predicate is given return the
-     * next leaf in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
-     */
-    nextLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    nextLeaf(predicate?: Predicate): VNode;
-    nextLeaf(predicate?: Predicate): VNode {
-        return this.next((node: VNode): boolean => {
-            return isLeaf(node) && node.test(predicate);
-        });
-    }
-    /**
-     * Return all previous siblings of the current node that satisfy the given
-     * predicate. If no predicate is given return all the previous siblings of
-     * the current node.
-     *
-     * @param [predicate]
-     */
-    previousSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    previousSiblings(predicate?: Predicate): VNode[];
-    previousSiblings(predicate?: Predicate): VNode[] {
-        const previousSiblings: VNode[] = [];
-        let sibling = this.previousSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                previousSiblings.push(sibling);
-            }
-            sibling = sibling.previousSibling();
-        }
-        return previousSiblings;
-    }
-    /**
-     * Return all next siblings of the current node that satisfy the given
-     * predicate. If no predicate is given return all the next siblings of the
-     * current node.
-     *
-     * @param [predicate]
-     */
-    nextSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
-    nextSiblings(predicate?: Predicate): VNode[];
-    nextSiblings(predicate?: Predicate): VNode[] {
-        const nextSiblings: VNode[] = [];
-        let sibling = this.nextSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                nextSiblings.push(sibling);
-            }
-            sibling = sibling.nextSibling();
-        }
-        return nextSiblings;
-    }
-
-    //--------------------------------------------------------------------------
-    // Updating
-    //--------------------------------------------------------------------------
-
-    /**
-     * Insert the given VNode before this VNode.
-     *
-     * @param node
-     */
-    before(node: VNode): void {
-        if (!this.parent) {
-            throw 'Cannot insert a VNode before a VNode with no parent.';
-        }
-        this.parent.insertBefore(node, this as VNode);
-    }
-    /**
-     * Insert the given VNode after this VNode.
-     *
-     * @param node
-     */
-    after(node: VNode): void {
-        if (!this.parent) {
-            throw 'Cannot insert a VNode after a VNode with no parent.';
-        }
-        this.parent.insertAfter(node, this as VNode);
-    }
-    /**
-     * Wrap this node in the given node by inserting the given node at this
-     * node's position in its parent and appending this node to the given node.
-     *
-     * @param node
-     */
-    wrap(node: VNode): void {
-        this.before(node);
-        node.append(this as VNode);
-    }
-    /**
-     * Remove this node.
-     */
-    remove(): void {
-        if (this.parent) {
-            this.parent.removeChild(this as VNode);
-        }
-    }
-    /**
-     * Remove this node in forward direction. (e.g. `Delete` key)
-     */
-    removeForward(): void {
-        this.remove();
-    }
-    /**
-     * Remove this node in backward direction. (e.g. `Backspace` key)
-     */
-    removeBackward(): void {
-        this.remove();
     }
 
     //--------------------------------------------------------------------------
@@ -701,4 +289,483 @@ export abstract class AbstractNode extends EventMixin {
 }
 export interface AbstractNode {
     constructor: new <T extends Constructor<VNode>>(...args: ConstructorParameters<T>) => this;
+}
+
+/**
+ * Return whether this node is an instance of the given VNode class.
+ *
+ * @param predicate The subclass of VNode to test this node against.
+ */
+export function isNodePredicate<T extends VNode>(
+    node: VNode,
+    predicate: Constructor<T> | Typeguard<T>,
+): node is T;
+export function isNodePredicate(node: VNode, predicate: Predicate): false;
+export function isNodePredicate(node: VNode, predicate: Predicate): boolean {
+    if (AbstractNode.isConstructor(predicate)) {
+        return node instanceof predicate;
+    } else {
+        return predicate(node as VNode);
+    }
+}
+/**
+ * Test this node against the given predicate.
+ *
+ * If the predicate is falsy, return true. If the predicate is a constructor
+ * of a VNode class, return whether this node is an instance of that class.
+ * If the predicate is a standard function, return the result of this
+ * function when called with the node as parameter.
+ *
+ *
+ * @param predicate The predicate to test this node against.
+ */
+export function testNodePredicate(node: AbstractNode, predicate?: Predicate): boolean {
+    if (!predicate) {
+        return true;
+    } else if (AbstractNode.isConstructor(predicate)) {
+        return node instanceof predicate;
+    } else {
+        return predicate(node as VNode);
+    }
+}
+
+/**
+ * Return true if this VNode comes before the given VNode in the pre-order
+ * traversal.
+ *
+ * @param vNode
+ */
+export function isBeforeNode(node: AbstractNode, vNode: VNode): boolean {
+    const thisPath = [node as VNode, ...ancestorsNodesTemp(node)];
+    const nodePath = [vNode, ...ancestorsNodesTemp(vNode)];
+    // Find the last distinct ancestors in the path to the root.
+    let thisAncestor: VNode;
+    let nodeAncestor: VNode;
+    do {
+        thisAncestor = thisPath.pop();
+        nodeAncestor = nodePath.pop();
+    } while (thisAncestor && nodeAncestor && thisAncestor === nodeAncestor);
+
+    if (thisAncestor && nodeAncestor) {
+        const thisParent = thisAncestor.parent;
+        const nodeParent = nodeAncestor.parent;
+        if (thisParent && thisParent === nodeParent) {
+            // Compare the indices of both ancestors in their shared parent.
+            const thisIndex = thisParent.childVNodes.indexOf(thisAncestor);
+            const nodeIndex = nodeParent.childVNodes.indexOf(nodeAncestor);
+            return thisIndex < nodeIndex;
+        } else {
+            // The very first ancestor of both nodes are different so
+            // they actually come from two different trees altogether.
+            return false;
+        }
+    } else {
+        // One of the nodes was in the ancestors path of the other.
+        return !thisAncestor && !!nodeAncestor;
+    }
+}
+
+/**
+ * Return true if this VNode comes after the given VNode in the pre-order
+ * traversal.
+ *
+ * @param vNode
+ */
+export function isAfterNode(fromNode: VNode, vNode: VNode): boolean {
+    return isBeforeNode(vNode, fromNode as VNode);
+}
+
+/**
+ * Return the closest node from this node that matches the given predicate.
+ * Start with this node then go up the ancestors tree until finding a match.
+ *
+ * @param predicate
+ */
+export function closestNode<T extends VNode>(node: VNode, predicate: Predicate<T>): T;
+export function closestNode(node: VNode, predicate: Predicate): VNode;
+export function closestNode(node: VNode, predicate: Predicate): VNode {
+    if (testNodePredicate(node, predicate)) {
+        return node as VNode;
+    } else {
+        return ancestorNodeTemp(node, predicate);
+    }
+}
+
+//--------------------------------------------------------------------------
+// Browsing ancestors and siblings.
+//--------------------------------------------------------------------------
+
+/**
+ * Return the first ancestor of this VNode that satisfies the given
+ * predicate.
+ *
+ * @param [predicate]
+ */
+export function ancestorNodeTemp<T extends VNode>(node: AbstractNode, predicate?: Predicate<T>): T;
+export function ancestorNodeTemp(node: AbstractNode, predicate?: Predicate): VNode;
+export function ancestorNodeTemp(node: AbstractNode, predicate?: Predicate): VNode {
+    let ancestor = node.parent;
+    while (ancestor && !testNodePredicate(ancestor, predicate)) {
+        ancestor = ancestor.parent;
+    }
+    return ancestor;
+}
+
+/**
+ * Return all ancestors of the current node that satisfy the given
+ * predicate. If no predicate is given return all the ancestors of the
+ * current node.
+ *
+ * @param [predicate]
+ */
+export function ancestorsNodesTemp<T extends VNode>(
+    node: AbstractNode,
+    predicate?: Predicate<T>,
+): T[];
+export function ancestorsNodesTemp(node: AbstractNode, predicate?: Predicate): VNode[];
+export function ancestorsNodesTemp(node: AbstractNode, predicate?: Predicate): VNode[] {
+    const ancestors: VNode[] = [];
+    let parent = node.parent;
+    while (parent) {
+        if (testNodePredicate(parent, predicate)) {
+            ancestors.push(parent);
+        }
+        parent = parent.parent;
+    }
+    return ancestors;
+}
+
+/**
+ * Return the lowest common ancestor between this VNode and the given one.
+ *
+ * @param node
+ */
+export function commonAncestorNodesTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    node: VNode,
+    predicate?: Predicate<T>,
+): T;
+export function commonAncestorNodesTemp(
+    currentNode: AbstractNode,
+    node: VNode,
+    predicate?: Predicate,
+): VNode;
+export function commonAncestorNodesTemp(
+    currentNode: AbstractNode,
+    node: VNode,
+    predicate?: Predicate,
+): VNode {
+    if (!currentNode.parent) {
+        return;
+    } else if (
+        currentNode.parent === node.parent &&
+        testNodePredicate(currentNode.parent, predicate)
+    ) {
+        return currentNode.parent;
+    }
+    const thisPath = [currentNode as VNode, ...ancestorsNodesTemp(currentNode, predicate)];
+    const nodePath = [node, ...ancestorsNodesTemp(node, predicate)];
+    let commonAncestor: VNode;
+    while (thisPath[thisPath.length - 1] === nodePath.pop()) {
+        commonAncestor = thisPath.pop();
+    }
+    return commonAncestor;
+}
+/**
+ * Return the siblings of this VNode which satisfy the given predicate.
+ *
+ * @param [predicate]
+ */
+export function siblingsNodesTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T[];
+export function siblingsNodesTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[];
+export function siblingsNodesTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[] {
+    const siblings: VNode[] = [];
+    let sibling: VNode = previousSiblingNodeTemp(currentNode);
+    while (sibling) {
+        if (testNodePredicate(sibling, predicate)) {
+            siblings.unshift(sibling);
+        }
+        sibling = previousSiblingNodeTemp(sibling);
+    }
+    sibling = nextSiblingNodeTemp(currentNode);
+    while (sibling) {
+        if (testNodePredicate(sibling, predicate)) {
+            siblings.push(sibling);
+        }
+        sibling = nextSiblingNodeTemp(sibling);
+    }
+    return siblings;
+}
+/**
+ * Return the nodes adjacent to this VNode that satisfy the given predicate.
+ */
+export function adjacentsNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T[];
+export function adjacentsNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[];
+export function adjacentsNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[] {
+    const adjacents: VNode[] = [];
+    let sibling: VNode = previousSiblingNodeTemp(currentNode);
+    while (sibling && testNodePredicate(sibling, predicate)) {
+        adjacents.unshift(sibling);
+        sibling = previousSiblingNodeTemp(sibling);
+    }
+    sibling = nextSiblingNodeTemp(currentNode);
+    while (sibling && testNodePredicate(sibling, predicate)) {
+        adjacents.push(sibling);
+        sibling = nextSiblingNodeTemp(sibling);
+    }
+    return adjacents;
+}
+
+/**
+ * Return the previous sibling of this VNode that satisfies the predicate.
+ * If no predicate is given, return the previous sibling of this VNode.
+ *
+ * @param [predicate]
+ */
+export function previousSiblingNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T;
+export function previousSiblingNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode;
+export function previousSiblingNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode {
+    if (!currentNode.parent) return;
+    const index = currentNode.parent.childVNodes.indexOf(currentNode as VNode);
+    let sibling = currentNode.parent.childVNodes[index - 1];
+    // Skip ignored siblings and those failing the predicate test.
+    while (sibling && !(sibling.tangible && testNodePredicate(sibling, predicate))) {
+        sibling = previousSiblingNodeTemp(sibling);
+    }
+    return sibling;
+}
+/**
+ * Return the next sibling of this VNode that satisfies the given predicate.
+ * If no predicate is given, return the next sibling of this VNode.
+ *
+ * @param [predicate]
+ */
+export function nextSiblingNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T;
+export function nextSiblingNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode;
+export function nextSiblingNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode {
+    if (!currentNode.parent) return;
+    const index = currentNode.parent.childVNodes.indexOf(currentNode as VNode);
+    let sibling = currentNode.parent.childVNodes[index + 1];
+    // Skip ignored siblings and those failing the predicate test.
+    while (sibling && !(sibling.tangible && testNodePredicate(sibling, predicate))) {
+        sibling = nextSiblingNodeTemp(sibling);
+    }
+    return sibling;
+}
+
+/**
+ * Return the previous node in a depth-first pre-order traversal of the
+ * tree that satisfies the given predicate. If no predicate is given return
+ * the previous node in a depth-first pre-order traversal of the tree.
+ *
+ * @param [predicate]
+ */
+export function previousNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T;
+export function previousNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode;
+export function previousNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode {
+    let previous = previousSiblingNodeTemp(currentNode);
+    if (previous) {
+        // The previous node is the last leaf of the previous sibling.
+        previous = previous.lastLeaf();
+    } else {
+        // If it has no previous sibling then climb up to the parent.
+        previous = currentNode.parent;
+    }
+    while (previous && !testNodePredicate(previous, predicate)) {
+        previous = previousNodeTemp(previous);
+    }
+    return previous;
+}
+
+/**
+ * Return the next node in a depth-first pre-order traversal of the tree
+ * that satisfies the given predicate. If no predicate is given return the
+ * next node in a depth-first pre-order traversal of the tree.
+ *
+ * @param [predicate]
+ */
+export function nextNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T;
+export function nextNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode;
+export function nextNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode {
+    // The node after node is its first child.
+    let next = currentNode.firstChild();
+    if (!next) {
+        // If it has no children then it is its next sibling.
+        next = nextSiblingNodeTemp(currentNode);
+    }
+    if (!next) {
+        // If it has no siblings either then climb up to the closest parent
+        // which has a next sibiling.
+        let ancestor = currentNode.parent;
+        while (ancestor && !nextSiblingNodeTemp(ancestor)) {
+            ancestor = ancestor.parent;
+        }
+        next = ancestor && nextSiblingNodeTemp(ancestor);
+    }
+    while (next && !testNodePredicate(next, predicate)) {
+        next = nextNodeTemp(next);
+    }
+    return next;
+}
+
+/**
+ * Return the previous leaf in a depth-first pre-order traversal of the
+ * tree that satisfies the given predicate. If no predicate is given return
+ * the previous leaf in a depth-first pre-order traversal of the tree.
+ *
+ * @param [predicate]
+ */
+export function previousLeafNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T;
+export function previousLeafNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode;
+export function previousLeafNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode {
+    return previousNodeTemp(currentNode, (node: VNode): boolean => {
+        return isLeaf(node) && testNodePredicate(node, predicate);
+    });
+}
+
+/**
+ * Return the next leaf in a depth-first pre-order traversal of the tree
+ * that satisfies the given predicate. If no predicate is given return the
+ * next leaf in a depth-first pre-order traversal of the tree.
+ *
+ * @param [predicate]
+ */
+export function nextLeafNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T;
+export function nextLeafNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode;
+export function nextLeafNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode {
+    return nextNodeTemp(currentNode, (node: VNode): boolean => {
+        return isLeaf(node) && testNodePredicate(node, predicate);
+    });
+}
+
+/**
+ * Return all previous siblings of the current node that satisfy the given
+ * predicate. If no predicate is given return all the previous siblings of
+ * the current node.
+ *
+ * @param [predicate]
+ */
+export function previousSiblingsNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T[];
+export function previousSiblingsNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[];
+export function previousSiblingsNodeTemp(
+    currentNode: AbstractNode,
+    predicate?: Predicate,
+): VNode[] {
+    const previousSiblings: VNode[] = [];
+    let sibling = previousSiblingNodeTemp(currentNode);
+    while (sibling) {
+        if (testNodePredicate(sibling, predicate)) {
+            previousSiblings.push(sibling);
+        }
+        sibling = previousSiblingNodeTemp(sibling);
+    }
+    return previousSiblings;
+}
+
+/**
+ * Return all next siblings of the current node that satisfy the given
+ * predicate. If no predicate is given return all the next siblings of the
+ * current node.
+ *
+ * @param [predicate]
+ */
+export function nextSiblingsNodeTemp<T extends VNode>(
+    currentNode: AbstractNode,
+    predicate?: Predicate<T>,
+): T[];
+export function nextSiblingsNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[];
+export function nextSiblingsNodeTemp(currentNode: AbstractNode, predicate?: Predicate): VNode[] {
+    const nextSiblings: VNode[] = [];
+    let sibling = nextSiblingNodeTemp(currentNode);
+    while (sibling) {
+        if (testNodePredicate(sibling, predicate)) {
+            nextSiblings.push(sibling);
+        }
+        sibling = nextSiblingNodeTemp(sibling);
+    }
+    return nextSiblings;
+}
+
+//--------------------------------------------------------------------------
+// Updating
+//--------------------------------------------------------------------------
+
+/**
+ * Insert the given VNode before this VNode.
+ *
+ * @param node
+ */
+export function beforeNodeTemp(currentNode: AbstractNode, node: VNode): void {
+    if (!currentNode.parent) {
+        throw 'Cannot insert a VNode before a VNode with no parent.';
+    }
+    currentNode.parent.insertBefore(node, currentNode as VNode);
+}
+/**
+ * Insert the given VNode after this VNode.
+ *
+ * @param node
+ */
+export function afterNodeTemp(currentNode: AbstractNode, node: VNode): void {
+    if (!currentNode.parent) {
+        throw 'Cannot insert a VNode after a VNode with no parent.';
+    }
+    currentNode.parent.insertAfter(node, currentNode as VNode);
+}
+/**
+ * Wrap this node in the given node by inserting the given node at this
+ * node's position in its parent and appending this node to the given node.
+ *
+ * @param node
+ */
+export function wrapNodeTemp(currentNode: AbstractNode, node: VNode): void {
+    beforeNodeTemp(currentNode, node);
+    node.append(currentNode as VNode);
+}
+/**
+ * Remove this node.
+ */
+export function removeNodeTemp(currentNode: AbstractNode): void {
+    if (currentNode.parent) {
+        currentNode.parent.removeChild(currentNode as VNode);
+    }
+}
+/**
+ * Remove this node in forward direction. (e.g. `Delete` key)
+ */
+export function removeForwardNodeTemp(currentNode: AbstractNode): void {
+    removeNodeTemp(currentNode);
+}
+/**
+ * Remove this node in backward direction. (e.g. `Backspace` key)
+ */
+export function removeBackwardNodeTemp(currentNode: AbstractNode): void {
+    removeNodeTemp(currentNode);
 }

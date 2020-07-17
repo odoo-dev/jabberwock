@@ -21,6 +21,30 @@ import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine
 import { VNode } from '../src/VNodes/VNode';
 import { parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
+import { beforeNodeTemp, afterNodeTemp, removeNodeTemp } from '../src/VNodes/AbstractNode';
+import {
+    nextLeafNodeTemp,
+    previousSiblingsNodeTemp,
+    nextSiblingsNodeTemp,
+} from '../src/VNodes/AbstractNode';
+import {
+    nextSiblingNodeTemp,
+    previousNodeTemp,
+    nextNodeTemp,
+    previousLeafNodeTemp,
+} from '../src/VNodes/AbstractNode';
+import {
+    siblingsNodesTemp,
+    adjacentsNodeTemp,
+    previousSiblingNodeTemp,
+} from '../src/VNodes/AbstractNode';
+import {
+    isNodePredicate,
+    isBeforeNode,
+    isAfterNode,
+    ancestorsNodesTemp,
+    commonAncestorNodesTemp,
+} from '../src/VNodes/AbstractNode';
 
 describe('core', () => {
     describe('src', () => {
@@ -30,7 +54,7 @@ describe('core', () => {
                     it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new VElement({ htmlTag: 'UNKNOWN-ELEMENT' });
-                            expect(vNode.is(AtomicNode)).to.equal(false);
+                            expect(isNodePredicate(vNode, AtomicNode)).to.equal(false);
                             expect(vNode.htmlTag).to.equal('UNKNOWN-ELEMENT');
                         }
                     });
@@ -49,7 +73,7 @@ describe('core', () => {
                     it('should create a marker node', async () => {
                         const markerNode = new MarkerNode();
                         expect(markerNode.tangible).to.equal(false);
-                        expect(markerNode.is(AtomicNode)).to.equal(true);
+                        expect(isNodePredicate(markerNode, AtomicNode)).to.equal(true);
                     });
                 });
             });
@@ -95,11 +119,11 @@ describe('core', () => {
                 describe('constructor', () => {
                     it('should create an AtomicNode', async () => {
                         const atomic = new AtomicNode();
-                        expect(atomic.is(AtomicNode)).to.equal(true);
+                        expect(isNodePredicate(atomic, AtomicNode)).to.equal(true);
                     });
                     it('should create a ContainerNode', async () => {
                         const container = new ContainerNode();
-                        expect(container.is(AtomicNode)).to.equal(false);
+                        expect(isNodePredicate(container, AtomicNode)).to.equal(false);
                     });
                 });
                 describe('toString', () => {
@@ -178,54 +202,54 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        expect(a.isBefore(b)).to.equal(true);
-                        expect(a.isBefore(c)).to.equal(true);
-                        expect(b.isBefore(a)).to.equal(false);
-                        expect(b.isBefore(c)).to.equal(true);
-                        expect(c.isBefore(a)).to.equal(false);
+                        expect(isBeforeNode(a, b)).to.equal(true);
+                        expect(isBeforeNode(a, c)).to.equal(true);
+                        expect(isBeforeNode(b, a)).to.equal(false);
+                        expect(isBeforeNode(b, c)).to.equal(true);
+                        expect(isBeforeNode(c, a)).to.equal(false);
                     });
                     it('should return if the is before (after in an other parent)', async () => {
-                        expect(a.isBefore(a)).to.equal(false, 'a isBefore a');
-                        expect(a.isBefore(b)).to.equal(true, 'a isBefore b');
-                        expect(a.isBefore(c)).to.equal(true, 'a isBefore c');
-                        expect(a.isBefore(d)).to.equal(true, 'a isBefore d');
-                        expect(a.isBefore(e)).to.equal(true, 'a isBefore e');
-                        expect(a.isBefore(f)).to.equal(true, 'a isBefore f');
+                        expect(isBeforeNode(a, a)).to.equal(false, 'a isBefore a');
+                        expect(isBeforeNode(a, b)).to.equal(true, 'a isBefore b');
+                        expect(isBeforeNode(a, c)).to.equal(true, 'a isBefore c');
+                        expect(isBeforeNode(a, d)).to.equal(true, 'a isBefore d');
+                        expect(isBeforeNode(a, e)).to.equal(true, 'a isBefore e');
+                        expect(isBeforeNode(a, f)).to.equal(true, 'a isBefore f');
 
-                        expect(b.isBefore(a)).to.equal(false, 'b isBefore a');
-                        expect(b.isBefore(b)).to.equal(false, 'b isBefore b');
-                        expect(b.isBefore(c)).to.equal(true, 'b isBefore c');
-                        expect(b.isBefore(d)).to.equal(true, 'b isBefore d');
-                        expect(b.isBefore(e)).to.equal(true, 'b isBefore e');
-                        expect(b.isBefore(f)).to.equal(true, 'b isBefore f');
+                        expect(isBeforeNode(b, a)).to.equal(false, 'b isBefore a');
+                        expect(isBeforeNode(b, b)).to.equal(false, 'b isBefore b');
+                        expect(isBeforeNode(b, c)).to.equal(true, 'b isBefore c');
+                        expect(isBeforeNode(b, d)).to.equal(true, 'b isBefore d');
+                        expect(isBeforeNode(b, e)).to.equal(true, 'b isBefore e');
+                        expect(isBeforeNode(b, f)).to.equal(true, 'b isBefore f');
 
-                        expect(c.isBefore(a)).to.equal(false, 'c isBefore a');
-                        expect(c.isBefore(b)).to.equal(false, 'c isBefore b');
-                        expect(c.isBefore(c)).to.equal(false, 'c isBefore c');
-                        expect(c.isBefore(d)).to.equal(true, 'c isBefore d');
-                        expect(c.isBefore(e)).to.equal(true, 'c isBefore e');
-                        expect(c.isBefore(f)).to.equal(true, 'c isBefore f');
+                        expect(isBeforeNode(c, a)).to.equal(false, 'c isBefore a');
+                        expect(isBeforeNode(c, b)).to.equal(false, 'c isBefore b');
+                        expect(isBeforeNode(c, c)).to.equal(false, 'c isBefore c');
+                        expect(isBeforeNode(c, d)).to.equal(true, 'c isBefore d');
+                        expect(isBeforeNode(c, e)).to.equal(true, 'c isBefore e');
+                        expect(isBeforeNode(c, f)).to.equal(true, 'c isBefore f');
 
-                        expect(d.isBefore(a)).to.equal(false, 'd isBefore a');
-                        expect(d.isBefore(b)).to.equal(false, 'd isBefore b');
-                        expect(d.isBefore(c)).to.equal(false, 'd isBefore c');
-                        expect(d.isBefore(d)).to.equal(false, 'd isBefore d');
-                        expect(d.isBefore(e)).to.equal(true, 'd isBefore e');
-                        expect(d.isBefore(f)).to.equal(true, 'd isBefore f');
+                        expect(isBeforeNode(d, a)).to.equal(false, 'd isBefore a');
+                        expect(isBeforeNode(d, b)).to.equal(false, 'd isBefore b');
+                        expect(isBeforeNode(d, c)).to.equal(false, 'd isBefore c');
+                        expect(isBeforeNode(d, d)).to.equal(false, 'd isBefore d');
+                        expect(isBeforeNode(d, e)).to.equal(true, 'd isBefore e');
+                        expect(isBeforeNode(d, f)).to.equal(true, 'd isBefore f');
 
-                        expect(e.isBefore(a)).to.equal(false, 'e isBefore a');
-                        expect(e.isBefore(b)).to.equal(false, 'e isBefore b');
-                        expect(e.isBefore(c)).to.equal(false, 'e isBefore c');
-                        expect(e.isBefore(d)).to.equal(false, 'e isBefore d');
-                        expect(e.isBefore(e)).to.equal(false, 'e isBefore e');
-                        expect(e.isBefore(f)).to.equal(true, 'e isBefore f');
+                        expect(isBeforeNode(e, a)).to.equal(false, 'e isBefore a');
+                        expect(isBeforeNode(e, b)).to.equal(false, 'e isBefore b');
+                        expect(isBeforeNode(e, c)).to.equal(false, 'e isBefore c');
+                        expect(isBeforeNode(e, d)).to.equal(false, 'e isBefore d');
+                        expect(isBeforeNode(e, e)).to.equal(false, 'e isBefore e');
+                        expect(isBeforeNode(e, f)).to.equal(true, 'e isBefore f');
 
-                        expect(f.isBefore(a)).to.equal(false, 'f isBefore a');
-                        expect(f.isBefore(b)).to.equal(false, 'f isBefore b');
-                        expect(f.isBefore(c)).to.equal(false, 'f isBefore c');
-                        expect(f.isBefore(d)).to.equal(false, 'f isBefore d');
-                        expect(f.isBefore(e)).to.equal(false, 'f isBefore e');
-                        expect(f.isBefore(f)).to.equal(false, 'f isBefore f');
+                        expect(isBeforeNode(f, a)).to.equal(false, 'f isBefore a');
+                        expect(isBeforeNode(f, b)).to.equal(false, 'f isBefore b');
+                        expect(isBeforeNode(f, c)).to.equal(false, 'f isBefore c');
+                        expect(isBeforeNode(f, d)).to.equal(false, 'f isBefore d');
+                        expect(isBeforeNode(f, e)).to.equal(false, 'f isBefore e');
+                        expect(isBeforeNode(f, f)).to.equal(false, 'f isBefore f');
                     });
                 });
                 describe('isAfter', () => {
@@ -237,11 +261,11 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        expect(a.isAfter(b)).to.equal(false);
-                        expect(a.isAfter(c)).to.equal(false);
-                        expect(b.isAfter(a)).to.equal(true);
-                        expect(b.isAfter(c)).to.equal(false);
-                        expect(c.isAfter(a)).to.equal(true);
+                        expect(isAfterNode(a, b)).to.equal(false);
+                        expect(isAfterNode(a, c)).to.equal(false);
+                        expect(isAfterNode(b, a)).to.equal(true);
+                        expect(isAfterNode(b, c)).to.equal(false);
+                        expect(isAfterNode(c, a)).to.equal(true);
                     });
                     it('should return if the is after (after in an other parent)', async () => {
                         /*
@@ -300,57 +324,57 @@ describe('core', () => {
                         const a2 = new CharNode({ char: 'a' });
                         root2.append(a2);
 
-                        expect(a.isAfter(a)).to.equal(false, 'a isAfter a');
-                        expect(a.isAfter(b)).to.equal(false, 'a isAfter b');
-                        expect(a.isAfter(c)).to.equal(false, 'a isAfter c');
-                        expect(a.isAfter(d)).to.equal(false, 'a isAfter d');
-                        expect(a.isAfter(e)).to.equal(false, 'a isAfter e');
-                        expect(a.isAfter(f)).to.equal(false, 'a isAfter f');
+                        expect(isAfterNode(a, a)).to.equal(false, 'a isAfter a');
+                        expect(isAfterNode(a, b)).to.equal(false, 'a isAfter b');
+                        expect(isAfterNode(a, c)).to.equal(false, 'a isAfter c');
+                        expect(isAfterNode(a, d)).to.equal(false, 'a isAfter d');
+                        expect(isAfterNode(a, e)).to.equal(false, 'a isAfter e');
+                        expect(isAfterNode(a, f)).to.equal(false, 'a isAfter f');
 
-                        expect(b.isAfter(a)).to.equal(true, 'b isAfter a');
-                        expect(b.isAfter(b)).to.equal(false, 'b isAfter b');
-                        expect(b.isAfter(c)).to.equal(false, 'b isAfter c');
-                        expect(b.isAfter(d)).to.equal(false, 'b isAfter d');
-                        expect(b.isAfter(e)).to.equal(false, 'b isAfter e');
-                        expect(b.isAfter(f)).to.equal(false, 'b isAfter f');
+                        expect(isAfterNode(b, a)).to.equal(true, 'b isAfter a');
+                        expect(isAfterNode(b, b)).to.equal(false, 'b isAfter b');
+                        expect(isAfterNode(b, c)).to.equal(false, 'b isAfter c');
+                        expect(isAfterNode(b, d)).to.equal(false, 'b isAfter d');
+                        expect(isAfterNode(b, e)).to.equal(false, 'b isAfter e');
+                        expect(isAfterNode(b, f)).to.equal(false, 'b isAfter f');
 
-                        expect(c.isAfter(a)).to.equal(true, 'c isAfter a');
-                        expect(c.isAfter(b)).to.equal(true, 'c isAfter b');
-                        expect(c.isAfter(c)).to.equal(false, 'c isAfter c');
-                        expect(c.isAfter(d)).to.equal(false, 'c isAfter d');
-                        expect(c.isAfter(e)).to.equal(false, 'c isAfter e');
-                        expect(c.isAfter(f)).to.equal(false, 'c isAfter f');
+                        expect(isAfterNode(c, a)).to.equal(true, 'c isAfter a');
+                        expect(isAfterNode(c, b)).to.equal(true, 'c isAfter b');
+                        expect(isAfterNode(c, c)).to.equal(false, 'c isAfter c');
+                        expect(isAfterNode(c, d)).to.equal(false, 'c isAfter d');
+                        expect(isAfterNode(c, e)).to.equal(false, 'c isAfter e');
+                        expect(isAfterNode(c, f)).to.equal(false, 'c isAfter f');
 
-                        expect(d.isAfter(a)).to.equal(true, 'd isAfter a');
-                        expect(d.isAfter(b)).to.equal(true, 'd isAfter b');
-                        expect(d.isAfter(c)).to.equal(true, 'd isAfter c');
-                        expect(d.isAfter(d)).to.equal(false, 'd isAfter d');
-                        expect(d.isAfter(e)).to.equal(false, 'd isAfter e');
-                        expect(d.isAfter(f)).to.equal(false, 'd isAfter f');
+                        expect(isAfterNode(d, a)).to.equal(true, 'd isAfter a');
+                        expect(isAfterNode(d, b)).to.equal(true, 'd isAfter b');
+                        expect(isAfterNode(d, c)).to.equal(true, 'd isAfter c');
+                        expect(isAfterNode(d, d)).to.equal(false, 'd isAfter d');
+                        expect(isAfterNode(d, e)).to.equal(false, 'd isAfter e');
+                        expect(isAfterNode(d, f)).to.equal(false, 'd isAfter f');
 
-                        expect(e.isAfter(a)).to.equal(true, 'e isAfter a');
-                        expect(e.isAfter(b)).to.equal(true, 'e isAfter b');
-                        expect(e.isAfter(c)).to.equal(true, 'e isAfter c');
-                        expect(e.isAfter(d)).to.equal(true, 'e isAfter d');
-                        expect(e.isAfter(e)).to.equal(false, 'e isAfter e');
-                        expect(e.isAfter(f)).to.equal(false, 'e isAfter f');
+                        expect(isAfterNode(e, a)).to.equal(true, 'e isAfter a');
+                        expect(isAfterNode(e, b)).to.equal(true, 'e isAfter b');
+                        expect(isAfterNode(e, c)).to.equal(true, 'e isAfter c');
+                        expect(isAfterNode(e, d)).to.equal(true, 'e isAfter d');
+                        expect(isAfterNode(e, e)).to.equal(false, 'e isAfter e');
+                        expect(isAfterNode(e, f)).to.equal(false, 'e isAfter f');
 
-                        expect(f.isAfter(a)).to.equal(true, 'f isAfter a');
-                        expect(f.isAfter(b)).to.equal(true, 'f isAfter b');
-                        expect(f.isAfter(c)).to.equal(true, 'f isAfter c');
-                        expect(f.isAfter(d)).to.equal(true, 'f isAfter d');
-                        expect(f.isAfter(e)).to.equal(true, 'f isAfter e');
-                        expect(f.isAfter(f)).to.equal(false, 'f isAfter f');
+                        expect(isAfterNode(f, a)).to.equal(true, 'f isAfter a');
+                        expect(isAfterNode(f, b)).to.equal(true, 'f isAfter b');
+                        expect(isAfterNode(f, c)).to.equal(true, 'f isAfter c');
+                        expect(isAfterNode(f, d)).to.equal(true, 'f isAfter d');
+                        expect(isAfterNode(f, e)).to.equal(true, 'f isAfter e');
+                        expect(isAfterNode(f, f)).to.equal(false, 'f isAfter f');
 
-                        expect(b.isAfter(h1)).to.equal(true, 'b isAfter h1');
-                        expect(h1.isAfter(b)).to.equal(false, 'h1 isAfter b');
-                        expect(e.isAfter(x)).to.equal(true, 'e is after x');
-                        expect(x.isAfter(e)).to.equal(false, 'x is after e');
+                        expect(isAfterNode(b, h1)).to.equal(true, 'b isAfter h1');
+                        expect(isAfterNode(h1, b)).to.equal(false, 'h1 isAfter b');
+                        expect(isAfterNode(e, x)).to.equal(true, 'e is after x');
+                        expect(isAfterNode(x, e)).to.equal(false, 'x is after e');
 
-                        expect(root2.isAfter(a2)).to.equal(false, 'root2 isAfter a2');
-                        expect(a2.isAfter(root2)).to.equal(true, 'a2 isAfter root2');
-                        expect(a.isAfter(a2)).to.equal(false, 'a isAfter a2');
-                        expect(a2.isAfter(a)).to.equal(false, 'a2 isAfter a');
+                        expect(isAfterNode(root2, a2)).to.equal(false, 'root2 isAfter a2');
+                        expect(isAfterNode(a2, root2)).to.equal(true, 'a2 isAfter root2');
+                        expect(isAfterNode(a, a2)).to.equal(false, 'a isAfter a2');
+                        expect(isAfterNode(a2, a)).to.equal(false, 'a2 isAfter a');
                     });
                 });
                 describe('commonAncestor', () => {
@@ -411,26 +435,29 @@ describe('core', () => {
                         const a2 = new CharNode({ char: 'a' });
                         root2.append(a2);
 
-                        expect(a.commonAncestor(a)).to.equal(root, 'a commonAncestor a');
-                        expect(a.commonAncestor(b)).to.equal(root, 'a commonAncestor b');
-                        expect(b.commonAncestor(a)).to.equal(root, 'b commonAncestor a');
-                        expect(b.commonAncestor(b)).to.equal(h1, 'b commonAncestor b');
-                        expect(b.commonAncestor(x)).to.equal(h1, 'b commonAncestor x');
-                        expect(x.commonAncestor(b)).to.equal(h1, 'x commonAncestor b');
-                        expect(x.commonAncestor(x)).to.equal(cite, 'x commonAncestor x');
-                        expect(e.commonAncestor(b)).to.equal(root, 'e commonAncestor b');
-                        expect(b.commonAncestor(e)).to.equal(root, 'b commonAncestor e');
-                        expect(e.commonAncestor(c)).to.equal(root, 'e commonAncestor c');
-                        expect(c.commonAncestor(e)).to.equal(root, 'c commonAncestor e');
-                        expect(e.commonAncestor(d)).to.equal(p, 'e commonAncestor d');
-                        expect(e.commonAncestor(p)).to.equal(p, 'e commonAncestor p');
-                        expect(p.commonAncestor(e)).to.equal(p, 'p commonAncestor e');
-                        expect(d.commonAncestor(e)).to.equal(p, 'd commonAncestor e');
-                        expect(e.commonAncestor(f)).to.equal(pp, 'e commonAncestor f');
-                        expect(f.commonAncestor(e)).to.equal(pp, 'f commonAncestor e');
-                        expect(a2.commonAncestor(root2)).to.equal(root2, 'a2 commonAncestor root2');
-                        expect(a.commonAncestor(a2)).to.be.undefined;
-                        expect(f.commonAncestor(e, FragmentNode)).to.equal(root);
+                        expect(commonAncestorNodesTemp(a, a)).to.equal(root, 'a commonAncestor a');
+                        expect(commonAncestorNodesTemp(a, b)).to.equal(root, 'a commonAncestor b');
+                        expect(commonAncestorNodesTemp(b, a)).to.equal(root, 'b commonAncestor a');
+                        expect(commonAncestorNodesTemp(b, b)).to.equal(h1, 'b commonAncestor b');
+                        expect(commonAncestorNodesTemp(b, x)).to.equal(h1, 'b commonAncestor x');
+                        expect(commonAncestorNodesTemp(x, b)).to.equal(h1, 'x commonAncestor b');
+                        expect(commonAncestorNodesTemp(x, x)).to.equal(cite, 'x commonAncestor x');
+                        expect(commonAncestorNodesTemp(e, b)).to.equal(root, 'e commonAncestor b');
+                        expect(commonAncestorNodesTemp(b, e)).to.equal(root, 'b commonAncestor e');
+                        expect(commonAncestorNodesTemp(e, c)).to.equal(root, 'e commonAncestor c');
+                        expect(commonAncestorNodesTemp(c, e)).to.equal(root, 'c commonAncestor e');
+                        expect(commonAncestorNodesTemp(e, d)).to.equal(p, 'e commonAncestor d');
+                        expect(commonAncestorNodesTemp(e, p)).to.equal(p, 'e commonAncestor p');
+                        expect(commonAncestorNodesTemp(p, e)).to.equal(p, 'p commonAncestor e');
+                        expect(commonAncestorNodesTemp(d, e)).to.equal(p, 'd commonAncestor e');
+                        expect(commonAncestorNodesTemp(e, f)).to.equal(pp, 'e commonAncestor f');
+                        expect(commonAncestorNodesTemp(f, e)).to.equal(pp, 'f commonAncestor e');
+                        expect(commonAncestorNodesTemp(a2, root2)).to.equal(
+                            root2,
+                            'a2 commonAncestor root2',
+                        );
+                        expect(commonAncestorNodesTemp(a, a2)).to.be.undefined;
+                        expect(commonAncestorNodesTemp(f, e, FragmentNode)).to.equal(root);
                     });
                 });
                 describe('nthChild', () => {
@@ -443,18 +470,24 @@ describe('core', () => {
                 });
                 describe('siblings', () => {
                     it('should return the node siblings', async () => {
-                        expect(h1.siblings()).to.deep.equal([a, c, p]);
-                        expect(h1.siblings(CharNode)).to.deep.equal([a, c]);
-                        expect(b.siblings()).to.deep.equal([], 'siblings without the markers');
-                        expect(root.siblings()).to.deep.equal([]);
+                        expect(siblingsNodesTemp(h1)).to.deep.equal([a, c, p]);
+                        expect(siblingsNodesTemp(h1, CharNode)).to.deep.equal([a, c]);
+                        expect(siblingsNodesTemp(b)).to.deep.equal(
+                            [],
+                            'siblings without the markers',
+                        );
+                        expect(siblingsNodesTemp(root)).to.deep.equal([]);
                     });
                 });
                 describe('adjacents', () => {
                     it('should return the adjacent nodes', async () => {
-                        expect(h1.adjacents()).to.deep.equal([a, c, p]);
-                        expect(h1.adjacents(CharNode)).to.deep.equal([a, c]);
-                        expect(b.adjacents()).to.deep.equal([], 'siblings without the markers');
-                        expect(root.adjacents()).to.deep.equal([]);
+                        expect(adjacentsNodeTemp(h1)).to.deep.equal([a, c, p]);
+                        expect(adjacentsNodeTemp(h1, CharNode)).to.deep.equal([a, c]);
+                        expect(adjacentsNodeTemp(b)).to.deep.equal(
+                            [],
+                            'siblings without the markers',
+                        );
+                        expect(adjacentsNodeTemp(root)).to.deep.equal([]);
                     });
                     it('should return the adjacent nodes', async () => {
                         const container = new ContainerNode();
@@ -472,8 +505,8 @@ describe('core', () => {
                         container.append(h3);
                         const e = new CharNode({ char: 'e' });
                         container.append(e);
-                        expect(c.adjacents()).to.deep.equal([a, h2, b, d, h3, e]);
-                        expect(c.adjacents(CharNode)).to.deep.equal([b, d]);
+                        expect(adjacentsNodeTemp(c)).to.deep.equal([a, h2, b, d, h3, e]);
+                        expect(adjacentsNodeTemp(c, CharNode)).to.deep.equal([b, d]);
                     });
                 });
                 describe('firstChild', () => {
@@ -657,28 +690,40 @@ describe('core', () => {
                 });
                 describe('previousSibling', () => {
                     it('should return the previousSibling', async () => {
-                        expect(h1.previousSibling()).to.deep.equal(a, 'h1.previousSibling = a');
-                        expect(p.previousSibling()).to.deep.equal(c, 'p.previousSibling = c');
-                        expect(pp.previousSibling()).to.deep.equal(d, 'pp.previousSibling = d');
-                        expect(f.previousSibling()).to.deep.equal(e, 'f.previousSibling = e');
+                        expect(previousSiblingNodeTemp(h1)).to.deep.equal(
+                            a,
+                            'h1.previousSibling = a',
+                        );
+                        expect(previousSiblingNodeTemp(p)).to.deep.equal(
+                            c,
+                            'p.previousSibling = c',
+                        );
+                        expect(previousSiblingNodeTemp(pp)).to.deep.equal(
+                            d,
+                            'pp.previousSibling = d',
+                        );
+                        expect(previousSiblingNodeTemp(f)).to.deep.equal(
+                            e,
+                            'f.previousSibling = e',
+                        );
                     });
                     it('should return the previousSibling with predicate without result', async () => {
-                        expect(root.previousSibling()).to.deep.equal(undefined);
-                        expect(d.previousSibling()).to.deep.equal(undefined);
+                        expect(previousSiblingNodeTemp(root)).to.deep.equal(undefined);
+                        expect(previousSiblingNodeTemp(d)).to.deep.equal(undefined);
                         expect(
-                            root.previousSibling(() => {
+                            previousSiblingNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.be.undefined;
                         expect(
-                            b.previousSibling(vNode => {
+                            previousSiblingNodeTemp(b, vNode => {
                                 return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
                     it('should return the previousSibling with predicate', async () => {
                         expect(
-                            p.previousSibling(vNode => {
+                            previousSiblingNodeTemp(p, vNode => {
                                 return vNode.id === a.id;
                             }),
                         ).to.equal(a);
@@ -686,27 +731,27 @@ describe('core', () => {
                 });
                 describe('nextSibling', () => {
                     it('should return the nextSibling', async () => {
-                        expect(h1.nextSibling()).to.deep.equal(c, 'h1.nextSibling = c');
-                        expect(d.nextSibling()).to.deep.equal(pp, 'd.nextSibling = pp');
-                        expect(e.nextSibling()).to.deep.equal(f, 'e.nextSibling = f');
+                        expect(nextSiblingNodeTemp(h1)).to.deep.equal(c, 'h1.nextSibling = c');
+                        expect(nextSiblingNodeTemp(d)).to.deep.equal(pp, 'd.nextSibling = pp');
+                        expect(nextSiblingNodeTemp(e)).to.deep.equal(f, 'e.nextSibling = f');
                     });
                     it('should return the nextSibling with predicate without result', async () => {
-                        expect(root.nextSibling()).to.deep.equal(undefined);
-                        expect(pp.nextSibling()).to.deep.equal(undefined);
+                        expect(nextSiblingNodeTemp(root)).to.deep.equal(undefined);
+                        expect(nextSiblingNodeTemp(pp)).to.deep.equal(undefined);
                         expect(
-                            root.nextSibling(() => {
+                            nextSiblingNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.be.undefined;
                         expect(
-                            f.nextSibling(vNode => {
+                            nextSiblingNodeTemp(f, vNode => {
                                 return vNode.id === marker2.id;
                             }),
                         ).to.be.undefined;
                     });
                     it('should return the nextSibling with predicate', async () => {
                         expect(
-                            h1.nextSibling(vNode => {
+                            nextSiblingNodeTemp(h1, vNode => {
                                 return vNode.id === p.id;
                             }),
                         ).to.equal(p);
@@ -714,27 +759,27 @@ describe('core', () => {
                 });
                 describe('previous', () => {
                     it('should return the previous node', async () => {
-                        expect(h1.previous()).to.deep.equal(a, 'h1.previous = a');
-                        expect(p.previous()).to.deep.equal(c, 'p.previous = c');
-                        expect(pp.previous()).to.deep.equal(d, 'pp.previous = d');
-                        expect(f.previous()).to.deep.equal(e, 'f.previous = e');
+                        expect(previousNodeTemp(h1)).to.deep.equal(a, 'h1.previous = a');
+                        expect(previousNodeTemp(p)).to.deep.equal(c, 'p.previous = c');
+                        expect(previousNodeTemp(pp)).to.deep.equal(d, 'pp.previous = d');
+                        expect(previousNodeTemp(f)).to.deep.equal(e, 'f.previous = e');
                     });
                     it('should return the previous with predicate without result', async () => {
-                        expect(root.previous()).to.deep.equal(undefined);
+                        expect(previousNodeTemp(root)).to.deep.equal(undefined);
                         expect(
-                            root.previous(() => {
+                            previousNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.be.undefined;
                         expect(
-                            b.previous(vNode => {
+                            previousNodeTemp(b, vNode => {
                                 return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
                     it('should return the previous with predicate', async () => {
                         expect(
-                            pp.previous(vNode => {
+                            previousNodeTemp(pp, vNode => {
                                 return vNode.id === b.id;
                             }),
                         ).to.equal(b);
@@ -742,27 +787,27 @@ describe('core', () => {
                 });
                 describe('next', () => {
                     it('should return the next', async () => {
-                        expect(root.next()).to.deep.equal(a, 'root.next = a');
-                        expect(h1.next()).to.deep.equal(b, 'h1.next = b');
-                        expect(d.next()).to.deep.equal(pp, 'd.next = pp');
-                        expect(e.next()).to.deep.equal(f, 'e.next = f');
+                        expect(nextNodeTemp(root)).to.deep.equal(a, 'root.next = a');
+                        expect(nextNodeTemp(h1)).to.deep.equal(b, 'h1.next = b');
+                        expect(nextNodeTemp(d)).to.deep.equal(pp, 'd.next = pp');
+                        expect(nextNodeTemp(e)).to.deep.equal(f, 'e.next = f');
                     });
                     it('should return the next with predicate without result', async () => {
-                        expect(f.next()).to.deep.equal(undefined);
+                        expect(nextNodeTemp(f)).to.deep.equal(undefined);
                         expect(
-                            root.next(() => {
+                            nextNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.be.undefined;
                         expect(
-                            a.next(vNode => {
+                            nextNodeTemp(a, vNode => {
                                 return vNode.id === marker2.id;
                             }),
                         ).to.be.undefined;
                     });
                     it('should return the next with predicate', async () => {
                         expect(
-                            b.next(vNode => {
+                            nextNodeTemp(b, vNode => {
                                 return vNode.id === e.id;
                             }),
                         ).to.equal(e);
@@ -770,32 +815,32 @@ describe('core', () => {
                 });
                 describe('previousLeaf', () => {
                     it('should return the previousLeaf node', async () => {
-                        expect(h1.previousLeaf()).to.deep.equal(a, 'h1.previousLeaf = a');
-                        expect(c.previousLeaf()).to.deep.equal(b, 'c.previousLeaf = b');
-                        expect(e.previousLeaf()).to.deep.equal(d, 'e.previousLeaf = d');
-                        expect(f.previousLeaf()).to.deep.equal(e, 'f.previousLeaf = e');
+                        expect(previousLeafNodeTemp(h1)).to.deep.equal(a, 'h1.previousLeaf = a');
+                        expect(previousLeafNodeTemp(c)).to.deep.equal(b, 'c.previousLeaf = b');
+                        expect(previousLeafNodeTemp(e)).to.deep.equal(d, 'e.previousLeaf = d');
+                        expect(previousLeafNodeTemp(f)).to.deep.equal(e, 'f.previousLeaf = e');
                     });
                     it('should return the previousLeaf with predicate without result', async () => {
-                        expect(root.previousLeaf()).to.deep.equal(undefined);
+                        expect(previousLeafNodeTemp(root)).to.deep.equal(undefined);
                         expect(
-                            root.previousLeaf(() => {
+                            previousLeafNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.be.undefined;
                         expect(
-                            b.previousLeaf(vNode => {
+                            previousLeafNodeTemp(b, vNode => {
                                 return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
                     it('should return the previousLeaf with predicate', async () => {
                         expect(
-                            e.previousLeaf(vNode => {
+                            previousLeafNodeTemp(e, vNode => {
                                 return vNode.id === b.id;
                             }),
                         ).to.equal(b);
                         expect(
-                            e.previousLeaf(vNode => {
+                            previousLeafNodeTemp(e, vNode => {
                                 return vNode instanceof CharNode;
                             }),
                         ).to.equal(d);
@@ -803,32 +848,32 @@ describe('core', () => {
                 });
                 describe('nextLeaf', () => {
                     it('should return the nextLeaf node', async () => {
-                        expect(root.nextLeaf()).to.deep.equal(a, 'root.nextLeaf = a');
-                        expect(h1.nextLeaf()).to.deep.equal(b, 'h1.nextLeaf = b');
-                        expect(c.nextLeaf()).to.deep.equal(d, 'c.nextLeaf = d');
-                        expect(b.nextLeaf()).to.deep.equal(c, 'b.nextLeaf = c');
+                        expect(nextLeafNodeTemp(root)).to.deep.equal(a, 'root.nextLeaf = a');
+                        expect(nextLeafNodeTemp(h1)).to.deep.equal(b, 'h1.nextLeaf = b');
+                        expect(nextLeafNodeTemp(c)).to.deep.equal(d, 'c.nextLeaf = d');
+                        expect(nextLeafNodeTemp(b)).to.deep.equal(c, 'b.nextLeaf = c');
                     });
                     it('should return the nextLeaf with predicate without result', async () => {
-                        expect(f.nextLeaf()).to.deep.equal(undefined);
+                        expect(nextLeafNodeTemp(f)).to.deep.equal(undefined);
                         expect(
-                            root.nextLeaf(() => {
+                            nextLeafNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.be.undefined;
                         expect(
-                            b.nextLeaf(vNode => {
+                            nextLeafNodeTemp(b, vNode => {
                                 return vNode.id === marker1.id;
                             }),
                         ).to.be.undefined;
                     });
                     it('should return the nextLeaf with predicate', async () => {
                         expect(
-                            b.nextLeaf(vNode => {
+                            nextLeafNodeTemp(b, vNode => {
                                 return vNode.id === e.id;
                             }),
                         ).to.equal(e);
                         expect(
-                            b.nextLeaf(vNode => {
+                            nextLeafNodeTemp(b, vNode => {
                                 return vNode instanceof CharNode;
                             }),
                         ).to.equal(c);
@@ -836,37 +881,40 @@ describe('core', () => {
                 });
                 describe('previousSiblings', () => {
                     it('should return the previousSiblings', async () => {
-                        expect(h1.previousSiblings()).to.deep.equal(
+                        expect(previousSiblingsNodeTemp(h1)).to.deep.equal(
                             [a],
                             'h1.previousSiblings = [a]',
                         );
-                        expect(p.previousSiblings()).to.deep.equal(
+                        expect(previousSiblingsNodeTemp(p)).to.deep.equal(
                             [c, h1, a],
                             'p.previousSiblings = [c, h1, a]',
                         );
-                        expect(pp.previousSiblings()).to.deep.equal(
+                        expect(previousSiblingsNodeTemp(pp)).to.deep.equal(
                             [d],
                             'pp.previousSiblings = [d]',
                         );
-                        expect(f.previousSiblings()).to.deep.equal([e], 'f.previousSiblings = [e]');
+                        expect(previousSiblingsNodeTemp(f)).to.deep.equal(
+                            [e],
+                            'f.previousSiblings = [e]',
+                        );
                     });
                     it('should return the previousSiblings with predicate without result', async () => {
-                        expect(root.previousSiblings()).to.deep.equal([]);
-                        expect(d.previousSiblings()).to.deep.equal([]);
+                        expect(previousSiblingsNodeTemp(root)).to.deep.equal([]);
+                        expect(previousSiblingsNodeTemp(d)).to.deep.equal([]);
                         expect(
-                            root.previousSiblings(() => {
+                            previousSiblingsNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.deep.equal([]);
                         expect(
-                            b.previousSiblings(vNode => {
+                            previousSiblingsNodeTemp(b, vNode => {
                                 return vNode.id === marker1.id;
                             }),
                         ).to.deep.equal([]);
                     });
                     it('should return the previousSiblings with predicate', async () => {
                         expect(
-                            p.previousSiblings(vNode => {
+                            previousSiblingsNodeTemp(p, vNode => {
                                 return vNode instanceof CharNode;
                             }),
                         ).to.deep.equal([c, a]);
@@ -874,27 +922,33 @@ describe('core', () => {
                 });
                 describe('nextSiblings', () => {
                     it('should return the nextSiblings', async () => {
-                        expect(h1.nextSiblings()).to.deep.equal([c, p], 'h1.nextSiblings = [c, p]');
-                        expect(d.nextSiblings()).to.deep.equal([pp], 'd.nextSiblings = [pp]');
-                        expect(e.nextSiblings()).to.deep.equal([f], 'e.nextSiblings = [f]');
+                        expect(nextSiblingsNodeTemp(h1)).to.deep.equal(
+                            [c, p],
+                            'h1.nextSiblings = [c, p]',
+                        );
+                        expect(nextSiblingsNodeTemp(d)).to.deep.equal(
+                            [pp],
+                            'd.nextSiblings = [pp]',
+                        );
+                        expect(nextSiblingsNodeTemp(e)).to.deep.equal([f], 'e.nextSiblings = [f]');
                     });
                     it('should return the nextSiblings with predicate without result', async () => {
-                        expect(root.nextSiblings()).to.deep.equal([]);
-                        expect(pp.nextSiblings()).to.deep.equal([]);
+                        expect(nextSiblingsNodeTemp(root)).to.deep.equal([]);
+                        expect(nextSiblingsNodeTemp(pp)).to.deep.equal([]);
                         expect(
-                            root.nextSiblings(() => {
+                            nextSiblingsNodeTemp(root, () => {
                                 return false;
                             }),
                         ).to.deep.equal([]);
                         expect(
-                            e.nextSiblings(vNode => {
+                            nextSiblingsNodeTemp(e, vNode => {
                                 return vNode.id === marker2.id;
                             }),
                         ).to.deep.equal([]);
                     });
                     it('should return the nextSiblings with predicate', async () => {
                         expect(
-                            p.previousSiblings(vNode => {
+                            previousSiblingsNodeTemp(p, vNode => {
                                 return vNode instanceof CharNode;
                             }),
                         ).to.deep.equal([c, a]);
@@ -908,7 +962,7 @@ describe('core', () => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
                                 const editable = domEngine.components.get('editable')[0];
                                 const a = editable.firstLeaf();
-                                const ancestors = a.ancestors();
+                                const ancestors = ancestorsNodesTemp(a);
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
                                     'HeadingNode: 1',
@@ -929,8 +983,11 @@ describe('core', () => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
                                 const editable = domEngine.components.get('editable')[0];
                                 const a = editable.firstLeaf();
-                                const ancestors = a.ancestors(ancestor => {
-                                    return !ancestor.is(HeadingNode) || ancestor.level !== 1;
+                                const ancestors = ancestorsNodesTemp(a, ancestor => {
+                                    return (
+                                        !isNodePredicate(ancestor, HeadingNode) ||
+                                        ancestor.level !== 1
+                                    );
                                 });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
@@ -973,7 +1030,8 @@ describe('core', () => {
                                 const editable = domEngine.components.get('editable')[0];
                                 const descendants = editable.descendants(
                                     descendant =>
-                                        !descendant.is(HeadingNode) || descendant.level !== 2,
+                                        !isNodePredicate(descendant, HeadingNode) ||
+                                        descendant.level !== 2,
                                 );
                                 expect(
                                     descendants.map(descendant => descendant.name),
@@ -988,16 +1046,16 @@ describe('core', () => {
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
                         const b = new CharNode({ char: 'b' });
-                        a.before(b);
+                        beforeNodeTemp(a, b);
                         const c = new CharNode({ char: 'c' });
-                        a.before(c);
-                        expect(a.siblings()).to.deep.equal([b, c]);
+                        beforeNodeTemp(a, c);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([b, c]);
                     });
                     it('should throw if no parent', async () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         expect(() => {
-                            root.before(a);
+                            beforeNodeTemp(root, a);
                         }).to.throw();
                     });
                 });
@@ -1007,10 +1065,10 @@ describe('core', () => {
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
                         const b = new CharNode({ char: 'b' });
-                        a.after(b);
+                        afterNodeTemp(a, b);
                         const c = new CharNode({ char: 'c' });
-                        a.after(c);
-                        expect(a.siblings()).to.deep.equal([c, b]);
+                        afterNodeTemp(a, c);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([c, b]);
                     });
                     it('should move a node after another', async () => {
                         const root = new ContainerNode();
@@ -1020,14 +1078,14 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        b.after(a);
-                        expect(a.siblings()).to.deep.equal([b, c]);
+                        afterNodeTemp(b, a);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([b, c]);
                     });
                     it('should throw if no parent', async () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         expect(() => {
-                            root.after(a);
+                            afterNodeTemp(root, a);
                         }).to.throw();
                     });
                 });
@@ -1040,7 +1098,7 @@ describe('core', () => {
                         root.insertBefore(b, a);
                         const c = new CharNode({ char: 'c' });
                         root.insertBefore(c, a);
-                        expect(a.siblings()).to.deep.equal([b, c]);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([b, c]);
                     });
                     it('should throw when try to insert before unknown node', async () => {
                         expect(() => {
@@ -1057,7 +1115,7 @@ describe('core', () => {
                         root.insertAfter(b, a);
                         const c = new CharNode({ char: 'c' });
                         root.insertAfter(c, a);
-                        expect(a.siblings()).to.deep.equal([c, b]);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([c, b]);
                     });
                     it('should throw when try to insert after unknown node', async () => {
                         expect(() => {
@@ -1087,9 +1145,9 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        expect(a.siblings()).to.deep.equal([b, c]);
-                        b.remove();
-                        expect(a.siblings()).to.deep.equal([c]);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([b, c]);
+                        removeNodeTemp(b);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([c]);
                     });
                 });
                 describe('removeChild', () => {
@@ -1101,9 +1159,9 @@ describe('core', () => {
                         root.append(b);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        expect(a.siblings()).to.deep.equal([b, c]);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([b, c]);
                         root.removeChild(b);
-                        expect(a.siblings()).to.deep.equal([c]);
+                        expect(siblingsNodesTemp(a)).to.deep.equal([c]);
                     });
                     it('should throw when try to remove a unknown node', async () => {
                         expect(() => {
@@ -1124,7 +1182,7 @@ describe('core', () => {
                         p.append(c);
                         p.splitAt(b);
                         expect(p.children()).to.deep.equal([a]);
-                        expect(p.nextSibling().children()).to.deep.equal([b, c]);
+                        expect(nextSiblingNodeTemp(p).children()).to.deep.equal([b, c]);
                     });
                     it('should split a paragraph with markers', async () => {
                         const root = new FragmentNode();
@@ -1142,7 +1200,11 @@ describe('core', () => {
                         p.append(c);
                         p.splitAt(b);
                         expect(p.childVNodes.slice()).to.deep.equal([a, marker1]);
-                        expect(p.nextSibling().childVNodes.slice()).to.deep.equal([b, marker2, c]);
+                        expect(nextSiblingNodeTemp(p).childVNodes.slice()).to.deep.equal([
+                            b,
+                            marker2,
+                            c,
+                        ]);
                     });
                     it('should not break fragment', async () => {
                         const root = new FragmentNode();

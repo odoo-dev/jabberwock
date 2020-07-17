@@ -9,6 +9,12 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { ListItemAttributes } from './ListItemXmlDomParser';
 import { withRange, VRange } from '../../core/src/VRange';
+import { previousSiblingsNodeTemp } from '../../core/src/VNodes/AbstractNode';
+import {
+    isNodePredicate,
+    ancestorNodeTemp,
+    previousSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export class ListItemDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -23,7 +29,7 @@ export class ListItemDomObjectRenderer extends NodeRenderer<DomObject> {
         };
         // Direct ListNode's VElement children "P" are rendered as "LI"
         // while other nodes will be rendered inside the "LI".
-        if (node.is(VElement) && node.htmlTag === 'P') {
+        if (isNodePredicate(node, VElement) && node.htmlTag === 'P') {
             const renderedChildren = await this.engine.renderChildren(node);
             li.children.push(...renderedChildren);
         } else {
@@ -41,20 +47,21 @@ export class ListItemDomObjectRenderer extends NodeRenderer<DomObject> {
         // that specifies those attributes belong on the list item.
         this.engine.renderAttributes(ListItemAttributes, node, li);
 
-        if (node.ancestor(ListNode)?.listType === ListType.ORDERED) {
+        if (ancestorNodeTemp(node, ListNode)?.listType === ListType.ORDERED) {
             // Adapt numbering to skip previous list item
             // Source: https://stackoverflow.com/a/12860083
-            const previousIdentedList = node.previousSibling();
+            const previousIdentedList = previousSiblingNodeTemp(node);
             if (previousIdentedList instanceof ListNode) {
-                const previousLis = previousIdentedList.previousSiblings(
-                    sibling => !sibling.is(ListNode),
+                const previousLis = previousSiblingsNodeTemp(
+                    previousIdentedList,
+                    sibling => !isNodePredicate(sibling, ListNode),
                 );
                 const value = Math.max(previousLis.length, 1) + 1;
                 li.attributes.value = value.toString();
             }
         }
 
-        if (node.is(ListNode)) {
+        if (isNodePredicate(node, ListNode)) {
             let style = li.attributes.style || '';
             if (style.indexOf('list-style') === -1) {
                 style += 'list-style: none;';

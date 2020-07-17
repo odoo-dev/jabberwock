@@ -13,6 +13,7 @@ import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 interface ThemeComponent extends ComponentDefinition {
     label?: string;
@@ -83,11 +84,11 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
                     commandId: 'changeTheme',
                     commandArgs: { theme: name } as ChangeThemeParams,
                     selected: (editor: JWEditor): boolean => {
-                        const ancestor = editor.selection.anchor.ancestor(ThemeNode);
+                        const ancestor = ancestorNodeTemp(editor.selection.anchor, ThemeNode);
                         return ancestor?.themeName === name;
                     },
                     enabled: (editor: JWEditor): boolean => {
-                        return !!editor.selection.anchor.ancestor(ThemeNode);
+                        return !!ancestorNodeTemp(editor.selection.anchor, ThemeNode);
                     },
                 });
                 return [button];
@@ -100,7 +101,7 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
      * @param params
      */
     async changeTheme(params: ChangeThemeParams): Promise<void> {
-        const ancestor = this.editor.selection.anchor.ancestor(ThemeNode);
+        const ancestor = ancestorNodeTemp(this.editor.selection.anchor, ThemeNode);
         if (ancestor) {
             ancestor.themeName = params.theme;
         }

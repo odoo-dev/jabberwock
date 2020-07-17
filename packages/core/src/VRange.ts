@@ -4,7 +4,26 @@ import { MarkerNode } from './VNodes/MarkerNode';
 import { Constructor } from '../../utils/src/utils';
 import { FragmentNode } from './VNodes/FragmentNode';
 import { ContainerNode } from './VNodes/ContainerNode';
-import { AbstractNode } from './VNodes/AbstractNode';
+import {
+    AbstractNode,
+    isNodePredicate,
+    testNodePredicate,
+    isBeforeNode,
+    commonAncestorNodesTemp,
+} from './VNodes/AbstractNode';
+import { TableCellNode } from '../../plugin-table/src/TableCellNode';
+import { nextNodeTemp, afterNodeTemp, beforeNodeTemp, removeNodeTemp } from './VNodes/AbstractNode';
+import {
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+    previousNodeTemp,
+} from './VNodes/AbstractNode';
+import {
+    isAfterNode,
+    closestNode,
+    ancestorNodeTemp,
+    ancestorsNodesTemp,
+} from './VNodes/AbstractNode';
 
 export class VRange {
     readonly start = new MarkerNode();
@@ -113,14 +132,14 @@ export class VRange {
     selectedNodes(predicate?: Predicate): VNode[] {
         const selectedNodes: VNode[] = [];
         let node = this.start;
-        const bound = this.end.next();
-        const endContainers = this.end.ancestors();
-        while ((node = node.next()) && node !== bound) {
+        const bound = nextNodeTemp(this.end);
+        const endContainers = ancestorsNodesTemp(this.end);
+        while ((node = nextNodeTemp(node)) && node !== bound) {
             if (
                 !endContainers.includes(node) &&
                 !(node instanceof FragmentNode) &&
                 node.editable &&
-                node?.test(predicate)
+                testNodePredicate(node, predicate)
             ) {
                 selectedNodes.push(node);
             }
@@ -152,18 +171,18 @@ export class VRange {
     targetedNodes(predicate?: Predicate): VNode[];
     targetedNodes(predicate?: Predicate): VNode[] {
         const targetedNodes: VNode[] = this.traversedNodes(predicate);
-        if (!this.end.previousSibling()) {
+        if (!previousSiblingNodeTemp(this.end)) {
             // When selecting a container and the space between it and the next
             // one (eg. triple click), don't return the next container as well.
             targetedNodes.pop();
         }
-        const closestStartAncestor = this.start.ancestor(predicate);
+        const closestStartAncestor = ancestorNodeTemp(this.start, predicate);
         if (closestStartAncestor?.editable) {
             targetedNodes.unshift(closestStartAncestor);
         } else if (closestStartAncestor) {
             const children = [...closestStartAncestor.childVNodes].reverse();
             for (const child of children) {
-                if (!targetedNodes.includes(child) && child.test(predicate)) {
+                if (!targetedNodes.includes(child) && testNodePredicate(child, predicate)) {
                     targetedNodes.unshift(child);
                 }
             }
@@ -179,9 +198,9 @@ export class VRange {
     traversedNodes(predicate?: Predicate): VNode[] {
         const traversedNodes = [];
         let node = this.start;
-        const bound = this.end.next();
-        while ((node = node.next()) && node !== bound) {
-            if (node.editable && node.test(predicate)) {
+        const bound = nextNodeTemp(this.end);
+        while ((node = nextNodeTemp(node)) && node !== bound) {
+            if (node.editable && testNodePredicate(node, predicate)) {
                 traversedNodes.push(node);
             }
         }
@@ -218,16 +237,16 @@ export class VRange {
         } else if (position === RelativePosition.AFTER) {
             reference = reference.lastLeaf();
         }
-        if (reference.is(ContainerNode) && !reference.hasChildren()) {
+        if (isNodePredicate(reference, ContainerNode) && !reference.hasChildren()) {
             reference.prepend(this.start);
         } else if (position === RelativePosition.AFTER && reference !== this.end) {
             // We check that `reference` isn't `this.end` to avoid a backward
             // collapsed range.
-            reference.after(this.start);
+            afterNodeTemp(reference, this.start);
         } else if (position === RelativePosition.INSIDE) {
             reference.append(this.start);
         } else {
-            reference.before(this.start);
+            beforeNodeTemp(reference, this.start);
         }
     }
     /**
@@ -244,16 +263,16 @@ export class VRange {
         } else if (position === RelativePosition.AFTER) {
             reference = reference.lastLeaf();
         }
-        if (reference.is(ContainerNode) && !reference.hasChildren()) {
+        if (isNodePredicate(reference, ContainerNode) && !reference.hasChildren()) {
             reference.append(this.end);
         } else if (position === RelativePosition.BEFORE && reference !== this.start) {
             // We check that `reference` isn't `this.start` to avoid a backward
             // collapsed range.
-            reference.before(this.end);
+            beforeNodeTemp(reference, this.end);
         } else if (position === RelativePosition.INSIDE) {
             reference.append(this.end);
         } else {
-            reference.after(this.end);
+            afterNodeTemp(reference, this.end);
         }
     }
     /**
@@ -268,20 +287,20 @@ export class VRange {
      */
     extendTo(targetNode: VNode): void {
         let position: RelativePosition;
-        if (targetNode.isBefore(this.start)) {
-            targetNode = targetNode.previous();
+        if (isBeforeNode(targetNode, this.start)) {
+            targetNode = previousNodeTemp(targetNode);
             if (targetNode.hasChildren()) {
                 targetNode = targetNode.firstLeaf();
                 position = RelativePosition.BEFORE;
             } else {
                 position = RelativePosition.AFTER;
             }
-            if (targetNode && this.end.nextSibling() !== targetNode) {
+            if (targetNode && nextSiblingNodeTemp(this.end) !== targetNode) {
                 this.setStart(targetNode, position);
             }
-        } else if (targetNode.isAfter(this.end)) {
+        } else if (isAfterNode(targetNode, this.end)) {
             if (targetNode.hasChildren()) {
-                targetNode = targetNode.next();
+                targetNode = nextNodeTemp(targetNode);
                 position = RelativePosition.BEFORE;
             } else {
                 position = RelativePosition.AFTER;
@@ -300,8 +319,8 @@ export class VRange {
      * @param predicate
      */
     split(predicate?: Predicate): VNode[] {
-        const ancestor = this.startContainer.commonAncestor(this.endContainer);
-        const closest = ancestor.closest(predicate);
+        const ancestor = commonAncestorNodesTemp(this.startContainer, this.endContainer);
+        const closest = closestNode(ancestor, predicate);
         const container = closest ? closest.parent : ancestor;
 
         // Split the start ancestors.
@@ -309,7 +328,7 @@ export class VRange {
         do {
             let startAncestor = start.parent;
             // Do not split at the start edge of a node.
-            if (start.previousSibling()) {
+            if (previousSiblingNodeTemp(start)) {
                 startAncestor = startAncestor.splitAt(start);
             }
             start = startAncestor;
@@ -320,7 +339,7 @@ export class VRange {
         do {
             const endAncestor = end.parent;
             // Do not split at the end edge of a node.
-            if (end.nextSibling()) {
+            if (nextSiblingNodeTemp(end)) {
                 endAncestor.splitAt(end);
                 endAncestor.append(end);
             }
@@ -332,7 +351,7 @@ export class VRange {
         let node = start;
         while (node !== end) {
             nodes.push(node);
-            node = node.nextSibling();
+            node = nextSiblingNodeTemp(node);
         }
         nodes.push(end);
         return nodes;
@@ -342,18 +361,20 @@ export class VRange {
      * nodes between start and end.
      */
     empty(): void {
-        const removableNodes = this.selectedNodes(node => {
-            // TODO: Replace this check by complex table selection support.
-            return node.breakable || node.parent?.breakable || node.parent?.is(FragmentNode);
-        });
+        const removableNodes = this.selectedNodes(
+            (node: VNode) =>
+                /* TODO: Replace this check by complex table selection support.*/ node.breakable ||
+                node.parent?.breakable ||
+                !isNodePredicate(node, TableCellNode),
+        );
         // Remove selected nodes without touching the start range's ancestors.
-        const startAncestors = this.start.ancestors();
+        const startAncestors = ancestorsNodesTemp(this.start);
         for (const node of removableNodes.filter(node => !startAncestors.includes(node))) {
-            node.remove();
+            removeNodeTemp(node);
         }
         // Collapse the range by merging nodes between start and end.
         if (this.startContainer !== this.endContainer) {
-            const commonAncestor = this.start.commonAncestor(this.end);
+            const commonAncestor = commonAncestorNodesTemp(this.start, this.end);
             let ancestor = this.endContainer.parent;
             while (ancestor !== commonAncestor) {
                 if (ancestor.children().length > 1) {
@@ -373,8 +394,8 @@ export class VRange {
      * Remove this range from its VDocument.
      */
     remove(): void {
-        this.start.remove();
-        this.end.remove();
+        removeNodeTemp(this.start);
+        removeNodeTemp(this.end);
     }
 }
 

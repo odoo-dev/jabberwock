@@ -15,6 +15,12 @@ import { distinct } from '../../utils/src/utils';
 import { TableRowNode } from './TableRowNode';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { removeNodeTemp } from '../../core/src/VNodes/AbstractNode';
+import {
+    ancestorNodeTemp,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     readonly loadables: Loadables<Parser & Renderer & Keymap> = {
@@ -100,10 +106,10 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     addRowAbove(params: CommandParams): void {
         const range = params.context.range;
-        const cell = range.start.ancestor(TableCellNode);
+        const cell = ancestorNodeTemp(range.start, TableCellNode);
         if (!cell) return;
 
-        cell.ancestor(TableNode).addRowAbove(cell);
+        ancestorNodeTemp(cell, TableNode).addRowAbove(cell);
     }
     /**
      * Add a row below the cell at given range start.
@@ -112,10 +118,10 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     addRowBelow(params: CommandParams): void {
         const range = params.context.range;
-        const row = range.start.ancestor(TableCellNode);
+        const row = ancestorNodeTemp(range.start, TableCellNode);
         if (!row) return;
 
-        row.ancestor(TableNode).addRowBelow(row);
+        ancestorNodeTemp(row, TableNode).addRowBelow(row);
     }
     /**
      * Add a column before the cell at given range start.
@@ -124,10 +130,10 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     addColumnBefore(params: CommandParams): void {
         const range = params.context.range;
-        const cell = range.start.ancestor(TableCellNode);
+        const cell = ancestorNodeTemp(range.start, TableCellNode);
         if (!cell) return;
 
-        cell.ancestor(TableNode).addColumnBefore(cell);
+        ancestorNodeTemp(cell, TableNode).addColumnBefore(cell);
     }
     /**
      * Add a column after the cell at given range start.
@@ -136,10 +142,10 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     addColumnAfter(params: CommandParams): void {
         const range = params.context.range;
-        const cell = range.start.ancestor(TableCellNode);
+        const cell = ancestorNodeTemp(range.start, TableCellNode);
         if (!cell) return;
 
-        cell.ancestor(TableNode).addColumnAfter(cell);
+        ancestorNodeTemp(cell, TableNode).addColumnAfter(cell);
     }
     /**
      * Delete the row at given range start.
@@ -148,11 +154,12 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     deleteRow(params: CommandParams): void {
         const range = params.context.range;
-        const cell = range.start.ancestor(TableCellNode);
+        const cell = ancestorNodeTemp(range.start, TableCellNode);
         if (!cell) return;
 
-        const row = cell.ancestor(TableRowNode);
-        const nextRow = row.nextSibling(TableRowNode) || row.previousSibling(TableRowNode);
+        const row = ancestorNodeTemp(cell, TableRowNode);
+        const nextRow =
+            nextSiblingNodeTemp(row, TableRowNode) || previousSiblingNodeTemp(row, TableRowNode);
         const nextCell = nextRow && nextRow.children(TableCellNode)[cell.columnIndex];
 
         if (nextCell) {
@@ -182,7 +189,7 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
                 }
             }
             // Remove the row.
-            row.remove();
+            removeNodeTemp(row);
 
             // The place where the range used to live was just demolished. Give
             // it shelter within the next active cell.
@@ -202,11 +209,13 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     deleteColumn(params: CommandParams): void {
         const range = params.context.range;
-        const cell = range.start.ancestor(TableCellNode);
+        const cell = ancestorNodeTemp(range.start, TableCellNode);
         if (!cell) return;
 
         const column = cell.column;
-        const nextCell = cell.nextSibling(TableCellNode) || cell.previousSibling(TableCellNode);
+        const nextCell =
+            nextSiblingNodeTemp(cell, TableCellNode) ||
+            previousSiblingNodeTemp(cell, TableCellNode);
 
         if (nextCell) {
             const nextColumnIndex = nextCell.columnIndex;
@@ -233,7 +242,7 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
                     cell.unmerge();
                 }
                 // Remove the cell.
-                cell.remove();
+                removeNodeTemp(cell);
 
                 // The place where the range used to live was just demolished.
                 // Give it shelter within the next active cell.
@@ -254,11 +263,11 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
      */
     deleteTable(params: CommandParams): void {
         const range = params.context.range;
-        const table = range.start.ancestor(TableNode);
+        const table = ancestorNodeTemp(range.start, TableNode);
         if (!table) return;
 
-        const nextSibling = table.nextSibling();
-        const previousSibling = table.previousSibling();
+        const nextSibling = nextSiblingNodeTemp(table);
+        const previousSibling = previousSiblingNodeTemp(table);
         if (nextSibling) {
             range.setStart(nextSibling.firstLeaf(), RelativePosition.BEFORE);
             range.collapse();
@@ -266,7 +275,7 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             range.setStart(previousSibling.lastLeaf(), RelativePosition.AFTER);
             range.collapse();
         }
-        table.remove();
+        removeNodeTemp(table);
     }
     /**
      * Merge the cells at given range into the first cell at given range.

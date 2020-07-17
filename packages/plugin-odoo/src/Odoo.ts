@@ -13,6 +13,11 @@ import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
 import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
 import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
+import {
+    isNodePredicate,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
@@ -29,8 +34,14 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'openLinkDialog',
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
-                            const node = range.start.nextSibling() || range.start.previousSibling();
-                            return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+                            const node =
+                                nextSiblingNodeTemp(range.start) ||
+                                previousSiblingNodeTemp(range.start);
+                            return (
+                                node &&
+                                isNodePredicate(node, InlineNode) &&
+                                !!node.modifiers.find(LinkFormat)
+                            );
                         },
                         modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
                     });

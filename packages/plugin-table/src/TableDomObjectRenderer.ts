@@ -7,6 +7,7 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TableSectionAttributes } from './TableRowXmlDomParser';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -31,7 +32,7 @@ export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
         };
 
         for (const child of table.children()) {
-            if (child.is(TableRowNode)) {
+            if (isNodePredicate(child, TableRowNode)) {
                 // If the child is a row, append it to its containing section.
                 const tableSection = child.header ? objectHead : objectBody;
                 tableSection.children.push(child);

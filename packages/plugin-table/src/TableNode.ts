@@ -1,6 +1,11 @@
 import { VElement } from '../../core/src/VNodes/VElement';
 import { TableRowNode } from './TableRowNode';
 import { TableCellNode } from './TableCellNode';
+import {
+    ancestorNodeTemp,
+    beforeNodeTemp,
+    afterNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export class TableNode extends VElement {
     breakable = false;
@@ -68,9 +73,9 @@ export class TableNode extends VElement {
      * @param referenceCell
      */
     addRowAbove(referenceCell: TableCellNode): void {
-        const referenceRow = referenceCell.ancestor(TableRowNode);
+        const referenceRow = ancestorNodeTemp(referenceCell, TableRowNode);
         const newRow = referenceRow.clone();
-        referenceRow.before(newRow);
+        beforeNodeTemp(referenceRow, newRow);
         for (const cell of referenceRow.children(TableCellNode)) {
             const clone = cell.clone();
             newRow.append(clone);
@@ -101,7 +106,7 @@ export class TableNode extends VElement {
         const rowIndex = referenceCell.rowIndex + referenceCell.rowspan - 1;
         const referenceRow = this.children(TableRowNode)[rowIndex];
         const newRow = referenceRow.clone();
-        referenceRow.after(newRow);
+        afterNodeTemp(referenceRow, newRow);
         for (const cell of referenceRow.children(TableCellNode)) {
             const clone = cell.clone();
             newRow.append(clone);
@@ -138,7 +143,7 @@ export class TableNode extends VElement {
         const referenceColumn = referenceCell.column;
         for (const cell of referenceColumn) {
             const clone = cell.clone();
-            cell.before(clone);
+            beforeNodeTemp(cell, clone);
 
             // Handle managers.
             const manager = cell.managerCell;
@@ -168,7 +173,7 @@ export class TableNode extends VElement {
         const referenceColumn = this.columns[columnIndex];
         for (const cell of referenceColumn) {
             const clone = cell.clone();
-            cell.after(clone);
+            afterNodeTemp(cell, clone);
 
             // Handle managers.
             if (cell.managerCell) {

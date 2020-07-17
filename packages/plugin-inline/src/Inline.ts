@@ -13,6 +13,11 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
+import {
+    isNodePredicate,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
@@ -186,12 +191,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         if (range.isCollapsed()) {
             // TODO: LineBreakNode should have the formats as well.
             inlineToCopyModifiers =
-                range.start.previousSibling(node => !(node instanceof LineBreakNode)) ||
-                range.start.nextSibling();
+                previousSiblingNodeTemp(range.start, node => !(node instanceof LineBreakNode)) ||
+                nextSiblingNodeTemp(range.start);
         } else {
-            inlineToCopyModifiers = range.start.nextSibling();
+            inlineToCopyModifiers = nextSiblingNodeTemp(range.start);
         }
-        if (inlineToCopyModifiers && inlineToCopyModifiers.is(InlineNode)) {
+        if (inlineToCopyModifiers && isNodePredicate(inlineToCopyModifiers, InlineNode)) {
             return inlineToCopyModifiers.modifiers.clone();
         }
     }
@@ -205,11 +210,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
 
         let inlineToCopyStyle: VNode;
         if (range.isCollapsed()) {
-            inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
+            inlineToCopyStyle =
+                previousSiblingNodeTemp(range.start) || nextSiblingNodeTemp(range.start);
         } else {
-            inlineToCopyStyle = range.start.nextSibling();
+            inlineToCopyStyle = nextSiblingNodeTemp(range.start);
         }
-        if (inlineToCopyStyle && inlineToCopyStyle.is(InlineNode)) {
+        if (inlineToCopyStyle && isNodePredicate(inlineToCopyStyle, InlineNode)) {
             return inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || new CssStyle();
         }
     }

@@ -1,6 +1,6 @@
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+import { AbstractNodeParams, ancestorNodeTemp } from '../../core/src/VNodes/AbstractNode';
 import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export type ZoneIdentifier = string;
@@ -28,7 +28,7 @@ export class ZoneNode extends ContainerNode {
     }
     show(child: VNode): void {
         this.hidden[child.id] = false;
-        const parentZone: ZoneNode = this.ancestor(ZoneNode);
+        const parentZone: ZoneNode = ancestorNodeTemp(this, ZoneNode);
         if (parentZone) {
             parentZone.show(this);
         }

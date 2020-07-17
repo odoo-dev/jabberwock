@@ -14,6 +14,7 @@ import { Format } from '../../core/src/Format';
 import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
 import { Modifiers } from '../../core/src/Modifiers';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
+import { isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 
 const insertText = async function(editor: JWEditor, text: string, select = false): Promise<void> {
     await editor.execCommand<Char>('insertText', {
@@ -60,14 +61,14 @@ describePlugin(Char, testEditor => {
             it('should create a CharNode', async () => {
                 const c = new CharNode({ char: ' ' });
                 expect(c.char).to.equal(' ');
-                expect(c.is(AtomicNode)).to.equal(true);
+                expect(isNodePredicate(c, AtomicNode)).to.equal(true);
                 expect(c.modifiers.length).to.equal(0);
                 expect(c.length).to.equal(1);
             });
             it('should create a CharNode with format', async () => {
                 const c = new CharNode({ char: ' ', modifiers: new Modifiers(BoldFormat) });
                 expect(c.char).to.equal(' ');
-                expect(c.is(AtomicNode)).to.equal(true);
+                expect(isNodePredicate(c, AtomicNode)).to.equal(true);
                 expect(c.modifiers.length).to.equal(1);
                 expect(c.modifiers.map(m => m.constructor.name)).to.deep.equal(['BoldFormat']);
             });

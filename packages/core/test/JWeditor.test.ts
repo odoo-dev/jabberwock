@@ -5,6 +5,7 @@ import { ModeError } from '../../utils/src/errors';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { removeNodeTemp } from '../src/VNodes/AbstractNode';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -237,10 +238,7 @@ describe('core', () => {
                         await editor.execBatch(async () => {
                             const layout = editor.plugins.get(Layout);
                             const domEngine = layout.engines.dom;
-                            domEngine.components
-                                .get('editable')[0]
-                                .firstLeaf()
-                                .remove();
+                            removeNodeTemp(domEngine.components.get('editable')[0].firstLeaf());
                         });
                     },
                     contentAfter: '<div>b[]</div>',

@@ -2,6 +2,11 @@ import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../../core/src/VNodes/AtomicNode';
 import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
+import {
+    isNodePredicate,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../../core/src/VNodes/AbstractNode';
 
 interface InfoState {
     currentTab: string;
@@ -50,9 +55,9 @@ export class InfoComponent extends OwlComponent<{}> {
     propRepr(vNode: VNode, propName: string): string {
         let prop = vNode[propName];
         if (propName === 'atomic') {
-            if (vNode.is(AtomicNode)) {
+            if (isNodePredicate(vNode, AtomicNode)) {
                 return 'true';
-            } else if (vNode.is(ContainerNode)) {
+            } else if (isNodePredicate(vNode, ContainerNode)) {
                 return 'false';
             } else {
                 return '?';
@@ -109,8 +114,8 @@ export class InfoComponent extends OwlComponent<{}> {
     //--------------------------------------------------------------------------
 
     _repr(vNode: VNode): string {
-        const nextSibling = vNode.nextSibling();
-        const prevSibling = vNode.previousSibling();
+        const nextSibling = nextSiblingNodeTemp(vNode);
+        const prevSibling = previousSiblingNodeTemp(vNode);
         const position = nextSibling ? 'BEFORE' : prevSibling ? 'AFTER' : 'INSIDE';
         const reference = nextSibling || prevSibling || vNode.parent;
         if (reference) {

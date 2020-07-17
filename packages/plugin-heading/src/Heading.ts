@@ -13,6 +13,12 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
+import {
+    replaceWith,
+    isNodePredicate,
+    closestNode,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -32,7 +38,7 @@ function headingButton(level: number): ComponentDefinition {
                     return (
                         nodes.length &&
                         nodes.every(node => {
-                            return node.closest(HeadingNode)?.level === level;
+                            return closestNode(node, HeadingNode)?.level === level;
                         })
                     );
                 },
@@ -52,7 +58,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             selector: [HeadingNode],
             check: (context: CheckingContext): boolean => {
                 const range = context.range;
-                return range.isCollapsed() && !range.start.nextSibling();
+                return range.isCollapsed() && !nextSiblingNodeTemp(range.start);
             },
             handler: this.insertParagraphBreak,
         },
@@ -78,8 +84,11 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                         selected: (editor: JWEditor): boolean => {
                             const nodes = editor.selection.range.targetedNodes();
                             return nodes.every(node => {
-                                return node.closest(ancestor => {
-                                    return ancestor.is(editor.configuration.defaults.Container);
+                                return closestNode(node, ancestor => {
+                                    return isNodePredicate(
+                                        ancestor,
+                                        editor.configuration.defaults.Container,
+                                    );
                                 });
                             });
                         },
@@ -114,7 +123,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         for (const node of params.context.range.targetedNodes(ContainerNode)) {
             const heading = this._createHeadingContainer(params.level);
             heading.modifiers = node.modifiers.clone();
-            node.replaceWith(heading);
+            replaceWith(node, heading);
         }
     }
 
@@ -128,7 +137,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         const heading = range.targetedNodes(HeadingNode)[0];
         const duplicate = heading.splitAt(range.start);
         const newContainer = new this.editor.configuration.defaults.Container();
-        duplicate.replaceWith(newContainer);
+        replaceWith(duplicate, newContainer);
     }
 
     //--------------------------------------------------------------------------

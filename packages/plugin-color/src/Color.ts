@@ -2,7 +2,11 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import {
+    AbstractNode,
+    isNodePredicate,
+    ancestorNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
@@ -59,7 +63,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
             // ancestor or a format.
             const notColoredYet = selectedNodes.filter(node => {
                 if (this.hasColor(color, node)) return false;
-                const colorAncestor = node.ancestor(this.hasColor.bind(this));
+                const colorAncestor = ancestorNodeTemp(node, this.hasColor.bind(this));
                 return !colorAncestor || !this.hasColor(color, colorAncestor);
             });
             for (const node of notColoredYet) {
@@ -97,7 +101,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
         if (range.isCollapsed()) {
             const inline = this.dependencies.get(Inline);
 
-            if (range.start.ancestor(hasColor)) {
+            if (ancestorNodeTemp(range.start, hasColor)) {
                 // Set the color style cache to the default color.
                 if (!inline.cache.style) {
                     inline.cache.style = new CssStyle();
@@ -112,7 +116,11 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 const target = this._nodeOrFirstFormat(node);
                 const currentColor = target.modifiers.find(Attributes)?.style.get(this.styleName);
 
-                if (!currentColor || currentColor === defaultColor || node.ancestor(hasColor)) {
+                if (
+                    !currentColor ||
+                    currentColor === defaultColor ||
+                    ancestorNodeTemp(node, hasColor)
+                ) {
                     // Set the color to the default color.
                     target.modifiers.get(Attributes).style.set(this.styleName, defaultColor);
                 } else {
@@ -123,7 +131,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // Uncolor the children and their formats as well.
                 for (const child of node.children()) {
                     child.modifiers.find(Attributes)?.style.remove(this.styleName);
-                    if (child.is(InlineNode)) {
+                    if (isNodePredicate(child, InlineNode)) {
                         for (const format of child.modifiers.filter(Format)) {
                             format.modifiers.find(Attributes)?.style.remove(this.styleName);
                         }

@@ -9,6 +9,7 @@ import { VNode } from '../src/VNodes/VNode';
 import { VSelection } from '../src/VSelection';
 import { Context, CheckingContext } from '../src/ContextManager';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { closestNode, ancestorNodeTemp } from '../src/VNodes/AbstractNode';
 
 describe('core', () => {
     describe('ContextManager', () => {
@@ -70,7 +71,7 @@ describe('core', () => {
                         expect(checkSpy.callCount).to.eql(1);
                         expect(checkSpy.args[0][0]).to.eql({
                             range: editor.selection.range,
-                            selector: [editor.selection.range.start.ancestor(ListNode)],
+                            selector: [ancestorNodeTemp(editor.selection.range.start, ListNode)],
                         });
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[0]);
@@ -149,10 +150,10 @@ describe('core', () => {
                         ];
 
                         const result = editor.contextManager.match(commands);
-                        const closestList = editor.selection.range.start.closest(ListNode);
+                        const closestList = closestNode(editor.selection.range.start, ListNode);
                         const checkingContext: CheckingContext = {
                             range: editor.selection.range,
-                            selector: [closestList.ancestor(ListNode), closestList],
+                            selector: [ancestorNodeTemp(closestList, ListNode), closestList],
                         };
                         expect(checkSpy1.callCount).to.eql(1);
                         expect(checkSpy1.args[0][0]).to.eql(checkingContext);
@@ -193,7 +194,9 @@ describe('core', () => {
                         expect(checkSpy.callCount).to.eql(1);
                         expect(checkSpy.args[0][0]).to.eql({
                             range: editor.selection.range,
-                            selector: [editor.selection.range.start.ancestor(ParagraphNode)],
+                            selector: [
+                                ancestorNodeTemp(editor.selection.range.start, ParagraphNode),
+                            ],
                         });
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[0]);
@@ -241,9 +244,9 @@ describe('core', () => {
                         expect(checkSpy.args[0][0]).to.eql({
                             range: editor.selection.range,
                             selector: [
-                                editor.selection.range.start.ancestor(isUl),
-                                editor.selection.range.start.ancestor(isOl),
-                                editor.selection.range.start.ancestor(ParagraphNode),
+                                ancestorNodeTemp(editor.selection.range.start, isUl),
+                                ancestorNodeTemp(editor.selection.range.start, isOl),
+                                ancestorNodeTemp(editor.selection.range.start, ParagraphNode),
                             ],
                         });
                         const [matchedCommand, computedContext] = result;
@@ -319,7 +322,7 @@ describe('core', () => {
                         expect(checkSpy1.callCount).to.eql(1);
                         expect(checkSpy1.args[0][0]).to.eql({
                             range: newSelection.range,
-                            selector: [newSelection.range.start.ancestor(ParagraphNode)],
+                            selector: [ancestorNodeTemp(newSelection.range.start, ParagraphNode)],
                         });
                         expect(checkSpy2.callCount).to.eql(0);
                         const [matchedCommand1, computedContext1] = result1;
@@ -337,7 +340,7 @@ describe('core', () => {
                         expect(checkSpy2.callCount).to.eql(1);
                         expect(checkSpy2.args[0][0]).to.eql({
                             range: editor.selection.range,
-                            selector: [editor.selection.range.start.ancestor(ListNode)],
+                            selector: [ancestorNodeTemp(editor.selection.range.start, ListNode)],
                         });
                         const [matchedCommand2, computedContext2] = result2;
                         expect(matchedCommand2).to.deep.equal(commands[1]);

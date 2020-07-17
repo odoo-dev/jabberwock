@@ -21,6 +21,11 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { QWeb } from '@odoo/owl';
 import { parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
+import {
+    ancestorsNodesTemp,
+    previousSiblingNodeTemp,
+    nextSiblingNodeTemp,
+} from '../../core/src/VNodes/AbstractNode';
 
 let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
@@ -565,9 +570,9 @@ describe('Plugin: DevTools', () => {
                 '</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td>none</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>siblings</devtools-td><devtools-td><devtools-list><devtools-listitem> previous: ' +
-                vNodeChar.previousSibling().name +
+                previousSiblingNodeTemp(vNodeChar).name +
                 '</devtools-listitem><devtools-listitem> next: ' +
-                vNodeChar.nextSibling().name +
+                nextSiblingNodeTemp(vNodeChar).name +
                 '</devtools-listitem></devtools-list></devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>';
@@ -575,8 +580,7 @@ describe('Plugin: DevTools', () => {
 
             const path = wrapper.querySelector('jw-devtools').querySelector('devtools-path');
             expect([].map.call(path.childNodes, (n: Node) => n.textContent)).to.deep.equal(
-                vNodeChar
-                    .ancestors()
+                ancestorsNodesTemp(vNodeChar)
                     .map(n => n.name)
                     .reverse()
                     .concat([vNodeChar.name + '.' + vNodeChar.name]),

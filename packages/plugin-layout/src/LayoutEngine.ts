@@ -1,6 +1,7 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import JWEditor from '../../core/src/JWEditor';
 import { ZoneIdentifier, ZoneNode } from './ZoneNode';
+import { closestNode, ancestorNodeTemp, removeNodeTemp } from '../../core/src/VNodes/AbstractNode';
 
 export type ComponentId = string;
 export type LayoutEngineId = string;
@@ -44,7 +45,7 @@ export abstract class LayoutEngine {
     async stop(): Promise<void> {
         for (const component of this.components.values()) {
             for (const node of component) {
-                const zone = node.ancestor(ZoneNode);
+                const zone = ancestorNodeTemp(node, ZoneNode);
                 if (zone) {
                     zone.hide(node);
                 }
@@ -139,7 +140,8 @@ export abstract class LayoutEngine {
             // filter by zone if needed
             if (
                 !zoneId ||
-                component.ancestor(
+                ancestorNodeTemp(
+                    component,
                     ancestor =>
                         ancestor instanceof ZoneNode && ancestor.managedZones.includes(zoneId),
                 )
@@ -147,11 +149,11 @@ export abstract class LayoutEngine {
                 // Remove all instances in the zone children.
                 this._clear(component);
                 // Remove the instance.
-                const zone = component.ancestor(ZoneNode);
+                const zone = ancestorNodeTemp(component, ZoneNode);
                 if (zone && !zones.includes(zone)) {
                     zones.push(zone);
                 }
-                component.remove();
+                removeNodeTemp(component);
             }
         }
         return zones;
@@ -177,7 +179,7 @@ export abstract class LayoutEngine {
             console.warn('No component to show. Prepend or append it in a zone first.');
         } else {
             for (const component of components) {
-                const zone = component.ancestor(ZoneNode);
+                const zone = ancestorNodeTemp(component, ZoneNode);
                 zone.show(component);
             }
         }
@@ -195,7 +197,7 @@ export abstract class LayoutEngine {
             console.warn('No component to hide. Prepend or append it in a zone first.');
         } else {
             for (const component of components) {
-                const zone = component.ancestor(ZoneNode);
+                const zone = ancestorNodeTemp(component, ZoneNode);
                 zone.hide(component);
             }
         }
@@ -247,7 +249,7 @@ export abstract class LayoutEngine {
                     // Excluding the ones that are contained within the given node.
                     // Avoid loop with child in itself.
                     matchingZones = matchingZones.filter(
-                        zone => !zone.closest(ancestor => components.includes(ancestor)),
+                        zone => !closestNode(zone, ancestor => components.includes(ancestor)),
                     );
                 }
                 if (matchingZones.length) {

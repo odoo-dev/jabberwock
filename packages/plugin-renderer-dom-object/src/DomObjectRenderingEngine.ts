@@ -4,7 +4,7 @@ import { DefaultDomObjectModifierRenderer } from './DefaultDomObjectModifierRend
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { AbstractNode, isNodePredicate } from '../../core/src/VNodes/AbstractNode';
 import { Format } from '../../core/src/Format';
 import { Modifier } from '../../core/src/Modifier';
 import { flat } from '../../utils/src/utils';
@@ -266,7 +266,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                     children.push(child);
                 }
             }
-        } else if (!node.is(AtomicNode)) {
+        } else if (!isNodePredicate(node, AtomicNode)) {
             children.push({ tag: 'BR' });
         }
         return children;

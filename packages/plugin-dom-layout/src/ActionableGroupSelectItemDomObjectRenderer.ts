@@ -11,11 +11,12 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { LabelNode } from '../../plugin-layout/src/LabelNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { DomObjectActionable } from './ActionableDomObjectRenderer';
+import { ancestorsNodesTemp } from '../../core/src/VNodes/AbstractNode';
 
 export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
-    predicate = (node: VNode): boolean => node.ancestors(ActionableGroupNode).length >= 2;
+    predicate = (node: VNode): boolean => ancestorsNodesTemp(node, ActionableGroupNode).length >= 2;
 
     actionableNodes = new Map<ActionableNode, HTMLElement>();
 
@@ -62,7 +63,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
             };
             domObject = domObjectActionable;
         } else if (item instanceof ActionableGroupNode) {
-            if (item.ancestors(ActionableGroupNode).length <= 2) {
+            if (ancestorsNodesTemp(item, ActionableGroupNode).length <= 2) {
                 const title = item.modifiers.find(Attributes)?.get('title');
                 domObject = {
                     tag: 'OPTGROUP',
