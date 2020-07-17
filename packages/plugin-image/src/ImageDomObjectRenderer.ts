@@ -31,7 +31,7 @@ export class ImageDomObjectRenderer extends NodeRenderer<DomObject> {
             selectedNode => selectedNode === node,
         ).length;
         if (isSelected) {
-            image.attributes = { class: 'jw_selected_image' };
+            image.attributes = { class: new Set(['jw_selected_image']) };
         }
         this.engine.locate([node], image);
         return image;

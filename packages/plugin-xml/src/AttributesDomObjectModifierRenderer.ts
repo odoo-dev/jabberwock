@@ -2,6 +2,8 @@ import { ModifierRenderer } from '../../plugin-renderer/src/ModifierRenderer';
 import {
     DomObjectRenderingEngine,
     DomObject,
+    DomObjectAttributes,
+    DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from './Attributes';
 
@@ -19,26 +21,21 @@ export class AttributesDomObjectModifierRenderer extends ModifierRenderer<DomObj
     async render(modifier: Attributes, contents: DomObject[]): Promise<DomObject[]> {
         const keys = modifier.keys();
         if (keys.length) {
-            const attributes = {};
+            const attributes: DomObjectAttributes = {};
             for (const name of keys) {
-                attributes[name] = modifier.get(name);
+                if (name === 'class') {
+                    attributes.class = new Set(modifier.classList.items());
+                } else if (name === 'style') {
+                    attributes.style = modifier.style.toJSON();
+                } else {
+                    attributes[name] = modifier.get(name);
+                }
             }
             const newContents = [];
             for (let index = 0; index < contents.length; index++) {
                 let content = contents[index];
                 if ('tag' in content) {
-                    if (content.attributes) {
-                        for (const name of keys) {
-                            if (!(name in content.attributes)) {
-                                content.attributes[name] = attributes[name];
-                            }
-                        }
-                    } else {
-                        content.attributes = {};
-                        for (const name of keys) {
-                            content.attributes[name] = attributes[name];
-                        }
-                    }
+                    this._applyAttributes(content, attributes);
                 } else if (
                     'children' in content &&
                     !content.children.find(
@@ -49,18 +46,7 @@ export class AttributesDomObjectModifierRenderer extends ModifierRenderer<DomObj
                 ) {
                     for (const child of content.children) {
                         if ('tag' in child) {
-                            if (child.attributes) {
-                                for (const name of keys) {
-                                    if (!(name in child.attributes)) {
-                                        child.attributes[name] = attributes[name];
-                                    }
-                                }
-                            } else {
-                                child.attributes = {};
-                                for (const name of keys) {
-                                    child.attributes[name] = attributes[name];
-                                }
-                            }
+                            this._applyAttributes(child, attributes);
                         }
                     }
                 } else {
@@ -90,5 +76,22 @@ export class AttributesDomObjectModifierRenderer extends ModifierRenderer<DomObj
             contents = newContents;
         }
         return contents;
+    }
+
+    private _applyAttributes(content: DomObjectElement, attributes: DomObjectAttributes): void {
+        if (!content.attributes) content.attributes = {};
+        const attr = content.attributes;
+        for (const name in attributes) {
+            if (name === 'class') {
+                if (!attr.class) attr.class = new Set();
+                for (const className of attributes.class) {
+                    attr.class.add(className);
+                }
+            } else if (name === 'style') {
+                attr.style = Object.assign({}, attributes.style, attr.style);
+            } else {
+                attr[name] = attributes[name];
+            }
+        }
     }
 }

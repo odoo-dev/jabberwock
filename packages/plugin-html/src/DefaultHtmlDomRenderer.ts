@@ -32,10 +32,25 @@ export class DefaultHtmlDomRenderer extends NodeRenderer<Node[]> {
         let domNode: Node;
         if ('tag' in domObject) {
             const element = document.createElement(domObject.tag);
-            if (domObject.attributes) {
-                for (const name in domObject.attributes) {
-                    const value = domObject.attributes[name];
-                    element.setAttribute(name, value);
+            const attributes = domObject.attributes;
+            if (attributes) {
+                for (const name in attributes) {
+                    if (name === 'style') {
+                        const style = attributes[name];
+                        for (const name in style) {
+                            element.style[name] = style[name];
+                        }
+                    } else if (name === 'class') {
+                        const classList = attributes[name];
+                        for (const className of classList) {
+                            element.classList.add(className);
+                        }
+                    } else {
+                        const value = attributes[name];
+                        if (typeof value === 'string') {
+                            element.setAttribute(name, value);
+                        }
+                    }
                 }
             }
             if (domObject.children) {

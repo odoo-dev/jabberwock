@@ -20,7 +20,7 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
             const followRange: DomObject = {
                 tag: 'JW-FOLLOW-RANGE',
                 children: node.children(),
-                attributes: { style: 'display: none;' },
+                attributes: { style: { 'display': 'none' } },
                 attach: (el: HTMLElement): void => {
                     followRangeDebounced = (): void => {
                         window.clearTimeout(debounce);

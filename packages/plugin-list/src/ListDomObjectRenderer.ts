@@ -22,7 +22,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
             children: [],
         };
         if (ListNode.CHECKLIST(listNode)) {
-            list.attributes = { class: 'checklist' };
+            list.attributes = { class: new Set(['checklist']) };
         }
         const children = listNode.children();
         const domObjects = await this.engine.render(children);
@@ -64,10 +64,6 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
         // that specifies those attributes belong on the list item.
         this.engine.renderAttributes(ListItemAttributes, listItem, li);
 
-        if (!li.attributes) {
-            li.attributes = {};
-        }
-
         if (listNode.listType === ListType.ORDERED) {
             // Adapt numbering to skip previous list item
             // Source: https://stackoverflow.com/a/12860083
@@ -82,17 +78,17 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
         }
 
         if (listItem.is(ListNode)) {
-            let style = li.attributes.style || '';
-            if (!style.includes('list-style')) {
-                style += 'list-style: none;';
+            const style = li.attributes.style || {};
+            if (!style['list-style']) {
+                style['list-style'] = 'none';
             }
             li.attributes.style = style;
         } else if (ListNode.CHECKLIST(listItem.parent)) {
             const className = ListNode.isChecked(listItem) ? 'checked' : 'unchecked';
             if (li.attributes.class) {
-                li.attributes.class += ' ' + className;
+                li.attributes.class.add(className);
             } else {
-                li.attributes.class = className;
+                li.attributes.class = new Set([className]);
             }
 
             // Handle click in the checkbox.

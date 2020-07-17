@@ -1,10 +1,12 @@
 import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
 import { nodeName, nodeLength, FlattenUnion, flat } from '../../utils/src/utils';
-import { styleToObject } from '../../utils/src/Dom';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomPoint } from './DomLayoutEngine';
-import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import {
+    DomObject,
+    DomObjectAttributes,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
 
 //--------------------------------------------------------------------------
@@ -31,7 +33,7 @@ type DomObjectMapping = {
 type DiffDomObject = {
     id: DomObjectID;
     removedChildren: DomObjectID[];
-    attributes: Record<string, string | null>;
+    attributes: DomObjectAttributes;
     style: Record<string, string | null>;
     classList: Record<string, boolean>;
     parentDomNode: Element | ShadowRoot;
@@ -681,7 +683,7 @@ export class DomReconciliationEngine {
         const diffClassList: Record<string, boolean> = {};
 
         const nodes: VNode[] = this._locations.get(domObject) || [];
-        const attributes: Record<string, string> = {};
+        const attributes: DomObjectAttributes = {};
         const children: DomObjectID[] = [];
         let domNodes: Node[] = [];
         let allDomNodes: Node[] = [];
@@ -856,21 +858,18 @@ export class DomReconciliationEngine {
                 hasChanged = true;
             }
             // Update attributes.
-            const newAttributes: Record<string, string> = domObject.attributes || {};
-            const oldAttributes: Record<string, string> = old?.object.attributes || {};
+            const newAttributes: DomObjectAttributes = domObject.attributes || {};
+            const oldAttributes: DomObjectAttributes = old?.object.attributes || {};
 
             for (const name in oldAttributes) {
-                const value = oldAttributes[name] || '';
                 if (!newAttributes[name]) {
                     hasChanged = true;
                     if (name === 'style') {
-                        const oldStyle = styleToObject(value);
-                        for (const key in oldStyle) {
+                        for (const key in oldAttributes[name]) {
                             diffStyle[key] = null;
                         }
                     } else if (name === 'class') {
-                        const oldClassNames = value.split(' ');
-                        for (const className of oldClassNames) {
+                        for (const className of oldAttributes[name]) {
                             diffClassList[className] = false;
                         }
                     } else {
@@ -879,44 +878,48 @@ export class DomReconciliationEngine {
                 }
             }
             for (const name in newAttributes) {
-                const value = newAttributes[name];
-                const oldValue = oldAttributes?.[name] || '';
                 if (name === 'style') {
-                    const oldStyle = styleToObject(oldValue);
-                    const newStyle = styleToObject(value);
-
-                    for (const key in oldStyle) {
-                        if (!newStyle[key]) {
-                            hasChanged = true;
-                            diffStyle[key] = null;
+                    const newStyle = newAttributes[name];
+                    const oldStyle = oldAttributes[name];
+                    if (oldStyle) {
+                        for (const key in oldStyle) {
+                            if (!newStyle[key]) {
+                                hasChanged = true;
+                                diffStyle[key] = null;
+                            }
                         }
                     }
                     for (const key in newStyle) {
-                        if (newStyle[key] !== oldStyle[key]) {
+                        if (newStyle[key] !== oldStyle?.[key]) {
                             hasChanged = true;
                             diffStyle[key] = newStyle[key];
                         }
                     }
                 } else if (name === 'class') {
-                    const oldClassNames = oldValue.split(' ');
-                    const newClassNames = value.split(' ');
-                    for (const className of oldClassNames) {
-                        if (className && !newClassNames.includes(className)) {
-                            hasChanged = true;
-                            diffClassList[className] = false;
+                    const newClassNames = newAttributes[name];
+                    const oldClassNames = oldAttributes[name];
+                    if (oldClassNames) {
+                        for (const className of oldClassNames) {
+                            if (className && !newClassNames.has(className)) {
+                                hasChanged = true;
+                                diffClassList[className] = false;
+                            }
                         }
                     }
                     for (const className of newClassNames) {
-                        if (className && !oldClassNames.includes(className)) {
+                        if (className && !oldClassNames?.has(className)) {
                             hasChanged = true;
                             diffClassList[className] = true;
                         }
                     }
-                } else if (value !== oldValue) {
-                    hasChanged = true;
-                    diffAttributes[name] = value;
+                } else {
+                    const value = newAttributes[name] as string;
+                    if (value !== oldAttributes[name]) {
+                        hasChanged = true;
+                        diffAttributes[name] = value;
+                    }
                 }
-                attributes[name] = value;
+                attributes[name] = newAttributes[name];
             }
         } else if (!domNodes.length && domObject.text) {
             if (!old || domObject.text !== old.object.text) {
@@ -1048,46 +1051,39 @@ export class DomReconciliationEngine {
     ): [number, GenericDomObject, DomObjectID][] {
         const mapRatios: [number, GenericDomObject, DomObjectID][] = [];
         for (const objectA of arrayA) {
-            const nodes = this._items.get(objectA) || [];
             for (const idB of arrayB) {
                 const itemB = this._objects[idB];
                 const objectB = itemB.object;
                 let currentRatio = 0;
                 if (objectA.tag) {
                     if (objectA.tag === objectB.tag) {
-                        const attrA: Record<string, string> = objectA.attributes || {};
-                        const attrB: Record<string, string> = objectB.attributes;
+                        const attrA: DomObjectAttributes = objectA.attributes || {};
+                        const attrB: DomObjectAttributes = objectB.attributes;
 
                         // add some points for attributes matching
                         let max = 0;
                         let same = 0;
                         for (const name in attrA) {
                             if (name === 'style') {
-                                const styleA = attrA[name] ? styleToObject(attrA[name]) : {};
-                                const styleB = attrB?.[name] ? styleToObject(attrB[name]) : {};
-                                for (const key in styleA) {
-                                    max++;
-                                    if (styleA[key] === styleB[key]) {
-                                        same++;
-                                    }
-                                }
-                                for (const key in styleB) {
-                                    if (!(key in styleB)) {
+                                const styleA = attrA[name];
+                                const styleB = attrB?.[name];
+                                if (styleA) {
+                                    for (const key in styleA) {
                                         max++;
+                                        if (styleA[key] === styleB?.[key]) {
+                                            same++;
+                                        }
                                     }
                                 }
                             } else if (name === 'class') {
-                                const classA = attrA[name]?.split(' ') || [];
-                                const classB = attrB?.[name]?.split(' ') || [];
-                                for (const c of classA) {
-                                    max++;
-                                    if (classB.includes(c)) {
-                                        same++;
-                                    }
-                                }
-                                for (const c of classB) {
-                                    if (!classA.includes(c)) {
+                                const classA = attrA[name];
+                                const classB = attrB?.[name];
+                                if (classA) {
+                                    for (const c of classA) {
                                         max++;
+                                        if (classB?.has(c)) {
+                                            same++;
+                                        }
                                     }
                                 }
                             } else {
@@ -1095,6 +1091,31 @@ export class DomReconciliationEngine {
                                 if (attrA[name] === attrB?.[name]) {
                                     same++;
                                 }
+                            }
+                        }
+                        for (const name in attrB) {
+                            if (name === 'style') {
+                                const styleA = attrA?.[name];
+                                const styleB = attrB[name];
+                                if (styleB) {
+                                    for (const key in styleB) {
+                                        if (!styleA || !(key in styleA)) {
+                                            max++;
+                                        }
+                                    }
+                                }
+                            } else if (name === 'class') {
+                                const classA = attrA?.[name];
+                                const classB = attrB[name];
+                                if (classB) {
+                                    for (const c of classB) {
+                                        if (!classA?.has(c)) {
+                                            max++;
+                                        }
+                                    }
+                                }
+                            } else if (!attrA || !(name in attrA)) {
+                                max++;
                             }
                         }
 
@@ -1114,38 +1135,72 @@ export class DomReconciliationEngine {
                     }
                 }
                 if (currentRatio >= 1) {
-                    // the best candidate must have the most common nodes
-                    if (this._locations.get(objectA) && this._locations.get(objectB)) {
-                        // More points for direct nodes.
-                        const match: VNode[] = [];
-                        for (const node of this._locations.get(objectA)) {
-                            if (this._locations.get(objectB).includes(node)) {
-                                match.push(node);
+                    // The best have at leat on node in common or the twice does not have node.
+                    const itemsA = this._items.get(objectA);
+                    const itemsB = this._items.get(objectB);
+                    // Some points for children nodes.
+                    let matchNode = 0;
+                    let maxNode = 0;
+                    for (const node of itemsA) {
+                        if (node instanceof AbstractNode) {
+                            maxNode++;
+                            if (itemsB.includes(node)) {
+                                matchNode++;
                             }
                         }
-                        currentRatio =
-                            match.length /
-                            Math.max(
-                                this._locations.get(objectA).length,
-                                this._locations.get(objectB).length,
-                            );
                     }
-                    if (nodes.length && this._items.get(objectB).length) {
-                        // Some points for children nodes.
-                        const match: Array<VNode | Modifier> = [];
-                        for (const node of nodes) {
-                            if (this._items.get(objectB).includes(node)) {
-                                match.push(node);
+                    for (const node of itemsB) {
+                        if (node instanceof AbstractNode) {
+                            if (!itemsB.includes(node)) {
+                                maxNode++;
                             }
                         }
-                        currentRatio +=
-                            match.length /
-                            Math.max(nodes.length, this._items.get(objectB).length) /
-                            10;
-                    } else if (!nodes.length && !this._items.get(objectB).length) {
-                        currentRatio += 1;
                     }
-                    mapRatios.push([currentRatio, objectA, idB]);
+                    const nodeRatio = maxNode ? matchNode / maxNode : 1;
+
+                    if (nodeRatio > 0) {
+                        currentRatio += nodeRatio;
+
+                        // The best candidate must have the most common located nodes.
+                        const locA = this._locations.get(objectA);
+                        const locB = this._locations.get(objectB);
+                        let match = 0;
+                        let max = 0;
+                        for (const node of locA) {
+                            max++;
+                            if (locB.includes(node)) {
+                                match++;
+                            }
+                        }
+                        for (const node of locB) {
+                            if (!locA.includes(node)) {
+                                max++;
+                            }
+                        }
+                        currentRatio += max ? match / max : 0;
+
+                        // The best candidate must have the most common modifiers.
+                        let matchModifier = 0;
+                        let maxModifier = 0;
+                        for (const node of itemsA) {
+                            if (!(node instanceof AbstractNode)) {
+                                maxModifier++;
+                                if (itemsB.includes(node)) {
+                                    matchModifier++;
+                                }
+                            }
+                        }
+                        for (const node of itemsB) {
+                            if (!(node instanceof AbstractNode)) {
+                                if (!itemsB.includes(node)) {
+                                    maxModifier++;
+                                }
+                            }
+                        }
+                        currentRatio += (maxModifier ? matchModifier / maxModifier : 0) / 10;
+
+                        mapRatios.push([currentRatio, objectA, idB]);
+                    }
                 }
             }
         }
@@ -1206,6 +1261,7 @@ export class DomReconciliationEngine {
             if (domNode && !domObject.shadowRoot !== !domNode.shadowRoot) {
                 domNode = null;
             }
+            let attributes: DomObjectAttributes;
             if (domNode) {
                 if (diff.askCompleteRedrawing) {
                     for (const attr of domNode.attributes) {
@@ -1214,22 +1270,13 @@ export class DomReconciliationEngine {
                             domNode.removeAttribute(attr.name);
                         }
                     }
-                    if (domObject.attributes) {
-                        for (const name in domObject.attributes) {
-                            domNode.setAttribute(name, domObject.attributes[name]);
-                        }
-                    }
+                    attributes = domObject.attributes;
                 } else {
-                    for (const name in diff.attributes) {
-                        const value = diff.attributes[name];
-                        if (value === null) {
-                            domNode.removeAttribute(name);
-                        } else {
-                            domNode.setAttribute(name, value);
-                        }
-                    }
+                    attributes = diff.attributes;
+                }
+                if (!diff.askCompleteRedrawing) {
                     for (const name in diff.style) {
-                        domNode.style[name] = diff.style[name] || '';
+                        domNode.style.setProperty(name, diff.style[name] || '');
                     }
                     for (const name in diff.classList) {
                         if (diff.classList[name]) {
@@ -1241,16 +1288,40 @@ export class DomReconciliationEngine {
                 }
             } else {
                 domNode = document.createElement(domObject.tag);
-                if (domObject.attributes) {
-                    for (const name in domObject.attributes) {
-                        const value = domObject.attributes[name];
-                        if (value !== null) {
-                            domNode.setAttribute(name, value);
-                        }
-                    }
-                }
+                attributes = domObject.attributes;
                 if (domObject.shadowRoot) {
                     domNode.attachShadow({ mode: 'open' });
+                }
+            }
+
+            for (const name in attributes) {
+                if (name === 'style') {
+                    const style = attributes[name];
+                    for (const name in style) {
+                        domNode.style.setProperty(name, style[name]);
+                    }
+                    // Now we set the attribute again to keep order.
+                    const styleInline = domNode.getAttribute('style');
+                    if (styleInline) {
+                        domNode.setAttribute('style', styleInline);
+                    }
+                } else if (name === 'class') {
+                    const classList = attributes[name];
+                    for (const className of classList) {
+                        domNode.classList.add(className);
+                    }
+                    // Now we set the attribute again to keep order.
+                    const classInline = domNode.getAttribute('class');
+                    if (classInline) {
+                        domNode.setAttribute('class', classInline);
+                    }
+                } else {
+                    const value = attributes[name];
+                    if (typeof value === 'string') {
+                        domNode.setAttribute(name, value);
+                    } else if (!value) {
+                        domNode.removeAttribute(name);
+                    }
                 }
             }
 

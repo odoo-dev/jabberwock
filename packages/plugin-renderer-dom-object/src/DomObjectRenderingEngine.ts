@@ -191,9 +191,13 @@ import { RuleProperty } from '../../core/src/Mode';
  *
  */
 
+export type DomObjectAttributes = Record<string, string | Set<string> | Record<string, string>> & {
+    class?: Set<string>;
+    style?: Record<string, string>;
+};
 export type DomObjectElement = {
     tag: string;
-    attributes?: Record<string, string>;
+    attributes?: DomObjectAttributes;
     children?: Array<DomObject | VNode>;
     attach?: (domNode: Element) => void;
     detach?: (domNode: Element) => void;
@@ -231,23 +235,22 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      */
     renderAttributes<T extends typeof Attributes>(Class: T, node: VNode, item: DomObject): void {
         if ('tag' in item) {
+            if (!item.attributes) item.attributes = {};
             const attributes = node.modifiers.find(Class);
             if (attributes) {
-                const attr = item.attributes || {};
+                const attr = item.attributes;
                 for (const name of attributes.keys()) {
-                    const value = attributes.get(name);
-                    if (name in attr) {
-                        attr[name] = item.attributes[name];
-                        if (name === 'class') {
-                            attr[name] = (attr[name] + ' ' + value).trim();
-                        } else if (name === 'style') {
-                            attr[name] += '; ' + value;
+                    if (name === 'class') {
+                        if (!attr.class) attr.class = new Set();
+                        for (const className of attributes.classList.items()) {
+                            attr.class.add(className);
                         }
+                    } else if (name === 'style') {
+                        attr.style = Object.assign({}, attributes.style.toJSON(), attr.style);
                     } else {
-                        attr[name] = value;
+                        attr[name] = attributes.get(name);
                     }
                 }
-                item.attributes = attr;
                 this._addOrigin(attributes, item);
             }
         }

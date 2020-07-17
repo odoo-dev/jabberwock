@@ -12,7 +12,7 @@ export class OdooMonetaryFieldDomObjectRenderer extends OdooFieldDomObjectRender
         const valueContainer: DomObjectElement = {
             tag: 'span',
             attributes: {
-                class: 'oe_currency_value',
+                class: new Set(['oe_currency_value']),
             },
         };
 
