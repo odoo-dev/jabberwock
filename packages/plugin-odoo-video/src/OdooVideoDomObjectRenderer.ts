@@ -30,11 +30,14 @@ export class OdooVideoHtmlDomRenderer extends NodeRenderer<DomObject> {
         };
         const wrapper: DomObject = {
             tag: 'DIV',
-            attributes: { class: 'media_iframe_video', 'data-oe-expression': node.src },
+            attributes: {
+                class: new Set(['media_iframe_video']),
+                'data-oe-expression': node.src,
+            },
             children: [
                 {
                     tag: 'DIV',
-                    attributes: { class: 'css_editable_mode_display' },
+                    attributes: { class: new Set(['css_editable_mode_display']) },
                     children: [{ text: '\u00A0' }],
                     attach: (el: HTMLElement): void => {
                         el.addEventListener('click', setSelection);
@@ -47,7 +50,7 @@ export class OdooVideoHtmlDomRenderer extends NodeRenderer<DomObject> {
                 },
                 {
                     tag: 'DIV',
-                    attributes: { class: 'media_iframe_video_size' },
+                    attributes: { class: new Set(['media_iframe_video_size']) },
                     children: [{ text: '\u00A0' }],
                 },
                 {

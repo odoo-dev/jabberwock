@@ -20,10 +20,22 @@ export class FormatDomObjectModifierRenderer extends ModifierRenderer<DomObject>
             children: contents,
         };
         const attributes = format.modifiers.find(Attributes);
-        if (attributes && attributes.keys().length) {
+        const keys = attributes?.keys();
+        if (keys?.length) {
             domObject.attributes = {};
-            for (const name of attributes.keys()) {
-                domObject.attributes[name] = attributes.get(name);
+
+            const attr = domObject.attributes;
+            for (const name of keys) {
+                if (name === 'class') {
+                    if (!attr.class) attr.class = new Set();
+                    for (const className of attributes.classList.items()) {
+                        attr.class.add(className);
+                    }
+                } else if (name === 'style') {
+                    attr.style = Object.assign({}, attributes.style.toJSON(), attr.style);
+                } else {
+                    attr[name] = attributes.get(name);
+                }
             }
         }
         return [domObject];

@@ -69,6 +69,12 @@ export class CssStyle {
         clone._style = { ...this._style };
         return clone;
     }
+    /**
+     * Return the style value as record.
+     */
+    toJSON(): Record<string, string> {
+        return Object.assign({}, this._style);
+    }
 
     //--------------------------------------------------------------------------
     // Public

@@ -13,7 +13,7 @@ export class LabelDomObjectRenderer extends NodeRenderer<DomObject> {
     async render(label: LabelNode): Promise<DomObject> {
         const objectLabel: DomObject = {
             tag: 'SPAN',
-            attributes: { class: 'label' },
+            attributes: { class: new Set(['label']) },
             children: [{ text: label.label }],
         };
         return objectLabel;

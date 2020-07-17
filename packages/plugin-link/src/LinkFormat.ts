@@ -6,7 +6,9 @@ export class LinkFormat extends Format {
         super('A');
         this.preserve = false;
         this.url = url;
-        this.target = target;
+        if (target) {
+            this.target = target;
+        }
     }
 
     // TODO: Attributes on Link should reactively read the values set on the

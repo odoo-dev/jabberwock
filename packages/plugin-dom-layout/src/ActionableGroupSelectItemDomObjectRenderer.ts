@@ -82,7 +82,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
             domObject = {
                 tag: 'OPTION',
                 attributes: {
-                    class: 'label',
+                    class: new Set(['label']),
                     disabled: 'true',
                 },
                 children: [{ text: item.label }],

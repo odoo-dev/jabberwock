@@ -33,7 +33,7 @@ export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
         // TODO CHM: not having default values is cumbersome
         container.attributes = container.attributes || {};
 
-        const classList = container.attributes.class?.split(' ') || [];
+        const classList = container.attributes.class || new Set();
 
         // Instances of the field containing the range are artificially focused.
         const focusedField = this.engine.editor.selection.range.start.ancestor(
@@ -41,19 +41,19 @@ export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
                 ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,
         );
         if (focusedField) {
-            classList.push('jw-focus');
+            classList.add('jw-focus');
         }
 
-        classList.push('jw-odoo-field');
+        classList.add('jw-odoo-field');
 
         if (!node.fieldInfo.isValid.get()) {
-            classList.push('jw-odoo-field-invalid');
+            classList.add('jw-odoo-field-invalid');
         }
 
         if (!node.descendants(AtomicNode).length) {
-            classList.push('jw-odoo-field-empty');
+            classList.add('jw-odoo-field-empty');
         }
 
-        container.attributes.class = classList.join(' ');
+        container.attributes.class = classList;
     }
 }

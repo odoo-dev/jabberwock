@@ -26,12 +26,12 @@ export class TemplateActionableDomObjectRenderer extends ActionableDomObjectRend
         domObject.children = [
             {
                 tag: 'JW-LABEL',
-                attributes: { class: 'label' },
+                attributes: { class: new Set(['label']) },
                 children: [{ text: template.label }],
             },
             {
                 tag: 'JW-THUMB',
-                attributes: { style: 'background-image: url(' + template.thumbnail + ')' },
+                attributes: { style: { 'background-image': 'url("' + template.thumbnail + '")' } },
             },
         ];
         return domObject;

@@ -40,14 +40,3 @@ export function nodeLength(node: Node): number {
         return node.childNodes.length;
     }
 }
-
-export function styleToObject(style: string): Record<string, string> {
-    const obj: Record<string, string> = {};
-    for (const styleValue of style.split(/\s*;\s*/)) {
-        const [key, value] = styleValue.split(/\s*:\s*/, 2);
-        if (key) {
-            obj[key] = value;
-        }
-    }
-    return obj;
-}
