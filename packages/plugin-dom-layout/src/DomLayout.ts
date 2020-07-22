@@ -164,10 +164,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         // ancestor. So we expect to find the main editor ZoneNode if we are in
         // the editable part of Jabberwock.
         return (
-            (node &&
-                (isContentEditable(node) || this.editor.mode.is(node, RuleProperty.EDITABLE)) &&
-                node.ancestor(ZoneNode).managedZones.includes('main')) ||
-            false
+            node &&
+            (isContentEditable(node) || this.editor.mode.is(node, RuleProperty.EDITABLE)) &&
+            !!node.ancestor(node => node instanceof ZoneNode && node.managedZones.includes('main'))
         );
     }
 

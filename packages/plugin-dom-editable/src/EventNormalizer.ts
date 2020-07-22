@@ -462,7 +462,7 @@ export class EventNormalizer {
      * If an event is triggered inside a shadow dom, we instanciate a new
      * EventNormalizer in the shadow dom.
      */
-    private _shadowNormalizers = new Map<ShadowRoot, EventNormalizer>();
+    private _shadowNormalizers = new Map<Document | ShadowRoot, EventNormalizer>();
 
     /**
      *
@@ -472,8 +472,9 @@ export class EventNormalizer {
     constructor(
         private _isInEditable: (node: Node) => boolean,
         private _triggerEventBatch: TriggerEventBatchCallback,
-        root: Document | ShadowRoot = document,
+        private root: Document | ShadowRoot = document,
     ) {
+        this._shadowNormalizers.set(root, this);
         this.initNextObservation();
 
         this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
@@ -482,10 +483,13 @@ export class EventNormalizer {
         this._bindEventInEditable(root, 'beforeinput', this._registerEvent);
         this._bindEventInEditable(root, 'input', this._registerEvent);
 
-        this._bindEvent(document, 'selectionchange', this._onSelectionChange);
+        this._bindEvent(root.ownerDocument || root, 'selectionchange', this._onSelectionChange);
         this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
         this._bindEvent(root, 'mousedown', this._onPointerDown);
         this._bindEvent(root, 'touchstart', this._onPointerDown);
+        this._bindEvent(root, 'load-iframe', this._onEventEnableNormalizer);
+        this._bindEvent(root, 'mousedown', this._onEventEnableNormalizer);
+        this._bindEvent(root, 'touchstart', this._onEventEnableNormalizer);
         this._bindEvent(root, 'mouseup', this._onPointerUp);
         this._bindEvent(root, 'touchend', this._onPointerUp);
         this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
@@ -500,6 +504,11 @@ export class EventNormalizer {
         this._mutationNormalizer = new MutationNormalizer(
             root instanceof Document ? root.body : root.lastElementChild,
         );
+
+        // Create EventNormalizer for all already loaded iframes.
+        for (const iframe of root.querySelectorAll('iframe')) {
+            this._enableNormalizer(iframe);
+        }
     }
     /**
      * Called when destroy the event normalizer.
@@ -509,7 +518,9 @@ export class EventNormalizer {
     destroy(): void {
         this._mutationNormalizer.destroy();
         this._unbindEvents();
-        this._shadowNormalizers.forEach(eventNormalizer => eventNormalizer.destroy());
+        this._shadowNormalizers.forEach(
+            eventNormalizer => eventNormalizer !== this && eventNormalizer.destroy(),
+        );
         this._triggerEventBatch = null;
         this._isInEditable = null;
     }
@@ -528,7 +539,15 @@ export class EventNormalizer {
      * @param listener to call when the even occurs on the target
      */
     _bindEvent(target: Document | ShadowRoot, type: string, listener: Function): void {
-        const boundListener = listener.bind(this);
+        const boundListener = (ev: EventToProcess): void => {
+            if ('target' in ev) {
+                const doc = (ev.target as Node).ownerDocument;
+                if (doc !== this.root && doc !== this.root.ownerDocument) {
+                    return;
+                }
+            }
+            listener.call(this, ev);
+        };
         this._eventListeners.push({
             target: target,
             type: type,
@@ -548,22 +567,16 @@ export class EventNormalizer {
     _bindEventInEditable(target: Document | ShadowRoot, type: string, listener: Function): void {
         const boundListener = (ev: EventToProcess): void => {
             let eventTarget = 'target' in ev && (ev.target as Node);
-            const shadowRoot = eventTarget instanceof Element && eventTarget.shadowRoot;
-            if (shadowRoot) {
-                if (!this._shadowNormalizers.get(shadowRoot)) {
-                    const eventNormalizer = new EventNormalizer(
-                        this._isInEditable,
-                        this._triggerEventBatch,
-                        shadowRoot,
-                    );
-                    this._shadowNormalizers.set(shadowRoot, eventNormalizer);
-                }
+            if (
+                eventTarget instanceof Element &&
+                (eventTarget.shadowRoot || nodeName(eventTarget) === 'IFRAME')
+            ) {
+                this._enableNormalizer(eventTarget);
             } else {
-                if (
-                    eventTarget &&
-                    (ev instanceof MouseEvent || (window.TouchEvent && ev instanceof TouchEvent))
-                ) {
-                    eventTarget = this._getEventTarget(ev);
+                if (eventTarget && ev.constructor.name === 'MouseEvent') {
+                    eventTarget = this._getEventTarget(ev as MouseEvent);
+                } else if (eventTarget && ev.constructor.name === 'TouchEvent') {
+                    eventTarget = this._getEventTarget(ev as TouchEvent);
                 } else {
                     eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
                 }
@@ -761,10 +774,7 @@ export class EventNormalizer {
                 keypressEvent.key !== 'Unidentified' &&
                 keypressEvent.key !== 'Dead' &&
                 keypressEvent.key) ||
-            (inputEvent &&
-                inputEvent.data !== null &&
-                inputEvent.data.length === 1 &&
-                inputEvent.data) ||
+            (inputEvent && inputEvent.data?.length === 1 && inputEvent.data) ||
             (keydownEvent &&
                 keydownEvent.key !== 'Unidentified' &&
                 keydownEvent.key !== 'Dead' &&
@@ -1556,9 +1566,16 @@ export class EventNormalizer {
      * @param ev
      */
     _getEventCaretPosition(ev: MouseEvent | TouchEvent): CaretPosition {
-        const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
-        const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
-        let caretPosition = caretPositionFromPoint(x, y);
+        const x =
+            ev.constructor.name === 'TouchEvent'
+                ? (ev as TouchEvent).touches[0].clientX
+                : (ev as MouseEvent).clientX;
+        const y =
+            ev.constructor.name === 'TouchEvent'
+                ? (ev as TouchEvent).touches[0].clientY
+                : (ev as MouseEvent).clientY;
+        const target = ev.target as Node;
+        let caretPosition = caretPositionFromPoint(x, y, target.ownerDocument);
         if (!caretPosition) {
             caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
@@ -1571,9 +1588,16 @@ export class EventNormalizer {
      * @param ev
      */
     _getEventTarget(ev: MouseEvent | TouchEvent): Node {
-        const x = ev instanceof MouseEvent ? ev.clientX : ev.touches[0].clientX;
-        const y = ev instanceof MouseEvent ? ev.clientY : ev.touches[0].clientY;
-        return elementFromPoint(x, y) || (ev.target as Node);
+        const x =
+            ev.constructor.name === 'TouchEvent'
+                ? (ev as TouchEvent).touches[0].clientX
+                : (ev as MouseEvent).clientX;
+        const y =
+            ev.constructor.name === 'TouchEvent'
+                ? (ev as TouchEvent).touches[0].clientY
+                : (ev as MouseEvent).clientY;
+        const target = ev.target as Node;
+        return elementFromPoint(x, y, target.ownerDocument) || target;
     }
 
     //--------------------------------------------------------------------------
@@ -1886,6 +1910,35 @@ export class EventNormalizer {
             // select all. The point is to avoid triggering a new event for a
             // selection change if everything was already selected beforehand.
             this._currentlySelectingAll = isSelectAll;
+        }
+    }
+    /**
+     * Create an instance of EventNormalizer if the pointer touch a shadow node.
+     *
+     * @param {MouseEvent} ev
+     */
+    _onEventEnableNormalizer(ev: MouseEvent | TouchEvent): void {
+        this._enableNormalizer(ev.target as Element);
+    }
+    /**
+     * Create an instance of EventNormalizer for the given element with shadow
+     * content or iframe content.
+     * To be editable an iframe cannot have src because it must be an iframe
+     * with content generated by the editor.
+     *
+     * @param {Element} el
+     */
+    private _enableNormalizer(el: Element): void {
+        const root =
+            el.shadowRoot ||
+            (el instanceof HTMLIFrameElement && !el.src && el.contentWindow.document);
+        if (root && !this._shadowNormalizers.get(root)) {
+            const eventNormalizer = new EventNormalizer(
+                this._isInEditable,
+                this._triggerEventBatch,
+                root,
+            );
+            this._shadowNormalizers.set(root, eventNormalizer);
         }
     }
 }

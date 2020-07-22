@@ -12,6 +12,8 @@ import { renderTextualSelection } from '../../utils/src/testUtils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable, createEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { VElement } from '../../core/src/VNodes/VElement';
 
 async function selectAllWithKeyA(container: HTMLElement): Promise<void> {
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
@@ -925,6 +927,60 @@ describe('DomEditable', () => {
                 focusNode: container.querySelector('section').firstChild.firstChild,
                 focusOffset: 2,
             });
+        });
+        it('mouse setRange (ubuntu chrome)', async () => {
+            editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section),
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
+            await editor.start();
+
+            expect(!!editor.selection.anchor.parent).to.equal(false);
+
+            const editable = container.querySelector('section');
+            const p1 = editable.firstChild;
+            const text1 = p1.firstChild;
+            const p2 = editable.childNodes[1];
+            const text2 = p2.firstChild;
+            await nextTick();
+
+            triggerEvent(p1, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 10,
+                clientY: 10,
+            });
+            setSelection(text1, 1, text1, 1);
+            setSelection(text1, 1, text2, 1);
+            triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+            triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+
+            await nextTick();
+            await nextTick();
+
+            const sectionNode = editor.selection.anchor.ancestor(
+                node => node instanceof VElement && node.htmlTag === 'SECTION',
+            );
+            expect(!!sectionNode).to.equal(true);
+            expect(editor.selection.anchor.previous()?.id).to.equal(
+                sectionNode.firstDescendant(CharNode).id,
+            );
+            expect(editor.selection.focus.previous()?.id).to.equal(
+                sectionNode.children()[1].firstChild().id,
+            );
         });
     });
 });

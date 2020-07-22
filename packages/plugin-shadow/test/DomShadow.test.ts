@@ -523,7 +523,7 @@ describe('DomShadow', async () => {
                                 const nodes = await parseEditable(editor, section);
                                 const shadow = new ShadowNode();
                                 shadow.append(...nodes);
-                                return nodes;
+                                return [shadow];
                             },
                         },
                     ],
@@ -540,7 +540,7 @@ describe('DomShadow', async () => {
                     return execCommand.call(editor, commandName, params);
                 };
                 domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                editable = domEngine.components.get('editable')[0];
+                editable = domEngine.components.get('editable')[0].firstChild();
             });
             afterEach(async () => {
                 return editor.stop();
@@ -682,6 +682,12 @@ describe('DomShadow', async () => {
             });
             it('select all: ctrl + a', async () => {
                 let domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                triggerEvent(domEditable, 'mousedown', {
+                    button: 2,
+                    detail: 1,
+                    clientX: 10,
+                    clientY: 10,
+                });
                 triggerEvent(domEditable, 'keydown', {
                     key: 'Control',
                     code: 'ControlLeft',
@@ -1120,7 +1126,7 @@ describe('DomShadow', async () => {
                             const nodes = await parseEditable(editor, section);
                             const shadow = new ShadowNode();
                             shadow.append(...nodes);
-                            return nodes;
+                            return [shadow];
                         },
                     },
                 ],
@@ -1147,7 +1153,7 @@ describe('DomShadow', async () => {
                 return execCommand.call(editor, commandName, params);
             };
             const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            const editable = domEngine.components.get('editable')[0];
+            const editable = domEngine.components.get('editable')[0].firstChild();
 
             // key: o
             await triggerEvents([
@@ -1196,6 +1202,66 @@ describe('DomShadow', async () => {
                 focusNode: domEditable.firstChild.firstChild,
                 focusOffset: 2,
             });
+        });
+        it('mouse setRange (ubuntu chrome)', async () => {
+            const editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(Shadow);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const shadow = new ShadowNode();
+                            shadow.append(...nodes);
+                            return [shadow];
+                        },
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
+            await editor.start();
+
+            expect(!!editor.selection.anchor.parent).to.equal(false);
+
+            const shadowRoot = container.querySelector('jw-shadow').shadowRoot;
+            const editable = shadowRoot.querySelector('section');
+            const p1 = editable.firstChild;
+            const text1 = p1.firstChild;
+            const p2 = editable.childNodes[1];
+            const text2 = p2.firstChild;
+            await nextTick();
+
+            triggerEvent(p1, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 10,
+                clientY: 10,
+            });
+            setSelection(text1, 1, text1, 1);
+            setSelection(text1, 1, text2, 1);
+            triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+            triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+            await nextTick();
+            await nextTick();
+
+            const sectionNode = editor.selection.anchor.ancestor(
+                node => node instanceof VElement && node.htmlTag === 'SECTION',
+            );
+            expect(!!sectionNode).to.equal(true);
+            expect(editor.selection.anchor.previous()?.id).to.equal(
+                sectionNode.firstDescendant(CharNode).id,
+            );
+            expect(editor.selection.focus.previous()?.id).to.equal(
+                sectionNode.children()[1].firstChild().id,
+            );
+            await editor.stop();
         });
     });
 });
