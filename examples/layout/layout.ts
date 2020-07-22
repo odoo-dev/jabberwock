@@ -24,6 +24,7 @@ import { Template } from '../../packages/plugin-template/src/Template';
 import { ZoneNode } from '../../packages/plugin-layout/src/ZoneNode';
 import { ParagraphNode } from '../../packages/plugin-paragraph/src/ParagraphNode';
 import { ThemeNode } from '../../packages/plugin-theme/src/ThemeNode';
+import { Iframe } from '../../packages/plugin-iframe/src/Iframe';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
@@ -31,6 +32,7 @@ jabberwocky.init(target);
 const editor = new BasicEditor();
 editor.load(DevTools);
 editor.load(Shadow);
+editor.load(Iframe);
 editor.configure(Template, {
     components: [
         {
@@ -96,6 +98,18 @@ editor.configure(Theme, {
                     .parse(
                         'text/html',
                         `<div style="background: lightblue; height: 100%;"><t-placeholder/></div>`,
+                    );
+            },
+        },
+        {
+            id: 'iframe',
+            label: 'Theme color red in iframe',
+            render: async (editor: JWEditor): Promise<VNode[]> => {
+                return editor.plugins
+                    .get(Parser)
+                    .parse(
+                        'text/html',
+                        `<t-iframe style="border: 0; width: 100%;"><div style="background: #ffaaaa; height: 100%;"><t-placeholder/></div></t-iframe>`,
                     );
             },
         },

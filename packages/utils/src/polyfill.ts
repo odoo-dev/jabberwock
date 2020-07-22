@@ -2,33 +2,50 @@ import { CaretPosition } from '../../plugin-dom-editable/src/EventNormalizer';
 import { targetDeepest } from './Dom';
 import { getDocument } from './utils';
 
-export function elementFromPoint(x: number, y: number): Node {
-    let element = document.elementFromPoint(x, y);
+export function elementFromPoint(
+    x: number,
+    y: number,
+    root: Document | ShadowRoot = document,
+): Node {
+    let element = root.elementFromPoint(x, y);
     if (element) {
-        let root: Document | ShadowRoot;
         root = element.ownerDocument;
-        while (element.shadowRoot && element.shadowRoot !== root) {
+        while (element.shadowRoot) {
             root = element.shadowRoot;
             element = root.elementFromPoint(x, y);
+            if (element.shadowRoot === root) {
+                if (root.firstElementChild) {
+                    element = root.lastElementChild;
+                    if (element.getBoundingClientRect().x > x) {
+                        element = root.firstElementChild;
+                    }
+                } else {
+                    break;
+                }
+            }
         }
         return element;
     }
 }
 
-export function caretPositionFromPoint(x: number, y: number): CaretPosition {
+export function caretPositionFromPoint(
+    x: number,
+    y: number,
+    root: Document | ShadowRoot = document,
+): CaretPosition {
     if ((!x && x !== 0) || (!y && y !== 0)) return;
 
     // There is no cross-browser function for this, but the three functions below
     // cover all modern browsers as well as the shadow DOM.
     let caretPosition: CaretPosition;
 
-    const element = elementFromPoint(x, y);
+    const element = elementFromPoint(x, y, root);
 
     if (!element) {
         return;
     }
 
-    const root = getDocument(element);
+    root = getDocument(element);
     if (root.caretPositionFromPoint) {
         caretPosition = root.caretPositionFromPoint(x, y);
     } else if (root instanceof ShadowRoot) {
@@ -41,10 +58,10 @@ export function caretPositionFromPoint(x: number, y: number): CaretPosition {
             };
         }
     } else {
-        const carretRange = root.caretRangeFromPoint(x, y);
-        caretPosition = {
-            offsetNode: carretRange.startContainer,
-            offset: carretRange.startOffset,
+        const caretRange = root.caretRangeFromPoint(x, y);
+        caretPosition = caretRange && {
+            offsetNode: caretRange.startContainer,
+            offset: caretRange.startOffset,
         };
     }
 
