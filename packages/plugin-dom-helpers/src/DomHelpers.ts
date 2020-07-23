@@ -5,6 +5,23 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { Format } from '../../core/src/Format';
+import { Modifiers } from '../../core/src/Modifiers';
+import { flat } from '../../utils/src/utils';
+
+function getAllAttributesModifiers(modifiers: Modifiers): Attributes[] {
+    return flat(
+        modifiers
+            .filter(modifier => modifier instanceof Attributes || modifier instanceof Format)
+            .map((modifier): Attributes[] => {
+                if (modifier instanceof Format) {
+                    return getAllAttributesModifiers(modifier.modifiers);
+                } else {
+                    return [modifier as Attributes];
+                }
+            }),
+    );
+}
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------
@@ -31,7 +48,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
     async removeClass(domNode: Node | Node[], className: string | string[]): Promise<void> {
         const classes = Array.isArray(className) ? className : [className];
         for (const node of this.getNodes(domNode)) {
-            node.modifiers.find(Attributes)?.classList.remove(...classes);
+            if (node.modifiers) {
+                const modifiers = getAllAttributesModifiers(node.modifiers);
+                for (const modifier of modifiers) {
+                    modifier.classList.remove(...classes);
+                }
+            }
         }
         await this.editor.dispatcher.dispatchHooks('@redraw');
     }
