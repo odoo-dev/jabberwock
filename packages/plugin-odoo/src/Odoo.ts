@@ -51,6 +51,18 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 },
             },
             {
+                id: 'OdooColorPickerButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'colorpicker',
+                        label: 'Color picker',
+                        commandId: 'openColorPicker',
+                        modifiers: [new Attributes({ class: 'fa fa-eyedropper fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
                 id: 'OdooDiscardButton',
                 async render(): Promise<ActionableNode[]> {
                     const button = new ActionableNode({
