@@ -559,7 +559,10 @@ export class EventNormalizer {
                     this._shadowNormalizers.set(shadowRoot, eventNormalizer);
                 }
             } else {
-                if (eventTarget && (ev instanceof MouseEvent || ev instanceof TouchEvent)) {
+                if (
+                    eventTarget &&
+                    (ev instanceof MouseEvent || (window.TouchEvent && ev instanceof TouchEvent))
+                ) {
                     eventTarget = this._getEventTarget(ev);
                 } else {
                     eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
