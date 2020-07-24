@@ -43,6 +43,17 @@ type DiffDomObject = {
 
 let diffObjectId = 0;
 
+/**
+ * Set the style of an element keeping the "!important" css modifier in the value
+ */
+function setStyle(element: HTMLElement, name: string, value: string): void {
+    if (value.includes('!important')) {
+        element.style.setProperty(name, value.replace('!important', ''), 'important');
+    } else {
+        element.style.setProperty(name, value);
+    }
+}
+
 export class DomReconciliationEngine {
     private _objects: Record<DomObjectID, DomObjectMapping> = {};
     private readonly _fromItem = new Map<VNode | Modifier, DomObjectID>();
@@ -1276,7 +1287,7 @@ export class DomReconciliationEngine {
                 }
                 if (!diff.askCompleteRedrawing) {
                     for (const name in diff.style) {
-                        domNode.style.setProperty(name, diff.style[name] || '');
+                        setStyle(domNode, name, diff.style[name] || '');
                     }
                     for (const name in diff.classList) {
                         if (diff.classList[name]) {
@@ -1298,7 +1309,7 @@ export class DomReconciliationEngine {
                 if (name === 'style') {
                     const style = attributes[name];
                     for (const name in style) {
-                        domNode.style.setProperty(name, style[name]);
+                        setStyle(domNode, name, style[name]);
                     }
                     // Now we set the attribute again to keep order.
                     const styleInline = domNode.getAttribute('style');

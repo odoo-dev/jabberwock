@@ -4691,6 +4691,28 @@ describe('DomLayout', () => {
 
                     expect(mutationNumber).to.equal(1, 'add style');
                 });
+                it('should add a style node with !important', async () => {
+                    const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const pDom = container.querySelector('p');
+                    const text = pDom.firstChild;
+
+                    const attributes = new Attributes();
+                    attributes.set('style', 'border: 1px !important;');
+                    div.firstChild().modifiers.prepend(attributes);
+
+                    await nextTick();
+                    mutationNumber = 0;
+
+                    await engine.redraw(div.firstChild());
+
+                    expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                    expect(pDom.firstChild === text).to.equal(true, 'Use same text');
+                    expect(container.innerHTML).to.equal(
+                        '<jw-editor><div><p style="border: 1px !important;">1</p><p>2</p><p>3</p></div></jw-editor>',
+                    );
+
+                    expect(mutationNumber).to.equal(1, 'add style');
+                });
                 it('should remove a style node', async () => {
                     const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                     const pDom = container.querySelector('p');
