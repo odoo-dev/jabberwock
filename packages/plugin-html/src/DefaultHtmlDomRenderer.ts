@@ -36,10 +36,12 @@ export class DefaultHtmlDomRenderer extends NodeRenderer<Node[]> {
             if (attributes) {
                 for (const name in attributes) {
                     if (name === 'style') {
-                        const style = attributes[name];
-                        for (const name in style) {
-                            element.style[name] = style[name];
-                        }
+                        element.setAttribute(
+                            'style',
+                            Object.keys(attributes.style)
+                                .map(styleName => `${styleName}: ${attributes.style[styleName]};`)
+                                .join(''),
+                        );
                     } else if (name === 'class') {
                         const classList = attributes[name];
                         for (const className of classList) {
