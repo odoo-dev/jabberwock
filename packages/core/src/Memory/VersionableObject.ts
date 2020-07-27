@@ -71,24 +71,6 @@ export interface ProxyObjectHandler {
 }
 
 export const proxyObjectHandler = {
-    get(obj: object, prop: keyType, proxy: object): MemoryAllowedType {
-        if (prop === memoryProxyPramsKey || prop === 'toString' || prop === 'constructor') {
-            return obj[prop];
-        }
-
-        const desc = Object.getOwnPropertyDescriptor(obj, prop);
-        if (desc?.get) {
-            return desc.get.call(proxy);
-        }
-
-        const params = obj[memoryProxyPramsKey];
-        const protoMethod = params.proto.getters[prop as string];
-        if (protoMethod) {
-            return protoMethod.call(proxy);
-        }
-
-        return obj[prop];
-    },
     set(obj: object, prop: keyType, value: MemoryAllowedType, proxy: object): boolean {
         // Object.assign might try to set the value of the paramsKey. We
         // obviously don't want that. Let it think it succeeded (returning false
