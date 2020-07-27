@@ -395,6 +395,23 @@
         </devtools-contents>
     </devtools-panel>
 
+    <!-- PLUGINS -->
+    <devtools-panel t-name="PluginsComponent"
+        t-att-class="{active: props.isOpen}" tabindex="1"
+        t-on-keydown="onKeydown">
+        <devtools-contents t-if="props.isOpen">
+            <devtools-mainpane style="overflow: hidden">
+                <mainpane-contents style="overflow: auto">
+                    <devtools-table>
+                        <devtools-tr t-foreach="plugins" t-as="plugin" t-key="plugin_index" class="selectable-line">
+                            <devtools-td><t t-esc="plugin"/></devtools-td>
+                        </devtools-tr>
+                    </devtools-table>
+                </mainpane-contents>
+            </devtools-mainpane>
+        </devtools-contents>
+    </devtools-panel>
+
     <!-- MAIN -->
     <jw-devtools t-name="devtools"
         t-att-class="{
@@ -415,6 +432,9 @@
             <devtools-button t-on-click="openTab('shortcuts')" t-att-class="{
                 selected: state.currentTab == 'shortcuts',
             }">Shortcuts</devtools-button>
+            <devtools-button t-on-click="openTab('plugins')" t-att-class="{
+                selected: state.currentTab == 'plugins',
+            }">Plugins</devtools-button>
             <devtools-button t-on-click="inspectDom()">&#128269;</devtools-button>
         </devtools-navbar>
         <t t-if="!state.closed">
@@ -422,6 +442,7 @@
             <CommandsComponent isOpen="state.currentTab == 'commands'"
                 commands="state.commands"/>
             <ShortcutsComponent isOpen="state.currentTab == 'shortcuts'"/>
+            <PluginsComponent isOpen="state.currentTab == 'plugins'"/>
         </t>
     </jw-devtools>
 
