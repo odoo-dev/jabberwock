@@ -26,7 +26,9 @@ export class PreCharDomObjectRenderer extends CharDomObjectRenderer {
         const stack = [...domObjects];
         for (const domObject of stack) {
             if ('text' in domObject) {
-                domObject.text = domObject.text.replace(/\u00A0/g, ' ');
+                domObject.text = domObject.text
+                    .replace(/\u00A0/g, ' ')
+                    .replace(/\u2003/g, '\u0009');
             }
             if ('children' in domObject) {
                 for (const child of domObject.children) {

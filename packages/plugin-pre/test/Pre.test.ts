@@ -60,6 +60,12 @@ describePlugin(Pre, testEditor => {
                     '                de</pre>',
             });
         });
+        it('should parse a pre with non-breaking space and tabulation', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<pre>a\u2003b\u00A0c</pre>`,
+                contentAfter: `<pre>a\tb c</pre>`,
+            });
+        });
     });
     describe('deleteForward', () => {
         describe('Selection collapsed', () => {
