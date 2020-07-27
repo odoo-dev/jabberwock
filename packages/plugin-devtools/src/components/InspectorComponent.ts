@@ -7,6 +7,7 @@ import { Layout } from '../../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../../plugin-dom-layout/src/DomLayoutEngine';
 import { caretPositionFromPoint } from '../../../utils/src/polyfill';
 import { CharNode } from '../../../plugin-char/src/CharNode';
+import { nodeName } from '../../../utils/src/utils';
 
 const hoverStyle = 'box-shadow: inset 0 0 0 100vh rgba(95, 146, 204, 0.5); cursor: pointer;';
 
@@ -31,9 +32,11 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         selectedID: this.domEngine.components.get('editable')[0]?.id || this.domEngine.root.id,
     };
     selectedNode = this.getNode(this.state.selectedID);
+    private _inspecting = new Set<Document | ShadowRoot>();
 
     constructor(parent?: OwlComponent<{}>, props?: InspectorComponentProps) {
         super(parent, props);
+        this._onInspectorMouseEnter = this._onInspectorMouseEnter.bind(this);
         this._onInspectorMouseMove = this._onInspectorMouseMove.bind(this);
         this._onInspectorMouseLeave = this._onInspectorMouseLeave.bind(this);
         this._onInspectorMouseDown = this._onInspectorMouseDown.bind(this);
@@ -126,17 +129,32 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
      *
      * @param ev
      */
-    inspectDom(): void {
-        window.addEventListener('mousemove', this._onInspectorMouseMove, true);
-        window.addEventListener('mouseleave', this._onInspectorMouseLeave, true);
-        window.addEventListener('mousedown', this._onInspectorMouseDown, true);
-        window.addEventListener('click', this._onInspectorClick, true);
+    inspectDom(doc: Document | ShadowRoot = document): void {
+        if (!this._inspecting.has(doc)) {
+            this._inspecting.add(doc);
+            doc.addEventListener('mouseenter', this._onInspectorMouseEnter, true);
+            doc.addEventListener('mousemove', this._onInspectorMouseMove, true);
+            doc.addEventListener('mouseleave', this._onInspectorMouseLeave, true);
+            doc.addEventListener('mousedown', this._onInspectorMouseDown, true);
+            doc.addEventListener('click', this._onInspectorClick, true);
+        }
     }
 
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
+    private async _onInspectorMouseEnter(ev: MouseEvent): Promise<void> {
+        const el = ev.target as Element;
+        if (nodeName(el) === 'IFRAME') {
+            const doc = (ev.target as HTMLIFrameElement).contentWindow?.document;
+            if (doc) {
+                this.inspectDom(doc);
+            }
+        } else if (el.shadowRoot) {
+            this.inspectDom(el.shadowRoot);
+        }
+    }
     /**
      * Add a class to highlight the targeted node (like to VNode).
      *
@@ -151,7 +169,11 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         this._hoveredTargets = [];
 
         const elements: HTMLElement[] = [];
-        for (const node of this._getNodeFromPosition(ev.clientX, ev.clientY)) {
+        for (const node of this._getNodeFromPosition(
+            ev.clientX,
+            ev.clientY,
+            (ev.target as Node).ownerDocument,
+        )) {
             for (const domNode of this.domEngine.getDomNodes(node)) {
                 const element = domNode instanceof HTMLElement ? domNode : domNode.parentElement;
                 if (!elements.includes(element)) {
@@ -192,8 +214,8 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         ev.stopImmediatePropagation();
         ev.preventDefault();
     }
-    private _getNodeFromPosition(clientX: number, clientY: number): VNode[] {
-        const caretPosition = caretPositionFromPoint(clientX, clientY);
+    private _getNodeFromPosition(clientX: number, clientY: number, doc: Document): VNode[] {
+        const caretPosition = caretPositionFromPoint(clientX, clientY, doc);
         let node = caretPosition?.offsetNode;
         let nodes = [];
         while (!nodes.length && node) {
@@ -211,10 +233,14 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
      * @param ev
      */
     private async _onInspectorClick(ev: MouseEvent): Promise<void> {
-        window.removeEventListener('mousemove', this._onInspectorMouseMove, true);
-        window.removeEventListener('mouseleave', this._onInspectorMouseLeave, true);
-        window.removeEventListener('mousedown', this._onInspectorMouseDown, true);
-        window.removeEventListener('click', this._onInspectorClick, true);
+        for (const doc of this._inspecting) {
+            doc.removeEventListener('mouseenter', this._onInspectorMouseEnter, true);
+            doc.removeEventListener('mousemove', this._onInspectorMouseMove, true);
+            doc.removeEventListener('mouseleave', this._onInspectorMouseLeave, true);
+            doc.removeEventListener('mousedown', this._onInspectorMouseDown, true);
+            doc.removeEventListener('click', this._onInspectorClick, true);
+        }
+        this._inspecting.clear();
         ev.stopImmediatePropagation();
         ev.preventDefault();
         for (const inspected of this._hoveredTargets) {
@@ -222,7 +248,11 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
         }
         this._hoveredTargets = [];
 
-        const nodes = this._getNodeFromPosition(ev.clientX, ev.clientY);
+        const nodes = this._getNodeFromPosition(
+            ev.clientX,
+            ev.clientY,
+            (ev.target as Node).ownerDocument,
+        );
         if (nodes.length) {
             this.state.selectedID = nodes[0].id;
             this.selectedNode = this.getNode(this.state.selectedID);
