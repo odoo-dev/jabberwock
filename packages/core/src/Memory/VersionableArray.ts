@@ -45,7 +45,7 @@ const proxyArrayHandler = {
         }
         const params = array[memoryProxyPramsKey];
         if (!params.memory) {
-            return proxyObjectHandler.get(array, prop, proxy);
+            return array[prop];
         }
         switch (prop) {
             case 'indexOf':
@@ -69,7 +69,7 @@ const proxyArrayHandler = {
             case 'filter':
                 return filter.bind(proxy, params);
             default:
-                return proxyObjectHandler.get(array, prop, proxy);
+                return array[prop];
         }
     },
     set(
