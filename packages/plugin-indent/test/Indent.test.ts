@@ -898,54 +898,48 @@ describePlugin(Indent, testEditor => {
         });
     });
     describe('indent', () => {
-        it('should indent 4 spaces tab when range is collapsed', async () => {
+        it('should insert tabulation when range is collapsed', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>[]a</p>',
                 stepFunction: indent,
-                contentAfter: '<p>&nbsp;&nbsp; &nbsp;[]a</p>',
+                contentAfter: '<p>\u2003[]a</p>',
             });
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[]</p>',
                 stepFunction: indent,
-                contentAfter: '<p>a &nbsp; &nbsp;[]</p>',
+                contentAfter: '<p>a\u2003[]</p>',
             });
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[]b</p>',
                 stepFunction: indent,
-                contentAfter: '<p>a &nbsp; &nbsp;[]b</p>',
+                contentAfter: '<p>a\u2003[]b</p>',
             });
         });
-        it('should replace text with 4 spaces when only one parent selected', async function() {
+        it('should replace text with tabulation when only one parent selected', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[b]</p>',
                 stepFunction: indent,
-                contentAfter: '<p>a &nbsp; &nbsp;[]</p>',
+                contentAfter: '<p>a\u2003[]</p>',
             });
         });
-        it('should replace text with 4 spaces when selection in multiples lines', async function() {
+        it('should replace text with tabulations when selection in multiples lines', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[b<br/>c]d</p>',
                 stepFunction: indent,
-                contentAfter: '<p>&nbsp;&nbsp; &nbsp;a[b<br>&nbsp;&nbsp; &nbsp;c]d</p>',
+                contentAfter: '<p>\u2003a[b<br>\u2003c]d</p>',
             });
         });
 
-        it('should indent with 4 space when multiples paragraph', async function() {
+        it('should indent with tabulations when multiples paragraph', async function() {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[b</p><p>cd</p><p>e]f</p>',
                 stepFunction: indent,
-                contentAfter:
-                    '<p>&nbsp;&nbsp; &nbsp;a[b</p>' +
-                    '<p>&nbsp;&nbsp; &nbsp;cd</p>' +
-                    '<p>&nbsp;&nbsp; &nbsp;e]f</p>',
+                contentAfter: '<p>\u2003a[b</p>' + '<p>\u2003cd</p>' + '<p>\u2003e]f</p>',
             });
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a[b</p><p><br/></p><p>e]f</p>',
                 stepFunction: indent,
-                contentAfter:
-                    '<p>&nbsp;&nbsp; &nbsp;a[b</p>' +
-                    '<p>&nbsp;&nbsp; &nbsp;</p>' +
-                    '<p>&nbsp;&nbsp; &nbsp;e]f</p>',
+                contentAfter: '<p>\u2003a[b</p>' + '<p>\u2003</p>' + '<p>\u2003e]f</p>',
             });
         });
         it('should indent with a fake range', async function() {
@@ -964,80 +958,77 @@ describePlugin(Indent, testEditor => {
                         });
                     });
                 },
-                contentAfter: '&nbsp;&nbsp; &nbsp;ab<br>&nbsp;&nbsp; &nbsp;cd[]',
+                contentAfter: '\u2003ab<br>\u2003cd[]',
             });
         });
     });
     describe('outdent', function() {
         it('should do nothing if no space at the beginning of line', async function() {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>a[]b<br>&nbsp;&nbsp; &nbsp;cd</p>',
+                contentBefore: '<p>a[]b<br>\u2003cd</p>',
                 stepFunction: outdent,
-                contentAfter: '<p>a[]b<br>&nbsp;&nbsp; &nbsp;cd</p>',
+                contentAfter: '<p>a[]b<br>\u2003cd</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore: '<p>a[]b</p><p>&nbsp;&nbsp; &nbsp;cd</p>',
+                contentBefore: '<p>a[]b</p><p>\u2003cd</p>',
                 stepFunction: outdent,
-                contentAfter: '<p>a[]b</p><p>&nbsp;&nbsp; &nbsp;cd</p>',
+                contentAfter: '<p>a[]b</p><p>\u2003cd</p>',
             });
         });
         it('should outdent when only one parent selected', async function() {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[]b</p>',
+                contentBefore: '<p>\u2003a[]b</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[]b</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; a[]b</p>',
+                contentBefore: '<p>\u2003a[]b</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[]b</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b]</p>',
+                contentBefore: '<p>\u2003a[b]</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b]</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; a[b]</p>',
+                contentBefore: '<p>\u2003a[b]</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b]</p>',
             });
         });
-        it('should outdent(up to 4 spaces) when selection in multiples lines', async function() {
+        it('should outdent when selection in multiples lines', async function() {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b<br/>&nbsp;&nbsp; &nbsp;c]d</p>',
+                contentBefore: '<p>\u2003a[b<br/>\u2003c]d</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b<br>c]d</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b<br/>&nbsp;&nbsp; c]d</p>',
+                contentBefore: '<p>\u2003a[b<br/>\u2003c]d</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b<br>c]d</p>',
             });
         });
-        it('should outdent(up to 4 spaces) when selection in multiples paragraph', async function() {
+        it('should outdent when selection in multiples paragraph', async function() {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; &nbsp;a[b<br/>&nbsp;&nbsp; &nbsp;c]d</p>',
+                contentBefore: '<p>\u2003a[b<br/>\u2003c]d</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b<br>c]d</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore: '<p>&nbsp;&nbsp; a[b<br/>&nbsp;&nbsp; &nbsp;c]d</p>',
+                contentBefore: '<p>\u2003a[b<br/>\u2003c]d</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b<br>c]d</p>',
             });
             await testEditor(BasicEditor, {
-                contentBefore:
-                    '<p>&nbsp;&nbsp; &nbsp;a[b</p>' +
-                    '<p>&nbsp;&nbsp; &nbsp;</p>' +
-                    '<p>&nbsp;&nbsp; &nbsp;e]f</p>',
+                contentBefore: '<p>\u2003a[b</p>' + '<p>\u2003</p>' + '<p>\u2003e]f</p>',
                 stepFunction: outdent,
                 contentAfter: '<p>a[b</p><p><br></p><p>e]f</p>',
             });
         });
         it('should outdent with a fake range', async function() {
             await testEditor(BasicEditor, {
-                contentBefore: '&nbsp;&nbsp;&nbsp;&nbsp;ab<br>&nbsp;&nbsp;&nbsp;&nbsp;cd[]',
+                contentBefore: '\u2003ab<br>\u2003cd[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
                     const editable = domEngine.components.get('editable')[0];

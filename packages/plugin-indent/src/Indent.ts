@@ -72,7 +72,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             ['OutdentButton', ['actionables']],
         ],
     };
-    tab = '    ';
+    tab = '\u2003'; // `&emsp;` ("em space")
 
     //--------------------------------------------------------------------------
     // Public
