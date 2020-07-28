@@ -3,11 +3,26 @@ ul.checklist > li {
     position: relative;
 }
 ul.checklist > li.unchecked:before, ul.checklist > li.checked:before {
+    content: '';
     position: absolute;
     left: -20px;
-    line-height: 1em;
-    content: '☐';
+    display: block;
+    height: 13px;
+    width: 13px;
+    border: 1px solid;
+    cursor: pointer;
 }
-ul.checklist > li.checked:before {
-    content: '☑';
+ul.checklist > li:after {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: -1px;
+    font-size: 13px;
+    opacity: 0;
+    cursor: pointer;
+}
+ul.checklist > li.checked:after {
+    content: "✓";
+    transition: opacity .5s;
+    opacity: 1;
 }
