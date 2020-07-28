@@ -19,6 +19,7 @@ jw-devtools {
 
 devtools-table {
     display: table;
+    width: 100%
 }
 devtools-tbody {
     display: table-row-group;
@@ -181,10 +182,6 @@ mainpane-contents {
     overflow: auto;
     flex: 1;
     padding: 1em;
-}
-
-mainpane-contents > devtools-table devtools-td:nth-child(1)  {
-    width: 100px;
 }
 
 devtools-command {
