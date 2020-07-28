@@ -580,7 +580,7 @@ export class EventNormalizer {
                 } else {
                     eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
                 }
-                if (!eventTarget || this._isInEditable(eventTarget)) {
+                if (eventTarget && this._isInEditable(eventTarget)) {
                     listener.call(this, ev);
                 }
             }

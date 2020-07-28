@@ -5399,8 +5399,7 @@ describe('utils', () => {
                     ];
                     expect(ctx.eventBatches).to.deep.equal(batchEvents);
                 });
-                // ? when does these strange case comes from?
-                it('strange case arrow without range', async () => {
+                it('arrow without range', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hello');
                     ctx.editable.innerHTML = '';
@@ -5412,27 +5411,12 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
                     await nextTick();
                     await nextTick();
-
-                    const keyboardActions: NormalizedAction[] = [
-                        {
-                            type: 'setSelection',
-                            domSelection: {
-                                anchorNode: document.body,
-                                anchorOffset: 0,
-                                focusNode: document.body,
-                                focusOffset: 0,
-                                direction: Direction.FORWARD,
-                            },
-                        },
-                    ];
-
-                    const batchEvents: EventBatch[] = [
-                        {
-                            actions: keyboardActions,
-                            mutatedElements: new Set([]),
-                        },
-                    ];
-                    expect(ctx.eventBatches).to.deep.equal(batchEvents);
+                    // All ranges were removed so the selection returns
+                    // document.body at offset 0. This is not in an editable
+                    // zone so the normalizer rejects the event.
+                    // This can occur when using the arrow keys in devtools for
+                    // instance.
+                    expect(ctx.eventBatches).to.deep.equal([]);
                 });
                 it('shift + arrow (ubuntu chrome)', async () => {
                     const p = document.createElement('p');
