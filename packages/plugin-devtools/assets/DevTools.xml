@@ -397,8 +397,7 @@
 
     <!-- PLUGINS -->
     <devtools-panel t-name="PluginsComponent"
-        t-att-class="{active: props.isOpen}" tabindex="1"
-        t-on-keydown="onKeydown">
+        t-att-class="{active: props.isOpen}" tabindex="1">
         <devtools-contents t-if="props.isOpen">
             <devtools-mainpane style="overflow: hidden">
                 <mainpane-contents style="overflow: auto">
@@ -409,6 +408,63 @@
                     </devtools-table>
                 </mainpane-contents>
             </devtools-mainpane>
+        </devtools-contents>
+    </devtools-panel>
+
+    <!-- MODES -->
+    <devtools-panel t-name="ModesComponent"
+        t-att-class="{active: props.isOpen}" tabindex="1"
+        t-on-keydown="onKeydown">
+        <devtools-contents t-if="props.isOpen">
+            <devtools-mainpane style="overflow: hidden">
+                <mainpane-contents style="overflow: auto">
+                    <devtools-table>
+                        <devtools-tr t-foreach="Object.values(modes)"
+                            t-as="mode" t-key="mode.id"
+                            class="selectable-line"
+                            t-att-class="{
+                                selected: state.selectedMode and state.selectedMode.id == mode.id,
+                            }"
+                            t-on-click="selectMode(mode.id)"
+                            t-on-dblclick="setMode(mode.id)">
+                            <devtools-td><t t-if="mode.id == state.currentMode.id">✅</t> <t t-esc="mode.id"/></devtools-td>
+                        </devtools-tr>
+                    </devtools-table>
+                </mainpane-contents>
+            </devtools-mainpane>
+            <devtools-sidepane>
+                <devtools-info>
+                    <devtools-about t-if="state.selectedMode">
+                        <devtools-type>Mode</devtools-type> <t t-esc="state.selectedMode.id"/>
+                    </devtools-about>
+                    <devtools-properties t-if="state.selectedMode">
+                        <devtools-infotitle>📖 Rules</devtools-infotitle>
+                        <t t-if="state.selectedMode">
+                            <devtools-table>
+                                <devtools-tbody>
+                                    <devtools-tr
+                                    t-foreach="state.selectedMode.rules"
+                                    t-as="rule" t-key="rule.id"
+                                    class="selectable-line">
+                                        <devtools-td>
+                                            <devtools-list>
+                                                <devtools-listitem>Selector: <devtools-button t-on-click="logSelector(rule.selector)">&gt;_</devtools-button></devtools-listitem>
+                                                <devtools-listitem t-foreach="Object.keys(rule.properties)"
+                                                t-as="property"
+                                                t-key="property_id">
+                                                    <t t-esc="property"/>: <t t-esc="rule.properties[property].value"/>
+                                                    <t t-if="rule.properties[property].cascading"> (cascading)</t>
+                                                    <t t-else=""> (targeted)</t>
+                                                </devtools-listitem>
+                                            </devtools-list>
+                                        </devtools-td>
+                                    </devtools-tr>
+                                </devtools-tbody>
+                            </devtools-table>
+                        </t>
+                    </devtools-properties>
+                </devtools-info>
+            </devtools-sidepane>
         </devtools-contents>
     </devtools-panel>
 
@@ -435,6 +491,9 @@
             <devtools-button t-on-click="openTab('plugins')" t-att-class="{
                 selected: state.currentTab == 'plugins',
             }">Plugins</devtools-button>
+            <devtools-button t-on-click="openTab('modes')" t-att-class="{
+                selected: state.currentTab == 'modes',
+            }">Modes</devtools-button>
             <devtools-button t-on-click="inspectDom()">&#128269;</devtools-button>
         </devtools-navbar>
         <t t-if="!state.closed">
@@ -443,6 +502,7 @@
                 commands="state.commands"/>
             <ShortcutsComponent isOpen="state.currentTab == 'shortcuts'"/>
             <PluginsComponent isOpen="state.currentTab == 'plugins'"/>
+            <ModesComponent isOpen="state.currentTab == 'modes'"/>
         </t>
     </jw-devtools>
 

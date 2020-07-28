@@ -27,15 +27,15 @@ type RuleEntries = Partial<Record<RuleProperty, ContextualEntry<PropertyDefiniti
 
 export class Mode {
     id: ModeIdentifier;
-    private readonly _rules: ModeRule[];
+    readonly rules: ModeRule[];
     private readonly _entries: RuleEntries;
     constructor(mode: ModeDefinition) {
         this.id = mode.id;
-        this._rules = mode.rules;
+        this.rules = mode.rules;
 
         // Convert the rules into an object describing them for each property.
         const ruleEntries: RuleEntries = {};
-        this._entries = this._rules.reduce((accumulator, rule) => {
+        this._entries = this.rules.reduce((accumulator, rule) => {
             for (const property of Object.keys(rule.properties) as RuleProperty[]) {
                 const entry: ContextualEntry<PropertyDefinition> = {
                     selector: rule.selector,
