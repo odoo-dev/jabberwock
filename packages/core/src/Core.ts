@@ -36,7 +36,6 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             handler: this.deleteForward,
         },
     };
-    mode = this.editor.mode;
 
     //--------------------------------------------------------------------------
     // Public
@@ -51,7 +50,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (!range.isCollapsed()) {
             range.empty();
         }
-        if (this.mode.is(range.startContainer, RuleProperty.BREAKABLE)) {
+        if (range.mode.is(range.startContainer, RuleProperty.BREAKABLE)) {
             range.startContainer.splitAt(range.start);
         } else {
             // Use a separator to break paragraphs in an unbreakable.
@@ -79,26 +78,26 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly preceding the range.
             const previousSibling = range.start.previousSibling();
-            if (previousSibling && this.mode.is(previousSibling, RuleProperty.EDITABLE)) {
+            if (previousSibling && range.mode.is(previousSibling, RuleProperty.EDITABLE)) {
                 previousSibling.removeBackward();
             } else if (
-                this.mode.is(range.startContainer, RuleProperty.BREAKABLE) &&
-                this.mode.is(range.startContainer, RuleProperty.EDITABLE)
+                range.mode.is(range.startContainer, RuleProperty.BREAKABLE) &&
+                range.mode.is(range.startContainer, RuleProperty.EDITABLE)
             ) {
                 // Otherwise set range start at previous valid leaf.
                 let ancestor = range.start.parent;
                 while (
                     ancestor &&
-                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
-                    this.mode.is(ancestor, RuleProperty.EDITABLE) &&
+                    range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
+                    range.mode.is(ancestor, RuleProperty.EDITABLE) &&
                     !ancestor.previousSibling()
                 ) {
                     ancestor = ancestor.parent;
                 }
                 if (
                     ancestor &&
-                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
-                    this.mode.is(ancestor, RuleProperty.EDITABLE)
+                    range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
+                    range.mode.is(ancestor, RuleProperty.EDITABLE)
                 ) {
                     const previous = ancestor.previousSibling().lastLeaf();
                     if (previous) {
@@ -119,26 +118,26 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (range.isCollapsed()) {
             // Basic case: remove the node directly following the range.
             const nextSibling = range.end.nextSibling();
-            if (nextSibling && this.mode.is(nextSibling, RuleProperty.EDITABLE)) {
+            if (nextSibling && range.mode.is(nextSibling, RuleProperty.EDITABLE)) {
                 nextSibling.removeForward();
             } else if (
-                this.mode.is(range.endContainer, RuleProperty.BREAKABLE) &&
-                this.mode.is(range.endContainer, RuleProperty.EDITABLE)
+                range.mode.is(range.endContainer, RuleProperty.BREAKABLE) &&
+                range.mode.is(range.endContainer, RuleProperty.EDITABLE)
             ) {
                 // Otherwise set range end at next valid leaf.
                 let ancestor = range.end.parent;
                 while (
                     ancestor &&
-                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
-                    this.mode.is(ancestor, RuleProperty.EDITABLE) &&
+                    range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
+                    range.mode.is(ancestor, RuleProperty.EDITABLE) &&
                     !ancestor.nextSibling()
                 ) {
                     ancestor = ancestor.parent;
                 }
                 if (
                     ancestor &&
-                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
-                    this.mode.is(ancestor, RuleProperty.EDITABLE)
+                    range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
+                    range.mode.is(ancestor, RuleProperty.EDITABLE)
                 ) {
                     const next = ancestor.nextSibling().firstLeaf();
                     if (next) {
