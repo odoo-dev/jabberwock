@@ -4337,7 +4337,7 @@ describePlugin(List, testEditor => {
                                     '<ul class="checklist"><li class="unchecked"><br></li><li class="unchecked"><br></li><li class="checked">[]abc</li></ul>',
                                 stepFunction: deleteBackward,
                                 contentAfter:
-                                    '<ul class="checklist"><li class="unchecked"><br></li><li class="unchecked">[]abc</li></ul>',
+                                    '<ul class="checklist"><li class="unchecked"><br></li><li class="checked">[]abc</li></ul>',
                             });
                         });
                         it('should rejoin sibling lists', async () => {

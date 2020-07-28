@@ -100,9 +100,13 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
                     this.mode.is(ancestor, RuleProperty.EDITABLE)
                 ) {
-                    const previous = ancestor.previousSibling().lastLeaf();
-                    if (previous) {
-                        range.setStart(previous, RelativePosition.AFTER);
+                    const previous = ancestor.previousSibling();
+                    const previousLeaf = previous.lastLeaf();
+                    if (previous && !previous.hasChildren()) {
+                        // If the previous sibling is empty, remove it.
+                        previous.removeBackward();
+                    } else if (previousLeaf) {
+                        range.setStart(previousLeaf, RelativePosition.AFTER);
                         range.empty();
                     }
                 }
@@ -141,7 +145,12 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     this.mode.is(ancestor, RuleProperty.EDITABLE)
                 ) {
                     const next = ancestor.nextSibling().firstLeaf();
-                    if (next) {
+                    if (next && !range.endContainer.hasChildren()) {
+                        // If the current container is empty, remove it.
+                        range.endContainer.removeForward();
+                        range.setStart(next, RelativePosition.BEFORE);
+                        range.setEnd(next, RelativePosition.BEFORE);
+                    } else if (next) {
                         range.setEnd(next, RelativePosition.BEFORE);
                         range.empty();
                     }

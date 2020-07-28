@@ -353,13 +353,20 @@ describe('VDocument', () => {
                         contentAfter: '<h1>ab[]</h1>',
                     });
                 });
+                it('should merge a heading1 with text into an empty paragraph (keeping the heading)', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p><br>[]</p><h1>ab</h1>',
+                        stepFunction: deleteForward,
+                        contentAfter: '<h1>[]ab</h1>',
+                    });
+                });
             });
             describe('With attributes', () => {
                 it('should merge a paragraph without class into an empty paragraph with a class', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p class="a"><br>[]</p><p>abc</p>',
                         stepFunction: deleteForward,
-                        contentAfter: '<p class="a">[]abc</p>',
+                        contentAfter: '<p>[]abc</p>',
                     });
                 });
                 it('should merge two paragraphs with spans of same classes', async () => {
@@ -948,6 +955,13 @@ describe('VDocument', () => {
                         contentAfter: '<h1>ab[]</h1>',
                     });
                 });
+                it('should merge a heading1 with text into an empty paragraph (keeping the heading)', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p><br></p><h1>[]ab</h1>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<h1>[]ab</h1>',
+                    });
+                });
                 it('should merge with previous node (default behaviour)', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<jw-block-a>a</jw-block-a><jw-block-b>[]b</jw-block-b>',
@@ -989,7 +1003,7 @@ describe('VDocument', () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<p class="a"><br></p><p>[]abc</p>',
                         stepFunction: deleteBackward,
-                        contentAfter: '<p class="a">[]abc</p>',
+                        contentAfter: '<p>[]abc</p>',
                     });
                 });
                 it('should merge two paragraphs with spans of same classes', async () => {
