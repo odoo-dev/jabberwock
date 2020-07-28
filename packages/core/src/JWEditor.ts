@@ -75,13 +75,13 @@ export class JWEditor {
     // each command batch is waited for.
     preventRenders: Set<Function> = new Set();
     enableRender = true;
-    private _modes: Record<ModeIdentifier, Mode> = {
+    modes: Record<ModeIdentifier, Mode> = {
         default: new Mode({
             id: 'default',
             rules: [],
         }),
     };
-    mode: Mode = this._modes.default;
+    mode: Mode = this.modes.default;
 
     constructor() {
         this.dispatcher = new Dispatcher(this);
@@ -100,7 +100,7 @@ export class JWEditor {
      * Set the current mode of the editor.
      */
     setMode(modeIdentifier: ModeIdentifier): void {
-        this.mode = this._modes[modeIdentifier];
+        this.mode = this.modes[modeIdentifier];
     }
 
     async nextEventMutex(next: (...args) => void): Promise<void> {
@@ -124,7 +124,7 @@ export class JWEditor {
         }
 
         for (const mode of this.configuration.modes || []) {
-            this._modes[mode.id] = new Mode(mode);
+            this.modes[mode.id] = new Mode(mode);
         }
         if (this.configuration.mode) {
             this.setMode(this.configuration.mode);

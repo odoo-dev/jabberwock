@@ -2,6 +2,7 @@ import { CommandsComponent } from './CommandsComponent';
 import { InspectorComponent } from './InspectorComponent';
 import { ShortcutsComponent } from './ShortcutsComponent';
 import { PluginsComponent } from './PluginsComponent';
+import { ModesComponent } from './ModesComponent';
 import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
@@ -22,6 +23,7 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
         InspectorComponent,
         ShortcutsComponent,
         PluginsComponent,
+        ModesComponent,
     };
     static template = 'devtools';
     inspectorRef = hooks.useRef('inspector');
