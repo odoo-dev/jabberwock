@@ -1,6 +1,8 @@
 /* GLOBAL */
 
 jw-devtools {
+    position: sticky;
+    position: -webkit-sticky;
     bottom: 0;
     min-height: 30px;
     max-height: 100%;
