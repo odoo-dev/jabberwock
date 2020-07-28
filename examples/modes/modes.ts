@@ -30,15 +30,30 @@ const modeDefinitions: ModeDefinition[] = [
         rules: [
             {
                 selector: [DividerNode],
-                editable: false,
+                properties: {
+                    editable: {
+                        value: false,
+                        cascading: true,
+                    },
+                },
             },
             {
                 selector: [DividerNode, PreNode],
-                editable: false,
+                properties: {
+                    editable: {
+                        value: false,
+                        cascading: true,
+                    },
+                },
             },
             {
                 selector: [PreNode],
-                editable: true,
+                properties: {
+                    editable: {
+                        value: true,
+                        cascading: true,
+                    },
+                },
             },
         ],
     },

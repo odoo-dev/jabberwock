@@ -3,15 +3,17 @@ import { ContextManager, ContextualEntry } from './ContextManager';
 
 export interface ModeRule {
     selector: Predicate[];
-    editable?: boolean;
-    breakable?: boolean;
+    properties: { [K in RuleProperty]?: PropertyDefinition };
 }
 export type ModeIdentifier = string;
 export interface ModeDefinition {
     id: ModeIdentifier;
     rules: ModeRule[];
 }
-
+export interface PropertyDefinition {
+    value: boolean;
+    cascading?: boolean; // default: false
+}
 /**
  * Properties of a `VNode` that can be modified by a mode.
  */
@@ -20,9 +22,8 @@ export enum RuleProperty {
     BREAKABLE = 'breakable',
     ALLOW_EMPTY = 'allowEmpty',
 }
-const modeProperties = ['editable', 'breakable', 'allowEmpty'];
 
-type RuleEntries = Partial<Record<RuleProperty, ContextualEntry<boolean>[]>>;
+type RuleEntries = Partial<Record<RuleProperty, ContextualEntry<PropertyDefinition>[]>>;
 
 export class Mode {
     id: ModeIdentifier;
@@ -33,19 +34,15 @@ export class Mode {
         this._rules = mode.rules;
 
         // Convert the rules into an object describing them for each property.
-        const ruleEntries: RuleEntries = modeProperties.reduce((accumulator, property) => {
-            accumulator[property] = [];
-            return accumulator;
-        }, {});
+        const ruleEntries: RuleEntries = {};
         this._entries = this._rules.reduce((accumulator, rule) => {
-            for (const property of modeProperties) {
-                if (typeof rule[property] === 'boolean') {
-                    const entry: ContextualEntry<boolean> = {
-                        selector: rule.selector,
-                        value: rule[property],
-                    };
-                    ruleEntries[property].push(entry);
-                }
+            for (const property of Object.keys(rule.properties) as RuleProperty[]) {
+                const entry: ContextualEntry<PropertyDefinition> = {
+                    selector: rule.selector,
+                    value: rule.properties[property],
+                };
+                if (!ruleEntries[property]) ruleEntries[property] = [];
+                ruleEntries[property].push(entry);
             }
             return accumulator;
         }, ruleEntries);
@@ -61,9 +58,15 @@ export class Mode {
      */
     is(node: VNode, property: RuleProperty): boolean {
         const hierarchy = [node, ...node.ancestors()];
-        const result = ContextManager.getRankedMatches(hierarchy, this._entries[property]);
-        if (result.length) {
-            return result[0].entry.value;
+        const entries = this._entries[property] || [];
+        const result = ContextManager.getRankedMatches(hierarchy, entries);
+        // For each result from a non-cascading rule property, keep only the
+        // ones that match the given node, not one of its ancestors.
+        const filteredResults = result.filter(
+            r => r.entry.value.cascading || r.matched.some(match => match === node),
+        );
+        if (filteredResults.length) {
+            return filteredResults[0].entry.value.value;
         } else {
             return node[property];
         }
