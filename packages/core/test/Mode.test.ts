@@ -18,11 +18,21 @@ describe('core', () => {
                             rules: [
                                 {
                                     selector: [ContainerNode],
-                                    editable: false,
+                                    properties: {
+                                        editable: {
+                                            value: false,
+                                            cascading: true,
+                                        },
+                                    },
                                 },
                                 {
                                     selector: [ContainerNode, ContainerNode],
-                                    editable: true,
+                                    properties: {
+                                        editable: {
+                                            value: true,
+                                            cascading: true,
+                                        },
+                                    },
                                 },
                             ],
                         },
@@ -43,7 +53,17 @@ describe('core', () => {
                 const root = new ContainerNode();
                 const mode = new Mode({
                     id: 'special',
-                    rules: [{ selector: [], editable: false }],
+                    rules: [
+                        {
+                            selector: [],
+                            properties: {
+                                editable: {
+                                    value: false,
+                                    cascading: true,
+                                },
+                            },
+                        },
+                    ],
                 });
                 // With default mode.
                 await withRange(editor, VRange.at(root), async range => {
@@ -76,7 +96,12 @@ describe('core', () => {
                 rules: [
                     {
                         selector: [ContainerNode],
-                        editable: false,
+                        properties: {
+                            editable: {
+                                value: false,
+                                cascading: true,
+                            },
+                        },
                     },
                 ],
             };
