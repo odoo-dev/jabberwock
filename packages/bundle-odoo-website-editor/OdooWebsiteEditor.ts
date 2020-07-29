@@ -50,6 +50,7 @@ import { ModeDefinition } from '../core/src/Mode';
 import './odooLayout.css';
 import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { Textarea } from '../plugin-textarea/src/Textarea';
+import { FollowRange } from '../plugin-dom-follow-range/src/FollowRange';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -81,10 +82,11 @@ const defaultToolbarLayout = [
         ],
     ],
     [
-        'OdooColorPickerButton',
         'BoldButton',
         'ItalicButton',
         'UnderlineButton',
+        'OdooTextColorButton',
+        'OdooBackgroundColorButton',
         'RemoveFormatButton',
     ],
     ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
@@ -143,6 +145,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Odoo],
                 [OdooVideo],
                 [CustomPlugin],
+                [FollowRange],
                 ...(options.plugins || []),
             ],
         });
@@ -159,7 +162,7 @@ export class OdooWebsiteEditor extends JWEditor {
         <div class="wrap_editor d-flex flex-column">
             <div class="d-flex flex-grow-1 flex-row overflow-auto">
                 <t t-zone="main_sidebar"/>
-                <div class="d-flex flex-column overflow-auto o_editor_center">
+                <div class="d-flex flex-column o_editor_center">
                     <div class="o_toolbar">
                         <t t-zone="tools"/>
                     </div>

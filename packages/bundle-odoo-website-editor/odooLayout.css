@@ -2,3 +2,12 @@ jw-editor {
     display: flex;
     flex-direction: column;
 }
+
+.jw-dropdown {
+    display: inline-block;
+}
+.jw-dropdown .dropdown-menu {
+    min-width: 250px;
+    border: 1px solid #000;
+    background-color: #141217;
+}
