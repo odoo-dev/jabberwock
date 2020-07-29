@@ -7,6 +7,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
+import { VRange } from '../../core/src/VRange';
 
 export enum AlignType {
     LEFT = 'left',
@@ -14,6 +15,7 @@ export enum AlignType {
     RIGHT = 'right',
     JUSTIFY = 'justify',
 }
+const alignTypes = [AlignType.LEFT, AlignType.CENTER, AlignType.RIGHT, AlignType.JUSTIFY];
 export type AlignParams = CommandParams & {
     type: AlignType;
 };
@@ -99,6 +101,34 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
         return type ? align?.includes(type) : !!align;
     }
     /**
+     * Return true if the given node or one of it's ancestor has the given
+     * alignment style. If no type is passed, return true if the given node has
+     * an alignment style at all.
+     *
+     * @param node
+     * @param [type]
+     */
+    static isClosestAligned(node: VNode, type: AlignType): boolean {
+        const alignedAncestor = node.closest(Align.isAligned);
+        return Align.isAligned(alignedAncestor || node, type);
+    }
+    /**
+     * Return the `AlignType` of the targeted nodes nodes of the `range` if any.
+     * Return `null` otherwise.
+     */
+    static selectedAlignement(range: VRange): AlignType | null {
+        const nodes = range.targetedNodes(ContainerNode);
+        if (!nodes.length) return null;
+
+        for (const type of alignTypes) {
+            if (nodes.every(node => Align.isClosestAligned(node, type))) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Align text.
      */
     align(params: AlignParams): void {
@@ -121,20 +151,13 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
 }
 
 function alignButton(type: AlignType): ActionableNode {
-    function isAligned(node: VNode, type: AlignType): boolean {
-        const alignedAncestor = node.closest(Align.isAligned);
-        return Align.isAligned(alignedAncestor || node, type);
-    }
-
     const button = new ActionableNode({
         name: 'align' + type,
         label: 'Align ' + type,
         commandId: 'align',
         commandArgs: { type: type } as AlignParams,
-        selected: (editor: JWEditor): boolean => {
-            const nodes = editor.selection.range.targetedNodes(ContainerNode);
-            return nodes.length && nodes.every(node => isAligned(node, type));
-        },
+        selected: (editor: JWEditor): boolean =>
+            Align.selectedAlignement(editor.selection.range) === type,
     });
     button.modifiers.append(
         new Attributes({

@@ -14,9 +14,26 @@ import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
 import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
 import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
 import { OdooTranslationXmlDomParser } from './OdooTranslationXmlDomParser';
+import { ReactiveValue } from '../../utils/src/ReactiveValue';
+import { AlignType, Align } from '../../plugin-align/src/Align';
+import { Bold } from '../../plugin-bold/src/Bold';
+import { Underline } from '../../plugin-underline/src/Underline';
+import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
+import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
+import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
+import { List } from '../../plugin-list/src/List';
+import { ListType } from '../../plugin-list/src/ListNode';
+
+interface SelectionInfo {
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    alignment: AlignType | null;
+    listType: ListType | null;
+}
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    static dependencies = [Inline, Link, Xml];
+    static dependencies = [Inline, Link, Xml, Bold, Inline, Underline, Align, List];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
         parsers: [OdooStructureXmlDomParser, OdooTranslationXmlDomParser],
         renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
@@ -98,4 +115,34 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             ['OdooSaveButton', ['actionables']],
         ],
     };
+
+    formatInfo: ReactiveValue<SelectionInfo> = new ReactiveValue({
+        bold: false,
+        italic: false,
+        underline: false,
+        alignment: null,
+        listType: null,
+    });
+
+    commandHooks = {
+        '*': this._updateInfo,
+    };
+
+    /**
+     * Update the information of the `formatInfo`.
+     */
+    private _updateInfo(): void {
+        const inline = this.editor.plugins.get(Inline);
+        const alignementType = Align.selectedAlignement(this.editor.selection.range);
+        const listType = List.selectedListType(this.editor.selection.range);
+
+        const newLocal = {
+            bold: inline.isAllFormat(BoldFormat),
+            italic: inline.isAllFormat(ItalicFormat),
+            underline: inline.isAllFormat(UnderlineFormat),
+            alignment: alignementType,
+            listType: listType,
+        };
+        this.formatInfo.set(newLocal);
+    }
 }

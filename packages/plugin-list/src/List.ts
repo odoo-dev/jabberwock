@@ -1,5 +1,5 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { ListNode, ListType } from './ListNode';
+import { ListNode, ListType, listTypes } from './ListNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { ListDomObjectRenderer } from './ListDomObjectRenderer';
@@ -31,6 +31,18 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     }
     static isInList(type: ListType, node: VNode): boolean {
         return node?.ancestor(ListNode)?.listType === type;
+    }
+    static selectedListType(range: VRange): ListType | null {
+        const nodes = range.targetedNodes();
+        if (!nodes.length) return null;
+
+        for (const listType of listTypes) {
+            if (nodes.every(node => List.isInList(listType, node))) {
+                return listType;
+            }
+        }
+
+        return null;
     }
     commands = {
         toggleList: {
@@ -107,13 +119,8 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle ordered list',
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.ORDERED } as ListParams,
-                        selected: (editor: JWEditor): boolean => {
-                            const targetedNodes = editor.selection.range.targetedNodes();
-                            return (
-                                targetedNodes.length &&
-                                targetedNodes.every(List.isInList.bind(List, ListType.ORDERED))
-                            );
-                        },
+                        selected: (editor: JWEditor): boolean =>
+                            List.selectedListType(editor.selection.range) === ListType.ORDERED,
                         modifiers: [new Attributes({ class: 'fa fa-list-ol fa-fw' })],
                     });
                     return [button];
@@ -127,13 +134,8 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle unordered list',
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.UNORDERED } as ListParams,
-                        selected: (editor: JWEditor): boolean => {
-                            const targetedNodes = editor.selection.range.targetedNodes();
-                            return (
-                                targetedNodes.length &&
-                                targetedNodes.every(List.isInList.bind(List, ListType.UNORDERED))
-                            );
-                        },
+                        selected: (editor: JWEditor): boolean =>
+                            List.selectedListType(editor.selection.range) === ListType.UNORDERED,
                         modifiers: [new Attributes({ class: 'fa fa-list-ul fa-fw' })],
                     });
                     return [button];
@@ -147,13 +149,9 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle checkbox list',
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.CHECKLIST } as ListParams,
-                        selected: (editor: JWEditor): boolean => {
-                            const targetedNodes = editor.selection.range.targetedNodes();
-                            return (
-                                targetedNodes.length &&
-                                targetedNodes.every(List.isInList.bind(List, ListType.CHECKLIST))
-                            );
-                        },
+                        selected: (editor: JWEditor): boolean =>
+                            List.selectedListType(editor.selection.range) === ListType.CHECKLIST,
+
                         modifiers: [new Attributes({ class: 'fa far fa-check-square fa-fw' })],
                     });
                     return [button];

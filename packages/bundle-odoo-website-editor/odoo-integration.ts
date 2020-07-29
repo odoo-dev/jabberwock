@@ -18,6 +18,10 @@ import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { OdooFieldNode } from '../plugin-odoo-field/src/OdooFieldNode';
 import { VElement } from '../core/src/VNodes/VElement';
+import { BoldFormat } from '../plugin-bold/src/BoldFormat';
+import { UnderlineFormat } from '../plugin-underline/src/UnderlineFormat';
+import { ItalicFormat } from '../plugin-italic/src/ItalicFormat';
+import { Odoo } from '../plugin-odoo/src/Odoo';
 
 export {
     OdooWebsiteEditor,
@@ -31,10 +35,14 @@ export {
     VRange,
     InlineNode,
     LinkFormat,
+    BoldFormat,
+    ItalicFormat,
+    UnderlineFormat,
     Attributes,
     ContainerNode,
     VElement,
     DividerNode,
+    Odoo,
     OdooStructureNode,
     OdooField,
     OdooFieldNode,

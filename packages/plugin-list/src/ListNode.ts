@@ -8,6 +8,7 @@ export enum ListType {
     UNORDERED = 'UNORDERED',
     CHECKLIST = 'CHECKLIST',
 }
+export const listTypes = [ListType.ORDERED, ListType.UNORDERED, ListType.CHECKLIST];
 export interface ListNodeParams extends AbstractNodeParams {
     listType: ListType;
 }
