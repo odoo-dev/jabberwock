@@ -20,6 +20,24 @@ export class EventMixin {
         }
         this._eventCallbacks[eventName].push(callback);
     }
+    /**
+     * Unsubscribe to an event with a callback.
+     *
+     * @param eventName
+     * @param callback
+     */
+    off(eventName: string, callback?: Function): void {
+        if (this._eventCallbacks && this._eventCallbacks[eventName]) {
+            if (callback) {
+                const index = this._eventCallbacks[eventName].indexOf(callback);
+                if (index !== -1) {
+                    this._eventCallbacks[eventName].splice(index, 1);
+                }
+            } else {
+                delete this._eventCallbacks[eventName];
+            }
+        }
+    }
 
     /**
      * Fire an event for of this object and all ancestors.
