@@ -774,7 +774,7 @@ export class EventNormalizer {
                 keypressEvent.key !== 'Unidentified' &&
                 keypressEvent.key !== 'Dead' &&
                 keypressEvent.key) ||
-            (inputEvent && inputEvent.data?.length === 1 && inputEvent.data) ||
+            (inputEvent && inputEvent.data && inputEvent.data.length === 1 && inputEvent.data) ||
             (keydownEvent &&
                 keydownEvent.key !== 'Unidentified' &&
                 keydownEvent.key !== 'Dead' &&
