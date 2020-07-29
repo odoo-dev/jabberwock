@@ -4,7 +4,7 @@ jw-toolbar {
     background-color: #875A7B;
     border-bottom: 1px solid #68465f;
     color: white;
-    overflow: hidden;
+    overflow: visible;
     font-family: "Montserrat", sans-serif;
     text-align: center;
     width: 100%;

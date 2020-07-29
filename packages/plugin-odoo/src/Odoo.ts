@@ -14,6 +14,7 @@ import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
 import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
 import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
 import { OdooTranslationXmlDomParser } from './OdooTranslationXmlDomParser';
+import { DividerNode } from '../../plugin-divider/src/DividerNode';
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
@@ -51,15 +52,51 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 },
             },
             {
-                id: 'OdooColorPickerButton',
-                async render(): Promise<ActionableNode[]> {
+                id: 'OdooTextColorButton',
+                async render(): Promise<DividerNode[]> {
                     const button = new ActionableNode({
-                        name: 'colorpicker',
-                        label: 'Color picker',
-                        commandId: 'openColorPicker',
-                        modifiers: [new Attributes({ class: 'fa fa-eyedropper fa-fw' })],
+                        name: 'textcolorpicker',
+                        label: 'Text Color picker',
+                        commandId: 'openTextColorPicker',
+                        modifiers: [
+                            new Attributes({ class: 'fa fa-font fa-fw dropdown-toggle' }),
+                            new Attributes({ 'data-toggle': 'dropdown' }),
+                        ],
                     });
-                    return [button];
+                    const dropdownContent = new DividerNode();
+                    dropdownContent.modifiers.append(new Attributes({ class: 'dropdown-menu' }));
+                    const dropdownContainer = new DividerNode();
+                    dropdownContainer.modifiers.append(
+                        new Attributes({ class: 'dropdown jw-dropdown jw-dropdown-textcolor' }),
+                    );
+                    dropdownContainer.append(button);
+                    dropdownContainer.append(dropdownContent);
+                    return [dropdownContainer];
+                },
+            },
+            {
+                id: 'OdooBackgroundColorButton',
+                async render(): Promise<DividerNode[]> {
+                    const button = new ActionableNode({
+                        name: 'backgroundcolorpicker',
+                        label: 'Background Color picker',
+                        commandId: 'openBackgroundColorPicker',
+                        modifiers: [
+                            new Attributes({ class: 'fa fa-paint-brush fa-fw dropdown-toggle' }),
+                            new Attributes({ 'data-toggle': 'dropdown' }),
+                        ],
+                    });
+                    const dropdownContent = new DividerNode();
+                    dropdownContent.modifiers.append(new Attributes({ class: 'dropdown-menu' }));
+                    const dropdownContainer = new DividerNode();
+                    dropdownContainer.modifiers.append(
+                        new Attributes({
+                            class: 'dropdown jw-dropdown jw-dropdown-backgroundcolor',
+                        }),
+                    );
+                    dropdownContainer.append(button);
+                    dropdownContainer.append(dropdownContent);
+                    return [dropdownContainer];
                 },
             },
             {
