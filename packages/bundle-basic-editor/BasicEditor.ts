@@ -45,6 +45,7 @@ import './basicLayout.css';
 import { OdooField } from '../../packages/plugin-odoo-field/src/OdooField';
 import { parseEditable, createEditable } from '../../packages/utils/src/configuration';
 import { Fullscreen } from '../../packages/plugin-fullsreen/src/Fullscreen';
+import { Code } from '../plugin-code/src/Code';
 
 export class BasicEditor extends JWEditor {
     constructor(params?: { editable?: HTMLElement }) {
@@ -94,6 +95,7 @@ export class BasicEditor extends JWEditor {
                 [FollowRange],
                 [Fullscreen, { component: 'editor' }],
                 [OdooField],
+                [Code],
             ],
         });
 
@@ -146,6 +148,7 @@ export class BasicEditor extends JWEditor {
                 ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
                 ['IndentButton', 'OutdentButton'],
                 ['LinkButton', 'UnlinkButton'],
+                ['CodeButton'],
             ],
         });
     }
