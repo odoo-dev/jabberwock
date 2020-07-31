@@ -64,12 +64,17 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
         } while (doc);
 
         if (selection.rangeCount && !isCollapsed) {
+            if (container.parentElement.tagName !== 'BODY') {
+                document.body.append(container);
+            }
             container.style.display = '';
             const size = container.getBoundingClientRect();
             const range = selection.getRangeAt(0);
             const box = range.getBoundingClientRect();
-            container.style.top = box.top - size.height + 'px';
-            container.style.left = box.left + (box.width - size.width) / 2 + 'px';
+            container.style.top = window.scrollY + box.top - size.height + 'px';
+            let leftPosition = box.left + (box.width - size.width) / 2;
+            leftPosition = Math.max(0, leftPosition);
+            container.style.left = leftPosition + 'px';
         } else if (container.style.display !== 'none') {
             // Use condition to have the minimum of mutations.
             container.style.display = 'none';
