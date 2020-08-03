@@ -4,8 +4,11 @@ import { TableCellNode } from './TableCellNode';
 
 export class TableNode extends VElement {
     breakable = false;
-    constructor() {
+    constructor(rowCount?: number, columnCount?: number) {
         super({ htmlTag: 'TABLE' });
+        if (rowCount && columnCount) {
+            this.reset(rowCount, columnCount);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -189,5 +192,26 @@ export class TableNode extends VElement {
                 clone.mergeWith(cell);
             }
         }
+    }
+    /**
+     * Empty this table and refill it with the given number of rows and columns.
+     *
+     * @param rowCount
+     * @param columnCount
+     */
+    reset(rowCount: number, columnCount: number): void {
+        this.empty();
+        const rows: TableRowNode[] = [];
+        for (let rowNumber = 0; rowNumber < rowCount; rowNumber += 1) {
+            rows.push(new TableRowNode());
+        }
+        for (const row of rows) {
+            const cells: TableCellNode[] = [];
+            for (let colNumber = 0; colNumber < columnCount; colNumber += 1) {
+                cells.push(new TableCellNode());
+            }
+            row.append(...cells);
+        }
+        this.append(...rows);
     }
 }
