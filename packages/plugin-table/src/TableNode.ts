@@ -67,10 +67,14 @@ export class TableNode extends VElement {
      * Add a new row above the reference row (the row of the given reference
      * cell). Copy the styles and colspans of the cells of the reference row. If
      * the reference row traverses a rowspan, extend that rowspan.
+     * If no `referenceCell` was passed, add a row on top of the table.
      *
-     * @param referenceCell
+     * @param [referenceCell]
      */
-    addRowAbove(referenceCell: TableCellNode): void {
+    addRowAbove(referenceCell?: TableCellNode): void {
+        if (!referenceCell) {
+            referenceCell = this.firstDescendant(TableCellNode);
+        }
         const referenceRow = referenceCell.ancestor(TableRowNode);
         const newRow = referenceRow.clone();
         referenceRow.before(newRow);
@@ -96,11 +100,15 @@ export class TableNode extends VElement {
      * Add a new row below the reference row (the row of the given reference
      * cell). Copy the styles and colspans of the cells of the reference row. If
      * the reference row traverses a rowspan, extend that rowspan.
+     * If no `referenceCell` was passed, add a row at the bottom of the table.
      * Note: a rowspan ending at the reference cell is not extended.
      *
-     * @param referenceCell
+     * @param [referenceCell]
      */
-    addRowBelow(referenceCell: TableCellNode): void {
+    addRowBelow(referenceCell?: TableCellNode): void {
+        if (!referenceCell) {
+            referenceCell = this.lastDescendant(TableCellNode);
+        }
         const rowIndex = referenceCell.rowIndex + referenceCell.rowspan - 1;
         const referenceRow = this.children(TableRowNode)[rowIndex];
         const newRow = referenceRow.clone();
@@ -134,10 +142,14 @@ export class TableNode extends VElement {
      * reference cell). Copy the styles and rowspans of the cells of the
      * reference column. If the reference column traverses a colspan, extend
      * that colspan.
+     * If no `referenceCell` was passed, add a column to the left of the table.
      *
-     * @param referenceCell
+     * @param [referenceCell]
      */
-    addColumnBefore(referenceCell: TableCellNode): void {
+    addColumnBefore(referenceCell?: TableCellNode): void {
+        if (!referenceCell) {
+            referenceCell = this.firstDescendant(TableCellNode);
+        }
         const referenceColumn = referenceCell.column;
         for (const cell of referenceColumn) {
             const clone = cell.clone();
@@ -162,11 +174,15 @@ export class TableNode extends VElement {
      * reference cell). Copy the styles and rowspans of the cells of the
      * reference column. If the reference column traverses a colpan, extend that
      * colspan.
+     * If no `referenceCell` was passed, add a column to the right of the table.
      * Note: a colspan ending at the reference cell is not extended.
      *
-     * @param referenceCell
+     * @param [referenceCell]
      */
-    addColumnAfter(referenceCell: TableCellNode): void {
+    addColumnAfter(referenceCell?: TableCellNode): void {
+        if (!referenceCell) {
+            referenceCell = this.lastDescendant(TableCellNode);
+        }
         const columnIndex = referenceCell.columnIndex + referenceCell.colspan - 1;
         const referenceColumn = this.columns[columnIndex];
         for (const cell of referenceColumn) {
