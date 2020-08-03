@@ -15,7 +15,7 @@ import footerTemplate from './footer.xml';
 import { ShadowNode } from '../../packages/plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../packages/plugin-metadata/src/MetadataNode';
 import { parseEditable, createEditable } from '../../packages/utils/src/configuration';
-import { Fullscreen } from '../../packages/plugin-fullsreen/src/Fullscreen';
+import { Fullscreen } from '../../packages/plugin-fullscreen/src/Fullscreen';
 import { Theme } from '../../packages/plugin-theme/src/Theme';
 import { Toolbar, ToolbarConfig } from '../../packages/plugin-toolbar/src/Toolbar';
 

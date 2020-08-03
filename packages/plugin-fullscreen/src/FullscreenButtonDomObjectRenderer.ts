@@ -12,7 +12,7 @@ import { Fullscreen } from './Fullscreen';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { DomObjectActionable } from '../../plugin-dom-layout/src/ActionableDomObjectRenderer';
 
-export class FullsreenButtonDomObjectRenderer extends NodeRenderer<DomObject> {
+export class FullscreenButtonDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>

@@ -35,7 +35,7 @@ describe('Fullscreen', () => {
         expect(container.firstElementChild.classList.contains('jw-fullscreen')).to.equal(true);
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(true, 'body');
         expect(container.querySelector('button[name="fullscreen"]').outerHTML).to.equal(
-            '<button name="fullscreen" title="Toggle Fullsreen" class="fas fa-expand fa-fw pressed" aria-pressed="true"></button>',
+            '<button name="fullscreen" title="Toggle Fullscreen" class="fas fa-expand fa-fw pressed" aria-pressed="true"></button>',
         );
         await editor.stop();
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(
@@ -55,7 +55,7 @@ describe('Fullscreen', () => {
         expect(container.firstElementChild.classList.contains('jw-fullscreen')).to.equal(false);
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(false, 'body');
         expect(container.querySelector('button[name="fullscreen"]').outerHTML).to.equal(
-            '<button name="fullscreen" title="Toggle Fullsreen" class="fas fa-expand fa-fw" aria-pressed="false"></button>',
+            '<button name="fullscreen" title="Toggle Fullscreen" class="fas fa-expand fa-fw" aria-pressed="false"></button>',
         );
         await editor.stop();
     });
