@@ -1,6 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { TableXmlDomParser } from './TableXmlDomParser';
-import { Loadables } from '../../core/src/JWEditor';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { TableRowXmlDomParser } from './TableRowXmlDomParser';
 import { TableCellXmlDomParser } from './TableCellXmlDomParser';
@@ -14,13 +14,31 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { TableNode } from './TableNode';
 import { distinct } from '../../utils/src/utils';
 import { TableRowNode } from './TableRowNode';
-import { RelativePosition } from '../../core/src/VNodes/VNode';
+import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
+import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+import { TablePickerDomObjectRenderer } from './TablePickerDomObjectRenderer';
+import { TablePickerCellDomObjectRenderer } from './TablePickerCellDomObjectRenderer';
+import '../assets/tablePicker.css';
+import { TablePickerNode } from './TablePickerNode';
 
-export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    readonly loadables: Loadables<Parser & Renderer & Keymap> = {
+export interface TableConfig extends JWPluginConfig {
+    minRowCount?: number;
+    minColumnCount?: number;
+}
+export interface InsertTableParams extends CommandParams {
+    rowCount?: number;
+    columnCount?: number;
+}
+
+export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
+    readonly loadables: Loadables<Parser & Renderer & Keymap & Layout> = {
         parsers: [TableXmlDomParser, TableRowXmlDomParser, TableCellXmlDomParser],
         renderers: [
+            TablePickerDomObjectRenderer,
+            TablePickerCellDomObjectRenderer,
             TableDomObjectRenderer,
             TableRowDomObjectRenderer,
             TableCellDomObjectRenderer,
@@ -64,8 +82,39 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
                 commandId: 'unmergeCells',
             },
         ],
+        components: [
+            {
+                id: 'TableButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'tableButton',
+                        label: 'Pick the size of the table you want to insert',
+                        commandId: 'insertTable',
+                        selected: (editor: JWEditor): boolean =>
+                            editor.plugins.get(Table).isTablePickerOpen,
+                        modifiers: [new Attributes({ class: 'fa fa-table fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'TablePicker',
+                async render(editor: JWEditor): Promise<VNode[]> {
+                    const tablePlugin = editor.plugins.get(Table);
+                    const table = new TablePickerNode(
+                        tablePlugin.minRowCount,
+                        tablePlugin.minColumnCount,
+                    );
+                    return [table];
+                },
+            },
+        ],
+        componentZones: [['TableButton', ['actionables']]],
     };
     commands = {
+        insertTable: {
+            handler: this.insertTable.bind(this),
+        },
         addRowAbove: {
             handler: this.addRowAbove.bind(this),
         },
@@ -94,11 +143,50 @@ export class Table<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
             handler: this.unmergeCells.bind(this),
         },
     };
+    isTablePickerOpen = false;
+    /**
+     * The minimum row count for the table picker (default: 5).
+     */
+    minRowCount = 5;
+    /**
+     * The minimum column count for the table picker (default: 5).
+     */
+    minColumnCount = 5;
+    constructor(public editor: JWEditor, public config: T) {
+        super(editor, config);
+        if (config.minRowCount) {
+            this.minRowCount = config.minRowCount;
+        }
+        if (config.minColumnCount) {
+            this.minColumnCount = config.minColumnCount;
+        }
+    }
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Insert a table at range. If no dimensions are given for the table, open
+     * the table picker in order to ask the user for dimensions.
+     *
+     * @param params
+     */
+    async insertTable(params: InsertTableParams): Promise<void> {
+        if (!params.rowCount || !params.columnCount) {
+            const layout = this.editor.plugins.get(Layout);
+            const isTablePickerOpen = !!this.isTablePickerOpen;
+            await layout.remove('TablePicker');
+            if (!isTablePickerOpen) {
+                await layout.append('TablePicker', 'TableButton');
+            }
+        } else {
+            const range = params.context.range;
+            if (range.start.parent) {
+                range.start.before(new TableNode(params.rowCount, params.columnCount));
+            }
+        }
+    }
     /**
      * Add a row above the cell at given range start.
      *
