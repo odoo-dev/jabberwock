@@ -148,6 +148,7 @@ export class BasicEditor extends JWEditor {
                 ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
                 ['IndentButton', 'OutdentButton'],
                 ['LinkButton', 'UnlinkButton'],
+                ['TableButton'],
                 ['CodeButton'],
             ],
         });

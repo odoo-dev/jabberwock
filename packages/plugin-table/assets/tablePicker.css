@@ -1,0 +1,20 @@
+table.table-picker {
+    position: absolute;
+    background-color: white;
+    border: 1px solid black;
+    -webkit-box-shadow: 2px 2px 5px 0px rgba(0,0,0,.4);
+    -moz-box-shadow: 2px 2px 5px 0px rgba(0,0,0,.4);
+    box-shadow: 2px 2px 5px 0px rgba(0,0,0,.4);
+}
+table.table-picker tr {
+    height: 1em;
+    padding: 0;
+}
+table.table-picker td {
+    width: 1em;
+    border: 1px solid black;
+    padding: 0;
+}
+table.table-picker td.highlight {
+    background-color: #875A7B;
+}
