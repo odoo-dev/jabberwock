@@ -8,22 +8,22 @@ jw-editor {
     height: 100vh;
 }
 
-jw-editor table, jw-editor tr, jw-editor td, jw-editor th {
+jw-editor jw-body table, jw-editor jw-body tr, jw-editor jw-body td, jw-editor jw-body th {
     border: 1px solid black;
     padding: 5px;
     height: 30px;
     vertical-align: top;
 }
-jw-editor th {
+jw-editor jw-body th {
     background-color: #76526c;
     color: white;
 }
-jw-editor tr {
+jw-editor jw-body tr {
     height: 30px;
     width: 30px;
 }
 
-jw-editor table.mondrian {
+jw-editor jw-body table.mondrian {
     padding: 0;
     border: 4px solid black;
     width: 65vh;
