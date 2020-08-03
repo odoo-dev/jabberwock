@@ -109,13 +109,28 @@ export class CssStyle {
         return this._style[name];
     }
     /**
+     * Set the records with the given names to the given values.
+     * Eg: `set({ width: '100%', height: '100%' });`
+     *
+     * @param pairs [name, value]
+     */
+    set(pairs: Record<string, string>): void;
+    /**
      * Set the record with the given name to the given value.
+     * Eg: `set('position', 'fixed');`
      *
      * @param name
      * @param value
      */
-    set(name: string, value: string): void {
-        this._style[name] = value;
+    set(name: string, value: string): void;
+    set(pairsOrName: string | Record<string, string>, value?: string): void {
+        if (typeof pairsOrName === 'string') {
+            this._style[pairsOrName] = value;
+        } else {
+            for (const name of Object.keys(pairsOrName)) {
+                this._style[name] = pairsOrName[name];
+            }
+        }
     }
     /**
      * Remove the record(s) with the given name(s).
