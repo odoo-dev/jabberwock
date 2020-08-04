@@ -51,6 +51,8 @@ import './odooLayout.css';
 import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { Textarea } from '../plugin-textarea/src/Textarea';
 import { FollowRange } from '../plugin-dom-follow-range/src/FollowRange';
+import { Input } from '../plugin-input/src/Input';
+import { FontSize } from '../plugin-font-size/src/FontSize';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -78,6 +80,7 @@ const defaultToolbarLayout = [
             'PreButton',
         ],
     ],
+    ['FontSizeInput'],
     [
         'BoldButton',
         'ItalicButton',
@@ -125,6 +128,8 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Bold],
                 [Italic],
                 [Underline],
+                [Input],
+                [FontSize],
                 [Link],
                 [FontAwesome],
                 [Divider],
