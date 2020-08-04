@@ -8,7 +8,6 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 
-import '../assets/Toolbar.css';
 import { ToolbarNode } from './ToolbarNode';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
