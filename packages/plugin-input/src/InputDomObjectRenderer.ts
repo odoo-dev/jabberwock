@@ -1,5 +1,7 @@
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { InputNode } from './InputNode';
+import { DomObjectElement } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { Predicate } from '../../core/src/VNodes/VNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
@@ -8,13 +10,13 @@ import {
 export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
-    predicate = InputNode;
+    predicate: Predicate = InputNode;
 
     /**
      * Render the VNode to the given format.
      */
     async render(node: InputNode): Promise<DomObject> {
-        const input = {
+        const input: DomObjectElement = {
             tag: 'INPUT',
             attributes: {
                 type: node.inputType,
@@ -22,6 +24,41 @@ export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
                 value: node.value,
             },
         };
+
+        let onInputChange: () => void;
+        let mousedown: (ev: MouseEvent) => void;
+        let changeHandler: () => void;
+        input.attach = (el: HTMLInputElement): void => {
+            onInputChange = this._onCommit.bind(this, node, el);
+            changeHandler = (): void => {
+                this.engine.editor.execCommand(()=>{
+                    node.value = el.value;
+                    node.change(this.engine.editor); 
+                });
+            };
+            mousedown = (ev: MouseEvent): void => {
+                ev.stopImmediatePropagation();
+                ev.stopPropagation();
+            };
+
+            el.addEventListener('change', changeHandler);
+            el.addEventListener('mousedown', mousedown);
+            this.engine.editor.dispatcher.registerCommandHook('@commit', onInputChange);
+        };
+
+        input.detach = (el: HTMLInputElement): void => {
+            el.removeEventListener('change', changeHandler);
+            el.removeEventListener('mousedown', mousedown);
+            this.engine.editor.dispatcher.removeCommandHook('@commit', onInputChange);
+        };
         return input;
     }
+
+    /**
+     * On input change handler.
+     *
+     * Meant to be overriden.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
+    _onCommit(node: InputNode, el: HTMLInputElement): void {}
 }
