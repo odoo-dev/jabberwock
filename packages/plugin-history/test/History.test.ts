@@ -42,7 +42,7 @@ describePlugin(History, testEditor => {
                         focusOffset: 4,
                     });
 
-                    const undoButton = document.querySelector('button[name="undo"]');
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
                     await click(undoButton);
                 },
                 contentAfter: '<p>abcdef</p>',
@@ -59,7 +59,7 @@ describePlugin(History, testEditor => {
                     const editable = document.querySelector('[contenteditable=true]');
                     expect(editable.innerHTML).to.deep.equal('<p>abcZdef</p>');
 
-                    const undoButton = document.querySelector('button[name="undo"]');
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
                     await click(undoButton);
                 },
                 contentAfter: '<p>abc[]def</p>',
@@ -82,7 +82,7 @@ describePlugin(History, testEditor => {
                     const editable = document.querySelector('[contenteditable=true]');
                     expect(editable.innerHTML).to.deep.equal('<p>abcX<br>Zdef</p>');
 
-                    const undoButton = document.querySelector('button[name="undo"]');
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
                     await click(undoButton);
                     await click(undoButton);
                 },
@@ -107,10 +107,10 @@ describePlugin(History, testEditor => {
                         );
                     });
 
-                    const undoButton = document.querySelector('button[name="undo"]');
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
                     await click(undoButton);
 
-                    const redoButton = document.querySelector('button[name="redo"]');
+                    const redoButton = document.querySelector('jw-button[name="redo"]');
                     await click(redoButton);
                 },
                 contentAfter: '<p>ab[cd]ef</p>',
@@ -124,10 +124,10 @@ describePlugin(History, testEditor => {
                         editor.selection.range.start.before(new CharNode({ char: 'Z' }));
                     });
 
-                    const undoButton = document.querySelector('button[name="undo"]');
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
                     await click(undoButton);
 
-                    const redoButton = document.querySelector('button[name="redo"]');
+                    const redoButton = document.querySelector('jw-button[name="redo"]');
                     await click(redoButton);
                 },
                 contentAfter: '<p>abcZ[]def</p>',
@@ -147,11 +147,11 @@ describePlugin(History, testEditor => {
                         editor.selection.range.start.before(new CharNode({ char: 'Z' }));
                     });
 
-                    const undoButton = document.querySelector('button[name="undo"]');
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
                     await click(undoButton);
                     await click(undoButton);
 
-                    const redoButton = document.querySelector('button[name="redo"]');
+                    const redoButton = document.querySelector('jw-button[name="redo"]');
                     await click(redoButton);
                     await click(redoButton);
                 },
