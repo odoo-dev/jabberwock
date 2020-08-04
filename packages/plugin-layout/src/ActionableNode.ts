@@ -11,6 +11,7 @@ interface ActionableNodeParams extends AbstractNodeParams {
     commandArgs?: CommandParams;
     selected?: (editor: JWEditor) => boolean;
     enabled?: (editor: JWEditor) => boolean;
+    visible?: (editor: JWEditor) => boolean;
 }
 
 export class ActionableNode extends AtomicNode {
@@ -31,6 +32,9 @@ export class ActionableNode extends AtomicNode {
         if (params.enabled) {
             this.enabled = params.enabled;
         }
+        if (params.visible) {
+            this.visible = params.visible;
+        }
     }
 
     get name(): string {
@@ -43,6 +47,10 @@ export class ActionableNode extends AtomicNode {
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     enabled(editor: JWEditor): boolean {
+        return true;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    visible(editor: JWEditor): boolean {
         return true;
     }
 }
