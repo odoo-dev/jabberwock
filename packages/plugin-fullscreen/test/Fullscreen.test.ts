@@ -30,12 +30,12 @@ describe('Fullscreen', () => {
         await editor.start();
         expect(container.firstElementChild.classList.contains('jw-fullscreen')).to.equal(false);
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(false, 'body');
-        await click(container.querySelector('button[name="fullscreen"]'));
+        await click(container.querySelector('jw-button[name="fullscreen"]'));
         await waitFullscreenRedraw();
         expect(container.firstElementChild.classList.contains('jw-fullscreen')).to.equal(true);
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(true, 'body');
-        expect(container.querySelector('button[name="fullscreen"]').outerHTML).to.equal(
-            '<button name="fullscreen" title="Toggle Fullscreen" class="fas fa-expand fa-fw pressed" aria-pressed="true"></button>',
+        expect(container.querySelector('jw-button[name="fullscreen"]').outerHTML).to.equal(
+            '<jw-button name="fullscreen" title="Toggle Fullscreen" class="fas fa-expand fa-fw pressed" aria-pressed="true"></jw-button>',
         );
         await editor.stop();
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(
@@ -48,14 +48,14 @@ describe('Fullscreen', () => {
         const editor = new BasicEditor({ editable: target });
         editor.configure(Toolbar, { layout: [['LinkButton', 'FullscreenButton']] });
         await editor.start();
-        await click(container.querySelector('button[name="fullscreen"]'));
+        await click(container.querySelector('jw-button[name="fullscreen"]'));
         await waitFullscreenRedraw();
-        await click(container.querySelector('button[name="fullscreen"]'));
+        await click(container.querySelector('jw-button[name="fullscreen"]'));
         await waitFullscreenRedraw();
         expect(container.firstElementChild.classList.contains('jw-fullscreen')).to.equal(false);
         expect(document.body.classList.contains('jw-fullscreen')).to.equal(false, 'body');
-        expect(container.querySelector('button[name="fullscreen"]').outerHTML).to.equal(
-            '<button name="fullscreen" title="Toggle Fullscreen" class="fas fa-expand fa-fw" aria-pressed="false"></button>',
+        expect(container.querySelector('jw-button[name="fullscreen"]').outerHTML).to.equal(
+            '<jw-button name="fullscreen" title="Toggle Fullscreen" class="fas fa-expand fa-fw" aria-pressed="false"></jw-button>',
         );
         await editor.stop();
     });
@@ -64,7 +64,7 @@ describe('Fullscreen', () => {
         editor.configure(Fullscreen, { component: 'editable' });
         editor.configure(Toolbar, { layout: [['LinkButton', 'FullscreenButton']] });
         await editor.start();
-        await click(container.querySelector('button[name="fullscreen"]'));
+        await click(container.querySelector('jw-button[name="fullscreen"]'));
         await waitFullscreenRedraw();
         expect(container.querySelector('.editable').classList.contains('jw-fullscreen')).to.equal(
             true,

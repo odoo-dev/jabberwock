@@ -25,7 +25,7 @@ jw-toolbar span {
     padding: 5px;
 }
 
-jw-toolbar button[aria-pressed="true"] {
+jw-toolbar jw-button[aria-pressed="true"] {
     background-color: #9c8897;
     color: white;
 }
@@ -65,12 +65,14 @@ jw-toolbar option.label {
     font-weight: bold;
 }
 
-jw-toolbar button {
+jw-toolbar jw-button {
     background-color: white;
+    color: black;
     border: 1px solid #68465f;
     padding: 5px;
     width: 30px !important;
     height: 30px !important;
+    box-sizing: border-box;
 }
 
 jw-toolbar .h1 {
