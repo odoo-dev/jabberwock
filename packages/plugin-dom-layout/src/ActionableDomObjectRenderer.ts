@@ -87,14 +87,15 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
             const editor = this.engine.editor;
             const select = !!actionable.selected(editor);
             const enable = !!actionable.enabled(editor);
+            const visible = !!actionable.visible(editor);
 
             const attrSelected = element.getAttribute('aria-pressed');
             if (select.toString() !== attrSelected) {
                 element.setAttribute('aria-pressed', select.toString());
                 if (select) {
-                    element.classList.add('pressed');
+                    element.classList.add('active');
                 } else {
-                    element.classList.remove('pressed');
+                    element.classList.remove('active');
                 }
             }
             const domEnable = !element.getAttribute('disabled');
@@ -103,6 +104,14 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
                     element.removeAttribute('disabled');
                 } else {
                     element.setAttribute('disabled', 'true');
+                }
+            }
+            const domVisible = element.style.display !== 'none';
+            if (visible !== domVisible) {
+                if (visible) {
+                    element.style.display = 'inline-block';
+                } else {
+                    element.style.display = 'none';
                 }
             }
         }
