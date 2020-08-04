@@ -17,7 +17,8 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(button: ActionableNode): Promise<DomObjectActionable> {
         let updateButton: () => void;
-        let handler: (ev: MouseEvent) => void;
+        let clickHandler: (ev: MouseEvent) => void;
+        let mousedownHandler: (ev: MouseEvent) => void;
         const objectButton: DomObjectActionable = {
             tag: 'BUTTON',
             attributes: {
@@ -29,17 +30,26 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
                 }
             },
             attach: (el: HTMLButtonElement): void => {
-                handler = (ev): void => {
+                clickHandler = (ev): void => {
                     ev.stopImmediatePropagation();
+                    ev.stopPropagation();
+                    ev.preventDefault();
                     objectButton.handler();
                 };
-                el.addEventListener('click', handler);
+                mousedownHandler = (ev: MouseEvent): void => {
+                    ev.stopImmediatePropagation();
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                };
+                el.addEventListener('click', clickHandler);
+                el.addEventListener('mousedown', mousedownHandler);
                 updateButton = this._updateButton.bind(this, button, el);
                 updateButton();
                 this.engine.editor.dispatcher.registerCommandHook('*', updateButton);
             },
             detach: (el: HTMLButtonElement): void => {
-                el.removeEventListener('click', handler);
+                el.removeEventListener('click', clickHandler);
+                el.removeEventListener('mousedown', mousedownHandler);
                 this.engine.editor.dispatcher.removeCommandHook('*', updateButton);
             },
         };
