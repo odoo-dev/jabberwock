@@ -5,6 +5,7 @@ import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
 import template from './modes.xml';
 import '../utils/editor.css';
+import '../../packages/plugin-toolbar/assets/Toolbar.css';
 import '../utils/fontawesomeAssets';
 import { DividerNode } from '../../packages/plugin-divider/src/DividerNode';
 import { PreNode } from '../../packages/plugin-pre/src/PreNode';

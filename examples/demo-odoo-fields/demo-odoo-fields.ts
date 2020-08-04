@@ -10,6 +10,7 @@ import { Layout } from '../../packages/plugin-layout/src/Layout';
 import { VNode } from '../../packages/core/src/VNodes/VNode';
 import JWEditor from '../../packages/core/src/JWEditor';
 
+import '../../packages/plugin-toolbar/assets/Toolbar.css';
 import layout from './layout.xml';
 import '../utils/fontawesomeAssets';
 
