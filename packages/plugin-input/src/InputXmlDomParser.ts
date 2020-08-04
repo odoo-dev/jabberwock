@@ -14,8 +14,8 @@ export class InputXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: HTMLInputElement): Promise<InputNode[]> {
         const input = new InputNode({
-            type: item.getAttribute('type'),
-            name: item.getAttribute('name'),
+            inputType: item.getAttribute('type'),
+            inputName: item.getAttribute('name'),
             value: item.value,
         });
         input.modifiers.append(this.engine.parseAttributes(item));
