@@ -62,9 +62,6 @@ interface OdooWebsiteEditorOptions {
     template?: string;
     toolbarLayout?: ToolbarLayout;
     mode?: ModeDefinition;
-    // todo: Remove when configuring the toolbar in another way.
-    discardButton?: boolean;
-    saveButton?: boolean;
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
 }
 
@@ -150,11 +147,7 @@ export class OdooWebsiteEditor extends JWEditor {
             ],
         });
         this.configure(Toolbar, {
-            layout: [
-                ...(options.toolbarLayout || defaultToolbarLayout),
-                ...(options.saveButton ? [['OdooSaveButton']] : []),
-                ...(options.discardButton ? [['OdooDiscardButton']] : []),
-            ],
+            layout: [...(options.toolbarLayout || defaultToolbarLayout)],
         });
 
         const defaultTemplate = `
