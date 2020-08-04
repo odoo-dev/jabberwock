@@ -63,6 +63,14 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
             }
         } while (doc);
 
+        // If the selection goes into an input inside the jw-follow-range, do nothing.
+        if (
+            document.activeElement instanceof HTMLInputElement &&
+            document.activeElement.closest('JW-FOLLOW-RANGE')
+        ) {
+            return;
+        }
+
         if (selection.rangeCount && !isCollapsed) {
             if (container.parentElement.tagName !== 'BODY') {
                 document.body.append(container);
