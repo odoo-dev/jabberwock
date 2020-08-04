@@ -15,6 +15,76 @@ import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
 import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
 import { OdooTranslationXmlDomParser } from './OdooTranslationXmlDomParser';
 import { DividerNode } from '../../plugin-divider/src/DividerNode';
+import { ImageNode } from '../../plugin-image/src/ImageNode';
+import { VRange } from '../../core/src/VRange';
+import { CommandParams } from '../../core/src/Dispatcher';
+import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
+
+export enum OdooPaddingClasses {
+    NONE = 'padding-none',
+    SMALL = 'padding-small',
+    MEDIUM = 'padding-medium',
+    LARGE = 'padding-large',
+    XL = 'padding-xl',
+}
+
+const paddingClassesLabels = {
+    [OdooPaddingClasses.NONE]: 'None',
+    [OdooPaddingClasses.SMALL]: 'Small',
+    [OdooPaddingClasses.MEDIUM]: 'Medium',
+    [OdooPaddingClasses.LARGE]: 'Large',
+    [OdooPaddingClasses.XL]: 'XL',
+};
+
+const paddingClasses = Object.keys(paddingClassesLabels);
+
+export enum OdooImageClasses {
+    ROUNDED = 'rounded',
+    ROUNDED_CIRCLE = 'rounded-circle',
+    SHADOW = 'shadow',
+    IMG_THUMBNAIL = 'img-thumbnail',
+}
+
+const imageClassesLabels = {
+    [OdooImageClasses.ROUNDED]: 'Rounded',
+    [OdooImageClasses.ROUNDED_CIRCLE]: 'Circle',
+    [OdooImageClasses.SHADOW]: 'Shadow',
+    [OdooImageClasses.IMG_THUMBNAIL]: 'Thumbnail',
+};
+
+/**
+ * Get one image targeted within the range.
+ * If more images are within the range, return undefined.
+ */
+function getSingleImage(range: VRange): ImageNode | undefined {
+    const imageNodes = range.targetedNodes(ImageNode);
+    return imageNodes.length === 1 && imageNodes[0];
+}
+/**
+ * Check if there is at exactly one image within the editor range
+ */
+function isImageVisible(editor: JWEditor): boolean {
+    return !!getSingleImage(editor.selection.range);
+}
+
+export interface SetPaddingParams extends CommandParams {
+    /**
+     * The name of the padding class.
+     */
+    className: OdooPaddingClasses;
+}
+
+export interface SetImageWidthParams extends CommandParams {
+    /**
+     * The width of the image in percentage (e.g. "10") or "auto" to remove the
+     * width attribute.
+     */
+    width: string;
+}
+
+export interface SetImageClassParams extends CommandParams {
+    className: OdooImageClasses;
+}
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
@@ -131,6 +201,77 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     return [button];
                 },
             },
+            this._makeImagePaddingComponent(
+                'OdooImagePaddingNoneActionable',
+                OdooPaddingClasses.NONE,
+            ),
+            this._makeImagePaddingComponent(
+                'OdooImagePaddingSmallActionable',
+                OdooPaddingClasses.SMALL,
+            ),
+            this._makeImagePaddingComponent(
+                'OdooImagePaddingMediumActionable',
+                OdooPaddingClasses.MEDIUM,
+            ),
+            this._makeImagePaddingComponent(
+                'OdooImagePaddingLargeActionable',
+                OdooPaddingClasses.LARGE,
+            ),
+            this._makeImagePaddingComponent('OdooImagePaddingXLActionable', OdooPaddingClasses.XL),
+
+            this._makeImageWidthComponent('OdooImageWidthAutoActionable', 'auto'),
+            this._makeImageWidthComponent('OdooImageWidth25Actionable', '25'),
+            this._makeImageWidthComponent('OdooImageWidth50Actionable', '50'),
+            this._makeImageWidthComponent('OdooImageWidth75Actionable', '75'),
+            this._makeImageWidthComponent('OdooImageWidth100Actionable', '100'),
+
+            this._makeImageClassComponent(
+                'OdooImageRoundedActionable',
+                OdooImageClasses.ROUNDED,
+                'fa-square',
+            ),
+            this._makeImageClassComponent(
+                'OdooImageRoundedCircleActionable',
+                OdooImageClasses.ROUNDED_CIRCLE,
+                'fa-circle-o',
+            ),
+            this._makeImageClassComponent(
+                'OdooImageRoundedShadowActionable',
+                OdooImageClasses.SHADOW,
+                'fa-sun-o',
+            ),
+            this._makeImageClassComponent(
+                'OdooImageRoundedThumbnailActionable',
+                OdooImageClasses.IMG_THUMBNAIL,
+                'fa-picture-o',
+            ),
+
+            {
+                id: 'OdooCropActionable',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'crop-image',
+                        label: 'Crop',
+                        commandId: 'cropImage',
+                        modifiers: [new Attributes({ class: 'fa fa-crop fa-fw' })],
+                        visible: isImageVisible,
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'OdooTransformActionable',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'transform-image',
+                        label: 'Transform',
+                        commandId: 'transformImage',
+                        modifiers: [new Attributes({ class: 'fa fa-object-ungroup fa-fw' })],
+                        visible: isImageVisible,
+                    });
+                    return [button];
+                },
+            },
         ],
         componentZones: [
             ['OdooLinkButton', ['actionables']],
@@ -139,4 +280,144 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             ['OdooSaveButton', ['actionables']],
         ],
     };
+
+    commands = {
+        setImagePadding: {
+            handler: this.setImagePadding,
+        },
+        setImageWidth: {
+            handler: this.setImageWidth,
+        },
+        setImageClass: {
+            handler: this.setImageClass,
+        },
+    };
+
+    setImagePadding(params: SetPaddingParams): void {
+        const image = getSingleImage(params.context.range);
+        if (image) {
+            const classList = image.modifiers.get(Attributes).classList;
+            for (const className of paddingClasses) {
+                classList.remove(className);
+            }
+            if (params.className === 'padding-none') return;
+            classList.add(params.className);
+        }
+    }
+    setImageWidth(params: SetImageWidthParams): void {
+        const image = getSingleImage(params.context.range);
+        if (image) {
+            const style = image.modifiers.get(Attributes).style;
+            if (params.width === 'auto') {
+                style.remove('width');
+            } else {
+                style.set('width', params.width + '%');
+            }
+        }
+    }
+    setImageClass(params: SetImageClassParams): void {
+        const image = getSingleImage(params.context.range);
+        if (image) {
+            const classList = image.modifiers.get(Attributes).classList;
+            classList.toggle(params.className);
+        }
+    }
+
+    _makeImagePaddingComponent(
+        componentId: string,
+        className: OdooPaddingClasses,
+    ): ComponentDefinition {
+        const component: ComponentDefinition = {
+            id: componentId,
+            async render(): Promise<ActionableNode[]> {
+                const params: SetPaddingParams = {
+                    className: className,
+                };
+                const button = new ActionableNode({
+                    name: `set-${className}`,
+                    label: paddingClassesLabels[className],
+                    commandId: 'setImagePadding',
+                    commandArgs: params,
+                    visible: isImageVisible,
+                    selected: (editor: JWEditor): boolean => {
+                        const image = getSingleImage(editor.selection.range);
+                        if (image) {
+                            const imageAttribute = image.modifiers.get(Attributes);
+                            if (className === OdooPaddingClasses.NONE) {
+                                if (
+                                    paddingClasses.every(
+                                        className => !imageAttribute.has(className),
+                                    )
+                                ) {
+                                    return true;
+                                }
+                            } else {
+                                imageAttribute.classList.has(className);
+                            }
+                        }
+                        return false;
+                    },
+                });
+                return [button];
+            },
+        };
+        return component;
+    }
+    _makeImageWidthComponent(componentId: string, width: string): ComponentDefinition {
+        const component: ComponentDefinition = {
+            id: componentId,
+            async render(): Promise<ActionableNode[]> {
+                const params: SetImageWidthParams = {
+                    width: width,
+                };
+                const button = new ActionableNode({
+                    name: `set-image-width-${width}`,
+                    label: width === 'auto' ? 'auto' : width + '%',
+                    commandId: 'setImageWidth',
+                    commandArgs: params,
+                    visible: isImageVisible,
+                    selected: (editor: JWEditor): boolean => {
+                        const image = getSingleImage(editor.selection.range);
+                        if (image) {
+                            const imageAttribute = image.modifiers.get(Attributes);
+                            return parseInt(imageAttribute.style.get('width')) === parseInt(width);
+                        }
+                        return false;
+                    },
+                });
+                return [button];
+            },
+        };
+        return component;
+    }
+    _makeImageClassComponent(
+        componentId: string,
+        className: OdooImageClasses,
+        faIcon: string,
+    ): ComponentDefinition {
+        const component: ComponentDefinition = {
+            id: componentId,
+            async render(): Promise<ActionableNode[]> {
+                const params: SetImageClassParams = { className };
+                const button = new ActionableNode({
+                    name: `set-image-class-${className}`,
+                    label: imageClassesLabels[className],
+                    commandId: 'setImageClass',
+                    commandArgs: params,
+                    modifiers: [new Attributes({ class: `fa ${faIcon} fa-fw` })],
+                    visible: isImageVisible,
+                    selected: (editor: JWEditor): boolean => {
+                        const image = getSingleImage(editor.selection.range);
+                        if (image) {
+                            const imageAttribute = image.modifiers.get(Attributes);
+                            return imageAttribute.classList.has(className);
+                        }
+                        return false;
+                    },
+                });
+                return [button];
+            },
+        };
+        return component;
+    }
 }
