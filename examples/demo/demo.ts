@@ -12,6 +12,7 @@ import './demo.css';
 import { VNode } from '../../packages/core/src/VNodes/VNode';
 
 import '../utils/fontawesomeAssets';
+import '../../packages/plugin-toolbar/assets/Toolbar.css';
 
 const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';

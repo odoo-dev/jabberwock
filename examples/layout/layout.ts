@@ -19,6 +19,7 @@ import { Fullscreen } from '../../packages/plugin-fullscreen/src/Fullscreen';
 import { Theme } from '../../packages/plugin-theme/src/Theme';
 import { Toolbar, ToolbarConfig } from '../../packages/plugin-toolbar/src/Toolbar';
 
+import '../../packages/plugin-toolbar/assets/Toolbar.css';
 import '../utils/fontawesomeAssets';
 import { Template } from '../../packages/plugin-template/src/Template';
 import { ZoneNode } from '../../packages/plugin-layout/src/ZoneNode';
