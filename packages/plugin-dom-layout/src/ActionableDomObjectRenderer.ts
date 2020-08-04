@@ -20,7 +20,7 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
         let clickHandler: (ev: MouseEvent) => void;
         let mousedownHandler: (ev: MouseEvent) => void;
         const objectButton: DomObjectActionable = {
-            tag: 'BUTTON',
+            tag: 'JW-BUTTON',
             attributes: {
                 name: button.actionName,
             },
