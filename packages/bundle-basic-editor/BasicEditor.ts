@@ -47,6 +47,7 @@ import { OdooField } from '../../packages/plugin-odoo-field/src/OdooField';
 import { parseEditable, createEditable } from '../../packages/utils/src/configuration';
 import { Fullscreen } from '../../packages/plugin-fullscreen/src/Fullscreen';
 import { Code } from '../plugin-code/src/Code';
+import { FontSize } from '../plugin-font-size/src/FontSize';
 
 export class BasicEditor extends JWEditor {
     constructor(params?: { editable?: HTMLElement }) {
@@ -75,6 +76,7 @@ export class BasicEditor extends JWEditor {
                 [Textarea],
                 [List],
                 [Indent],
+                [FontSize],
                 [Span],
                 [Bold],
                 [Italic],
@@ -145,6 +147,7 @@ export class BasicEditor extends JWEditor {
                         'PreButton',
                     ],
                 ],
+                ['FontSizeInput'],
                 ['BoldButton', 'ItalicButton', 'UnderlineButton', 'RemoveFormatButton'],
                 ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
                 ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
