@@ -30,6 +30,10 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
                 }
             },
             attach: (el: HTMLButtonElement): void => {
+                this.engine.editor.dispatcher.removeCommandHook('*', updateButton);
+                el.removeEventListener('click', clickHandler);
+                el.removeEventListener('mousedown', mousedownHandler);
+
                 clickHandler = (ev): void => {
                     ev.stopImmediatePropagation();
                     ev.stopPropagation();

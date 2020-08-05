@@ -35,6 +35,9 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
                 },
                 attach: (el: HTMLOptionElement): void => {
                     const select = el.closest('select') || el.parentElement;
+                    select.removeEventListener('change', handler);
+                    this.engine.editor.dispatcher.removeCommandHook('*', updateOption);
+
                     handler = (ev: Event): void => {
                         const option = select.querySelector('option:checked');
                         if (option === el) {
