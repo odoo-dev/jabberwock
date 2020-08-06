@@ -17,11 +17,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async addClass(domNode: Node | Node[], className: string | string[]): Promise<void> {
-        const classes = Array.isArray(className) ? className : [className];
-        for (const node of this.getNodes(domNode)) {
-            node.modifiers.get(Attributes).classList.add(...classes);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const classes = Array.isArray(className) ? className : [className];
+            for (const node of this.getNodes(domNode)) {
+                node.modifiers.get(Attributes).classList.add(...classes);
+            }
+        });
     }
     /**
      * Remove a class or a list of classes from a DOM node or a list of DOM nodes.
@@ -29,11 +30,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async removeClass(domNode: Node | Node[], className: string | string[]): Promise<void> {
-        const classes = Array.isArray(className) ? className : [className];
-        for (const node of this.getNodes(domNode)) {
-            node.modifiers.find(Attributes)?.classList.remove(...classes);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const classes = Array.isArray(className) ? className : [className];
+            for (const node of this.getNodes(domNode)) {
+                node.modifiers.find(Attributes)?.classList.remove(...classes);
+            }
+        });
     }
     /**
      * Add or remove a class or a list of classes from a DOM node or a list of
@@ -42,11 +44,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async toggleClass(domNode: Node | Node[], className: string): Promise<void> {
-        const classes = Array.isArray(className) ? className : [className];
-        for (const node of this.getNodes(domNode)) {
-            node.modifiers.get(Attributes).classList.toggle(...classes);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const classes = Array.isArray(className) ? className : [className];
+            for (const node of this.getNodes(domNode)) {
+                node.modifiers.get(Attributes).classList.toggle(...classes);
+            }
+        });
     }
     /**
      * Set an attribute on a DOM node or a list of DOM nodes.
@@ -54,10 +57,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async setAttribute(domNode: Node | Node[], name: string, value: string): Promise<void> {
-        for (const node of this.getNodes(domNode)) {
-            node.modifiers.get(Attributes).set(name, value);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            for (const node of this.getNodes(domNode)) {
+                node.modifiers.get(Attributes).set(name, value);
+            }
+        });
     }
 
     /**
@@ -68,13 +72,14 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         domNode: Node | Node[],
         attributes: { [key: string]: string },
     ): Promise<void> {
-        for (const node of this.getNodes(domNode)) {
-            node.modifiers.get(Attributes).clear();
-            for (const [name, value] of Object.entries(attributes)) {
-                node.modifiers.get(Attributes).set(name, value);
+        return this.editor.execCommand(async () => {
+            for (const node of this.getNodes(domNode)) {
+                node.modifiers.get(Attributes).clear();
+                for (const [name, value] of Object.entries(attributes)) {
+                    node.modifiers.get(Attributes).set(name, value);
+                }
             }
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        });
     }
     /**
      * Set a style key/value pair on a DOM node or a list of DOM nodes.
@@ -87,11 +92,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         value: string,
         important?: boolean,
     ): Promise<void> {
-        for (const node of this.getNodes(domNode)) {
-            value = important ? value + ' !important' : value;
-            node.modifiers.get(Attributes).style.set(name, value);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            for (const node of this.getNodes(domNode)) {
+                value = important ? value + ' !important' : value;
+                node.modifiers.get(Attributes).style.set(name, value);
+            }
+        });
     }
     /**
      * Remove a DOM node or a list of DOM nodes.
@@ -99,10 +105,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async remove(domNode: Node | Node[]): Promise<void> {
-        for (const node of this.getNodes(domNode)) {
-            node.remove();
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            for (const node of this.getNodes(domNode)) {
+                node.remove();
+            }
+        });
     }
     /**
      * Remove the contents of a DOM node or of a list of DOM nodes.
@@ -110,10 +117,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async empty(domNode: Node | Node[]): Promise<void> {
-        for (const node of this.getNodes(domNode)) {
-            node.empty();
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            for (const node of this.getNodes(domNode)) {
+                node.empty();
+            }
+        });
     }
     /**
      * Replace a DOM node or a list of DOM nodes with the given HTML content.
@@ -121,16 +129,17 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async replace(domNodes: Node | Node[], html: string): Promise<void> {
-        const nodes = this.getNodes(domNodes);
-        const parsedNodes = await this._parseHtmlString(html);
-        const firstNode = nodes[0];
-        for (const parsedNode of parsedNodes) {
-            firstNode.before(parsedNode);
-        }
-        for (const node of nodes) {
-            node.remove();
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const nodes = this.getNodes(domNodes);
+            const parsedNodes = await this._parseHtmlString(html);
+            const firstNode = nodes[0];
+            for (const parsedNode of parsedNodes) {
+                firstNode.before(parsedNode);
+            }
+            for (const node of nodes) {
+                node.remove();
+            }
+        });
     }
     /**
      * Wrap the given HTML content within a DOM container.
@@ -138,17 +147,18 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async wrap(domContainer: Node, html: string): Promise<void> {
-        const container = this.getNodes(domContainer)[0];
-        if (!(container instanceof ContainerNode)) {
-            throw new Error(
-                'The provided container must be a ContainerNode in the Jabberwock structure.',
-            );
-        }
-        const parsedNodes = await this._parseHtmlString(html);
-        for (const parsedNode of parsedNodes) {
-            container.wrap(parsedNode);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const container = this.getNodes(domContainer)[0];
+            if (!(container instanceof ContainerNode)) {
+                throw new Error(
+                    'The provided container must be a ContainerNode in the Jabberwock structure.',
+                );
+            }
+            const parsedNodes = await this._parseHtmlString(html);
+            for (const parsedNode of parsedNodes) {
+                container.wrap(parsedNode);
+            }
+        });
     }
     /**
      * Move a DOM Node before another.
@@ -156,11 +166,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async moveBefore(fromDomNode: Node, toDomNode: Node): Promise<void> {
-        const toNode = this.getNodes(toDomNode)[0];
-        for (const fromNode of this.getNodes(fromDomNode)) {
-            fromNode.before(toNode);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const toNode = this.getNodes(toDomNode)[0];
+            for (const fromNode of this.getNodes(fromDomNode)) {
+                fromNode.before(toNode);
+            }
+        });
     }
     /**
      * Move a DOM Node after another.
@@ -168,12 +179,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async moveAfter(fromDomNode: Node, toDomNode: Node): Promise<void> {
-        const toNodes = this.getNodes(toDomNode);
-        const toNode = toNodes[toNodes.length - 1];
-        for (const fromNode of this.getNodes(fromDomNode).reverse()) {
-            fromNode.after(toNode);
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+        return this.editor.execCommand(async () => {
+            const toNodes = this.getNodes(toDomNode);
+            const toNode = toNodes[toNodes.length - 1];
+            for (const fromNode of this.getNodes(fromDomNode).reverse()) {
+                fromNode.after(toNode);
+            }
+        });
     }
     /**
      * Insert html content before, after or inside a DOM Node. If no DOM Node
@@ -182,37 +194,39 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async insertHtml(html: string, domNode?: Node, position?: RelativePosition): Promise<VNode[]> {
-        let nodes: VNode[];
-        if (domNode) {
-            nodes = this.getNodes(domNode);
-            if (!nodes.length) {
-                throw new Error('The given DOM node does not have a corresponding VNode.');
+        let parsedNodes: VNode[];
+        await this.editor.execCommand(async () => {
+            let nodes: VNode[];
+            if (domNode) {
+                nodes = this.getNodes(domNode);
+                if (!nodes.length) {
+                    throw new Error('The given DOM node does not have a corresponding VNode.');
+                }
+                position = position || RelativePosition.BEFORE;
+            } else {
+                this.editor.selection.range.empty();
+                nodes = [this.editor.selection.range.start];
+                position = RelativePosition.BEFORE;
             }
-            position = position || RelativePosition.BEFORE;
-        } else {
-            this.editor.selection.range.empty();
-            nodes = [this.editor.selection.range.start];
-            position = RelativePosition.BEFORE;
-        }
-        const parsedNodes = await this._parseHtmlString(html);
-        switch (position.toUpperCase()) {
-            case RelativePosition.BEFORE:
-                for (const parsedNode of parsedNodes) {
-                    nodes[0].before(parsedNode);
-                }
-                break;
-            case RelativePosition.AFTER:
-                for (const parsedNode of [...parsedNodes].reverse()) {
-                    nodes[nodes.length - 1].after(parsedNode);
-                }
-                break;
-            case RelativePosition.INSIDE:
-                for (const parsedNode of [...parsedNodes]) {
-                    nodes[nodes.length - 1].append(parsedNode);
-                }
-                break;
-        }
-        await this.editor.dispatcher.dispatchHooks('@redraw');
+            parsedNodes = await this._parseHtmlString(html);
+            switch (position.toUpperCase()) {
+                case RelativePosition.BEFORE:
+                    for (const parsedNode of parsedNodes) {
+                        nodes[0].before(parsedNode);
+                    }
+                    break;
+                case RelativePosition.AFTER:
+                    for (const parsedNode of [...parsedNodes].reverse()) {
+                        nodes[nodes.length - 1].after(parsedNode);
+                    }
+                    break;
+                case RelativePosition.INSIDE:
+                    for (const parsedNode of [...parsedNodes]) {
+                        nodes[nodes.length - 1].append(parsedNode);
+                    }
+                    break;
+            }
+        });
         return parsedNodes;
     }
     /**
