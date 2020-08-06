@@ -18,6 +18,7 @@ import { Point } from './VNodes/VNode';
 
 export enum EditorStage {
     CONFIGURATION = 'configuration',
+    STARTING = 'starting',
     EDITION = 'edition',
 }
 
@@ -78,7 +79,7 @@ export class JWEditor {
         loadables: {},
     };
     memory: Memory;
-    memoryInfo: { commandNames: string[] };
+    memoryInfo: { commandNames: string[]; uiCommand: boolean };
     private _memoryID = 0;
     selection: VSelection;
     loaders: Record<string, Loader> = {};
@@ -118,7 +119,7 @@ export class JWEditor {
      * Start the editor on the editable DOM node set on this editor instance.
      */
     async start(): Promise<void> {
-        this._stage = EditorStage.EDITION;
+        this._stage = EditorStage.STARTING;
         this._loadPlugins();
 
         // Load editor-level loadables.
@@ -139,17 +140,18 @@ export class JWEditor {
         }
 
         // create memory
-        this.memoryInfo = makeVersionable({ commandNames: [] });
+        this.memoryInfo = makeVersionable({ commandNames: [], uiCommand: false });
         this.memory = new Memory();
         this.memory.attach(this.memoryInfo);
         this.memory.create(this._memoryID.toString());
 
         // Start all plugins in the first memory slice.
-        return this.execCommand(async () => {
+        await this.execCommand(async () => {
             for (const plugin of this.plugins.values()) {
                 await plugin.start();
             }
         });
+        this._stage = EditorStage.EDITION;
     }
 
     //--------------------------------------------------------------------------
@@ -364,44 +366,69 @@ export class JWEditor {
             }
 
             // Switch to the next memory slice (unfreeze the memory).
+            const origin = this.memory.sliceKey;
             const memorySlice = this._memoryID.toString();
             this.memory.switchTo(memorySlice);
             this.memoryInfo.commandNames = new VersionableArray();
+            this.memoryInfo.uiCommand = false;
             let commandNames = this.memoryInfo.commandNames;
 
-            // Execute command.
-            if (typeof commandName === 'function') {
-                this.memoryInfo.commandNames.push('@custom');
-                await commandName(this.contextManager.defaultContext);
-                if (this.memory.sliceKey !== memorySlice) {
-                    // Override by the current commandName if the slice changed.
-                    commandNames = ['@custom'];
+            try {
+                // Execute command.
+                if (typeof commandName === 'function') {
+                    this.memoryInfo.commandNames.push('@custom');
+                    await commandName(this.contextManager.defaultContext);
+                    if (this.memory.sliceKey !== memorySlice) {
+                        // Override by the current commandName if the slice changed.
+                        commandNames = ['@custom'];
+                    }
+                } else {
+                    this.memoryInfo.commandNames.push(commandName);
+                    await this.dispatcher.dispatch(commandName, params);
+                    if (this.memory.sliceKey !== memorySlice) {
+                        // Override by the current commandName if the slice changed.
+                        commandNames = [commandName];
+                    }
                 }
-            } else {
-                this.memoryInfo.commandNames.push(commandName);
-                await this.dispatcher.dispatch(commandName, params);
-                if (this.memory.sliceKey !== memorySlice) {
-                    // Override by the current commandName if the slice changed.
-                    commandNames = [commandName];
+
+                // Prepare nex slice and freeze the memory.
+                this._memoryID++;
+                const nextMemorySlice = this._memoryID.toString();
+                this.memory.create(nextMemorySlice);
+
+                // Send the commit message with a froozen memory.
+                const changesLocations = this.memory.getChangesLocations(
+                    memorySlice,
+                    this.memory.sliceKey,
+                );
+                await this.dispatcher.dispatchHooks('@commit', {
+                    changesLocations: changesLocations,
+                    commandNames: commandNames,
+                });
+            } catch (error) {
+                if (this._stage !== EditorStage.EDITION) {
+                    throw error;
                 }
+                console.error(error);
+                const failedSlice = this.memory.sliceKey;
+
+                // When an error occurs, we go back to part of the functional memory.
+                this.memory.switchTo(origin);
+
+                // Send the commit message with a froozen memory.
+                const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
+                await this.dispatcher
+                    .dispatchHooks('@commit', {
+                        changesLocations: changesLocations,
+                        commandNames: commandNames,
+                    })
+                    .catch(error => {
+                        if (this._stage !== EditorStage.EDITION) {
+                            throw error;
+                        }
+                        console.error(error);
+                    });
             }
-
-            // Check if it's frozen for calling execCommand inside a call of
-            // execCommand Create the next memory slice (and freeze the
-            // current memory).
-            this._memoryID++;
-            const nextMemorySlice = this._memoryID.toString();
-            this.memory.create(nextMemorySlice);
-
-            // Send the commit message with a froozen memory.
-            const changesLocations = this.memory.getChangesLocations(
-                memorySlice,
-                this.memory.sliceKey,
-            );
-            return this.dispatcher.dispatchHooks('@commit', {
-                changesLocations: changesLocations,
-                commandNames: commandNames,
-            });
         });
         return this._mutex;
     }
