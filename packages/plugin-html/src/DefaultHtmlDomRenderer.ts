@@ -62,6 +62,18 @@ export class DefaultHtmlDomRenderer extends NodeRenderer<Node[]> {
                     }
                 }
             }
+            // Implement attach & detach: domObject into html.
+            element.addEventListener('detach', () => {
+                [...element.children].forEach(childElement => {
+                    childElement.dispatchEvent(new CustomEvent('detach'));
+                });
+                if (domObject.detach) {
+                    domObject.detach(element);
+                }
+            });
+            if (domObject.attach) {
+                domObject.attach(element);
+            }
             domNode = element;
         } else if ('text' in domObject) {
             domNode = document.createTextNode(domObject.text);
