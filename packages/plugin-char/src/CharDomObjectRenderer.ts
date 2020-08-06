@@ -43,11 +43,11 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
         // Render block edge spaces as non-breakable space (otherwise browsers
         // won't render them).
         const previous = charNodes[0].previousSibling();
-        if (!previous || !previous.is(InlineNode)) {
+        if (!previous || !(previous instanceof InlineNode)) {
             texts[0] = texts[0].replace(/^ /g, '\u00A0');
         }
         const next = charNodes[charNodes.length - 1].nextSibling();
-        if (!next || !next.is(InlineNode)) {
+        if (!next || !(next instanceof InlineNode)) {
             texts[texts.length - 1] = texts[texts.length - 1].replace(/^ /g, '\u00A0');
         }
         const textObject = { text: texts.join('') };

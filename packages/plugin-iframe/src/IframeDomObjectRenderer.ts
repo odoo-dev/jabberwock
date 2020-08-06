@@ -20,7 +20,7 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                     tag: 'JW-IFRAME',
                     shadowRoot: true,
                     children: iframeNode.childVNodes.filter(
-                        child => child.tangible || child.is(MetadataNode),
+                        child => child.tangible || child instanceof MetadataNode,
                     ),
                     attach: (wrap: HTMLElement): void => {
                         if (wrap.parentElement instanceof HTMLIFrameElement) {

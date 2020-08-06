@@ -13,7 +13,10 @@ export class LinkXmlDomParser extends FormatXmlDomParser {
         const link = new LinkFormat(item.getAttribute('href'));
         // TODO: Link should not have an `Attributes` modifier outside of XML.
         // In XML context we need to conserve the order of attributes.
-        link.modifiers.replace(Attributes, this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            link.modifiers.replace(Attributes, attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(link, children);
 

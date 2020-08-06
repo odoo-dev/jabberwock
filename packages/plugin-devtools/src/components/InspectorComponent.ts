@@ -222,7 +222,7 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
             nodes = this.domEngine.getNodes(node);
             node = node.parentNode;
         }
-        if (nodes.length && nodes[0].is(CharNode) && nodes[caretPosition.offset]) {
+        if (nodes[0] instanceof CharNode && nodes[caretPosition.offset]) {
             return [nodes[caretPosition.offset]];
         }
         return nodes;

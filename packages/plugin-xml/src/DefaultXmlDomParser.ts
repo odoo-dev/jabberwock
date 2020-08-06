@@ -14,7 +14,10 @@ export class DefaultXmlDomParser extends AbstractParser<Node> {
         // but we don't break it either.
         const element = new VElement({ htmlTag: nodeName(item) });
         if (item instanceof Element) {
-            element.modifiers.append(this.engine.parseAttributes(item));
+            const attributes = this.engine.parseAttributes(item);
+            if (attributes.length) {
+                element.modifiers.append(attributes);
+            }
         }
         const nodes = await this.engine.parse(...item.childNodes);
         element.append(...nodes);

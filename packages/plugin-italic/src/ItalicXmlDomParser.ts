@@ -15,7 +15,10 @@ export class ItalicXmlDomParser extends FormatXmlDomParser {
      */
     async parse(item: Element): Promise<VNode[]> {
         const italic = new ItalicFormat(nodeName(item) as 'I' | 'EM');
-        italic.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            italic.modifiers.append(attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(italic, children);
 

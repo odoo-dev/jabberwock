@@ -18,11 +18,13 @@ export class InputXmlDomParser extends AbstractParser<Node> {
             name: item.getAttribute('name'),
             value: item.value,
         });
-        input.modifiers.append(this.engine.parseAttributes(item));
-        const attributes = input.modifiers.find(Attributes);
+        const attributes = this.engine.parseAttributes(item);
         if (attributes) {
             attributes.remove('type'); // type is on input.inputType
             attributes.remove('name'); // type is on input.inputName
+        }
+        if (attributes.length) {
+            input.modifiers.append(attributes);
         }
         const nodes = await this.engine.parse(...item.childNodes);
         input.append(...nodes);

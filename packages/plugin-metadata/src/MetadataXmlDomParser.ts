@@ -25,7 +25,10 @@ export class MetadataXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<MetadataNode[]> {
         const technical = new MetadataNode({ htmlTag: nodeName(item) as 'SCRIPT' | 'STYLE' });
-        technical.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            technical.modifiers.append(attributes);
+        }
         technical.contents = item.innerHTML;
         return [technical];
     }

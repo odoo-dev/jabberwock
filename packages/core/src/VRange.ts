@@ -240,7 +240,7 @@ export class VRange {
         } else if (position === RelativePosition.AFTER) {
             reference = reference.lastLeaf();
         }
-        if (reference.is(ContainerNode) && !reference.hasChildren()) {
+        if (reference instanceof ContainerNode && !reference.hasChildren()) {
             reference.prepend(this.start);
         } else if (position === RelativePosition.AFTER && reference !== this.end) {
             // We check that `reference` isn't `this.end` to avoid a backward
@@ -266,7 +266,7 @@ export class VRange {
         } else if (position === RelativePosition.AFTER) {
             reference = reference.lastLeaf();
         }
-        if (reference.is(ContainerNode) && !reference.hasChildren()) {
+        if (reference instanceof ContainerNode && !reference.hasChildren()) {
             reference.append(this.end);
         } else if (position === RelativePosition.BEFORE && reference !== this.start) {
             // We check that `reference` isn't `this.start` to avoid a backward
@@ -366,7 +366,7 @@ export class VRange {
     empty(): void {
         const removableNodes = this.selectedNodes(node => {
             // TODO: Replace Table check with complex table selection support.
-            return this.mode.is(node, RuleProperty.EDITABLE) && !node.is(TableCellNode);
+            return this.mode.is(node, RuleProperty.EDITABLE) && !(node instanceof TableCellNode);
         });
         // Remove selected nodes without touching the start range's ancestors.
         const startAncestors = this.start.ancestors();

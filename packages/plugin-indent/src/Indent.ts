@@ -157,7 +157,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      * @param params
      */
     _isSegmentBreak(node: VNode): boolean {
-        return node.is(ContainerNode) || node.is(LineBreakNode);
+        return node instanceof ContainerNode || node instanceof LineBreakNode;
     }
     /**
      * Return the next segment start point after the given segment break.
@@ -167,7 +167,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     _nextSegmentStart(segmentBreak: VNode): Point {
         let reference = segmentBreak;
         let position = RelativePosition.BEFORE;
-        if (segmentBreak.is(AtomicNode)) {
+        if (segmentBreak instanceof AtomicNode) {
             reference = segmentBreak.nextSibling();
         } else if (segmentBreak.hasChildren()) {
             reference = segmentBreak.firstChild();
@@ -182,7 +182,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      * @param node
      */
     _isSpace(node: VNode): boolean {
-        return node.is(CharNode) && /^\s$/g.test(node.char);
+        return node instanceof CharNode && /^\s$/g.test(node.char);
     }
     /**
      * Return true if the given VNode can be considered to be a segment break.
@@ -191,7 +191,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      */
     _nextIndentationSpace(segmentBreak: VNode): VNode {
         let space: VNode;
-        if (segmentBreak.is(AtomicNode)) {
+        if (segmentBreak instanceof AtomicNode) {
             space = segmentBreak.nextSibling();
         } else {
             space = segmentBreak.firstChild();
