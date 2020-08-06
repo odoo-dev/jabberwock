@@ -13,10 +13,8 @@ export class ImageDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(node: ImageNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
         const select = (): void => {
-            this.engine.editor.nextEventMutex(() => {
-                return this.engine.editor.execCommand(async () => {
-                    this.engine.editor.selection.select(node, node);
-                });
+            this.engine.editor.execCommand(() => {
+                this.engine.editor.selection.select(node, node);
             });
         };
         const image: DomObject = {

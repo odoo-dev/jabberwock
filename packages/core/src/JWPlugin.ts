@@ -1,4 +1,4 @@
-import JWEditor, { Loader, PluginMap, Loadables } from './JWEditor';
+import { JWEditor, Loader, PluginMap, Loadables } from './JWEditor';
 import { CommandIdentifier, CommandImplementation, CommandHook } from './Dispatcher';
 
 export type JWPluginConfig = {};

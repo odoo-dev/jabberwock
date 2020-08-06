@@ -14,19 +14,15 @@ export class OdooVideoHtmlDomRenderer extends NodeRenderer<DomObject> {
 
     async render(node: OdooVideoNode): Promise<DomObject> {
         const setSelection = (): void => {
-            this.engine.editor.nextEventMutex(() => {
-                this.engine.editor.execCommand<Core>('setSelection', {
-                    vSelection: {
-                        anchorNode: node,
-                        direction: Direction.FORWARD,
-                    },
-                });
+            this.engine.editor.execCommand<Core>('setSelection', {
+                vSelection: {
+                    anchorNode: node,
+                    direction: Direction.FORWARD,
+                },
             });
         };
         const openMedia = (): void => {
-            this.engine.editor.nextEventMutex(() => {
-                this.engine.editor.execCommand('openMedia');
-            });
+            this.engine.editor.execCommand('openMedia');
         };
         const wrapper: DomObject = {
             tag: 'DIV',

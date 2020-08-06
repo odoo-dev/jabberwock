@@ -1,7 +1,7 @@
 import { Dispatcher, CommandParams } from './Dispatcher';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { Core } from './Core';
-import { ContextManager } from './ContextManager';
+import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
 import { VRange } from './VRange';
 import { isConstructor } from '../../utils/src/utils';
@@ -30,8 +30,8 @@ export type Loadables<T extends JWPlugin = JWPlugin> = {
     [key in keyof T['loaders']]?: Parameters<T['loaders'][key]>[0];
 };
 
-type Commands<T extends JWPlugin> = Extract<keyof T['commands'], string>;
-type CommandParamsType<T extends JWPlugin, K extends string> = K extends Commands<T>
+export type Commands<T extends JWPlugin> = Extract<keyof T['commands'], string>;
+export type CommandParamsType<T extends JWPlugin, K extends string> = K extends Commands<T>
     ? Parameters<T['commands'][K]['handler']>[0]
     : never;
 export interface CommitParams extends CommandParams {
@@ -82,7 +82,7 @@ export class JWEditor {
     private _memoryID = 0;
     selection: VSelection;
     loaders: Record<string, Loader> = {};
-    private mutex = Promise.resolve();
+    private _mutex = Promise.resolve();
     // Use a set so that when asynchronous functions are called we ensure that
     // each command batch is waited for.
     preventRenders: Set<Function> = new Set();
@@ -99,9 +99,7 @@ export class JWEditor {
         this.dispatcher = new Dispatcher(this);
         this.plugins = new Map();
         this.selection = new VSelection(this);
-        this.contextManager = new ContextManager(this);
-
-        this.nextEventMutex = this.nextEventMutex.bind(this);
+        this.contextManager = new ContextManager(this, this._execSubCommand.bind(this));
 
         // Core is a special mandatory plugin that handles the matching between
         // the commands supported in the core of the editor and the VDocument.
@@ -116,9 +114,6 @@ export class JWEditor {
         this.mode = this.modes[modeIdentifier];
     }
 
-    async nextEventMutex(next: (...args) => void): Promise<void> {
-        return (this.mutex = this.mutex.then(next));
-    }
     /**
      * Start the editor on the editable DOM node set on this editor instance.
      */
@@ -327,10 +322,12 @@ export class JWEditor {
 
     /**
      * Execute arbitrary code in `callback`, then dispatch the commit event.
+     * The callback receives an `execCommand` parameter which it can use to
+     * make further calls to `execCommand` from *inside* its current command.
      *
      * @param callback
      */
-    async execCommand(callback: () => Promise<void> | void): Promise<void>;
+    async execCommand(callback: (context: Context) => Promise<void> | void): Promise<void>;
     /**
      * Execute the given command.
      *
@@ -343,6 +340,8 @@ export class JWEditor {
     ): Promise<void>;
     /**
      * Execute the command or arbitrary code in `callback` in memory.
+     * The call to execCommand are executed into a mutex. Every plugin can
+     * launch subcommands with the 'JWPlugin.execCommand' method instead.
      *
      * TODO: create memory for each plugin who use the command then use
      * squashInto(winnerSliceKey, winnerSliceKey, newMasterSliceKey)
@@ -351,29 +350,42 @@ export class JWEditor {
      * @param params arguments object of the command to execute
      */
     async execCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
-        commandName: C | (() => Promise<void> | void),
+        commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
     ): Promise<void> {
-        const isFrozen = this.memory.isFrozen();
+        this._mutex = this._mutex.then(async () => {
+            if (!this.memory.isFrozen()) {
+                console.error(
+                    'You are trying to call the external editor' +
+                        ' execCommand method from within an execCommand. ' +
+                        'Use the `execCommand` method of your plugin instead.',
+                );
+                return;
+            }
 
-        let memorySlice: string;
-        if (isFrozen) {
             // Switch to the next memory slice (unfreeze the memory).
-            memorySlice = this._memoryID.toString();
+            const memorySlice = this._memoryID.toString();
             this.memory.switchTo(memorySlice);
             this.memoryInfo.commandNames = new VersionableArray();
-        }
+            let commandNames = this.memoryInfo.commandNames;
 
-        // Execute command.
-        if (typeof commandName === 'function') {
-            this.memoryInfo.commandNames.push('@custom');
-            await commandName();
-        } else {
-            this.memoryInfo.commandNames.push(commandName);
-            await this.dispatcher.dispatch(commandName, params);
-        }
+            // Execute command.
+            if (typeof commandName === 'function') {
+                this.memoryInfo.commandNames.push('@custom');
+                await commandName(this.contextManager.defaultContext);
+                if (this.memory.sliceKey !== memorySlice) {
+                    // Override by the current commandName if the slice changed.
+                    commandNames = ['@custom'];
+                }
+            } else {
+                this.memoryInfo.commandNames.push(commandName);
+                await this.dispatcher.dispatch(commandName, params);
+                if (this.memory.sliceKey !== memorySlice) {
+                    // Override by the current commandName if the slice changed.
+                    commandNames = [commandName];
+                }
+            }
 
-        if (isFrozen) {
             // Check if it's frozen for calling execCommand inside a call of
             // execCommand Create the next memory slice (and freeze the
             // current memory).
@@ -386,33 +398,70 @@ export class JWEditor {
                 memorySlice,
                 this.memory.sliceKey,
             );
-            await this.dispatcher.dispatchHooks('@commit', {
+            return this.dispatcher.dispatchHooks('@commit', {
                 changesLocations: changesLocations,
-                commandNames: this.memoryInfo.commandNames,
+                commandNames: commandNames,
             });
-        }
+        });
+        return this._mutex;
     }
 
     /**
-     * Create a temporary range corresponding to the given boundary points and
-     * call the given callback with the newly created range as argument. The
-     * range is automatically destroyed after calling the callback.
+     * Execute a command on a temporary range corresponding to the given
+     * boundary points. The range is automatically destroyed afterwards.
+     *
+     * @param bounds The points corresponding to the range boundaries.
+     * @param commandName name identifier of the command to execute or callback
+     * @param params arguments object of the command to execute
+     * @param mode
+     */
+    async execWithRange<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        bounds: [Point, Point],
+        commandName: C | ((context: Context) => Promise<void> | void),
+        params?: CommandParamsType<P, C>,
+        mode?: Mode,
+    ): Promise<void>;
+    /**
+     * Execute a command on a temporary range corresponding to the given
+     * boundary points. The range is automatically destroyed afterwards.
      *
      * @param bounds The points corresponding to the range boundaries.
      * @param callback The callback to call with the newly created range.
      * @param mode
      */
-    async withRange(
+    async execWithRange<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
         bounds: [Point, Point],
-        callback: (range: VRange) => Promise<void> | void,
+        callback: (context: Context) => Promise<void> | void,
+        mode?: Mode,
+    ): Promise<void>;
+    async execWithRange<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        bounds: [Point, Point],
+        commandName: C | ((context: Context) => Promise<void> | void),
+        params?: CommandParamsType<P, C> | Mode,
         mode?: Mode,
     ): Promise<void> {
-        return this.execCommand(async () => {
+        const callback = async (): Promise<void> => {
             this.memoryInfo.commandNames.push('@withRange');
-            const range = new VRange(this, bounds, mode);
-            await callback(range);
+            let range: VRange;
+            if (typeof commandName === 'function') {
+                range = new VRange(this, bounds, params as Mode);
+                this.memoryInfo.commandNames.push('@custom');
+                await commandName({ ...this.contextManager.defaultContext, range });
+            } else {
+                range = new VRange(this, bounds, mode);
+                this.memoryInfo.commandNames.push(commandName);
+                const newParam = Object.assign({ context: {} }, params as CommandParamsType<P, C>);
+                newParam.context.range = range;
+                await this.dispatcher.dispatch(commandName, newParam);
+            }
             range.remove();
-        });
+        };
+
+        if (this.memory.isFrozen()) {
+            await this.execCommand(callback);
+        } else {
+            await callback();
+        }
     }
 
     /**
@@ -433,10 +482,29 @@ export class JWEditor {
         this.plugins.clear();
         this.dispatcher = new Dispatcher(this);
         this.selection = new VSelection(this);
-        this.contextManager = new ContextManager(this);
+        this.contextManager = new ContextManager(this, this._execSubCommand);
         // Clear loaders.
         this.loaders = {};
         this._stage = EditorStage.CONFIGURATION;
+    }
+
+    /**
+     * Execute the command or arbitrary code in `callback` in memory.
+     *
+     * @param commandName name identifier of the command to execute or callback
+     * @param params arguments object of the command to execute
+     */
+    async _execSubCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        commandName: C | ((context: Context) => Promise<void> | void),
+        params?: CommandParamsType<P, C>,
+    ): Promise<void> {
+        if (typeof commandName === 'function') {
+            this.memoryInfo.commandNames.push('@custom');
+            await commandName(this.contextManager.defaultContext);
+        } else {
+            this.memoryInfo.commandNames.push(commandName);
+            await this.dispatcher.dispatch(commandName, params);
+        }
     }
 }
 
