@@ -56,6 +56,8 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
                 tablePicker.columnCount > minColumnCount
             ) {
                 this.engine.editor.execCommand(() => {
+                    this.engine.editor.memoryInfo.uiCommand = true;
+
                     const toRedraw = new Set<VNode>();
                     // Add/remove rows.
                     if (tablePickerCell.rowIndex >= tablePicker.rowCount - 1) {
