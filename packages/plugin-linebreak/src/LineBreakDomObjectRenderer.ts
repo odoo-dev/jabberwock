@@ -4,6 +4,7 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class LineBreakDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -13,15 +14,18 @@ export class LineBreakDomObjectRenderer extends NodeRenderer<DomObject> {
     /**
      * Render the VNode to the given format.
      */
-    async render(node: LineBreakNode): Promise<DomObject> {
+    async render(
+        node: LineBreakNode,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<DomObject> {
         const br: DomObject = { tag: 'BR' };
-        this.engine.locate([node], br);
+        worker.locate([node], br);
         if (!node.nextSibling()) {
             // If a LineBreakNode has no next sibling, it must be rendered
             // as two BRs in order for it to be visible.
             const br2 = { tag: 'BR' };
             const domObject = { children: [br, br2] };
-            this.engine.locate([node], br2);
+            worker.locate([node], br2);
             return domObject;
         }
         return br;

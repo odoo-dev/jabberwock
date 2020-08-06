@@ -21,6 +21,7 @@ import { TableCellNode } from '../src/TableCellNode';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { TableSectionAttributes } from '../src/TableRowXmlDomParser';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { CharNode } from '../../plugin-char/src/CharNode';
 
 let element: Element;
 describePlugin(Table, testEditor => {
@@ -3301,19 +3302,28 @@ describePlugin(Table, testEditor => {
                     const table = editable.firstChild() as TableNode;
                     await editor.execCommand('addRowBelow');
                     const row10 = table.children(TableRowNode)[10];
-                    table.addRowBelow(row10.children(TableCellNode)[0]);
-                    const insertedRow = table.children(TableRowNode)[11];
-                    const insertedCells = insertedRow.children(TableCellNode);
+                    const row11 = table.children(TableRowNode)[11];
+
+                    await editor.execCommand(async () => {
+                        const td = row11.children(TableCellNode)[0];
+                        const b = new CharNode({ char: 'b' });
+                        td.append(b);
+                        editor.selection.setAt(b);
+                    });
+
+                    await editor.execCommand('addRowBelow');
 
                     // Test the row
                     expect(table.children(TableRowNode)[10]).to.equal(
                         row10,
                         "10th row hasn't changed",
                     );
+                    expect(row11).to.not.equal(row10, '11th row is a new row');
                     expect(table.children(TableRowNode)[11]).to.not.equal(
                         row10,
                         '11th row is a new row',
                     );
+                    const insertedRow = table.children(TableRowNode)[11];
                     expect(insertedRow.header).to.equal(false, 'new row is not a header row');
                     expect(insertedRow.modifiers.find(Attributes)?.style.cssText).to.equal(
                         undefined,
@@ -3321,6 +3331,7 @@ describePlugin(Table, testEditor => {
                     );
 
                     // Test individual cells
+                    const insertedCells = insertedRow.children(TableCellNode);
                     testActive(insertedCells, [true, false, true, true]);
                     testHeader(insertedCells, [false, false, false, false]);
                     testColspan(insertedCells, [2, 1, 1, 1]);
@@ -3384,8 +3395,13 @@ describePlugin(Table, testEditor => {
                                 '<td>(9, 3)</td>',
                             '</tr>',
                             '<tr>',
-                                '<td>[](10, 2)</td>',
+                                '<td>(10, 2)</td>',
                                 '<td>(10, 3)</td>',
+                            '</tr>',
+                            '<tr>',
+                                '<td colspan="2">[]b</td>',
+                                '<td><br></td>',
+                                '<td><br></td>',
                             '</tr>',
                             '<tr>',
                                 '<td colspan="2"><br></td>',

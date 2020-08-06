@@ -33,6 +33,8 @@ export class JWPlugin<T extends JWPluginConfig = {}> {
     async stop(): Promise<void> {
         // This is where plugins can do asynchronous work when the editor is
         // stopping (e.g. save on a server, close connections, etc).
+        this.dependencies.clear();
+        this.editor = null;
     }
 }
 export interface JWPlugin {

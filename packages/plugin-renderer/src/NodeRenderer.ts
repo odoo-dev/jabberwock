@@ -1,6 +1,7 @@
 import { RenderingIdentifier } from './RenderingEngine';
 import { RenderingEngine } from './RenderingEngine';
 import { VNode, Predicate } from '../../core/src/VNodes/VNode';
+import { RenderingEngineWorker } from './RenderingEngineCache';
 
 class SuperRenderer<T> {
     constructor(public renderer: NodeRenderer<T>) {}
@@ -9,18 +10,18 @@ class SuperRenderer<T> {
      *
      * @param node
      */
-    render(node: VNode): Promise<T> {
-        const nextRenderer = this.renderer.engine.getCompatibleRenderer(node, this.renderer);
-        return nextRenderer?.render(node);
+    render(node: VNode, worker: RenderingEngineWorker<T>): Promise<T> {
+        const nextRenderer = worker.getCompatibleRenderer(node, this.renderer);
+        return nextRenderer?.render(node, worker);
     }
     /**
      * Render the given group of nodes.
      *
      * @param node
      */
-    async renderBatch(nodes: VNode[]): Promise<T[]> {
-        await Promise.all(this.renderer.engine.renderBatched(nodes, this.renderer));
-        return nodes.map(node => this.renderer.engine.renderings.get(node));
+    async renderBatch(nodes: VNode[], worker: RenderingEngineWorker<T>): Promise<T[]> {
+        await Promise.all(worker.renderBatched(nodes, this.renderer));
+        return nodes.map(node => worker.getRendering(node));
     }
 }
 
@@ -42,7 +43,7 @@ export abstract class NodeRenderer<T> {
      *
      * @param node
      */
-    abstract render(node: VNode): Promise<T>;
+    abstract render(node: VNode, worker: RenderingEngineWorker<T>): Promise<T>;
     /**
      * Render the given group of nodes.
      * The indices of the DomObject list match the indices of the given nodes
@@ -50,8 +51,8 @@ export abstract class NodeRenderer<T> {
      *
      * @param node
      */
-    renderBatch(nodes: VNode[]): Promise<T[]> {
-        return Promise.all(nodes.map(node => this.render(node)));
+    renderBatch(nodes: VNode[], worker: RenderingEngineWorker<T>): Promise<T[]> {
+        return Promise.all(nodes.map(node => this.render(node, worker)));
     }
 }
 

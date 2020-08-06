@@ -1,6 +1,10 @@
-export class ClassList {
-    private _classList = new Set<string>();
+import { VersionableObject } from '../../core/src/Memory/VersionableObject';
+import { VersionableSet } from '../../core/src/Memory/VersionableSet';
+
+export class ClassList extends VersionableObject {
+    private _classList: Set<string>;
     constructor(...classList: string[]) {
+        super();
         for (const className of classList) {
             this.add(className);
         }
@@ -14,13 +18,13 @@ export class ClassList {
      * Return the number of classes in the set.
      */
     get length(): number {
-        return this._classList.size;
+        return this._classList?.size || 0;
     }
     /**
      * Return a textual representation of the set.
      */
     get className(): string {
-        if (!this._classList.size) return;
+        if (!this._classList?.size) return;
         return Array.from(this._classList).join(' ');
     }
     /**
@@ -52,7 +56,9 @@ export class ClassList {
      */
     clone(): ClassList {
         const clone = new ClassList();
-        clone._classList = new Set(this._classList);
+        if (this._classList?.size) {
+            clone._classList = new VersionableSet(this._classList);
+        }
         return clone;
     }
 
@@ -66,13 +72,13 @@ export class ClassList {
      * @param name
      */
     has(name: string): boolean {
-        return this._classList.has(name);
+        return this._classList?.has(name) || false;
     }
     /**
      * Return an array containing all the items in the list.
      */
     items(): string[] {
-        return Array.from(this._classList);
+        return this._classList ? Array.from(this._classList) : [];
     }
     /**
      * Add the given class(es) to the set.
@@ -80,6 +86,9 @@ export class ClassList {
      * @param classNames
      */
     add(...classNames: string[]): void {
+        if (!this._classList) {
+            this._classList = new VersionableSet();
+        }
         for (const className of classNames) {
             if (className) {
                 const classes = this.parseClassName(className);
@@ -95,6 +104,7 @@ export class ClassList {
      * @param classNames
      */
     remove(...classNames: string[]): void {
+        if (!this._classList?.size) return;
         for (const className of classNames) {
             if (className) {
                 const classes = this.parseClassName(className);
@@ -108,7 +118,7 @@ export class ClassList {
      * Clear the set of all its classes.
      */
     clear(): void {
-        this._classList = new Set();
+        delete this._classList;
     }
     /**
      * Reinitialize the set with a new set of classes (empty if no argument is
@@ -117,7 +127,7 @@ export class ClassList {
      * @param classList
      */
     reset(...classList: string[]): void {
-        this._classList.clear();
+        delete this._classList;
         for (const className of classList) {
             this.add(className);
         }
@@ -129,6 +139,9 @@ export class ClassList {
      * @param classes
      */
     toggle(...classes: string[]): void {
+        if (!this._classList) {
+            this._classList = new VersionableSet();
+        }
         for (const className of classes) {
             if (className) {
                 const parsed = this.parseClassName(className);

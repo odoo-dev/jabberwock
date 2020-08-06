@@ -11,16 +11,26 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { LabelNode } from '../../plugin-layout/src/LabelNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { DomObjectActionable } from './ActionableDomObjectRenderer';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean => node.ancestors(ActionableGroupNode).length >= 2;
 
-    async render(item: VNode): Promise<DomObject> {
+    actionableNodes = new Map<ActionableNode, HTMLElement>();
+
+    constructor(engine: DomObjectRenderingEngine) {
+        super(engine);
+        this.engine.editor.dispatcher.registerCommandHook(
+            '@commit',
+            this._updateActionables.bind(this),
+        );
+    }
+
+    async render(item: VNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
         let domObject: DomObject;
         if (item instanceof ActionableNode) {
-            let updateOption: () => void;
             let handler: (ev: Event) => void;
             const domObjectActionable: DomObjectActionable = {
                 tag: 'OPTION',
@@ -43,14 +53,12 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
                         }
                     };
                     select.addEventListener('change', handler);
-                    updateOption = this._updateOption.bind(this, item, el);
-                    updateOption();
-                    this.engine.editor.dispatcher.registerCommandHook('*', updateOption);
+                    this.actionableNodes.set(item, el);
                 },
                 detach: (el: HTMLOptionElement): void => {
                     const select = el.closest('select') || el.parentElement;
                     select.removeEventListener('change', handler);
-                    this.engine.editor.dispatcher.removeCommandHook('*', updateOption);
+                    this.actionableNodes.delete(item);
                 },
             };
             domObject = domObjectActionable;
@@ -88,7 +96,7 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
                 children: [{ text: item.label }],
             };
         } else if (item instanceof ZoneNode) {
-            domObject = await this.super.render(item);
+            domObject = await this.super.render(item, worker);
             if (!('tag' in domObject) || domObject.tag.toUpperCase() !== 'OPTION') {
                 domObject = { children: item.children() };
             }
@@ -100,32 +108,40 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
         }
         return domObject;
     }
+
     /**
      * Update option rendering after the command if the value of selected or
      * enabled change.
      *
-     * @param button
+     * @param aactionable
      * @param element
      */
-    private _updateOption(button: ActionableNode, element: HTMLOptionElement): void {
-        const editor = this.engine.editor;
-        const select = button.selected(editor);
-        const enable = button.enabled(editor);
-        const attrSelected = element.getAttribute('selected');
-        if (select.toString() !== attrSelected) {
-            if (select) {
-                element.setAttribute('selected', 'true');
-                element.closest('select').value = element.getAttribute('value');
-            } else {
-                element.removeAttribute('selected');
-            }
+    protected _updateActionables(): void {
+        const commandNames = this.engine.editor.memoryInfo.commandNames;
+        if (commandNames.length === 1 && commandNames.includes('insertText')) {
+            // By default the actionable buttons are not update for a text insertion.
+            return;
         }
-        const domEnable = !element.getAttribute('disabled');
-        if (enable !== domEnable) {
-            if (enable) {
-                element.removeAttribute('disabled');
-            } else {
-                element.setAttribute('disabled', 'true');
+        for (const [aactionable, element] of this.actionableNodes) {
+            const editor = this.engine.editor;
+            const select = aactionable.selected(editor);
+            const enable = aactionable.enabled(editor);
+            const attrSelected = element.getAttribute('selected');
+            if (select.toString() !== attrSelected) {
+                if (select) {
+                    element.setAttribute('selected', 'true');
+                    element.closest('select').value = element.getAttribute('value');
+                } else {
+                    element.removeAttribute('selected');
+                }
+            }
+            const domEnable = !element.getAttribute('disabled');
+            if (enable !== domEnable) {
+                if (enable) {
+                    element.removeAttribute('disabled');
+                } else {
+                    element.setAttribute('disabled', 'true');
+                }
             }
         }
     }

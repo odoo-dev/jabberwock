@@ -74,8 +74,8 @@ describePlugin(List, testEditor => {
         describe('Checklist', () => {
             it('should parse a checked class', async () => {
                 await testEditor(BasicEditor, {
-                    contentBefore: '<ul class="checklist"><li class="checked">a</li></ul>',
-                    contentAfter: '<ul class="checklist"><li class="checked">a</li></ul>',
+                    contentBefore: '<ul class="checklist"><li class="checked">a[]</li></ul>',
+                    contentAfter: '<ul class="checklist"><li class="checked">a[]</li></ul>',
                 });
             });
             it('should parse a custom class', async () => {
@@ -5889,7 +5889,7 @@ describePlugin(List, testEditor => {
                                         <li style="list-style: none;">
                                             <ul>
                                                 <li><font style="color: red;">cd</font></li>
-                                                <li>b</li>
+                                                <li><font style="color: red;">b</font></li>
                                                 <li>[]<br></li>
                                             </ul>
                                         </li>
@@ -6214,7 +6214,7 @@ describePlugin(List, testEditor => {
                                         <li style="list-style: none;">
                                             <ul class="checklist">
                                                 <li class="unchecked"><font style="color: red;">cd</font></li>
-                                                <li class="unchecked">0</li>
+                                                <li class="unchecked"><font style="color: red;">0</font></li>
                                                 <li class="unchecked">[]<br></li>
                                             </ul>
                                         </li>
@@ -6304,7 +6304,7 @@ describePlugin(List, testEditor => {
                                         <li style="list-style: none;">
                                             <ul class="checklist">
                                                 <li class="checked"><font style="color: red;">cd</font></li>
-                                                <li class="unchecked">0</li>
+                                                <li class="unchecked"><font style="color: red;">0</font></li>
                                                 <li class="unchecked">[]<br></li>
                                             </ul>
                                         </li>

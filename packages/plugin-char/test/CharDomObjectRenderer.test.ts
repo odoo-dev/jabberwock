@@ -4,7 +4,10 @@ import { Char } from '../src/Char';
 import { CharNode } from '../src/CharNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
-import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import {
+    DomObject,
+    DomObjectRenderingEngine,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { VNode } from '../../core/src/VNodes/VNode';
 
@@ -30,13 +33,12 @@ describe('CharDomObjectRenderer', () => {
                 root.append(new CharNode({ char: 'b' }));
 
                 const renderer = editor.plugins.get(Renderer);
-                const rendered = await renderer.render<DomObject>('dom/object', char);
+                const engine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
+                const cache = await engine.render(root.childVNodes);
+                const rendered = cache.renderings.get(char);
                 expect(rendered).to.deep.equal({ text: 'a \u00A0b' });
 
-                const locations = renderer.engines['dom/object'].locations as Map<
-                    DomObject,
-                    VNode[]
-                >;
+                const locations = cache.locations as Map<DomObject, VNode[]>;
                 expect(rendered && locations.get(rendered)).to.deep.equal(root.childVNodes);
             });
             it('should insert 2 spaces and 2 nbsp instead of 4 spaces', async () => {
@@ -50,13 +52,12 @@ describe('CharDomObjectRenderer', () => {
                 root.append(new CharNode({ char: 'b' }));
 
                 const renderer = editor.plugins.get(Renderer);
-                const rendered = await renderer.render<DomObject>('dom/object', char);
+                const engine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
+                const cache = await engine.render(root.childVNodes);
+                const rendered = cache.renderings.get(char);
                 expect(rendered).to.deep.equal({ text: 'a \u00A0 \u00A0b' });
 
-                const locations = renderer.engines['dom/object'].locations as Map<
-                    DomObject,
-                    VNode[]
-                >;
+                const locations = cache.locations as Map<DomObject, VNode[]>;
                 expect(rendered && locations.get(rendered)).to.deep.equal(root.children());
             });
         });

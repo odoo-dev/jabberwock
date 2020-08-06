@@ -180,8 +180,16 @@ describe('DomEditable', () => {
                 await editor.start();
                 commandNames = [];
                 const execCommand = editor.execCommand;
-                editor.execCommand = async (commandName: string, params: object): Promise<void> => {
-                    commandNames.push(commandName);
+                editor.execCommand = async (
+                    commandName: string | (() => Promise<void> | void),
+                    params?: object,
+                ): Promise<void> => {
+                    if (typeof commandName === 'function') {
+                        commandNames.push('@custom');
+                        await commandName();
+                    } else {
+                        commandNames.push(commandName);
+                    }
                     return execCommand.call(editor, commandName, params);
                 };
             });
@@ -832,14 +840,14 @@ describe('DomEditable', () => {
             await selectAllWithKeyA(container1);
             await selectAllWithKeyA(container2);
 
-            await editor.stop();
-            await editor2.stop();
-
             const params = {
                 context: editor.contextManager.defaultContext,
             };
             expect(execSpy.args).to.eql([['command-b', params]]);
             expect(execSpy2.args).to.eql([['selectAll', {}]]);
+
+            await editor.stop();
+            await editor2.stop();
         });
         it('deleteContentBackward (SwiftKey) with special keymap', async () => {
             section.innerHTML = '<div>abcd</div>';
@@ -875,8 +883,16 @@ describe('DomEditable', () => {
             await editor.start();
             commandNames = [];
             const execCommand = editor.execCommand;
-            editor.execCommand = async (commandName: string, params: object): Promise<void> => {
-                commandNames.push(commandName);
+            editor.execCommand = async (
+                commandName: string | (() => Promise<void> | void),
+                params?: object,
+            ): Promise<void> => {
+                if (typeof commandName === 'function') {
+                    commandNames.push('@custom');
+                    await commandName();
+                } else {
+                    commandNames.push(commandName);
+                }
                 return execCommand.call(editor, commandName, params);
             };
 

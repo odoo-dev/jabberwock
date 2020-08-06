@@ -97,7 +97,7 @@ editor.configure(Theme, {
                     .get(Parser)
                     .parse(
                         'text/html',
-                        `<div style="background: lightblue; height: 100%;"><t-placeholder/></div>`,
+                        `<div style="background: lightblue; min-height: 100%;"><t-placeholder/></div>`,
                     );
             },
         },
@@ -105,12 +105,12 @@ editor.configure(Theme, {
             id: 'iframe',
             label: 'Theme color red in iframe',
             render: async (editor: JWEditor): Promise<VNode[]> => {
-                return editor.plugins
-                    .get(Parser)
-                    .parse(
-                        'text/html',
-                        `<t-iframe style="border: 0; width: 100%;"><div style="background: #ffaaaa; height: 100%;"><t-placeholder/></div></t-iframe>`,
-                    );
+                return editor.plugins.get(Parser).parse(
+                    'text/html',
+                    `<t-iframe style="border-width: 80px 14px 40px; border-radius: 16px; border-style: solid; border-color: #000; background-color: white; width: 400px; height: 600px; margin: auto; display: block;">
+                            <div style="background: #ffaaaa; min-height: 100%;"><t-placeholder/></div>
+                        </t-iframe>`,
+                );
             },
         },
     ],

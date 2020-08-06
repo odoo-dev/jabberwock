@@ -85,7 +85,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 range.mode.is(range.startContainer, RuleProperty.EDITABLE)
             ) {
                 // Otherwise set range start at previous valid leaf.
-                let ancestor = range.start.parent;
+                let ancestor: VNode = range.start.parent;
                 while (
                     ancestor &&
                     range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
@@ -129,7 +129,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 range.mode.is(range.endContainer, RuleProperty.EDITABLE)
             ) {
                 // Otherwise set range end at next valid leaf.
-                let ancestor = range.end.parent;
+                let ancestor: VNode = range.end.parent;
                 while (
                     ancestor &&
                     range.mode.is(ancestor, RuleProperty.BREAKABLE) &&

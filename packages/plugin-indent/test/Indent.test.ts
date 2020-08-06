@@ -1,7 +1,7 @@
 import { describePlugin, unformat } from '../../utils/src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
 import { Indent } from '../src/Indent';
-import { withRange, VRange } from '../../core/src/VRange';
+import { VRange } from '../../core/src/VRange';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
@@ -950,7 +950,7 @@ describePlugin(Indent, testEditor => {
                     const editable = domEngine.components.get('editable')[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
-                    await withRange(editor, VRange.selecting(bNode, dNode), async range => {
+                    await editor.withRange(VRange.selecting(bNode, dNode), async range => {
                         await editor.execCommand<Indent>('indent', {
                             context: {
                                 range: range,
@@ -1034,7 +1034,7 @@ describePlugin(Indent, testEditor => {
                     const editable = domEngine.components.get('editable')[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
-                    await withRange(editor, VRange.selecting(bNode, dNode), async range => {
+                    await editor.withRange(VRange.selecting(bNode, dNode), async range => {
                         await editor.execCommand<Indent>('outdent', {
                             context: {
                                 range: range,

@@ -1,6 +1,10 @@
-export class CssStyle {
-    private _style: Record<string, string> = {};
+import { VersionableObject } from '../../core/src/Memory/VersionableObject';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
+
+export class CssStyle extends VersionableObject {
+    private _style: Record<string, string>;
     constructor(style?: string | Record<string, string>) {
+        super();
         if (style) {
             this.reset(style);
         }
@@ -14,12 +18,15 @@ export class CssStyle {
      * Return the number of styles in the set.
      */
     get length(): number {
-        return Object.keys(this._style).length;
+        return this._style ? Object.keys(this._style).length : 0;
     }
     /**
      * Return a textual representation of the CSS declaration block.
      */
     get cssText(): string {
+        if (!this._style) {
+            return;
+        }
         const keys = Object.keys(this._style);
         if (!Object.keys(this._style).length) return;
         const valueRepr = [];
@@ -66,7 +73,9 @@ export class CssStyle {
      */
     clone(): CssStyle {
         const clone = new CssStyle();
-        clone._style = { ...this._style };
+        if (this._style) {
+            clone._style = makeVersionable({ ...this._style });
+        }
         return clone;
     }
     /**
@@ -86,19 +95,19 @@ export class CssStyle {
      * @param key
      */
     has(key: string): boolean {
-        return !!this._style[key];
+        return !!this._style?.[key];
     }
     /**
      * Return an array containing all the keys in the record.
      */
     keys(): string[] {
-        return Object.keys(this._style);
+        return this._style ? Object.keys(this._style) : [];
     }
     /**
      * Return an array containing all the values in the record.
      */
     values(): string[] {
-        return Object.values(this._style);
+        return this._style ? Object.values(this._style) : [];
     }
     /**
      * Return the record matching the given name.
@@ -106,7 +115,7 @@ export class CssStyle {
      * @param name
      */
     get(name: string): string {
-        return this._style[name];
+        return this._style?.[name];
     }
     /**
      * Set the record with the given name to the given value.
@@ -115,6 +124,9 @@ export class CssStyle {
      * @param value
      */
     set(name: string, value: string): void {
+        if (!this._style) {
+            this._style = makeVersionable({});
+        }
         this._style[name] = value;
     }
     /**
@@ -123,15 +135,17 @@ export class CssStyle {
      * @param name
      */
     remove(...names: string[]): void {
-        for (const name of names) {
-            delete this._style[name];
+        if (this._style) {
+            for (const name of names) {
+                delete this._style[name];
+            }
         }
     }
     /**
      * Clear the record of all its styles.
      */
     clear(): void {
-        this._style = {};
+        delete this._style;
     }
     /**
      * Reinitialize the record with a new record of styles (empty if no argument
@@ -139,11 +153,17 @@ export class CssStyle {
      *
      * @param style
      */
-    reset(style: Record<string, string> | string = {}): void {
+    reset(style: Record<string, string> | string = ''): void {
         if (typeof style === 'object') {
-            this._style = style;
+            if (Object.keys(style).length) {
+                this._style = makeVersionable(style);
+            } else {
+                delete this._style;
+            }
+        } else if (style.length) {
+            this._style = makeVersionable(this.parseCssText(style));
         } else {
-            this._style = this.parseCssText(style);
+            delete this._style;
         }
     }
 }

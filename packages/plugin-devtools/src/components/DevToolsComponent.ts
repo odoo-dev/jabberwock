@@ -39,7 +39,8 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
     _heightOnLastMousedown: number;
 
     async willStart(): Promise<void> {
-        this.env.editor.dispatcher.registerCommandHook('*', this.refresh.bind(this));
+        this.env.editor.dispatcher.registerCommandHook('*', this.addCommand.bind(this));
+        this.env.editor.dispatcher.registerCommandHook('@commit', this.render.bind(this));
         return super.willStart();
     }
     willUnmount(): void {
@@ -69,12 +70,10 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
         (this.inspectorRef.comp as InspectorComponent)?.inspectDom();
     }
     /**
-     * Refresh this component with respect to the recent dispatching of the
-     * given command with the given arguments.
+     * Add the recent dispatching of the given command with the given arguments.
      */
-    refresh(params: CommandParams, id: CommandIdentifier): void {
+    addCommand(params: CommandParams, id: CommandIdentifier): void {
         this.state.commands.push([id, params]);
-        this.render();
     }
     /**
      * Drag the DevTools to resize them

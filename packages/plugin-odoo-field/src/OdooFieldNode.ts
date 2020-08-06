@@ -1,5 +1,6 @@
 import { VElement } from '../../core/src/VNodes/VElement';
 import { OdooFieldInfo } from './OdooField';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export class OdooFieldNode<T extends OdooFieldInfo = OdooFieldInfo> extends VElement {
     fieldInfo: T;
@@ -10,7 +11,7 @@ export class OdooFieldNode<T extends OdooFieldInfo = OdooFieldInfo> extends VEle
         },
     ) {
         super(params);
-        this.fieldInfo = params.fieldInfo;
+        this.fieldInfo = makeVersionable(params.fieldInfo);
     }
 
     /**

@@ -1,6 +1,7 @@
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export type ZoneIdentifier = string;
 export interface ZoneNodeParams extends AbstractNodeParams {
@@ -8,14 +9,14 @@ export interface ZoneNodeParams extends AbstractNodeParams {
 }
 
 export class ZoneNode extends ContainerNode {
-    hidden: Map<VNode, boolean> = new Map();
+    hidden: Record<number, boolean>;
     editable = false;
     breakable = false;
     managedZones: ZoneIdentifier[];
 
     constructor(params: ZoneNodeParams) {
         super(params);
-        this.managedZones = params.managedZones;
+        this.managedZones = makeVersionable(params.managedZones);
     }
 
     get name(): string {
@@ -23,11 +24,17 @@ export class ZoneNode extends ContainerNode {
     }
 
     hide(child: VNode): void {
-        this.hidden.set(child, true);
+        if (!this.hidden) {
+            this.hidden = makeVersionable({});
+        }
+        this.hidden[child.id] = true;
         return;
     }
     show(child: VNode): void {
-        this.hidden.set(child, false);
+        const id = child.id;
+        if (this.hidden?.[id]) {
+            this.hidden[id] = false;
+        }
         const parentZone: ZoneNode = this.ancestor(ZoneNode);
         if (parentZone) {
             parentZone.show(this);
@@ -36,6 +43,8 @@ export class ZoneNode extends ContainerNode {
     _removeAtIndex(index: number): void {
         const child = this.childVNodes[index];
         super._removeAtIndex(index);
-        this.hidden.delete(child);
+        if (this.hidden) {
+            delete this.hidden[child.id];
+        }
     }
 }

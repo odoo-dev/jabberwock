@@ -6,6 +6,7 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TableSectionAttributes } from './TableRowXmlDomParser';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -15,7 +16,7 @@ export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
     /**
      * Render the TableNode along with its contents (TableRowNodes).
      */
-    async render(table: TableNode): Promise<DomObject> {
+    async render(table: TableNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
         const objectTable: DomObject = {
             tag: 'TABLE',
             children: [],
@@ -34,7 +35,7 @@ export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
                 // If the child is a row, append it to its containing section.
                 const tableSection = child.header ? objectHead : objectBody;
                 tableSection.children.push(child);
-                this.engine.renderAttributes(TableSectionAttributes, child, tableSection);
+                this.engine.renderAttributes(TableSectionAttributes, child, tableSection, worker);
                 if (!objectTable.children.includes(tableSection)) {
                     objectTable.children.push(tableSection);
                 }

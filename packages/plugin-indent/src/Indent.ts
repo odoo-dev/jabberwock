@@ -6,7 +6,7 @@ import { Char } from '../../plugin-char/src/Char';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
-import { withRange, VRange } from '../../core/src/VRange';
+import { VRange } from '../../core/src/VRange';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
@@ -106,8 +106,8 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             for (const segmentBreak of segmentBreaks) {
                 // Insert 4 spaces at the start of next segment.
                 const [node, position] = this._nextSegmentStart(segmentBreak);
-                await withRange(this.editor, VRange.at(node, position), async range => {
-                    await this.editor.execCommand<Char>('insertText', {
+                await this.editor.withRange(VRange.at(node, position), async range => {
+                    return this.editor.execCommand<Char>('insertText', {
                         text: this.tab,
                         context: {
                             range: range,

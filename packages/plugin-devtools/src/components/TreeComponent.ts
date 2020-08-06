@@ -156,7 +156,7 @@ export class TreeComponent extends OwlComponent<NodeProps> {
      */
     _getSelectionMarkersAncestors(): Set<number> {
         const selectionMarkersAncestors = new Set<number>();
-        let ancestor = this.env.editor.selection.anchor.parent;
+        let ancestor: VNode = this.env.editor.selection.anchor.parent;
         while (ancestor) {
             selectionMarkersAncestors.add(ancestor.id);
             ancestor = ancestor.parent;

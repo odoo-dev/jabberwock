@@ -1,8 +1,9 @@
-import { Dispatcher } from './Dispatcher';
+import { Dispatcher, CommandParams } from './Dispatcher';
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import { Core } from './Core';
 import { ContextManager } from './ContextManager';
 import { VSelection } from './VSelection';
+import { VRange } from './VRange';
 import { isConstructor } from '../../utils/src/utils';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { StageError } from '../../utils/src/errors';
@@ -10,6 +11,10 @@ import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
 import { ModeIdentifier, ModeDefinition, Mode } from './Mode';
+import { Memory, ChangesLocations } from './Memory/Memory';
+import { makeVersionable } from './Memory/Versionable';
+import { VersionableArray } from './Memory/VersionableArray';
+import { Point } from './VNodes/VNode';
 
 export enum EditorStage {
     CONFIGURATION = 'configuration',
@@ -26,9 +31,13 @@ export type Loadables<T extends JWPlugin = JWPlugin> = {
 };
 
 type Commands<T extends JWPlugin> = Extract<keyof T['commands'], string>;
-type CommandParams<T extends JWPlugin, K extends string> = K extends Commands<T>
+type CommandParamsType<T extends JWPlugin, K extends string> = K extends Commands<T>
     ? Parameters<T['commands'][K]['handler']>[0]
     : never;
+export interface CommitParams extends CommandParams {
+    changesLocations: ChangesLocations;
+    commandNames: string[];
+}
 
 export interface JWEditorConfig {
     /**
@@ -68,7 +77,10 @@ export class JWEditor {
         plugins: [],
         loadables: {},
     };
-    selection = new VSelection(this);
+    memory: Memory;
+    memoryInfo: { commandNames: string[] };
+    private _memoryID = 0;
+    selection: VSelection;
     loaders: Record<string, Loader> = {};
     private mutex = Promise.resolve();
     // Use a set so that when asynchronous functions are called we ensure that
@@ -86,6 +98,7 @@ export class JWEditor {
     constructor() {
         this.dispatcher = new Dispatcher(this);
         this.plugins = new Map();
+        this.selection = new VSelection(this);
         this.contextManager = new ContextManager(this);
 
         this.nextEventMutex = this.nextEventMutex.bind(this);
@@ -130,9 +143,18 @@ export class JWEditor {
             this.setMode(this.configuration.mode);
         }
 
-        for (const plugin of this.plugins.values()) {
-            await plugin.start();
-        }
+        // create memory
+        this.memoryInfo = makeVersionable({ commandNames: [] });
+        this.memory = new Memory();
+        this.memory.attach(this.memoryInfo);
+        this.memory.create(this._memoryID.toString());
+
+        // Start all plugins in the first memory slice.
+        return this.execCommand(async () => {
+            for (const plugin of this.plugins.values()) {
+                await plugin.start();
+            }
+        });
     }
 
     //--------------------------------------------------------------------------
@@ -303,13 +325,12 @@ export class JWEditor {
         }
     }
 
-    async execBatch(callback: () => Promise<void>): Promise<void> {
-        this.preventRenders.add(callback);
-        await callback();
-        this.preventRenders.delete(callback);
-        await this.dispatcher.dispatchHooks('@batch');
-    }
-
+    /**
+     * Execute arbitrary code in `callback`, then dispatch the commit event.
+     *
+     * @param callback
+     */
+    async execCommand(callback: () => Promise<void> | void): Promise<void>;
     /**
      * Execute the given command.
      *
@@ -318,28 +339,101 @@ export class JWEditor {
      */
     async execCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
         commandName: C,
-        params?: CommandParams<P, C>,
+        params?: CommandParamsType<P, C>,
+    ): Promise<void>;
+    /**
+     * Execute the command or arbitrary code in `callback` in memory.
+     *
+     * TODO: create memory for each plugin who use the command then use
+     * squashInto(winnerSliceKey, winnerSliceKey, newMasterSliceKey)
+     *
+     * @param commandName name identifier of the command to execute or callback
+     * @param params arguments object of the command to execute
+     */
+    async execCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        commandName: C | (() => Promise<void> | void),
+        params?: CommandParamsType<P, C>,
     ): Promise<void> {
-        return await this.dispatcher.dispatch(commandName, params);
+        const isFrozen = this.memory.isFrozen();
+
+        let memorySlice: string;
+        if (isFrozen) {
+            // Switch to the next memory slice (unfreeze the memory).
+            memorySlice = this._memoryID.toString();
+            this.memory.switchTo(memorySlice);
+            this.memoryInfo.commandNames = new VersionableArray();
+        }
+
+        // Execute command.
+        if (typeof commandName === 'function') {
+            this.memoryInfo.commandNames.push('@custom');
+            await commandName();
+        } else {
+            this.memoryInfo.commandNames.push(commandName);
+            await this.dispatcher.dispatch(commandName, params);
+        }
+
+        if (isFrozen) {
+            // Check if it's frozen for calling execCommand inside a call of
+            // execCommand Create the next memory slice (and freeze the
+            // current memory).
+            this._memoryID++;
+            const nextMemorySlice = this._memoryID.toString();
+            this.memory.create(nextMemorySlice);
+
+            // Send the commit message with a froozen memory.
+            const changesLocations = this.memory.getChangesLocations(
+                memorySlice,
+                this.memory.sliceKey,
+            );
+            await this.dispatcher.dispatchHooks('@commit', {
+                changesLocations: changesLocations,
+                commandNames: this.memoryInfo.commandNames,
+            });
+        }
     }
 
     /**
-     * Execute arbitrary code in `callback`, then dispatch the event.
+     * Create a temporary range corresponding to the given boundary points and
+     * call the given callback with the newly created range as argument. The
+     * range is automatically destroyed after calling the callback.
+     *
+     * @param bounds The points corresponding to the range boundaries.
+     * @param callback The callback to call with the newly created range.
+     * @param mode
      */
-    async execCustomCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
-        callback: () => Promise<void>,
+    async withRange(
+        bounds: [Point, Point],
+        callback: (range: VRange) => Promise<void> | void,
+        mode?: Mode,
     ): Promise<void> {
-        await callback();
-        await this.dispatcher.dispatchHooks('@custom');
+        return this.execCommand(async () => {
+            this.memoryInfo.commandNames.push('@withRange');
+            const range = new VRange(this, bounds, mode);
+            await callback(range);
+            range.remove();
+        });
     }
 
     /**
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
+        if (this.memory) {
+            this.memory.create('stop');
+            this.memory.switchTo('stop'); // Unfreeze the memory.
+        }
         for (const plugin of this.plugins.values()) {
             await plugin.stop();
         }
+        if (this.memory) {
+            this.memory.create('stopped'); // Freeze the memory.
+            this.memory = null;
+        }
+        this.plugins.clear();
+        this.dispatcher = new Dispatcher(this);
+        this.selection = new VSelection(this);
+        this.contextManager = new ContextManager(this);
         // Clear loaders.
         this.loaders = {};
         this._stage = EditorStage.CONFIGURATION;

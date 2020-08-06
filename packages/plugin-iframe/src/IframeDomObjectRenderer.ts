@@ -5,7 +5,6 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { IframeNode } from './IframeNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -64,7 +63,6 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                 iframe.removeEventListener('load', onload);
             },
         };
-        this.engine.renderAttributes(Attributes, iframeNode, domObject);
         return domObject;
     }
 }

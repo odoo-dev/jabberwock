@@ -8,6 +8,7 @@ import { ReactiveValue } from '../../utils/src/ReactiveValue';
 import { OdooFieldMap } from './OdooFieldMap';
 import { OdooMonetaryFieldXmlDomParser } from './OdooMonetaryFieldXmlDomParser';
 import { OdooMonetaryFieldDomObjectRenderer } from './OdooMonetaryFieldDomObjectRenderer';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export interface OdooFieldDefinition {
     modelId: string;
@@ -60,11 +61,11 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
             }
             reactiveValue.set(value);
 
-            const reactiveOdooField = {
+            const reactiveOdooField = makeVersionable({
                 ...field,
                 value: reactiveValue,
                 isValid,
-            };
+            });
             this._registry.set(field, reactiveOdooField);
         }
         return this._registry.get(field);

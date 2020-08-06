@@ -1,7 +1,7 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import JWEditor, { Loadables } from '../../core/src/JWEditor';
+import { JWEditor, Loadables, CommitParams } from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutLocation, DomLayoutEngine } from './DomLayoutEngine';
 import {
@@ -21,7 +21,6 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { RuleProperty } from '../../core/src/Mode';
 import { isContentEditable } from '../../utils/src/utils';
 
@@ -30,7 +29,6 @@ export interface DomLayoutConfig extends JWPluginConfig {
     locations?: [ComponentId, DomLayoutLocation][];
     components?: ComponentDefinition[];
     componentZones?: [ComponentId, ZoneIdentifier[]][];
-    afterRender?: Function;
 }
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
@@ -53,7 +51,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         domLocations: this._loadComponentLocations,
     };
     commandHooks = {
-        '*': this.redraw,
+        '@commit': this._redraw,
     };
 
     constructor(editor: JWEditor, configuration: T) {
@@ -76,9 +74,6 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         this._loadComponentLocations(this.configuration.locations || []);
         domLayoutEngine.location = this.configuration.location;
         await domLayoutEngine.start();
-        if (this.configuration.afterRender) {
-            await this.configuration.afterRender();
-        }
         window.addEventListener('keydown', this.processKeydown, true);
     }
     async stop(): Promise<void> {
@@ -86,6 +81,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom;
         await domLayoutEngine.stop();
+        return super.stop();
     }
 
     //--------------------------------------------------------------------------
@@ -119,25 +115,6 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
                 return this.editor.execCommand(command.commandId, params);
             });
             return command.commandId;
-        }
-    }
-
-    async redraw(): Promise<void> {
-        // TODO: adapt when add memory
-        // * redraw node with change
-        // * redraw children if add or remove children (except for selection)
-        const layout = this.dependencies.get(Layout);
-        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-        const editables = domLayoutEngine.components.get('editable');
-        if (editables?.length) {
-            const nodes = [...editables];
-            for (const node of nodes) {
-                if (node instanceof ContainerNode) {
-                    nodes.push(...node.childVNodes);
-                }
-            }
-            await domLayoutEngine.redraw(...nodes);
-            await this.configuration.afterRender?.();
         }
     }
 
@@ -201,5 +178,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             node = node.parentElement;
         }
         return isAnchorDescendantOfTarget ? anchorNode : target;
+    }
+    private async _redraw(params: CommitParams): Promise<void> {
+        const layout = this.dependencies.get(Layout);
+        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        await domLayoutEngine.redraw(params.changesLocations);
     }
 }
