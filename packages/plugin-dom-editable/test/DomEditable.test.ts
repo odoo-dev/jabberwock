@@ -152,7 +152,6 @@ describe('DomEditable', () => {
         });
     });
     describe('_onNormalizedEvent', () => {
-        let commandNames: string[];
         let editor: JWEditor;
         afterEach(async () => {
             return editor.stop();
@@ -178,20 +177,6 @@ describe('DomEditable', () => {
                 section.innerHTML = '<div>abcd</div>';
                 setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
-                commandNames = [];
-                const execCommand = editor.execCommand;
-                editor.execCommand = async (
-                    commandName: string | (() => Promise<void> | void),
-                    params?: object,
-                ): Promise<void> => {
-                    if (typeof commandName === 'function') {
-                        commandNames.push('@custom');
-                        await commandName();
-                    } else {
-                        commandNames.push(commandName);
-                    }
-                    return execCommand.call(editor, commandName, params);
-                };
             });
             it('enter in the middle of the word', async () => {
                 const p = container.querySelector('section').firstChild;
@@ -220,7 +205,7 @@ describe('DomEditable', () => {
                 await nextTick();
                 await nextTick();
 
-                expect(commandNames.join(',')).to.equal('insertParagraphBreak');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertParagraphBreak');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>ab</div><div>cd</div>' +
@@ -265,7 +250,7 @@ describe('DomEditable', () => {
                 await nextTick();
                 await nextTick();
 
-                expect(commandNames.join(',')).to.equal('insertLineBreak,insert');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertLineBreak,insert');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>ab<br>cd</div>' +
@@ -314,7 +299,7 @@ describe('DomEditable', () => {
                     [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('insertText');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertText');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>abocd</div>' +
@@ -339,7 +324,7 @@ describe('DomEditable', () => {
             });
             it('select all: ctrl + a', async () => {
                 await selectAllWithKeyA(container);
-                expect(commandNames.join(',')).to.equal('selectAll');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('selectAll');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>abcd</div>' +
@@ -372,7 +357,7 @@ describe('DomEditable', () => {
                 await nextTick();
                 await nextTick();
 
-                expect(commandNames.join(',')).to.equal('setSelection');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('setSelection');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>abcd</div>' +
@@ -455,7 +440,7 @@ describe('DomEditable', () => {
                     [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft' }],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteBackward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteBackward');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div><br></div>' +
@@ -538,7 +523,7 @@ describe('DomEditable', () => {
                     [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft' }],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteForward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div><br></div>' +
@@ -603,7 +588,7 @@ describe('DomEditable', () => {
                     ],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteBackward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteBackward');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>acd</div>' +
@@ -668,7 +653,7 @@ describe('DomEditable', () => {
                     ],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteForward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>abd</div>' +
@@ -717,7 +702,7 @@ describe('DomEditable', () => {
                     ],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteBackward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteBackward');
                 expect(container.innerHTML).to.equal(
                     '<jw-editor><section contenteditable="true">' +
                         '<div>acd</div>' +
@@ -881,20 +866,6 @@ describe('DomEditable', () => {
                 },
             );
             await editor.start();
-            commandNames = [];
-            const execCommand = editor.execCommand;
-            editor.execCommand = async (
-                commandName: string | (() => Promise<void> | void),
-                params?: object,
-            ): Promise<void> => {
-                if (typeof commandName === 'function') {
-                    commandNames.push('@custom');
-                    await commandName();
-                } else {
-                    commandNames.push(commandName);
-                }
-                return execCommand.call(editor, commandName, params);
-            };
 
             // key: o
             await triggerEvents([
@@ -925,7 +896,7 @@ describe('DomEditable', () => {
                 ],
             ]);
 
-            expect(commandNames.join(',')).to.equal('deleteForward');
+            expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
             expect(container.innerHTML).to.equal(
                 '<jw-editor><section contenteditable="true">' +
                     '<div>abd</div>' +

@@ -10,6 +10,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable } from '../../utils/src/configuration';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { isBlock } from '../../utils/src/isBlock';
+import { CommandParams } from '../../core/src/Dispatcher';
 
 export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     codeView = new CodeViewNode();
@@ -52,14 +53,14 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     // Public
     //--------------------------------------------------------------------------
 
-    async toggle(): Promise<void> {
+    async toggle(params: CommandParams): Promise<void> {
         if (this.active) {
-            return this.deactivate();
+            return this.deactivate(params);
         } else {
-            return this.activate();
+            return this.activate(params);
         }
     }
-    async activate(): Promise<void> {
+    async activate(params: CommandParams): Promise<void> {
         this.active = true;
         const domLayoutEngine = this.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
         const editable = domLayoutEngine.components.get('editable')[0];
@@ -70,9 +71,9 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
 
         // Show the code view and hide the editable.
         await this.editor.plugins.get(Layout).append('code', 'main');
-        await this.editor.execCommand('hide', { componentId: 'editable' });
+        await params.context.execCommand('hide', { componentId: 'editable' });
     }
-    async deactivate(): Promise<void> {
+    async deactivate(params: CommandParams): Promise<void> {
         this.active = false;
         const domLayoutEngine = this.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
         const editable = domLayoutEngine.components.get('editable')[0];
@@ -87,7 +88,7 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         editable.append(...newEditable[0].children());
 
         // Show the editable and hide the code view.
-        await this.editor.execCommand('show', { componentId: 'editable' });
+        await params.context.execCommand('show', { componentId: 'editable' });
         await this.editor.plugins.get(Layout).remove('code', 'main');
     }
 

@@ -145,7 +145,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (params.target) {
             link.modifiers.get(Attributes).set('target', params.target);
         }
-        return this.editor.execCommand<Char>('insertText', {
+        return params.context.execCommand<Char>('insertText', {
             text: label || link.url,
             formats: new Modifiers(link),
             context: params.context,

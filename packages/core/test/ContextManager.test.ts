@@ -47,6 +47,7 @@ describe('core', () => {
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[1]);
                         expect(computedContext).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },
@@ -75,12 +76,14 @@ describe('core', () => {
                         const result = editor.contextManager.match(commands);
                         expect(checkSpy.callCount).to.eql(1);
                         expect(checkSpy.args[0][0]).to.eql({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                             selector: [editor.selection.range.start.ancestor(ListNode)],
                         });
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[0]);
                         expect(computedContext).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },
@@ -112,12 +115,14 @@ describe('core', () => {
                         expect(checkSpy1.callCount).to.eql(0);
                         expect(checkSpy2.callCount).to.eql(1);
                         expect(checkSpy2.args[0][0]).to.eql({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                             selector: [],
                         });
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[1]);
                         expect(computedContext).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },
@@ -157,6 +162,7 @@ describe('core', () => {
                         const result = editor.contextManager.match(commands);
                         const closestList = editor.selection.range.start.closest(ListNode);
                         const checkingContext: CheckingContext = {
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                             selector: [closestList.ancestor(ListNode), closestList],
                         };
@@ -167,6 +173,7 @@ describe('core', () => {
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[1]);
                         expect(computedContext).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },
@@ -197,12 +204,14 @@ describe('core', () => {
                         const result = editor.contextManager.match(commands);
                         expect(checkSpy.callCount).to.eql(1);
                         expect(checkSpy.args[0][0]).to.eql({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                             selector: [editor.selection.range.start.ancestor(ParagraphNode)],
                         });
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[0]);
                         expect(computedContext).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },
@@ -244,6 +253,7 @@ describe('core', () => {
                         const result = editor.contextManager.match(commands);
                         expect(checkSpy.callCount).to.eql(1);
                         expect(checkSpy.args[0][0]).to.eql({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                             selector: [
                                 editor.selection.range.start.ancestor(isUl),
@@ -254,6 +264,7 @@ describe('core', () => {
                         const [matchedCommand, computedContext] = result;
                         expect(matchedCommand).to.deep.equal(commands[1]);
                         expect(computedContext).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },
@@ -316,10 +327,12 @@ describe('core', () => {
                         ];
 
                         const result1 = editor.contextManager.match(commands, {
+                            ...editor.contextManager.defaultContext,
                             range: newSelection.range,
                         });
                         expect(checkSpy1.callCount).to.eql(1);
                         expect(checkSpy1.args[0][0]).to.eql({
+                            ...editor.contextManager.defaultContext,
                             range: newSelection.range,
                             selector: [newSelection.range.start.ancestor(ParagraphNode)],
                         });
@@ -327,23 +340,27 @@ describe('core', () => {
                         const [matchedCommand1, computedContext1] = result1;
                         expect(matchedCommand1).to.deep.equal(commands[0]);
                         expect(computedContext1).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: newSelection.range,
                         });
 
                         // Which itself can still be overriden by the caller.
                         const context: Context = {
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         };
                         const result2 = editor.contextManager.match(commands, context);
                         expect(checkSpy1.callCount).to.eql(1);
                         expect(checkSpy2.callCount).to.eql(1);
                         expect(checkSpy2.args[0][0]).to.eql({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                             selector: [editor.selection.range.start.ancestor(ListNode)],
                         });
                         const [matchedCommand2, computedContext2] = result2;
                         expect(matchedCommand2).to.deep.equal(commands[1]);
                         expect(computedContext2).to.deep.equal({
+                            ...editor.contextManager.defaultContext,
                             range: editor.selection.range,
                         });
                     },

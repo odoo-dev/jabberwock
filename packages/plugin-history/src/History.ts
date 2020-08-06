@@ -1,5 +1,5 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
-import { JWEditor, Loadables } from '../../core/src/JWEditor';
+import { JWEditor, Loadables, CommitParams } from '../../core/src/JWEditor';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
@@ -90,10 +90,10 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         }
         this.editor.memory.switchTo(this._memoryKeys[this._memoryStep]);
     }
-    private _registerMemoryKey(): void {
+    private _registerMemoryKey(commitParams: CommitParams): void {
         const sliceKey = this.editor.memory.sliceKey;
         if (!this._memoryKeys.includes(sliceKey)) {
-            const commands = this.editor.memoryInfo.commandNames;
+            const commands = commitParams.commandNames;
             if (commands.length === 1 && commands[0] === 'setSelection') {
                 if (this._memoryStep > this._memoryKeys.length - 1) {
                     // After an undo, don't replace history for setSelection.
@@ -109,9 +109,7 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
 
             this._memoryStep++;
             this._memoryKeys.splice(this._memoryStep, Infinity, sliceKey);
-            this._memoryCommands.splice(this._memoryStep, Infinity, [
-                ...this.editor.memoryInfo.commandNames,
-            ]);
+            this._memoryCommands.splice(this._memoryStep, Infinity, [...commands]);
         }
     }
 }

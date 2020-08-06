@@ -111,9 +111,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            this.editor.nextEventMutex(() => {
-                return this.editor.execCommand(command.commandId, params);
-            });
+            await this.editor.execCommand(command.commandId, params);
             return command.commandId;
         }
     }

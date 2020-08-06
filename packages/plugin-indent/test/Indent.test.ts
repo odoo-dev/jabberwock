@@ -950,13 +950,7 @@ describePlugin(Indent, testEditor => {
                     const editable = domEngine.components.get('editable')[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
-                    await editor.withRange(VRange.selecting(bNode, dNode), async range => {
-                        await editor.execCommand<Indent>('indent', {
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Indent>(VRange.selecting(bNode, dNode), 'indent');
                 },
                 contentAfter: '\u2003ab<br>\u2003cd[]',
             });
@@ -1034,13 +1028,7 @@ describePlugin(Indent, testEditor => {
                     const editable = domEngine.components.get('editable')[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
-                    await editor.withRange(VRange.selecting(bNode, dNode), async range => {
-                        await editor.execCommand<Indent>('outdent', {
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Indent>(VRange.selecting(bNode, dNode), 'outdent');
                 },
                 contentAfter: 'ab<br>cd[]',
             });

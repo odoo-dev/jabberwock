@@ -11,6 +11,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { VRange } from '../../core/src/VRange';
 import { ListItemAttributes } from './ListItemXmlDomParser';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { List } from './List';
 
 export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -122,16 +123,12 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
                 if (ev.offsetX < 0) {
                     ev.stopImmediatePropagation();
                     ev.preventDefault();
-                    this.engine.editor.withRange(
-                        VRange.at(listItem.firstChild() || listItem),
-                        range => {
-                            return this.engine.editor.execCommand('toggleChecked', {
-                                context: {
-                                    range: range,
-                                },
-                            });
-                        },
-                    );
+                    this.engine.editor.execCommand(() => {
+                        return this.engine.editor.execWithRange<List>(
+                            VRange.at(listItem.firstChild() || listItem),
+                            'toggleChecked',
+                        );
+                    });
                 }
             };
             li.attach = (el: HTMLElement): void => {

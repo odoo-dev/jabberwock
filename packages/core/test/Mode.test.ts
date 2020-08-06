@@ -66,13 +66,15 @@ describe('core', () => {
                     ],
                 });
                 // With default mode.
-                await editor.withRange(VRange.at(root), async range => {
+                await editor.execWithRange(VRange.at(root), async context => {
+                    const range = context.range;
                     expect(range.mode.is(range.startContainer, RuleProperty.EDITABLE)).to.be.true;
                 });
                 // With special mode
-                await editor.withRange(
+                await editor.execWithRange(
                     VRange.at(root),
-                    async range => {
+                    async context => {
+                        const range = context.range;
                         expect(range.mode.is(range.startContainer, RuleProperty.EDITABLE)).to.be
                             .false;
                     },

@@ -9,6 +9,7 @@ import { TableNode } from './TableNode';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { TablePickerNode } from './TablePickerNode';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 
 export class TablePickerDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -21,18 +22,20 @@ export class TablePickerDomObjectRenderer extends NodeRenderer<DomObject> {
     ): Promise<DomObjectElement> {
         const domObject = (await this.super.render(tablePicker, worker)) as DomObjectElement;
         const tablePlugin = this.engine.editor.plugins.get(Table);
-        const layout = this.engine.editor.plugins.get(Layout);
+        const layout = this.engine.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
         let attach: boolean;
 
         const close = async (): Promise<void> => {
-            // TODO: remove this setTimeout when we have external vs internal execCommand.
-            setTimeout(() => {
-                if (attach && tablePlugin.isTablePickerOpen) {
-                    this.engine.editor.execCommand(() => {
-                        return layout.remove('TablePicker');
-                    });
+            this.engine.editor.execCommand(async () => {
+                this.engine.editor.memoryInfo.uiCommand = true;
+                if (
+                    attach &&
+                    tablePlugin.isTablePickerOpen &&
+                    layout.components.get('TablePicker').length
+                ) {
+                    await layout.remove('TablePicker');
                 }
-            }, 50);
+            });
         };
 
         domObject.attach = (): void => {

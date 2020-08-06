@@ -566,12 +566,13 @@ describe('VDocument', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[bc</p><p>de]f</p>',
                     stepFunction: (editor: JWEditor) => {
-                        const domEngine = editor.plugins.get(Layout).engines.dom;
+                        const pluginLayout = editor.plugins.get(Layout);
+                        const domEngine = pluginLayout.engines.dom;
                         const editable = domEngine.components.get('editable')[0];
-                        return editor.execCommand(() => {
+                        return editor.execCommand(context => {
                             editable.firstChild().breakable = false;
                             editable.lastChild().breakable = false;
-                            return deleteForward(editor);
+                            return context.execCommand('deleteBackward');
                         });
                     },
                     contentAfter: '<p>a[</p><p>]f</p>',
@@ -1550,14 +1551,7 @@ describe('VDocument', () => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
                     const editable = domEngine.components.get('editable')[0];
                     const aNode = editable.next(node => node.name === 'a');
-                    await editor.withRange(VRange.at(aNode), async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Char>(VRange.at(aNode), 'insertText', { text: 'c' });
                 },
                 contentAfter: 'cab[]',
             });
@@ -1569,13 +1563,8 @@ describe('VDocument', () => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
                     const editable = domEngine.components.get('editable')[0];
                     const aNode = editable.next(node => node.name === 'a');
-                    await editor.withRange(VRange.selecting(aNode, aNode), async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
+                    await editor.execWithRange<Char>(VRange.selecting(aNode, aNode), 'insertText', {
+                        text: 'c',
                     });
                 },
                 contentAfter: 'cb[]',
@@ -1592,14 +1581,7 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.BEFORE],
                         [aNode, RelativePosition.BEFORE],
                     ];
-                    await editor.withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Char>(rangeParams, 'insertText', { text: 'c' });
                 },
                 contentAfter: 'cab[]',
             });
@@ -1615,14 +1597,7 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.BEFORE],
                         [aNode, RelativePosition.AFTER],
                     ];
-                    await editor.withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Char>(rangeParams, 'insertText', { text: 'c' });
                 },
                 contentAfter: 'cb[]',
             });
@@ -1638,14 +1613,7 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                         [aNode, RelativePosition.AFTER],
                     ];
-                    await editor.withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Char>(rangeParams, 'insertText', { text: 'c' });
                 },
                 contentAfter: 'acb[]',
             });
@@ -1662,14 +1630,7 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                         [bNode, RelativePosition.BEFORE],
                     ];
-                    await editor.withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Char>(rangeParams, 'insertText', { text: 'c' });
                 },
                 contentAfter: 'acb[]',
             });
@@ -1686,14 +1647,7 @@ describe('VDocument', () => {
                         [aNode, RelativePosition.AFTER],
                         [bNode, RelativePosition.AFTER],
                     ];
-                    await editor.withRange(rangeParams, async range => {
-                        await editor.execCommand<Char>('insertText', {
-                            text: 'c',
-                            context: {
-                                range: range,
-                            },
-                        });
-                    });
+                    await editor.execWithRange<Char>(rangeParams, 'insertText', { text: 'c' });
                 },
                 contentAfter: 'ac[]',
             });

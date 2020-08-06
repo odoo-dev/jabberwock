@@ -1,9 +1,14 @@
-import JWEditor from './JWEditor';
+import JWEditor, { Commands, CommandParamsType } from './JWEditor';
 import { VRange } from './VRange';
 import { Predicate, VNode } from './VNodes/VNode';
+import { JWPlugin } from './JWPlugin';
 
 export interface Context {
     range?: VRange;
+    execCommand: <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        commandName: C | (() => Promise<void> | void),
+        params?: CommandParamsType<P, C>,
+    ) => Promise<void>;
 }
 
 export interface CheckingContext extends Context {
@@ -48,10 +53,11 @@ export class ContextManager {
     editor: JWEditor;
     defaultContext: Context;
 
-    constructor(editor: JWEditor) {
+    constructor(editor: JWEditor, execCommand: Context['execCommand']) {
         this.editor = editor;
         this.defaultContext = {
             range: this.editor.selection.range,
+            execCommand: execCommand,
         };
     }
 

@@ -90,11 +90,9 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         // Only indent when there is at leat two lines selected, that is when
         // at least one segment break could be identified in the selection.
         if (range.isCollapsed() || !segmentBreaks.length) {
-            await this.editor.execCommand<Char>('insertText', {
+            await params.context.execCommand<Char>('insertText', {
                 text: this.tab,
-                context: {
-                    range: range,
-                },
+                context: { ...params.context, range },
             });
         } else {
             // The first line of the selection is neither fully selected nor
@@ -106,13 +104,8 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             for (const segmentBreak of segmentBreaks) {
                 // Insert 4 spaces at the start of next segment.
                 const [node, position] = this._nextSegmentStart(segmentBreak);
-                await this.editor.withRange(VRange.at(node, position), async range => {
-                    return this.editor.execCommand<Char>('insertText', {
-                        text: this.tab,
-                        context: {
-                            range: range,
-                        },
-                    });
+                await this.editor.execWithRange<Char>(VRange.at(node, position), 'insertText', {
+                    text: this.tab,
                 });
             }
         }
