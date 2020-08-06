@@ -133,7 +133,12 @@ function alignButton(type: AlignType): ActionableNode {
         commandArgs: { type: type } as AlignParams,
         selected: (editor: JWEditor): boolean => {
             const nodes = editor.selection.range.targetedNodes(ContainerNode);
-            return nodes.length && nodes.every(node => isAligned(node, type));
+            for (const node of nodes) {
+                if (!isAligned(node, type)) {
+                    return false;
+                }
+            }
+            return !!nodes.length;
         },
     });
     button.modifiers.append(

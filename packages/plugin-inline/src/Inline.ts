@@ -139,10 +139,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             return !!this.cache.modifiers.find(FormatClass);
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
-            return (
-                selectedInlines.length &&
-                selectedInlines.every(char => !!char.modifiers.find(FormatClass))
-            );
+            for (const char of selectedInlines) {
+                if (!char.modifiers.find(FormatClass)) {
+                    return false;
+                }
+            }
+            return !!selectedInlines.length;
         }
     }
     /**
