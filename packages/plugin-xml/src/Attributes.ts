@@ -101,7 +101,6 @@ export class Attributes extends Modifier {
         if (this.classList.length && !keys.includes('class')) {
             // The node was not parsed with a class attribute, add it in place.
             // Use `get` for its value but record its position in the record.
-            this._record.class = null;
             keys.push('class');
         }
         if (this.style.length && !keys.includes('style')) {
