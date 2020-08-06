@@ -33,6 +33,7 @@ import { BackgroundColor } from '../../packages/plugin-backgroundcolor/src/Backg
 import { Layout } from '../../packages/plugin-layout/src/Layout';
 import { DomLayout } from '../../packages/plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../packages/plugin-dom-editable/src/DomEditable';
+import { History } from '../../packages/plugin-history/src/History';
 import { VNode } from '../../packages/core/src/VNodes/VNode';
 import { Input } from '../../packages/plugin-input/src/Input';
 import { Dialog } from '../../packages/plugin-dialog/src/Dialog';
@@ -65,6 +66,7 @@ export class BasicEditor extends JWEditor {
                 [Html],
                 [DomLayout],
                 [DomEditable],
+                [History],
                 [Inline],
                 [Char],
                 [LineBreak],
@@ -150,6 +152,7 @@ export class BasicEditor extends JWEditor {
                 ['LinkButton', 'UnlinkButton'],
                 ['TableButton'],
                 ['CodeButton'],
+                ['UndoButton', 'RedoButton'],
             ],
         });
     }
