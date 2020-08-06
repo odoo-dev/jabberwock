@@ -1397,7 +1397,7 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
-        it.skip('should not redraw a selection in a part removed from the arch/DOM', async () => {
+        it('should not redraw a selection in a part removed from the arch/DOM', async () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 render(editor: JWEditor): Promise<VNode[]> {
@@ -1428,22 +1428,15 @@ describe('DomLayout', () => {
 
             expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
 
-            let hasError = false;
-            await editor
-                .execCommand(() => {
-                    editor.selection.set({
-                        anchorNode: div.descendants(CharNode)[0],
-                        anchorPosition: RelativePosition.AFTER,
-                        focusNode: div.descendants(CharNode)[0],
-                        direction: Direction.BACKWARD,
-                        focusPosition: RelativePosition.AFTER,
-                    });
-                })
-                .catch(error => {
-                    hasError = true;
-                    expect(error.message).to.include('selection');
+            await editor.execCommand(() => {
+                editor.selection.set({
+                    anchorNode: div.descendants(CharNode)[0],
+                    anchorPosition: RelativePosition.AFTER,
+                    focusNode: div.descendants(CharNode)[0],
+                    direction: Direction.BACKWARD,
+                    focusPosition: RelativePosition.AFTER,
                 });
-            expect(hasError).to.equal(true);
+            });
 
             const domSelection = target.ownerDocument.getSelection();
 
