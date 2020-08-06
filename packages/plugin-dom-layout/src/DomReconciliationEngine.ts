@@ -80,7 +80,10 @@ export class DomReconciliationEngine {
     ): void {
         const renderedSet = new Set<DomObject>();
         for (const node of updatedNodes) {
-            renderedSet.add(renderings.get(node));
+            const rendering = renderings.get(node);
+            if (rendering) {
+                renderedSet.add(rendering);
+            }
         }
         const rendered = [...renderedSet];
 
