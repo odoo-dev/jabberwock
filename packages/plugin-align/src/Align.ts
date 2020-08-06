@@ -132,13 +132,15 @@ function alignButton(type: AlignType): ActionableNode {
         commandId: 'align',
         commandArgs: { type: type } as AlignParams,
         selected: (editor: JWEditor): boolean => {
-            const nodes = editor.selection.range.targetedNodes(ContainerNode);
-            for (const node of nodes) {
-                if (!isAligned(node, type)) {
-                    return false;
-                }
+            const range = editor.selection.range;
+            const ancestor = range.start.closest(ContainerNode);
+            const startIsAligned = ancestor && isAligned(ancestor, type);
+            if (!startIsAligned || range.isCollapsed()) {
+                return startIsAligned;
+            } else {
+                const ancestor = range.end.closest(ContainerNode);
+                return ancestor && isAligned(ancestor, type);
             }
-            return !!nodes.length;
         },
     });
     button.modifiers.append(
