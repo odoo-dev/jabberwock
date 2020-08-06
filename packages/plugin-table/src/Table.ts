@@ -178,7 +178,9 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
             await layout.remove('TablePicker');
         }
         if (!params.rowCount || !params.columnCount) {
-            await layout.append('TablePicker', 'TableButton');
+            if (!this.isTablePickerOpen) {
+                await layout.append('TablePicker', 'TableButton');
+            }
         } else {
             const range = params.context.range;
             if (range.start.parent) {
