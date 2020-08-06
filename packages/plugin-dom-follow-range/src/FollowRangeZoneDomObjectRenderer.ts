@@ -62,6 +62,10 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
                 }
             }
         } while (doc);
+        const selectionIsInEditable =
+            !!selection &&
+            selection.anchorNode &&
+            selection.anchorNode.parentElement.closest('[contenteditable="true"]');
 
         // If the selection goes into an input inside the jw-follow-range, do nothing.
         if (
@@ -71,7 +75,7 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
             return;
         }
 
-        if (selection.rangeCount && !isCollapsed) {
+        if (selection.rangeCount && !isCollapsed && selectionIsInEditable) {
             if (container.parentElement.tagName !== 'BODY') {
                 document.body.append(container);
             }
