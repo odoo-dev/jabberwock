@@ -19,7 +19,10 @@ export class ShadowXmlDomParser extends AbstractParser<Node> {
      */
     async parse(item: Element): Promise<VNode[]> {
         const shadow = new ShadowNode();
-        shadow.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            shadow.modifiers.append(attributes);
+        }
         const nodes = await this.engine.parse(...item.childNodes);
         shadow.append(...nodes);
         return [shadow];

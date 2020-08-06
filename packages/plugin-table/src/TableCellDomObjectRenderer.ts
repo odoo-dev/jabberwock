@@ -22,7 +22,6 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
             attributes: {},
         };
 
-        // Render attributes.
         // Colspan and rowspan are handled differently from other attributes:
         // they are automatically calculated in function of the cell's managed
         // cells. Render them here. If their value is 1 or less, they are

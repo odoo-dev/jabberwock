@@ -31,7 +31,7 @@ export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
         };
 
         for (const child of table.children()) {
-            if (child.is(TableRowNode)) {
+            if (child instanceof TableRowNode) {
                 // If the child is a row, append it to its containing section.
                 const tableSection = child.header ? objectHead : objectBody;
                 tableSection.children.push(child);

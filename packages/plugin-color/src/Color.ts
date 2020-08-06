@@ -109,7 +109,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 // Uncolor the children and their formats as well.
                 for (const child of node.children()) {
                     child.modifiers.find(Attributes)?.style.remove(this.styleName);
-                    if (child.is(InlineNode)) {
+                    if (child instanceof InlineNode) {
                         for (const format of child.modifiers.filter(Format)) {
                             format.modifiers.find(Attributes)?.style.remove(this.styleName);
                         }

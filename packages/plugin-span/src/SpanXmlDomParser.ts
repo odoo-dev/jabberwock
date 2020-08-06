@@ -16,7 +16,10 @@ export class SpanXmlDomParser extends FormatXmlDomParser {
      */
     async parse(item: Element): Promise<VNode[]> {
         const span = new SpanFormat(nodeName(item) as 'SPAN' | 'FONT');
-        span.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            span.modifiers.append(attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         // Handle empty spans.
         if (!children.length) {

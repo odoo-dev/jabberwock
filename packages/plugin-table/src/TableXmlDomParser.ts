@@ -22,14 +22,17 @@ export class TableXmlDomParser extends AbstractParser<Node> {
     async parse(item: HTMLTableElement): Promise<TableNode[]> {
         // Parse the table itself and its attributes.
         const table = new TableNode();
-        table.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            table.modifiers.append(attributes);
+        }
 
         // Parse the contents of the table.
         const children = await this.engine.parse(...item.childNodes);
 
         // Build the grid.
         const dimensions = this._getTableDimensions(item);
-        const parsedRows = children.filter(row => row.is(TableRowNode)) as TableRowNode[];
+        const parsedRows = children.filter(row => row instanceof TableRowNode) as TableRowNode[];
         const grid = this._createTableGrid(dimensions, parsedRows);
 
         // Append the cells to the rows.
@@ -48,7 +51,7 @@ export class TableXmlDomParser extends AbstractParser<Node> {
         let rowIndex = 0;
         for (let childIndex = 0; childIndex < children.length; childIndex += 1) {
             const child = children[childIndex];
-            if (child.is(TableRowNode)) {
+            if (child instanceof TableRowNode) {
                 const row = rows[rowIndex];
                 table.append(row);
                 rowIndex += 1;

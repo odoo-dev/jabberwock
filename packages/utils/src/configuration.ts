@@ -94,7 +94,7 @@ export async function parseElement(editor: JWEditor, element: HTMLElement): Prom
             if (forceAfter) {
                 return [reference, RelativePosition.AFTER];
             }
-            if (forcePrepend && reference.is(ContainerNode)) {
+            if (forcePrepend && reference instanceof ContainerNode) {
                 return [reference, RelativePosition.INSIDE];
             }
 

@@ -15,7 +15,7 @@ export class PreSeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
 
     predicate = (item: VNode): boolean => {
         const DefaultSeparator = this.engine.editor.configuration.defaults.Separator;
-        return item.is(DefaultSeparator) && !!item.ancestor(PreNode);
+        return item instanceof DefaultSeparator && !!item.ancestor(PreNode);
     };
 
     /**

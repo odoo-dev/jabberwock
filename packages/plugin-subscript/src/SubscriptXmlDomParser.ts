@@ -15,7 +15,10 @@ export class SubscriptXmlDomParser extends FormatXmlDomParser {
      */
     async parse(item: Element): Promise<VNode[]> {
         const subscript = new SubscriptFormat();
-        subscript.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            subscript.modifiers.append(attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(subscript, children);
 

@@ -32,7 +32,11 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             const node = range.start.nextSibling() || range.start.previousSibling();
-                            return node && node.is(InlineNode) && !!node.modifiers.find(LinkFormat);
+                            return (
+                                node &&
+                                node instanceof InlineNode &&
+                                !!node.modifiers.find(LinkFormat)
+                            );
                         },
                         modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
                     });

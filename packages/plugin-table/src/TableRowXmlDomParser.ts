@@ -26,7 +26,10 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
             return this.parseTableSection(item);
         } else if (nodeName(item) === 'TR') {
             const row = new TableRowNode();
-            row.modifiers.append(this.engine.parseAttributes(item));
+            const attributes = this.engine.parseAttributes(item);
+            if (attributes.length) {
+                row.modifiers.append(attributes);
+            }
             const cells = await this.engine.parse(...item.childNodes);
             row.append(...cells);
             return [row];
@@ -48,17 +51,17 @@ export class TableRowXmlDomParser extends AbstractParser<Node> {
         }
 
         // Parse the <tbody> or <thead>'s modifiers.
-        const containerModifiers = new Modifiers(this.engine.parseAttributes(tableSection));
+        const attributes = this.engine.parseAttributes(tableSection);
 
         // Apply the attributes, style and `header` property of the container to
         // each row.
         const name = nodeName(tableSection);
         for (const parsedNode of parsedNodes) {
-            if (parsedNode.is(TableRowNode)) {
+            if (parsedNode instanceof TableRowNode) {
                 parsedNode.header = name === 'THEAD';
                 parsedNode.modifiers.replace(
                     TableSectionAttributes,
-                    new TableSectionAttributes(containerModifiers.get(Attributes)),
+                    new TableSectionAttributes(attributes),
                 );
             }
         }

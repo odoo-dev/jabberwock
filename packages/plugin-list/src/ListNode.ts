@@ -18,13 +18,13 @@ export class ListNode extends ContainerNode {
     // Typescript currently doesn't support using enum as keys in interfaces.
     // Source: https://github.com/microsoft/TypeScript/issues/13042
     static ORDERED(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType === ListType.ORDERED;
+        return node && node instanceof ListNode && node.listType === ListType.ORDERED;
     }
     static UNORDERED(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType === ListType.UNORDERED;
+        return node && node instanceof ListNode && node.listType === ListType.UNORDERED;
     }
     static CHECKLIST(node: VNode): node is ListNode {
-        return node && node.is(ListNode) && node.listType === ListType.CHECKLIST;
+        return node && node instanceof ListNode && node.listType === ListType.CHECKLIST;
     }
     listType: ListType;
     constructor(params: ListNodeParams) {
@@ -63,7 +63,7 @@ export class ListNode extends ContainerNode {
      */
     static check(...nodes: VNode[]): void {
         for (const node of nodes) {
-            if (node.is(ListNode)) {
+            if (node instanceof ListNode) {
                 // Check the list's children.
                 ListNode.check(...node.children());
             } else {
@@ -72,7 +72,7 @@ export class ListNode extends ContainerNode {
 
                 // Propagate to next indented list if any.
                 const indentedChild = node.nextSibling();
-                if (indentedChild && indentedChild.is(ListNode)) {
+                if (indentedChild && indentedChild instanceof ListNode) {
                     ListNode.check(indentedChild);
                 }
             }
@@ -85,7 +85,7 @@ export class ListNode extends ContainerNode {
      */
     static uncheck(...nodes: VNode[]): void {
         for (const node of nodes) {
-            if (node.is(ListNode)) {
+            if (node instanceof ListNode) {
                 // Uncheck the list's children.
                 ListNode.uncheck(...node.children());
             } else {
@@ -94,7 +94,7 @@ export class ListNode extends ContainerNode {
 
                 // Propagate to next indented list.
                 const indentedChild = node.nextSibling();
-                if (indentedChild && indentedChild.is(ListNode)) {
+                if (indentedChild && indentedChild instanceof ListNode) {
                     ListNode.uncheck(indentedChild);
                 }
             }

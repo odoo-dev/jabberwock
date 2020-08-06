@@ -14,7 +14,7 @@ export abstract class FormatXmlDomParser extends AbstractParser<Node> {
      */
     applyFormat(format: Format, nodes: VNode[]): void {
         for (const node of nodes) {
-            if (node.is(InlineNode)) {
+            if (node instanceof InlineNode) {
                 format.clone().applyTo(node);
             } else {
                 const inlineNodes = node.descendants(InlineNode);
