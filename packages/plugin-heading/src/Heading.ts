@@ -28,13 +28,13 @@ function headingButton(level: number): ComponentDefinition {
                 commandId: 'applyHeadingStyle',
                 commandArgs: { level: level } as HeadingParams,
                 selected: (editor: JWEditor): boolean => {
-                    const nodes = editor.selection.range.targetedNodes();
-                    return (
-                        nodes.length &&
-                        nodes.every(node => {
-                            return node.closest(HeadingNode)?.level === level;
-                        })
-                    );
+                    const range = editor.selection.range;
+                    const startIsHeading = range.start.closest(HeadingNode)?.level === level;
+                    if (!startIsHeading || range.isCollapsed()) {
+                        return startIsHeading;
+                    } else {
+                        return range.end.closest(HeadingNode)?.level === level;
+                    }
                 },
                 modifiers: [new Attributes({ class: 'h' + level })],
             });
@@ -76,14 +76,24 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                         commandId: 'applyHeadingStyle',
                         commandArgs: { level: 0 } as HeadingParams,
                         selected: (editor: JWEditor): boolean => {
-                            const nodes = editor.selection.range.targetedNodes();
-                            return nodes.every(node => {
-                                return node.closest(ancestor => {
-                                    return (
-                                        ancestor instanceof editor.configuration.defaults.Container
+                            const range = editor.selection.range;
+                            if (range.start.parent) {
+                                const startIsDefault = !!range.start.closest(
+                                    ancestor =>
+                                        ancestor instanceof editor.configuration.defaults.Container,
+                                );
+                                if (!startIsDefault || range.isCollapsed()) {
+                                    return startIsDefault;
+                                } else {
+                                    return !!range.end.closest(
+                                        ancestor =>
+                                            ancestor instanceof
+                                            editor.configuration.defaults.Container,
                                     );
-                                });
-                            });
+                                }
+                            } else {
+                                return true;
+                            }
                         },
                         modifiers: [new Attributes({ class: 'p' })],
                     });

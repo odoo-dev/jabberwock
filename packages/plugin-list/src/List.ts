@@ -108,11 +108,13 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.ORDERED } as ListParams,
                         selected: (editor: JWEditor): boolean => {
-                            const targetedNodes = editor.selection.range.targetedNodes();
-                            return (
-                                targetedNodes.length &&
-                                targetedNodes.every(List.isInList.bind(List, ListType.ORDERED))
-                            );
+                            const range = editor.selection.range;
+                            const startIsList = List.isInList(ListType.ORDERED, range.start);
+                            if (!startIsList || range.isCollapsed()) {
+                                return startIsList;
+                            } else {
+                                return List.isInList(ListType.ORDERED, range.end);
+                            }
                         },
                         modifiers: [new Attributes({ class: 'fa fa-list-ol fa-fw' })],
                     });
@@ -128,11 +130,13 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.UNORDERED } as ListParams,
                         selected: (editor: JWEditor): boolean => {
-                            const targetedNodes = editor.selection.range.targetedNodes();
-                            return (
-                                targetedNodes.length &&
-                                targetedNodes.every(List.isInList.bind(List, ListType.UNORDERED))
-                            );
+                            const range = editor.selection.range;
+                            const startIsList = List.isInList(ListType.UNORDERED, range.start);
+                            if (!startIsList || range.isCollapsed()) {
+                                return startIsList;
+                            } else {
+                                return List.isInList(ListType.UNORDERED, range.end);
+                            }
                         },
                         modifiers: [new Attributes({ class: 'fa fa-list-ul fa-fw' })],
                     });
@@ -148,11 +152,13 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.CHECKLIST } as ListParams,
                         selected: (editor: JWEditor): boolean => {
-                            const targetedNodes = editor.selection.range.targetedNodes();
-                            return (
-                                targetedNodes.length &&
-                                targetedNodes.every(List.isInList.bind(List, ListType.CHECKLIST))
-                            );
+                            const range = editor.selection.range;
+                            const startIsList = List.isInList(ListType.CHECKLIST, range.start);
+                            if (!startIsList || range.isCollapsed()) {
+                                return startIsList;
+                            } else {
+                                return List.isInList(ListType.CHECKLIST, range.end);
+                            }
                         },
                         modifiers: [new Attributes({ class: 'fa far fa-check-square fa-fw' })],
                     });

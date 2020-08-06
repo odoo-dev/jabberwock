@@ -8,6 +8,7 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { InlineNode } from '../../plugin-inline/src/InlineNode';
 
 export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
@@ -29,8 +30,26 @@ export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
                         label: 'Toggle underline',
                         commandId: 'toggleFormat',
                         commandArgs: { FormatClass: UnderlineFormat } as FormatParams,
-                        selected: (editor: JWEditor): boolean =>
-                            editor.plugins.get(Inline).isAllFormat(UnderlineFormat),
+                        selected: (editor: JWEditor): boolean => {
+                            const range = editor.selection.range;
+                            if (range.isCollapsed()) {
+                                const pluginInline = editor.plugins.get(Inline);
+                                return !!pluginInline
+                                    .getCurrentModifiers(range)
+                                    ?.find(UnderlineFormat);
+                            } else {
+                                const startIsFormated = !!range.start
+                                    .nextSibling(InlineNode)
+                                    ?.modifiers.find(UnderlineFormat);
+                                if (!startIsFormated || range.isCollapsed()) {
+                                    return startIsFormated;
+                                } else {
+                                    return !!range.end
+                                        .previousSibling(InlineNode)
+                                        ?.modifiers.find(UnderlineFormat);
+                                }
+                            }
+                        },
                         modifiers: [new Attributes({ class: 'fa fa-underline fa-fw' })],
                     });
                     return [button];

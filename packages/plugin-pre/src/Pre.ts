@@ -31,13 +31,13 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
                         label: 'Pre',
                         commandId: 'applyPreStyle',
                         selected: (editor: JWEditor): boolean => {
-                            const nodes = editor.selection.range.targetedNodes();
-                            return (
-                                nodes.length &&
-                                nodes.every(node => {
-                                    return node.closest(PreNode);
-                                })
-                            );
+                            const range = editor.selection.range;
+                            const startPre = !!range.start.closest(PreNode);
+                            if (!startPre || range.isCollapsed()) {
+                                return startPre;
+                            } else {
+                                return !!range.end.closest(PreNode);
+                            }
                         },
                         modifiers: [new Attributes({ class: 'pre' })],
                     });
