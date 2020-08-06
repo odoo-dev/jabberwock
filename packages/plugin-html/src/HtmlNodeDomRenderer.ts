@@ -11,7 +11,7 @@ export class HtmlHtmlDomRenderer extends NodeRenderer<DomObject> {
     predicate = HtmlNode;
 
     async render(node: HtmlNode): Promise<DomObject> {
-        const domObject: DomObject = { dom: [node.domNode] };
+        const domObject: DomObject = { dom: [node.domNode()] };
         return domObject;
     }
 }

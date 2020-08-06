@@ -187,7 +187,7 @@ export class OdooWebsiteEditor extends JWEditor {
                     id: 'snippet_menu',
                     render(): Promise<VNode[]> {
                         const node: VNode = options.snippetMenuElement
-                            ? new HtmlNode({ domNode: options.snippetMenuElement })
+                            ? new HtmlNode({ domNode: (): Node => options.snippetMenuElement })
                             : new LineBreakNode();
                         return Promise.resolve([node]);
                     },
@@ -196,7 +196,7 @@ export class OdooWebsiteEditor extends JWEditor {
                     id: 'snippetManipulators',
                     render(): Promise<VNode[]> {
                         const node: VNode = options.snippetMenuElement
-                            ? new HtmlNode({ domNode: options.snippetManipulators })
+                            ? new HtmlNode({ domNode: (): Node => options.snippetManipulators })
                             : new LineBreakNode();
                         return Promise.resolve([node]);
                     },
