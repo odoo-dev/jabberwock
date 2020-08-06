@@ -117,11 +117,6 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
      * @param element
      */
     protected _updateActionables(): void {
-        const commandNames = this.engine.editor.memoryInfo.commandNames;
-        if (commandNames.length === 1 && commandNames.includes('insertText')) {
-            // By default the actionable buttons are not update for a text insertion.
-            return;
-        }
         for (const [aactionable, element] of this.actionableNodes) {
             const editor = this.engine.editor;
             const select = aactionable.selected(editor);

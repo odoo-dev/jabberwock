@@ -511,7 +511,6 @@ describe('DomShadow', async () => {
     });
     describe('normalize editable events', async () => {
         describe('hande user events with EventNormalizer', async () => {
-            let commandNames: string[];
             let editor: JWEditor;
             let domEngine: DomLayoutEngine;
             let editable: VNode;
@@ -541,20 +540,6 @@ describe('DomShadow', async () => {
                 section.innerHTML = '<div>abcd</div>';
                 setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
-                commandNames = [];
-                const execCommand = editor.execCommand;
-                editor.execCommand = async (
-                    commandName: string | (() => Promise<void> | void),
-                    params?: object,
-                ): Promise<void> => {
-                    if (typeof commandName === 'function') {
-                        commandNames.push('@custom');
-                        await commandName();
-                    } else {
-                        commandNames.push(commandName);
-                    }
-                    return execCommand.call(editor, commandName, params);
-                };
                 domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 editable = domEngine.components.get('editable')[0].firstChild();
             });
@@ -584,7 +569,7 @@ describe('DomShadow', async () => {
                 await nextTick();
                 await nextTick();
 
-                expect(commandNames.join(',')).to.equal('insertParagraphBreak');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertParagraphBreak');
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
                     '<section contenteditable="true">' +
@@ -630,7 +615,7 @@ describe('DomShadow', async () => {
                 await nextTick();
 
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
-                expect(commandNames.join(',')).to.equal('insertLineBreak,insert');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertLineBreak,insert');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
                     '<section contenteditable="true">' + '<div>ab<br>cd</div>' + '</section>',
                 );
@@ -677,7 +662,7 @@ describe('DomShadow', async () => {
                     [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('insertText');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertText');
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 domEditable.removeAttribute('id');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -727,7 +712,7 @@ describe('DomShadow', async () => {
                 await nextTick();
                 await nextTick();
 
-                expect(commandNames.join(',')).to.equal('selectAll');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('selectAll');
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
                     '<section contenteditable="true"><div>abcd</div></section>',
@@ -761,7 +746,7 @@ describe('DomShadow', async () => {
                 await nextTick();
                 await nextTick();
 
-                expect(commandNames.join(',')).to.equal('setSelection');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('setSelection');
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
                     '<section contenteditable="true">' + '<div>abcd</div>' + '</section>',
@@ -843,7 +828,7 @@ describe('DomShadow', async () => {
                     [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft' }],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteBackward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteBackward');
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 domEditable.removeAttribute('id');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -926,7 +911,7 @@ describe('DomShadow', async () => {
                     [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft' }],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteForward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 domEditable.removeAttribute('id');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -991,7 +976,7 @@ describe('DomShadow', async () => {
                     ],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteBackward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteBackward');
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 domEditable.removeAttribute('id');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -1056,7 +1041,7 @@ describe('DomShadow', async () => {
                     ],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteForward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 domEditable.removeAttribute('id');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -1105,7 +1090,7 @@ describe('DomShadow', async () => {
                     ],
                 ]);
 
-                expect(commandNames.join(',')).to.equal('deleteBackward');
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteBackward');
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 domEditable.removeAttribute('id');
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -1162,20 +1147,6 @@ describe('DomShadow', async () => {
                 },
             );
             await editor.start();
-            const commandNames = [];
-            const execCommand = editor.execCommand;
-            editor.execCommand = async (
-                commandName: string | (() => Promise<void> | void),
-                params?: object,
-            ): Promise<void> => {
-                if (typeof commandName === 'function') {
-                    commandNames.push('@custom');
-                    await commandName();
-                } else {
-                    commandNames.push(commandName);
-                }
-                return execCommand.call(editor, commandName, params);
-            };
             const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
             const editable = domEngine.components.get('editable')[0].firstChild();
 
@@ -1208,7 +1179,7 @@ describe('DomShadow', async () => {
                 ],
             ]);
 
-            expect(commandNames.join(',')).to.equal('deleteForward');
+            expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
             const domEditable = domEngine.getDomNodes(editable)[0] as Element;
             domEditable.removeAttribute('id');
             expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(

@@ -113,34 +113,30 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      * @param batchPromise
      */
     async _onNormalizedEvent(batchPromise: Promise<EventBatch>): Promise<void> {
-        return this.editor.nextEventMutex(
-            async (): Promise<void> => {
-                const batch = await batchPromise;
-                const domEngine = this.dependencies.get(Layout).engines.dom as DomLayoutEngine;
-                if (batch.mutatedElements) {
-                    domEngine.markForRedraw(batch.mutatedElements);
+        const batch = await batchPromise;
+        const domEngine = this.dependencies.get(Layout).engines.dom as DomLayoutEngine;
+        if (batch.mutatedElements) {
+            domEngine.markForRedraw(batch.mutatedElements);
+        }
+        let processed = false;
+        if (batch.inferredKeydownEvent) {
+            const domLayout = this.dependencies.get(DomLayout);
+            processed = !!(await domLayout.processKeydown(
+                new KeyboardEvent('keydown', {
+                    ...batch.inferredKeydownEvent,
+                    key: batch.inferredKeydownEvent.key,
+                    code: batch.inferredKeydownEvent.code,
+                }),
+            ));
+        }
+        if (!processed) {
+            for (const action of batch.actions) {
+                const commandSpec = this._matchCommand(action);
+                if (commandSpec) {
+                    await this.editor.execCommand(...commandSpec);
                 }
-                let processed = false;
-                if (batch.inferredKeydownEvent) {
-                    const domLayout = this.dependencies.get(DomLayout);
-                    processed = !!(await domLayout.processKeydown(
-                        new KeyboardEvent('keydown', {
-                            ...batch.inferredKeydownEvent,
-                            key: batch.inferredKeydownEvent.key,
-                            code: batch.inferredKeydownEvent.code,
-                        }),
-                    ));
-                }
-                if (!processed) {
-                    for (const action of batch.actions) {
-                        const commandSpec = this._matchCommand(action);
-                        if (commandSpec) {
-                            await this.editor.execCommand(...commandSpec);
-                        }
-                    }
-                }
-            },
-        );
+            }
+        }
     }
     /**
      * In DomLayout, KeyboardEvent listener to be added to the DOM that calls

@@ -37,12 +37,13 @@ describePlugin(Align, testEditor => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p style="text-align: right;">c[]d</p>',
                     stepFunction: (editor: JWEditor) => {
-                        const domEngine = editor.plugins.get(Layout).engines.dom;
+                        const domLayout = editor.plugins.get(Layout);
+                        const domEngine = domLayout.engines.dom;
                         const editable = domEngine.components.get('editable')[0];
                         const root = editable;
-                        return editor.execCommand(() => {
+                        return editor.execCommand(context => {
                             root.lastChild().editable = false;
-                            return align(AlignType.LEFT)(editor);
+                            return context.execCommand<Align>('align', { type: AlignType.LEFT });
                         });
                     },
                     contentAfter: '<p>ab</p><p style="text-align: right;">c[]d</p>',
