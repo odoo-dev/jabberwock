@@ -178,6 +178,7 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
             await layout.remove('TablePicker');
         }
         if (!params.rowCount || !params.columnCount) {
+            this.editor.memoryInfo.uiCommand = true;
             if (!this.isTablePickerOpen) {
                 await layout.append('TablePicker', 'TableButton');
             }

@@ -105,8 +105,9 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                     this._memoryKeys[this._memoryStep] = sliceKey;
                     return;
                 }
+            } else if (this.editor.memoryInfo.uiCommand) {
+                return;
             }
-
             this._memoryStep++;
             this._memoryKeys.splice(this._memoryStep, Infinity, sliceKey);
             this._memoryCommands.splice(this._memoryStep, Infinity, [...commands]);
