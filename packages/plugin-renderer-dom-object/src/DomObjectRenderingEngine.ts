@@ -2,12 +2,15 @@ import { RenderingEngine, RenderingIdentifier } from '../../plugin-renderer/src/
 import { DefaultDomObjectRenderer } from './DefaultDomObjectRenderer';
 import { DefaultDomObjectModifierRenderer } from './DefaultDomObjectModifierRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Modifier } from '../../core/src/Modifier';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { RuleProperty } from '../../core/src/Mode';
+import {
+    RenderingEngineWorker,
+    RenderingEngineCache,
+} from '../../plugin-renderer/src/RenderingEngineCache';
 
 /**
  * Renderer a node can define the location when define the nodes attributes.
@@ -226,6 +229,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
     static readonly id: RenderingIdentifier = 'dom/object';
     static readonly defaultRenderer = DefaultDomObjectRenderer;
     static readonly defaultModifierRenderer = DefaultDomObjectModifierRenderer;
+
     /**
      * Render the attributes of the given VNode onto the given DOM Element.
      *
@@ -233,7 +237,12 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      * @param node
      * @param element
      */
-    renderAttributes<T extends typeof Attributes>(Class: T, node: VNode, item: DomObject): void {
+    renderAttributes<T extends typeof Attributes>(
+        Class: T,
+        node: VNode,
+        item: DomObject,
+        worker: RenderingEngineWorker<DomObject>,
+    ): void {
         if ('tag' in item) {
             if (!item.attributes) item.attributes = {};
             const attributes = node.modifiers.find(Class);
@@ -251,7 +260,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                         attr[name] = attributes.get(name);
                     }
                 }
-                this._addOrigin(attributes, item);
+                worker.depends(item, attributes);
             }
         }
     }
@@ -259,17 +268,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      * @overwrite
      */
     async renderChildren(node: VNode): Promise<Array<DomObject | VNode>> {
-        const children: Array<DomObject | VNode> = [];
-        if (node.hasChildren()) {
-            for (const child of node.childVNodes) {
-                if (child.tangible) {
-                    children.push(child);
-                }
-            }
-        } else if (
-            !node.is(AtomicNode) &&
-            this.editor.mode.is(node, RuleProperty.ALLOW_EMPTY) !== true
-        ) {
+        const children: Array<DomObject | VNode> = node.children();
+        if (!children.length && this.editor.mode.is(node, RuleProperty.ALLOW_EMPTY) !== true) {
             children.push({ tag: 'BR' });
         }
         return children;
@@ -289,7 +289,10 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      *
      * @param domObject
      */
-    async resolveChildren(domObject: DomObject): Promise<void> {
+    async resolveChildren(
+        domObject: DomObject,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<void> {
         const stack = [domObject];
         for (const domObject of stack) {
             if ('children' in domObject) {
@@ -297,7 +300,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 const childNodes = domObject.children.filter(
                     child => child instanceof AbstractNode,
                 ) as VNode[];
-                const domObjects = await this.render(childNodes);
+                const domObjects = await worker.render(childNodes);
                 for (const index in domObject.children) {
                     const child = domObject.children[index];
                     let childObject: DomObject;
@@ -320,9 +323,13 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      *
      * @override
      */
-    renderBatched(nodes: VNode[], rendered?: NodeRenderer<DomObject>): Promise<void>[] {
-        const renderingUnits = this._getRenderingUnits(nodes, rendered);
-        return this._renderBatched(renderingUnits);
+    renderBatched(
+        cache: RenderingEngineCache<DomObject>,
+        nodes: VNode[],
+        rendered?: NodeRenderer<DomObject>,
+    ): Promise<void>[] {
+        const renderingUnits = this._getRenderingUnits(cache, nodes, rendered);
+        return this._renderBatched(cache, renderingUnits);
     }
     /**
      * Group the nodes by format and by renderer and call 'renderBatch' with
@@ -334,59 +341,58 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      *
      * @param renderingUnits
      */
-    private _renderBatched(renderingUnits: RenderingBatchUnit[]): Promise<void>[] {
+    private _renderBatched(
+        cache: RenderingEngineCache<DomObject>,
+        renderingUnits: RenderingBatchUnit[],
+    ): Promise<void>[] {
         const batchPromises: Promise<void>[] = [];
-
-        // Remove modifier who render nothing.
-        for (const unit of renderingUnits) {
-            for (let i = unit[1].length - 1; i >= 0; i--) {
-                if (this._modifierIsSameAs(unit[1][i], null)) {
-                    unit[1].splice(i, 1);
-                }
-            }
-        }
-
         for (let unitIndex = 0; unitIndex < renderingUnits.length; unitIndex++) {
             let nextUnitIndex = unitIndex;
             const unit = renderingUnits[unitIndex];
-            if (unit[1].length) {
+            if (unit && unit[1].length) {
                 // Group same formating.
-                const modifier = unit[1].shift();
-                const newRenderingUnits: RenderingBatchUnit[] = [unit];
-                let lastUnit: RenderingBatchUnit = unit;
+                const modifier = unit[1][0];
+                let lastUnit: RenderingBatchUnit = [unit[0], unit[1].slice(1), unit[2]];
+                const newRenderingUnits: RenderingBatchUnit[] = [lastUnit];
                 let nextUnit: RenderingBatchUnit;
                 while (
                     (nextUnit = renderingUnits[nextUnitIndex + 1]) &&
                     lastUnit[0].parent === nextUnit[0].parent &&
                     nextUnit[1].length &&
-                    this._modifierIsSameAs(modifier, nextUnit[1]?.[0])
+                    this._modifierIsSameAs(cache, modifier, nextUnit[1]?.[0])
                 ) {
                     nextUnitIndex++;
                     lastUnit = renderingUnits[nextUnitIndex];
                     newRenderingUnits.push([lastUnit[0], lastUnit[1].slice(1), lastUnit[2]]);
                 }
                 // Render wrapped nodes.
-                const promises = this._renderBatched(newRenderingUnits);
+                const promises = this._renderBatched(cache, newRenderingUnits);
                 const nodes: VNode[] = newRenderingUnits.map(u => u[0]);
                 const modifierPromise = Promise.all(promises).then(async () => {
                     const domObjects: DomObject[] = [];
-                    for (const domObject of nodes.map(node => this.renderings.get(node))) {
+                    for (const domObject of nodes.map(node => cache.renderings.get(node))) {
                         if (!domObjects.includes(domObject)) {
                             domObjects.push(domObject);
                         }
                     }
                     // Create format.
-                    const modifierRenderer = this.getCompatibleModifierRenderer(modifier, nodes);
-                    const wraps = await modifierRenderer.render(modifier, domObjects, nodes);
+                    const modifierRenderer = this.getCompatibleModifierRenderer(cache, modifier);
+                    const wraps = await modifierRenderer.render(
+                        modifier,
+                        domObjects,
+                        nodes,
+                        cache.worker,
+                    );
 
                     // Add origins.
                     for (const wrap of wraps) {
                         const stack = [wrap];
                         for (const domObject of stack) {
-                            const origins = this.from.get(domObject);
+                            const origins = cache.renderingDependent.get(domObject);
                             if (origins) {
                                 for (const origin of origins) {
-                                    this._addOrigin(origin, wrap);
+                                    this._depends(cache, origin, wrap);
+                                    this._depends(cache, wrap, origin);
                                 }
                             }
                             if ('children' in domObject) {
@@ -397,17 +403,20 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                                 }
                             }
                         }
-                        this._addOrigin(modifier, wrap);
+                        this._depends(cache, modifier, wrap);
+                        this._depends(cache, wrap, modifier);
                     }
 
                     // Update the renderings promise.
                     for (const node of nodes) {
-                        const wrap = wraps.find(wrap => this.from.get(wrap)?.includes(node));
-                        this.renderings.set(node, wrap);
+                        const wrap = wraps.find(wrap =>
+                            cache.renderingDependent.get(wrap)?.has(node),
+                        );
+                        cache.renderings.set(node, wrap);
                     }
                 });
                 for (const node of nodes) {
-                    this.renderingPromises.set(node, modifierPromise);
+                    cache.renderingPromises.set(node, modifierPromise);
                 }
                 batchPromises.push(modifierPromise);
             } else {
@@ -430,21 +439,22 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 if (currentRenderer) {
                     const promise = new Promise<void>(resolve => {
                         Promise.resolve().then(() => {
-                            currentRenderer.renderBatch(siblings).then(domObjects => {
+                            currentRenderer.renderBatch(siblings, cache.worker).then(domObjects => {
                                 // Set the value, add origins and locations.
                                 for (const index in siblings) {
                                     const node = siblings[index];
                                     const value = domObjects[index];
-                                    this._addOrigin(node, value);
-                                    this._addDefaultLocation(node, value);
-                                    this.renderings.set(node, value);
+                                    this._depends(cache, node, value);
+                                    this._depends(cache, value, node);
+                                    this._addDefaultLocation(cache, node, value);
+                                    cache.renderings.set(node, value);
                                 }
                                 resolve();
                             });
                         });
                     });
                     for (const sibling of siblings) {
-                        this.renderingPromises.set(sibling, promise);
+                        cache.renderingPromises.set(sibling, promise);
                     }
                     batchPromises.push(promise);
                     nextUnitIndex--;
@@ -463,54 +473,66 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      * @param rendered
      */
     private _getRenderingUnits(
+        cache: RenderingEngineCache<DomObject>,
         nodes: VNode[],
         rendered?: NodeRenderer<DomObject>,
     ): RenderingBatchUnit[] {
         // Consecutive char nodes are rendered in same time.
         const renderingUnits: RenderingBatchUnit[] = [];
+        const setNodes = new Set(nodes); // Use set for perf.
+
         const selected = new Set<VNode>();
         for (const node of nodes) {
             if (selected.has(node)) {
                 continue;
             }
-            if (node.hasChildren()) {
-                const renderer = this.getCompatibleRenderer(node, rendered);
-                if (renderer) {
-                    const modifiers = node.modifiers.map(modifer => modifer);
-                    renderingUnits.push([node, modifiers, renderer]);
-                }
-                selected.add(node);
-            } else {
-                const siblings = node.parent?.children();
-                if (!siblings || siblings.indexOf(node) === -1) {
-                    // Render node like MarkerNode.
-                    const renderer = this.getCompatibleRenderer(node, rendered);
-                    if (renderer) {
-                        const modifiers = node.modifiers.map(modifer => modifer);
-                        renderingUnits.push([node, modifiers, renderer]);
-                    }
-                    selected.add(node);
-                } else {
-                    for (const sibling of siblings) {
-                        if (!selected.has(sibling)) {
-                            const modifiers = sibling.modifiers.map(modifer => modifer);
-                            const renderer = this.getCompatibleRenderer(sibling, rendered);
-                            if (renderer) {
-                                renderingUnits.push([sibling, modifiers, renderer]);
-                            }
+            const parent = node.parent;
+            if (parent) {
+                const markers: VNode[] = [];
+                parent.childVNodes.forEach(sibling => {
+                    // Filter and sort the ndoes.
+                    if (setNodes.has(sibling)) {
+                        if (sibling.tangible) {
+                            renderingUnits.push(this._createUnit(cache, sibling, rendered));
+                        } else {
+                            // Not tangible node are add after other nodes (don't cut text node).
+                            markers.push(sibling);
                         }
                         selected.add(sibling);
+                    } else if (sibling.tangible) {
+                        renderingUnits.push(null);
                     }
+                });
+                for (const marker of markers) {
+                    renderingUnits.push(this._createUnit(cache, marker, rendered));
                 }
+            } else {
+                renderingUnits.push(this._createUnit(cache, node, rendered));
             }
         }
         return renderingUnits;
     }
-    protected _addDefaultLocation(node: VNode, domObject: DomObject): void {
+    private _createUnit(
+        cache: RenderingEngineCache<DomObject>,
+        node: VNode,
+        rendered?: NodeRenderer<DomObject>,
+    ): RenderingBatchUnit {
+        const renderer = cache.worker.getCompatibleRenderer(node, rendered);
+        // Remove modifier who render nothing.
+        const modifiers = node.modifiers.filter(
+            modifer => !this._modifierIsSameAs(cache, modifer, null),
+        );
+        return [node, modifiers, renderer];
+    }
+    protected _addDefaultLocation(
+        cache: RenderingEngineCache<DomObject>,
+        node: VNode,
+        domObject: DomObject,
+    ): void {
         let located = false;
         const stack = [domObject];
         for (const object of stack) {
-            if (this.locations.get(object)) {
+            if (cache.locations.get(object)) {
                 located = true;
                 break;
             }
@@ -526,13 +548,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
             }
         }
         if (!located) {
-            this.locations.set(domObject, [node]);
+            cache.locations.set(domObject, [node]);
         }
-    }
-    private _modifierIsSameAs(modifierA: Modifier | void, modifierB: Modifier | void): boolean {
-        return (
-            (!modifierA || modifierA.isSameAs(modifierB)) &&
-            (!modifierB || modifierB.isSameAs(modifierA))
-        );
     }
 }

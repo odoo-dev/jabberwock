@@ -7,6 +7,7 @@ import {
     DomObjectText,
     DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 const zeroWidthSpace = '\u200b';
 
@@ -15,7 +16,10 @@ export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
     engine: DomObjectRenderingEngine;
     predicate = FontAwesomeNode;
 
-    async render(node: FontAwesomeNode): Promise<DomObject> {
+    async render(
+        node: FontAwesomeNode,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<DomObject> {
         const fontawesome: DomObjectElement = { tag: node.htmlTag };
         // Surround the fontawesome with two invisible characters so the
         // selection can navigate around it.
@@ -45,9 +49,9 @@ export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
             ],
         };
 
-        this.engine.locate([node], domObject.children[0] as DomObjectText);
-        this.engine.locate([node], fontawesome);
-        this.engine.locate([node], domObject.children[2] as DomObjectText);
+        worker.locate([node], domObject.children[0] as DomObjectText);
+        worker.locate([node], fontawesome);
+        worker.locate([node], domObject.children[2] as DomObjectText);
 
         return domObject;
     }

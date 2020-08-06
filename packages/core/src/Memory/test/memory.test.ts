@@ -7,7 +7,7 @@ import { VersionableSet } from '../VersionableSet';
 import { makeVersionable, markNotVersionable, proxifyVersionable } from '../Versionable';
 import { memoryProxyPramsKey } from '../const';
 
-describe.only('core', () => {
+describe('core', () => {
     describe('state', () => {
         describe('memory', () => {
             describe('throw', () => {

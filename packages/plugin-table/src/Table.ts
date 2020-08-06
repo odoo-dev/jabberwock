@@ -101,10 +101,10 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
                 id: 'TablePicker',
                 async render(editor: JWEditor): Promise<VNode[]> {
                     const tablePlugin = editor.plugins.get(Table);
-                    const table = new TablePickerNode(
-                        tablePlugin.minRowCount,
-                        tablePlugin.minColumnCount,
-                    );
+                    const table = new TablePickerNode({
+                        rowCount: tablePlugin.minRowCount,
+                        columnCount: tablePlugin.minColumnCount,
+                    });
                     return [table];
                 },
             },
@@ -173,17 +173,16 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
      * @param params
      */
     async insertTable(params: InsertTableParams): Promise<void> {
-        if (!params.rowCount || !params.columnCount) {
-            const layout = this.editor.plugins.get(Layout);
-            const isTablePickerOpen = !!this.isTablePickerOpen;
+        const layout = this.editor.plugins.get(Layout);
+        if (this.isTablePickerOpen) {
             await layout.remove('TablePicker');
-            if (!isTablePickerOpen) {
-                await layout.append('TablePicker', 'TableButton');
-            }
+        }
+        if (!params.rowCount || !params.columnCount) {
+            await layout.append('TablePicker', 'TableButton');
         } else {
             const range = params.context.range;
             if (range.start.parent) {
-                range.start.before(new TableNode(params.rowCount, params.columnCount));
+                range.start.before(new TableNode(params));
             }
         }
     }

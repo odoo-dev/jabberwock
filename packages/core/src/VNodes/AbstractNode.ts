@@ -10,6 +10,7 @@ import { AtomicNode } from './AtomicNode';
 import { Modifiers } from '../Modifiers';
 import { EventMixin } from '../../../utils/src/EventMixin';
 import { Modifier } from '../Modifier';
+import { markAsDiffRoot } from '../Memory/Memory';
 
 export interface AbstractNodeParams {
     modifiers?: Modifiers | Array<Modifier | Constructor<Modifier>>;
@@ -47,7 +48,7 @@ export abstract class AbstractNode extends EventMixin {
      * Can be overridden with a `Mode`.
      */
     breakable = true;
-    parent: VNode;
+    parent: ContainerNode;
     modifiers = new Modifiers();
     childVNodes: VNode[];
     /**
@@ -71,6 +72,7 @@ export abstract class AbstractNode extends EventMixin {
                 this.modifiers.append(...params.modifiers);
             }
         }
+        markAsDiffRoot(this);
     }
 
     get name(): string {

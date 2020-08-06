@@ -288,16 +288,18 @@ describe('core', () => {
                     contentBefore:
                         '<div><div><p>cd</p></div></div>' +
                         '<ul><li></li><li style="list-style: none;"><ul><li><p>c</p></li></ul></li><li><div>[]</div></li></ul>',
-                    stepFunction: (editor: BasicEditor) => {
+                    stepFunction: async (editor: BasicEditor) => {
                         const callback = (): void => {};
                         const check = (context: CheckingContext): boolean => !!context;
                         const checkSpy1 = sinon.spy(check);
                         const checkSpy2 = sinon.spy(check);
                         const newSelection = new VSelection(editor);
 
-                        const domEngine = editor.plugins.get(Layout).engines.dom;
-                        const editable = domEngine.components.get('editable')[0];
-                        newSelection.setAt(editable);
+                        await editor.execCommand(async () => {
+                            const domEngine = editor.plugins.get(Layout).engines.dom;
+                            const editable = domEngine.components.get('editable')[0];
+                            newSelection.setAt(editable);
+                        });
                         const commands: CommandImplementation[] = [
                             {
                                 title: 'paragraph',

@@ -5,10 +5,8 @@ import {
     DomZonePosition,
     ComponentDefinition,
 } from '../../plugin-layout/src/LayoutEngine';
-import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { ZoneNode, ZoneIdentifier } from '../../plugin-layout/src/ZoneNode';
+import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Direction, VSelectionDescription } from '../../core/src/VSelection';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
 import JWEditor from '../../core/src/JWEditor';
 import { DomReconciliationEngine } from './DomReconciliationEngine';
@@ -19,6 +17,11 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
 import { flat } from '../../utils/src/utils';
+import { Modifier } from '../../core/src/Modifier';
+import { RenderingEngineCache } from '../../plugin-renderer/src/RenderingEngineCache';
+import { ChangesLocations } from '../../core/src/Memory/Memory';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
@@ -34,6 +37,8 @@ export class DomLayoutEngine extends LayoutEngine {
     private _markedForRedraw = new Set<Node>();
     location: [Node, DomZonePosition];
     locations: Record<ComponentId, DomLayoutLocation> = {};
+
+    private _rendererCache: RenderingEngineCache<DomObject>;
 
     defaultRootComponent: ComponentDefinition = {
         id: 'editor',
@@ -66,7 +71,6 @@ export class DomLayoutEngine extends LayoutEngine {
         }
 
         await super.start();
-        await this.redraw();
     }
     async stop(): Promise<void> {
         for (const componentId in this.componentDefinitions) {
@@ -89,8 +93,10 @@ export class DomLayoutEngine extends LayoutEngine {
             }
         }
         this.renderingMap = {};
+        this._markedForRedraw = new Set();
         this.location = null;
         this.locations = {};
+        this._rendererCache = null;
         this._domReconciliationEngine.clear();
         return super.stop();
     }
@@ -115,168 +121,19 @@ export class DomLayoutEngine extends LayoutEngine {
     getDomNodes(node: VNode): Node[] {
         return this._domReconciliationEngine.toDom(node);
     }
-    /**
-     * Redraw the layout component after insertion.
-     * If the target zone is the root, prepare its location before redrawing.
-     *
-     * @override
-     */
-    async prepend(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const nodes = await super.prepend(componentId, zoneId, props);
-        // Filter out children of nodes that we are already going to redraw.
-        const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
-        for (const node of nodeToRedraw) {
-            nodeToRedraw.push(...node.childVNodes);
-        }
-        // only used if the zone want to return a Node but hide the component (eg: a panel)
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    /**
-     * Redraw the layout component after insertion.
-     * If the target zone is the root, prepare its location before redrawing.
-     *
-     * @override
-     */
-    async append(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const nodes = await super.append(componentId, zoneId, props);
-        // Filter out children of nodes that we are already going to redraw.
-        const nodeToRedraw = nodes.filter(node => !node.ancestor(n => nodes.includes(n)));
-        for (const node of nodeToRedraw) {
-            nodeToRedraw.push(...node.childVNodes);
-        }
-        // only used if the zone want to return a Node but hide the component (eg: a panel)
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    /**
-     * Redraw the layout component after removal.
-     *
-     * @override
-     */
-    async remove(componentId: ComponentId): Promise<ZoneNode[]> {
-        const zones = await super.remove(componentId);
-        // TODO: adapt when add memory
-        await this.redraw(...zones);
-        return zones;
-    }
-    /**
-     * Redraw the layout component after showing the component.
-     *
-     * @override
-     */
-    async show(componentId: ComponentId): Promise<VNode[]> {
-        const nodes = await super.show(componentId);
-        const nodeToRedraw = [...nodes];
-        for (const node of nodeToRedraw) {
-            nodeToRedraw.push(...node.childVNodes);
-        }
-        for (const node of nodes) {
-            nodeToRedraw.push(node.ancestor(ZoneNode));
-        }
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    /**
-     * Redraw the layout component after hidding the component.
-     *
-     * @override
-     */
-    async hide(componentId: ComponentId): Promise<VNode[]> {
-        const nodes = await super.hide(componentId);
-        const nodeToRedraw = [...nodes];
-        for (const node of nodes) {
-            nodeToRedraw.push(node.ancestor(ZoneNode));
-        }
-        // TODO: adapt when add memory
-        await this.redraw(...nodeToRedraw);
-        return nodes;
-    }
-    async redraw(...nodes: VNode[]): Promise<void> {
-        if (
-            !this.editor.enableRender ||
-            (this.editor.preventRenders && this.editor.preventRenders.size)
-        ) {
-            return;
-        }
+    async redraw(params: ChangesLocations): Promise<void> {
         if (this._currentlyRedrawing) {
             throw new Error('Double redraw detected');
         }
         this._currentlyRedrawing = true;
-
-        if (nodes.length) {
-            for (let node of nodes) {
-                while (
-                    (this._domReconciliationEngine.getRenderedWith(node).length !== 1 ||
-                        !this._domReconciliationEngine.toDom(node).length) &&
-                    node.parent
-                ) {
-                    // If the node are redererd with some other nodes then redraw parent.
-                    // If not in layout then redraw the parent.
-                    node = node.parent;
-                    if (!nodes.includes(node)) {
-                        nodes.push(node);
-                    }
-                }
-            }
-            for (const node of [...nodes]) {
-                // Add direct siblings nodes for batched nodes with format.
-                const previous = node.previous();
-                if (previous && !nodes.includes(previous)) {
-                    nodes.push(previous);
-                }
-                const next = node.next();
-                if (next && !nodes.includes(next)) {
-                    nodes.push(next);
-                }
-            }
-        } else {
-            // Redraw all.
-            for (const componentId in this.locations) {
-                nodes.push(...this.components.get(componentId));
-            }
-            for (const node of nodes) {
-                if (node instanceof ContainerNode) {
-                    nodes.push(...node.childVNodes);
-                }
-            }
-        }
-
-        nodes = nodes.filter(node => {
-            const ancestor = node.ancestors(ZoneNode).pop();
-            return ancestor?.managedZones.includes('root');
-        });
-
-        // Render nodes.
-        const renderer = this.editor.plugins.get(Renderer);
-        const domObjects = await renderer.render<DomObject>('dom/object', nodes);
-        const engine = renderer.engines['dom/object'] as DomObjectRenderingEngine;
-
-        this._domReconciliationEngine.update(
-            domObjects || [],
-            engine.locations,
-            engine.from,
-            this._markedForRedraw,
-        );
-        this._markedForRedraw = new Set();
-
-        // Append in dom if needed.
-        for (const componentId in this.locations) {
-            const nodes = this.components.get(componentId);
-            const needInsert = nodes.find(node => {
-                const domNodes = this._domReconciliationEngine.toDom(node);
-                return !domNodes.length || domNodes.some(node => !node.parentNode);
+        return this._redraw(params)
+            .then(() => {
+                this._currentlyRedrawing = false;
+            })
+            .catch(error => {
+                this._currentlyRedrawing = false;
+                throw error;
             });
-            if (needInsert) {
-                this._appendComponentInDom(componentId);
-            }
-        }
-
-        this._renderSelection();
-        this._currentlyRedrawing = false;
     }
     /**
      * Parse the dom selection into the description of a VSelection.
@@ -329,6 +186,339 @@ export class DomLayoutEngine extends LayoutEngine {
     // Private
     //--------------------------------------------------------------------------
 
+    private async _redraw(params: ChangesLocations): Promise<void> {
+        const updatedNodes = [...this._getInvalidNodes(params)];
+
+        const layout = this.editor.plugins.get(Renderer);
+        const engine = layout.engines['dom/object'] as DomObjectRenderingEngine;
+        const cache = (this._rendererCache = await engine.render(
+            updatedNodes,
+            this._rendererCache,
+        ));
+
+        this._domReconciliationEngine.update(
+            updatedNodes,
+            cache.renderings,
+            cache.locations,
+            cache.renderingDependent,
+            this._markedForRedraw,
+        );
+        this._markedForRedraw = new Set();
+
+        // Append in dom if needed.
+        for (const componentId in this.locations) {
+            const nodes = this.components.get(componentId);
+            const needInsert = nodes.find(node => {
+                const domNodes = this._domReconciliationEngine.toDom(node);
+                return !domNodes.length || domNodes.some(node => !node.parentNode);
+            });
+            if (needInsert) {
+                this._appendComponentInDom(componentId);
+            }
+        }
+
+        this._renderSelection();
+    }
+    /**
+     * Get the invalidated nodes in the rendering.
+     * Clear the renderer in cache for this node or modifier. The cache
+     * renderer is added only for performance at redrawing time. The
+     * invalidation are automatically made from memory changes.
+     */
+    private _getInvalidNodes(diff: ChangesLocations): Set<VNode> {
+        const cache = this._rendererCache;
+        const remove = new Set<VNode>();
+        const update = new Set<VNode>();
+        const updatedModifiers = new Set<Modifier>();
+        const updatedSiblings = new Set<VNode>();
+
+        const add = new Set<VNode>();
+
+        // Add new nodes for redrawing it.
+        for (const object of diff.add) {
+            if (object instanceof AbstractNode) {
+                add.add(object as VNode);
+            } else if (object instanceof Modifier) {
+                updatedModifiers.add(object);
+            }
+        }
+
+        for (const node of add) {
+            if (!node.parent) {
+                add.delete(node);
+                remove.add(node);
+                if (node.childVNodes) {
+                    for (const child of node.descendants()) {
+                        add.delete(node);
+                        remove.add(child);
+                    }
+                }
+            }
+        }
+
+        if (cache) {
+            // Select the removed VNode and Modifiers.
+            const allRemove = new Set(diff.remove);
+            for (const object of diff.remove) {
+                if (object instanceof AbstractNode) {
+                    remove.add(object as VNode);
+                } else {
+                    if (object instanceof Modifier) {
+                        updatedModifiers.add(object);
+                    }
+                    for (const [parent] of this.editor.memory.getParents(object)) {
+                        if (parent instanceof AbstractNode) {
+                            update.add(parent as VNode);
+                        } else if (parent instanceof Modifier) {
+                            updatedModifiers.add(parent);
+                        }
+                    }
+                }
+            }
+            const filterd = this._filterInRoot([...remove]);
+            for (const node of filterd.remove) {
+                update.delete(node);
+                remove.add(node);
+                if (node.childVNodes) {
+                    for (const child of node.descendants()) {
+                        remove.add(child);
+                    }
+                }
+            }
+            for (const node of filterd.keep) {
+                update.add(node); // TODO: memory change to have real add and not add + move.
+            }
+
+            const needSiblings = new Set<AbstractNode>();
+
+            // Filter to keep only update not added or removed nodes.
+            const paramsUpdate: [object, string[] | number[] | void][] = [];
+            diff.update.filter(up => {
+                const object = up[0];
+                if (
+                    up[1] &&
+                    object instanceof AbstractNode &&
+                    (up[1] as string[]).includes('parent') &&
+                    !object.parent
+                ) {
+                    remove.add(object as VNode);
+                    for (const child of object.descendants()) {
+                        remove.add(child);
+                    }
+                } else if (!remove.has(object as VNode)) {
+                    paramsUpdate.push(up);
+                }
+            });
+
+            // Select the updated VNode and Modifiers and the VNode siblings.
+            // From the parent, select the removed VNode siblings.
+            for (const [object, changes] of paramsUpdate) {
+                if (
+                    allRemove.has(object) ||
+                    update.has(object as VNode) ||
+                    updatedModifiers.has(object as Modifier)
+                ) {
+                    continue;
+                }
+                if (object instanceof AbstractNode) {
+                    update.add(object as VNode);
+                    needSiblings.add(object);
+                } else {
+                    if (object instanceof Modifier) {
+                        updatedModifiers.add(object);
+                    }
+                    for (const [parent, parentProp] of this.editor.memory.getParents(object)) {
+                        if (parent instanceof AbstractNode) {
+                            update.add(parent as VNode);
+                            if (
+                                changes &&
+                                parentProp[0][0] === 'childVNodes' &&
+                                typeof changes[0] === 'number'
+                            ) {
+                                // If change a children (add or remove) redraw the node and
+                                // siblings.
+                                const childVNodes = parent.childVNodes;
+                                for (let i = 0; i < changes.length; i++) {
+                                    const index = changes[i] as number;
+                                    const child = childVNodes[index];
+                                    if (child) {
+                                        if (!add.has(child)) {
+                                            update.add(child);
+                                        }
+                                        if (changes[i - 1] !== index - 1) {
+                                            const previous = child.previousSibling();
+                                            if (
+                                                previous &&
+                                                !add.has(previous) &&
+                                                !update.has(previous)
+                                            ) {
+                                                updatedSiblings.add(previous);
+                                            }
+                                        }
+                                        if (changes[i + 1] !== index + 1) {
+                                            const next = child.nextSibling();
+                                            if (next && !add.has(next) && !update.has(next)) {
+                                                if (next) updatedSiblings.add(next);
+                                            }
+                                        }
+                                    } else {
+                                        const children = parent.children();
+                                        if (children.length) {
+                                            const last = children[children.length - 1];
+                                            if (last && !add.has(last) && !update.has(last)) {
+                                                updatedSiblings.add(last);
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                needSiblings.add(parent);
+                            }
+                        } else if (parent instanceof Modifier) {
+                            updatedModifiers.add(parent);
+                        }
+                    }
+                }
+            }
+
+            // If any change invalidate the siblings.
+            for (const node of needSiblings) {
+                const next = node.nextSibling();
+                if (next) updatedSiblings.add(next);
+                const previous = node.previousSibling();
+                if (previous) updatedSiblings.add(previous);
+            }
+
+            // Invalidate compatible renderer cache.
+            for (const node of update) {
+                cache.cachedCompatibleRenderer.delete(node);
+            }
+
+            // Invalidate compatible renderer cache and modifier compare cache.
+            for (const modifier of updatedModifiers) {
+                cache.cachedCompatibleModifierRenderer.delete(modifier);
+                const id = cache.cachedModifierId.get(modifier);
+                if (id) {
+                    const keys = cache.cachedIsSameAsModifierIds[id];
+                    if (keys) {
+                        for (const key in keys) {
+                            delete cache.cachedIsSameAsModifier[key];
+                        }
+                        delete cache.cachedIsSameAsModifierIds[id];
+                    }
+                }
+            }
+
+            // Add the siblings to invalidate the sibling groups.
+            for (const sibling of updatedSiblings) {
+                update.add(sibling);
+            }
+
+            // Get all linked and dependent VNodes and Modifiers to invalidate cache.
+            const treated = new Set<DomObject>();
+            const nodesOrModifiers = [...update, ...updatedModifiers];
+            const treatedItem = new Set<VNode | Modifier>(nodesOrModifiers);
+            for (const nodeOrModifier of nodesOrModifiers) {
+                const linkedRenderings = cache.nodeDependent.get(nodeOrModifier);
+                if (linkedRenderings) {
+                    for (const link of linkedRenderings) {
+                        if (!treated.has(link)) {
+                            treated.add(link);
+                            const from = cache.renderingDependent.get(link);
+                            if (from) {
+                                for (const n of from) {
+                                    if (!treatedItem.has(n)) {
+                                        // Add to invalid domObject origin nodes or modifiers.
+                                        nodesOrModifiers.push(n);
+                                        treatedItem.add(n);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                const linkedNodes = cache.linkedNodes.get(nodeOrModifier);
+                if (linkedNodes) {
+                    for (const node of linkedNodes) {
+                        if (!treatedItem.has(node)) {
+                            // Add to invalid linked nodes of linkes nodes.
+                            nodesOrModifiers.push(node);
+                            treatedItem.add(node);
+                        }
+                    }
+                }
+                if (nodeOrModifier instanceof AbstractNode) {
+                    update.add(nodeOrModifier);
+                } else {
+                    updatedModifiers.add(nodeOrModifier);
+                }
+            }
+
+            // Invalidate VNode cache origin, location and linked.
+            for (const node of update) {
+                cache.renderingPromises.delete(node);
+                const item = cache.renderings.get(node);
+                if (item) {
+                    cache.renderingDependent.delete(item);
+                    cache.locations.delete(item);
+                }
+                cache.renderings.delete(node);
+                cache.nodeDependent.delete(node);
+                cache.linkedNodes.delete(node);
+            }
+
+            // Remove all removed children and modifiers.
+            for (const node of remove) {
+                update.delete(node);
+                if (node.modifiers) {
+                    // If the node is created after this memory slice (undo), the
+                    // node has no values, no id, no modifiers...
+                    node.modifiers.map(modifier => updatedModifiers.add(modifier));
+                }
+            }
+
+            // Invalidate Modifiers cache linked.
+            for (const modifier of updatedModifiers) {
+                cache.nodeDependent.delete(modifier);
+            }
+        }
+        for (const node of add) {
+            update.add(node);
+        }
+
+        // Render nodes.
+        return update;
+    }
+    private _filterInRoot(nodes: VNode[]): { keep: Set<VNode>; remove: Set<VNode> } {
+        const inRoot = new Set<VNode>();
+        const notRoot = new Set<VNode>();
+        const nodesInRoot = new Set<VNode>();
+        const nodesInNotRoot = new Set<VNode>();
+        for (const node of nodes) {
+            const parents: VNode[] = [];
+            let ancestor = node;
+            while (ancestor && !notRoot.has(ancestor)) {
+                if (ancestor === this.root || inRoot.has(ancestor)) {
+                    // The VNode is in the domLayout.
+                    nodesInRoot.add(node);
+                    for (const parent of parents) {
+                        inRoot.add(parent);
+                    }
+                    break;
+                }
+                parents.push(ancestor);
+                ancestor = ancestor.parent;
+                if (!ancestor) {
+                    // The VNode is not in the domLayout.
+                    nodesInNotRoot.add(node);
+                    for (const parent of parents) {
+                        notRoot.add(parent);
+                    }
+                }
+            }
+        }
+        return { keep: nodesInRoot, remove: nodesInNotRoot };
+    }
     /**
      * Render the given VSelection as a DOM selection in the given target.
      *

@@ -37,6 +37,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
     async stop(): Promise<void> {
         this.eventNormalizer.destroy();
         window.removeEventListener('keydown', this._processKeydown);
+        return super.stop();
     }
 
     /**

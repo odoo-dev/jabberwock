@@ -407,23 +407,3 @@ export class VRange {
         this.end.remove();
     }
 }
-
-/**
- * Create a temporary range corresponding to the given boundary points and
- * call the given callback with the newly created range as argument. The
- * range is automatically destroyed after calling the callback.
- *
- * @param bounds The points corresponding to the range boundaries.
- * @param callback The callback to call with the newly created range.
- */
-export async function withRange<T>(
-    editor: JWEditor,
-    bounds: [Point, Point],
-    callback: (range: VRange) => T,
-    mode?: Mode,
-): Promise<T> {
-    const range = new VRange(editor, bounds, mode);
-    const result = await callback(range);
-    range.remove();
-    return result;
-}

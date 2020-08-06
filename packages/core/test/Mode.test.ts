@@ -2,7 +2,7 @@ import JWEditor from '../src/JWEditor';
 import { ContainerNode } from '../src/VNodes/ContainerNode';
 import { expect } from 'chai';
 import { ModeDefinition, Mode, RuleProperty } from '../src/Mode';
-import { withRange, VRange } from '../src/VRange';
+import { VRange } from '../src/VRange';
 
 describe('core', () => {
     describe('Modes', () => {
@@ -66,12 +66,11 @@ describe('core', () => {
                     ],
                 });
                 // With default mode.
-                await withRange(editor, VRange.at(root), async range => {
+                await editor.withRange(VRange.at(root), async range => {
                     expect(range.mode.is(range.startContainer, RuleProperty.EDITABLE)).to.be.true;
                 });
                 // With special mode
-                await withRange(
-                    editor,
+                await editor.withRange(
                     VRange.at(root),
                     async range => {
                         expect(range.mode.is(range.startContainer, RuleProperty.EDITABLE)).to.be

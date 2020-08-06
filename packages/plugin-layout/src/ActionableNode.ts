@@ -2,6 +2,7 @@ import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import JWEditor from '../../core/src/JWEditor';
 import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 interface ActionableNodeParams extends AbstractNodeParams {
     name: string;
@@ -23,7 +24,7 @@ export class ActionableNode extends AtomicNode {
         this.actionName = params.name;
         this.label = params.label;
         this.commandId = params.commandId;
-        this.commandArgs = params.commandArgs;
+        this.commandArgs = params.commandArgs && makeVersionable(params.commandArgs);
         if (params.selected) {
             this.selected = params.selected;
         }

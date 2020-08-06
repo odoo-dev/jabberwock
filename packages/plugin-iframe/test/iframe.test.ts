@@ -57,9 +57,9 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                expect(node.is(VElement) && node.htmlTag).to.equal('DIV');
+                expect(node instanceof VElement && node.htmlTag).to.equal('DIV');
                 const iframe = node.firstChild();
-                expect(iframe.is(IframeNode)).to.equal(true);
+                expect(iframe instanceof IframeNode).to.equal(true);
                 expect(iframe.firstChild()).to.equal(undefined);
             });
             it('should parse a template with <t-iframe> which have content', async () => {
@@ -79,8 +79,8 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild();
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
-                expect(section.firstChild().is(CharNode)).to.equal(true);
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section.firstChild() instanceof CharNode).to.equal(true);
             });
             it('should parse a template with <t-iframe> with style tag', async () => {
                 const editor = new JWEditor();
@@ -100,10 +100,12 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild() as IframeNode;
                 const style = iframe.childVNodes[0];
-                expect(style.is(MetadataNode) && style.htmlTag).to.equal('STYLE');
-                expect(style.is(MetadataNode) && style.contents).to.equal('* { color: red; }');
+                expect(style instanceof MetadataNode && style.htmlTag).to.equal('STYLE');
+                expect(style instanceof MetadataNode && style.contents).to.equal(
+                    '* { color: red; }',
+                );
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a template with <t-iframe> with link tag', async () => {
                 const editor = new JWEditor();
@@ -128,23 +130,23 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild() as IframeNode;
                 const link = iframe.childVNodes[0];
-                expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
+                expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
 
                 expect(link.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href1"}',
                 );
                 const link2 = iframe.childVNodes[1];
-                expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
+                expect(link2 instanceof MetadataNode && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href2"}',
                 );
                 const link3 = iframe.childVNodes[2];
-                expect(link3.is(MetadataNode) && link3.htmlTag).to.equal('LINK');
+                expect(link3 instanceof MetadataNode && link3.htmlTag).to.equal('LINK');
                 expect(link3.modifiers.find(Attributes).name).to.equal(
                     '{rel: "help", href: "/help/"}',
                 );
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a template with <t-iframe> with style and link tag', async () => {
                 const editor = new JWEditor();
@@ -169,20 +171,22 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild() as IframeNode;
                 const link = iframe.childVNodes[0];
-                expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
+                expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href1"}',
                 );
                 const style = iframe.childVNodes[1];
-                expect(style.is(MetadataNode) && style.htmlTag).to.equal('STYLE');
-                expect(style.is(MetadataNode) && style.contents).to.equal('* { color: red; }');
+                expect(style instanceof MetadataNode && style.htmlTag).to.equal('STYLE');
+                expect(style instanceof MetadataNode && style.contents).to.equal(
+                    '* { color: red; }',
+                );
                 const link2 = iframe.childVNodes[2];
-                expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
+                expect(link2 instanceof MetadataNode && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href2"}',
                 );
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
             });
         });
         describe('parse dom/html', async () => {
@@ -202,9 +206,9 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                expect(node.is(VElement) && node.htmlTag).to.equal('DIV');
+                expect(node instanceof VElement && node.htmlTag).to.equal('DIV');
                 const iframe = node.firstChild();
-                expect(iframe.is(IframeNode)).to.equal(true);
+                expect(iframe instanceof IframeNode).to.equal(true);
                 expect(iframe.firstChild()).to.equal(undefined);
             });
             it('should parse a HtmlDocument with iframe container', async () => {
@@ -225,9 +229,9 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                expect(node.is(VElement) && node.htmlTag).to.equal('DIV');
+                expect(node instanceof VElement && node.htmlTag).to.equal('DIV');
                 const iframe = node.firstChild();
-                expect(iframe.is(IframeNode)).to.equal(true);
+                expect(iframe instanceof IframeNode).to.equal(true);
                 expect(iframe.firstChild()).to.equal(undefined);
             });
             it('should parse a HtmlDocument with iframe which have content', async () => {
@@ -254,10 +258,10 @@ describe('Iframe', async () => {
                 await editor.stop();
 
                 const iframe = node.firstChild();
-                expect(iframe.is(IframeNode)).to.equal(true);
+                expect(iframe instanceof IframeNode).to.equal(true);
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
-                expect(section.firstChild().is(CharNode)).to.equal(true);
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section.firstChild() instanceof CharNode).to.equal(true);
             });
             it('should parse a HtmlDocument with iframe container with style tag', async () => {
                 const editor = new JWEditor();
@@ -287,10 +291,12 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild() as IframeNode;
                 const style = iframe.childVNodes[0];
-                expect(style.is(MetadataNode) && style.htmlTag).to.equal('STYLE');
-                expect(style.is(MetadataNode) && style.contents).to.equal('* { color: red; }');
+                expect(style instanceof MetadataNode && style.htmlTag).to.equal('STYLE');
+                expect(style instanceof MetadataNode && style.contents).to.equal(
+                    '* { color: red; }',
+                );
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a HtmlDocument with iframe container with link tag', async () => {
                 const editor = new JWEditor();
@@ -329,22 +335,22 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild() as IframeNode;
                 const link = iframe.childVNodes[0];
-                expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
+                expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href1"}',
                 );
                 const link2 = iframe.childVNodes[1];
-                expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
+                expect(link2 instanceof MetadataNode && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href2"}',
                 );
                 const link3 = iframe.childVNodes[2];
-                expect(link3.is(MetadataNode) && link3.htmlTag).to.equal('LINK');
+                expect(link3 instanceof MetadataNode && link3.htmlTag).to.equal('LINK');
                 expect(link3.modifiers.find(Attributes).name).to.equal(
                     '{rel: "help", href: "/help/"}',
                 );
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a HtmlDocument with iframe container with style and link tag', async () => {
                 const editor = new JWEditor();
@@ -382,20 +388,22 @@ describe('Iframe', async () => {
 
                 const iframe = node.firstChild() as IframeNode;
                 const link = iframe.childVNodes[0];
-                expect(link.is(MetadataNode) && link.htmlTag).to.equal('LINK');
+                expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href1"}',
                 );
                 const style = iframe.childVNodes[1];
-                expect(style.is(MetadataNode) && style.htmlTag).to.equal('STYLE');
-                expect(style.is(MetadataNode) && style.contents).to.equal('* { color: red; }');
+                expect(style instanceof MetadataNode && style.htmlTag).to.equal('STYLE');
+                expect(style instanceof MetadataNode && style.contents).to.equal(
+                    '* { color: red; }',
+                );
                 const link2 = iframe.childVNodes[2];
-                expect(link2.is(MetadataNode) && link2.htmlTag).to.equal('LINK');
+                expect(link2 instanceof MetadataNode && link2.htmlTag).to.equal('LINK');
                 expect(link2.modifiers.find(Attributes).name).to.equal(
                     '{rel: "stylesheet", href: "#href2"}',
                 );
                 const section = iframe.firstChild();
-                expect(section.is(VElement) && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
             });
         });
     });

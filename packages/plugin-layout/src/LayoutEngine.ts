@@ -36,6 +36,7 @@ export abstract class LayoutEngine {
             // Add into the default zone if no valid zone could be found.
             throw new Error('Please define a "default" zone in your template.');
         }
+        this.editor.memory.attach(this.root);
     }
     /**
      * Hide all components.

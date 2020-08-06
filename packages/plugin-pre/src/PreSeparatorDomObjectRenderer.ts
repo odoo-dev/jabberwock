@@ -7,6 +7,7 @@ import {
     DomObjectFragment,
     DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class PreSeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -20,14 +21,16 @@ export class PreSeparatorDomObjectRenderer extends NodeRenderer<DomObject> {
     /**
      * Render the VNode.
      */
-    async render(node: VNode): Promise<DomObject> {
-        const separator = (await this.super.render(node)) as DomObjectElement | DomObjectFragment;
+    async render(node: VNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
+        const separator = (await this.super.render(node, worker)) as
+            | DomObjectElement
+            | DomObjectFragment;
         let rendering: DomObject;
         if ('tag' in separator) {
             rendering = { text: '\n' };
         } else {
             rendering = { text: '\n\n' };
-            this.engine.locate([node, node], rendering);
+            worker.locate([node, node], rendering);
         }
         return rendering;
     }

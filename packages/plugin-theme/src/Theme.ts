@@ -11,7 +11,6 @@ import { ThemeNode } from './ThemeNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
 
 interface ThemeComponent extends ComponentDefinition {
@@ -103,10 +102,6 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
         const ancestor = this.editor.selection.anchor.ancestor(ThemeNode);
         if (ancestor) {
             ancestor.themeName = params.theme;
-
-            // TODO: remove this redraw when memory send the nodes to redraw into domLayout
-            const domEngine = this.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            await domEngine.redraw(ancestor);
         }
     }
 }

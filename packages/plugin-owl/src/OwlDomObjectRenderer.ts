@@ -24,8 +24,8 @@ export class OwlDomObjectRenderer extends NodeRenderer<DomObject> {
 
         const placeholder = document.createElement('jw-placeholer');
         document.body.appendChild(placeholder);
-        node.Component.env = this.env;
-        const component = new node.Component(null, node.props);
+        node.params.Component.env = this.env;
+        const component = new node.params.Component(null, node.params.props);
         components.set(node, component);
         await component.mount(placeholder);
         placeholder.remove();

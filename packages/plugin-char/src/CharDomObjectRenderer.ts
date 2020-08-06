@@ -6,22 +6,29 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate: Predicate = CharNode;
 
-    async render(charNode: CharNode): Promise<DomObject> {
-        return this._renderText([charNode]);
+    async render(charNode: CharNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
+        return this._renderText([charNode], worker);
     }
-    async renderBatch(charNodes: CharNode[]): Promise<DomObject[]> {
+    async renderBatch(
+        charNodes: CharNode[],
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<DomObject[]> {
         const domObjects: DomObject[] = [];
-        const domObject = this._renderText(charNodes);
+        const domObject = this._renderText(charNodes, worker);
         for (let i = 0; i < charNodes.length; i++) domObjects.push(domObject);
         return domObjects;
     }
-    private _renderText(charNodes: CharNode[]): DomObject {
+    private _renderText(
+        charNodes: CharNode[],
+        worker: RenderingEngineWorker<DomObject>,
+    ): DomObject {
         // Create textObject.
         const texts = [];
         for (const charNode of charNodes) {
@@ -44,7 +51,7 @@ export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
             texts[texts.length - 1] = texts[texts.length - 1].replace(/^ /g, '\u00A0');
         }
         const textObject = { text: texts.join('') };
-        this.engine.locate(charNodes, textObject);
+        worker.locate(charNodes, textObject);
         return textObject;
     }
 }

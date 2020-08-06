@@ -6,7 +6,7 @@ describe('plugin-paragraph', () => {
     describe('ParagraphNode', () => {
         it('should create a paragraph', async () => {
             const vNode = new ParagraphNode();
-            expect(vNode.is(ContainerNode)).to.equal(true);
+            expect(vNode instanceof ContainerNode).to.equal(true);
             expect(vNode.htmlTag).to.equal('P');
         });
     });

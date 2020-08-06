@@ -8,15 +8,16 @@ import {
 
 import '../assets/checklist.css';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { withRange, VRange } from '../../core/src/VRange';
+import { VRange } from '../../core/src/VRange';
 import { ListItemAttributes } from './ListItemXmlDomParser';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = ListNode;
 
-    async render(listNode: ListNode): Promise<DomObject> {
+    async render(listNode: ListNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
         const list: DomObjectElement = {
             tag: listNode.listType === ListType.ORDERED ? 'OL' : 'UL',
             children: [],
@@ -25,9 +26,11 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
             list.attributes = { class: new Set(['checklist']) };
         }
         const children = listNode.children();
-        const domObjects = await this.engine.render(children);
+        const domObjects = await worker.render(children);
         for (const index in children) {
-            list.children.push(this._renderLi(listNode, children[index], domObjects[index]));
+            list.children.push(
+                this._renderLi(listNode, children[index], domObjects[index], worker),
+            );
         }
 
         return list;
@@ -36,6 +39,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
         listNode: ListNode,
         listItem: VNode,
         rendering: DomObject,
+        worker: RenderingEngineWorker<DomObject>,
     ): DomObject | VNode {
         let li: DomObjectElement;
         // The node was wrapped in a "LI" but needs to be rendered as well.
@@ -53,16 +57,25 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
                 tag: 'LI',
                 children: [rendering],
             };
+            // Mark as origin. If the listItem or the listNode change, the other are invalidate.
+            worker.depends(listItem, li);
+            worker.depends(li, listItem);
         } else {
             li = {
                 tag: 'LI',
                 children: [listItem],
             };
+            // Mark as dependent. If the listItem change, the listNode are invalidate. But if the
+            // list change, the listItem will not invalidate.
+            worker.depends(li, listItem);
         }
+
+        worker.depends(li, listNode);
+        worker.depends(listNode, li);
 
         // Render the node's attributes that were stored on the technical key
         // that specifies those attributes belong on the list item.
-        this.engine.renderAttributes(ListItemAttributes, listItem, li);
+        this.engine.renderAttributes(ListItemAttributes, listItem, li, worker);
 
         if (listNode.listType === ListType.ORDERED) {
             // Adapt numbering to skip previous list item
@@ -70,7 +83,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
             const previousIdentedList = listItem.previousSibling();
             if (previousIdentedList instanceof ListNode) {
                 const previousLis = previousIdentedList.previousSiblings(
-                    sibling => !sibling.is(ListNode),
+                    sibling => !(sibling instanceof ListNode),
                 );
                 const value = Math.max(previousLis.length, 1) + 1;
                 li.attributes.value = value.toString();
@@ -83,7 +96,20 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
                 style['list-style'] = 'none';
             }
             li.attributes.style = style;
-        } else if (ListNode.CHECKLIST(listItem.parent)) {
+
+            if (ListNode.CHECKLIST(listItem)) {
+                const prev = listItem.previousSibling();
+                if (prev && !ListNode.CHECKLIST(prev)) {
+                    // Add dependencie to check/uncheck with previous checklist item used as title.
+                    worker.depends(prev, listItem);
+                    worker.depends(listItem, prev);
+                }
+            }
+        } else if (ListNode.CHECKLIST(listNode)) {
+            // Add dependencie because the modifier on the listItem change the li rendering.
+            worker.depends(li, listItem);
+            worker.depends(listItem, listNode);
+
             const className = ListNode.isChecked(listItem) ? 'checked' : 'unchecked';
             if (li.attributes.class) {
                 li.attributes.class.add(className);
@@ -96,8 +122,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
                 if (ev.offsetX < 0) {
                     ev.stopImmediatePropagation();
                     ev.preventDefault();
-                    withRange(
-                        this.engine.editor,
+                    this.engine.editor.withRange(
                         VRange.at(listItem.firstChild() || listItem),
                         range => {
                             return this.engine.editor.execCommand('toggleChecked', {

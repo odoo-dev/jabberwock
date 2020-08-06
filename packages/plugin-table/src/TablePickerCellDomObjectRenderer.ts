@@ -6,12 +6,11 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TableCellNode } from './TableCellNode';
 import { TableNode } from './TableNode';
-import { Layout } from '../../plugin-layout/src/Layout';
-import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { TableRowNode } from './TableRowNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Table } from './Table';
 import { TablePickerNode } from './TablePickerNode';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -19,10 +18,11 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
     predicate = (node: VNode): boolean =>
         node instanceof TableCellNode && node.parent?.parent instanceof TablePickerNode;
 
-    async render(tablePickerCell: TableCellNode): Promise<DomObjectElement> {
-        const layout = this.engine.editor.plugins.get(Layout);
-        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-        const domObject = (await this.super.render(tablePickerCell)) as DomObjectElement;
+    async render(
+        tablePickerCell: TableCellNode,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<DomObjectElement> {
+        const domObject = (await this.super.render(tablePickerCell, worker)) as DomObjectElement;
         domObject.attributes = {
             ...domObject.attributes,
             ...{
@@ -34,7 +34,7 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
         const minRowCount = tablePlugin.minRowCount;
         const minColumnCount = tablePlugin.minColumnCount;
 
-        const onMouseOver = async (ev: Event): Promise<void> => {
+        const onMouseOver = (ev: Event): void => {
             const table = (ev.target as HTMLTableCellElement).closest('table.table-picker');
             for (const cell of table.querySelectorAll('td')) {
                 const rowIndex = +cell.getAttribute('data-rowCount') - 1;
@@ -49,58 +49,64 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
                 }
             }
             const tablePicker = tablePickerCell.ancestor(TableNode);
-            const toRedraw = new Set<VNode>();
-            // Add/remove rows.
-            if (tablePickerCell.rowIndex >= tablePicker.rowCount - 1) {
-                // Add.
-                const newRow = new TableRowNode();
-                toRedraw.add(newRow);
-                tablePicker.append(newRow);
-                for (let cellIndex = 0; cellIndex < tablePicker.columnCount; cellIndex++) {
-                    const newCell = new TableCellNode();
-                    newRow.append(newCell);
-                    toRedraw.add(newCell);
-                }
-            } else if (tablePicker.rowCount > minRowCount) {
-                // Remove.
-                const rows = tablePicker.children(
-                    child =>
-                        child instanceof TableRowNode &&
-                        child.rowIndex >= minRowCount &&
-                        child.rowIndex > tablePickerCell.rowIndex + 1,
-                );
-                for (const row of rows) {
-                    for (const rowCell of row.children(TableCellNode)) {
-                        rowCell.remove();
+            if (
+                tablePickerCell.rowIndex >= tablePicker.rowCount - 1 ||
+                tablePicker.rowCount > minRowCount ||
+                tablePickerCell.columnIndex >= tablePicker.columnCount - 1 ||
+                tablePicker.columnCount > minColumnCount
+            ) {
+                this.engine.editor.execCommand(() => {
+                    const toRedraw = new Set<VNode>();
+                    // Add/remove rows.
+                    if (tablePickerCell.rowIndex >= tablePicker.rowCount - 1) {
+                        // Add.
+                        const newRow = new TableRowNode();
+                        toRedraw.add(newRow);
+                        tablePicker.append(newRow);
+                        for (let cellIndex = 0; cellIndex < tablePicker.columnCount; cellIndex++) {
+                            const newCell = new TableCellNode();
+                            newRow.append(newCell);
+                            toRedraw.add(newCell);
+                        }
+                    } else if (tablePicker.rowCount > minRowCount) {
+                        // Remove.
+                        const rows = tablePicker.children(
+                            child =>
+                                child instanceof TableRowNode &&
+                                child.rowIndex >= minRowCount &&
+                                child.rowIndex > tablePickerCell.rowIndex + 1,
+                        );
+                        for (const row of rows) {
+                            for (const rowCell of row.children(TableCellNode)) {
+                                rowCell.remove();
+                            }
+                            row.remove();
+                        }
+                        if (rows.length) toRedraw.add(tablePicker);
                     }
-                    row.remove();
-                }
-                if (rows.length) toRedraw.add(tablePicker);
-            }
-            // Add/remove Columns.
-            if (tablePickerCell.columnIndex >= tablePicker.columnCount - 1) {
-                // Add.
-                for (const row of tablePicker.children(TableRowNode)) {
-                    const newCell = new TableCellNode();
-                    row.append(newCell);
-                    toRedraw.add(newCell);
-                }
-            } else if (tablePicker.columnCount > minColumnCount) {
-                // Remove.
-                const cellsToRemove = tablePicker.descendants(
-                    descendant =>
-                        descendant instanceof TableCellNode &&
-                        descendant.columnIndex >= minColumnCount &&
-                        descendant.columnIndex > tablePickerCell.columnIndex + 1,
-                );
-                for (const cellToRemove of cellsToRemove) {
-                    toRedraw.add(cellToRemove.parent);
-                    cellToRemove.remove();
-                }
-                if (cellsToRemove.length) toRedraw.add(tablePicker);
-            }
-            if (toRedraw.size) {
-                await domLayoutEngine.redraw(...toRedraw);
+                    // Add/remove Columns.
+                    if (tablePickerCell.columnIndex >= tablePicker.columnCount - 1) {
+                        // Add.
+                        for (const row of tablePicker.children(TableRowNode)) {
+                            const newCell = new TableCellNode();
+                            row.append(newCell);
+                            toRedraw.add(newCell);
+                        }
+                    } else if (tablePicker.columnCount > minColumnCount) {
+                        // Remove.
+                        const cellsToRemove = tablePicker.descendants(
+                            descendant =>
+                                descendant instanceof TableCellNode &&
+                                descendant.columnIndex >= minColumnCount &&
+                                descendant.columnIndex > tablePickerCell.columnIndex + 1,
+                        );
+                        for (const cellToRemove of cellsToRemove) {
+                            toRedraw.add(cellToRemove.parent);
+                            cellToRemove.remove();
+                        }
+                        if (cellsToRemove.length) toRedraw.add(tablePicker);
+                    }
+                });
             }
         };
         const onClick = async (ev: Event): Promise<void> => {

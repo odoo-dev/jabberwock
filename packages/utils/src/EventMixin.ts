@@ -1,7 +1,12 @@
+import { VersionableObject } from '../../core/src/Memory/VersionableObject';
+import { VersionableArray } from '../../core/src/Memory/VersionableArray';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
+import { VersionableSet } from '../../core/src/Memory/VersionableSet';
+
 /**
  * Abstract class to add event mechanism.
  */
-export class EventMixin {
+export class EventMixin extends VersionableObject {
     _eventCallbacks: Record<string, Function[]>;
     _callbackWorking: Set<Function>;
 
@@ -13,10 +18,10 @@ export class EventMixin {
      */
     on(eventName: string, callback: Function): void {
         if (!this._eventCallbacks) {
-            this._eventCallbacks = {};
+            this._eventCallbacks = makeVersionable({});
         }
         if (!this._eventCallbacks[eventName]) {
-            this._eventCallbacks[eventName] = [];
+            this._eventCallbacks[eventName] = new VersionableArray();
         }
         this._eventCallbacks[eventName].push(callback);
     }
@@ -30,7 +35,7 @@ export class EventMixin {
     trigger<A>(eventName: string, args?: A): void {
         if (this._eventCallbacks?.[eventName]) {
             if (!this._callbackWorking) {
-                this._callbackWorking = new Set();
+                this._callbackWorking = new VersionableSet();
             }
             for (const callback of this._eventCallbacks[eventName]) {
                 if (!this._callbackWorking.has(callback)) {
