@@ -50,9 +50,9 @@ export class InfoComponent extends OwlComponent<{}> {
     propRepr(vNode: VNode, propName: string): string {
         let prop = vNode[propName];
         if (propName === 'atomic') {
-            if (vNode.is(AtomicNode)) {
+            if (vNode instanceof AtomicNode) {
                 return 'true';
-            } else if (vNode.is(ContainerNode)) {
+            } else if (vNode instanceof ContainerNode) {
                 return 'false';
             } else {
                 return '?';

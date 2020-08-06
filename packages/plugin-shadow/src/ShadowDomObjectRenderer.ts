@@ -15,7 +15,9 @@ export class ShadowDomObjectRenderer extends NodeRenderer<DomObject> {
         const domObject: DomObject = {
             tag: 'JW-SHADOW',
             shadowRoot: true,
-            children: shadow.childVNodes.filter(child => child.tangible || child.is(MetadataNode)),
+            children: shadow.childVNodes.filter(
+                child => child.tangible || child instanceof MetadataNode,
+            ),
         };
         return domObject;
     }

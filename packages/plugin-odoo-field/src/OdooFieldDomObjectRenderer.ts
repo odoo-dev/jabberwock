@@ -38,7 +38,8 @@ export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
         // Instances of the field containing the range are artificially focused.
         const focusedField = this.engine.editor.selection.range.start.ancestor(
             ancestor =>
-                ancestor.is(OdooFieldNode) && ancestor.fieldInfo.value === node.fieldInfo.value,
+                ancestor instanceof OdooFieldNode &&
+                ancestor.fieldInfo.value === node.fieldInfo.value,
         );
         if (focusedField) {
             classList.add('jw-focus');

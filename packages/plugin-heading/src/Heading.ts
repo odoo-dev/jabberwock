@@ -79,7 +79,9 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                             const nodes = editor.selection.range.targetedNodes();
                             return nodes.every(node => {
                                 return node.closest(ancestor => {
-                                    return ancestor.is(editor.configuration.defaults.Container);
+                                    return (
+                                        ancestor instanceof editor.configuration.defaults.Container
+                                    );
                                 });
                             });
                         },

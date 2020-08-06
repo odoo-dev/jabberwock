@@ -134,7 +134,7 @@ export class TableCellNode extends ContainerNode {
     mergeWith(newManager: VNode): void {
         const thisTable = this.ancestor(TableNode);
         const otherTable = newManager.ancestor(TableNode);
-        if (!newManager.is(TableCellNode) || thisTable !== otherTable) return;
+        if (!(newManager instanceof TableCellNode) || thisTable !== otherTable) return;
 
         this.__managerCell = newManager;
         newManager.manage(this);

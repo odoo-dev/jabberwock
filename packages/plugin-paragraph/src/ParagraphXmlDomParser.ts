@@ -13,7 +13,10 @@ export class ParagraphXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<ParagraphNode[]> {
         const paragraph = new ParagraphNode();
-        paragraph.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            paragraph.modifiers.append(attributes);
+        }
         const nodes = await this.engine.parse(...item.childNodes);
         paragraph.append(...nodes);
         return [paragraph];

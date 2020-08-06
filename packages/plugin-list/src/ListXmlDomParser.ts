@@ -31,7 +31,13 @@ export class ListXmlDomParser extends AbstractParser<Node> {
 
         // Create the list node and parse its children and attributes.
         const list = new ListNode({ listType: type });
-        list.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (type === ListType.CHECKLIST) {
+            attributes.classList.remove('checklist');
+        }
+        if (attributes.length) {
+            list.modifiers.append(attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         list.append(...children);
 

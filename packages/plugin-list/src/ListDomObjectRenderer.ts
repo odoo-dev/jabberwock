@@ -90,7 +90,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
             }
         }
 
-        if (listItem.is(ListNode)) {
+        if (listItem instanceof ListNode) {
             const style = li.attributes.style || {};
             if (!style['list-style']) {
                 style['list-style'] = 'none';

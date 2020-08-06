@@ -13,7 +13,10 @@ export class PreXmlDomParser extends AbstractParser<Node> {
 
     async parse(item: Element): Promise<PreNode[]> {
         const pre = new PreNode();
-        pre.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            pre.modifiers.append(attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         pre.append(...children);
         return [pre];

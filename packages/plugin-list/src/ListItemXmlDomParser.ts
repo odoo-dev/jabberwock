@@ -27,7 +27,11 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
         let inlinesContainer: VNode;
         // Parse the list item's attributes into the node's ListItemAttributes,
         // which will be read only by ListItemDomRenderer.
-        const itemModifiers = new Modifiers(this.engine.parseAttributes(item));
+        const itemModifiers = new Modifiers();
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            itemModifiers.append(attributes);
+        }
         const Container = this.engine.editor.configuration.defaults.Container;
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];

@@ -15,7 +15,10 @@ export class TextareaXmlDomParser extends AbstractParser<Node> {
      */
     async parse(item: HTMLTextAreaElement): Promise<VNode[]> {
         const textarea = new TextareaNode({ value: item.value });
-        textarea.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            textarea.modifiers.append(attributes);
+        }
         return [textarea];
     }
 }

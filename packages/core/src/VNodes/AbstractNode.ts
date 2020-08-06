@@ -1,4 +1,4 @@
-import { VNode, RelativePosition, Predicate, Typeguard, isLeaf } from './VNode';
+import { VNode, RelativePosition, Predicate, isLeaf } from './VNode';
 import {
     Constructor,
     nodeLength,
@@ -142,20 +142,6 @@ export abstract class AbstractNode extends EventMixin {
      */
     get length(): number {
         return this.children().length;
-    }
-    /**
-     * Return whether this node is an instance of the given VNode class.
-     *
-     * @param predicate The subclass of VNode to test this node against.
-     */
-    is<T extends VNode>(predicate: Constructor<T> | Typeguard<T>): this is T;
-    is(predicate: Predicate): false;
-    is(predicate: Predicate): boolean {
-        if (AbstractNode.isConstructor(predicate)) {
-            return this instanceof predicate;
-        } else {
-            return predicate(this as VNode);
-        }
     }
     /**
      * Test this node against the given predicate.
@@ -730,6 +716,7 @@ export abstract class AbstractNode extends EventMixin {
         return __repr;
     }
 }
+
 export interface AbstractNode {
     constructor: new <T extends Constructor<VNode>>(...args: ConstructorParameters<T>) => this;
 }

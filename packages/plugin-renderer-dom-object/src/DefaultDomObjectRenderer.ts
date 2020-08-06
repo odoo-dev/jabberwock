@@ -12,16 +12,16 @@ export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
     async render(node: VNode): Promise<DomObject> {
         let domObject: DomObject;
         if (node.tangible) {
-            if (node.is(VElement) && node.htmlTag[0] !== '#') {
+            if (node instanceof VElement && node.htmlTag[0] !== '#') {
                 domObject = {
                     tag: node.htmlTag,
                     children: await this.engine.renderChildren(node),
                 };
-            } else if (node.test(FragmentNode)) {
+            } else if (node instanceof FragmentNode) {
                 domObject = {
                     children: await this.engine.renderChildren(node),
                 };
-            } else if (node.is(AtomicNode)) {
+            } else if (node instanceof AtomicNode) {
                 domObject = { children: [] };
             } else {
                 domObject = {

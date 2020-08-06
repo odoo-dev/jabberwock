@@ -15,7 +15,10 @@ export class UnderlineXmlDomParser extends FormatXmlDomParser {
      */
     async parse(item: Element): Promise<VNode[]> {
         const underline = new UnderlineFormat();
-        underline.modifiers.append(this.engine.parseAttributes(item));
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            underline.modifiers.append(attributes);
+        }
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(underline, children);
 

@@ -13,6 +13,8 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
+import { VRange } from '../../core/src/VRange';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
@@ -60,10 +62,17 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
      * the modifier in the following property. This value is reset each time the
      * range changes in a document.
      */
-    cache: InlineCache = {
-        modifiers: null,
-        style: null,
-    };
+    cache: InlineCache = makeVersionable({
+        modifiers: undefined,
+        style: undefined,
+    });
+
+    start(): Promise<void> {
+        this.editor.memory.attach(this.cache);
+        this.getCurrentModifiers();
+        this.getCurrentStyle();
+        return super.start();
+    }
 
     //--------------------------------------------------------------------------
     // Public
@@ -125,7 +134,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     isAllFormat(FormatClass: Constructor<Modifier>, range = this.editor.selection.range): boolean {
         if (range.isCollapsed()) {
             if (!this.cache.modifiers) {
-                return !!this.getCurrentModifiers(range).find(FormatClass);
+                return !!this.getCurrentModifiers(range)?.find(FormatClass);
             }
             return !!this.cache.modifiers.find(FormatClass);
         } else {
@@ -139,53 +148,61 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     /**
      * Get the modifiers for the next insertion.
      */
-    getCurrentModifiers(range = this.editor.selection.range): Modifiers {
-        if (this.cache.modifiers) {
+    getCurrentModifiers(range?: VRange): Modifiers | null {
+        const storeInCache = !range;
+        range = range || this.editor.selection.range;
+        if (this.cache.modifiers === undefined || range !== this.editor.selection.range) {
+            let inlineToCopyModifiers: VNode;
+            if (range.isCollapsed()) {
+                // TODO: LineBreakNode should have the formats as well.
+                inlineToCopyModifiers =
+                    range.start.previousSibling(node => !(node instanceof LineBreakNode)) ||
+                    range.start.nextSibling();
+            } else {
+                inlineToCopyModifiers = range.start.nextSibling();
+            }
+            let modifiers: Modifiers = null;
+            if (inlineToCopyModifiers && inlineToCopyModifiers instanceof InlineNode) {
+                modifiers = inlineToCopyModifiers.modifiers.clone();
+            }
+            if (storeInCache) {
+                this.cache.modifiers = modifiers;
+            }
+            return modifiers;
+        } else {
             return this.cache.modifiers;
         }
-
-        let inlineToCopyModifiers: VNode;
-        if (range.isCollapsed()) {
-            // TODO: LineBreakNode should have the formats as well.
-            inlineToCopyModifiers =
-                range.start.previousSibling(node => !node.test(LineBreakNode)) ||
-                range.start.nextSibling();
-        } else {
-            inlineToCopyModifiers = range.start.nextSibling();
-        }
-        if (inlineToCopyModifiers && inlineToCopyModifiers.is(InlineNode)) {
-            return inlineToCopyModifiers.modifiers.clone();
-        }
-
-        return new Modifiers();
     }
     /**
      * Get the styles for the next insertion.
      */
-    getCurrentStyle(range = this.editor.selection.range): CssStyle {
-        if (this.cache.style) {
-            return this.cache.style;
+    getCurrentStyle(range?: VRange): CssStyle | null {
+        const storeInCache = !range;
+        range = range || this.editor.selection.range;
+        if (this.cache.style === undefined || range !== this.editor.selection.range) {
+            let inlineToCopyStyle: VNode;
+            if (range.isCollapsed()) {
+                inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
+            } else {
+                inlineToCopyStyle = range.start.nextSibling();
+            }
+            let style: CssStyle = null;
+            if (inlineToCopyStyle && inlineToCopyStyle instanceof InlineNode) {
+                style = inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || null;
+            }
+            if (storeInCache) {
+                this.cache.style = style;
+            }
+            return style;
         }
-
-        let inlineToCopyStyle: VNode;
-        if (range.isCollapsed()) {
-            inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
-        } else {
-            inlineToCopyStyle = range.start.nextSibling();
-        }
-        if (inlineToCopyStyle && inlineToCopyStyle.is(InlineNode)) {
-            return inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || new CssStyle();
-        }
-        return new CssStyle();
+        return this.cache.style;
     }
     /**
      * Each time the selection changes, we reset its format and style.
      */
     resetCache(): void {
-        this.cache = {
-            modifiers: null,
-            style: null,
-        };
+        this.cache.modifiers = undefined;
+        this.cache.style = undefined;
     }
     /**
      * Remove the formatting of the nodes in the range.
