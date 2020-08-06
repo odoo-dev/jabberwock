@@ -4,8 +4,12 @@ import JWEditor from '../../core/src/JWEditor';
 import { Modifier } from '../../core/src/Modifier';
 import { ModifierRenderer, ModifierRendererConstructor } from './ModifierRenderer';
 import { NodeRenderer, RendererConstructor } from './NodeRenderer';
+import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { RenderingEngineCache, ModifierPairId } from './RenderingEngineCache';
 
 export type RenderingIdentifier = string;
+
+let modifierId = 0;
 
 export class RenderingEngine<T = {}> {
     static readonly id: RenderingIdentifier;
@@ -15,10 +19,6 @@ export class RenderingEngine<T = {}> {
     readonly editor: JWEditor;
     readonly renderers: NodeRenderer<T>[] = [];
     readonly modifierRenderers: ModifierRenderer<T>[] = [];
-    readonly renderings: Map<VNode, T> = new Map();
-    readonly renderingPromises: Map<VNode, Promise<void>> = new Map();
-    readonly locations: Map<T, VNode[]> = new Map();
-    readonly from: Map<T, Array<VNode | Modifier>> = new Map();
 
     constructor(editor: JWEditor) {
         this.editor = editor;
@@ -71,16 +71,38 @@ export class RenderingEngine<T = {}> {
     /**
      * Render the given node. If a prior rendering already exists for this node
      * in this run, return it directly.
+     * The cache are automaticaly invalidate if the nodes are not linked to the
+     * memory (linked to a layout root for eg)
      *
-     * @param node
+     * @param nodes
      */
-    async render(nodes: VNode[]): Promise<T[]> {
+    async render(
+        nodes: VNode[],
+        cache?: RenderingEngineCache<T>,
+    ): Promise<RenderingEngineCache<T>> {
+        if (!cache) {
+            cache = new RenderingEngineCache();
+            cache.worker = {
+                depends: this._depends.bind(this, cache),
+                renderBatched: this.renderBatched.bind(this, cache),
+                getCompatibleRenderer: this.getCompatibleRenderer.bind(this, cache),
+                getCompatibleModifierRenderer: this.getCompatibleModifierRenderer.bind(this, cache),
+                locate: this.locate.bind(this, cache),
+                getRendering: (node): T => cache.renderings.get(node),
+                render: async (nodes: VNode[]): Promise<T[]> => {
+                    await this.render(nodes, cache);
+                    return nodes.map(node => cache.renderings.get(node));
+                },
+            };
+        }
+
         const promises = this.renderBatched(
-            nodes.filter(node => !this.renderingPromises.get(node)),
+            cache,
+            nodes.filter(node => !cache.renderingPromises.get(node)),
         );
         await Promise.all(promises); // wait the newest promises
-        await Promise.all(nodes.map(node => this.renderingPromises.get(node))); // wait indifidual promise
-        return nodes.map(node => this.renderings.get(node)); // return result
+        await Promise.all(nodes.map(node => cache.renderingPromises.get(node))); // wait indifidual promise
+        return cache;
     }
     /**
      * Indicates the location of the nodes in the rendering performed.
@@ -94,8 +116,8 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendering
      */
-    locate(nodes: VNode[], value: T): void {
-        this.locations.set(value, nodes);
+    locate(cache: RenderingEngineCache<T>, nodes: VNode[], value: T): void {
+        cache.locations.set(value, nodes);
     }
     /**
      * Group the nodes and call the renderer 'renderBatch' method with the
@@ -109,18 +131,23 @@ export class RenderingEngine<T = {}> {
      * @param nodes
      * @param rendered
      */
-    renderBatched(nodes: VNode[], rendered?: NodeRenderer<T>): Promise<void>[] {
+    renderBatched(
+        cache: RenderingEngineCache<T>,
+        nodes: VNode[],
+        rendered?: NodeRenderer<T>,
+    ): Promise<void>[] {
         const promises: Promise<void>[] = [];
         for (const node of nodes) {
-            const renderer = this.getCompatibleRenderer(node, rendered);
-            const renderings = renderer.renderBatch(nodes);
+            const renderer = cache.worker.getCompatibleRenderer(node, rendered);
+            const renderings = renderer.renderBatch(nodes, cache.worker);
             const promise = renderings.then(values => {
                 const value = values[0];
-                this._addOrigin(node, value);
-                this._addDefaultLocation(node, value);
-                this.renderings.set(node, value);
+                this._depends(cache, node, value);
+                this._depends(cache, value, node);
+                this._addDefaultLocation(cache, node, value);
+                cache.renderings.set(node, value);
             });
-            this.renderingPromises.set(node, promise);
+            cache.renderingPromises.set(node, promise);
             promises.push(promise);
         }
         return promises;
@@ -132,13 +159,25 @@ export class RenderingEngine<T = {}> {
      * @param node
      * @param previousRenderer
      */
-    getCompatibleRenderer(node: VNode, previousRenderer: NodeRenderer<T>): NodeRenderer<T> {
+    getCompatibleRenderer(
+        cache: RenderingEngineCache<T>,
+        node: VNode,
+        previousRenderer: NodeRenderer<T>,
+    ): NodeRenderer<T> {
+        let cacheCompatible = cache.cachedCompatibleRenderer.get(node);
+        if (!cacheCompatible) {
+            cacheCompatible = new Map();
+            cache.cachedCompatibleRenderer.set(node, cacheCompatible);
+        } else if (cacheCompatible.get(previousRenderer)) {
+            return cacheCompatible.get(previousRenderer);
+        }
         let nextRendererIndex = this.renderers.indexOf(previousRenderer) + 1;
         let nextRenderer: NodeRenderer<T>;
         do {
             nextRenderer = this.renderers[nextRendererIndex];
             nextRendererIndex++;
         } while (nextRenderer && !node.test(nextRenderer.predicate));
+        cacheCompatible.set(previousRenderer, nextRenderer);
         return nextRenderer;
     }
     /**
@@ -149,10 +188,18 @@ export class RenderingEngine<T = {}> {
      * @param previousRenderer
      */
     getCompatibleModifierRenderer(
+        cache: RenderingEngineCache<T>,
         modifier: Modifier,
-        nodes: VNode[],
         previousRenderer?: ModifierRenderer<T>,
     ): ModifierRenderer<T> {
+        let cacheCompatible = cache.cachedCompatibleModifierRenderer.get(modifier);
+        if (!cacheCompatible) {
+            cacheCompatible = new Map();
+            cache.cachedCompatibleModifierRenderer.set(modifier, cacheCompatible);
+        } else if (cacheCompatible.get(previousRenderer)) {
+            return cacheCompatible.get(previousRenderer);
+        }
+
         let nextRendererIndex = this.modifierRenderers.indexOf(previousRenderer) + 1;
         let nextRenderer: ModifierRenderer<T>;
         do {
@@ -162,32 +209,100 @@ export class RenderingEngine<T = {}> {
             nextRenderer.predicate &&
             !(isConstructor(nextRenderer.predicate, Modifier)
                 ? modifier instanceof nextRenderer.predicate
-                : nextRenderer.predicate(modifier, nodes))
+                : nextRenderer.predicate(modifier))
         );
+        cacheCompatible.set(previousRenderer, nextRenderer);
         return nextRenderer;
     }
-    /**
-     * Clear the cache.
-     *
-     */
-    clear(): void {
-        this.renderings.clear();
-        this.renderingPromises.clear();
-        this.locations.clear();
-        this.from.clear();
-    }
-    protected _addOrigin(node: VNode | Modifier, value: T): void {
-        const from = this.from.get(value);
-        if (from) {
-            if (!from.includes(node)) {
-                from.push(node);
-            }
+    protected _depends(
+        cache: RenderingEngineCache<T>,
+        dependent: T | VNode | Modifier,
+        dependency: T | VNode | Modifier,
+    ): void {
+        let dNode: VNode | Modifier;
+        let dRendering: T;
+        let dyNode: VNode | Modifier;
+        let dyRendering: T;
+        if (dependent instanceof AbstractNode || dependent instanceof Modifier) {
+            dNode = dependent;
         } else {
-            this.from.set(value, [node]);
+            dRendering = dependent;
+        }
+        if (dependency instanceof AbstractNode || dependency instanceof Modifier) {
+            dyNode = dependency;
+        } else {
+            dyRendering = dependency;
+        }
+
+        if (dNode) {
+            if (dyNode) {
+                const linked = cache.linkedNodes.get(dyNode);
+                if (linked) {
+                    linked.add(dNode);
+                } else {
+                    cache.linkedNodes.set(dyNode, new Set([dNode]));
+                }
+            } else {
+                const from = cache.renderingDependent.get(dyRendering);
+                if (from) {
+                    from.add(dNode);
+                } else {
+                    cache.renderingDependent.set(dyRendering, new Set([dNode]));
+                }
+            }
+        } else if (dyNode) {
+            const linked = cache.nodeDependent.get(dyNode);
+            if (linked) {
+                linked.add(dRendering);
+            } else {
+                cache.nodeDependent.set(dyNode, new Set([dRendering]));
+            }
         }
     }
-    protected _addDefaultLocation(node: VNode, value: T): void {
-        this.locations.set(value, [node]);
+    protected _addDefaultLocation(cache: RenderingEngineCache<T>, node: VNode, value: T): void {
+        cache.locations.set(value, [node]);
+    }
+    protected _modifierIsSameAs(
+        cache: RenderingEngineCache<T>,
+        modifierA: Modifier | void,
+        modifierB: Modifier | void,
+    ): boolean {
+        if (modifierA === modifierB) {
+            return true;
+        }
+        let idA = modifierA ? cache.cachedModifierId.get(modifierA) : 'null';
+        if (!idA) {
+            idA = ++modifierId;
+            cache.cachedModifierId.set(modifierA, idA);
+        }
+        let idB = modifierB ? cache.cachedModifierId.get(modifierB) : 'null';
+        if (!idB) {
+            idB = ++modifierId;
+            cache.cachedModifierId.set(modifierB, idB);
+        }
+        const key: ModifierPairId = idA + '-' + idB;
+        if (key in cache.cachedIsSameAsModifier) {
+            return cache.cachedIsSameAsModifier[key];
+        }
+        const reverseKey: ModifierPairId = idB + '-' + idA;
+        if (reverseKey in cache.cachedIsSameAsModifier) {
+            return cache.cachedIsSameAsModifier[reverseKey];
+        }
+        const isSame =
+            (!modifierA || modifierA.isSameAs(modifierB)) &&
+            (!modifierB || modifierB.isSameAs(modifierA));
+        cache.cachedIsSameAsModifier[key] = isSame;
+        if (!cache.cachedIsSameAsModifierIds[idA]) {
+            cache.cachedIsSameAsModifierIds[idA] = [key];
+        } else {
+            cache.cachedIsSameAsModifierIds[idA].push(key);
+        }
+        if (!cache.cachedIsSameAsModifierIds[idB]) {
+            cache.cachedIsSameAsModifierIds[idB] = [key];
+        } else {
+            cache.cachedIsSameAsModifierIds[idB].push(key);
+        }
+        return cache.cachedIsSameAsModifier[key];
     }
 }
 

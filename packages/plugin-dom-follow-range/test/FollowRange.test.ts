@@ -82,8 +82,11 @@ describe('FollowRange', async () => {
             location: [section, 'replace'],
         });
         await editor.start();
-        await editor.plugins.get(Layout).append('aaa', 'range');
-        await editor.plugins.get(Layout).append('bbb', 'range');
+
+        await editor.execCommand(async () => {
+            await editor.plugins.get(Layout).append('aaa', 'range');
+            await editor.plugins.get(Layout).append('bbb', 'range');
+        });
         expect(container.innerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
             [
                 '<jw-editor>',

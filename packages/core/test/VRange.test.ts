@@ -9,10 +9,12 @@ describe('VRange', () => {
                 contentBefore: '<v>abc<w>de[f<x>ghi<y>jkl<z>mno</z>pqr</y>stu</x>vw</w>xy]z</v>',
                 stepFunction: async (editor: BasicEditor) => {
                     editor.dispatcher.registerCommand('refresh', { handler: () => {} });
-                    const nodes = editor.selection.range.split();
-                    const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
-                    editable.lastChild().after(nodes[0]);
+                    await editor.execCommand(async () => {
+                        const nodes = editor.selection.range.split();
+                        const domEngine = editor.plugins.get(Layout).engines.dom;
+                        const editable = domEngine.components.get('editable')[0];
+                        editable.lastChild().after(nodes[0]);
+                    });
                     await editor.execCommand('refresh');
                 },
                 contentAfter:

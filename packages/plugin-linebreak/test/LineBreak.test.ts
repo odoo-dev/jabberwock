@@ -47,7 +47,7 @@ describePlugin(LineBreak, testEditor => {
                 await new LineBreakXmlDomParser(engine).parse(br1)
             )[0] as LineBreakNode;
             expect(lineBreak instanceof AbstractNode).to.be.true;
-            expect(lineBreak.is(AtomicNode)).to.equal(true);
+            expect(lineBreak instanceof AtomicNode).to.equal(true);
         });
         it('should not parse a SPAN node', async () => {
             const engine = new XmlDomParsingEngine(new JWEditor());
@@ -91,7 +91,7 @@ describePlugin(LineBreak, testEditor => {
         describe('constructor', () => {
             it('should create a LineBreakNode', async () => {
                 const lineBreak = new LineBreakNode();
-                expect(lineBreak.is(AtomicNode)).to.equal(true);
+                expect(lineBreak instanceof AtomicNode).to.equal(true);
             });
         });
         describe('clone', () => {

@@ -4,7 +4,6 @@ import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { CodeButtonDomObjectRenderer } from './CodeButtonDomObjectRenderer';
 import { CodeViewNode } from './CodeViewNode';
 import { CodeViewDomObjectRenderer } from './CodeViewDomObjectRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
@@ -15,7 +14,7 @@ import { isBlock } from '../../utils/src/isBlock';
 export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     codeView = new CodeViewNode();
     readonly loadables: Loadables<Renderer & Layout> = {
-        renderers: [CodeButtonDomObjectRenderer, CodeViewDomObjectRenderer],
+        renderers: [CodeViewDomObjectRenderer],
         components: [
             {
                 id: 'CodeButton',
@@ -23,6 +22,7 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     const button = new ActionableNode({
                         name: 'code',
                         label: 'Toggle Code view',
+                        commandId: 'toggleCodeView',
                         selected: (): boolean => this.active,
                         modifiers: [new Attributes({ class: 'fas fa-code fa-fw' })],
                     });
@@ -38,6 +38,11 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         ],
         componentZones: [['CodeButton', ['actionables']]],
     };
+    commands = {
+        toggleCodeView: {
+            handler: this.toggle.bind(this),
+        },
+    };
     active = false;
     async start(): Promise<void> {
         await super.start();
@@ -49,9 +54,9 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
 
     async toggle(): Promise<void> {
         if (this.active) {
-            this.deactivate();
+            return this.deactivate();
         } else {
-            this.activate();
+            return this.activate();
         }
     }
     async activate(): Promise<void> {

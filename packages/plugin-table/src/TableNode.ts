@@ -4,10 +4,10 @@ import { TableCellNode } from './TableCellNode';
 
 export class TableNode extends VElement {
     breakable = false;
-    constructor(rowCount?: number, columnCount?: number) {
+    constructor(params?: { rowCount?: number; columnCount?: number }) {
         super({ htmlTag: 'TABLE' });
-        if (rowCount && columnCount) {
-            this.reset(rowCount, columnCount);
+        if (params && params.rowCount && params.columnCount) {
+            this.reset(params.rowCount, params.columnCount);
         }
     }
 

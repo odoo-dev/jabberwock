@@ -30,7 +30,7 @@ describe('core', () => {
                     it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new VElement({ htmlTag: 'UNKNOWN-ELEMENT' });
-                            expect(vNode.is(AtomicNode)).to.equal(false);
+                            expect(vNode instanceof AtomicNode).to.equal(false);
                             expect(vNode.htmlTag).to.equal('UNKNOWN-ELEMENT');
                         }
                     });
@@ -49,7 +49,7 @@ describe('core', () => {
                     it('should create a marker node', async () => {
                         const markerNode = new MarkerNode();
                         expect(markerNode.tangible).to.equal(false);
-                        expect(markerNode.is(AtomicNode)).to.equal(true);
+                        expect(markerNode instanceof AtomicNode).to.equal(true);
                     });
                 });
             });
@@ -95,11 +95,11 @@ describe('core', () => {
                 describe('constructor', () => {
                     it('should create an AtomicNode', async () => {
                         const atomic = new AtomicNode();
-                        expect(atomic.is(AtomicNode)).to.equal(true);
+                        expect(atomic instanceof AtomicNode).to.equal(true);
                     });
                     it('should create a ContainerNode', async () => {
                         const container = new ContainerNode();
-                        expect(container.is(AtomicNode)).to.equal(false);
+                        expect(container instanceof AtomicNode).to.equal(false);
                     });
                 });
                 describe('toString', () => {
@@ -930,7 +930,9 @@ describe('core', () => {
                                 const editable = domEngine.components.get('editable')[0];
                                 const a = editable.firstLeaf();
                                 const ancestors = a.ancestors(ancestor => {
-                                    return !ancestor.is(HeadingNode) || ancestor.level !== 1;
+                                    return (
+                                        !(ancestor instanceof HeadingNode) || ancestor.level !== 1
+                                    );
                                 });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
@@ -973,7 +975,8 @@ describe('core', () => {
                                 const editable = domEngine.components.get('editable')[0];
                                 const descendants = editable.descendants(
                                     descendant =>
-                                        !descendant.is(HeadingNode) || descendant.level !== 2,
+                                        !(descendant instanceof HeadingNode) ||
+                                        descendant.level !== 2,
                                 );
                                 expect(
                                     descendants.map(descendant => descendant.name),

@@ -234,7 +234,7 @@ describe('core', () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<div>ab[]</div>',
                     stepFunction: async editor => {
-                        await editor.execCustomCommand(async () => {
+                        await editor.execCommand(async () => {
                             const layout = editor.plugins.get(Layout);
                             const domEngine = layout.engines.dom;
                             domEngine.components

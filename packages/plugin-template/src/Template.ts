@@ -127,8 +127,8 @@ export class Template<T extends TemplateConfig = TemplateConfig> extends JWPlugi
         const filledZone = new Set<ZoneIdentifier>();
         for (const templateName of templateToSelect) {
             const config = templateConfigurations[templateName];
-            await layout.clear(config.zoneId);
             if (!filledZone.has(config.thumbnailZoneId)) {
+                await layout.clear(config.zoneId);
                 filledZone.add(config.thumbnailZoneId);
                 await layout.prepend(
                     'TemplateThumbnailSelector-' + config.thumbnailZoneId,

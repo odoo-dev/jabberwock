@@ -1,9 +1,12 @@
 import { Modifier } from './Modifier';
 import { Constructor, isConstructor } from '../../utils/src/utils';
+import { VersionableObject } from './Memory/VersionableObject';
+import { VersionableArray } from './Memory/VersionableArray';
 
-export class Modifiers {
+export class Modifiers extends VersionableObject {
     private _contents: Modifier[];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
+        super();
         const clonedModifiers = modifiers.map(mod => {
             return mod instanceof Modifier ? mod.clone() : mod;
         });
@@ -49,7 +52,7 @@ export class Modifiers {
      */
     append(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
         if (modifiers.length && !this._contents) {
-            this._contents = [];
+            this._contents = new VersionableArray();
         }
         for (const modifier of modifiers) {
             if (modifier instanceof Modifier) {
@@ -67,7 +70,7 @@ export class Modifiers {
      */
     prepend(...modifiers: Array<Modifier | Constructor<Modifier>>): void {
         if (modifiers.length && !this._contents) {
-            this._contents = [];
+            this._contents = new VersionableArray();
         }
         for (const modifier of [...modifiers].reverse()) {
             if (modifier instanceof Modifier) {

@@ -60,14 +60,14 @@ describePlugin(Char, testEditor => {
             it('should create a CharNode', async () => {
                 const c = new CharNode({ char: ' ' });
                 expect(c.char).to.equal(' ');
-                expect(c.is(AtomicNode)).to.equal(true);
+                expect(c instanceof AtomicNode).to.equal(true);
                 expect(c.modifiers.length).to.equal(0);
                 expect(c.length).to.equal(1);
             });
             it('should create a CharNode with format', async () => {
                 const c = new CharNode({ char: ' ', modifiers: new Modifiers(BoldFormat) });
                 expect(c.char).to.equal(' ');
-                expect(c.is(AtomicNode)).to.equal(true);
+                expect(c instanceof AtomicNode).to.equal(true);
                 expect(c.modifiers.length).to.equal(1);
                 expect(c.modifiers.map(m => m.constructor.name)).to.deep.equal(['BoldFormat']);
             });

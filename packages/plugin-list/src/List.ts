@@ -6,7 +6,7 @@ import { ListDomObjectRenderer } from './ListDomObjectRenderer';
 import { ListItemAttributesDomObjectModifierRenderer } from './ListItemAttributesDomObjectModifierRenderer';
 import { ListXmlDomParser } from './ListXmlDomParser';
 import { ListItemXmlDomParser, ListItemAttributes } from './ListItemXmlDomParser';
-import { withRange, VRange } from '../../core/src/VRange';
+import { VRange } from '../../core/src/VRange';
 import { IndentParams, OutdentParams } from '../../plugin-indent/src/Indent';
 import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/Core';
@@ -176,92 +176,93 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      *
      * @param params
      */
-    toggleList(params: ListParams): Promise<void> {
+    toggleList(params: ListParams): void {
         const type = params.type;
-        const range = params.context.range;
+        const bounds = VRange.clone(params.context.range);
+        const range = new VRange(this.editor, bounds);
 
-        return withRange(this.editor, VRange.clone(range), range => {
-            // Extend the range to cover the entirety of its containers.
-            if (range.startContainer.hasChildren()) {
-                range.setStart(range.startContainer.firstChild());
-            }
-            if (range.endContainer.hasChildren()) {
-                range.setEnd(range.endContainer.lastChild());
-            }
-            // If all targeted nodes are within a list of given type then unlist
-            // them. Otherwise, convert them to the given list type.
-            const targetedNodes = range.targetedNodes();
-            const ancestors = targetedNodes.map(node => node.closest(ListNode));
-            const targetedLists = ancestors.filter(list => !!list);
-            if (
-                targetedLists.length === targetedNodes.length &&
-                targetedLists.every(list => list.listType === type)
-            ) {
-                // Unlist the targeted nodes from all its list ancestors.
-                while (range.start.ancestor(ListNode)) {
-                    const nodesToUnlist = range.split(ListNode);
-                    for (const list of nodesToUnlist) {
-                        for (const child of list.childVNodes) {
-                            // TODO: automatically invalidate `li-attributes`.
-                            child.modifiers.remove(ListItemAttributes);
-                        }
-                        list.unwrap();
+        // Extend the range to cover the entirety of its containers.
+        if (range.startContainer.hasChildren()) {
+            range.setStart(range.startContainer.firstChild());
+        }
+        if (range.endContainer.hasChildren()) {
+            range.setEnd(range.endContainer.lastChild());
+        }
+        // If all targeted nodes are within a list of given type then unlist
+        // them. Otherwise, convert them to the given list type.
+        const targetedNodes = range.targetedNodes();
+        const ancestors = targetedNodes.map(node => node.closest(ListNode));
+        const targetedLists = ancestors.filter(list => !!list);
+        if (
+            targetedLists.length === targetedNodes.length &&
+            targetedLists.every(list => list.listType === type)
+        ) {
+            // Unlist the targeted nodes from all its list ancestors.
+            while (range.start.ancestor(ListNode)) {
+                const nodesToUnlist = range.split(ListNode);
+                for (const list of nodesToUnlist) {
+                    for (const child of list.childVNodes) {
+                        // TODO: automatically invalidate `li-attributes`.
+                        child.modifiers.remove(ListItemAttributes);
                     }
+                    list.unwrap();
                 }
-            } else if (targetedLists.length === targetedNodes.length) {
-                // If all nodes are in lists, convert the targeted list
-                // nodes to the given list type.
-                const lists = distinct(targetedLists);
-                const listsToConvert = lists.filter(l => l.listType !== type);
-                for (const list of listsToConvert) {
-                    let newList = new ListNode({ listType: type });
-                    list.replaceWith(newList);
-
-                    // If the new list is after or before a list of the same
-                    // type, merge them. Example:
-                    // <ol><li>a</li></ol><ol><li>b</li></ol>
-                    // => <ol><li>a</li><li>b</li></ol>).
-                    const previousSibling = newList.previousSibling();
-                    if (previousSibling && previousSibling.is(ListNode[type])) {
-                        newList.mergeWith(previousSibling);
-                        newList = previousSibling;
-                    }
-                    const nextSibling = newList.nextSibling();
-                    if (nextSibling && nextSibling.is(ListNode[type])) {
-                        nextSibling.mergeWith(newList);
-                    }
-                }
-            } else {
-                // If only some nodes are in lists and other aren't then only
-                // wrap the ones that were not already in a list into a list of
-                // the given type.
+            }
+        } else if (targetedLists.length === targetedNodes.length) {
+            // If all nodes are in lists, convert the targeted list
+            // nodes to the given list type.
+            const lists = distinct(targetedLists);
+            const listsToConvert = lists.filter(l => l.listType !== type);
+            for (const list of listsToConvert) {
                 let newList = new ListNode({ listType: type });
-                const nodesToConvert = range.split(ListNode);
-                for (const node of nodesToConvert) {
-                    // Merge top-level lists instead of nesting them.
-                    if (node.is(ListNode)) {
-                        node.mergeWith(newList);
-                    } else {
-                        node.wrap(newList);
-                    }
-                }
+                list.replaceWith(newList);
 
-                // If the new list is after or before a list of the same type,
-                // merge them. Example:
+                // If the new list is after or before a list of the same
+                // type, merge them. Example:
                 // <ol><li>a</li></ol><ol><li>b</li></ol>
                 // => <ol><li>a</li><li>b</li></ol>).
                 const previousSibling = newList.previousSibling();
-                if (previousSibling && previousSibling.is(ListNode[type])) {
+                if (previousSibling && ListNode[type](previousSibling)) {
                     newList.mergeWith(previousSibling);
                     newList = previousSibling;
                 }
-
                 const nextSibling = newList.nextSibling();
-                if (nextSibling && nextSibling.is(ListNode[type])) {
+                if (nextSibling && ListNode[type](nextSibling)) {
                     nextSibling.mergeWith(newList);
                 }
             }
-        });
+        } else {
+            // If only some nodes are in lists and other aren't then only
+            // wrap the ones that were not already in a list into a list of
+            // the given type.
+            let newList = new ListNode({ listType: type });
+            const nodesToConvert = range.split(ListNode);
+            for (const node of nodesToConvert) {
+                // Merge top-level lists instead of nesting them.
+                if (node instanceof ListNode) {
+                    node.mergeWith(newList);
+                } else {
+                    node.wrap(newList);
+                }
+            }
+
+            // If the new list is after or before a list of the same type,
+            // merge them. Example:
+            // <ol><li>a</li></ol><ol><li>b</li></ol>
+            // => <ol><li>a</li><li>b</li></ol>).
+            const previousSibling = newList.previousSibling();
+            if (previousSibling && ListNode[type](previousSibling)) {
+                newList.mergeWith(previousSibling);
+                newList = previousSibling;
+            }
+
+            const nextSibling = newList.nextSibling();
+            if (nextSibling && ListNode[type](nextSibling)) {
+                nextSibling.mergeWith(newList);
+            }
+        }
+
+        range.remove();
     }
 
     /**

@@ -16,7 +16,7 @@ describePlugin(Heading, testEditor => {
         it('should create a heading', async () => {
             for (let i = 1; i <= 6; i++) {
                 const vNode = new HeadingNode({ level: i });
-                expect(vNode.is(ContainerNode)).to.equal(true);
+                expect(vNode instanceof ContainerNode).to.equal(true);
                 expect(vNode.htmlTag).to.equal('H' + i);
                 expect(vNode.level).to.equal(i);
             }

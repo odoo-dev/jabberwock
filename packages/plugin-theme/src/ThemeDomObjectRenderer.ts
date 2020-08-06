@@ -5,7 +5,7 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ThemeNode } from './ThemeNode';
 import { Theme } from './Theme';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -16,14 +16,19 @@ export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
         const themePlugin = this.engine.editor.plugins.get(Theme);
         const component = themePlugin.themes[themeNode.themeName];
         const nodes = await component.render(this.engine.editor);
-        const domObjects: DomObject[] = await this.engine.render(nodes);
+        const cache = await this.engine.render(nodes);
+        const domObjects = nodes.map(node => cache.renderings.get(node));
         for (const domObject of domObjects) {
-            await this._resolvePlaceholder(themeNode, domObject);
+            await this._resolvePlaceholder(themeNode, domObject, cache.worker);
         }
-        return this._removeRef({ children: domObjects });
+        return { children: domObjects };
     }
-    private async _resolvePlaceholder(theme: ThemeNode, domObject: DomObject): Promise<void> {
-        await this.engine.resolveChildren(domObject);
+    private async _resolvePlaceholder(
+        theme: ThemeNode,
+        domObject: DomObject,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<void> {
+        await this.engine.resolveChildren(domObject, worker);
         let placeholderFound = false;
         const domObjects: DomObject[] = [domObject];
         for (const domObject of domObjects) {
@@ -55,21 +60,5 @@ export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
                 domObjects.push(...(domObject.children as DomObject[]));
             }
         }
-    }
-    private _removeRef(domObject: DomObject): DomObject {
-        const domObjects = [domObject];
-        for (const domObject of domObjects) {
-            if ('children' in domObject) {
-                for (let index = 0; index < domObject.children.length; index++) {
-                    const child = domObject.children[index];
-                    if (!(child instanceof AbstractNode)) {
-                        domObject.children[index] = Object.create(child);
-                        // Recursively apply on children in one stack.
-                        domObjects.push(child);
-                    }
-                }
-            }
-        }
-        return Object.create(domObject);
     }
 }

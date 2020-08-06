@@ -302,7 +302,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ Attributes: {} ]</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
                 root.children()[1].textContent +
@@ -906,7 +906,7 @@ describe('Plugin: DevTools', () => {
                 [...subpanel.querySelectorAll('devtools-td:not(.numbering)')].map(
                     td => td.textContent,
                 ),
-            ).to.deep.equal(['insertText', 'setSelection']);
+            ).to.deep.equal(['@commit', 'insertText', '@commit', 'setSelection']);
         });
         it('should select "hide"', async () => {
             await openDevTools();
@@ -1092,7 +1092,7 @@ describe('Plugin: DevTools', () => {
                 const subpanel = wrapper
                     .querySelector('jw-devtools')
                     .querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line');
+                const line = subpanel.querySelector('.selectable-line:nth-child(2)');
                 await click(line);
                 expect(line.classList.contains('selected')).to.equal(true);
 
@@ -1107,7 +1107,7 @@ describe('Plugin: DevTools', () => {
                 const subpanel = wrapper
                     .querySelector('jw-devtools')
                     .querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line:nth-child(2)');
+                const line = subpanel.querySelector('.selectable-line:nth-child(4)');
                 await click(line);
                 expect(line.classList.contains('selected')).to.equal(true);
 
@@ -1141,7 +1141,7 @@ describe('Plugin: DevTools', () => {
                 const subpanel = wrapper
                     .querySelector('jw-devtools')
                     .querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line:nth-child(2)');
+                const line = subpanel.querySelector('.selectable-line:nth-child(3)');
                 await click(line);
                 await keydown(line, 'ArrowUp');
 
@@ -1169,7 +1169,7 @@ describe('Plugin: DevTools', () => {
                 const subpanel = wrapper
                     .querySelector('jw-devtools')
                     .querySelector('devtools-panel.active mainpane-contents');
-                const line = subpanel.querySelector('.selectable-line');
+                const line = subpanel.querySelector('.selectable-line:nth-child(3)');
                 await click(line);
 
                 await keydown(line, 'ArrowDown');

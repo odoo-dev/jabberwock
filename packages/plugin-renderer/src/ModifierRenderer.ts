@@ -3,6 +3,7 @@ import { RenderingEngine } from './RenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
 import { ModifierPredicate } from '../../core/src/Modifier';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { RenderingEngineWorker } from './RenderingEngineCache';
 
 class SuperModifierRenderer<T> {
     constructor(public renderer: ModifierRenderer<T>) {}
@@ -15,13 +16,14 @@ class SuperModifierRenderer<T> {
      * @param contents
      * @param batch
      */
-    render(modifier: Modifier, contents: T[], batch: VNode[]): Promise<T[]> {
-        const nextRenderer = this.renderer.engine.getCompatibleModifierRenderer(
-            modifier,
-            batch,
-            this.renderer,
-        );
-        return nextRenderer?.render(modifier, contents, batch);
+    render(
+        modifier: Modifier,
+        contents: T[],
+        batch: VNode[],
+        worker: RenderingEngineWorker<T>,
+    ): Promise<T[]> {
+        const nextRenderer = worker.getCompatibleModifierRenderer(modifier, this.renderer);
+        return nextRenderer?.render(modifier, contents, batch, worker);
     }
 }
 
@@ -43,7 +45,12 @@ export abstract class ModifierRenderer<T> {
      * @param contents
      * @param batch
      */
-    abstract render(modifier: Modifier, renderings: T[], batch: VNode[]): Promise<T[]>;
+    abstract render(
+        modifier: Modifier,
+        renderings: T[],
+        batch: VNode[],
+        worker: RenderingEngineWorker<T>,
+    ): Promise<T[]>;
 }
 
 export interface ModifierRenderer<T = {}> {

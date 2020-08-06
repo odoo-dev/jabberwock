@@ -11,6 +11,7 @@ import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 
 import template from '../assets/Dialog.xml';
 import '../assets/Dialog.css';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 const container = document.createElement('jw-container');
 container.innerHTML = template;
@@ -21,11 +22,17 @@ export class DialogZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     engine: DomObjectRenderingEngine;
     predicate = DialogZoneNode;
 
-    async render(node: DialogZoneNode): Promise<DomObject> {
+    async render(
+        node: DialogZoneNode,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<DomObject> {
         const float = document.createElement('jw-dialog-container');
         for (const child of node.childVNodes) {
-            if (!node.hidden.get(child) && (child.tangible || child.is(MetadataNode))) {
-                float.appendChild(await this._renderDialog(child));
+            if (child.tangible || child instanceof MetadataNode) {
+                if (!node.hidden?.[child.id]) {
+                    float.appendChild(await this._renderDialog(child));
+                }
+                worker.depends(child, node);
             }
         }
         return {

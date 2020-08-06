@@ -1,9 +1,10 @@
 import { Modifier } from '../../core/src/Modifier';
 import { CssStyle } from './CssStyle';
 import { ClassList } from './ClassList';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export class Attributes extends Modifier {
-    private _record: Record<string, string> = {};
+    private _record: Record<string, string>;
     style = new CssStyle();
     // Avoid copiying FontAwesome classes on paragraph break.
     // TODO : need to be improved to better take care of color classes, etc.
@@ -50,9 +51,15 @@ export class Attributes extends Modifier {
      */
     clone(): this {
         const clone = new this.constructor();
-        clone._record = { ...this._record };
-        clone.style = this.style.clone();
-        clone.classList = this.classList.clone();
+        if (this._record) {
+            clone._record = makeVersionable({ ...this._record });
+        }
+        if (this.style.length) {
+            clone.style = this.style.clone();
+        }
+        if (this.classList.length) {
+            clone.classList = this.classList.clone();
+        }
         return clone;
     }
     /**
@@ -83,12 +90,14 @@ export class Attributes extends Modifier {
      * Return an array containing all the keys in the record.
      */
     keys(): string[] {
-        const keys = Object.keys(this._record).filter(key => {
-            return (
-                (key !== 'style' || !!this.style.length) &&
-                (key !== 'class' || !!this.classList.length)
-            );
-        });
+        const keys = this._record
+            ? Object.keys(this._record).filter(key => {
+                  return (
+                      (key !== 'style' || !!this.style.length) &&
+                      (key !== 'class' || !!this.classList.length)
+                  );
+              })
+            : [];
         if (this.classList.length && !keys.includes('class')) {
             // The node was not parsed with a class attribute, add it in place.
             // Use `get` for its value but record its position in the record.
@@ -116,11 +125,11 @@ export class Attributes extends Modifier {
     get(name: string): string {
         name = name.toLowerCase();
         if (name === 'style') {
-            return this.style.cssText;
+            return this.style?.cssText;
         } else if (name === 'class') {
-            return this.classList.className;
+            return this.classList?.className;
         } else {
-            return this._record[name];
+            return this._record?.[name];
         }
     }
     /**
@@ -131,8 +140,15 @@ export class Attributes extends Modifier {
      */
     set(name: string, value: string): void {
         name = name.toLowerCase();
+        if (!this._record) {
+            this._record = makeVersionable({});
+        }
         if (name === 'style') {
-            this.style.reset(value);
+            if (this.style) {
+                this.style.reset(value);
+            } else {
+                this.style = new CssStyle();
+            }
             // Use `get` for its value but record its position in the record.
             this._record.style = null;
         } else if (name === 'class') {
@@ -155,13 +171,13 @@ export class Attributes extends Modifier {
                 this.style.clear();
             } else if (name === 'class') {
                 this.classList.clear();
-            } else {
+            } else if (this._record) {
                 delete this._record[name];
             }
         }
     }
     clear(): void {
-        this._record = {};
+        delete this._record;
         this.style.clear();
         this.classList.clear();
     }

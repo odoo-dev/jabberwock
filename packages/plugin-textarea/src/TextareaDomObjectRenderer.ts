@@ -3,7 +3,6 @@ import {
     DomObjectRenderingEngine,
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { Attributes } from '../../plugin-xml/src/Attributes';
 import { TextareaNode } from './TextareaNode';
 import { DomObjectText } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 
@@ -21,7 +20,6 @@ export class TextareaDomObjectRenderer extends NodeRenderer<DomObject> {
             tag: 'TEXTAREA',
             children: [text],
         };
-        this.engine.renderAttributes(Attributes, node, textarea);
         return textarea;
     }
 }
