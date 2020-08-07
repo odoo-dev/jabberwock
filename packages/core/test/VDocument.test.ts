@@ -361,6 +361,18 @@ describe('VDocument', () => {
                         contentAfter: '<h1>[]ab</h1>',
                     });
                 });
+                it('should merge a text following a paragraph (keeping the text)', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>ab[]</p>cd',
+                        stepFunction: deleteForward,
+                        contentAfter: '<p>ab[]cd</p>',
+                    });
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>ab[]</p>cd<p>ef</p>',
+                        stepFunction: deleteForward,
+                        contentAfter: '<p>ab[]cd</p><p>ef</p>',
+                    });
+                });
             });
             describe('With attributes', () => {
                 it('should merge a paragraph without class into an empty paragraph with a class', async () => {
@@ -998,6 +1010,18 @@ describe('VDocument', () => {
                         stepFunction: deleteBackward,
                         contentAfter:
                             '<table><tbody><tr><td><br></td><td>[]abc</td></tr></tbody></table>',
+                    });
+                });
+                it('should merge a text preceding a paragraph (removing the paragraph)', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: 'ab<p>[]cd</p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: 'ab[]cd',
+                    });
+                    await testEditor(BasicEditor, {
+                        contentBefore: 'ab<p>[]cd</p>ef',
+                        stepFunction: deleteBackward,
+                        contentAfter: 'ab[]cdef',
                     });
                 });
             });
