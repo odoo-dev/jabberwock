@@ -113,6 +113,10 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      * @param batchPromise
      */
     async _onNormalizedEvent(batchPromise: Promise<EventBatch>): Promise<void> {
+        // TODO: this is wrong ! It is important to trigger the `nextEventMutex`
+        // which was removed in this commit een if there is nothing to process
+        // in the batchPromise ! The execCommand mutex cannot replace the
+        // nextEventMutex because their purpose is different !
         const batch = await batchPromise;
         const domEngine = this.dependencies.get(Layout).engines.dom as DomLayoutEngine;
         if (batch.mutatedElements) {
