@@ -1397,7 +1397,7 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
-        it('should not redraw a selection in a part removed from the arch/DOM', async () => {
+        it.skip('should not redraw a selection in a part removed from the arch/DOM', async () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 render(editor: JWEditor): Promise<VNode[]> {
