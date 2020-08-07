@@ -4,6 +4,7 @@ import { CommandParams } from './Dispatcher';
 import { VSelectionDescription } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { RuleProperty } from './Mode';
+import { AtomicNode } from './VNodes/AtomicNode';
 
 export type InsertParagraphBreakParams = CommandParams;
 export type DeleteBackwardParams = CommandParams;
@@ -99,14 +100,18 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
                     range.mode.is(ancestor, RuleProperty.EDITABLE)
                 ) {
-                    const previous = ancestor.previousSibling();
-                    const previousLeaf = previous.lastLeaf();
-                    if (previous && !previous.hasChildren()) {
-                        // If the previous sibling is empty, remove it.
-                        previous.removeBackward();
-                    } else if (previousLeaf) {
-                        range.setStart(previousLeaf, RelativePosition.AFTER);
-                        range.empty();
+                    const previousSibling = ancestor.previousSibling();
+                    if (previousSibling instanceof AtomicNode) {
+                        ancestor.mergeWith(previousSibling.parent);
+                    } else {
+                        const previousLeaf = previousSibling.lastLeaf();
+                        if (previousSibling && !previousSibling.hasChildren()) {
+                            // If the previous sibling is empty, remove it.
+                            previousSibling.removeBackward();
+                        } else if (previousLeaf) {
+                            range.setStart(previousLeaf, RelativePosition.AFTER);
+                            range.empty();
+                        }
                     }
                 }
             }
@@ -143,15 +148,24 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
                     range.mode.is(ancestor, RuleProperty.EDITABLE)
                 ) {
-                    const next = ancestor.nextSibling().firstLeaf();
-                    if (next && !range.endContainer.hasChildren()) {
-                        // If the current container is empty, remove it.
-                        range.endContainer.removeForward();
-                        range.setStart(next, RelativePosition.BEFORE);
-                        range.setEnd(next, RelativePosition.BEFORE);
-                    } else if (next) {
-                        range.setEnd(next, RelativePosition.BEFORE);
-                        range.empty();
+                    const nextSibling = ancestor.nextSibling();
+                    if (nextSibling instanceof AtomicNode) {
+                        let next: VNode = nextSibling;
+                        while (next && next instanceof AtomicNode) {
+                            ancestor.append(next);
+                            next = ancestor.nextSibling();
+                        }
+                    } else {
+                        const next = nextSibling.firstLeaf();
+                        if (next && !range.endContainer.hasChildren()) {
+                            // If the current container is empty, remove it.
+                            range.endContainer.removeForward();
+                            range.setStart(next, RelativePosition.BEFORE);
+                            range.setEnd(next, RelativePosition.BEFORE);
+                        } else if (next) {
+                            range.setEnd(next, RelativePosition.BEFORE);
+                            range.empty();
+                        }
                     }
                 }
             }
