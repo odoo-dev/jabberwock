@@ -535,7 +535,7 @@ export class DomLayoutEngine extends LayoutEngine {
             selection.anchor.ancestors().pop() !== this.root ||
             selection.focus.ancestors().pop() !== this.root
         ) {
-            throw new Error('Cannot render a selection that is outside the Layout.');
+            console.warn('Cannot render a selection that is outside the Layout.');
         }
         const anchor = this._domReconciliationEngine.getLocations(selection.anchor);
         const focus = this._domReconciliationEngine.getLocations(selection.focus);
