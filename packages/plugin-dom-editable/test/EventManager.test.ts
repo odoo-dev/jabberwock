@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { JWEditor, Loadables } from '../../core/src/JWEditor';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { DomEditable } from './DomEditable';
+import { DomEditable } from '../src/DomEditable';
 
 describe('core', () => {
     describe('EventManager', () => {
