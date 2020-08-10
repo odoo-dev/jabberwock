@@ -34,9 +34,8 @@ export class FullscreenButtonDomObjectRenderer extends NodeRenderer<DomObject> {
         let elButton: Element;
         domObject.handler = (): void => {
             // only one component can be display in fullscreen
-            const component = domLayoutEngine.components.get(
-                fullscreenPlugin.configuration.component,
-            )?.[0];
+            const component =
+                domLayoutEngine.components[fullscreenPlugin.configuration.component]?.[0];
 
             if (component) {
                 // only one element can be display in fullscreen

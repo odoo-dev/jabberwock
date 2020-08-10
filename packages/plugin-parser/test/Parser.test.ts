@@ -324,7 +324,7 @@ describe('utils', () => {
                     renderTextualSelection();
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const domEditable = domEngine.getDomNodes(editable)[0] as Element;
 
                     const value = domEditable.innerHTML;

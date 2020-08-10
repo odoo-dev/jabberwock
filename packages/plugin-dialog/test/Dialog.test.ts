@@ -227,9 +227,9 @@ describe('Dialog', async () => {
 
             // the node are not removed, only hide
             // TO CHECK DMO: params for 'add' method: callback for onShow and onHide ?
-            const div = editor.plugins.get(Layout).engines.dom.components.get('aaa')[0];
+            const div = editor.plugins.get(Layout).engines.dom.components.aaa[0];
             expect(div.parent).to.instanceOf(DialogZoneNode);
-            const section = editor.plugins.get(Layout).engines.dom.components.get('bbb')[0];
+            const section = editor.plugins.get(Layout).engines.dom.components.bbb[0];
             expect(section.parent).to.instanceOf(DialogZoneNode);
         });
         it('should close 2 dialogs it with the backdrop', async () => {
@@ -273,9 +273,9 @@ describe('Dialog', async () => {
             );
 
             // the node are not removed, only hide
-            const div = editor.plugins.get(Layout).engines.dom.components.get('aaa')[0];
+            const div = editor.plugins.get(Layout).engines.dom.components.aaa[0];
             expect(div.parent).to.instanceOf(DialogZoneNode);
-            const section = editor.plugins.get(Layout).engines.dom.components.get('bbb')[0];
+            const section = editor.plugins.get(Layout).engines.dom.components.bbb[0];
             expect(section.parent).to.instanceOf(DialogZoneNode);
         });
         it('should close a dialog and re-open a dialog', async () => {
@@ -369,7 +369,7 @@ describe('Dialog', async () => {
                 ].join(''),
             );
 
-            const section = editor.plugins.get(Layout).engines.dom.components.get('bbb')[0];
+            const section = editor.plugins.get(Layout).engines.dom.components.bbb[0];
             expect(section.parent).to.instanceOf(DialogZoneNode);
         });
     });

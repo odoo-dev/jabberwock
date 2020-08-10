@@ -1204,8 +1204,7 @@ describe('DomLayout', () => {
                     const layout = editor.plugins.get(Layout);
                     const domLayout = layout.engines.dom as DomLayoutEngine;
                     await editor.execCommand(() => {
-                        domLayout.components
-                            .get('editable')[0]
+                        domLayout.components.editable[0]
                             .children()[0]
                             .children()[0]
                             .remove();
@@ -1571,7 +1570,7 @@ describe('DomLayout', () => {
                 contentBefore: 'a[b]c',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
 
                     const renderer = editor.plugins.get(Renderer);
                     const rendered = await renderer.render<DomObject>('dom/object', editable);
@@ -1595,7 +1594,7 @@ describe('DomLayout', () => {
                 contentBefore: 'a[<i>b]</i>c',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
 
                     const renderer = editor.plugins.get(Renderer);
                     const rendered = await renderer.render<DomObject>('dom/object', editable);
@@ -1626,7 +1625,7 @@ describe('DomLayout', () => {
                 contentBefore: 'a[b<br>c]d',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const renderer = editor.plugins.get(Renderer);
                     const br = editable.children()[2];
                     await editor.execCommand(context => {
@@ -2154,7 +2153,7 @@ describe('DomLayout', () => {
                         });
 
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
 
                         const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                         expect(domEditable.innerHTML).to.equal('a<b><i>b</i></b>c');
@@ -2191,10 +2190,7 @@ describe('DomLayout', () => {
                         await editor.execCommand(async () => {
                             const layout = editor.plugins.get(Layout);
                             const domEngine = layout.engines.dom;
-                            domEngine.components
-                                .get('editable')[0]
-                                .firstLeaf()
-                                .remove();
+                            domEngine.components.editable[0].firstLeaf().remove();
                         });
                         expect(document.querySelector('jw-test').innerHTML).to.equal(
                             '<div>b</div>',
@@ -2270,7 +2266,7 @@ describe('DomLayout', () => {
                     contentBefore: 'a[b<br>c]d',
                     stepFunction: async (editor: JWEditor) => {
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
 
                         mutationNumber = 0;
 
@@ -2298,7 +2294,7 @@ describe('DomLayout', () => {
                     contentBefore: 'a[b<br>c]d',
                     stepFunction: async (editor: JWEditor) => {
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
 
                         const renderer = editor.plugins.get(Renderer);
                         const br = editable.children()[2];
@@ -2344,7 +2340,7 @@ describe('DomLayout', () => {
                     contentBefore: 'a[b<br>c]d',
                     stepFunction: async (editor: JWEditor) => {
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
 
                         const renderer = editor.plugins.get(Renderer);
                         const br = editable.children()[2];
@@ -2378,7 +2374,7 @@ describe('DomLayout', () => {
                     contentBefore: 'a<b>[b</b><br><b>c]</b>d',
                     stepFunction: async (editor: JWEditor) => {
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
 
                         const br = editable.children()[2];
 
@@ -2409,7 +2405,7 @@ describe('DomLayout', () => {
                     contentBefore: 'aa[a<b>bbb</b>ccc]',
                     stepFunction: async (editor: JWEditor) => {
                         const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
                         const domEditable = domEngine.getDomNodes(editable)[0] as Element;
 
                         mutationNumber = 0;
@@ -3265,7 +3261,7 @@ describe('DomLayout', () => {
 
                 const layout = editor.plugins.get(Layout);
                 const domLayout = layout.engines.dom as DomLayoutEngine;
-                const section = domLayout.components.get('test')[0];
+                const section = domLayout.components.test[0];
                 const div = section.firstChild();
                 const p = div.firstChild();
 
@@ -3336,7 +3332,7 @@ describe('DomLayout', () => {
 
                 const layout = editor.plugins.get(Layout);
                 const domLayout = layout.engines.dom as DomLayoutEngine;
-                const section = domLayout.components.get('test')[0];
+                const section = domLayout.components.test[0];
                 const div = section.firstChild();
                 const p = div.firstChild();
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
@@ -3398,7 +3394,7 @@ describe('DomLayout', () => {
                 const custom = new CustomNode();
                 const layout = editor.plugins.get(Layout);
                 const domLayout = layout.engines.dom as DomLayoutEngine;
-                const div = domLayout.components.get('test')[0];
+                const div = domLayout.components.test[0];
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {

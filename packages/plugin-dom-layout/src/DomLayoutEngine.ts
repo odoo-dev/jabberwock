@@ -76,7 +76,7 @@ export class DomLayoutEngine extends LayoutEngine {
         for (const componentId in this.componentDefinitions) {
             const location = this.locations[componentId];
             if (location) {
-                const nodes = this.components.get(componentId);
+                const nodes = this.components[componentId];
                 for (const node of nodes) {
                     const domNodes = this._domReconciliationEngine.toDom(node);
                     if (location[1] === 'replace') {
@@ -207,7 +207,7 @@ export class DomLayoutEngine extends LayoutEngine {
 
         // Append in dom if needed.
         for (const componentId in this.locations) {
-            const nodes = this.components.get(componentId);
+            const nodes = this.components[componentId];
             const needInsert = nodes.find(node => {
                 const domNodes = this._domReconciliationEngine.toDom(node);
                 return !domNodes.length || domNodes.some(node => !node.parentNode);
@@ -299,7 +299,7 @@ export class DomLayoutEngine extends LayoutEngine {
                     up[1] &&
                     object instanceof AbstractNode &&
                     (up[1] as string[]).includes('parent') &&
-                    !object.parent
+                    (!object.parent || !object.id)
                 ) {
                     remove.add(object as VNode);
                     for (const child of object.descendants()) {
@@ -526,7 +526,9 @@ export class DomLayoutEngine extends LayoutEngine {
                 }
                 parents.push(ancestor);
                 ancestor = ancestor.parent;
-                if (!ancestor) {
+                if (!ancestor || !ancestor.id) {
+                    // A VNode without an id does not exist yet/anymore in the
+                    // current memory slice.
                     // The VNode is not in the domLayout.
                     nodesInNotRoot.add(node);
                     for (const parent of parents) {
@@ -547,6 +549,7 @@ export class DomLayoutEngine extends LayoutEngine {
         const selection = this.editor.selection;
         const domNodes = this._domReconciliationEngine.toDom(selection.anchor.parent);
         if (!domNodes.length) {
+            document.getSelection().removeAllRanges();
             return;
         }
         if (
@@ -554,12 +557,13 @@ export class DomLayoutEngine extends LayoutEngine {
             selection.focus.ancestors().pop() !== this.root
         ) {
             console.warn('Cannot render a selection that is outside the Layout.');
+            document.getSelection().removeAllRanges();
         }
         const anchor = this._domReconciliationEngine.getLocations(selection.anchor);
         const focus = this._domReconciliationEngine.getLocations(selection.focus);
 
-        const document = anchor[0].ownerDocument;
-        const domSelection = document.getSelection();
+        const doc = anchor[0].ownerDocument;
+        const domSelection = doc.getSelection();
 
         if (
             domSelection.anchorNode === anchor[0] &&
@@ -570,7 +574,7 @@ export class DomLayoutEngine extends LayoutEngine {
             return;
         }
 
-        const domRange = document.createRange();
+        const domRange = doc.createRange();
         if (selection.direction === Direction.FORWARD) {
             domRange.setStart(anchor[0], anchor[1]);
             domRange.collapse(true);
@@ -612,7 +616,7 @@ export class DomLayoutEngine extends LayoutEngine {
         }
 
         const domNodes: Node[] = [];
-        for (const node of this.components.get(id)) {
+        for (const node of this.components[id]) {
             domNodes.push(...this._domReconciliationEngine.toDom(node));
         }
         if (!domNodes.length && this.locations[id][1] === 'replace') {

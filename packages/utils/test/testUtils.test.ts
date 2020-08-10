@@ -41,7 +41,7 @@ describe('core', () => {
                         contentBefore: '<p>[a]</p>',
                         stepFunction: (editor: JWEditor) => {
                             const domEngine = editor.plugins.get(Layout).engines.dom;
-                            const editable = domEngine.components.get('editable')[0];
+                            const editable = domEngine.components.editable[0];
                             expect(editable instanceof FragmentNode).to.be.true;
                             expect(editable.children().length).to.equal(1);
                             const p = editable.children()[0] as VElement;

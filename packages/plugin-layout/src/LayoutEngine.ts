@@ -1,6 +1,8 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import JWEditor from '../../core/src/JWEditor';
 import { ZoneIdentifier, ZoneNode } from './ZoneNode';
+import { VersionableArray } from '../../core/src/Memory/VersionableArray';
+import { VersionableObject } from '../../core/src/Memory/VersionableObject';
 
 export type ComponentId = string;
 export type LayoutEngineId = string;
@@ -17,7 +19,7 @@ export abstract class LayoutEngine {
     protected componentZones: Record<ComponentId, ZoneIdentifier[]> = {};
     readonly root = new ZoneNode({ managedZones: ['root'] });
 
-    components: Map<ComponentId, VNode[]> = new Map();
+    components = new VersionableObject() as Record<ComponentId, VNode[]>;
 
     constructor(public editor: JWEditor) {}
 
@@ -37,13 +39,14 @@ export abstract class LayoutEngine {
             throw new Error('Please define a "default" zone in your template.');
         }
         this.editor.memory.attach(this.root);
+        this.editor.memory.attach(this.components);
     }
     /**
      * Hide all components.
      */
     async stop(): Promise<void> {
-        for (const component of this.components.values()) {
-            for (const node of component) {
+        for (const id in this.components) {
+            for (const node of this.components[id]) {
                 const zone = node.ancestor(ZoneNode);
                 if (zone) {
                     zone.hide(node);
@@ -52,7 +55,7 @@ export abstract class LayoutEngine {
         }
         this.componentDefinitions = {};
         this.componentZones = {};
-        this.components.clear();
+        this.components = {};
         this.root.empty();
     }
 
@@ -132,7 +135,7 @@ export abstract class LayoutEngine {
      *      component from this zone only
      */
     async remove(componentId: ComponentId, zoneId?: ZoneIdentifier): Promise<ZoneNode[]> {
-        const components = [...(this.components.get(componentId) || [])];
+        const components = [...(this.components[componentId] || [])];
         const zones: ZoneNode[] = [];
         let component: VNode;
         while ((component = components.pop())) {
@@ -172,7 +175,7 @@ export abstract class LayoutEngine {
      * @param componentId
      */
     async show(componentId: ComponentId): Promise<VNode[]> {
-        const components = this.components.get(componentId);
+        const components = this.components[componentId];
         if (!components?.length) {
             console.warn('No component to show. Prepend or append it in a zone first.');
         } else {
@@ -190,7 +193,7 @@ export abstract class LayoutEngine {
      * @param componentId
      */
     async hide(componentId: ComponentId): Promise<VNode[]> {
-        const components = this.components.get(componentId);
+        const components = this.components[componentId];
         if (!components?.length) {
             console.warn('No component to hide. Prepend or append it in a zone first.');
         } else {
@@ -242,7 +245,7 @@ export abstract class LayoutEngine {
                         (zoneIds && zone.managedZones.find(zoneId => zoneIds.includes(zoneId))) ||
                         zone.managedZones.includes(componentId),
                 );
-                const components = this.components.get(componentId);
+                const components = this.components[componentId];
                 if (components) {
                     // Excluding the ones that are contained within the given node.
                     // Avoid loop with child in itself.
@@ -271,7 +274,12 @@ export abstract class LayoutEngine {
         props?: {},
         prepend = false,
     ): Promise<VNode[]> {
-        const components = this.components.get(componentDefinition.id) || [];
+        let components = this.components[componentDefinition.id];
+        if (!components) {
+            // Set the local reference.
+            components = new VersionableArray();
+            this.components[componentDefinition.id] = components;
+        }
         // Add into the container.
         const newComponents: VNode[] = [];
         for (const zone of zones) {
@@ -284,10 +292,6 @@ export abstract class LayoutEngine {
                 zone.append(...nodes);
             }
         }
-
-        // Set the local reference.
-        this.components.set(componentDefinition.id, components);
-
         // Return the components that were newly created.
         return newComponents;
     }
@@ -299,8 +303,8 @@ export abstract class LayoutEngine {
         for (const zone of zones) {
             for (const child of zone.children()) {
                 zone.removeChild(child);
-                for (const component of this.components) {
-                    const nodes = component[1];
+                for (const id in this.components) {
+                    const nodes = this.components[id];
                     if (nodes.includes(child)) {
                         nodes.splice(nodes.indexOf(child), 1);
                         break;

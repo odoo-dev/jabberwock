@@ -568,7 +568,7 @@ describe('VDocument', () => {
                     stepFunction: (editor: JWEditor) => {
                         const pluginLayout = editor.plugins.get(Layout);
                         const domEngine = pluginLayout.engines.dom;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
                         return editor.execCommand(context => {
                             editable.firstChild().breakable = false;
                             editable.lastChild().breakable = false;
@@ -1549,7 +1549,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     await editor.execWithRange<Char>(VRange.at(aNode), 'insertText', { text: 'c' });
                 },
@@ -1561,7 +1561,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     await editor.execWithRange<Char>(VRange.selecting(aNode, aNode), 'insertText', {
                         text: 'c',
@@ -1575,7 +1575,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.BEFORE],
@@ -1591,7 +1591,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.BEFORE],
@@ -1607,7 +1607,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     const rangeParams: [Point, Point] = [
                         [aNode, RelativePosition.AFTER],
@@ -1623,7 +1623,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     const bNode = editable.next(node => node.name === 'b');
                     const rangeParams: [Point, Point] = [
@@ -1640,7 +1640,7 @@ describe('VDocument', () => {
                 contentBefore: 'ab[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const aNode = editable.next(node => node.name === 'a');
                     const bNode = editable.next(node => node.name === 'b');
                     const rangeParams: [Point, Point] = [

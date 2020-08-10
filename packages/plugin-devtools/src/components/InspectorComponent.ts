@@ -29,7 +29,7 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
     }[] = [];
 
     state: InspectorState = {
-        selectedID: this.domEngine.components.get('editable')[0]?.id || this.domEngine.root.id,
+        selectedID: this.domEngine.components.editable[0]?.id || this.domEngine.root.id,
     };
     selectedNode = this.getNode(this.state.selectedID);
     private _inspecting = new Set<Document | ShadowRoot>();

@@ -541,7 +541,7 @@ describe('DomShadow', async () => {
                 setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
                 domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                editable = domEngine.components.get('editable')[0].firstChild();
+                editable = domEngine.components.editable[0].firstChild();
             });
             afterEach(async () => {
                 return editor.stop();
@@ -1148,7 +1148,7 @@ describe('DomShadow', async () => {
             );
             await editor.start();
             const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            const editable = domEngine.components.get('editable')[0].firstChild();
+            const editable = domEngine.components.editable[0].firstChild();
 
             // key: o
             await triggerEvents([

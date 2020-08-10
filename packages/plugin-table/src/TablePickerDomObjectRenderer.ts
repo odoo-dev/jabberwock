@@ -31,7 +31,7 @@ export class TablePickerDomObjectRenderer extends NodeRenderer<DomObject> {
                 if (
                     attach &&
                     tablePlugin.isTablePickerOpen &&
-                    layout.components.get('TablePicker').length
+                    layout.components.TablePicker.length
                 ) {
                     await layout.remove('TablePicker');
                 }

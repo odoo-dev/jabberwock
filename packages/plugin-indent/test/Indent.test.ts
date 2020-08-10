@@ -947,7 +947,7 @@ describePlugin(Indent, testEditor => {
                 contentBefore: 'ab<br>cd[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
                     await editor.execWithRange<Indent>(VRange.selecting(bNode, dNode), 'indent');
@@ -1025,7 +1025,7 @@ describePlugin(Indent, testEditor => {
                 contentBefore: '\u2003ab<br>\u2003cd[]',
                 stepFunction: async (editor: JWEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const bNode = editable.next(node => node.name === 'b');
                     const dNode = editable.next(node => node.name === 'd');
                     await editor.execWithRange<Indent>(VRange.selecting(bNode, dNode), 'outdent');

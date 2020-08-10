@@ -47,7 +47,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      */
     selectAll(): void {
         const domEngine = this.dependencies.get(Layout).engines.dom;
-        const editable = domEngine.components.get('editable')[0];
+        const editable = domEngine.components.editable[0];
         this.editor.selection.set({
             anchorNode: editable.firstLeaf(),
             anchorPosition: RelativePosition.BEFORE,
