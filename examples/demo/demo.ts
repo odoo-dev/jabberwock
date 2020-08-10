@@ -13,6 +13,7 @@ import { VNode } from '../../packages/core/src/VNodes/VNode';
 
 import '../utils/fontawesomeAssets';
 import '../../packages/plugin-toolbar/assets/Toolbar.css';
+import { Table } from '../../packages/plugin-table/src/Table';
 
 const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';
@@ -24,6 +25,9 @@ editor.load(FontAwesome);
 // editor.load(DevTools);
 editor.configure(DomLayout, {
     location: [target, 'replace'],
+});
+editor.configure(Table, {
+    inlineUI: true,
 });
 const config: JWEditorConfig & { loadables: Loadables<Layout> } = {
     loadables: {
