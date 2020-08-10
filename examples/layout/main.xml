@@ -1,3 +1,9 @@
 <b>replace the target, zone "custom" just after this bold tag, and zone "main" after without any container</b>
 <my-custom-zone><t t-zone="custom"/></my-custom-zone>
-<t-theme><t t-zone="main"/></t-theme>
+<table width="100%">
+    <tr>
+        <td width="10%">main.xml td</td>
+        <td width="80%"><t t-zone="main"/></td>
+        <td width="10%">main.xml td</td>
+    </tr>
+</table>

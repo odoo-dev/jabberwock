@@ -22,7 +22,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseEditable } from '../../utils/src/configuration';
 
 function waitIframeLoading(): Promise<void> {
-    return new Promise(r => setTimeout(r, 5));
+    return new Promise(r => setTimeout(r, 15));
 }
 
 const container = document.createElement('div');
@@ -481,7 +481,6 @@ describe('Iframe', async () => {
             const p1 = editable.firstChild;
             const text1 = p1.firstChild;
             const p2 = editable.childNodes[1];
-            const text2 = p2.firstChild;
             await nextTick();
 
             triggerEvent(p1, 'mousedown', {
@@ -491,7 +490,7 @@ describe('Iframe', async () => {
                 clientY: 10,
             });
             setSelection(text1, 1, text1, 1);
-            setSelection(text1, 1, text2, 1);
+            setSelection(text1, 1, text1, 1);
             triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             await nextTick();
@@ -501,12 +500,108 @@ describe('Iframe', async () => {
                 node => node instanceof VElement && node.htmlTag === 'SECTION',
             );
             expect(!!sectionNode).to.equal(true);
-            expect(editor.selection.anchor.previous()?.id).to.equal(
+            expect([
+                editor.selection.anchor.previous()?.id,
+                editor.selection.focus.previous()?.id,
+            ]).to.deep.equal([
                 sectionNode.firstDescendant(CharNode).id,
+                sectionNode.firstDescendant(CharNode).id,
+            ]);
+
+            const domSelection = doc.getSelection();
+            expect({
+                anchorNode: domSelection.anchorNode,
+                anchorOffset: domSelection.anchorOffset,
+                focusNode: domSelection.focusNode,
+                focusOffset: domSelection.focusOffset,
+            }).to.deep.equal({
+                anchorNode: text1,
+                anchorOffset: 1,
+                focusNode: text1,
+                focusOffset: 1,
+            });
+
+            await editor.stop();
+        });
+        it('mouse setRange (ubuntu chrome) not colapsed', async () => {
+            const editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(Iframe);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const iframe = new IframeNode();
+                            iframe.append(...nodes);
+                            return [iframe];
+                        },
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            section.innerHTML = '<p>aaaaa</p><p>bbbbb</p><p>ccccc<br/><br/></p>';
+            await editor.start();
+            await waitIframeLoading();
+
+            expect(
+                !!editor.selection.anchor.ancestor(
+                    node => node instanceof VElement && node.htmlTag === 'SECTION',
+                ),
+            ).to.equal(false);
+
+            const doc = container.querySelector('iframe').contentWindow.document;
+            const root = doc.querySelector('jw-iframe').shadowRoot;
+            const editable = root.querySelector('section');
+            const p1 = editable.firstChild;
+            const text1 = p1.firstChild;
+            const p2 = editable.childNodes[1];
+            const text2 = p2.firstChild;
+            await nextTick();
+
+            triggerEvent(p1, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 30,
+                clientY: 25,
+            });
+            setSelection(text1, 1, text1, 1);
+            setSelection(text1, 1, text2, 4);
+            triggerEvent(p1, 'click', { button: 2, detail: 0, clientX: 30, clientY: 25 });
+            triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 30, clientY: 40 });
+            await nextTick();
+            await nextTick();
+
+            const sectionNode = editor.selection.anchor.ancestor(
+                node => node instanceof VElement && node.htmlTag === 'SECTION',
             );
-            expect(editor.selection.focus.previous()?.id).to.equal(
-                sectionNode.children()[1].firstChild().id,
-            );
+            expect(!!sectionNode).to.equal(true);
+            expect([
+                editor.selection.anchor.previous()?.id,
+                editor.selection.focus.previous()?.id,
+            ]).to.deep.equal([
+                sectionNode.firstChild().children()[0].id,
+                sectionNode.children()[1].children()[3].id,
+            ]);
+
+            const domSelection = doc.getSelection();
+            expect({
+                anchorNode: domSelection.anchorNode,
+                anchorOffset: domSelection.anchorOffset,
+                focusNode: domSelection.focusNode,
+                focusOffset: domSelection.focusOffset,
+            }).to.deep.equal({
+                anchorNode: text1,
+                anchorOffset: 1,
+                focusNode: text2,
+                focusOffset: 4,
+            });
+
             await editor.stop();
         });
     });
