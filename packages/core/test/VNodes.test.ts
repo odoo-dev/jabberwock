@@ -906,7 +906,7 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
-                                const editable = domEngine.components.get('editable')[0];
+                                const editable = domEngine.components.editable[0];
                                 const a = editable.firstLeaf();
                                 const ancestors = a.ancestors();
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
@@ -927,7 +927,7 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
-                                const editable = domEngine.components.get('editable')[0];
+                                const editable = domEngine.components.editable[0];
                                 const a = editable.firstLeaf();
                                 const ancestors = a.ancestors(ancestor => {
                                     return (
@@ -953,7 +953,7 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
-                                const editable = domEngine.components.get('editable')[0];
+                                const editable = domEngine.components.editable[0];
                                 const descendants = editable.descendants();
                                 expect(
                                     descendants.map(descendant => descendant.name),
@@ -972,7 +972,7 @@ describe('core', () => {
                             contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
-                                const editable = domEngine.components.get('editable')[0];
+                                const editable = domEngine.components.editable[0];
                                 const descendants = editable.descendants(
                                     descendant =>
                                         !(descendant instanceof HeadingNode) ||
@@ -1201,7 +1201,7 @@ describe('core', () => {
                     editor.load(MyCustomPlugin);
                     await editor.start();
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const customVNode = editable.firstChild();
                     expect(customVNode.constructor.name).to.equal('MyCustomNode');
                     expect(customVNode instanceof MyCustomNode).to.be.true;

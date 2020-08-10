@@ -885,7 +885,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row0 = table.children(TableRowNode)[0];
                     await editor.execCommand('addRowAbove');
@@ -989,7 +989,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row1 = table.children(TableRowNode)[1];
                     await editor.execCommand('addRowAbove');
@@ -1097,7 +1097,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 2, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row2 = table.children(TableRowNode)[2];
                     await editor.execCommand('addRowAbove');
@@ -1200,7 +1200,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 3, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row3 = table.children(TableRowNode)[3];
                     await editor.execCommand('addRowAbove');
@@ -1307,7 +1307,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 4, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row4 = table.children(TableRowNode)[4];
                     await editor.execCommand('addRowAbove');
@@ -1424,7 +1424,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 5, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row5 = table.children(TableRowNode)[5];
                     await editor.execCommand('addRowAbove');
@@ -1543,7 +1543,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 6, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row6 = table.children(TableRowNode)[6];
                     await editor.execCommand('addRowAbove');
@@ -1658,7 +1658,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 7, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row7 = table.children(TableRowNode)[7];
                     await editor.execCommand('addRowAbove');
@@ -1760,7 +1760,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 8, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row8 = table.children(TableRowNode)[8];
                     await editor.execCommand('addRowAbove');
@@ -1871,7 +1871,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 9, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row9 = table.children(TableRowNode)[9];
                     await editor.execCommand('addRowAbove');
@@ -1973,7 +1973,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 10, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row10 = table.children(TableRowNode)[10];
                     await editor.execCommand('addRowAbove');
@@ -2090,7 +2090,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row0 = table.children(TableRowNode)[0];
                     await editor.execCommand('addRowBelow');
@@ -2194,7 +2194,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row1 = table.children(TableRowNode)[1];
                     await editor.execCommand('addRowBelow');
@@ -2302,7 +2302,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 2, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row2 = table.children(TableRowNode)[2];
                     await editor.execCommand('addRowBelow');
@@ -2405,7 +2405,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 3, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row3 = table.children(TableRowNode)[3];
                     await editor.execCommand('addRowBelow');
@@ -2522,7 +2522,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 4, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row4 = table.children(TableRowNode)[4];
                     await editor.execCommand('addRowBelow');
@@ -2642,7 +2642,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 5, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row5 = table.children(TableRowNode)[5];
                     await editor.execCommand('addRowBelow');
@@ -2754,7 +2754,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 6, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row6 = table.children(TableRowNode)[6];
                     await editor.execCommand('addRowBelow');
@@ -2857,7 +2857,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 7, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row7 = table.children(TableRowNode)[7];
                     await editor.execCommand('addRowBelow');
@@ -2969,7 +2969,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 8, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row8 = table.children(TableRowNode)[8];
                     await editor.execCommand('addRowBelow');
@@ -3076,7 +3076,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 9, 2),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row9 = table.children(TableRowNode)[9];
                     await editor.execCommand('addRowBelow');
@@ -3188,7 +3188,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 9, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const row9 = table.children(TableRowNode)[9];
                     const row10 = table.children(TableRowNode)[10];
@@ -3298,7 +3298,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 10, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     await editor.execCommand('addRowBelow');
                     const row10 = table.children(TableRowNode)[10];
@@ -3425,7 +3425,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col0 = table.columns[0];
                     await editor.execCommand('addColumnBefore');
@@ -3535,7 +3535,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 0, 1),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
 
                     const col1 = table.columns[1];
@@ -3652,7 +3652,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 2),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col2 = table.columns[2];
                     await editor.execCommand('addColumnBefore');
@@ -3771,7 +3771,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 3),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col3 = table.columns[3];
                     await editor.execCommand('addColumnBefore');
@@ -3884,7 +3884,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 0, 0),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col0 = table.columns[0];
                     await editor.execCommand('addColumnAfter');
@@ -4001,7 +4001,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 1),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col1 = table.columns[1];
                     await editor.execCommand('addColumnAfter');
@@ -4123,7 +4123,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 2),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col2 = table.columns[2];
                     await editor.execCommand('addColumnAfter');
@@ -4240,7 +4240,7 @@ describePlugin(Table, testEditor => {
                 contentBefore: withSelectedCell(element, 1, 3),
                 stepFunction: async (editor: BasicEditor) => {
                     const domEngine = editor.plugins.get(Layout).engines.dom;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const table = editable.firstChild() as TableNode;
                     const col3 = table.columns[3];
                     await editor.execCommand('addColumnAfter');

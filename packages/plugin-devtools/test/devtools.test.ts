@@ -185,7 +185,7 @@ describe('Plugin: DevTools', () => {
         it('should display the root by default in info', async () => {
             await openDevTools();
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
-            const root = domEngine.components.get('editable')[0];
+            const root = domEngine.components.editable[0];
             const aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
@@ -274,7 +274,7 @@ describe('Plugin: DevTools', () => {
             );
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
-            const root = domEngine.components.get('editable')[0];
+            const root = domEngine.components.editable[0];
             const aResult =
                 '<devtools-about>' +
                 '<devtools-type>' +
@@ -510,10 +510,7 @@ describe('Plugin: DevTools', () => {
             expect(bold.classList.contains('folded')).to.equal(true, 'node is folded');
             expect(bold.querySelector('devtools-children')).to.equal(null);
 
-            const vNodeChar = domEngine.components
-                .get('editable')[0]
-                .children()[1]
-                .children()[1];
+            const vNodeChar = domEngine.components.editable[0].children()[1].children()[1];
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
@@ -653,10 +650,7 @@ describe('Plugin: DevTools', () => {
 
             expect(container.querySelector('b').parentElement.innerHTML).to.equal('a<b>z</b>c');
             expect(
-                !!domEngine.components
-                    .get('editable')[0]
-                    .descendants(CharNode)
-                    .find(c => c.char === 'z'),
+                !!domEngine.components.editable[0].descendants(CharNode).find(c => c.char === 'z'),
             ).to.equal(true, 'z should be in vDocument');
 
             await nextTickFrame();
@@ -762,7 +756,7 @@ describe('Plugin: DevTools', () => {
                 clientY: pos.top,
             });
 
-            const vNode = domEngine.components.get('editable')[0].children()[1];
+            const vNode = domEngine.components.editable[0].children()[1];
 
             let about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             let aResult =
@@ -1067,10 +1061,7 @@ describe('Plugin: DevTools', () => {
                 );
                 await nextTickFrame();
 
-                charBeforeChange = domEngine.components
-                    .get('editable')[0]
-                    .children()[1]
-                    .children()[1];
+                charBeforeChange = domEngine.components.editable[0].children()[1].children()[1];
 
                 const container = wrapper
                     .querySelector('jw-editor')

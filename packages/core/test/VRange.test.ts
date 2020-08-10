@@ -12,7 +12,7 @@ describe('VRange', () => {
                     await editor.execCommand(async () => {
                         const nodes = editor.selection.range.split();
                         const domEngine = editor.plugins.get(Layout).engines.dom;
-                        const editable = domEngine.components.get('editable')[0];
+                        const editable = domEngine.components.editable[0];
                         editable.lastChild().after(nodes[0]);
                     });
                     await editor.execCommand('refresh');

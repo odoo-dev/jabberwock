@@ -424,7 +424,7 @@ describe('Keymap', () => {
                     const execSpy = spy(editor, 'execCommand');
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     const domEditable = domEngine.getDomNodes(editable)[0] as Element;
 
                     await keydown(domEditable, 'a', {
@@ -469,7 +469,7 @@ describe('Keymap', () => {
                     const execSpy = spy(editor, 'execCommand');
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     let domEditable = domEngine.getDomNodes(editable)[0] as Element;
                     await keydown(domEditable, 'a', { ctrlKey: true });
                     domEditable = domEngine.getDomNodes(editable)[0] as Element;
@@ -523,7 +523,7 @@ describe('Keymap', () => {
                     const execSpy = spy(editor, 'execCommand');
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     let domEditable = domEngine.getDomNodes(editable)[0] as Element;
                     await keydown(domEditable, 'a', { ctrlKey: true });
                     domEditable = domEngine.getDomNodes(editable)[0] as Element;
@@ -576,7 +576,7 @@ describe('Keymap', () => {
                     editor.execCommand = (): Promise<void> => Promise.resolve();
                     const execSpy = spy(editor, 'execCommand');
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                    const editable = domEngine.components.get('editable')[0];
+                    const editable = domEngine.components.editable[0];
                     let domEditable = domEngine.getDomNodes(editable)[0] as Element;
                     await keydown(domEditable, 'a', { ctrlKey: true });
                     domEditable = domEngine.getDomNodes(editable)[0] as Element;

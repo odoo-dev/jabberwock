@@ -237,10 +237,7 @@ describe('core', () => {
                         await editor.execCommand(async () => {
                             const layout = editor.plugins.get(Layout);
                             const domEngine = layout.engines.dom;
-                            domEngine.components
-                                .get('editable')[0]
-                                .firstLeaf()
-                                .remove();
+                            domEngine.components.editable[0].firstLeaf().remove();
                         });
                     },
                     contentAfter: '<div>b[]</div>',

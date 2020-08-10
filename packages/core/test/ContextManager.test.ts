@@ -308,7 +308,7 @@ describe('core', () => {
 
                         await editor.execCommand(async () => {
                             const domEngine = editor.plugins.get(Layout).engines.dom;
-                            const editable = domEngine.components.get('editable')[0];
+                            const editable = domEngine.components.editable[0];
                             newSelection.setAt(editable);
                         });
                         const commands: CommandImplementation[] = [

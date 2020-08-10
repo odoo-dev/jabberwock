@@ -63,7 +63,7 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     async activate(params: CommandParams): Promise<void> {
         this.active = true;
         const domLayoutEngine = this.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-        const editable = domLayoutEngine.components.get('editable')[0];
+        const editable = domLayoutEngine.components.editable[0];
 
         // Update the view's contents.
         const domEditable = domLayoutEngine.getDomNodes(editable)[0] as Element;
@@ -76,7 +76,7 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     async deactivate(params: CommandParams): Promise<void> {
         this.active = false;
         const domLayoutEngine = this.editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-        const editable = domLayoutEngine.components.get('editable')[0];
+        const editable = domLayoutEngine.components.editable[0];
 
         // Parse the code view into the editable.
         const codeContainer = document.createElement('div');

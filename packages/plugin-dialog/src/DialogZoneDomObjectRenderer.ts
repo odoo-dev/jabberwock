@@ -46,8 +46,8 @@ export class DialogZoneDomObjectRenderer extends NodeRenderer<DomObject> {
         content.appendChild(this.engine.renderPlaceholder(node));
         let componentId: ComponentId;
         const components = this.engine.editor.plugins.get(Layout).engines.dom.components;
-        for (const [id, nodes] of components) {
-            if (nodes.includes(node)) {
+        for (const id in components) {
+            if (components[id].includes(node)) {
                 componentId = id;
             }
         }
