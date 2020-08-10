@@ -393,6 +393,19 @@ export class DomLayoutEngine extends LayoutEngine {
             for (const node of update) {
                 cache.cachedCompatibleRenderer.delete(node);
             }
+            for (const node of remove) {
+                cache.cachedCompatibleRenderer.delete(node);
+            }
+
+            // Add removed nodes modifiers for invalidation.
+            for (const node of remove) {
+                if (node.modifiers) {
+                    // If the node is created after this memory slice (undo),
+                    // the node has no values, no id, no modifiers... But the
+                    // modifiers is inside the list of removed objects.
+                    node.modifiers.map(modifier => updatedModifiers.add(modifier));
+                }
+            }
 
             // Invalidate compatible renderer cache and modifier compare cache.
             for (const modifier of updatedModifiers) {
@@ -416,7 +429,7 @@ export class DomLayoutEngine extends LayoutEngine {
 
             // Get all linked and dependent VNodes and Modifiers to invalidate cache.
             const treated = new Set<DomObject>();
-            const nodesOrModifiers = [...update, ...updatedModifiers];
+            const nodesOrModifiers = [...update, ...remove, ...updatedModifiers];
             const treatedItem = new Set<VNode | Modifier>(nodesOrModifiers);
             for (const nodeOrModifier of nodesOrModifiers) {
                 const linkedRenderings = cache.nodeDependent.get(nodeOrModifier);
@@ -454,27 +467,32 @@ export class DomLayoutEngine extends LayoutEngine {
                 }
             }
 
+            // Remove all removed children from node to update.
+            for (const node of remove) {
+                update.delete(node);
+            }
+
             // Invalidate VNode cache origin, location and linked.
-            for (const node of update) {
+            for (const node of [...update, ...remove]) {
                 cache.renderingPromises.delete(node);
                 const item = cache.renderings.get(node);
                 if (item) {
-                    cache.renderingDependent.delete(item);
-                    cache.locations.delete(item);
+                    const items = [item];
+                    for (const item of items) {
+                        cache.renderingDependent.delete(item);
+                        cache.locations.delete(item);
+                        if ('children' in item) {
+                            for (const child of item.children) {
+                                if (!(child instanceof AbstractNode)) {
+                                    items.push(child);
+                                }
+                            }
+                        }
+                    }
                 }
                 cache.renderings.delete(node);
                 cache.nodeDependent.delete(node);
                 cache.linkedNodes.delete(node);
-            }
-
-            // Remove all removed children and modifiers.
-            for (const node of remove) {
-                update.delete(node);
-                if (node.modifiers) {
-                    // If the node is created after this memory slice (undo), the
-                    // node has no values, no id, no modifiers...
-                    node.modifiers.map(modifier => updatedModifiers.add(modifier));
-                }
             }
 
             // Invalidate Modifiers cache linked.

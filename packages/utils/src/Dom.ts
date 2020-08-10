@@ -40,3 +40,13 @@ export function nodeLength(node: Node): number {
         return node.childNodes.length;
     }
 }
+
+/**
+ * Return if the node is a text node. Don't use instance of to allow iframe
+ * uses.
+ *
+ * @param node
+ */
+export function isTextNode(node: Node): node is Text {
+    return node.nodeName === '#text';
+}

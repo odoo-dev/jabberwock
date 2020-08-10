@@ -17,6 +17,10 @@ import {
 } from '../../utils/src/testUtils';
 import { Direction } from '../../core/src/VSelection';
 import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
+import {
+    triggerEvent,
+    setSelection as setDomSelection,
+} from '../../plugin-dom-editable/test/eventNormalizerUtils';
 import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
@@ -2400,6 +2404,72 @@ describe('DomLayout', () => {
                     contentAfter: 'a[<b>b<br>c]</b>d',
                 });
             });
+            it('should replace a formating text by the copy-past of same text', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: 'aa[a<b>bbb</b>ccc]',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.get('editable')[0];
+                        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
+
+                        mutationNumber = 0;
+                        triggerEvent(domEditable, 'keydown', {
+                            key: 'v',
+                            code: 'KeyV',
+                            ctrlKey: true,
+                        });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.setData('text/plain', 'abbbccc');
+                        triggerEvent(domEditable, 'paste', { clipboardData: dataTransfer });
+                        await nextTick();
+                        await nextTick();
+
+                        expect(domEditable.innerHTML).to.equal('aaabbbccc');
+
+                        triggerEvent(domEditable, 'mousedown', {
+                            button: 2,
+                            detail: 1,
+                            clientX: 30,
+                            clientY: 65,
+                        });
+                        const text = domEditable.lastChild as Text;
+                        setDomSelection(
+                            text,
+                            text.textContent.length - 2,
+                            text,
+                            text.textContent.length - 2,
+                        );
+                        setDomSelection(
+                            text,
+                            text.textContent.length - 2,
+                            text,
+                            text.textContent.length,
+                        );
+                        await nextTick();
+                        triggerEvent(domEditable, 'click', {
+                            button: 2,
+                            detail: 0,
+                            clientX: 65,
+                            clientY: 30,
+                        });
+                        triggerEvent(domEditable, 'mouseup', {
+                            button: 2,
+                            detail: 0,
+                            clientX: 80,
+                            clientY: 30,
+                        });
+
+                        expect(domEditable.childNodes.length).to.equal(
+                            2,
+                            'at least keep the first text node',
+                        );
+
+                        await nextTick();
+                        await nextTick();
+                    },
+                    contentAfter: 'aaabbbc[cc]',
+                });
+            });
         });
         describe('text', () => {
             let editor: JWEditor;
@@ -3224,7 +3294,7 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should split a paragraph and keep the created nodes', async () => {
+            it('should split a paragraph and keep the created nodes (2)', async () => {
                 const Component: ComponentDefinition = {
                     id: 'test',
                     render(editor: JWEditor): Promise<VNode[]> {
