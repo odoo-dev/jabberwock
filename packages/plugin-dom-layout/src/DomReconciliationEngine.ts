@@ -8,6 +8,7 @@ import {
     DomObjectAttributes,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
+import { isTextNode } from '../../utils/src/Dom';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -440,7 +441,7 @@ export class DomReconciliationEngine {
         // equal to the length of the container. In order to retrieve the last
         // descendent, we need to make sure we target an existing node, ie. an
         // existing index.
-        if (offset >= nodeLength(container)) {
+        if (!isTextNode(domNode) && offset >= nodeLength(container)) {
             forceAfter = true;
             offset = container.childNodes.length - 1;
             while (container.childNodes.length) {
@@ -484,6 +485,16 @@ export class DomReconciliationEngine {
                 offset = this._locations.get(object.object).length - 1;
             } else {
                 offset = 0;
+            }
+        }
+
+        // For domObjectText, add the previous text length as offset.
+        if (object.object.text && isTextNode(domNode)) {
+            const texts = object.dom as Text[];
+            let index = texts.indexOf(domNode);
+            while (index > 0) {
+                index--;
+                offset += texts[index].textContent.length;
             }
         }
 
@@ -1690,14 +1701,14 @@ export class DomReconciliationEngine {
         let textNode: Text;
         if (object.parentDomNode) {
             for (const domNode of object.parentDomNode.childNodes) {
-                if (domNode instanceof Text && this.isAvailableNode(id, domNode)) {
+                if (isTextNode(domNode) && this.isAvailableNode(id, domNode)) {
                     textNode = domNode;
                 }
             }
         }
         if (!textNode && diff) {
             for (const domNode of diff.dom) {
-                if (domNode instanceof Text && this.isAvailableNode(id, domNode)) {
+                if (isTextNode(domNode) && this.isAvailableNode(id, domNode)) {
                     textNode = domNode;
                 }
             }
@@ -1707,14 +1718,19 @@ export class DomReconciliationEngine {
             const textNodes = [textNode];
             let text = textNode;
             while (
-                text.previousSibling instanceof Text &&
+                text.previousSibling &&
+                isTextNode(text.previousSibling) &&
                 this.isAvailableNode(id, text.previousSibling)
             ) {
                 text = text.previousSibling;
                 textNodes.unshift(text);
             }
             text = textNode;
-            while (text.nextSibling instanceof Text && this.isAvailableNode(id, text.nextSibling)) {
+            while (
+                text.nextSibling &&
+                isTextNode(text.nextSibling) &&
+                this.isAvailableNode(id, text.nextSibling)
+            ) {
                 text = text.nextSibling;
                 textNodes.push(text);
             }
