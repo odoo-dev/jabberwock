@@ -18,3 +18,18 @@ table.table-picker td {
 table.table-picker td.highlight {
     background-color: #875A7B;
 }
+
+span.table-handler.fa-plus-square {
+    position: absolute;
+    cursor: pointer;
+    background-color: white;
+    width: 1em;
+    color: #00FF00;
+}
+span.table-handler.fa-minus-square {
+    position: absolute;
+    cursor: pointer;
+    background-color: white;
+    width: 1em;
+    color: #FF0000;
+}

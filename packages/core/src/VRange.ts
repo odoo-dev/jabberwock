@@ -117,6 +117,24 @@ export class VRange {
         return this.startContainer.childVNodes[startIndex + 1] === this.end;
     }
     /**
+     * Return true if the start or end of the range is contained within the
+     * given container.
+     *
+     * @param container
+     */
+    isIn(container: VNode): boolean {
+        let startAncestor: VNode = this.start;
+        let endAncestor: VNode = this.end;
+        while (startAncestor || endAncestor) {
+            if (startAncestor === container || endAncestor === container) {
+                return true;
+            }
+            startAncestor = startAncestor?.parent;
+            endAncestor = endAncestor?.parent;
+        }
+        return false;
+    }
+    /**
      * Return a list of all nodes that are fully selected by this range.
      */
     selectedNodes<T extends VNode>(predicate?: Constructor<T>): T[];

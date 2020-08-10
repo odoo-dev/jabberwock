@@ -14,19 +14,20 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { TableNode } from './TableNode';
 import { distinct } from '../../utils/src/utils';
 import { TableRowNode } from './TableRowNode';
-import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
+import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { TablePickerDomObjectRenderer } from './TablePickerDomObjectRenderer';
 import { TablePickerCellDomObjectRenderer } from './TablePickerCellDomObjectRenderer';
-import '../assets/tablePicker.css';
 import { TablePickerNode } from './TablePickerNode';
+import '../assets/tableUI.css';
 
 export interface TableConfig extends JWPluginConfig {
     minRowCount?: number;
     minColumnCount?: number;
+    inlineUI?: boolean;
 }
 export interface InsertTableParams extends CommandParams {
     rowCount?: number;
@@ -99,7 +100,7 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
             },
             {
                 id: 'TablePicker',
-                async render(editor: JWEditor): Promise<VNode[]> {
+                async render(editor: JWEditor): Promise<TablePickerNode[]> {
                     const tablePlugin = editor.plugins.get(Table);
                     const table = new TablePickerNode({
                         rowCount: tablePlugin.minRowCount,
@@ -152,6 +153,11 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
      * The minimum column count for the table picker (default: 5).
      */
     minColumnCount = 5;
+    /**
+     * If true, add UI buttons inline in the table on render to add/remove
+     * columns/rows.
+     */
+    inlineUI = false;
     constructor(public editor: JWEditor, public config: T) {
         super(editor, config);
         if (config.minRowCount) {
@@ -160,6 +166,7 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
         if (config.minColumnCount) {
             this.minColumnCount = config.minColumnCount;
         }
+        this.inlineUI = !!config.inlineUI;
     }
 
     //--------------------------------------------------------------------------

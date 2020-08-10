@@ -26,6 +26,7 @@ import { ZoneNode } from '../../packages/plugin-layout/src/ZoneNode';
 import { ParagraphNode } from '../../packages/plugin-paragraph/src/ParagraphNode';
 import { ThemeNode } from '../../packages/plugin-theme/src/ThemeNode';
 import { Iframe } from '../../packages/plugin-iframe/src/Iframe';
+import { Table } from '../../packages/plugin-table/src/Table';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
@@ -164,6 +165,9 @@ editor.configure(DomLayout, {
         ['domFooter', [document.body, 'append']],
     ],
     componentZones: [['editable', ['main']]],
+});
+editor.configure(Table, {
+    inlineUI: true,
 });
 
 const toolbarConfig = editor.configuration.plugins.find(

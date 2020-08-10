@@ -39,7 +39,6 @@ import { CommandImplementation, CommandIdentifier } from '../core/src/Dispatcher
 import { JWPlugin, JWPluginConfig } from '../core/src/JWPlugin';
 import { OdooVideo } from '../plugin-odoo-video/src/OdooVideo';
 import { DomZonePosition } from '../plugin-layout/src/LayoutEngine';
-import { HtmlDomRenderingEngine } from '../plugin-html/src/HtmlDomRenderingEngine';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { Odoo } from '../plugin-odoo/src/Odoo';
 import { parseEditable } from '../utils/src/configuration';
@@ -48,7 +47,6 @@ import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
 import { ModeDefinition } from '../core/src/Mode';
 import './odooLayout.css';
-import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { Textarea } from '../plugin-textarea/src/Textarea';
 import { FollowRange } from '../plugin-dom-follow-range/src/FollowRange';
 
@@ -219,6 +217,9 @@ export class OdooWebsiteEditor extends JWEditor {
         this.configure(DomEditable, {
             autoFocus: true,
             source: options.source.firstElementChild as HTMLElement,
+        });
+        this.configure(Table, {
+            inlineUI: true,
         });
         if (options.mode) {
             this.configure({
