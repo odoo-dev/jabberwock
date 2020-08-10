@@ -2,13 +2,14 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Direction } from '../../core/src/VSelection';
 import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
-import { CommandIdentifier } from '../../core/src/Dispatcher';
+import { CommandIdentifier, CommandParams } from '../../core/src/Dispatcher';
 import { InsertTextParams } from '../../plugin-char/src/Char';
 import { VSelectionParams } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { JWEditor } from '../../core/src/JWEditor';
-import { RelativePosition } from '../../core/src/VNodes/VNode';
+import { RelativePosition, Point, VNode } from '../../core/src/VNodes/VNode';
+import { VRange } from '../../core/src/VRange';
 
 export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [DomLayout, Layout];
@@ -67,7 +68,9 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      *
      * @param action
      */
-    private _matchCommand(action: NormalizedAction): [CommandIdentifier, object] {
+    private _matchCommand(
+        action: NormalizedAction,
+    ): [CommandIdentifier, CommandParams, [Point, Point]?] {
         switch (action.type) {
             case 'insertLineBreak':
                 return ['insertLineBreak', {}];
@@ -89,11 +92,42 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             case 'insertParagraphBreak':
                 return ['insertParagraphBreak', {}];
             case 'deleteWord':
-                // TODO: extract range
                 if (action.direction === Direction.FORWARD) {
-                    return ['deleteForward', { range: {} }];
+                    const text = Array.from(action.text);
+                    if (text[text.length - 1] === ' ') {
+                        // Make sure to handle a space _before_ the word.
+                        text.unshift(text.pop());
+                    }
+                    let end: VNode = this.editor.selection.range.end;
+                    while (end && text.length) {
+                        const next = end.nextSibling();
+                        if (next?.textContent === text.shift()) {
+                            end = next;
+                        }
+                    }
+                    return [
+                        'deleteForward',
+                        {},
+                        VRange.selecting(this.editor.selection.range.start, end),
+                    ];
                 } else {
-                    return ['deleteBackward', { range: {} }];
+                    let start: VNode = this.editor.selection.range.start;
+                    const text = Array.from(action.text);
+                    if (text[0] === ' ') {
+                        // Make sure to treat a space _before_ the word.
+                        text.push(text.shift());
+                    }
+                    while (start && text.length) {
+                        const previous = start.previousSibling();
+                        if (previous?.textContent === text.pop()) {
+                            start = previous;
+                        }
+                    }
+                    return [
+                        'deleteBackward',
+                        {},
+                        VRange.selecting(start, this.editor.selection.range.end),
+                    ];
                 }
             case 'deleteContent': {
                 if (action.direction === Direction.FORWARD) {
@@ -135,9 +169,11 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         }
         if (!processed) {
             for (const action of batch.actions) {
-                const commandSpec = this._matchCommand(action);
-                if (commandSpec) {
-                    await this.editor.execCommand(...commandSpec);
+                const [commandName, commandParams, rangeBounds] = this._matchCommand(action);
+                if (commandName && rangeBounds) {
+                    await this.editor.execWithRange(rangeBounds, commandName, commandParams);
+                } else if (commandName) {
+                    await this.editor.execCommand(commandName, commandParams);
                 }
             }
         }

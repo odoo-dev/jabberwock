@@ -14,7 +14,7 @@ export interface InsertParams extends CommandParams {
     node: VNode;
 }
 
-export interface VSelectionParams {
+export interface VSelectionParams extends CommandParams {
     vSelection: VSelectionDescription;
 }
 

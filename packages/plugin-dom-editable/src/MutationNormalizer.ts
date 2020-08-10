@@ -185,10 +185,14 @@ export class MutationNormalizer {
                 }
             }
             insertByChange = insertByChange.slice(0, len);
+            const removeByChange = oldText.slice(
+                oldText.length - changePosition.right - len,
+                oldText.length - changePosition.right,
+            );
             return {
                 index: -1,
                 insert: insertByChange,
-                remove: '',
+                remove: removeByChange,
                 previous: previousLinked,
                 current: currentLinked,
             };
