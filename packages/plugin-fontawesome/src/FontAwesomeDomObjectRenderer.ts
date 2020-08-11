@@ -20,7 +20,12 @@ export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
         node: FontAwesomeNode,
         worker: RenderingEngineWorker<DomObject>,
     ): Promise<DomObject> {
-        const fontawesome: DomObjectElement = { tag: node.htmlTag };
+        const fontawesome: DomObjectElement = {
+            tag: node.htmlTag,
+            attributes: {
+                class: new Set(node.faClasses),
+            },
+        };
         // Surround the fontawesome with two invisible characters so the
         // selection can navigate around it.
         const domObject: DomObjectFragment = {

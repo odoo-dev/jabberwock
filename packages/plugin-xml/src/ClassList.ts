@@ -1,8 +1,7 @@
 import { VersionableObject } from '../../core/src/Memory/VersionableObject';
-import { VersionableSet } from '../../core/src/Memory/VersionableSet';
 
 export class ClassList extends VersionableObject {
-    private _classList: Set<string>;
+    private _classList: Record<string, boolean>;
     constructor(...classList: string[]) {
         super();
         for (const className of classList) {
@@ -18,14 +17,14 @@ export class ClassList extends VersionableObject {
      * Return the number of classes in the set.
      */
     get length(): number {
-        return this._classList?.size || 0;
+        return this._classList ? this.items().length : 0;
     }
     /**
      * Return a textual representation of the set.
      */
     get className(): string {
-        if (!this._classList?.size) return;
-        return Array.from(this._classList).join(' ');
+        if (!this.length) return;
+        return this.items().join(' ');
     }
     /**
      * Reinitialize the set with a new set of classes, from a string to parse.
@@ -56,9 +55,9 @@ export class ClassList extends VersionableObject {
      */
     clone(): ClassList {
         const clone = new ClassList();
-        if (this._classList?.size) {
-            clone._classList = new VersionableSet(this._classList);
-        }
+        // TODO: Maybe this should copy the entire history rather than only the
+        // currently active classes ?
+        clone.add(...this.items());
         return clone;
     }
 
@@ -72,13 +71,23 @@ export class ClassList extends VersionableObject {
      * @param name
      */
     has(name: string): boolean {
-        return this._classList?.has(name) || false;
+        return this._classList?.[name] || false;
     }
     /**
      * Return an array containing all the items in the list.
      */
     items(): string[] {
-        return this._classList ? Array.from(this._classList) : [];
+        return this._classList
+            ? Object.keys(this._classList).filter(key => this._classList[key])
+            : [];
+    }
+    /**
+     * Return a record containing all the past and current classes. Classes that
+     * are not active anymore have their value set to `false`.
+     *
+     */
+    history(): Record<string, boolean> {
+        return Object.assign({ ...this._classList } || {});
     }
     /**
      * Add the given class(es) to the set.
@@ -87,13 +96,13 @@ export class ClassList extends VersionableObject {
      */
     add(...classNames: string[]): void {
         if (!this._classList) {
-            this._classList = new VersionableSet();
+            this._classList = new VersionableObject() as Record<string, boolean>;
         }
         for (const className of classNames) {
             if (className) {
                 const classes = this.parseClassName(className);
                 for (const name of classes) {
-                    this._classList.add(name);
+                    this._classList[name] = true;
                 }
             }
         }
@@ -104,12 +113,12 @@ export class ClassList extends VersionableObject {
      * @param classNames
      */
     remove(...classNames: string[]): void {
-        if (!this._classList?.size) return;
+        if (!this._classList) return;
         for (const className of classNames) {
             if (className) {
                 const classes = this.parseClassName(className);
                 for (const name of classes) {
-                    this._classList.delete(name);
+                    this._classList[name] = false;
                 }
             }
         }
@@ -140,16 +149,16 @@ export class ClassList extends VersionableObject {
      */
     toggle(...classes: string[]): void {
         if (!this._classList) {
-            this._classList = new VersionableSet();
+            this._classList = new VersionableObject() as Record<string, boolean>;
         }
         for (const className of classes) {
             if (className) {
                 const parsed = this.parseClassName(className);
                 for (const name of parsed) {
-                    if (this._classList.has(name)) {
-                        this._classList.delete(name);
+                    if (this._classList[name]) {
+                        this._classList[name] = false;
                     } else {
-                        this._classList.add(name);
+                        this._classList[name] = true;
                     }
                 }
             }
