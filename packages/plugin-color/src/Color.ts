@@ -29,16 +29,16 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
      * Return false otherwise.
      */
     hasColor(node: VNode): boolean;
-    hasColor(color: string, node: VNode): boolean;
-    hasColor(color: string | VNode, node?: VNode): boolean {
+    hasColor(color: string, node: VNode | Format): boolean;
+    hasColor(color: string | VNode, node?: VNode | Format): boolean {
         if (color instanceof AbstractNode) {
             node = color;
         }
-        const nodeBackgroundColor = node.modifiers.find(Attributes)?.style.get(this.styleName);
+        const nodeColor = node.modifiers.find(Attributes)?.style.get(this.styleName);
         if (color instanceof AbstractNode) {
-            return !!nodeBackgroundColor;
+            return !!nodeColor;
         } else {
-            return nodeBackgroundColor === color;
+            return nodeColor === color;
         }
     }
     /**
@@ -54,18 +54,40 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
             const currentCache = inline.cache.style || {};
             inline.cache.style = new CssStyle({ ...currentCache, [this.styleName]: color });
         } else {
-            const selectedNodes = params.context.range.selectedNodes((node: VNode): boolean => {
-                // Skip if the node already has the right color, through an
-                // ancestor or a format.
-                if (this.hasColor(color, node)) return false;
-                const colorAncestor = node.ancestor(this.hasColor.bind(this));
-                return !colorAncestor || !this.hasColor(color, colorAncestor);
-            });
-            for (const node of selectedNodes.filter(node => !selectedNodes.includes(node.parent))) {
-                // Apply the style to the node or its first format.
-                this._nodeOrFirstFormat(node)
-                    .modifiers.get(Attributes)
-                    .style.set(this.styleName, color);
+            let selectedNodes = params.context.range.selectedNodes();
+            selectedNodes = selectedNodes.filter(node => !selectedNodes.includes(node.parent));
+            // Color the highest ancestor.
+            for (const node of selectedNodes) {
+                // Color the highest fully selected format if any.
+                const fullySelectedFormats = this._newFormats(node).filter(format => {
+                    // This format is started by this node. Now find out if we
+                    // end it within the selection.
+                    return selectedNodes.includes(this._lastNodeWithFormat(node, format));
+                });
+                if (fullySelectedFormats.length) {
+                    const highestFullFormat = fullySelectedFormats.pop();
+                    const pairs: [VNode | Format, Format][] = selectedNodes.map(selectedNode => {
+                        const format = this._findFormat(selectedNode, highestFullFormat);
+                        if (format) {
+                            return [this._inheritsColorFrom(selectedNode, color), format];
+                        }
+                    });
+                    for (const pair of pairs) {
+                        if (pair?.[1]) {
+                            // Color the formats.
+                            if (pair[0]) {
+                                // If the node inherited the color, remove the
+                                // inherited color.
+                                this._removeColor(pair[0]);
+                            }
+                            this._applyColor(pair[1], color);
+                        }
+                    }
+                } else if (!this._inheritsColorFrom(node, color)) {
+                    // Skip if the node already has the right color, through an
+                    // ancestor or a format.
+                    this._applyColor(node, color);
+                }
             }
         }
     }
@@ -139,5 +161,70 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
      */
     _isAllColored(node: VNode, color: string): boolean {
         return node.children().every(child => this.hasColor(color, child));
+    }
+    /**
+     * Return the first format that matches the given format, on the given node.
+     *
+     * @param node
+     * @param format
+     */
+    private _findFormat(node: VNode, format: Format): Format {
+        return node.modifiers.filter(Format).find(nodeFormat => nodeFormat.isSameAs(format));
+    }
+    /**
+     * Return the last consecutive node to have the given format (assumed to be
+     * held by the given node too).
+     *
+     * @param node
+     * @param format
+     */
+    private _lastNodeWithFormat(node: VNode, format: Format): VNode {
+        let current = node;
+        let next = node.nextSibling();
+        while (this._findFormat(next, format)) {
+            current = next;
+            next = current.nextSibling();
+        }
+        return current;
+    }
+    /**
+     * Return all formats that are started by the given node.
+     *
+     * @param node
+     */
+    private _newFormats(node: VNode): Format[] {
+        const formats = node.modifiers.filter(Format);
+        const previous = node.previousSibling();
+        // A new format is starting if the previous sibling doesn't have it.
+        if (!previous) return formats;
+        return formats.filter(format => !this._findFormat(previous, format));
+    }
+    /**
+     * If the given node inherits the given color through an ancestor of a
+     * format, or if it simply has it itself, return the node or format it
+     * inherits it from.
+     *
+     * @param node
+     * @param color
+     */
+    private _inheritsColorFrom(node: VNode, color: string): VNode | Format | undefined {
+        if (this.hasColor(color, node)) {
+            return node;
+        }
+        const colorAncestor = node.ancestor(this.hasColor.bind(this));
+        if (colorAncestor && this.hasColor(color, colorAncestor)) {
+            return colorAncestor;
+        }
+        for (const format of node.modifiers.filter(Format)) {
+            if (this.hasColor(color, format)) {
+                return format;
+            }
+        }
+    }
+    private _applyColor(node: VNode | Format, color: string): void {
+        node.modifiers.get(Attributes).style.set(this.styleName, color);
+    }
+    private _removeColor(node: VNode | Format): void {
+        node.modifiers.get(Attributes).style.remove(this.styleName);
     }
 }

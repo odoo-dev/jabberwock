@@ -80,7 +80,7 @@ describePlugin(TextColor, testEditor => {
                     contentAfter: '<p style="color: red;">[abc]</p>',
                 });
             });
-            it('should not set the background color of characters that already have that background color through an ancestor', async () => {
+            it('should not set the color of characters that already have that color through an ancestor', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="color: yellow;">a[bc]d</p>',
                     stepFunction: async editor => {
@@ -89,7 +89,7 @@ describePlugin(TextColor, testEditor => {
                     contentAfter: '<p style="color: yellow;">a[bc]d</p>',
                 });
             });
-            it("should only set the background color of characters that don't already have that background color through an ancestor", async () => {
+            it("should only set the color of characters that don't already have that color through an ancestor", async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="color: yellow;">a[bc</p><p>de]f</p>',
                     stepFunction: async editor => {
@@ -99,7 +99,7 @@ describePlugin(TextColor, testEditor => {
                         '<p style="color: yellow;">a[bc</p><p><span style="color: yellow;">de]</span>f</p>',
                 });
             });
-            it('should not set the background color of characters that already have that background color through a format', async () => {
+            it('should not set the color of characters that already have that color through a format', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a<i style="color: yellow;">b[cd]e</i>f</p>',
                     stepFunction: async editor => {
@@ -108,7 +108,7 @@ describePlugin(TextColor, testEditor => {
                     contentAfter: '<p>a<i style="color: yellow;">b[cd]e</i>f</p>',
                 });
             });
-            it("should only set the background color of characters that don't already have that background color through a format", async () => {
+            it("should only set the color of characters that don't already have that color through a format", async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a<i style="color: yellow;">b[cd</i>e]f</p>',
                     stepFunction: async editor => {
@@ -116,6 +116,58 @@ describePlugin(TextColor, testEditor => {
                     },
                     contentAfter:
                         '<p>a<i style="color: yellow;">b[cd</i><span style="color: yellow;">e]</span>f</p>',
+                });
+            });
+            it('should set the color of an italic container', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab[<i>cd]</i>ef</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'yellow');
+                    },
+                    contentAfter: '<p>ab[<i style="color: yellow;">cd]</i>ef</p>',
+                });
+            });
+            it('should set the color of the first word in an italic container', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab<i>[cd] ef</i>gh</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'yellow');
+                    },
+                    contentAfter: '<p>ab[<i><span style="color: yellow;">cd]</span> ef</i>gh</p>',
+                });
+            });
+            it('should set the color of the second word in an italic container', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>ab<i>cd [ef] gh</i>ij</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'yellow');
+                    },
+                    contentAfter:
+                        '<p>ab<i>cd [<span style="color: yellow;">ef]</span> gh</i>ij</p>',
+                });
+            });
+            it('should set the color of a selection including an italic container', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>a[b<i>cd</i>e]f</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'yellow');
+                    },
+                    contentAfter:
+                        '<p>a[<span style="color: yellow;">b</span><i style="color: yellow;">cd</i><span style="color: yellow;">e]</span>f</p>',
+                });
+            });
+            it('should set the color of a selection already starting and ending with that color', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<p>a[<span style="color: yellow;">b</span><i><span style="color: yellow;">cd</span>ef</i><span style="color: yellow;">g]h</span>f</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'yellow');
+                    },
+                    // We keep a span without attributes because it was parsed
+                    // as a span, not as a color on its text. We don't want to
+                    // break the user's css if it was applied to the span.
+                    contentAfter:
+                        '<p>a[<span style="color: yellow;">b</span><i style="color: yellow;"><span>cd</span>ef</i><span style="color: yellow;">g]h</span>f</p>',
                 });
             });
         });
