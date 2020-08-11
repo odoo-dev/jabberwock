@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "webpack-dev-server --config webpack-examples.config.js",
     "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-examples.config.js",
-    "build-odoo": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-odoo.config.js",
+    "build-odoo": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --display-modules --config webpack-odoo.config.js",
     "perf": "karma start --include-files test/**/*.perf.ts",
     "coverage": "karma start --coverage",
     "debug": "karma start --no-browsers --debug",

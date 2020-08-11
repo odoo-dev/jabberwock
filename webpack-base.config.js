@@ -56,28 +56,6 @@ const mainConfig = {
             'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
         },
     },
-    // We might require this configuration in the future to
-    // bundle the differents parts of the editor.
-    // We do not need the following configuration now.
-    //
-    // optimization: {
-    //     splitChunks: {
-    //         cacheGroups: {
-    //             default: false,
-    //             vendors: false,
-    //             owl: {
-    //                 name: 'owl.lib',
-    //                 chunks: 'all',
-    //                 test: /owl/,
-    //             },
-    //             core: {
-    //                 name: 'core',
-    //                 chunks: 'all',
-    //                 test: /core/,
-    //             },
-    //         },
-    //     },
-    // },
 };
 
 // -----------------------------------------------------------------------------
@@ -111,6 +89,8 @@ const odooBuildPath = path.resolve(__dirname, 'build/odoo');
 const odooBuildFilename = 'odoo-integration.js';
 module.exports.odoo = {
     ...mainConfig,
+    mode: 'production',
+    devtool: 'source-map',
     entry: {
         'odoo-integration': integrationDevPath,
     },
@@ -141,4 +121,23 @@ module.exports.odoo = {
             },
         },
     ],
+    optimization: {
+        minimize: false,
+        splitChunks: {
+            cacheGroups: {
+                default: false,
+                vendors: false,
+                owl: {
+                    name: 'owl.lib',
+                    chunks: 'all',
+                    test: /owl/,
+                },
+                core: {
+                    name: 'plugin-devtools',
+                    chunks: 'all',
+                    test: /plugin-devtools/,
+                },
+            },
+        },
+    },
 };
