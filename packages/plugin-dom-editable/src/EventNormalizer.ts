@@ -1408,11 +1408,12 @@ export class EventNormalizer {
         // part in it. In this case, consider the caret position instead.
         // This can happen when target is an input or a contenteditable=false.
         if (target instanceof Node) {
+            const caretPosition = this._getEventCaretPosition(ev);
             if (
                 !target.contains(selectionDescription.anchorNode) &&
-                !target.contains(selectionDescription.focusNode)
+                !target.contains(selectionDescription.focusNode) &&
+                caretPosition.offsetNode === target
             ) {
-                const caretPosition = this._getEventCaretPosition(ev);
                 selectionDescription = {
                     anchorNode: caretPosition.offsetNode,
                     anchorOffset: caretPosition.offset,
