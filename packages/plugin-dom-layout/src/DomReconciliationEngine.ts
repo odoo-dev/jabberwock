@@ -257,14 +257,18 @@ export class DomReconciliationEngine {
                 if (this._diff[id]) {
                     this._diff[id].askCompleteRedrawing = true;
                 } else if (this._objects[id]) {
-                    const domObject = this._objects[id].object;
+                    const object = this._objects[id];
+                    const domObject = object.object;
+                    if (typeof domObject.detach === 'function') {
+                        domObject.detach(...object.dom);
+                    }
                     this._diff[id] = {
                         id: id,
                         attributes: {},
                         style: {},
                         classList: {},
-                        dom: domObject.dom || [],
-                        parentDomNode: this._objects[id].parentDomNode,
+                        dom: object.dom,
+                        parentDomNode: object.parentDomNode,
                         removedChildren: [],
                         askCompleteRedrawing: true,
                     };
@@ -1475,7 +1479,7 @@ export class DomReconciliationEngine {
             }
         }
         for (const domNode of object.dom) {
-            if (this._fromDom.get(domNode) !== id) {
+            if (this._fromDom.get(domNode) !== id || !domNode.parentNode) {
                 this._fromDom.set(domNode, id);
                 newNode = true;
             }

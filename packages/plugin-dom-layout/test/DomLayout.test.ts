@@ -51,6 +51,7 @@ import { parseElement } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 import { ChangesLocations } from '../../core/src/Memory/Memory';
+import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -2949,6 +2950,46 @@ describe('DomLayout', () => {
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
 
                 expect(mutationNumber).to.equal(2, 'update text; add <p> & text');
+            });
+            it('should split a paragraph with formatted text (firefox)', async () => {
+                const divDom = container.querySelector('div');
+                const pDom = container.querySelector('p');
+
+                const p = div.firstChild();
+                await editor.execCommand(() => {
+                    p.children()[1].modifiers.append(new BoldFormat());
+                    p.children()[5].modifiers.append(new ItalicFormat());
+                });
+
+                expect(divDom.innerHTML).to.equal('<p>a<b>b</b>cde<i>f</i></p>' + '<p>123456</p>');
+
+                await editor.execCommand(async () => {
+                    p.splitAt(p.children()[4]);
+
+                    // Update dom in same time (like firefox).
+
+                    const a = pDom.childNodes[0];
+                    const b = pDom.childNodes[1];
+                    const cde = pDom.childNodes[2] as Text;
+                    const e = cde.splitText(2);
+                    const newPDom = document.createElement('p');
+                    divDom.insertBefore(newPDom, pDom);
+                    newPDom.appendChild(a);
+                    newPDom.appendChild(b);
+                    newPDom.appendChild(cde);
+
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    domEngine.markForRedraw(new Set([e, cde, newPDom, a, b]));
+
+                    await nextTick();
+                    mutationNumber = 0;
+                });
+
+                expect(divDom.innerHTML).to.equal(
+                    '<p>a<b>b</b>cd</p>' + '<p>e<i>f</i></p>' + '<p>123456</p>',
+                );
+
+                expect(mutationNumber).to.equal(6, 'TODO: reduce this to 0 mutations !');
             });
             it('should make bold all chars', async () => {
                 const pDom = container.querySelector('p');
