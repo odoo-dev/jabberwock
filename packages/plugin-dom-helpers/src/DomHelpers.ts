@@ -5,6 +5,15 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { CommandParamsType, Commands } from '../../core/src/JWEditor';
+import { Context } from '../../core/src/ContextManager';
+
+export interface ExecutionContext {
+    execCommand: <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        commandName: C | ((context: Context) => Promise<void> | void),
+        params?: CommandParamsType<P, C>,
+    ) => Promise<void>;
+}
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------
@@ -16,8 +25,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async addClass(domNode: Node | Node[], className: string | string[]): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async addClass(
+        context: ExecutionContext,
+        domNode: Node | Node[],
+        className: string | string[],
+    ): Promise<void> {
+        return context.execCommand(async () => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).classList.add(...classes);
@@ -29,8 +42,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async removeClass(domNode: Node | Node[], className: string | string[]): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async removeClass(
+        context: ExecutionContext,
+        domNode: Node | Node[],
+        className: string | string[],
+    ): Promise<void> {
+        return context.execCommand(async () => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.find(Attributes)?.classList.remove(...classes);
@@ -43,8 +60,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async toggleClass(domNode: Node | Node[], className: string): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async toggleClass(
+        context: ExecutionContext,
+        domNode: Node | Node[],
+        className: string,
+    ): Promise<void> {
+        return context.execCommand(async () => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).classList.toggle(...classes);
@@ -56,8 +77,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async setAttribute(domNode: Node | Node[], name: string, value: string): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async setAttribute(
+        context: ExecutionContext,
+        domNode: Node | Node[],
+        name: string,
+        value: string,
+    ): Promise<void> {
+        return context.execCommand(async () => {
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).set(name, value);
             }
@@ -69,10 +95,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * attributes.
      */
     async updateAttributes(
+        context: ExecutionContext,
         domNode: Node | Node[],
         attributes: { [key: string]: string },
     ): Promise<void> {
-        return this.editor.execCommand(async () => {
+        return context.execCommand(async () => {
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).clear();
                 for (const [name, value] of Object.entries(attributes)) {
@@ -87,12 +114,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async setStyle(
+        context: ExecutionContext,
         domNode: Node | Node[],
         name: string,
         value: string,
         important?: boolean,
     ): Promise<void> {
-        return this.editor.execCommand(async () => {
+        return context.execCommand(async () => {
             for (const node of this.getNodes(domNode)) {
                 value = important ? value + ' !important' : value;
                 node.modifiers.get(Attributes).style.set(name, value);
@@ -104,8 +132,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async remove(domNode: Node | Node[]): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async remove(
+        context: ExecutionContext,
+
+        domNode: Node | Node[],
+    ): Promise<void> {
+        return context.execCommand(async () => {
             for (const node of this.getNodes(domNode)) {
                 node.remove();
             }
@@ -116,8 +148,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async empty(domNode: Node | Node[]): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async empty(
+        context: ExecutionContext,
+
+        domNode: Node | Node[],
+    ): Promise<void> {
+        return context.execCommand(async () => {
             for (const node of this.getNodes(domNode)) {
                 node.empty();
             }
@@ -128,8 +164,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async replace(domNodes: Node | Node[], html: string): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async replace(context: ExecutionContext, domNodes: Node | Node[], html: string): Promise<void> {
+        return context.execCommand(async () => {
             const nodes = this.getNodes(domNodes);
             const parsedNodes = await this._parseHtmlString(html);
             const firstNode = nodes[0];
@@ -146,8 +182,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async wrap(domContainer: Node, html: string): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async wrap(context: ExecutionContext, domContainer: Node, html: string): Promise<void> {
+        return context.execCommand(async () => {
             const container = this.getNodes(domContainer)[0];
             if (!(container instanceof ContainerNode)) {
                 throw new Error(
@@ -165,8 +201,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async moveBefore(fromDomNode: Node, toDomNode: Node): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async moveBefore(context: ExecutionContext, fromDomNode: Node, toDomNode: Node): Promise<void> {
+        return context.execCommand(async () => {
             const toNode = this.getNodes(toDomNode)[0];
             for (const fromNode of this.getNodes(fromDomNode)) {
                 fromNode.before(toNode);
@@ -178,8 +214,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async moveAfter(fromDomNode: Node, toDomNode: Node): Promise<void> {
-        return this.editor.execCommand(async () => {
+    async moveAfter(context: ExecutionContext, fromDomNode: Node, toDomNode: Node): Promise<void> {
+        return context.execCommand(async () => {
             const toNodes = this.getNodes(toDomNode);
             const toNode = toNodes[toNodes.length - 1];
             for (const fromNode of this.getNodes(fromDomNode).reverse()) {
@@ -193,9 +229,14 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async insertHtml(html: string, domNode?: Node, position?: RelativePosition): Promise<VNode[]> {
+    async insertHtml(
+        context: ExecutionContext,
+        html: string,
+        domNode?: Node,
+        position?: RelativePosition,
+    ): Promise<VNode[]> {
         let parsedNodes: VNode[];
-        await this.editor.execCommand(async () => {
+        await context.execCommand(async () => {
             let nodes: VNode[];
             if (domNode) {
                 nodes = this.getNodes(domNode);
