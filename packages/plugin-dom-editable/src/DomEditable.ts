@@ -169,11 +169,14 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         }
         if (!processed) {
             for (const action of batch.actions) {
-                const [commandName, commandParams, rangeBounds] = this._matchCommand(action);
-                if (commandName && rangeBounds) {
-                    await this.editor.execWithRange(rangeBounds, commandName, commandParams);
-                } else if (commandName) {
-                    await this.editor.execCommand(commandName, commandParams);
+                const commandSpec = this._matchCommand(action);
+                if (commandSpec) {
+                    const [commandName, commandParams, rangeBounds] = commandSpec;
+                    if (commandName && rangeBounds) {
+                        await this.editor.execWithRange(rangeBounds, commandName, commandParams);
+                    } else if (commandName) {
+                        await this.editor.execCommand(commandName, commandParams);
+                    }
                 }
             }
         }
