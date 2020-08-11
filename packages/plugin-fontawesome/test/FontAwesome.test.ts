@@ -3,6 +3,7 @@ import { FontAwesome } from '../src/FontAwesome';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
+import { Char } from '../../plugin-char/src/Char';
 
 const deleteForward = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<Core>('deleteForward');
@@ -174,6 +175,22 @@ describePlugin(FontAwesome, testEditor => {
                         contentAfter: '<p>ab[]cd</p>',
                     });
                 });
+            });
+        });
+    });
+    describe('Text insertion', () => {
+        it('should insert a character before', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>ab[]<i class="fa fa-pastafarianism"></i>cd</p>',
+                stepFunction: editor => editor.execCommand<Char>('insertText', { text: 's' }),
+                contentAfter: '<p>abs[]\u200b<i class="fa fa-pastafarianism"></i>\u200bcd</p>',
+            });
+        });
+        it('should insert a character after', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>ab<i class="fa fa-pastafarianism"></i>[]cd</p>',
+                stepFunction: editor => editor.execCommand<Char>('insertText', { text: 's' }),
+                contentAfter: '<p>ab\u200b<i class="fa fa-pastafarianism"></i>\u200bs[]cd</p>',
             });
         });
     });

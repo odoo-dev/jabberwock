@@ -2,8 +2,9 @@ import { FontAwesomeNode } from './FontAwesomeNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { nodeName } from '../../utils/src/utils';
+import { VersionableArray } from '../../core/src/Memory/VersionableArray';
 
-export const FontAwesomeRegex = /(^|[\s*\n*])fa[bdlrs]?[\s*\n*$]/;
+export const FontAwesomeRegex = /(?:^|\s|\n)(fa[bdlrs]?)(?:.|\n)*?(fa-.*?)(?:\s|\n|$)/;
 
 export class FontAwesomeXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -14,11 +15,18 @@ export class FontAwesomeXmlDomParser extends AbstractParser<Node> {
     };
 
     async parse(item: Element): Promise<FontAwesomeNode[]> {
-        const fontawesome = new FontAwesomeNode({ htmlTag: nodeName(item) });
         const attributes = this.engine.parseAttributes(item);
-        if (attributes.length) {
-            fontawesome.modifiers.append(attributes);
-        }
+        // Remove fa classes to avoid having them spread to nearby nodes.
+        // They will be put back at renderng time.
+        const faClasses = item.className.match(FontAwesomeRegex).slice(1);
+        const fontawesome = new FontAwesomeNode({
+            htmlTag: nodeName(item),
+            faClasses: new VersionableArray(...faClasses),
+        });
+        attributes.classList.remove(...faClasses);
+        // Keep the attributes even though it might be empty as it will be used
+        // to restore the proper order of classes.
+        fontawesome.modifiers.append(attributes);
         return [fontawesome];
     }
 
