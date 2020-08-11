@@ -123,7 +123,7 @@ export class AttributesDomObjectModifierRenderer extends ModifierRenderer<DomObj
             }
         }
         for (const className in classHistory) {
-            if (classHistory[className] || content.attributes.class.has(className)) {
+            if (classHistory[className] || content.attributes.class?.has(className)) {
                 classNames.add(className);
             }
         }
