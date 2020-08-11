@@ -94,10 +94,7 @@ export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOptions) {
         super();
         class CustomPlugin extends JWPlugin {
-            commands = Object.assign(
-                { commit: { handler: options.afterRender } },
-                options.customCommands,
-            );
+            commands = Object.assign(options.customCommands);
         }
 
         this.configure({
