@@ -215,6 +215,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 ['editable', ['main']],
             ],
             location: options.location,
+            pressedActionablesClassName: 'active',
         });
         this.configure(DomEditable, {
             autoFocus: true,

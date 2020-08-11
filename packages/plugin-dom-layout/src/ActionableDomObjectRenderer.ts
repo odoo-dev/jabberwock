@@ -8,6 +8,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Predicate } from '../../core/src/VNodes/VNode';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { DomLayout } from './DomLayout';
 
 export type DomObjectActionable = DomObjectElement & { handler: () => void };
 
@@ -83,6 +84,10 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
      * enabled change.
      */
     protected _updateActionables(): void {
+        const pluginConfig = this.engine.editor.plugins.get(DomLayout).configuration;
+        const pressedActionablesClassName = pluginConfig.pressedActionablesClassName
+            ? pluginConfig.pressedActionablesClassName
+            : 'pressed';
         for (const [actionable, element] of this.actionableNodes) {
             const editor = this.engine.editor;
             const select = !!actionable.selected(editor);
@@ -93,9 +98,9 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
             if (select.toString() !== attrSelected) {
                 element.setAttribute('aria-pressed', select.toString());
                 if (select) {
-                    element.classList.add('active');
+                    element.classList.add(pressedActionablesClassName);
                 } else {
-                    element.classList.remove('active');
+                    element.classList.remove(pressedActionablesClassName);
                 }
             }
             const domEnable = !element.getAttribute('disabled');

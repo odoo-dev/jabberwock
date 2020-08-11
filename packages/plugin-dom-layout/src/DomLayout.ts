@@ -29,6 +29,7 @@ export interface DomLayoutConfig extends JWPluginConfig {
     locations?: [ComponentId, DomLayoutLocation][];
     components?: ComponentDefinition[];
     componentZones?: [ComponentId, ZoneIdentifier[]][];
+    pressedActionablesClassName?: string;
 }
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
