@@ -364,6 +364,12 @@ export class JWEditor {
                 );
                 return;
             }
+            const timeout = setTimeout(() => {
+                console.warn(
+                    'An execCommand call is taking more than 10 seconds to finish. It might be caused by a deadlock.\n' +
+                        'Verify that you do not call editor.execCommand inside another editor.execCommand.',
+                );
+            }, 10000);
 
             // Switch to the next memory slice (unfreeze the memory).
             const origin = this.memory.sliceKey;
@@ -405,7 +411,9 @@ export class JWEditor {
                     changesLocations: changesLocations,
                     commandNames: commandNames,
                 });
+                clearTimeout(timeout);
             } catch (error) {
+                clearTimeout(timeout);
                 if (this._stage !== EditorStage.EDITION) {
                     throw error;
                 }
