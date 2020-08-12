@@ -577,7 +577,7 @@ export class EventNormalizer {
                     eventTarget = this._getEventTarget(ev as MouseEvent);
                 } else if (eventTarget && ev.constructor.name === 'TouchEvent') {
                     eventTarget = this._getEventTarget(ev as TouchEvent);
-                } else {
+                } else if (this._isInEditable(eventTarget)) {
                     eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
                 }
                 if (eventTarget && this._isInEditable(eventTarget)) {
