@@ -1692,7 +1692,7 @@ export class EventNormalizer {
                 this._mousedownInEditable = false;
                 this._initialCaretPosition = undefined;
             }
-        } else if (ev.target instanceof Element) {
+        } else if (ev.target instanceof Element && !!ev.target.closest('[contentEditable=true]')) {
             // When within a contenteditable element but in a non-editable
             // context, prevent a collapsed selection by removing all ranges.
             // TODO: remove them from the VDocument as well.
