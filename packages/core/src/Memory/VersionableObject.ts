@@ -16,7 +16,7 @@ import {
     removedItem,
     memoryProxyNotVersionableKey,
     memoryProxyPramsKey,
-    FroozenError,
+    FrozenError,
     symbolVerify,
 } from './const';
 
@@ -115,7 +115,7 @@ export const proxyObjectHandler = {
         }
 
         if (memory.isFrozen()) {
-            throw new FroozenError();
+            throw new FrozenError();
         }
 
         const oldValue = obj[prop];

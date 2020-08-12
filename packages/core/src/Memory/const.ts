@@ -33,11 +33,11 @@ export class VersionableAllreadyVersionableError extends MemoryError {
             '\nPlease use it instead of the source object.';
     }
 }
-export class FroozenError extends MemoryError {
+export class FrozenError extends MemoryError {
     constructor() {
         super();
         this.message =
-            'This memory is froozen and immutable.' +
+            'This memory is frozen and immutable.' +
             '\nYou can not update a memory version who content memory dependencies';
     }
 }

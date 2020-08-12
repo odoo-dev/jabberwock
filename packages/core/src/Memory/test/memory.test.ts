@@ -173,7 +173,7 @@ describe('core', () => {
                         instance.myMethod();
                     }).to.throw('VersionableObject');
                 });
-                it('if try to edit attribute in a froozen slice', () => {
+                it('if try to edit attribute in a frozen slice', () => {
                     const obj = new VersionableObject();
                     memory.attach(obj);
                     memory.switchTo('1');
@@ -182,7 +182,7 @@ describe('core', () => {
                     expect((): number => (obj['H' + 1] = 4)).to.throw('can not update', 'object');
                     memory.remove('1-1');
                 });
-                it('if try to edit array in a froozen slice', () => {
+                it('if try to edit array in a frozen slice', () => {
                     const memory = new Memory();
                     const array = new VersionableArray();
                     memory.attach(array);
@@ -194,7 +194,7 @@ describe('core', () => {
                     memory.switchTo('1');
                     memory.remove('2');
                 });
-                it('if try to edit set in a froozen slice', () => {
+                it('if try to edit set in a frozen slice', () => {
                     const memory = new Memory();
                     const set = new VersionableSet();
                     memory.attach(set);

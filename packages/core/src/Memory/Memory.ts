@@ -6,7 +6,7 @@ import {
     NotVersionableError,
     VersionableAllreadyVersionableError,
     MemoryError,
-    FroozenError,
+    FrozenError,
 } from './const';
 
 type SliceKey = string;
@@ -251,7 +251,7 @@ export class Memory {
             throw new NotVersionableError();
         }
         if (this.isFrozen()) {
-            throw new FroozenError();
+            throw new FrozenError();
         }
         if (!params.memory || params.memory !== this._memoryWorker) {
             params.isDiffRoot = true;

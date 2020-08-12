@@ -402,7 +402,7 @@ export class JWEditor {
                 const nextMemorySlice = this._memoryID.toString();
                 this.memory.create(nextMemorySlice);
 
-                // Send the commit message with a froozen memory.
+                // Send the commit message with a frozen memory.
                 const changesLocations = this.memory.getChangesLocations(
                     memorySlice,
                     this.memory.sliceKey,
@@ -423,7 +423,7 @@ export class JWEditor {
                 // When an error occurs, we go back to part of the functional memory.
                 this.memory.switchTo(origin);
 
-                // Send the commit message with a froozen memory.
+                // Send the commit message with a frozen memory.
                 const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
                 await this.dispatcher
                     .dispatchHooks('@commit', {

@@ -11,7 +11,7 @@ import {
     removedItem,
     memoryProxyPramsKey,
     memoryProxyNotVersionableKey,
-    FroozenError,
+    FrozenError,
 } from './const';
 import {
     _proxifyObject,
@@ -91,7 +91,7 @@ const proxyArrayHandler = {
         const index = +prop;
         const memory = params.memory;
         if (memory.isFrozen()) {
-            throw new FroozenError();
+            throw new FrozenError();
         }
 
         const oldValue = array[prop];

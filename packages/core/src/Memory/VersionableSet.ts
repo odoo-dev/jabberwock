@@ -13,7 +13,7 @@ import {
     _stackedProxify,
 } from './Versionable';
 
-import { memoryProxyNotVersionableKey, memoryProxyPramsKey, FroozenError } from './const';
+import { memoryProxyNotVersionableKey, memoryProxyPramsKey, FrozenError } from './const';
 
 interface SetParams extends VersionableParams {
     size: number;
@@ -103,7 +103,7 @@ export class VersionableSet<T extends MemoryAllowedType = MemoryAllowedType> ext
         const params = this[memoryProxyPramsKey];
         const memory = params.memory;
         if (memory && memory.isFrozen()) {
-            throw new FroozenError();
+            throw new FrozenError();
         }
 
         const check = this.has(item);
@@ -145,7 +145,7 @@ export class VersionableSet<T extends MemoryAllowedType = MemoryAllowedType> ext
         const params = this[memoryProxyPramsKey];
         const memory = params.memory;
         if (memory && memory.isFrozen()) {
-            throw new FroozenError();
+            throw new FrozenError();
         }
 
         const check = this.has(item);
@@ -180,7 +180,7 @@ export class VersionableSet<T extends MemoryAllowedType = MemoryAllowedType> ext
         const params = this[memoryProxyPramsKey];
         const memory = params.memory;
         if (memory && memory.isFrozen()) {
-            throw new FroozenError();
+            throw new FrozenError();
         }
         if (this.size === 0) {
             return this;
