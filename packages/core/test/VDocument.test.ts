@@ -947,6 +947,20 @@ describe('VDocument', () => {
                 });
             });
             describe('Merging different types of elements', () => {
+                it('should merge a paragraph with text into a paragraph with text', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>ab</p><p>[]cd</p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p>ab[]cd</p>',
+                    });
+                });
+                it('should merge a paragraph with formated text into a paragraph with text', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>aa</p><p>[]a<i>bbb</i></p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p>aa[]a<i>bbb</i></p>',
+                    });
+                });
                 it('should merge a paragraph with text into a heading1 with text', async () => {
                     await testEditor(BasicEditor, {
                         contentBefore: '<h1>ab</h1><p>[]cd</p>',

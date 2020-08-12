@@ -113,8 +113,19 @@ export class VRange {
      */
     isCollapsed(): boolean {
         if (!this.startContainer || !this.endContainer) return;
-        const startIndex = this.start.parent.childVNodes.indexOf(this.start);
-        return this.startContainer.childVNodes[startIndex + 1] === this.end;
+        const childVNodes = this.start.parent.childVNodes;
+        let index = childVNodes.indexOf(this.end);
+        while (index > 0) {
+            index--;
+            const sibling = childVNodes[index];
+            if (sibling === this.start) {
+                return true;
+            }
+            if (sibling.tangible) {
+                break;
+            }
+        }
+        return false;
     }
     /**
      * Return true if the start or end of the range is contained within the
