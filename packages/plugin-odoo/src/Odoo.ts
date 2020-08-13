@@ -57,8 +57,13 @@ const imageClassesLabels = {
  * If more images are within the range, return undefined.
  */
 function getSingleImage(range: VRange): ImageNode | undefined {
-    const imageNodes = range.targetedNodes(ImageNode);
-    return imageNodes.length === 1 && imageNodes[0];
+    const next = range.start.nextLeaf();
+    if (next instanceof ImageNode) {
+        const prev = range.end.nextLeaf();
+        if (prev === next) {
+            return next;
+        }
+    }
 }
 /**
  * Check if there is at exactly one image within the editor range
