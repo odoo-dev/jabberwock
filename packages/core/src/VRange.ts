@@ -199,7 +199,11 @@ export class VRange {
     targetedNodes(predicate?: Predicate): VNode[];
     targetedNodes(predicate?: Predicate): VNode[] {
         const targetedNodes: VNode[] = this.traversedNodes(predicate);
-        if (!this.end.previousSibling()) {
+        if (
+            !this.end.previousSibling() &&
+            targetedNodes.length &&
+            targetedNodes[targetedNodes.length - 1] === this.endContainer
+        ) {
             // When selecting a container and the space between it and the next
             // one (eg. triple click), don't return the next container as well.
             targetedNodes.pop();
