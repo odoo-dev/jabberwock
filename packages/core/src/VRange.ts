@@ -193,7 +193,8 @@ export class VRange {
      * Return a list of all the nodes currently targeted by the range. If the
      * range is collapsed, the targeted node is the container of the range.
      * Otherwise, the targeted nodes are the ones encountered by traversing the
-     * tree from the start to end of this range.
+     * tree from the start to end of this range, together with the start
+     * container.
      */
     targetedNodes<T extends VNode>(predicate?: Constructor<T>): T[];
     targetedNodes(predicate?: Predicate): VNode[];
