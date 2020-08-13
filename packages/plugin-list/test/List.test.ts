@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
 import { ListType, ListNode } from '../src/ListNode';
-import { describePlugin, keydown, unformat, click } from '../../utils/src/testUtils';
+import { describePlugin, keydown, unformat, click, nextTick } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { List } from '../src/List';
@@ -6694,6 +6694,52 @@ describePlugin(List, testEditor => {
                                     </ul>
                                 </li>
                             </ul>`),
+                    });
+                });
+            });
+            describe('Regular list', () => {
+                it('should indent a regular list empty item', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                            <ul>
+                                <li>abc</li>
+                                <li>[]</li>
+                            </ul>
+                            <p>def</p>`),
+                        stepFunction: indentList,
+                        contentAfter: unformat(`
+                            <ul>
+                                <li>abc</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[]<br></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>def</p>`),
+                    });
+                });
+                it('should indent a regular list empty item after an insertParagraphBreak', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                            <ul>
+                                <li>abc[]</li>
+                            </ul>
+                            <p>def</p>`),
+                        stepFunction: async (editor: JWEditor): Promise<void> => {
+                            await editor.execCommand<Core>('insertParagraphBreak');
+                            await editor.execCommand<List>('indent');
+                        },
+                        contentAfter: unformat(`
+                            <ul>
+                                <li>abc</li>
+                                <li style="list-style: none;">
+                                    <ul>
+                                        <li>[]<br></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>def</p>`),
                     });
                 });
             });

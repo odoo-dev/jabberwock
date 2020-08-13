@@ -70,7 +70,8 @@ export class DomReconciliationEngine {
     // old one, and the diff are consumed when we redraw the node.
     private readonly _diff: Record<DomObjectID, DiffDomObject> = {};
     private readonly _rendererTreated = new Set<GenericDomObject>();
-    private _domUpdated = new Set<DomObjectID>();
+    private readonly _releasedItems = new Set<VNode | Modifier>();
+    private readonly _domUpdated = new Set<DomObjectID>();
 
     update(
         updatedNodes: VNode[],
@@ -364,6 +365,7 @@ export class DomReconciliationEngine {
             }
         }
         this._domUpdated.clear();
+        this._releasedItems.clear();
     }
 
     /**
@@ -601,6 +603,7 @@ export class DomReconciliationEngine {
 
         // use the location
         let domNodes: Node[];
+        let isText = true;
         const alreadyCheck = new Set<VNode>();
         while (!domNodes && reference) {
             alreadyCheck.add(reference);
@@ -635,9 +638,11 @@ export class DomReconciliationEngine {
 
                         domNodes.push(...this._getchildrenDomNodes(id));
                     }
+                    if (domNodes.length && (object.object.tag || object.object.dom)) {
+                        isText = false;
+                    }
                 }
             }
-
             if (!domNodes?.length || !domNodes[0].parentNode) {
                 const next = reference.nextLeaf();
                 if (next && !alreadyCheck.has(next)) {
@@ -652,19 +657,33 @@ export class DomReconciliationEngine {
         }
 
         let domNode: Node;
-        let offset = locations.lastIndexOf(reference);
+        let offset =
+            position === RelativePosition.AFTER
+                ? locations.lastIndexOf(reference)
+                : locations.indexOf(reference);
 
-        if (domNodes[0].nodeType === Node.TEXT_NODE) {
+        if (isText) {
             let index = 0;
             while (offset >= domNodes[index].textContent.length) {
                 offset -= domNodes[index].textContent.length;
                 index++;
             }
             domNode = domNodes[index];
-        } else {
+            if (position === RelativePosition.AFTER) {
+                // Increment the offset to be positioned after the reference node.
+                offset += 1;
+            }
+        } else if (position === RelativePosition.INSIDE) {
             domNode = domNodes[offset];
-            if (position === RelativePosition.INSIDE) {
-                offset = 0;
+            offset = 0;
+        } else {
+            if (position === RelativePosition.AFTER) {
+                domNode = domNodes[domNodes.length - 1];
+            } else {
+                domNode = domNodes[0];
+            }
+            if (domNode.nodeType === Node.TEXT_NODE) {
+                offset = domNode.textContent.length;
             } else {
                 // Char nodes have their offset in the corresponding text nodes
                 // registered in the map via `set` but void nodes don't. Their
@@ -672,11 +691,12 @@ export class DomReconciliationEngine {
                 const container = domNode.parentNode;
                 offset = Array.prototype.indexOf.call(container.childNodes, domNode);
                 domNode = container;
+
+                if (position === RelativePosition.AFTER) {
+                    // Increment the offset to be positioned after the reference node.
+                    offset += 1;
+                }
             }
-        }
-        if (position === RelativePosition.AFTER) {
-            // Increment the offset to be positioned after the reference node.
-            offset += 1;
         }
 
         return [domNode, offset];
@@ -1014,7 +1034,10 @@ export class DomReconciliationEngine {
             for (const item of this._items.get(old.object)) {
                 const ids = this._renderedNodes.get(item);
                 if (ids && ids.has(id)) {
-                    this._renderedNodes.delete(item);
+                    if (!this._releasedItems.has(item)) {
+                        this._releasedItems.add(item);
+                        this._renderedNodes.delete(item);
+                    }
                 }
             }
         }
@@ -1024,7 +1047,7 @@ export class DomReconciliationEngine {
             this._fromItem.set(node, id);
         }
         if (items) {
-            for (const item of [...items, ...this._items.get(domObject)]) {
+            for (const item of new Set([...items, ...this._items.get(domObject)])) {
                 let ids = this._renderedNodes.get(item);
                 if (!ids) {
                     ids = new Set();
