@@ -463,6 +463,12 @@ export class EventNormalizer {
      * EventNormalizer in the shadow dom.
      */
     private _shadowNormalizers = new Map<Document | ShadowRoot, EventNormalizer>();
+    /**
+     * This is a cache of the selection state used only for determining whether
+     * a particular deleteContent is actually a deleteWord using the SwiftKey
+     * mobile keyboard or not.
+     */
+    private _swiftKeyDeleteWordSelectionCache?: DomSelectionDescription[] = [];
 
     /**
      *
@@ -851,7 +857,12 @@ export class EventNormalizer {
             normalizedActions.length === 0 &&
             ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard)
         ) {
-            const keyboardAction = this._getKeyboardAction(key, inputType, !!mutatedElements.size);
+            const keyboardAction = this._getKeyboardAction(
+                key,
+                inputType,
+                !!mutatedElements.size,
+                keydownEvent,
+            );
             if (keyboardAction) {
                 normalizedActions.push(keyboardAction);
             }
@@ -967,6 +978,7 @@ export class EventNormalizer {
         key: string,
         inputType: string,
         hasMutatedElements: boolean,
+        keydownEvent?: KeyboardEvent,
     ):
         | InsertLineBreakAction
         | InsertParagraphBreakAction
@@ -978,7 +990,7 @@ export class EventNormalizer {
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
             if (key === 'Backspace' || key === 'Delete') {
-                return this._getRemoveAction(key, inputType);
+                return this._getRemoveAction(key, inputType, keydownEvent);
             } else if (key === 'Enter') {
                 if (inputType === 'insertLineBreak') {
                     const insertLineBreakAction: InsertLineBreakAction = {
@@ -1291,13 +1303,34 @@ export class EventNormalizer {
     _getRemoveAction(
         key: string,
         inputType: string,
+        keydownEvent: KeyboardEvent,
     ): DeleteWordAction | DeleteHardLineAction | DeleteContentAction {
         const direction = key === 'Backspace' ? Direction.BACKWARD : Direction.FORWARD;
+
+        // Check if this is a deleteWord from the SwiftKey mobile keyboard. This
+        // be triggered by long-pressing the backspace key, however SwiftKey
+        // does not trigger a proper deleteWord event so we must detect it.
+        // This is extremely ad-hoc for the particular case of SwiftKey. It
+        // turns out it triggers two selectionchange after the deletion is done.
+        // The actual selection we want is the one preceding these two, which is
+        // the selection right before the deletion.
+        this._swiftKeyDeleteWordSelectionCache.pop();
+        this._swiftKeyDeleteWordSelectionCache.pop();
+        const selection = this._swiftKeyDeleteWordSelectionCache.pop();
+        this._swiftKeyDeleteWordSelectionCache.length = 0;
+
         // Get characterMapping to retrieve which word has been deleted.
         const characterMapping = this._mutationNormalizer.getCharactersMapping();
 
+        const isCollapsed =
+            selection &&
+            selection.anchorNode === selection.focusNode &&
+            selection.anchorOffset === selection.focusOffset;
+
         const isSwiftKeyDeleteWord =
             (inputType === 'deleteContentForward' || inputType === 'deleteContentBackward') &&
+            keydownEvent?.key === 'Unidentified' &&
+            isCollapsed &&
             characterMapping.remove.length > 1;
 
         if (
@@ -1854,6 +1887,10 @@ export class EventNormalizer {
             // normaliser bind event on document.
             return;
         }
+        const selection = this._getSelection();
+
+        this._swiftKeyDeleteWordSelectionCache.push(selection);
+
         const keydownEvent = this.currentStackObservation._eventsMap.keydown;
         const isNavEvent =
             keydownEvent instanceof KeyboardEvent &&
@@ -1862,7 +1899,7 @@ export class EventNormalizer {
         if (isNavEvent) {
             const setSelectionAction: SetSelectionAction = {
                 type: 'setSelection',
-                domSelection: this._getSelection(),
+                domSelection: selection,
             };
             this.initNextObservation();
             this._triggerEventBatch(
@@ -1877,7 +1914,7 @@ export class EventNormalizer {
             // This heuristic protects against a costly `_isSelectAll` call.
             const modifiedKeyEvent = this._modifierKeys.ctrlKey || this._modifierKeys.metaKey;
             const heuristic = modifiedKeyEvent || this._followsPointerAction;
-            const isSelectAll = heuristic && this._isSelectAll(this._getSelection());
+            const isSelectAll = heuristic && this._isSelectAll(selection);
             if (isSelectAll && !this._currentlySelectingAll) {
                 if (modifiedKeyEvent) {
                     // This select all was triggered from the keyboard. Add a
