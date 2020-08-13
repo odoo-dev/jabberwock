@@ -19,6 +19,7 @@ import { distinct } from '../../utils/src/utils';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { RuleProperty } from '../../core/src/Mode';
 
 export interface ListParams extends CommandParams {
     type: ListType;
@@ -328,8 +329,10 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const previousSibling = item.previousSibling();
             const nextSibling = item.nextSibling();
             if (previousSibling && nextSibling) {
-                const splitList = item.parent.splitAt(item);
-                splitList.before(item);
+                if (this.editor.mode.is(item.parent, RuleProperty.BREAKABLE)) {
+                    const splitList = item.parent.splitAt(item);
+                    splitList.before(item);
+                }
             } else if (previousSibling) {
                 list.after(item);
             } else if (nextSibling) {

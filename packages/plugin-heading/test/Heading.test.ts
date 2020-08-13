@@ -234,4 +234,40 @@ describePlugin(Heading, testEditor => {
             });
         });
     });
+    describe('insertParagraphBreak', () => {
+        it('should insert a new paragraph after the heading', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<h1>abc[]</h1>',
+                stepFunction: async editor => editor.execCommand('insertParagraphBreak'),
+                contentAfter: '<h1>abc</h1><p>[]<br></p>',
+            });
+        });
+        it('should insert a line break at the end of the heading if the heading is not breakable', async () => {
+            await testEditor(BasicEditor, {
+                beforeStart: editor => {
+                    editor.configure({
+                        modes: [
+                            {
+                                id: 'unbreakable',
+                                rules: [
+                                    {
+                                        selector: [HeadingNode],
+                                        properties: {
+                                            breakable: {
+                                                value: false,
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+                    editor.configure({ mode: 'unbreakable' });
+                },
+                contentBefore: '<h1>abc[]</h1>',
+                stepFunction: async editor => editor.execCommand('insertParagraphBreak'),
+                contentAfter: '<h1>abc<br>[]<br></h1>',
+            });
+        });
+    });
 });

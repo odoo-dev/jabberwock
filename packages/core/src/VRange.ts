@@ -365,7 +365,7 @@ export class VRange {
         do {
             let startAncestor = start.parent;
             // Do not split at the start edge of a node.
-            if (start.previousSibling()) {
+            if (start.previousSibling() && this.mode.is(startAncestor, RuleProperty.BREAKABLE)) {
                 startAncestor = startAncestor.splitAt(start);
             }
             start = startAncestor;
@@ -376,7 +376,7 @@ export class VRange {
         do {
             const endAncestor = end.parent;
             // Do not split at the end edge of a node.
-            if (end.nextSibling()) {
+            if (end.nextSibling() && this.mode.is(endAncestor, RuleProperty.BREAKABLE)) {
                 endAncestor.splitAt(end);
                 endAncestor.append(end);
             }
@@ -407,16 +407,21 @@ export class VRange {
         for (const node of removableNodes.filter(node => !startAncestors.includes(node))) {
             node.remove();
         }
-        // Collapse the range by merging nodes between start and end.
+        // Collapse the range by merging nodes between start and end, if it
+        // doesn't traverse an unbreakable node.
         if (this.startContainer !== this.endContainer) {
             const commonAncestor = this.start.commonAncestor(this.end);
             let ancestor = this.endContainer.parent;
             while (ancestor !== commonAncestor) {
-                if (ancestor.children().length > 1) {
+                if (
+                    ancestor.children().length > 1 &&
+                    this.mode.is(ancestor, RuleProperty.BREAKABLE)
+                ) {
                     ancestor.splitAt(this.endContainer);
                 }
                 if (
                     this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
+                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
                     this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
                     this.mode.is(this.endContainer, RuleProperty.EDITABLE)
                 ) {
@@ -424,13 +429,24 @@ export class VRange {
                 }
                 ancestor = ancestor.parent;
             }
+            const traversedUnbreakables = this.traversedNodes(this._isUnbreakable.bind(this));
+            const unbreakableStartAncestor = this.start.ancestor(this._isUnbreakable.bind(this));
             if (
+                unbreakableStartAncestor &&
+                !this.end.ancestor(node => node === unbreakableStartAncestor)
+            ) {
+                traversedUnbreakables.unshift(unbreakableStartAncestor);
+            }
+            if (
+                !traversedUnbreakables.length &&
+                this.mode.is(this.startContainer, RuleProperty.BREAKABLE) &&
                 this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
                 this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
                 this.mode.is(this.endContainer, RuleProperty.EDITABLE)
             ) {
                 this.endContainer.mergeWith(this.startContainer);
             }
+            this.collapse();
         }
     }
     /**
@@ -439,5 +455,18 @@ export class VRange {
     remove(): void {
         this.start.remove();
         this.end.remove();
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return true if the given node is unbreakable.
+     *
+     * @param node
+     */
+    _isUnbreakable(node: VNode): boolean {
+        return !this.mode.is(node, RuleProperty.BREAKABLE);
     }
 }

@@ -672,6 +672,8 @@ export abstract class AbstractNode extends EventMixin {
      * Split this node at the given child, moving it and its next siblings into
      * a duplicate of this VNode that is inserted after the original. Return the
      * duplicated VNode.
+     * Note: make sure to check that the node is breakable before attempting to
+     * split it.
      *
      * @param child
      */

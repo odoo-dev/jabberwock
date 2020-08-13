@@ -225,9 +225,6 @@ export class ContainerNode extends AbstractNode {
     splitAt(child: VNode): this {
         if (child.parent !== this) {
             throw new ChildError(this, child);
-        } else if (!this.breakable) {
-            // Unbreakable nodes do not split.
-            return this;
         }
         const duplicate = this.clone();
         const index = this.childVNodes.indexOf(child);
