@@ -473,6 +473,9 @@ export class DomReconciliationEngine {
             const id = this._fromDom.get(container);
             if (id) {
                 object = this._objects[id];
+                if (!object) {
+                    throw new Error('Dom location altered.');
+                }
             } else if (container.previousSibling) {
                 forceAfter = true;
                 container = container.previousSibling;
