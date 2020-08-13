@@ -1542,8 +1542,12 @@ export class DomReconciliationEngine {
             const chars: [string, Text, number][] = [];
             for (const textNode of textNodes) {
                 const split = textNode.textContent.split('');
-                for (let i = 0; i < split.length; i++) {
-                    chars.push([split[i], textNode, i]);
+                if (split.length) {
+                    for (let i = 0; i < split.length; i++) {
+                        chars.push([split[i], textNode, i]);
+                    }
+                } else {
+                    chars.push(['', textNode, 0]);
                 }
             }
 

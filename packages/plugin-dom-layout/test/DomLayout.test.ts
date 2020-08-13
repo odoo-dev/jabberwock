@@ -1662,50 +1662,8 @@ describe('DomLayout', () => {
         afterEach(() => {
             observer.disconnect();
         });
-        describe('all', () => {
-            it('should redraw all with new item', async () => {
-                const Component: ComponentDefinition = {
-                    id: 'test',
-                    render(editor: JWEditor): Promise<VNode[]> {
-                        return editor.plugins
-                            .get(Parser)
-                            .parse('text/html', '<p>abc</p><p>def</p>');
-                    },
-                };
-                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                    loadables: Loadables<Layout> = {
-                        components: [Component],
-                        componentZones: [['test', ['main']]],
-                    };
-                }
-                const editor = new JWEditor();
-                editor.load(Html);
-                editor.load(Char);
-                editor.configure(DomLayout, { location: [target, 'replace'] });
-                editor.load(Plugin);
-                await editor.start();
-
-                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
-                const area = new VElement({ htmlTag: 'area' });
-
-                mutationNumber = 0;
-                await editor.execCommand(() => {
-                    b.after(area);
-                    expect(container.innerHTML).to.equal(
-                        '<jw-editor><p>abc</p><p>def</p></jw-editor>',
-                    );
-                });
-
-                expect(container.innerHTML).to.equal(
-                    '<jw-editor><p>ab<area>c</p><p>def</p></jw-editor>',
-                );
-
-                expect(mutationNumber).to.equal(3, 'update text, add <area>, add text');
-
-                await editor.stop();
-            });
-            it('should redraw all with new item, with node before the editor', async () => {
+        describe('features and layout container', () => {
+            it('should redraw with a new item, with node before the editor', async () => {
                 container.prepend(document.createElement('section'));
                 const Component: ComponentDefinition = {
                     id: 'test',
@@ -1747,6 +1705,138 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
+            it('should update a template', async () => {
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [
+                            {
+                                id: 'test',
+                                render(editor: JWEditor): Promise<VNode[]> {
+                                    const template = '<p>abc</p><p>def</p>';
+                                    return editor.plugins.get(Parser).parse('text/html', template);
+                                },
+                            },
+                        ],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, {
+                    components: [
+                        {
+                            id: 'template',
+                            async render(editor: JWEditor): Promise<VNode[]> {
+                                const template =
+                                    '<div class="a"></div><t t-zone="main"/><div class="b"><t t-zone="default"/></div>';
+                                return editor.plugins.get(Parser).parse('text/html', template);
+                            },
+                        },
+                    ],
+                    componentZones: [['template', ['root']]],
+                    location: [target, 'replace'],
+                });
+                editor.load(Plugin);
+                await editor.start();
+
+                expect(container.innerHTML).to.equal(
+                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
+                    'Test before changes',
+                );
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const divDom = container.getElementsByTagName('div')[1];
+                const div = engine.getNodes(divDom)[0];
+                const area = new VElement({ htmlTag: 'area' });
+
+                mutationNumber = 0;
+                await editor.execCommand(() => {
+                    div.after(area);
+                    expect(container.innerHTML).to.equal(
+                        '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
+                    );
+                });
+
+                expect(container.innerHTML).to.equal(
+                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div><area>',
+                );
+
+                expect(mutationNumber).to.equal(1, 'add <area>');
+
+                await editor.stop();
+            });
+            it('should throw an error if try to replace the target without any DOM node', async () => {
+                class CustomNode extends AtomicNode {}
+                const div = document.createElement('div');
+                let index = 0;
+                class CustomDomRenderer extends NodeRenderer<DomObject> {
+                    static id = DomObjectRenderingEngine.id;
+                    engine: DomObjectRenderingEngine;
+                    predicate = CustomNode;
+                    async render(): Promise<DomObject> {
+                        index++;
+                        return { dom: index === 1 ? [div] : [] };
+                    }
+                }
+                const custom = new CustomNode();
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [custom];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Renderer & Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                        renderers: [CustomDomRenderer],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, {
+                    components: [
+                        {
+                            id: 'aaa',
+                            render(editor: JWEditor): Promise<VNode[]> {
+                                const template = '<t t-zone="main"/><t t-zone="default"/>';
+                                return editor.plugins.get(Parser).parse('text/html', template);
+                            },
+                        },
+                    ],
+                    locations: [['aaa', [target, 'replace']]],
+                });
+                editor.load(Plugin);
+                await editor.start();
+
+                expect(container.innerHTML).to.equal('<div></div>');
+
+                await nextTick();
+                mutationNumber = 0;
+
+                let hasFail = false;
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const changes: ChangesLocations = {
+                    add: [],
+                    move: [],
+                    remove: [],
+                    update: engine.root.descendants().map(node => [node, ['id']]),
+                };
+                await engine.redraw(changes).catch(e => {
+                    expect(e.message).to.include('Impossible');
+                    hasFail = true;
+                });
+
+                expect(hasFail).to.equal(true);
+
+                expect(mutationNumber).to.equal(1, 'remove <div>');
+
+                await editor.stop();
+            });
+        });
+        describe('altered DOM', () => {
             it('should throw an error if try to redraw with an altered DOM for the editor (removed target to replace)', async () => {
                 const Component: ComponentDefinition = {
                     id: 'test',
@@ -1838,67 +1928,6 @@ describe('DomLayout', () => {
                     3,
                     'update text, add <area>, add text, do not need to update the parent',
                 );
-
-                await editor.stop();
-            });
-            it('should update a template', async () => {
-                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                    loadables: Loadables<Layout> = {
-                        components: [
-                            {
-                                id: 'test',
-                                render(editor: JWEditor): Promise<VNode[]> {
-                                    const template = '<p>abc</p><p>def</p>';
-                                    return editor.plugins.get(Parser).parse('text/html', template);
-                                },
-                            },
-                        ],
-                        componentZones: [['test', ['main']]],
-                    };
-                }
-                const editor = new JWEditor();
-                editor.load(Html);
-                editor.load(Char);
-                editor.configure(DomLayout, {
-                    components: [
-                        {
-                            id: 'template',
-                            async render(editor: JWEditor): Promise<VNode[]> {
-                                const template =
-                                    '<div class="a"></div><t t-zone="main"/><div class="b"><t t-zone="default"/></div>';
-                                return editor.plugins.get(Parser).parse('text/html', template);
-                            },
-                        },
-                    ],
-                    componentZones: [['template', ['root']]],
-                    location: [target, 'replace'],
-                });
-                editor.load(Plugin);
-                await editor.start();
-
-                expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
-                    'Test before changes',
-                );
-
-                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                const divDom = container.getElementsByTagName('div')[1];
-                const div = engine.getNodes(divDom)[0];
-                const area = new VElement({ htmlTag: 'area' });
-
-                mutationNumber = 0;
-                await editor.execCommand(() => {
-                    div.after(area);
-                    expect(container.innerHTML).to.equal(
-                        '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
-                    );
-                });
-
-                expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div><area>',
-                );
-
-                expect(mutationNumber).to.equal(1, 'add <area>');
 
                 await editor.stop();
             });
@@ -2071,72 +2100,45 @@ describe('DomLayout', () => {
 
                 await editor.stop();
             });
-            it('should throw an error if try to replace the target without any DOM node', async () => {
-                class CustomNode extends AtomicNode {}
-                const div = document.createElement('div');
-                let index = 0;
-                class CustomDomRenderer extends NodeRenderer<DomObject> {
-                    static id = DomObjectRenderingEngine.id;
-                    engine: DomObjectRenderingEngine;
-                    predicate = CustomNode;
-                    async render(): Promise<DomObject> {
-                        index++;
-                        return { dom: index === 1 ? [div] : [] };
-                    }
-                }
-                const custom = new CustomNode();
+            it('should update text with an altered DOM', async () => {
                 const Component: ComponentDefinition = {
                     id: 'test',
-                    async render(): Promise<VNode[]> {
-                        return [custom];
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins
+                            .get(Parser)
+                            .parse('text/html', '<p>abc</p><p>def</p>');
                     },
                 };
                 class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                    loadables: Loadables<Renderer & Layout> = {
+                    loadables: Loadables<Layout> = {
                         components: [Component],
                         componentZones: [['test', ['main']]],
-                        renderers: [CustomDomRenderer],
                     };
                 }
                 const editor = new JWEditor();
                 editor.load(Html);
                 editor.load(Char);
-                editor.configure(DomLayout, {
-                    components: [
-                        {
-                            id: 'aaa',
-                            render(editor: JWEditor): Promise<VNode[]> {
-                                const template = '<t t-zone="main"/><t t-zone="default"/>';
-                                return editor.plugins.get(Parser).parse('text/html', template);
-                            },
-                        },
-                    ],
-                    locations: [['aaa', [target, 'replace']]],
-                });
+                editor.configure(DomLayout, { location: [target, 'replace'] });
                 editor.load(Plugin);
                 await editor.start();
 
-                expect(container.innerHTML).to.equal('<div></div>');
-
+                const pDom = container.querySelector('p');
+                const text = pDom.firstChild as Text;
+                text.textContent = '';
                 await nextTick();
-                mutationNumber = 0;
 
-                let hasFail = false;
-                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                const changes: ChangesLocations = {
-                    add: [],
-                    move: [],
-                    remove: [],
-                    update: engine.root.descendants().map(node => [node, ['id']]),
-                };
-                await engine.redraw(changes).catch(e => {
-                    expect(e.message).to.include('Impossible');
-                    hasFail = true;
+                mutationNumber = 0;
+                await editor.execCommand(() => {
+                    const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const [p] = engine.getNodes(pDom);
+                    p.children()[1].remove(); // b
                 });
 
-                expect(hasFail).to.equal(true);
+                expect(container.innerHTML).to.equal('<jw-editor><p>ac</p><p>def</p></jw-editor>');
+                expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
+                expect([...pDom.childNodes]).to.deep.equal([text], 'Use the same text');
 
-                expect(mutationNumber).to.equal(1, 'remove <div>');
+                expect(mutationNumber).to.equal(1, '"" => ac');
 
                 await editor.stop();
             });
@@ -3401,6 +3403,48 @@ describe('DomLayout', () => {
             });
         });
         describe('nodes', () => {
+            it('should redraw with a new item', async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins
+                            .get(Parser)
+                            .parse('text/html', '<p>abc</p><p>def</p>');
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
+                const area = new VElement({ htmlTag: 'area' });
+
+                mutationNumber = 0;
+                await editor.execCommand(() => {
+                    b.after(area);
+                    expect(container.innerHTML).to.equal(
+                        '<jw-editor><p>abc</p><p>def</p></jw-editor>',
+                    );
+                });
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><p>ab<area>c</p><p>def</p></jw-editor>',
+                );
+
+                expect(mutationNumber).to.equal(3, 'update text, add <area>, add text');
+
+                await editor.stop();
+            });
             it('should add a item which return a fragment dom object', async () => {
                 class CustomNode extends AtomicNode {}
                 class CustomDomRenderer extends NodeRenderer<DomObject> {
