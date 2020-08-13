@@ -6,7 +6,7 @@ import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from './LinkFormat';
 import { Char } from '../../plugin-char/src/Char';
 import { Modifiers } from '../../core/src/Modifiers';
-import { VNode, Typeguard } from '../../core/src/VNodes/VNode';
+import { VNode, Typeguard, RelativePosition } from '../../core/src/VNodes/VNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
@@ -145,11 +145,18 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (params.target) {
             link.modifiers.get(Attributes).set('target', params.target);
         }
-        return params.context.execCommand<Char>('insertText', {
-            text: label || link.url,
-            formats: new Modifiers(link),
-            context: params.context,
-        });
+        return this.editor.execWithRange<Char>(
+            [
+                [range.start, RelativePosition.AFTER],
+                [range.end, RelativePosition.BEFORE],
+            ],
+            'insertText',
+            {
+                text: label || link.url,
+                formats: new Modifiers(link),
+                context: params.context,
+            },
+        );
     }
     unlink(params: LinkParams): void {
         const range = params.context.range;
