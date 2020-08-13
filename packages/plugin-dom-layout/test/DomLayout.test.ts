@@ -1476,7 +1476,7 @@ describe('DomLayout', () => {
             await editor.stop();
         });
         describe('complex location', () => {
-            it('should redraw a selection in a custom fragment with children which have same rendering', async () => {
+            it('should redraw a selection in a custom fragment with children which have same rendering (1)', async () => {
                 class CustomNode extends AtomicNode {}
                 const custom = new CustomNode();
                 class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
@@ -1496,7 +1496,94 @@ describe('DomLayout', () => {
                                     tag: 'SPAN',
                                 },
                                 {
+                                    text: 'b',
+                                },
+                            ],
+                        };
+                        worker.locate([node], domObject.children[0] as DomObjectText);
+                        worker.locate([node], domObject.children[1] as DomObjectElement);
+                        worker.locate([node], domObject.children[2] as DomObjectText);
+                        return domObject;
+                    }
+                }
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    async render(): Promise<VNode[]> {
+                        return [custom];
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Renderer & Layout> = {
+                        components: [Component],
+                        renderers: [CustomHtmlObjectRenderer],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+
+                await editor.start();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+
+                document.getSelection().removeAllRanges();
+
+                await editor.execCommand(() => {
+                    custom.before(new CharNode({ char: 'X' }));
+                    custom.after(new CharNode({ char: 'Y' }));
+                    editor.selection.set({
+                        anchorNode: custom,
+                        anchorPosition: RelativePosition.BEFORE,
+                        focusNode: custom,
+                        direction: Direction.BACKWARD,
+                        focusPosition: RelativePosition.BEFORE,
+                    });
+                });
+
+                const domEditor = container.getElementsByTagName('jw-editor')[0];
+
+                let childNodes = [...domEditor.childNodes] as Node[];
+                let domSelection = target.ownerDocument.getSelection();
+
+                expect(childNodes.indexOf(domSelection.anchorNode)).to.deep.equal(0);
+                expect(domSelection.anchorOffset).to.deep.equal(1);
+
+                // redraw without real changes
+                await engine.redraw({ add: [], move: [], remove: [], update: [[custom, ['id']]] });
+
+                childNodes = [...domEditor.childNodes] as Node[];
+                domSelection = target.ownerDocument.getSelection();
+                expect(childNodes.indexOf(domSelection.anchorNode)).to.deep.equal(
+                    0,
+                    'after redraw',
+                );
+                expect(domSelection.anchorOffset).to.deep.equal(1, 'after redraw');
+
+                await editor.stop();
+            });
+            it('should redraw a selection in a custom fragment with children which have same rendering (2)', async () => {
+                class CustomNode extends AtomicNode {}
+                const custom = new CustomNode();
+                class CustomHtmlObjectRenderer extends NodeRenderer<DomObject> {
+                    static id = DomObjectRenderingEngine.id;
+                    engine: DomObjectRenderingEngine;
+                    predicate = CustomNode;
+                    async render(
+                        node: CustomNode,
+                        worker: RenderingEngineWorker<DomObject>,
+                    ): Promise<DomObject> {
+                        const domObject: DomObjectFragment = {
+                            children: [
+                                {
                                     text: 'a',
+                                },
+                                {
+                                    tag: 'SPAN',
+                                },
+                                {
+                                    text: 'b',
                                 },
                             ],
                         };
