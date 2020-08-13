@@ -561,7 +561,7 @@ describe('VDocument', () => {
                     contentBefore:
                         '<table><tbody><tr><td>a[bc</td><td>de]f</td></tr></tbody></table>',
                     stepFunction: deleteForward,
-                    contentAfter: '<table><tbody><tr><td>a[</td><td>]f</td></tr></tbody></table>',
+                    contentAfter: '<table><tbody><tr><td>a[]</td><td>f</td></tr></tbody></table>',
                 });
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[bc</p><p>de]f</p>',
@@ -575,7 +575,7 @@ describe('VDocument', () => {
                             return context.execCommand('deleteBackward');
                         });
                     },
-                    contentAfter: '<p>a[</p><p>]f</p>',
+                    contentAfter: '<p>a[]</p><p>f</p>',
                 });
             });
         });

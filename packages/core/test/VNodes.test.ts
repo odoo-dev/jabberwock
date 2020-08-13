@@ -1147,16 +1147,6 @@ describe('core', () => {
                         expect(p.childVNodes.slice()).to.deep.equal([a, marker1]);
                         expect(p.nextSibling().childVNodes.slice()).to.deep.equal([b, marker2, c]);
                     });
-                    it('should not break fragment', async () => {
-                        const root = new FragmentNode();
-                        const p = new VElement({ htmlTag: 'P' });
-                        root.append(p);
-                        expect(root.childVNodes.slice()).to.deep.equal([p]);
-                        expect(root.parent).to.be.undefined;
-                        root.splitAt(p);
-                        expect(root.childVNodes.slice()).to.deep.equal([p]);
-                        expect(root.parent).to.be.undefined;
-                    });
                 });
             });
             describe('Custom VNode', () => {

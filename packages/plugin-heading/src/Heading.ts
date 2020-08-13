@@ -13,6 +13,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
+import { RuleProperty } from '../../core/src/Mode';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -49,7 +50,11 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             handler: this.applyHeadingStyle,
         },
         insertParagraphBreak: {
-            selector: [HeadingNode],
+            selector: [
+                (node): boolean =>
+                    node instanceof HeadingNode &&
+                    this.editor.mode.is(node, RuleProperty.BREAKABLE),
+            ],
             check: (context: CheckingContext): boolean => {
                 const range = context.range;
                 return range.isCollapsed() && !range.start.nextSibling();
