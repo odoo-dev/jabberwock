@@ -404,7 +404,10 @@ export class VRange {
         });
         // Remove selected nodes without touching the start range's ancestors.
         const startAncestors = this.start.ancestors();
-        for (const node of removableNodes.filter(node => !startAncestors.includes(node))) {
+        const endAncestors = this.end.ancestors();
+        for (const node of removableNodes.filter(
+            node => !startAncestors.includes(node) && !endAncestors.includes(node),
+        )) {
             node.remove();
         }
         // Collapse the range by merging nodes between start and end.

@@ -1,11 +1,13 @@
 import JWEditor from '../src/JWEditor';
-import { testEditor } from '../../utils/src/testUtils';
+import { testEditor, unformat } from '../../utils/src/testUtils';
 import { Char } from '../../plugin-char/src/Char';
 import { VRange } from '../src/VRange';
 import { RelativePosition, Point } from '../src/VNodes/VNode';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Core } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
+import { VElement } from '../src/VNodes/VElement';
 
 const deleteForward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteForward');
@@ -432,6 +434,44 @@ describe('VDocument', () => {
                             await deleteForward(editor);
                         },
                         contentAfter: '<p><span><b>a[]</b></span><br><span><b>cde</b></span></p>',
+                    });
+                });
+            });
+            describe('unbreakable', () => {
+                it('should clear content of nbreakable nodes and not merge the containers', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                            '<section-unbreakable>
+                                <article-unbreakable>
+                                    <p>[abc</p>
+                                    <p>def</p>
+                                    <footer-unbreakable>ghi</footer-unbreakable>
+                                </article-unbreakable>
+                                <article-unbreakable>
+                                    <p>123</p>
+                                    <p>456</p>
+                                    <footer-unbreakable>789]</footer-unbreakable>
+                                </article-unbreakable>
+                            </section-unbreakable>`),
+                        stepFunction: async (editor: JWEditor): Promise<void> => {
+                            await editor.execCommand(() => {
+                                const layoutEngine = editor.plugins.get(Layout).engines
+                                    .dom as DomLayoutEngine;
+                                layoutEngine.root
+                                    .descendants(node => node instanceof VElement)
+                                    .forEach(node => (node.breakable = false));
+                            });
+                            await editor.execCommand<Core>('deleteForward');
+                        },
+                        contentAfter: unformat(`
+                            '<section-unbreakable>
+                                <article-unbreakable>
+                                    <p>[<br></p>
+                                </article-unbreakable>
+                                <article-unbreakable>
+                                    <footer-unbreakable>]<br></footer-unbreakable>
+                                </article-unbreakable>
+                            </section-unbreakable>`),
                     });
                 });
             });
