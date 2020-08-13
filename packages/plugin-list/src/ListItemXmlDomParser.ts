@@ -42,9 +42,9 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     // wrapped together in a base container.
                     if (!inlinesContainer) {
                         inlinesContainer = new Container();
-                        inlinesContainer.modifiers.append(
-                            new ListItemAttributes(itemModifiers.get(Attributes)),
-                        );
+                        const attributes = itemModifiers.get(Attributes);
+                        attributes.remove('value');
+                        inlinesContainer.modifiers.append(new ListItemAttributes(attributes));
                         nodes.push(inlinesContainer);
                     }
                     inlinesContainer.append(...parsedChild);
@@ -54,9 +54,9 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     } else {
                         inlinesContainer = null; // Close the inlinesContainer.
                         for (const child of parsedChild) {
-                            child.modifiers.set(
-                                new ListItemAttributes(itemModifiers.get(Attributes)),
-                            );
+                            const attributes = itemModifiers.get(Attributes);
+                            attributes.remove('value');
+                            child.modifiers.set(new ListItemAttributes(attributes));
                         }
                         nodes.push(...parsedChild);
                     }

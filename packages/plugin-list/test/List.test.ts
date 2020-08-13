@@ -5776,6 +5776,38 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ol><li>abc</li><li>[]<br></li></ol>',
                             });
                         });
+                        it('should indent an item in an ordered list and add value (with dom mutations)', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                        <li value="2">c[]</li>
+                                    </ol>`),
+                                stepFunction: async (editor: JWEditor): Promise<void> => {
+                                    const ol = document.querySelector('ol');
+                                    const li = document.createElement('li');
+                                    li.append(document.createElement('br'));
+                                    ol.insertBefore(li, ol.lastElementChild);
+                                    await editor.execCommand<Core>('insertParagraphBreak'); // new line
+                                },
+                                contentAfter: unformat(`
+                                    <ol>
+                                        <li>a</li>
+                                        <li style="list-style: none;">
+                                            <ol>
+                                                <li>b</li>
+                                            </ol>
+                                        </li>
+                                        <li value="2">c</li>
+                                        <li>[]<br></li>
+                                    </ol>`),
+                            });
+                        });
                     });
                     describe('Removing items', () => {
                         it('should add an empty list item at the end of a list, then remove it', async () => {

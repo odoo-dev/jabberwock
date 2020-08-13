@@ -1776,7 +1776,14 @@ export class DomReconciliationEngine {
      */
     private isAvailableNode(id: DomObjectID, domNode: Node): boolean {
         const linkedId = this._fromDom.get(domNode);
-        if (!linkedId || linkedId === id) {
+        if (!linkedId) {
+            // The browser can separate an item and keep all attributes on the
+            // clone. In the event of a new element to be associated, a
+            // complete redrawing is requested.
+            this._diff[id].askCompleteRedrawing = true;
+            return true;
+        }
+        if (linkedId === id) {
             return true;
         }
         if (this._diff[linkedId]?.askCompleteRedrawing) {

@@ -33,7 +33,6 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
                 this._renderLi(listNode, children[index], domObjects[index], worker),
             );
         }
-
         return list;
     }
     private _renderLi(
@@ -41,7 +40,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
         listItem: VNode,
         rendering: DomObject,
         worker: RenderingEngineWorker<DomObject>,
-    ): DomObject | VNode {
+    ): DomObject {
         let li: DomObjectElement;
         // The node was wrapped in a "LI" but needs to be rendered as well.
         if ('tag' in rendering && rendering.tag === 'P' && !rendering.shadowRoot) {
