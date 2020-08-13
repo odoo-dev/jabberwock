@@ -51,6 +51,7 @@ import { Textarea } from '../plugin-textarea/src/Textarea';
 import { FollowRange } from '../plugin-dom-follow-range/src/FollowRange';
 import { Input } from '../plugin-input/src/Input';
 import { FontSize } from '../plugin-font-size/src/FontSize';
+import { History } from '../plugin-history/src/History';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -146,6 +147,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [OdooVideo],
                 [CustomPlugin],
                 [FollowRange],
+                [History],
                 ...(options.plugins || []),
             ],
         });
