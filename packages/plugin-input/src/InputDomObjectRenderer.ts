@@ -25,15 +25,15 @@ export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
             },
         };
 
-        let onInputChange: () => void;
+        let onCommit: () => void;
         let mousedown: (ev: MouseEvent) => void;
         let changeHandler: () => void;
         input.attach = (el: HTMLInputElement): void => {
-            onInputChange = this._onCommit.bind(this, node, el);
+            onCommit = this._onCommit.bind(this, node, el);
             changeHandler = (): void => {
-                this.engine.editor.execCommand(()=>{
+                this.engine.editor.execCommand(() => {
                     node.value = el.value;
-                    node.change(this.engine.editor); 
+                    node.change(this.engine.editor);
                 });
             };
             mousedown = (ev: MouseEvent): void => {
@@ -43,13 +43,13 @@ export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
 
             el.addEventListener('change', changeHandler);
             el.addEventListener('mousedown', mousedown);
-            this.engine.editor.dispatcher.registerCommandHook('@commit', onInputChange);
+            this.engine.editor.dispatcher.registerCommandHook('@commit', onCommit);
         };
 
         input.detach = (el: HTMLInputElement): void => {
             el.removeEventListener('change', changeHandler);
             el.removeEventListener('mousedown', mousedown);
-            this.engine.editor.dispatcher.removeCommandHook('@commit', onInputChange);
+            this.engine.editor.dispatcher.removeCommandHook('@commit', onCommit);
         };
         return input;
     }

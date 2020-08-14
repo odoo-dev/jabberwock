@@ -11,3 +11,7 @@ jw-editor {
     border: 1px solid #000;
     background-color: #141217;
 }
+
+jw-toolbar input {
+    color: #C6C6C6;
+}

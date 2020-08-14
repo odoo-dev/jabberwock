@@ -18,26 +18,46 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
      */
     _onCommit(node: InputNode, input: HTMLInputElement): void {
         super._onCommit(node, input);
-        const range = this.engine.editor.selection.range;
-        const fontNodes = range.selectedNodes(CharNode);
+        const editor = this.engine.editor;
+        const range = editor.selection.range;
 
-        const fontSize =
-            fontNodes[0] && fontNodes[0].modifiers.find(Attributes)?.style?.get('font-size');
+        let next = range.start.nextSibling(CharNode);
+        if (next) {
+            // If the end is before the charNode, the charNode is not selected.
+            const childVNodes = next.parent.childVNodes;
+            let index = childVNodes.indexOf(next);
+            let sibling: VNode;
+            while (index && (sibling = childVNodes[index - 1]) && sibling !== range.start) {
+                if (sibling !== range.end) {
+                    next = null;
+                }
+                index--;
+            }
+        }
+
+        let fontSize = next?.modifiers.find(Attributes)?.style?.get('font-size');
 
         input.style.display = 'block';
         if (fontSize) {
-            input.value = parseInt(fontSize).toString();
-        } else if (fontNodes[0]) {
+            fontSize = parseInt(fontSize, 10).toString();
+        } else if (next) {
             const layout = this.engine.editor.plugins.get(Layout);
             const domLayout = layout.engines.dom as DomLayoutEngine;
-            const firstDomNode = domLayout.getDomNodes(fontNodes[0])[0];
-            const firstDomElement =
-                firstDomNode instanceof HTMLElement ? firstDomNode : firstDomNode.parentElement;
-            const style = firstDomElement ? getComputedStyle(firstDomElement) : {'font-size': ''};
-            input.value = parseInt(style['font-size']).toString();
+            const firstDomNode = domLayout.getDomNodes(next)[0];
+            let firstDomElement: Element;
+            if (firstDomNode) {
+                firstDomElement =
+                    firstDomNode instanceof HTMLElement ? firstDomNode : firstDomNode.parentElement;
+                if (firstDomElement) {
+                    fontSize = parseInt(
+                        getComputedStyle(firstDomElement)['font-size'],
+                        10,
+                    ).toString();
+                }
+            }
         } else {
-            input.value = '';
             input.style.display = 'none';
         }
+        input.value = fontSize || '';
     }
 }
