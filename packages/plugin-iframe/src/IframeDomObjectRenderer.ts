@@ -5,6 +5,7 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { IframeNode } from './IframeNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -13,15 +14,19 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(iframeNode: IframeNode): Promise<DomObject> {
         let onload: (ev: Event) => void;
+        const children: VNode[] = [];
+        iframeNode.childVNodes.forEach(child => {
+            if (child.tangible || child instanceof MetadataNode) {
+                children.push(child);
+            }
+        });
         const domObject: DomObject = {
             tag: 'IFRAME',
             children: [
                 {
                     tag: 'JW-IFRAME',
                     shadowRoot: true,
-                    children: iframeNode.childVNodes.filter(
-                        child => child.tangible || child instanceof MetadataNode,
-                    ),
+                    children: children,
                     attach: (wrap: HTMLElement): void => {
                         if (wrap.parentElement instanceof HTMLIFrameElement) {
                             const body = wrap.parentElement.contentWindow?.document.body;
