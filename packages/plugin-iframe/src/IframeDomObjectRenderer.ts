@@ -21,52 +21,54 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
             }
         });
         const domObject: DomObject = {
-            tag: 'IFRAME',
             children: [
                 {
                     tag: 'JW-IFRAME',
                     shadowRoot: true,
                     children: children,
-                    attach: (wrap: HTMLElement): void => {
-                        if (wrap.parentElement instanceof HTMLIFrameElement) {
-                            const body = wrap.parentElement.contentWindow?.document.body;
+                },
+                {
+                    tag: 'IFRAME',
+                    attributes: { src: iframeNode.src },
+                    attach: (iframe: HTMLIFrameElement): void => {
+                        const wrap = iframe.previousElementSibling as HTMLElement;
+                        wrap.style.display = 'none';
+                        onload = (ev: Event): void => {
+                            if (!ev.isTrusted) {
+                                return;
+                            }
+                            if (!iframeNode.src) {
+                                const doc = iframe.contentWindow.document;
+                                const body = doc.body;
+                                body.style.margin = '0px';
+
+                                for (const attr of wrap.attributes) {
+                                    wrap.removeAttribute(attr.name);
+                                }
+                                body.innerHTML = '';
+                                body.append(wrap);
+                            }
+                            // Bubbles up the load-iframe event.
+                            const customEvent = new CustomEvent('load-iframe', {
+                                bubbles: true,
+                                composed: true,
+                                cancelable: true,
+                            });
+                            iframe.dispatchEvent(customEvent);
+                        };
+                        iframe.addEventListener('load', onload);
+                    },
+                    detach: (iframe: HTMLIFrameElement): void => {
+                        if (!iframe.src) {
+                            const body = iframe.contentWindow?.document.body;
                             if (body) {
-                                body.appendChild(wrap);
+                                iframe.append(...body.childNodes);
                             }
                         }
+                        iframe.removeEventListener('load', onload);
                     },
                 },
             ],
-            attach: (iframe: HTMLIFrameElement) => {
-                onload = (ev: Event): void => {
-                    if (!ev.isTrusted) {
-                        return;
-                    }
-                    if (!iframe.src) {
-                        const doc = iframe.contentWindow.document;
-                        const body = doc.body;
-                        body.style.margin = '0px';
-                        body.append(...iframe.childNodes);
-                    }
-                    // Bubbles up the load-iframe event.
-                    const customEvent = new CustomEvent('load-iframe', {
-                        bubbles: true,
-                        composed: true,
-                        cancelable: true,
-                    });
-                    iframe.dispatchEvent(customEvent);
-                };
-                iframe.addEventListener('load', onload);
-            },
-            detach: (iframe: HTMLIFrameElement) => {
-                if (!iframe.src) {
-                    const body = iframe.contentWindow?.document.body;
-                    if (body) {
-                        iframe.append(...body.childNodes);
-                    }
-                }
-                iframe.removeEventListener('load', onload);
-            },
         };
         return domObject;
     }
