@@ -18,8 +18,9 @@ export class IframeXmlDomParser extends AbstractParser<Node> {
      * @param item
      */
     async parse(item: Element): Promise<VNode[]> {
-        const shadow = new IframeNode();
         const attributes = this.engine.parseAttributes(item);
+        const shadow = new IframeNode({ src: attributes.get('src') });
+        attributes.remove('src');
         if (attributes.length) {
             shadow.modifiers.append(attributes);
         }
