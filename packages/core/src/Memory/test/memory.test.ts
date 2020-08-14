@@ -2457,6 +2457,69 @@ describe('core', () => {
                         ],
                     });
                 });
+                it('should get the changed object with reversed memory slice order', () => {
+                    const tata = {
+                        m: 6,
+                    };
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const obj: any = makeVersionable({
+                        toto: {
+                            titi: {
+                                tata: tata,
+                            },
+                        },
+                        tutu: {
+                            a: 1,
+                            tata: tata,
+                        },
+                        vroum: {
+                            b: 2,
+                        },
+                        array: [
+                            { x: 1 },
+                            { x: 2 },
+                            { x: 3 },
+                            { x: 4 },
+                            { x: 5 },
+                            { x: 6 },
+                            { x: 7 },
+                            { x: 8 },
+                        ],
+                    });
+                    markAsDiffRoot(obj.toto);
+                    markAsDiffRoot(obj.tutu);
+                    const memory = new Memory();
+                    memory.create('init');
+                    memory.switchTo('init');
+                    memory.attach(obj);
+                    memory.create('test');
+                    memory.switchTo('test');
+                    memory.create('test-1');
+                    memory.switchTo('test-1');
+
+                    obj.toto.titi.tata.m = 4;
+                    obj.tutu.a = 6;
+                    const vroum = obj.vroum;
+                    delete obj.vroum;
+                    const x2 = obj.array[1];
+                    obj.array.splice(1, 1);
+                    const z = makeVersionable({ z: 1 });
+                    obj.array.splice(3, 0, z); // [{ x: 1 },  { x: 3 },{ x: 4 }, {z: 1}, { x: 5 },{ x: 6 },{ x: 7 },{ x: 8 }]
+                    const yop = (obj.yop = makeVersionable({ a: 1 }));
+
+                    memory.switchTo('test');
+                    expect(memory.getChangesLocations('test-1', 'test')).to.deep.equal({
+                        add: [vroum, x2],
+                        move: [],
+                        remove: [z, yop],
+                        update: [
+                            [obj, ['vroum', 'yop']],
+                            [obj.tutu, ['a']],
+                            [obj.array, [1, 4]],
+                            [obj.toto.titi.tata, ['m']],
+                        ],
+                    });
+                });
             });
         });
     });
