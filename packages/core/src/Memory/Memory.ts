@@ -326,13 +326,21 @@ export class Memory {
                 const proxy = this._proxies[ID];
                 if (linkedParentOfProxy[ID].length) {
                     if (ref.ids.has(+ID)) {
-                        diff.add.push(proxy);
+                        if (ref.parent === previous) {
+                            diff.remove.push(proxy);
+                        } else {
+                            diff.add.push(proxy);
+                        }
                         removeFromUpdate.add(proxy);
                     } else {
                         diff.move.push(proxy);
                     }
                 } else {
-                    diff.remove.push(proxy);
+                    if (ref.parent === previous) {
+                        diff.add.push(proxy);
+                    } else {
+                        diff.remove.push(proxy);
+                    }
                     removeFromUpdate.add(proxy);
                 }
             }

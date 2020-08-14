@@ -2301,7 +2301,7 @@ describe('DomLayout', () => {
                         await editor.execCommand('deleteForward');
                         expect(document.querySelector('jw-test').innerHTML).to.equal('<p>abc</p>');
                         expect(mutationNumber).to.equal(
-                            5,
+                            4,
                             'remove <p>, remove <br>, update toolbar history button',
                         );
                     },
