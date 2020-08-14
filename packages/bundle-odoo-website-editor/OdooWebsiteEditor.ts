@@ -52,6 +52,9 @@ import { FollowRange } from '../plugin-dom-follow-range/src/FollowRange';
 import { Input } from '../plugin-input/src/Input';
 import { FontSize } from '../plugin-font-size/src/FontSize';
 import { History } from '../plugin-history/src/History';
+import { Iframe } from '../plugin-iframe/src/Iframe';
+import { Theme } from '../plugin-theme/src/Theme';
+import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -148,6 +151,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [CustomPlugin],
                 [FollowRange],
                 [History],
+                [Iframe],
                 ...(options.plugins || []),
             ],
         });
@@ -206,7 +210,10 @@ export class OdooWebsiteEditor extends JWEditor {
                 {
                     id: 'editable',
                     render: async (editor: JWEditor): Promise<VNode[]> => {
-                        return parseEditable(editor, options.source);
+                        const theme = new ThemeNode();
+                        const contents = await parseEditable(editor, options.source, true);
+                        theme.append(...contents);
+                        return [theme];
                     },
                 },
             ],
@@ -226,6 +233,37 @@ export class OdooWebsiteEditor extends JWEditor {
         this.configure(Table, {
             inlineUI: true,
         });
+
+        this.configure(Theme, {
+            components: [
+                {
+                    id: 'default',
+                    label: 'Theme table',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        return editor.plugins.get(Parser).parse('text/html', '<t-placeholder/>');
+                    },
+                },
+                {
+                    id: 'mobile',
+                    label: 'Mobile preview',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        const styleSheets: string[] = [];
+                        for (const style of document.querySelectorAll('style, link')) {
+                            styleSheets.push(style.outerHTML);
+                        }
+                        return editor.plugins
+                            .get(Parser)
+                            .parse(
+                                'text/html',
+                                '<t-iframe id="mobile-preview">' +
+                                    styleSheets.join('') +
+                                    '<t-placeholder/></t-iframe>',
+                            );
+                    },
+                },
+            ],
+        });
+
         if (options.mode) {
             this.configure({
                 modes: [options.mode],
