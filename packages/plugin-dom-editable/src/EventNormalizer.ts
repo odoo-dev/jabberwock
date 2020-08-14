@@ -1407,7 +1407,9 @@ export class EventNormalizer {
             root = document;
         }
 
-        const selection = root.getSelection();
+        const selection = root.getSelection
+            ? root.getSelection()
+            : root.ownerDocument.getSelection();
 
         let forward: boolean;
         if (!selection || selection.rangeCount === 0) {
@@ -1969,7 +1971,9 @@ export class EventNormalizer {
     private _enableNormalizer(el: Element): void {
         const root =
             el.shadowRoot ||
-            (el instanceof HTMLIFrameElement && !el.src && el.contentWindow.document);
+            (el instanceof HTMLIFrameElement &&
+                (!el.src || el.src === window.location.href) &&
+                el.contentWindow.document);
         if (root && !this._shadowNormalizers.get(root)) {
             const eventNormalizer = new EventNormalizer(
                 this._isInEditable,

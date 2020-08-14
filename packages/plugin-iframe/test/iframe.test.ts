@@ -22,7 +22,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseEditable } from '../../utils/src/configuration';
 
 function waitIframeLoading(): Promise<void> {
-    return new Promise(r => setTimeout(r, 15));
+    return new Promise(r => setTimeout(r, 60));
 }
 
 const container = document.createElement('div');
