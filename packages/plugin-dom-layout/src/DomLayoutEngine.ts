@@ -414,7 +414,7 @@ export class DomLayoutEngine extends LayoutEngine {
                 if (id) {
                     const keys = cache.cachedIsSameAsModifierIds[id];
                     if (keys) {
-                        for (const key in keys) {
+                        for (const key of keys) {
                             delete cache.cachedIsSameAsModifier[key];
                         }
                         delete cache.cachedIsSameAsModifierIds[id];
