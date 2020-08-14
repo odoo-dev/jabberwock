@@ -280,13 +280,9 @@ export class RenderingEngine<T = {}> {
             idB = ++modifierId;
             cache.cachedModifierId.set(modifierB, idB);
         }
-        const key: ModifierPairId = idA + '-' + idB;
+        const key: ModifierPairId = idA > idB ? idA + '-' + idB : idB + '-' + idA;
         if (key in cache.cachedIsSameAsModifier) {
             return cache.cachedIsSameAsModifier[key];
-        }
-        const reverseKey: ModifierPairId = idB + '-' + idA;
-        if (reverseKey in cache.cachedIsSameAsModifier) {
-            return cache.cachedIsSameAsModifier[reverseKey];
         }
         const isSame =
             (!modifierA || modifierA.isSameAs(modifierB)) &&
@@ -302,7 +298,7 @@ export class RenderingEngine<T = {}> {
         } else {
             cache.cachedIsSameAsModifierIds[idB].push(key);
         }
-        return cache.cachedIsSameAsModifier[key];
+        return isSame;
     }
 }
 

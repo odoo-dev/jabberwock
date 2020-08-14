@@ -170,6 +170,35 @@ describePlugin(TextColor, testEditor => {
                         '<p>a[<span style="color: yellow;">b</span><i style="color: yellow;"><span>cd</span>ef</i><span style="color: yellow;">g]h</span>f</p>',
                 });
             });
+            it('should set the color of all characters to red', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1>[a]</h1><p>b</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'red');
+                    },
+                    contentAfter: '<h1 style="color: red;">[a]</h1><p>b</p>',
+                });
+            });
+            it('should set the color of all characters to red with different attributes', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1 class="aaa">[a]</h1><p class="yyy">b</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'red');
+                    },
+                    contentAfter:
+                        '<h1 class="aaa" style="color: red;">[a]</h1><p class="yyy">b</p>',
+                });
+            });
+            it('should set the color of all characters to red with same attributes', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1 class="aaa">[a]</h1><p class="aaa">b</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'red');
+                    },
+                    contentAfter:
+                        '<h1 class="aaa" style="color: red;">[a]</h1><p class="aaa">b</p>',
+                });
+            });
         });
     });
     describe('uncolorText', () => {
