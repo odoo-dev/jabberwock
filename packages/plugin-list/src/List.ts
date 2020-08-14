@@ -328,21 +328,21 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const list = item.ancestor(ListNode);
             const previousSibling = item.previousSibling();
             const nextSibling = item.nextSibling();
-            if (previousSibling && nextSibling) {
-                if (this.editor.mode.is(item.parent, RuleProperty.BREAKABLE)) {
+            if (this.editor.mode.is(list, RuleProperty.BREAKABLE)) {
+                if (previousSibling && nextSibling) {
                     const splitList = item.parent.splitAt(item);
                     splitList.before(item);
+                } else if (previousSibling) {
+                    list.after(item);
+                } else if (nextSibling) {
+                    list.before(item);
+                } else {
+                    for (const child of list.childVNodes) {
+                        // TODO: automatically invalidate `li-attributes`.
+                        child.modifiers.remove(ListItemAttributes);
+                    }
+                    list.unwrap();
                 }
-            } else if (previousSibling) {
-                list.after(item);
-            } else if (nextSibling) {
-                list.before(item);
-            } else {
-                for (const child of list.childVNodes) {
-                    // TODO: automatically invalidate `li-attributes`.
-                    child.modifiers.remove(ListItemAttributes);
-                }
-                list.unwrap();
             }
         }
     }

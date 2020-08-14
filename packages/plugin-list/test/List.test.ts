@@ -3732,6 +3732,69 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<div>abc</div><div><div>[]def</div></div>',
                             });
                         });
+                        it('should not outdent while nested within a list item if the list is unbreakable', async () => {
+                            const unbreakableMode = {
+                                id: 'unbreakable',
+                                rules: [
+                                    {
+                                        selector: [ListNode],
+                                        properties: {
+                                            breakable: {
+                                                value: false,
+                                            },
+                                        },
+                                    },
+                                ],
+                            };
+                            // First LI.
+                            await testEditor(BasicEditor, {
+                                beforeStart: editor => {
+                                    editor.configure({ modes: [unbreakableMode] });
+                                    editor.configure({ mode: 'unbreakable' });
+                                },
+                                contentBefore:
+                                    '<ol><li><div><div>[]abc</div></div></li><li>def</li></ol>',
+                                stepFunction: backspace,
+                                contentAfter:
+                                    '<ol><li><div><div>[]abc</div></div></li><li>def</li></ol>',
+                            });
+                            // In the middle.
+                            await testEditor(BasicEditor, {
+                                beforeStart: editor => {
+                                    editor.configure({ modes: [unbreakableMode] });
+                                    editor.configure({ mode: 'unbreakable' });
+                                },
+                                contentBefore:
+                                    '<ol><li><div>abc</div></li><li><div><div>[]def</div></div></li><li>ghi</li></ol>',
+                                stepFunction: backspace,
+                                contentAfter:
+                                    '<ol><li><div>abc</div></li><li><div><div>[]def</div></div></li><li>ghi</li></ol>',
+                            });
+                            // Last LI.
+                            await testEditor(BasicEditor, {
+                                beforeStart: editor => {
+                                    editor.configure({ modes: [unbreakableMode] });
+                                    editor.configure({ mode: 'unbreakable' });
+                                },
+                                contentBefore:
+                                    '<ol><li>abc</li><li><div><div>[]def</div></div></li></ol>',
+                                stepFunction: backspace,
+                                contentAfter:
+                                    '<ol><li>abc</li><li><div><div>[]def</div></div></li></ol>',
+                            });
+                            // With a div before the list:
+                            await testEditor(BasicEditor, {
+                                beforeStart: editor => {
+                                    editor.configure({ modes: [unbreakableMode] });
+                                    editor.configure({ mode: 'unbreakable' });
+                                },
+                                contentBefore:
+                                    '<div>abc</div><ol><li>def</li><li><div><div>[]ghi</div></div></li><li>jkl</li></ol>',
+                                stepFunction: backspace,
+                                contentAfter:
+                                    '<div>abc</div><ol><li>def</li><li><div><div>[]ghi</div></div></li><li>jkl</li></ol>',
+                            });
+                        });
                         it('should outdent an empty list item within a list', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
