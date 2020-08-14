@@ -693,8 +693,13 @@ export class EventNormalizer {
                 // In the multiple key case, a 'keydown' is always the first
                 // event triggered between the three (keydown, keypress, input).
                 // So we create a new map each time a 'keydown' is registred.
-                if (ev.type === 'keydown') {
+                if (ev instanceof KeyboardEvent && ev.type === 'keydown') {
                     this.currentStackObservation._multiKeyStack.push({});
+
+                    // Drop any selection that is not the last one before input.
+                    this._swiftKeyDeleteWordSelectionCache = [
+                        this._swiftKeyDeleteWordSelectionCache.pop(),
+                    ];
                 }
                 const lastMultiKeys = this.currentStackObservation._multiKeyStack[
                     this.currentStackObservation._multiKeyStack.length - 1
@@ -1310,13 +1315,9 @@ export class EventNormalizer {
         // Check if this is a deleteWord from the SwiftKey mobile keyboard. This
         // be triggered by long-pressing the backspace key, however SwiftKey
         // does not trigger a proper deleteWord event so we must detect it.
-        // This is extremely ad-hoc for the particular case of SwiftKey. It
-        // turns out it triggers two selectionchange after the deletion is done.
-        // The actual selection we want is the one preceding these two, which is
-        // the selection right before the deletion.
-        this._swiftKeyDeleteWordSelectionCache.pop();
-        this._swiftKeyDeleteWordSelectionCache.pop();
-        const selection = this._swiftKeyDeleteWordSelectionCache.pop();
+        // This is extremely ad-hoc for the particular case of SwiftKey and we
+        // need to retrieve the selection as it was right before the deletion.
+        const selection = this._swiftKeyDeleteWordSelectionCache[0];
         this._swiftKeyDeleteWordSelectionCache.length = 0;
 
         // Get characterMapping to retrieve which word has been deleted.
