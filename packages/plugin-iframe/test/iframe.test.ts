@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import JWEditor from '../../core/src/JWEditor';
+import { spy } from 'sinon';
+import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Char } from '../../plugin-char/src/Char';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
@@ -7,6 +8,7 @@ import {
     setSelection,
     nextTick,
     triggerEvent,
+    triggerEvents,
 } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { Iframe } from '../src/Iframe';
@@ -20,6 +22,8 @@ import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { Metadata } from '../../plugin-metadata/src/Metadata';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseEditable } from '../../utils/src/configuration';
+import { selectAllWithKeyA } from '../../plugin-dom-editable/test/DomEditable.test';
+import { Keymap, Platform } from '../../plugin-keymap/src/Keymap';
 
 function waitIframeLoading(): Promise<void> {
     return new Promise(r => {
@@ -643,6 +647,132 @@ describe('Iframe', async () => {
                 focusOffset: 4,
             });
 
+            await editor.stop();
+        });
+        it('should insert char in a word', async () => {
+            const editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(Iframe);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const iframe = new IframeNode();
+                            iframe.append(...nodes);
+                            return [iframe];
+                        },
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            section.innerHTML = '<div>abcd</div>';
+            setSelection(section.firstChild.firstChild, 2, section.lastChild.firstChild, 2);
+
+            editor.configure(Keymap, { platform: Platform.PC });
+            await editor.start();
+            await waitIframeLoading();
+
+            // key: o
+            await triggerEvents([
+                [
+                    {
+                        'type': 'selection',
+                        'focus': { 'nodeId': 2, 'offset': 2 },
+                        'anchor': { 'nodeId': 2, 'offset': 2 },
+                    },
+                ],
+                [
+                    { 'type': 'keydown', 'key': 'o', 'code': 'KeyO' },
+                    { 'type': 'keypress', 'key': 'o', 'code': 'KeyO' },
+                    { 'type': 'beforeinput', 'data': 'o', 'inputType': 'insertText' },
+                    { 'type': 'input', 'data': 'o', 'inputType': 'insertText' },
+                    {
+                        'type': 'mutation',
+                        'mutationType': 'characterData',
+                        'textContent': 'abocd',
+                        'targetId': 2,
+                    },
+                    {
+                        'type': 'selection',
+                        'focus': { 'nodeId': 2, 'offset': 3 },
+                        'anchor': { 'nodeId': 2, 'offset': 3 },
+                    },
+                ],
+                [{ 'type': 'keyup', 'key': 'o', 'code': 'KeyO' }],
+            ]);
+
+            const doc = container.querySelector('iframe').contentWindow.document;
+            const domEditable = doc.querySelector('jw-iframe').shadowRoot.firstElementChild;
+            expect(domEditable.innerHTML).to.equal('<div>abocd</div>');
+            expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertText');
+            expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertText');
+
+            const domSelection = domEditable.ownerDocument.getSelection();
+            expect({
+                anchorNode: domSelection.anchorNode,
+                anchorOffset: domSelection.anchorOffset,
+                focusNode: domSelection.focusNode,
+                focusOffset: domSelection.focusOffset,
+            }).to.deep.equal({
+                anchorNode: domEditable.firstChild.firstChild,
+                anchorOffset: 3,
+                focusNode: domEditable.firstChild.firstChild,
+                focusOffset: 3,
+            });
+
+            await editor.stop();
+        });
+        it('should trigger a shortcut', async () => {
+            const editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(Iframe);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const iframe = new IframeNode();
+                            iframe.append(...nodes);
+                            return [iframe];
+                        },
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
+            editor.configure(Keymap, { platform: Platform.PC });
+            const loadables: Loadables<Keymap> = {
+                shortcuts: [
+                    {
+                        pattern: 'CTRL+A',
+                        commandId: 'command-b',
+                    },
+                ],
+            };
+            editor.load(loadables);
+            await editor.start();
+            await waitIframeLoading();
+
+            editor.execCommand = (): Promise<void> => Promise.resolve();
+            const execSpy = spy(editor, 'execCommand');
+            const doc = container.querySelector('iframe').contentWindow.document;
+            const shadowRoot = doc.querySelector('jw-iframe').shadowRoot;
+            await selectAllWithKeyA(shadowRoot);
+            const params = {
+                context: editor.contextManager.defaultContext,
+            };
+            expect(execSpy.args).to.eql([['command-b', params]]);
             await editor.stop();
         });
     });

@@ -221,9 +221,10 @@ interface DataTransferDetails {
 type EventToProcess = Event | DataTransferDetails;
 
 interface EventListenerDeclaration {
-    readonly target: Document | ShadowRoot;
+    readonly target: Document | ShadowRoot | Window;
     readonly type: string;
     readonly listener: EventListener;
+    readonly capture: boolean;
 }
 
 interface CompositionData {
@@ -478,10 +479,17 @@ export class EventNormalizer {
     constructor(
         private _isInEditable: (node: Node) => boolean,
         private _triggerEventBatch: TriggerEventBatchCallback,
+        private processKeydown: {
+            handle: (event: KeyboardEvent) => void;
+            handleCapture: (event: KeyboardEvent) => void;
+        },
         private root: Document | ShadowRoot = document,
     ) {
         this._shadowNormalizers.set(root, this);
         this.initNextObservation();
+
+        this._bindEvent(root, 'keydown', processKeydown.handle);
+        this._bindEvent(root, 'keydown', processKeydown.handleCapture, true);
 
         this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
         this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
@@ -544,7 +552,12 @@ export class EventNormalizer {
      * @param type of the event to listen
      * @param listener to call when the even occurs on the target
      */
-    _bindEvent(target: Document | ShadowRoot, type: string, listener: Function): void {
+    _bindEvent(
+        target: Document | ShadowRoot | Window,
+        type: string,
+        listener: Function,
+        capture = true,
+    ): void {
         const boundListener = (ev: EventToProcess): void => {
             if ('target' in ev) {
                 const doc = (ev.target as Node).ownerDocument;
@@ -558,6 +571,7 @@ export class EventNormalizer {
             target: target,
             type: type,
             listener: boundListener,
+            capture: capture,
         });
         target.addEventListener(type, boundListener, true);
     }
@@ -598,8 +612,8 @@ export class EventNormalizer {
      *
      */
     _unbindEvents(): void {
-        this._eventListeners.forEach(({ target, type, listener }) => {
-            target.removeEventListener(type, listener, true);
+        this._eventListeners.forEach(({ target, type, listener, capture }) => {
+            target.removeEventListener(type, listener, capture);
         });
     }
     /**
@@ -1988,6 +2002,7 @@ export class EventNormalizer {
             const eventNormalizer = new EventNormalizer(
                 this._isInEditable,
                 this._triggerEventBatch,
+                this.processKeydown,
                 root,
             );
             this._shadowNormalizers.set(root, eventNormalizer);
