@@ -14,7 +14,7 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
     predicate = IframeNode;
 
     async render(iframeNode: IframeNode): Promise<DomObject> {
-        let onload: (ev: Event) => void;
+        let onload: () => void;
         const children: VNode[] = [];
         iframeNode.childVNodes.forEach(child => {
             if (child.tangible || child instanceof MetadataNode) {
@@ -37,7 +37,8 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                         // Use the window.location.href to keep style, link and meta to load some
                         // data like the font-face. The style are not really used into the shadow
                         // container but we need the real url to load font-face with relative path.
-                        src: iframeNode.src || (!window.sinon && window.location.href),
+                        src: iframeNode.src || window.location.href,
+                        name: 'jw-device',
                     },
                     attach: (iframe: HTMLIFrameElement): void => {
                         const prev = iframe.previousElementSibling as HTMLElement;
@@ -50,8 +51,19 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                             wrap = prev;
                         }
 
-                        if (!iframeNode.src) {
-                            (function killJavascript(): void {
+                        if (iframeNode.src) {
+                            onload = (): void => {
+                                // Bubbles up the load-iframe event.
+                                const customEvent = new CustomEvent('load-iframe', {
+                                    bubbles: true,
+                                    composed: true,
+                                    cancelable: true,
+                                });
+                                iframe.dispatchEvent(customEvent);
+                            };
+                            iframe.addEventListener('load', onload);
+                        } else {
+                            (function loadWithPreloadedMeta(): void {
                                 // Remove all scripts, keep style, link and meta to load some
                                 // data like the font-face. The style are not used into the
                                 // shadow container.
@@ -59,45 +71,40 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                                     return;
                                 } else {
                                     const doc = iframe.contentWindow?.document;
-                                    if (
-                                        doc &&
-                                        doc.body &&
-                                        (doc.head.innerHTML !== '' || doc.body.innerHTML !== '')
-                                    ) {
-                                        for (const script of doc.head.querySelectorAll('script')) {
-                                            script.remove();
+                                    if (doc && (doc.head || doc.body)) {
+                                        for (const meta of wrap.shadowRoot.querySelectorAll(
+                                            'style, link, meta',
+                                        )) {
+                                            doc.write(meta.outerHTML);
                                         }
-                                        for (const script of doc.body.querySelectorAll('script')) {
-                                            script.remove();
-                                        }
+                                        doc.write('<body></body>');
+                                        doc.write("<script type='application/x-suppress'>");
+                                        iframe.contentWindow.close();
+
+                                        setTimeout((): void => {
+                                            const doc = iframe.contentWindow.document;
+                                            // Remove all attribute from the shadow container.
+                                            for (const attr of [...wrap.attributes]) {
+                                                wrap.removeAttribute(attr.name);
+                                            }
+                                            doc.body.style.margin = '0px';
+                                            doc.body.innerHTML = '';
+                                            doc.body.append(wrap);
+
+                                            // Bubbles up the load-iframe event.
+                                            const customEvent = new CustomEvent('load-iframe', {
+                                                bubbles: true,
+                                                composed: true,
+                                                cancelable: true,
+                                            });
+                                            iframe.dispatchEvent(customEvent);
+                                        });
                                     } else {
-                                        setTimeout(killJavascript);
+                                        setTimeout(loadWithPreloadedMeta);
                                     }
                                 }
                             })();
                         }
-
-                        onload = (): void => {
-                            if (!iframeNode.src) {
-                                const doc = iframe.contentWindow.document;
-                                // Remove all attribute from the shadow container.
-                                for (const attr of [...wrap.attributes]) {
-                                    wrap.removeAttribute(attr.name);
-                                }
-                                doc.body.style.margin = '0px';
-                                doc.body.innerHTML = '';
-                                doc.body.append(wrap);
-                                iframe.contentWindow.close();
-                            }
-                            // Bubbles up the load-iframe event.
-                            const customEvent = new CustomEvent('load-iframe', {
-                                bubbles: true,
-                                composed: true,
-                                cancelable: true,
-                            });
-                            iframe.dispatchEvent(customEvent);
-                        };
-                        iframe.addEventListener('load', onload);
                     },
                     detach: (iframe: HTMLIFrameElement): void => {
                         if (!iframe.src) {
