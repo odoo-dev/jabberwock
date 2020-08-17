@@ -22,8 +22,21 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseEditable } from '../../utils/src/configuration';
 
 function waitIframeLoading(): Promise<void> {
-    return new Promise(r => setTimeout(r, 60));
+    return new Promise(r => {
+        const resolve = (): void => {
+            document.removeEventListener('load-iframe', resolve);
+            r();
+        };
+        document.addEventListener('load-iframe', resolve);
+    });
 }
+
+const loadedWithPreloadedMeta = Symbol('loadedWithPreloadedMeta');
+if (!window.top[loadedWithPreloadedMeta]) {
+    window.top[loadedWithPreloadedMeta] = 0;
+}
+window.top[loadedWithPreloadedMeta]++;
+const loadingTest = window.top[loadedWithPreloadedMeta];
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -222,7 +235,7 @@ describe('Iframe', async () => {
                 const domIframe = document.createElement('iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
-                await waitIframeLoading();
+                await new Promise(r => setTimeout(r, 15));
 
                 const nodes = await editor.plugins.get(Parser).parse('dom/html', domDiv);
                 const node = nodes[0];
@@ -245,7 +258,7 @@ describe('Iframe', async () => {
                 const domIframe = document.createElement('iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
-                await waitIframeLoading();
+                await new Promise(r => setTimeout(r, 15));
                 const iframeRoot = domIframe.contentWindow.document.body;
 
                 const domSection = document.createElement('section');
@@ -275,7 +288,7 @@ describe('Iframe', async () => {
                 const domIframe = document.createElement('iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
-                await waitIframeLoading();
+                await new Promise(r => setTimeout(r, 15));
                 const iframeRoot = domIframe.contentWindow.document.body;
 
                 const domStyle = document.createElement('style');
@@ -310,7 +323,7 @@ describe('Iframe', async () => {
                 const domIframe = document.createElement('iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
-                await waitIframeLoading();
+                await new Promise(r => setTimeout(r, 15));
                 const iframeRoot = domIframe.contentWindow.document.body;
 
                 const domLink = document.createElement('link');
@@ -364,7 +377,7 @@ describe('Iframe', async () => {
                 const domIframe = document.createElement('iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
-                await waitIframeLoading();
+                await new Promise(r => setTimeout(r, 15));
                 const iframeRoot = domIframe.contentWindow.document.body;
 
                 const domLink = document.createElement('link');
@@ -409,6 +422,34 @@ describe('Iframe', async () => {
     });
 
     describe('render', async () => {
+        it('javascript inside the iframe has been killed', async () => {
+            const editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(Iframe);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section);
+                            const iframe = new IframeNode();
+                            iframe.append(...nodes);
+                            return [iframe];
+                        },
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            section.innerHTML = '<p>a</p>';
+            await editor.start();
+            await waitIframeLoading();
+            expect(window.top[loadedWithPreloadedMeta] - loadingTest).to.equal(0);
+            await editor.stop();
+        });
         it('mouse setRange (ubuntu chrome)', async () => {
             const editor = new JWEditor();
             editor.load(Html);
