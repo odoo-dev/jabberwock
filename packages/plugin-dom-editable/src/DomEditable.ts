@@ -10,6 +10,7 @@ import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { JWEditor } from '../../core/src/JWEditor';
 import { RelativePosition, Point, VNode } from '../../core/src/VNodes/VNode';
 import { VRange } from '../../core/src/VRange';
+import { RuleProperty } from '../../core/src/Mode';
 
 export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [DomLayout, Layout];
@@ -47,12 +48,15 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      * @param params
      */
     selectAll(): void {
+        const unbreakableAncestor = this.editor.selection.range.start.ancestor(
+            node => !this.editor.mode.is(node, RuleProperty.BREAKABLE),
+        );
         const domEngine = this.dependencies.get(Layout).engines.dom;
         const editable = domEngine.components.editable[0];
         this.editor.selection.set({
-            anchorNode: editable.firstLeaf(),
+            anchorNode: unbreakableAncestor?.firstLeaf() || editable.firstLeaf(),
             anchorPosition: RelativePosition.BEFORE,
-            focusNode: editable.lastLeaf(),
+            focusNode: unbreakableAncestor?.lastLeaf() || editable.lastLeaf(),
             focusPosition: RelativePosition.AFTER,
             direction: Direction.FORWARD,
         });
