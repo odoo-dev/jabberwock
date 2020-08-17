@@ -15,7 +15,7 @@ import { Html } from '../../plugin-html/src/Html';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
 
-async function selectAllWithKeyA(container: HTMLElement): Promise<void> {
+export async function selectAllWithKeyA(container: HTMLElement | ShadowRoot): Promise<void> {
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
         key: 'Control',
         code: 'ControlLeft',

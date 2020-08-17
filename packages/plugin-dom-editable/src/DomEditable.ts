@@ -22,23 +22,19 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
 
     eventNormalizer: EventNormalizer;
 
-    constructor(editor: JWEditor, configuration: T) {
-        super(editor, configuration);
-        this._processKeydown = this._processKeydown.bind(this);
-    }
-
     async start(): Promise<void> {
         const domLayout = this.dependencies.get(DomLayout);
         this.eventNormalizer = new EventNormalizer(
             domLayout.isInEditable.bind(domLayout),
             this._onNormalizedEvent.bind(this),
+            {
+                handle: this._processKeydown.bind(this),
+                handleCapture: domLayout.processKeydown,
+            },
         );
-
-        window.addEventListener('keydown', this._processKeydown);
     }
     async stop(): Promise<void> {
         this.eventNormalizer.destroy();
-        window.removeEventListener('keydown', this._processKeydown);
         return super.stop();
     }
 

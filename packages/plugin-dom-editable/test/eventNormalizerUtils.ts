@@ -1,4 +1,5 @@
 import { EventBatch, EventNormalizer } from '../src/EventNormalizer';
+import { nodeName } from '../../utils/src/utils';
 
 /**
  * This mapping exist to ease the tests of the normalizer.
@@ -271,9 +272,16 @@ export class NodeIndexGenerator {
 function getEditableElement(): Element {
     let editableElement = document.querySelector('[contentEditable=true]');
     if (!editableElement) {
-        const shadows = [...document.getElementsByTagName('jw-shadow')];
-        while (!editableElement && shadows.length) {
-            editableElement = shadows.pop().shadowRoot.querySelector('[contentEditable=true]');
+        const els = [...document.querySelectorAll('jw-shadow, iframe')];
+        while (!editableElement && els.length) {
+            const el = els.pop();
+            if (el instanceof HTMLIFrameElement) {
+                els.push(
+                    ...el.contentWindow.document.querySelectorAll('jw-shadow, jw-iframe, iframe'),
+                );
+            } else if (el.shadowRoot) {
+                editableElement = el.shadowRoot.querySelector('[contentEditable=true]');
+            }
         }
     }
     return editableElement;
@@ -408,6 +416,14 @@ export function testCallbackBefore(): TestContext {
             if (batch.actions.length > 0) {
                 eventBatchs.push(await batch);
             }
+        },
+        {
+            handle: (): void => {
+                return;
+            },
+            handleCapture: (): void => {
+                return;
+            },
         },
     );
     return {
