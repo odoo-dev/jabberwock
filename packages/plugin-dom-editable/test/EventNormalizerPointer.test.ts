@@ -1430,7 +1430,19 @@ describe('utils', () => {
                     setSelection(text1, 0, text3, 3);
                     await nextTick();
                     await nextTick();
-                    expect(ctx.eventBatches).to.deep.equal([]);
+                    const normalizedActions: NormalizedAction[] = [
+                        {
+                            type: 'selectAll',
+                        },
+                    ];
+
+                    const batchEvents: EventBatch[] = [
+                        {
+                            actions: normalizedActions,
+                            mutatedElements: new Set([]),
+                        },
+                    ];
+                    expect(ctx.eventBatches).to.deep.equal(batchEvents);
                 });
                 it('touch select all (android)', async () => {
                     ctx.editable.innerHTML =

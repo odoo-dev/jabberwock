@@ -1523,11 +1523,12 @@ export class EventNormalizer {
         const endInsideEditable = this._isInEditable(endContainer);
         if (startInsideEditable && endInsideEditable) {
             return (
+                startOffset === 0 &&
                 this._isAtVisibleEdge(startContainer, 'start') &&
                 this._isAtVisibleEdge(endContainer, 'end')
             );
         } else if (startInsideEditable) {
-            return this._isAtVisibleEdge(startContainer, 'start');
+            return startOffset === 0 && this._isAtVisibleEdge(startContainer, 'start');
         } else if (endInsideEditable) {
             return this._isAtVisibleEdge(endContainer, 'end');
         } else {
