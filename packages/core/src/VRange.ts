@@ -412,9 +412,10 @@ export class VRange {
         if (this.startContainer !== this.endContainer) {
             const commonAncestor = this.start.commonAncestor(this.end);
             let ancestor = this.endContainer.parent;
-            while (ancestor !== commonAncestor) {
+            while (ancestor && ancestor !== commonAncestor) {
                 if (
                     ancestor.children().length > 1 &&
+                    this.endContainer.parent === ancestor &&
                     this.mode.is(ancestor, RuleProperty.BREAKABLE)
                 ) {
                     ancestor.splitAt(this.endContainer);
