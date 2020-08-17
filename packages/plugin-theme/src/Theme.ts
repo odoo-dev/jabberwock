@@ -58,13 +58,16 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
 
     constructor(editor: JWEditor, configuration: Partial<T> = {}) {
         super(editor, configuration);
-        for (const theme of this.configuration.components) {
-            this.themes[theme.id] = theme;
+        if (this.configuration.components) {
+            for (const theme of this.configuration.components) {
+                this.addTheme(theme);
+            }
         }
-        for (const name in this.themes) {
-            this.loadables.components.push(this._createThemeButton(name));
-            this.loadables.componentZones.push(['Theme' + name + 'Button', ['themeButtons']]);
-        }
+    }
+    addTheme(theme: ThemeComponent): void {
+        this.themes[theme.id] = theme;
+        this.loadables.components.push(this._createThemeButton(theme.id));
+        this.loadables.componentZones.push(['Theme' + theme.id + 'Button', ['themeButtons']]);
     }
     /**
      * Create a theme button ComponentDefinition.

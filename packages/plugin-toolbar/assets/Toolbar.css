@@ -73,6 +73,7 @@ jw-toolbar jw-button {
     width: 30px !important;
     height: 30px !important;
     box-sizing: border-box;
+    cursor: pointer;
 }
 
 jw-toolbar .h1 {

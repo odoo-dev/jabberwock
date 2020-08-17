@@ -1,0 +1,11 @@
+#jw-device-preview {
+    border-width: 80px 14px 40px;
+    border-radius: 16px;
+    border-style: solid;
+    border-color: #000;
+    background-color: white;
+    width: 400px;
+    height: 700px;
+    margin: auto;
+    display: block;
+}
