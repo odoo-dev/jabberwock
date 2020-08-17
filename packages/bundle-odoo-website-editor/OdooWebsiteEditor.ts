@@ -55,6 +55,7 @@ import { History } from '../plugin-history/src/History';
 import { Iframe } from '../plugin-iframe/src/Iframe';
 import { Theme } from '../plugin-theme/src/Theme';
 import { ThemeNode } from '../plugin-theme/src/ThemeNode';
+import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -234,34 +235,12 @@ export class OdooWebsiteEditor extends JWEditor {
             inlineUI: true,
         });
 
-        this.configure(Theme, {
-            components: [
-                {
-                    id: 'default',
-                    label: 'Theme table',
-                    render: async (editor: JWEditor): Promise<VNode[]> => {
-                        return editor.plugins.get(Parser).parse('text/html', '<t-placeholder/>');
-                    },
-                },
-                {
-                    id: 'mobile',
-                    label: 'Mobile preview',
-                    render: async (editor: JWEditor): Promise<VNode[]> => {
-                        const styleSheets: string[] = [];
-                        for (const style of document.querySelectorAll('style, link')) {
-                            styleSheets.push(style.outerHTML);
-                        }
-                        return editor.plugins
-                            .get(Parser)
-                            .parse(
-                                'text/html',
-                                '<t-iframe id="mobile-preview">' +
-                                    styleSheets.join('') +
-                                    '<t-placeholder/></t-iframe>',
-                            );
-                    },
-                },
-            ],
+        this.configure(DevicePreview, {
+            getTheme(editor: JWEditor) {
+                const layout = editor.plugins.get(Layout);
+                const domLayout = layout.engines.dom;
+                return domLayout.components.editable[0] as ThemeNode;
+            },
         });
 
         if (options.mode) {
