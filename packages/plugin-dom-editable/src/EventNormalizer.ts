@@ -1518,20 +1518,21 @@ export class EventNormalizer {
         [startContainer, startOffset] = targetDeepest(startContainer, startOffset);
         [endContainer, endOffset] = targetDeepest(endContainer, endOffset);
 
-        if (
-            startOffset !== 0 ||
-            (endContainer.nodeType === Node.TEXT_NODE &&
-                endOffset !== endContainer.textContent.length)
-        ) {
-            return false;
+        // Look for visible nodes in editable that would be outside the range.
+        const startInsideEditable = this._isInEditable(startContainer);
+        const endInsideEditable = this._isInEditable(endContainer);
+        if (startInsideEditable && endInsideEditable) {
+            return (
+                this._isAtVisibleEdge(startContainer, 'start') &&
+                this._isAtVisibleEdge(endContainer, 'end')
+            );
+        } else if (startInsideEditable) {
+            return this._isAtVisibleEdge(startContainer, 'start');
+        } else if (endInsideEditable) {
+            return this._isAtVisibleEdge(endContainer, 'end');
+        } else {
+            return true;
         }
-
-        // Look for visible nodes in editable that would be outside the selection.
-        const startInside = this._isInEditable(startContainer);
-        const endInside = this._isInEditable(endContainer);
-        const startEdge = startInside && this._isAtVisibleEdge(startContainer, 'start');
-        const endEdge = endInside && this._isAtVisibleEdge(endContainer, 'end');
-        return (startEdge && endEdge) || (startEdge && !endInside) || (!startInside && endEdge);
     }
     /**
      * Return true if the given element is at the edge of the editable node in
@@ -1569,7 +1570,14 @@ export class EventNormalizer {
                 // Depth-first search has checked all elements in editable.
                 return true;
             } else {
-                currentNode = currentNode.parentNode[sibling];
+                let ancestor = currentNode.parentNode;
+                currentNode = ancestor[sibling];
+                // When checking from the end we need to go up the ancestors
+                // tree to find one which does have a previous sibling.
+                while (!currentNode && side === 'end') {
+                    ancestor = ancestor.parentNode;
+                    currentNode = ancestor[sibling];
+                }
             }
         }
         return false;
