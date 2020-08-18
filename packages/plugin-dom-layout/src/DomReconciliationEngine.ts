@@ -9,6 +9,7 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
 import { isTextNode } from '../../utils/src/Dom';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -456,8 +457,15 @@ export class DomReconciliationEngine {
             }
         }
 
-        // We targetting the deepest.
+        // We are targetting the deepest descendant.
         while (container.childNodes[offset]) {
+            if (
+                nodeName(container.childNodes[offset]) === 'BR' &&
+                !container.childNodes[offset].nextSibling
+            ) {
+                // Target the last br in a container.
+                forceAfter = true;
+            }
             if (forceAfter) {
                 container = container.childNodes[nodeLength(container) - 1];
                 offset = nodeLength(container) - 1;
