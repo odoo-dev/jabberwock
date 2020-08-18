@@ -22,6 +22,7 @@ import { RenderingEngineCache } from '../../plugin-renderer/src/RenderingEngineC
 import { ChangesLocations } from '../../core/src/Memory/Memory';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { RuleProperty } from '../../core/src/Mode';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
@@ -566,6 +567,13 @@ export class DomLayoutEngine extends LayoutEngine {
      */
     private _renderSelection(): void {
         const selection = this.editor.selection;
+        if (
+            selection.range.isCollapsed() &&
+            !this.editor.mode.is(selection.range.start, RuleProperty.EDITABLE)
+        ) {
+            // Don't render a collapsed range in a non-editable node.
+            return;
+        }
         const domNodes = this._domReconciliationEngine.toDom(selection.anchor.parent);
         if (!domNodes.length) {
             document.getSelection().removeAllRanges();
