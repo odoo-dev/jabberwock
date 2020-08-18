@@ -602,6 +602,8 @@ export class EventNormalizer {
                 }
                 if (eventTarget && this._isInEditable(eventTarget)) {
                     listener.call(this, ev);
+                } else if (eventTarget && 'preventDefault' in ev) {
+                    ev.preventDefault();
                 }
             }
         };
