@@ -417,10 +417,7 @@ export function testCallbackBefore(): TestContext {
             }
         },
         {
-            handle: (): void => {
-                return;
-            },
-            handleCapture: (): void => {
+            keydown: (): void => {
                 return;
             },
         },

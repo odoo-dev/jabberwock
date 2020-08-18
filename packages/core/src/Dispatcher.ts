@@ -10,6 +10,9 @@ export interface CommandImplementation extends Contextual {
 export interface CommandParams {
     context?: Context;
 }
+export interface PartialCommandParams {
+    context?: Partial<Context>;
+}
 export type CommandHandler = (args) => void;
 export type CommandHook = (params: CommandParams, commandId: string) => void;
 

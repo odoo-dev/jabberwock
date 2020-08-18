@@ -40,6 +40,15 @@ export interface CommitParams extends CommandParams {
     commandNames: string[];
 }
 
+export type ExecCommandFunction = <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+    commandName: C | ((context: Context) => Promise<void> | void),
+    params?: CommandParamsType<P, C>,
+) => Promise<void>;
+
+export interface ExecutionContext {
+    execCommand: ExecCommandFunction;
+}
+
 export interface JWEditorConfig {
     /**
      * The modes that the editor will support.
@@ -322,6 +331,12 @@ export class JWEditor {
         }
     }
 
+    async nextEventMutex(next: (execCommand: ExecCommandFunction) => void): Promise<void> {
+        return (this._mutex = this._mutex.then(
+            next.bind(undefined, this._withOpenMemory.bind(this)),
+        ));
+    }
+
     /**
      * Execute arbitrary code in `callback`, then dispatch the commit event.
      * The callback receives an `execCommand` parameter which it can use to
@@ -355,91 +370,9 @@ export class JWEditor {
         commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
     ): Promise<void> {
-        this._mutex = this._mutex.then(async () => {
-            if (!this.memory.isFrozen()) {
-                console.error(
-                    'You are trying to call the external editor' +
-                        ' execCommand method from within an execCommand. ' +
-                        'Use the `execCommand` method of your plugin instead.',
-                );
-                return;
-            }
-            const timeout = setTimeout(() => {
-                console.warn(
-                    'An execCommand call is taking more than 10 seconds to finish. It might be caused by a deadlock.\n' +
-                        'Verify that you do not call editor.execCommand inside another editor.execCommand.',
-                );
-            }, 10000);
-
-            // Switch to the next memory slice (unfreeze the memory).
-            const origin = this.memory.sliceKey;
-            const memorySlice = this._memoryID.toString();
-            this.memory.switchTo(memorySlice);
-            this.memoryInfo.commandNames = new VersionableArray();
-            this.memoryInfo.uiCommand = false;
-            let commandNames = this.memoryInfo.commandNames;
-
-            try {
-                // Execute command.
-                if (typeof commandName === 'function') {
-                    const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
-                    this.memoryInfo.commandNames.push(name);
-                    await commandName(this.contextManager.defaultContext);
-                    if (this.memory.sliceKey !== memorySlice) {
-                        // Override by the current commandName if the slice changed.
-                        commandNames = [name];
-                    }
-                } else {
-                    this.memoryInfo.commandNames.push(commandName);
-                    await this.dispatcher.dispatch(commandName, params);
-                    if (this.memory.sliceKey !== memorySlice) {
-                        // Override by the current commandName if the slice changed.
-                        commandNames = [commandName];
-                    }
-                }
-
-                // Prepare nex slice and freeze the memory.
-                this._memoryID++;
-                const nextMemorySlice = this._memoryID.toString();
-                this.memory.create(nextMemorySlice);
-
-                // Send the commit message with a frozen memory.
-                const changesLocations = this.memory.getChangesLocations(
-                    memorySlice,
-                    this.memory.sliceKey,
-                );
-                await this.dispatcher.dispatchHooks('@commit', {
-                    changesLocations: changesLocations,
-                    commandNames: commandNames,
-                });
-                clearTimeout(timeout);
-            } catch (error) {
-                clearTimeout(timeout);
-                if (this._stage !== EditorStage.EDITION) {
-                    throw error;
-                }
-                console.error(error);
-                const failedSlice = this.memory.sliceKey;
-
-                // When an error occurs, we go back to part of the functional memory.
-                this.memory.switchTo(origin);
-
-                try {
-                    // Send the commit message with a frozen memory.
-                    const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
-                    await this.dispatcher.dispatchHooks('@commit', {
-                        changesLocations: changesLocations,
-                        commandNames: commandNames,
-                    });
-                } catch (revertError) {
-                    if (this._stage !== EditorStage.EDITION) {
-                        throw revertError;
-                    }
-                    console.error(revertError);
-                }
-            }
+        return this.nextEventMutex(async () => {
+            return this._withOpenMemory(commandName, params);
         });
-        return this._mutex;
     }
 
     /**
@@ -526,6 +459,93 @@ export class JWEditor {
         this._stage = EditorStage.CONFIGURATION;
     }
 
+    private async _withOpenMemory<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
+        commandName: C | ((context: Context) => Promise<void> | void),
+        params?: CommandParamsType<P, C>,
+    ): Promise<void> {
+        if (!this.memory.isFrozen()) {
+            console.error(
+                'You are trying to call the external editor' +
+                    ' execCommand method from within an execCommand. ' +
+                    'Use the `execCommand` method of your plugin instead.',
+            );
+            return;
+        }
+        const timeout = setTimeout(() => {
+            console.warn(
+                'An execCommand call is taking more than 10 seconds to finish. It might be caused by a deadlock.\n' +
+                    'Verify that you do not call editor.execCommand inside another editor.execCommand.',
+            );
+        }, 10000);
+
+        // Switch to the next memory slice (unfreeze the memory).
+        const origin = this.memory.sliceKey;
+        const memorySlice = this._memoryID.toString();
+        this.memory.switchTo(memorySlice);
+        this.memoryInfo.commandNames = new VersionableArray();
+        this.memoryInfo.uiCommand = false;
+        let commandNames = this.memoryInfo.commandNames;
+
+        try {
+            // Execute command.
+            if (typeof commandName === 'function') {
+                const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
+                this.memoryInfo.commandNames.push(name);
+                await commandName(this.contextManager.defaultContext);
+                if (this.memory.sliceKey !== memorySlice) {
+                    // Override by the current commandName if the slice changed.
+                    commandNames = [name];
+                }
+            } else {
+                this.memoryInfo.commandNames.push(commandName);
+                await this.dispatcher.dispatch(commandName, params);
+                if (this.memory.sliceKey !== memorySlice) {
+                    // Override by the current commandName if the slice changed.
+                    commandNames = [commandName];
+                }
+            }
+
+            // Prepare nex slice and freeze the memory.
+            this._memoryID++;
+            const nextMemorySlice = this._memoryID.toString();
+            this.memory.create(nextMemorySlice);
+
+            // Send the commit message with a frozen memory.
+            const changesLocations = this.memory.getChangesLocations(
+                memorySlice,
+                this.memory.sliceKey,
+            );
+            await this.dispatcher.dispatchHooks('@commit', {
+                changesLocations: changesLocations,
+                commandNames: commandNames,
+            });
+            clearTimeout(timeout);
+        } catch (error) {
+            clearTimeout(timeout);
+            if (this._stage !== EditorStage.EDITION) {
+                throw error;
+            }
+            console.error(error);
+            const failedSlice = this.memory.sliceKey;
+
+            // When an error occurs, we go back to part of the functional memory.
+            this.memory.switchTo(origin);
+
+            try {
+                // Send the commit message with a frozen memory.
+                const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
+                await this.dispatcher.dispatchHooks('@commit', {
+                    changesLocations: changesLocations,
+                    commandNames: commandNames,
+                });
+            } catch (revertError) {
+                if (this._stage !== EditorStage.EDITION) {
+                    throw revertError;
+                }
+                console.error(revertError);
+            }
+        }
+    }
     /**
      * Execute the command or arbitrary code in `callback` in memory.
      *

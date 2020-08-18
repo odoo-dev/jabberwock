@@ -764,8 +764,7 @@ describe('Iframe', async () => {
             await editor.start();
             await waitIframeLoading();
 
-            editor.execCommand = (): Promise<void> => Promise.resolve();
-            const execSpy = spy(editor, 'execCommand');
+            const execSpy = spy(editor.dispatcher, 'dispatch');
             const doc = container.querySelector('iframe').contentWindow.document;
             const shadowRoot = doc.querySelector('jw-iframe').shadowRoot;
             await selectAllWithKeyA(shadowRoot);

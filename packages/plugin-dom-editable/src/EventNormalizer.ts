@@ -479,17 +479,15 @@ export class EventNormalizer {
     constructor(
         private _isInEditable: (node: Node) => boolean,
         private _triggerEventBatch: TriggerEventBatchCallback,
-        private processKeydown: {
-            handle: (event: KeyboardEvent) => void;
-            handleCapture: (event: KeyboardEvent) => void;
+        private forwardEvent: {
+            keydown: (event: KeyboardEvent) => void;
         },
         private root: Document | ShadowRoot = document,
     ) {
         this._shadowNormalizers.set(root, this);
         this.initNextObservation();
 
-        this._bindEvent(root, 'keydown', processKeydown.handle);
-        this._bindEvent(root, 'keydown', processKeydown.handleCapture, true);
+        this._bindEvent(root, 'keydown', forwardEvent.keydown, true);
 
         this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
         this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
@@ -2002,7 +2000,7 @@ export class EventNormalizer {
             const eventNormalizer = new EventNormalizer(
                 this._isInEditable,
                 this._triggerEventBatch,
-                this.processKeydown,
+                this.forwardEvent,
                 root,
             );
             this._shadowNormalizers.set(root, eventNormalizer);
