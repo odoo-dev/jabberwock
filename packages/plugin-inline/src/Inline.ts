@@ -91,10 +91,13 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             if (!this.cache.modifiers) {
                 this.cache.modifiers = this.getCurrentModifiers(range);
             }
-            const format = this.cache.modifiers.find(FormatClass);
+            const format = this.cache.modifiers?.find(FormatClass);
             if (format) {
                 this.cache.modifiers.remove(format);
             } else {
+                if (!this.cache.modifiers) {
+                    this.cache.modifiers = new Modifiers();
+                }
                 this.cache.modifiers.append(new FormatClass());
             }
         } else {
