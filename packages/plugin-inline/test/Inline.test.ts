@@ -5,6 +5,7 @@ import { Constructor } from '../../utils/src/utils';
 import { Format } from '../../core/src/Format';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
+import { Char } from '../../plugin-char/src/Char';
 
 const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
     await editor.execCommand<Inline>('toggleFormat', {
@@ -41,6 +42,27 @@ describePlugin(Inline, testEditor => {
     describe('toggleFormat', () => {
         // TODO: test that selection collapsed toggle format without char-plugin
         // indeed does nothing.
+        describe('Selection collapsed', () => {
+            it('should do nothing', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[]</p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        await toggleFormat(editor, BoldFormat);
+                    },
+                    contentAfter: '<p>[]<br></p>',
+                });
+            });
+            it('should add the next char in bold', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[]</p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        await toggleFormat(editor, BoldFormat);
+                        await editor.execCommand<Char>('insertText', { text: 'a' });
+                    },
+                    contentAfter: '<p><b>a[]</b></p>',
+                });
+            });
+        });
         describe('Selection not collapsed', () => {
             it('should be bold when selected is not bold', async () => {
                 await testEditor(BasicEditor, {
