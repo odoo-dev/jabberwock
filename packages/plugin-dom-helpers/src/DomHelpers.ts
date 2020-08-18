@@ -1,3 +1,4 @@
+import { ExecutionContext } from './../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
@@ -5,16 +6,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { CommandParamsType, Commands } from '../../core/src/JWEditor';
-import { Context } from '../../core/src/ContextManager';
 import { Format } from '../../core/src/Format';
-
-export interface ExecutionContext {
-    execCommand: <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
-        commandName: C | ((context: Context) => Promise<void> | void),
-        params?: CommandParamsType<P, C>,
-    ) => Promise<void>;
-}
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------

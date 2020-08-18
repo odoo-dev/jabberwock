@@ -420,8 +420,7 @@ describe('Keymap', () => {
                     editor.load(loadables);
                 },
                 stepFunction: async editor => {
-                    editor.execCommand = (): Promise<void> => Promise.resolve();
-                    const execSpy = spy(editor, 'execCommand');
+                    const execSpy = spy(editor.dispatcher, 'dispatch');
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                     const editable = domEngine.components.editable[0];
@@ -465,8 +464,7 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     // todo: to remove when the normalizer will
                     //       not be in included by default
-                    editor.execCommand = (): Promise<void> => Promise.resolve();
-                    const execSpy = spy(editor, 'execCommand');
+                    const execSpy = spy(editor.dispatcher, 'dispatch');
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                     const editable = domEngine.components.editable[0];
@@ -519,8 +517,7 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     // todo: to remove when the normalizer will
                     //       not be in included by default
-                    editor.execCommand = (): Promise<void> => Promise.resolve();
-                    const execSpy = spy(editor, 'execCommand');
+                    const execSpy = spy(editor.dispatcher, 'dispatch');
 
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                     const editable = domEngine.components.editable[0];
@@ -573,8 +570,7 @@ describe('Keymap', () => {
                 stepFunction: async editor => {
                     // todo: to remove when the normalizer will
                     //       not be in included by default
-                    editor.execCommand = (): Promise<void> => Promise.resolve();
-                    const execSpy = spy(editor, 'execCommand');
+                    const execSpy = spy(editor.dispatcher, 'dispatch');
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                     const editable = domEngine.components.editable[0];
                     let domEditable = domEngine.getDomNodes(editable)[0] as Element;

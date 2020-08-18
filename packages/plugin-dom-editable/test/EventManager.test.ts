@@ -29,8 +29,7 @@ describe('core', () => {
                         );
                     },
                     stepFunction: async (editor: BasicEditor) => {
-                        editor.execCommand = (): Promise<void> => Promise.resolve();
-                        const execSpy = spy(editor, 'execCommand');
+                        const execSpy = spy(editor.dispatcher, 'dispatch');
                         const params = {
                             context: editor.contextManager.defaultContext,
                         };

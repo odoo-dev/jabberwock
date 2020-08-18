@@ -7,7 +7,8 @@ import { InsertTextParams } from '../../plugin-char/src/Char';
 import { VSelectionParams } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
-import { RelativePosition, Point, VNode } from '../../core/src/VNodes/VNode';
+import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
+import { JWEditor } from '../../core/src/JWEditor';
 import { VRange } from '../../core/src/VRange';
 import { RuleProperty } from '../../core/src/Mode';
 
@@ -18,8 +19,16 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             handler: this.selectAll,
         },
     };
+    commandHooks = {
+        '@preKeydownCommand': this._onPreKeydownCommand,
+    };
 
     eventNormalizer: EventNormalizer;
+
+    constructor(editor: JWEditor, configuration: T) {
+        super(editor, configuration);
+        this._onPreKeydownCommand = this._onPreKeydownCommand.bind(this);
+    }
 
     async start(): Promise<void> {
         const domLayout = this.dependencies.get(DomLayout);
@@ -27,8 +36,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             domLayout.isInEditable.bind(domLayout),
             this._onNormalizedEvent.bind(this),
             {
-                handle: this._processKeydown.bind(this),
-                handleCapture: domLayout.processKeydown,
+                keydown: domLayout.processKeydown,
             },
         );
     }
@@ -67,9 +75,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      *
      * @param action
      */
-    private _matchCommand(
-        action: NormalizedAction,
-    ): [CommandIdentifier, CommandParams, [Point, Point]?] {
+    private _matchCommand(action: NormalizedAction): [CommandIdentifier, CommandParams] {
         switch (action.type) {
             case 'insertLineBreak':
                 return ['insertLineBreak', {}];
@@ -106,8 +112,15 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
                     }
                     return [
                         'deleteForward',
-                        {},
-                        VRange.selecting(this.editor.selection.range.start, end),
+                        {
+                            context: {
+                                range: new VRange(
+                                    this.editor,
+                                    VRange.selecting(this.editor.selection.range.start, end),
+                                    { temporary: true },
+                                ),
+                            },
+                        },
                     ];
                 } else {
                     let start: VNode = this.editor.selection.range.start;
@@ -124,8 +137,15 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
                     }
                     return [
                         'deleteBackward',
-                        {},
-                        VRange.selecting(start, this.editor.selection.range.end),
+                        {
+                            context: {
+                                range: new VRange(
+                                    this.editor,
+                                    VRange.selecting(start, this.editor.selection.range.end),
+                                    { temporary: true },
+                                ),
+                            },
+                        },
                     ];
                 }
             case 'deleteContent': {
@@ -146,53 +166,42 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      * @param batchPromise
      */
     async _onNormalizedEvent(batchPromise: Promise<EventBatch>): Promise<void> {
-        // TODO: The `nextEventMutex` shenanigans that were removed in this
-        // commit should be reinstated unless we want the normalizer to call
-        // `execCommand` regardless of the observation outcome like it used to
-        // call `nextEventMutex` before calling `execCommand`.
-        const batch = await batchPromise;
-        const domEngine = this.dependencies.get(Layout).engines.dom as DomLayoutEngine;
-        if (batch.mutatedElements) {
-            domEngine.markForRedraw(batch.mutatedElements);
-        }
-        let processed = false;
-        if (batch.inferredKeydownEvent) {
-            const domLayout = this.dependencies.get(DomLayout);
-            processed = !!(await domLayout.processKeydown(
-                new KeyboardEvent('keydown', {
-                    ...batch.inferredKeydownEvent,
-                    key: batch.inferredKeydownEvent.key,
-                    code: batch.inferredKeydownEvent.code,
-                }),
-            ));
-        }
-        if (!processed) {
-            for (const action of batch.actions) {
-                const commandSpec = this._matchCommand(action);
-                if (commandSpec) {
-                    const [commandName, commandParams, rangeBounds] = commandSpec;
-                    if (commandName && rangeBounds) {
-                        await this.editor.execWithRange(rangeBounds, commandName, commandParams);
-                    } else if (commandName) {
-                        await this.editor.execCommand(commandName, commandParams);
+        await this.editor.nextEventMutex(async execCommand => {
+            const batch = await batchPromise;
+            const domEngine = this.dependencies.get(Layout).engines.dom as DomLayoutEngine;
+            if (batch.mutatedElements) {
+                domEngine.markForRedraw(batch.mutatedElements);
+            }
+            let processed = false;
+            if (batch.inferredKeydownEvent) {
+                const domLayout = this.dependencies.get(DomLayout);
+                processed = !!(await domLayout.processKeydown(
+                    new KeyboardEvent('keydown', {
+                        ...batch.inferredKeydownEvent,
+                        key: batch.inferredKeydownEvent.key,
+                        code: batch.inferredKeydownEvent.code,
+                    }),
+                    { execCommand },
+                ));
+            }
+            if (!processed) {
+                for (const action of batch.actions) {
+                    const commandSpec = this._matchCommand(action);
+                    if (commandSpec) {
+                        const [commandName, commandParams] = commandSpec;
+                        if (commandName) {
+                            await execCommand(commandName, commandParams);
+                        }
                     }
                 }
             }
-        }
+        });
     }
     /**
-     * In DomLayout, KeyboardEvent listener to be added to the DOM that calls
-     * `execCommand` if the keys pressed match one of the shortcut registered
-     * in the keymap.
-     * In case of the keydow are defaultPrevented it's means we executed a new
-     * command. We split the event agragation of normalizer to ensure to have
-     * the next execCommand at the right time.
-     *
-     * @param event
+     * When a new event is triggered by a keypress, we need to init a new
+     * observation to make chain of event properly.
      */
-    private _processKeydown(event: KeyboardEvent): void {
-        if (event.defaultPrevented) {
-            this.eventNormalizer.initNextObservation();
-        }
+    private _onPreKeydownCommand(): void {
+        this.eventNormalizer.initNextObservation();
     }
 }
