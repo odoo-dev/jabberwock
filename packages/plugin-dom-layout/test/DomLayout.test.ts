@@ -1736,6 +1736,132 @@ describe('DomLayout', () => {
                 contentAfter: 'a[<b>b<br>c]</b>d',
             });
         });
+        it('should not render a changed node already removed', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<section><p>abc[]d</p></section>',
+                stepFunction: async (editor: JWEditor) => {
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.editable[0];
+                    const section = editable.firstChild();
+
+                    let nbError = 0;
+                    const logError = console.error;
+                    console.error = (...args): void => {
+                        nbError++;
+                        logError.call(console, ...args);
+                    };
+
+                    await editor.execCommand(() => {
+                        section.empty();
+                    });
+                    await editor.execCommand(() => {
+                        editor.selection.set({
+                            anchorNode: section,
+                            anchorPosition: RelativePosition.INSIDE,
+                            focusNode: section,
+                            direction: Direction.FORWARD,
+                            focusPosition: RelativePosition.INSIDE,
+                        });
+                    });
+
+                    expect(nbError).to.be.equal(0, 'No error found');
+                    console.error = logError;
+                },
+                contentAfter: '<section>[]<br></section>',
+            });
+        });
+        it('should not render a changed node already removed (2)', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<section><div><p>abc[]d</p></div></section>',
+                stepFunction: async (editor: JWEditor) => {
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.editable[0];
+                    const section = editable.firstChild();
+
+                    let nbError = 0;
+                    const logError = console.error;
+                    console.error = (...args): void => {
+                        nbError++;
+                        logError.call(console, ...args);
+                    };
+
+                    await editor.execCommand(() => {
+                        section.empty();
+                    });
+                    await editor.execCommand(() => {
+                        editor.selection.set({
+                            anchorNode: section,
+                            anchorPosition: RelativePosition.INSIDE,
+                            focusNode: section,
+                            direction: Direction.FORWARD,
+                            focusPosition: RelativePosition.INSIDE,
+                        });
+                    });
+
+                    expect(nbError).to.be.equal(0, 'No error found');
+                    console.error = logError;
+                },
+                contentAfter: '<section>[]<br></section>',
+            });
+        });
+        it('should not render a changed node already removed (3)', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<section><div><p>abc[]d</p></div></section>',
+                stepFunction: async (editor: JWEditor) => {
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.editable[0];
+                    const section = editable.firstChild();
+                    const leaf = section.firstLeaf();
+
+                    let nbError = 0;
+                    const logError = console.error;
+                    console.error = (...args): void => {
+                        nbError++;
+                        logError.call(console, ...args);
+                    };
+
+                    await editor.execCommand(() => {
+                        section.empty();
+                    });
+                    await editor.execCommand(() => {
+                        leaf['data-yop'] = 'o';
+                    });
+
+                    expect(nbError).to.be.equal(0, 'No error found');
+                    console.error = logError;
+                },
+                contentAfter: '<section><br></section>',
+            });
+        });
+        it('should not render a changed node already removed (4)', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<section><div><p>abc[]d</p></div></section>',
+                stepFunction: async (editor: JWEditor) => {
+                    const domEngine = editor.plugins.get(Layout).engines.dom;
+                    const editable = domEngine.components.editable[0];
+                    const section = editable.firstChild();
+                    const div = section.firstChild();
+
+                    let nbError = 0;
+                    const logError = console.error;
+                    console.error = (...args): void => {
+                        nbError++;
+                        logError.call(console, ...args);
+                    };
+
+                    await editor.execCommand(() => {
+                        section.empty();
+                    });
+                    await editor.execCommand(() => {
+                        div.append(div.firstChild().firstChild());
+                    });
+
+                    expect(nbError).to.be.equal(0, 'No error found');
+                    console.error = logError;
+                },
+                contentAfter: '<section><br></section>',
+            });
+        });
     });
     describe('redraw with minimum mutation', () => {
         let observer: MutationObserver;
