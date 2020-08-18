@@ -7,6 +7,7 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Predicate } from '../../core/src/VNodes/VNode';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { VElement } from '../../core/src/VNodes/VElement';
 
 export class CharDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;

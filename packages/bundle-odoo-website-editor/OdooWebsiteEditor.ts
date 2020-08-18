@@ -56,6 +56,7 @@ import { Iframe } from '../plugin-iframe/src/Iframe';
 import { Theme } from '../plugin-theme/src/Theme';
 import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
+import { Button } from '../plugin-button/src/Button';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -153,6 +154,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [FollowRange],
                 [History],
                 [Iframe],
+                [Button],
                 ...(options.plugins || []),
             ],
         });
