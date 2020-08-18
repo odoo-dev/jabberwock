@@ -1,5 +1,4 @@
 import { EventBatch, EventNormalizer } from '../src/EventNormalizer';
-import { nodeName } from '../../utils/src/utils';
 
 /**
  * This mapping exist to ease the tests of the normalizer.
