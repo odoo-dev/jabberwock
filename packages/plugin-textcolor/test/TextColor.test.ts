@@ -41,6 +41,19 @@ describePlugin(TextColor, testEditor => {
                     contentAfter: '<p>a<span style="color: red;">bc[]</span>d</p>',
                 });
             });
+            it('should change color when write text', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[]</p>',
+                    stepFunction: async editor => {
+                        await colorText(editor, 'red');
+                        await insertText(editor, 'a');
+                        await colorText(editor, 'blue');
+                        await insertText(editor, 'b');
+                    },
+                    contentAfter:
+                        '<p><span style="color: red;">a</span><span style="color: blue;">b[]</span></p>',
+                });
+            });
         });
         describe('range not collapsed', () => {
             it('should set the color of two characters to red', async () => {

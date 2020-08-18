@@ -51,7 +51,8 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
         if (params.context.range.isCollapsed()) {
             // Set the style cache.
             const inline = this.dependencies.get(Inline);
-            const currentCache = inline.cache.style || {};
+            // Convert CssStyle class into a true object for spread operator.
+            const currentCache = inline.cache.style ? inline.cache.style.toJSON() : {};
             inline.cache.style = new CssStyle({ ...currentCache, [this.styleName]: color });
         } else {
             let selectedNodes = params.context.range.selectedNodes();
