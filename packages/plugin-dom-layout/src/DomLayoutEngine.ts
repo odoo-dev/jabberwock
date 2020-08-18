@@ -295,12 +295,7 @@ export class DomLayoutEngine extends LayoutEngine {
             const paramsUpdate: [object, string[] | number[] | void][] = [];
             diff.update.filter(up => {
                 const object = up[0];
-                if (
-                    up[1] &&
-                    object instanceof AbstractNode &&
-                    (up[1] as string[]).includes('parent') &&
-                    (!object.parent || !object.id)
-                ) {
+                if (up[1] && object instanceof AbstractNode && !object.parent) {
                     remove.add(object as VNode);
                     for (const child of object.descendants()) {
                         remove.add(child);
@@ -310,11 +305,14 @@ export class DomLayoutEngine extends LayoutEngine {
                 }
             });
 
+            const mayBeAlreadyRemoved: VNode[] = [];
+
             // Select the updated VNode and Modifiers and the VNode siblings.
             // From the parent, select the removed VNode siblings.
             for (const [object, changes] of paramsUpdate) {
                 if (
                     allRemove.has(object) ||
+                    remove.has(object as VNode) ||
                     update.has(object as VNode) ||
                     updatedModifiers.has(object as Modifier)
                 ) {
@@ -323,14 +321,24 @@ export class DomLayoutEngine extends LayoutEngine {
                 if (object instanceof AbstractNode) {
                     update.add(object as VNode);
                     needSiblings.add(object);
+                    mayBeAlreadyRemoved.push(object as VNode);
                 } else {
                     if (object instanceof Modifier) {
                         updatedModifiers.add(object);
                     }
                     for (const [parent, parentProp] of this.editor.memory.getParents(object)) {
                         if (parent instanceof AbstractNode) {
-                            update.add(parent as VNode);
-                            if (
+                            if (remove.has(parent as VNode)) {
+                                // The node was already removed in an other memory slice.
+                            } else if (!parent.parent) {
+                                // An old removed node can change. For eg: move a children
+                                // into the active VDocument.
+                                remove.add(parent as VNode);
+                                for (const child of parent.descendants()) {
+                                    remove.add(child);
+                                    update.delete(child);
+                                }
+                            } else if (
                                 changes &&
                                 parentProp[0][0] === 'childVNodes' &&
                                 typeof changes[0] === 'number'
@@ -371,14 +379,25 @@ export class DomLayoutEngine extends LayoutEngine {
                                         }
                                     }
                                 }
+                                update.add(parent as VNode);
+                                mayBeAlreadyRemoved.push(parent as VNode);
                             } else {
+                                update.add(parent as VNode);
                                 needSiblings.add(parent);
+                                mayBeAlreadyRemoved.push(parent as VNode);
                             }
                         } else if (parent instanceof Modifier) {
                             updatedModifiers.add(parent);
                         }
                     }
                 }
+            }
+
+            for (const node of this._filterInRoot(mayBeAlreadyRemoved).remove) {
+                update.delete(node);
+                remove.add(node);
+                update.delete(node);
+                needSiblings.delete(node);
             }
 
             // If any change invalidate the siblings.
