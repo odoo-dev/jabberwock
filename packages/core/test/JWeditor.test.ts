@@ -5,6 +5,8 @@ import { StageError } from '../../utils/src/errors';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
+import { VRange } from '../src/VRange';
+import { Char } from '../../plugin-char/src/Char';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -229,7 +231,7 @@ describe('core', () => {
                 });
             });
         });
-        describe('execCustomCommand', () => {
+        describe('execCommand', () => {
             it('should execute a custom command and trigger plugins', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<div>ab[]</div>',
@@ -241,6 +243,28 @@ describe('core', () => {
                         });
                     },
                     contentAfter: '<div>b[]</div>',
+                });
+            });
+            it('should remove a temporaryVRange after an execCommand', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>ab[]</div>',
+                    stepFunction: async editor => {
+                        await editor.execCommand(async context => {
+                            const layout = editor.plugins.get(Layout);
+                            const domLayout = layout.engines.dom;
+                            const divider = domLayout.components.editable[0].firstChild();
+                            const range = new VRange(editor, VRange.at(divider), {
+                                temporary: true,
+                            });
+                            expect(range.start.parent).to.equal(divider);
+                            await context.execCommand<Char>('insertText', {
+                                text: 'c',
+                                context: { range },
+                            });
+                            expect(range.start.parent).to.equal(undefined);
+                        });
+                    },
+                    contentAfter: '<div>cab[]</div>',
                 });
             });
         });

@@ -9,9 +9,20 @@ import { TableCellNode } from '../../plugin-table/src/TableCellNode';
 import { Mode, RuleProperty } from './Mode';
 import JWEditor from './JWEditor';
 
+interface VRangeOptions {
+    temporary?: boolean;
+    mode?: Mode;
+}
+
 export class VRange {
     readonly start = new MarkerNode();
     readonly end = new MarkerNode();
+    /**
+     * Mark the range as being temporary to signal the system to remove it
+     * when necessary.
+     */
+    temporary: boolean;
+    private readonly _mode: Mode | undefined;
 
     /**
      * Return the context of a collapsed range at the given location, targetting
@@ -75,8 +86,10 @@ export class VRange {
     constructor(
         public readonly editor: JWEditor,
         boundaryPoints?: [Point, Point],
-        private readonly _mode?: Mode,
+        options: VRangeOptions = {},
     ) {
+        this.temporary = !!options.temporary;
+        this._mode = options.mode;
         // If a range context is given, adapt this range to match it.
         if (boundaryPoints) {
             const [start, end] = boundaryPoints;

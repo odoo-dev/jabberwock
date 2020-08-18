@@ -8,14 +8,23 @@ import { setDomSelection, nextTick, triggerEvent, triggerEvents } from './eventN
 import { Keymap, Platform } from '../../plugin-keymap/src/Keymap';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
-import { renderTextualSelection } from '../../utils/src/testUtils';
+import { renderTextualSelection, testEditor } from '../../utils/src/testUtils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable, createEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { VElement } from '../../core/src/VNodes/VElement';
+import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
+import { Layout } from '../../plugin-layout/src/Layout';
+import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 
 export async function selectAllWithKeyA(container: HTMLElement | ShadowRoot): Promise<void> {
+    setDomSelection(
+        container.querySelector('[contenteditable]').firstChild.firstChild,
+        0,
+        container.querySelector('[contenteditable]').firstChild.firstChild,
+        0,
+    );
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
         key: 'Control',
         code: 'ControlLeft',
@@ -154,7 +163,7 @@ describe('DomEditable', () => {
     describe('_onNormalizedEvent', () => {
         let editor: JWEditor;
         afterEach(async () => {
-            return editor.stop();
+            return editor?.stop();
         });
         describe('handle user events with EventNormalizer', () => {
             beforeEach(async () => {
@@ -722,6 +731,44 @@ describe('DomEditable', () => {
                 });
             });
         });
+
+        it('should trigger commands in proper order', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<div>[]</div>',
+                stepFunction: async editor => {
+                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const editable = domEngine.components.editable[0];
+                    const editableDom = domEngine.getDomNodes(editable)[0] as HTMLElement;
+                    const textNode = editableDom.childNodes[0];
+                    triggerEvent(editableDom, 'keydown', { key: 'a', code: 'KeyA' });
+                    textNode.textContent = 'a';
+                    triggerEvent(editableDom, 'keyup', { key: 'a', code: 'KeyA' });
+                    triggerEvent(editableDom, 'input', { data: 'a', inputType: 'insertText' });
+                    triggerEvent(editableDom, 'keydown', { key: 'b', code: 'KeyB' });
+                    textNode.textContent = 'ab';
+                    triggerEvent(editableDom, 'keyup', { key: 'b', code: 'KeyB' });
+                    triggerEvent(editableDom, 'input', { data: 'b', inputType: 'insertText' });
+                    triggerEvent(editableDom, 'keydown', { key: 'Tab', code: 'Tab' });
+                    triggerEvent(editableDom, 'keyup', { key: 'Tab', code: 'Tab' });
+                    triggerEvent(editableDom, 'keydown', { key: 'c', code: 'KeyC' });
+                    textNode.textContent = 'ab  c';
+                    triggerEvent(editableDom, 'keyup', { key: 'c', code: 'KeyC' });
+                    triggerEvent(editableDom, 'input', { data: 'c', inputType: 'insertText' });
+                    triggerEvent(editableDom, 'keydown', { key: 'd', code: 'KeyD' });
+                    textNode.textContent = 'ab  cd';
+                    triggerEvent(editableDom, 'keyup', { key: 'c', code: 'KeyC' });
+                    triggerEvent(editableDom, 'input', { data: 'd', inputType: 'insertText' });
+
+                    // wait for the event to be processed in the next tick
+                    await nextTick();
+                    // wait for the last event in the editor mutex to finish
+                    await new Promise(resolve => {
+                        editor.execCommand(resolve);
+                    });
+                },
+                contentAfter: '<div>ab\u2003cd[]</div>',
+            });
+        });
         it('should trigger a shortcut', async () => {
             editor = new JWEditor();
             editor.load(Html);
@@ -752,8 +799,7 @@ describe('DomEditable', () => {
             editor.load(loadables);
             await editor.start();
 
-            editor.execCommand = (): Promise<void> => Promise.resolve();
-            const execSpy = spy(editor, 'execCommand');
+            const execSpy = spy(editor.dispatcher, 'dispatch');
             await selectAllWithKeyA(container);
             const params = {
                 context: editor.contextManager.defaultContext,
@@ -794,8 +840,7 @@ describe('DomEditable', () => {
             editor.load(loadables);
             await editor.start();
 
-            editor.execCommand = (): Promise<void> => Promise.resolve();
-            const execSpy = spy(editor, 'execCommand');
+            const execSpy = spy(editor.dispatcher, 'dispatch');
 
             const editor2 = new JWEditor();
             editor2.load(Html);
@@ -820,15 +865,20 @@ describe('DomEditable', () => {
             article.innerHTML = '<div>abcd</div>';
             await editor2.start();
 
-            editor2.execCommand = (): Promise<void> => Promise.resolve();
-            const execSpy2 = spy(editor2, 'execCommand');
+            const execSpy2 = spy(editor2.dispatcher, 'dispatch');
             await selectAllWithKeyA(container1);
             await selectAllWithKeyA(container2);
 
             const params = {
                 context: editor.contextManager.defaultContext,
             };
-            expect(execSpy.args).to.eql([['command-b', params]]);
+            expect(execSpy.args).to.eql([
+                ['command-b', params],
+                // todo: There should not be a select all in the first editor.
+                // Correct this bug when having two editor at the same time
+                // becomes critical.
+                ['selectAll', {}],
+            ]);
             expect(execSpy2.args).to.eql([['selectAll', {}]]);
 
             await editor.stop();

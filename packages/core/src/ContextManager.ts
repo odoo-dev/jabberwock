@@ -1,16 +1,11 @@
-import JWEditor, { Commands, CommandParamsType } from './JWEditor';
+import JWEditor from './JWEditor';
 import { VRange } from './VRange';
 import { Predicate, VNode } from './VNodes/VNode';
-import { JWPlugin } from './JWPlugin';
+import { ExecutionContext } from './JWEditor';
 
-export interface Context {
+export interface Context extends Partial<ExecutionContext> {
     range?: VRange;
-    execCommand: <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
-        commandName: C | (() => Promise<void> | void),
-        params?: CommandParamsType<P, C>,
-    ) => Promise<void>;
 }
-
 export interface CheckingContext extends Context {
     selector?: VNode[];
 }

@@ -52,6 +52,10 @@ export class Dispatcher {
 
             await this.dispatchHooks(commandId, args);
 
+            if (params.context?.range?.temporary) {
+                params.context.range.remove();
+            }
+
             return result;
         }
     }

@@ -1,7 +1,7 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { JWEditor, Loadables, CommitParams } from '../../core/src/JWEditor';
+import { JWEditor, Loadables, CommitParams, ExecutionContext } from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutLocation, DomLayoutEngine } from './DomLayoutEngine';
 import {
@@ -125,7 +125,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
      *
      * @param event
      */
-    async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
+    async processKeydown(
+        event: KeyboardEvent,
+        processingContext: ExecutionContext = this.editor,
+    ): Promise<CommandIdentifier> {
         if (
             this.focusedNode &&
             ['INPUT', 'SELECT', 'TEXTAREA'].includes(nodeName(this.focusedNode))
@@ -151,7 +154,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            await this.editor.execCommand(command.commandId, params);
+            await Promise.all([
+                this.editor.dispatcher.dispatchHooks('@preKeydownCommand', {}),
+                processingContext.execCommand(command.commandId, params),
+            ]);
             return command.commandId;
         }
     }
