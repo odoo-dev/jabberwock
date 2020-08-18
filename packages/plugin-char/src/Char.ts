@@ -9,6 +9,7 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
@@ -50,11 +51,20 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         let modifiers = inline.getCurrentModifiers(range);
         // Ony preserved modifiers are applied at the start of a container.
         const previousSibling = range.start.previousSibling();
-        if (!previousSibling && modifiers) {
-            const preservedModifiers = modifiers.filter(mod => mod.preserve);
+        if (modifiers) {
+            const isAfterLineBreak = previousSibling instanceof LineBreakNode;
+            const preservedModifiers = modifiers.filter(mod => {
+                if (isAfterLineBreak) {
+                    return mod.preserve.lineBreak;
+                } else if (previousSibling) {
+                    return mod.preserve.after;
+                } else {
+                    return mod.preserve.paragraphBreak;
+                }
+            });
             if (preservedModifiers.length) {
                 modifiers = new Modifiers(...preservedModifiers);
-            } else {
+            } else if (!previousSibling) {
                 modifiers = null;
             }
         }
