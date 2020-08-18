@@ -592,9 +592,7 @@ export class DomReconciliationEngine {
     getLocations(node: VNode): DomPoint {
         let reference = node.previousSibling();
         let position = RelativePosition.AFTER;
-        if (reference) {
-            reference = reference.lastLeaf();
-        } else {
+        if (!reference || reference.hasChildren()) {
             reference = node.nextSibling();
             position = RelativePosition.BEFORE;
             if (reference) {

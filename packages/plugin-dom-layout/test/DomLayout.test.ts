@@ -1475,6 +1475,12 @@ describe('DomLayout', () => {
 
             await editor.stop();
         });
+        it('should render a selection at start of an inline adjacent to a block', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<div><p>abc</p>[]def</div>',
+                contentAfter: '<div><p>abc</p>[]def</div>',
+            });
+        });
         describe('complex location', () => {
             it('should redraw a selection in a custom fragment with children which have same rendering (1)', async () => {
                 class CustomNode extends AtomicNode {}
