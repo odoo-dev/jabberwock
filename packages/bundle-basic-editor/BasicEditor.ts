@@ -48,6 +48,7 @@ import { parseEditable, createEditable } from '../../packages/utils/src/configur
 import { Fullscreen } from '../../packages/plugin-fullscreen/src/Fullscreen';
 import { Code } from '../plugin-code/src/Code';
 import { FontSize } from '../plugin-font-size/src/FontSize';
+import { Button } from '../plugin-button/src/Button';
 
 export class BasicEditor extends JWEditor {
     constructor(params?: { editable?: HTMLElement }) {
@@ -100,6 +101,7 @@ export class BasicEditor extends JWEditor {
                 [Fullscreen, { component: 'editor' }],
                 [OdooField],
                 [Code],
+                [Button],
             ],
         });
 
