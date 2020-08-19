@@ -7,6 +7,7 @@ import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { CommandParamsType, Commands } from '../../core/src/JWEditor';
 import { Context } from '../../core/src/ContextManager';
+import { Format } from '../../core/src/Format';
 
 export interface ExecutionContext {
     execCommand: <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
@@ -52,6 +53,9 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.find(Attributes)?.classList.remove(...classes);
+                for (const modifier of node.modifiers.filter(Format)) {
+                    modifier.modifiers.find(Attributes)?.classList.remove(...classes);
+                }
             }
         };
         return context.execCommand(domHelpersRemoveClass);
