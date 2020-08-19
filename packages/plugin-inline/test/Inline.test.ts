@@ -6,6 +6,8 @@ import { Format } from '../../core/src/Format';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 import { Char } from '../../plugin-char/src/Char';
+import { RelativePosition } from '../../core/src/VNodes/VNode';
+import { Direction } from '../../core/src/VSelection';
 
 const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
     await editor.execCommand<Inline>('toggleFormat', {
@@ -100,6 +102,34 @@ describePlugin(Inline, testEditor => {
                     },
                     contentAfter:
                         'a<b style="color: red;">b[</b><span style="color: red;">cd</span><span style="color: green;">ef]</span><b style="color: green;">g</b>',
+                });
+            });
+            it('should replace all text and add the next char in bold', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p><b>[abc]</b></p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        await editor.execCommand<Char>('insertText', { text: 'd' });
+                    },
+                    contentAfter: '<p><b>d[]</b></p>',
+                });
+            });
+            it('should select and replace all text and add the next char in bold', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p><b>[]abc</b></p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        const p = editor.selection.anchor.parent;
+                        await editor.execCommand('setSelection', {
+                            vSelection: {
+                                anchorNode: p.firstLeaf(),
+                                anchorPosition: RelativePosition.BEFORE,
+                                focusNode: p.lastLeaf(),
+                                focusPosition: RelativePosition.AFTER,
+                                direction: Direction.FORWARD,
+                            },
+                        });
+                        await editor.execCommand<Char>('insertText', { text: 'd' });
+                    },
+                    contentAfter: '<p><b>d[]</b></p>',
                 });
             });
         });

@@ -5,6 +5,8 @@ import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Core } from '../../core/src/Core';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
+import { RelativePosition } from '../../core/src/VNodes/VNode';
+import { Direction } from '../../core/src/VSelection';
 
 const convertToLink = async function(editor: JWEditor): Promise<void> {
     await editor.execCommand<Link>('link', { url: 'url' });
@@ -305,6 +307,25 @@ describePlugin(Link, testEditor => {
                     await insertText(editor, 'c');
                 },
                 contentAfter: '<p>a<a href="exist">b</a></p><p>c[]d</p>',
+            });
+        });
+        it('should select and replace all text and add the next char in bold', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<div><p>[]123</p><p><a href="#">abc</a></p></div>',
+                stepFunction: async (editor: JWEditor) => {
+                    const p = editor.selection.anchor.parent.nextSibling();
+                    await editor.execCommand('setSelection', {
+                        vSelection: {
+                            anchorNode: p.firstLeaf(),
+                            anchorPosition: RelativePosition.BEFORE,
+                            focusNode: p.lastLeaf(),
+                            focusPosition: RelativePosition.AFTER,
+                            direction: Direction.FORWARD,
+                        },
+                    });
+                    await editor.execCommand<Char>('insertText', { text: 'd' });
+                },
+                contentAfter: '<div><p>123</p><p><a href="#">d[]</a></p></div>',
             });
         });
     });

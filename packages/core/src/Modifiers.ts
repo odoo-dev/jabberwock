@@ -34,7 +34,7 @@ export class Modifiers extends VersionableObject {
      */
     clone(): Modifiers {
         if (this._contents) {
-            return new Modifiers(...this._contents.map(mod => mod.clone()));
+            return new Modifiers(...this._contents);
         } else {
             return new Modifiers();
         }
