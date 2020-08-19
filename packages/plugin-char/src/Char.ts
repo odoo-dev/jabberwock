@@ -50,8 +50,8 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const inline = this.editor.plugins.get(Inline);
         let modifiers = inline.getCurrentModifiers(range);
         // Ony preserved modifiers are applied at the start of a container.
-        const previousSibling = range.start.previousSibling();
-        if (modifiers) {
+        if (modifiers && range.isCollapsed()) {
+            const previousSibling = range.start.previousSibling();
             const isAfterLineBreak = previousSibling instanceof LineBreakNode;
             const preservedModifiers = modifiers.filter(mod => {
                 if (isAfterLineBreak) {
