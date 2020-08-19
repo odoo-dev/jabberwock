@@ -3,6 +3,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { LinkFormat } from './LinkFormat';
 import { nodeName } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 export class LinkXmlDomParser extends FormatXmlDomParser {
     predicate = (item: Node): boolean => {
@@ -19,6 +20,12 @@ export class LinkXmlDomParser extends FormatXmlDomParser {
         }
         const children = await this.engine.parse(...item.childNodes);
         this.applyFormat(link, children);
+        // The applyFormat helper only applies the format to InlineNodes.
+        for (const node of children) {
+            if (node instanceof LineBreakNode) {
+                link.clone().applyTo(node);
+            }
+        }
 
         return children;
     }

@@ -291,7 +291,7 @@ describePlugin(Link, testEditor => {
                 contentAfter: '<p>a<a href="exist">bc[]</a>d</p>',
             });
         });
-        it.skip('should add a character in the link after a br tag', async () => {
+        it('should add a character in the link after a br tag', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a<a href="exist">b<br>[]</a>d</p>',
                 stepFunction: async editor => {
