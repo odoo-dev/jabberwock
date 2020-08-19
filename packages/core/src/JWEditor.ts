@@ -424,19 +424,19 @@ export class JWEditor {
                 // When an error occurs, we go back to part of the functional memory.
                 this.memory.switchTo(origin);
 
-                // Send the commit message with a frozen memory.
-                const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
-                await this.dispatcher
-                    .dispatchHooks('@commit', {
+                try {
+                    // Send the commit message with a frozen memory.
+                    const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
+                    await this.dispatcher.dispatchHooks('@commit', {
                         changesLocations: changesLocations,
                         commandNames: commandNames,
-                    })
-                    .catch(error => {
-                        if (this._stage !== EditorStage.EDITION) {
-                            throw error;
-                        }
-                        console.error(error);
                     });
+                } catch (revertError) {
+                    if (this._stage !== EditorStage.EDITION) {
+                        throw revertError;
+                    }
+                    console.error(revertError);
+                }
             }
         });
         return this._mutex;
