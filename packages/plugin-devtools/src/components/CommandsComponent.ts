@@ -44,6 +44,9 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
         if (value && value instanceof Node && nodeName(value)) {
             return '<' + nodeName(value).toLowerCase() + '>';
         }
+        if (value instanceof Array) {
+            return '' + value.join(', ');
+        }
         return '' + value;
     }
     /**

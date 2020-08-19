@@ -30,12 +30,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         domNode: Node | Node[],
         className: string | string[],
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersAddClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).classList.add(...classes);
             }
-        });
+        };
+        return context.execCommand(domHelpersAddClass);
     }
     /**
      * Remove a class or a list of classes from a DOM node or a list of DOM nodes.
@@ -47,12 +48,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         domNode: Node | Node[],
         className: string | string[],
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersRemoveClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.find(Attributes)?.classList.remove(...classes);
             }
-        });
+        };
+        return context.execCommand(domHelpersRemoveClass);
     }
     /**
      * Add or remove a class or a list of classes from a DOM node or a list of
@@ -65,12 +67,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         domNode: Node | Node[],
         className: string,
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersToggleClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).classList.toggle(...classes);
             }
-        });
+        };
+        return context.execCommand(domHelpersToggleClass);
     }
     /**
      * Set an attribute on a DOM node or a list of DOM nodes.
@@ -83,11 +86,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         name: string,
         value: string,
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersSetAttribute = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).set(name, value);
             }
-        });
+        };
+        return context.execCommand(domHelpersSetAttribute);
     }
 
     /**
@@ -99,14 +103,15 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         domNode: Node | Node[],
         attributes: { [key: string]: string },
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersUpdateAttribute = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).clear();
                 for (const [name, value] of Object.entries(attributes)) {
                     node.modifiers.get(Attributes).set(name, value);
                 }
             }
-        });
+        };
+        return context.execCommand(domHelpersUpdateAttribute);
     }
     /**
      * Set a style key/value pair on a DOM node or a list of DOM nodes.
@@ -120,12 +125,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         value: string,
         important?: boolean,
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersSetStyle = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 value = important ? value + ' !important' : value;
                 node.modifiers.get(Attributes).style.set(name, value);
             }
-        });
+        };
+        return context.execCommand(domHelpersSetStyle);
     }
     /**
      * Remove a DOM node or a list of DOM nodes.
@@ -137,11 +143,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
 
         domNode: Node | Node[],
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersRemove = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.remove();
             }
-        });
+        };
+        return context.execCommand(domHelpersRemove);
     }
     /**
      * Remove the contents of a DOM node or of a list of DOM nodes.
@@ -153,11 +160,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
 
         domNode: Node | Node[],
     ): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersEmpty = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.empty();
             }
-        });
+        };
+        return context.execCommand(domHelpersEmpty);
     }
     /**
      * Replace a DOM node or a list of DOM nodes with the given HTML content.
@@ -165,7 +173,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async replace(context: ExecutionContext, domNodes: Node | Node[], html: string): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersReplace = async (): Promise<void> => {
             const nodes = this.getNodes(domNodes);
             const parsedNodes = await this._parseHtmlString(html);
             const firstNode = nodes[0];
@@ -175,7 +183,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             for (const node of nodes) {
                 node.remove();
             }
-        });
+        };
+        return context.execCommand(domHelpersReplace);
     }
     /**
      * Wrap the given HTML content within a DOM container.
@@ -183,7 +192,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async wrap(context: ExecutionContext, domContainer: Node, html: string): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersWrap = async (): Promise<void> => {
             const container = this.getNodes(domContainer)[0];
             if (!(container instanceof ContainerNode)) {
                 throw new Error(
@@ -194,7 +203,8 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             for (const parsedNode of parsedNodes) {
                 container.wrap(parsedNode);
             }
-        });
+        };
+        return context.execCommand(domHelpersWrap);
     }
     /**
      * Move a DOM Node before another.
@@ -202,12 +212,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async moveBefore(context: ExecutionContext, fromDomNode: Node, toDomNode: Node): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersMoveBefore = async (): Promise<void> => {
             const toNode = this.getNodes(toDomNode)[0];
             for (const fromNode of this.getNodes(fromDomNode)) {
                 fromNode.before(toNode);
             }
-        });
+        };
+        return context.execCommand(domHelpersMoveBefore);
     }
     /**
      * Move a DOM Node after another.
@@ -215,13 +226,14 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @param params
      */
     async moveAfter(context: ExecutionContext, fromDomNode: Node, toDomNode: Node): Promise<void> {
-        return context.execCommand(async () => {
+        const domHelpersMoveAfter = async (): Promise<void> => {
             const toNodes = this.getNodes(toDomNode);
             const toNode = toNodes[toNodes.length - 1];
             for (const fromNode of this.getNodes(fromDomNode).reverse()) {
                 fromNode.after(toNode);
             }
-        });
+        };
+        return context.execCommand(domHelpersMoveAfter);
     }
     /**
      * Insert html content before, after or inside a DOM Node. If no DOM Node
