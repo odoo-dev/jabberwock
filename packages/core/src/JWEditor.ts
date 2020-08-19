@@ -382,11 +382,12 @@ export class JWEditor {
             try {
                 // Execute command.
                 if (typeof commandName === 'function') {
-                    this.memoryInfo.commandNames.push('@custom');
+                    const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
+                    this.memoryInfo.commandNames.push(name);
                     await commandName(this.contextManager.defaultContext);
                     if (this.memory.sliceKey !== memorySlice) {
                         // Override by the current commandName if the slice changed.
-                        commandNames = ['@custom'];
+                        commandNames = [name];
                     }
                 } else {
                     this.memoryInfo.commandNames.push(commandName);
@@ -480,7 +481,9 @@ export class JWEditor {
             let range: VRange;
             if (typeof commandName === 'function') {
                 range = new VRange(this, bounds, params as Mode);
-                this.memoryInfo.commandNames.push('@custom');
+                this.memoryInfo.commandNames.push(
+                    '@custom' + (commandName.name ? ':' + commandName.name : ''),
+                );
                 await commandName({ ...this.contextManager.defaultContext, range });
             } else {
                 range = new VRange(this, bounds, mode);
@@ -534,7 +537,9 @@ export class JWEditor {
         params?: CommandParamsType<P, C>,
     ): Promise<void> {
         if (typeof commandName === 'function') {
-            this.memoryInfo.commandNames.push('@custom');
+            this.memoryInfo.commandNames.push(
+                '@custom' + (commandName.name ? ':' + commandName.name : ''),
+            );
             await commandName(this.contextManager.defaultContext);
         } else {
             this.memoryInfo.commandNames.push(commandName);
