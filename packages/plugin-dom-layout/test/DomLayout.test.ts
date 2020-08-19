@@ -1198,287 +1198,370 @@ describe('DomLayout', () => {
         });
     });
     describe('renderSelection', () => {
-        it('should not render the selection if the range is not in the root element of the vDocument', async () => {
-            await testEditor(BasicEditor, {
-                contentBefore: '<div><div><div>a[]</div></div><p>b</p></div>',
-                stepFunction: async editor => {
-                    const layout = editor.plugins.get(Layout);
-                    const domLayout = layout.engines.dom as DomLayoutEngine;
-                    await editor.execCommand(() => {
-                        domLayout.components.editable[0]
-                            .children()[0]
-                            .children()[0]
-                            .remove();
-                        document.getSelection().removeAllRanges();
+        describe('basic', () => {
+            it('should not render the selection if the range is not in the root element of the vDocument', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div><div><div>a[]</div></div><p>b</p></div>',
+                    stepFunction: async editor => {
+                        const layout = editor.plugins.get(Layout);
+                        const domLayout = layout.engines.dom as DomLayoutEngine;
+                        await editor.execCommand(() => {
+                            domLayout.components.editable[0]
+                                .children()[0]
+                                .children()[0]
+                                .remove();
+                            document.getSelection().removeAllRanges();
+                        });
+                    },
+                    contentAfter: '<div><p>b</p></div>',
+                });
+            });
+            it("shouldn't redraw a wrong selection", async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins
+                            .get(Parser)
+                            .parse('text/html', '<p>abc</p><p>def</p>');
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                target.ownerDocument.getSelection().removeAllRanges();
+
+                const domLayoutEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                domLayoutEngine.redraw({ add: [], move: [], remove: [], update: [] });
+                const domSelection = target.ownerDocument.getSelection();
+                expect(domSelection.anchorNode).to.deep.equal(null);
+
+                await editor.stop();
+            });
+            it('should redraw the selection', async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins
+                            .get(Parser)
+                            .parse('text/html', '<p>abc</p><p>def</p>');
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                const body = container.getElementsByTagName('jw-editor')[0];
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const abc = engine.getNodes(body.firstChild.firstChild);
+                const def = engine.getNodes(body.lastChild.firstChild);
+
+                await editor.execCommand(() => {
+                    editor.selection.set({
+                        anchorNode: abc[1],
+                        anchorPosition: RelativePosition.BEFORE,
+                        focusNode: def[2],
+                        direction: Direction.FORWARD,
+                        focusPosition: RelativePosition.BEFORE,
                     });
-                },
-                contentAfter: '<div><p>b</p></div>',
+                });
+
+                const redrawedBody = container.getElementsByTagName('jw-editor')[0];
+                const domSelection = target.ownerDocument.getSelection();
+                expect({
+                    anchorNode: domSelection.anchorNode,
+                    anchorOffset: domSelection.anchorOffset,
+                    focusNode: domSelection.focusNode,
+                    focusOffset: domSelection.focusOffset,
+                }).to.deep.equal({
+                    anchorNode: redrawedBody.firstChild.firstChild,
+                    anchorOffset: 1,
+                    focusNode: redrawedBody.lastChild.firstChild,
+                    focusOffset: 2,
+                });
+
+                await editor.stop();
             });
-        });
-        it("shouldn't redraw a wrong selection", async () => {
-            const Component: ComponentDefinition = {
-                id: 'test',
-                render(editor: JWEditor): Promise<VNode[]> {
-                    return editor.plugins.get(Parser).parse('text/html', '<p>abc</p><p>def</p>');
-                },
-            };
-            class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                loadables: Loadables<Layout> = {
-                    components: [Component],
-                    componentZones: [['test', ['main']]],
+            it('should redraw the selection on void element', async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        const template = '<p><img src="#"></p><p>abc</p>';
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
                 };
-            }
-            const editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.configure(DomLayout, { location: [target, 'replace'] });
-            editor.load(Plugin);
-            await editor.start();
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.load(Image);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
 
-            target.ownerDocument.getSelection().removeAllRanges();
+                const body = container.getElementsByTagName('jw-editor')[0];
 
-            const domLayoutEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            domLayoutEngine.redraw({ add: [], move: [], remove: [], update: [] });
-            const domSelection = target.ownerDocument.getSelection();
-            expect(domSelection.anchorNode).to.deep.equal(null);
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const img = engine.getNodes(body.firstChild.firstChild)[0];
+                const abc = engine.getNodes(body.lastChild.firstChild);
 
-            await editor.stop();
-        });
-        it('should redraw the selection', async () => {
-            const Component: ComponentDefinition = {
-                id: 'test',
-                render(editor: JWEditor): Promise<VNode[]> {
-                    return editor.plugins.get(Parser).parse('text/html', '<p>abc</p><p>def</p>');
-                },
-            };
-            class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                loadables: Loadables<Layout> = {
-                    components: [Component],
-                    componentZones: [['test', ['main']]],
+                await editor.execCommand(() => {
+                    editor.selection.set({
+                        anchorNode: img,
+                        anchorPosition: RelativePosition.BEFORE,
+                        focusNode: abc[2],
+                        direction: Direction.FORWARD,
+                        focusPosition: RelativePosition.BEFORE,
+                    });
+                });
+
+                const redrawedBody = container.getElementsByTagName('jw-editor')[0];
+                const domSelection = target.ownerDocument.getSelection();
+                expect({
+                    anchorNode: domSelection.anchorNode,
+                    anchorOffset: domSelection.anchorOffset,
+                    focusNode: domSelection.focusNode,
+                    focusOffset: domSelection.focusOffset,
+                }).to.deep.equal({
+                    anchorNode: redrawedBody.firstChild,
+                    anchorOffset: 0,
+                    focusNode: redrawedBody.lastChild.firstChild,
+                    focusOffset: 2,
+                });
+
+                await editor.stop();
+            });
+            it('should redraw the selection (backward)', async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins
+                            .get(Parser)
+                            .parse('text/html', '<p>abc</p><p>def</p>');
+                    },
                 };
-            }
-            const editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.configure(DomLayout, { location: [target, 'replace'] });
-            editor.load(Plugin);
-            await editor.start();
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
 
-            const body = container.getElementsByTagName('jw-editor')[0];
+                const body = container.getElementsByTagName('jw-editor')[0];
 
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            const abc = engine.getNodes(body.firstChild.firstChild);
-            const def = engine.getNodes(body.lastChild.firstChild);
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const abc = engine.getNodes(body.firstChild.firstChild);
+                const def = engine.getNodes(body.lastChild.firstChild);
+                await editor.execCommand(() => {
+                    editor.selection.set({
+                        anchorNode: def[1],
+                        anchorPosition: RelativePosition.AFTER,
+                        focusNode: abc[1],
+                        direction: Direction.BACKWARD,
+                        focusPosition: RelativePosition.BEFORE,
+                    });
+                });
+                const domSelection = target.ownerDocument.getSelection();
 
-            await editor.execCommand(() => {
-                editor.selection.set({
-                    anchorNode: abc[1],
-                    anchorPosition: RelativePosition.BEFORE,
-                    focusNode: def[2],
-                    direction: Direction.FORWARD,
-                    focusPosition: RelativePosition.BEFORE,
+                const redrawedBody = container.getElementsByTagName('jw-editor')[0];
+                expect({
+                    anchorNode: domSelection.anchorNode,
+                    anchorOffset: domSelection.anchorOffset,
+                    focusNode: domSelection.focusNode,
+                    focusOffset: domSelection.focusOffset,
+                }).to.deep.equal({
+                    anchorNode: redrawedBody.lastChild.firstChild,
+                    anchorOffset: 2,
+                    focusNode: redrawedBody.firstChild.firstChild,
+                    focusOffset: 1,
+                });
+
+                await editor.stop();
+            });
+            it('should not redraw a selection in a part removed from the arch/DOM', async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        const template = '<div><p>abc</p><p>def</p></div>';
+                        return editor.plugins.get(Parser).parse('text/html', template);
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                document.getSelection().removeAllRanges();
+
+                const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                const div = engine.getNodes(container.querySelector('div'))[0];
+                await editor.execCommand(() => {
+                    div.remove();
+                });
+
+                expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
+
+                await editor.execCommand(() => {
+                    editor.selection.set({
+                        anchorNode: div.descendants(CharNode)[0],
+                        anchorPosition: RelativePosition.AFTER,
+                        focusNode: div.descendants(CharNode)[0],
+                        direction: Direction.BACKWARD,
+                        focusPosition: RelativePosition.AFTER,
+                    });
+                });
+
+                const domSelection = target.ownerDocument.getSelection();
+
+                expect(domSelection.anchorNode).to.equal(null);
+
+                await editor.stop();
+            });
+            it('should not redraw a selection in a fragment out of the arch', async () => {
+                const editor = new JWEditor();
+                editor.load(Char);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                await editor.start();
+
+                document.getSelection().removeAllRanges();
+
+                const element = new VElement({ htmlTag: 'div' });
+                const p = new VElement({ htmlTag: 'p' });
+
+                await editor.execCommand(() => {
+                    element.append(p);
+                    editor.selection.set({
+                        anchorNode: p,
+                        anchorPosition: RelativePosition.INSIDE,
+                        focusNode: p,
+                        direction: Direction.BACKWARD,
+                        focusPosition: RelativePosition.INSIDE,
+                    });
+                });
+
+                const domSelection = target.ownerDocument.getSelection();
+                expect(domSelection.anchorNode).to.equal(null);
+
+                await editor.stop();
+            });
+            it('should render a selection at start of an inline adjacent to a block', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div><p>abc</p>[]def</div>',
+                    contentAfter: '<div><p>abc</p>[]def</div>',
                 });
             });
-
-            const redrawedBody = container.getElementsByTagName('jw-editor')[0];
-            const domSelection = target.ownerDocument.getSelection();
-            expect({
-                anchorNode: domSelection.anchorNode,
-                anchorOffset: domSelection.anchorOffset,
-                focusNode: domSelection.focusNode,
-                focusOffset: domSelection.focusOffset,
-            }).to.deep.equal({
-                anchorNode: redrawedBody.firstChild.firstChild,
-                anchorOffset: 1,
-                focusNode: redrawedBody.lastChild.firstChild,
-                focusOffset: 2,
-            });
-
-            await editor.stop();
         });
-        it('should redraw the selection on void element', async () => {
-            const Component: ComponentDefinition = {
-                id: 'test',
-                render(editor: JWEditor): Promise<VNode[]> {
-                    const template = '<p><img src="#"></p><p>abc</p>';
-                    return editor.plugins.get(Parser).parse('text/html', template);
-                },
-            };
-            class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                loadables: Loadables<Layout> = {
-                    components: [Component],
-                    componentZones: [['test', ['main']]],
-                };
-            }
-            const editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.load(Image);
-            editor.configure(DomLayout, { location: [target, 'replace'] });
-            editor.load(Plugin);
-            await editor.start();
+        describe('when handle user events', () => {
+            it('should insert char (ubuntu chrome)', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>hell[]</p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.editable[0];
+                        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
 
-            const body = container.getElementsByTagName('jw-editor')[0];
+                        const text = domEditable.firstChild.firstChild;
+                        triggerEvent(domEditable, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(domEditable, 'keypress', { key: 'o', code: 'KeyO' });
+                        triggerEvent(domEditable, 'beforeinput', {
+                            data: 'o',
+                            inputType: 'insertText',
+                        });
+                        text.textContent = 'hello';
+                        triggerEvent(domEditable, 'input', { data: 'o', inputType: 'insertText' });
+                        setDomSelection(text, 5, text, 5);
 
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            const img = engine.getNodes(body.firstChild.firstChild)[0];
-            const abc = engine.getNodes(body.lastChild.firstChild);
-
-            await editor.execCommand(() => {
-                editor.selection.set({
-                    anchorNode: img,
-                    anchorPosition: RelativePosition.BEFORE,
-                    focusNode: abc[2],
-                    direction: Direction.FORWARD,
-                    focusPosition: RelativePosition.BEFORE,
+                        await nextTick();
+                        await nextTick();
+                    },
+                    contentAfter: '<p>hello[]</p>',
                 });
             });
+            it('should insert multiples key in same stack (oi<backspace>) (ubuntu chrome)', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>hell[]</p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const editable = domEngine.components.editable[0];
+                        const domEditable = domEngine.getDomNodes(editable)[0] as Element;
 
-            const redrawedBody = container.getElementsByTagName('jw-editor')[0];
-            const domSelection = target.ownerDocument.getSelection();
-            expect({
-                anchorNode: domSelection.anchorNode,
-                anchorOffset: domSelection.anchorOffset,
-                focusNode: domSelection.focusNode,
-                focusOffset: domSelection.focusOffset,
-            }).to.deep.equal({
-                anchorNode: redrawedBody.firstChild,
-                anchorOffset: 0,
-                focusNode: redrawedBody.lastChild.firstChild,
-                focusOffset: 2,
-            });
+                        const text = domEditable.firstChild.firstChild;
+                        triggerEvent(domEditable, 'keydown', { key: 'o', code: 'KeyO' });
+                        triggerEvent(domEditable, 'keypress', { key: 'o', code: 'KeyO' });
+                        triggerEvent(domEditable, 'beforeinput', {
+                            data: 'o',
+                            inputType: 'insertText',
+                        });
+                        text.textContent = 'hello';
+                        triggerEvent(domEditable, 'input', { data: 'o', inputType: 'insertText' });
+                        setDomSelection(text, 5, text, 5);
+                        triggerEvent(domEditable, 'keydown', { key: 'i', code: 'KeyI' });
+                        triggerEvent(domEditable, 'keypress', { key: 'i', code: 'KeyI' });
+                        triggerEvent(domEditable, 'beforeinput', {
+                            data: 'i',
+                            inputType: 'insertText',
+                        });
+                        text.textContent = 'helloi';
+                        triggerEvent(domEditable, 'input', { data: 'i', inputType: 'insertText' });
+                        setDomSelection(text, 6, text, 6);
+                        triggerEvent(domEditable, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                        });
+                        triggerEvent(domEditable, 'keypress', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                        });
+                        triggerEvent(domEditable, 'beforeinput', {
+                            inputType: 'deleteContentBackward',
+                        });
+                        text.textContent = 'hello';
+                        triggerEvent(domEditable, 'input', { inputType: 'deleteContentBackward' });
+                        setDomSelection(text, 5, text, 5);
 
-            await editor.stop();
-        });
-        it('should redraw the selection (backward)', async () => {
-            const Component: ComponentDefinition = {
-                id: 'test',
-                render(editor: JWEditor): Promise<VNode[]> {
-                    return editor.plugins.get(Parser).parse('text/html', '<p>abc</p><p>def</p>');
-                },
-            };
-            class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                loadables: Loadables<Layout> = {
-                    components: [Component],
-                    componentZones: [['test', ['main']]],
-                };
-            }
-            const editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.configure(DomLayout, { location: [target, 'replace'] });
-            editor.load(Plugin);
-            await editor.start();
-
-            const body = container.getElementsByTagName('jw-editor')[0];
-
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            const abc = engine.getNodes(body.firstChild.firstChild);
-            const def = engine.getNodes(body.lastChild.firstChild);
-            await editor.execCommand(() => {
-                editor.selection.set({
-                    anchorNode: def[1],
-                    anchorPosition: RelativePosition.AFTER,
-                    focusNode: abc[1],
-                    direction: Direction.BACKWARD,
-                    focusPosition: RelativePosition.BEFORE,
+                        await nextTick();
+                        await nextTick();
+                    },
+                    contentAfter: '<p>hello[]</p>',
                 });
-            });
-            const domSelection = target.ownerDocument.getSelection();
-
-            const redrawedBody = container.getElementsByTagName('jw-editor')[0];
-            expect({
-                anchorNode: domSelection.anchorNode,
-                anchorOffset: domSelection.anchorOffset,
-                focusNode: domSelection.focusNode,
-                focusOffset: domSelection.focusOffset,
-            }).to.deep.equal({
-                anchorNode: redrawedBody.lastChild.firstChild,
-                anchorOffset: 2,
-                focusNode: redrawedBody.firstChild.firstChild,
-                focusOffset: 1,
-            });
-
-            await editor.stop();
-        });
-        it('should not redraw a selection in a part removed from the arch/DOM', async () => {
-            const Component: ComponentDefinition = {
-                id: 'test',
-                render(editor: JWEditor): Promise<VNode[]> {
-                    const template = '<div><p>abc</p><p>def</p></div>';
-                    return editor.plugins.get(Parser).parse('text/html', template);
-                },
-            };
-            class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
-                loadables: Loadables<Layout> = {
-                    components: [Component],
-                    componentZones: [['test', ['main']]],
-                };
-            }
-            const editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.configure(DomLayout, { location: [target, 'replace'] });
-            editor.load(Plugin);
-            await editor.start();
-
-            document.getSelection().removeAllRanges();
-
-            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            const div = engine.getNodes(container.querySelector('div'))[0];
-            await editor.execCommand(() => {
-                div.remove();
-            });
-
-            expect(container.innerHTML).to.equal('<jw-editor></jw-editor>');
-
-            await editor.execCommand(() => {
-                editor.selection.set({
-                    anchorNode: div.descendants(CharNode)[0],
-                    anchorPosition: RelativePosition.AFTER,
-                    focusNode: div.descendants(CharNode)[0],
-                    direction: Direction.BACKWARD,
-                    focusPosition: RelativePosition.AFTER,
-                });
-            });
-
-            const domSelection = target.ownerDocument.getSelection();
-
-            expect(domSelection.anchorNode).to.equal(null);
-
-            await editor.stop();
-        });
-        it('should not redraw a selection in a fragment out of the arch', async () => {
-            const editor = new JWEditor();
-            editor.load(Char);
-            editor.configure(DomLayout, { location: [target, 'replace'] });
-            await editor.start();
-
-            document.getSelection().removeAllRanges();
-
-            const element = new VElement({ htmlTag: 'div' });
-            const p = new VElement({ htmlTag: 'p' });
-
-            await editor.execCommand(() => {
-                element.append(p);
-                editor.selection.set({
-                    anchorNode: p,
-                    anchorPosition: RelativePosition.INSIDE,
-                    focusNode: p,
-                    direction: Direction.BACKWARD,
-                    focusPosition: RelativePosition.INSIDE,
-                });
-            });
-
-            const domSelection = target.ownerDocument.getSelection();
-            expect(domSelection.anchorNode).to.equal(null);
-
-            await editor.stop();
-        });
-        it('should render a selection at start of an inline adjacent to a block', async () => {
-            await testEditor(BasicEditor, {
-                contentBefore: '<div><p>abc</p>[]def</div>',
-                contentAfter: '<div><p>abc</p>[]def</div>',
             });
         });
         describe('complex location', () => {
