@@ -80,6 +80,16 @@ const alphabetsContainingSpaces = new RegExp(
 );
 
 /**
+ * Information about the MouseEvent or TouchEvent that represent their
+ * positions.
+ */
+interface PositionEvent {
+    target: EventTarget;
+    x: number;
+    y: number;
+}
+
+/**
  * These javascript event types might, in case of safari or spell-checking
  * keyboard, trigger dom events in multiple javascript stacks. They will require
  * to observe events during two ticks rather than after a single tick.
@@ -592,9 +602,9 @@ export class EventNormalizer {
                 this._enableNormalizer(eventTarget);
             } else {
                 if (eventTarget && ev.constructor.name === 'MouseEvent') {
-                    eventTarget = this._getEventTarget(ev as MouseEvent);
+                    eventTarget = this._getEventTarget(this._getPositionEvent(ev as MouseEvent));
                 } else if (eventTarget && ev.constructor.name === 'TouchEvent') {
-                    eventTarget = this._getEventTarget(ev as TouchEvent);
+                    eventTarget = this._getEventTarget(this._getPositionEvent(ev as TouchEvent));
                 } else if (this._isInEditable(eventTarget)) {
                     eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
                 }
@@ -1407,7 +1417,7 @@ export class EventNormalizer {
      *
      * @param [ev]
      */
-    _getSelection(ev?: MouseEvent | TouchEvent): DomSelectionDescription {
+    _getSelection(ev?: PositionEvent): DomSelectionDescription {
         let selectionDescription: DomSelectionDescription;
         let target: Node;
         let root: Document | ShadowRoot;
@@ -1623,17 +1633,9 @@ export class EventNormalizer {
      *
      * @param ev
      */
-    _getEventCaretPosition(ev: MouseEvent | TouchEvent): CaretPosition {
-        const x =
-            ev.constructor.name === 'TouchEvent'
-                ? (ev as TouchEvent).touches[0].clientX
-                : (ev as MouseEvent).clientX;
-        const y =
-            ev.constructor.name === 'TouchEvent'
-                ? (ev as TouchEvent).touches[0].clientY
-                : (ev as MouseEvent).clientY;
+    _getEventCaretPosition(ev: PositionEvent): CaretPosition {
         const target = ev.target as Node;
-        let caretPosition = caretPositionFromPoint(x, y, target.ownerDocument);
+        let caretPosition = caretPositionFromPoint(ev.x, ev.y, target.ownerDocument);
         if (!caretPosition) {
             caretPosition = { offsetNode: ev.target as Node, offset: 0 };
         }
@@ -1645,17 +1647,9 @@ export class EventNormalizer {
      *
      * @param ev
      */
-    _getEventTarget(ev: MouseEvent | TouchEvent): Node {
-        const x =
-            ev.constructor.name === 'TouchEvent'
-                ? (ev as TouchEvent).touches[0].clientX
-                : (ev as MouseEvent).clientX;
-        const y =
-            ev.constructor.name === 'TouchEvent'
-                ? (ev as TouchEvent).touches[0].clientY
-                : (ev as MouseEvent).clientY;
+    _getEventTarget(ev: PositionEvent): Node {
         const target = ev.target as Node;
-        return elementFromPoint(x, y, target.ownerDocument) || target;
+        return elementFromPoint(ev.x, ev.y, target.ownerDocument) || target;
     }
 
     //--------------------------------------------------------------------------
@@ -1714,8 +1708,9 @@ export class EventNormalizer {
     _onPointerDown(ev: MouseEvent | TouchEvent): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        const target = this._getEventTarget(ev);
-        const caretPosition = this._getEventCaretPosition(ev);
+        const positionEvent = this._getPositionEvent(ev);
+        const target = this._getEventTarget(positionEvent);
+        const caretPosition = this._getEventCaretPosition(positionEvent);
         if (target && this._isInEditable(caretPosition.offsetNode)) {
             this._mousedownInEditable = true;
             this._initialCaretPosition = caretPosition;
@@ -1742,7 +1737,7 @@ export class EventNormalizer {
                 // gets invalidated by the redrawing of the DOM.
                 this._initialCaretPosition = this._getEventCaretPosition(ev);
                 this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
-                    return this._analyzeSelectionChange(ev);
+                    return this._analyzeSelectionChange(this._getPositionEvent(ev));
                 });
                 this._triggerEventBatch(this._pointerSelectionTimeout.promise);
             } catch (e) {
@@ -1774,7 +1769,7 @@ export class EventNormalizer {
      *
      * @param ev
      */
-    _analyzeSelectionChange(ev: MouseEvent | TouchEvent): EventBatch {
+    _analyzeSelectionChange(ev: PositionEvent): EventBatch {
         const eventBatch = {
             actions: [],
             mutatedElements: new Set([]),
@@ -2005,5 +2000,22 @@ export class EventNormalizer {
             );
             this._shadowNormalizers.set(root, eventNormalizer);
         }
+    }
+
+    /**
+     * Retrieve a `PositionEvent` from a` MouseEvent` or a `TouchEvent`.
+     */
+    _getPositionEvent(ev: MouseEvent | TouchEvent): PositionEvent {
+        return {
+            x:
+                ev.constructor.name === 'TouchEvent'
+                    ? (ev as TouchEvent).touches[0].clientX
+                    : (ev as MouseEvent).clientX,
+            y:
+                ev.constructor.name === 'TouchEvent'
+                    ? (ev as TouchEvent).touches[0].clientY
+                    : (ev as MouseEvent).clientY,
+            target: ev.target,
+        };
     }
 }
