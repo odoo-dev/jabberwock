@@ -1000,6 +1000,51 @@ describe('core', () => {
                     memory.switchTo('test');
                     expect(array.slice()).to.deep.equal(['x']);
                 });
+                it('remove item with splice at index -2', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    memory.attach(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    array.splice(-2, 1);
+
+                    expect(array.slice()).to.deep.equal(['x', 'z']);
+                });
+                it('add items with splice at index -1 and switch memory', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    memory.attach(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    memory.create('1-1');
+                    memory.switchTo('1-1');
+                    array.splice(-1, 0, 'A', 'B');
+
+                    expect(array.slice()).to.deep.equal(['x', 'y', 'A', 'B', 'z']);
+
+                    memory.switchTo('test');
+                    memory.create('1-2');
+                    memory.switchTo('1-2');
+                    array.splice(-1, 0, 'C', 'D');
+
+                    expect(array.slice()).to.deep.equal(['x', 'y', 'C', 'D', 'z']);
+                });
+                it('ramove and add items with splice at index -2', () => {
+                    const memory = new Memory();
+                    const array = makeVersionable(['x', 'y', 'z']);
+                    memory.attach(array);
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    array.splice(-2, 1, 'A', 'B');
+
+                    expect(array.slice()).to.deep.equal(['x', 'A', 'B', 'z']);
+                });
             });
 
             describe('specific updates', () => {
@@ -1186,7 +1231,7 @@ describe('core', () => {
                     memory.switchTo('b');
                     expect(array).to.deep.equal(res, 'after switch slices');
                 });
-                it('add item in array at index 5', () => {
+                it('add item in array at index 5 & 10', () => {
                     const array = new VersionableArray();
                     const res = [];
                     const obj = new VersionableObject({ a: 1 });

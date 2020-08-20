@@ -278,6 +278,9 @@ function splice(
     const array = params.object;
     const uniqIDs = params.uniqIDs;
     const len = array.length;
+    if (index < 0) {
+        index = len + index;
+    }
     if (nb === undefined) {
         nb = len - index;
     }
