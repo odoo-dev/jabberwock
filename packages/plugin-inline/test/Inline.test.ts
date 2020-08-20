@@ -132,6 +132,24 @@ describePlugin(Inline, testEditor => {
                     contentAfter: '<p><b>d[]</b></p>',
                 });
             });
+            it('should be bold inside a link', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: 'a<a href="#">b[cd]e</a>f',
+                    stepFunction: async (editor: JWEditor) => {
+                        await toggleFormat(editor, BoldFormat);
+                    },
+                    contentAfter: 'a<a href="#">b[<b>cd]</b>e</a>f',
+                });
+            });
+            it('should be bold inside a link and italic', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<i>a<a href="#">b[cd]e</a>f</i>',
+                    stepFunction: async (editor: JWEditor) => {
+                        await toggleFormat(editor, BoldFormat);
+                    },
+                    contentAfter: '<i>a<a href="#">b[<b>cd]</b>e</a>f</i>',
+                });
+            });
         });
     });
     describe('format and attributes', () => {

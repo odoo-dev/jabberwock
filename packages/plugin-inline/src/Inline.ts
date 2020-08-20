@@ -105,9 +105,30 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
 
             // If every char in the range has the format `FormatClass`, remove
             // the format for all of them.
-            const allHaveFormat = selectedInlines.every(inline => {
-                return !!inline.modifiers.find(FormatClass);
-            });
+            let allHaveFormat = true;
+            // If every node have the same format, put the new format before each.
+            const everyFormats: Modifier[] = [];
+            for (let i = 0; i < selectedInlines.length; i++) {
+                const inline = selectedInlines[i];
+                const formats = inline.modifiers.filter(Format);
+
+                if (!formats.find(format => format instanceof FormatClass)) {
+                    allHaveFormat = false;
+                }
+
+                everyFormats.splice(formats.length);
+                for (let u = 0; u < formats.length; u++) {
+                    const format = formats[formats.length - 1 - u];
+                    if (i === 0) {
+                        everyFormats.push(format);
+                    } else if (everyFormats[u] && !everyFormats[u].isSameAs(format)) {
+                        everyFormats.splice(u);
+                    }
+                }
+            }
+
+            // If every char in the range has the format `FormatClass`, remove
+            // the format for all of them.
             if (allHaveFormat) {
                 for (const inline of selectedInlines) {
                     const format = inline.modifiers.find(FormatClass);
@@ -124,11 +145,12 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                     inline.modifiers.remove(format);
                 }
             } else {
+                const insertAfter = everyFormats.length && everyFormats[0].constructor;
                 // If there is at least one char in the range without the format
                 // `FormatClass`, set the format for all nodes.
                 for (const inline of selectedInlines) {
                     if (!inline.modifiers.find(FormatClass)) {
-                        new FormatClass().applyTo(inline);
+                        inline.modifiers.insertAfter(FormatClass, insertAfter);
                     }
                 }
             }

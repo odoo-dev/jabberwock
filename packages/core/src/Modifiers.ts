@@ -81,6 +81,26 @@ export class Modifiers extends VersionableObject {
         }
     }
     /**
+     * Insert one modifier to the array after a type of modifier, if the ref
+     * is not inside the list, prepend the modifier.
+     * If the given modifier is a modifier class constructor, instantiate it.
+     *
+     * @param modifiers
+     */
+    insertAfter(modifier: Modifier | Constructor<Modifier>, ref: Constructor<Modifier>): void {
+        if (!this._contents) {
+            this._contents = new VersionableArray();
+        }
+        let instance: Modifier;
+        if (modifier instanceof Modifier) {
+            instance = modifier;
+        } else {
+            instance = new modifier();
+        }
+        const index = this._contents.findIndex(modifier => modifier instanceof ref);
+        this._contents.splice(index + 1, 0, instance);
+    }
+    /**
      * Return the first modifier in the array that is an instance of the given
      * Modifier class, if any.
      * If the modifier passed is a Modifier instance, return it if it was
@@ -294,5 +314,14 @@ export class Modifiers extends VersionableObject {
      */
     map<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): T[] {
         return this._contents?.map(callbackfn) || [];
+    }
+    /**
+     * Proxy for the native `foreach` method of `Array`, called on `this._contents`.
+     *
+     * @see Array.map
+     * @param callbackfn
+     */
+    forEach<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): void {
+        return this._contents?.forEach(callbackfn);
     }
 }

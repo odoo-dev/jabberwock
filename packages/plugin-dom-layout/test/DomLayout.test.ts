@@ -2461,7 +2461,7 @@ describe('DomLayout', () => {
                         const editable = domEngine.components.editable[0];
 
                         const domEditable = domEngine.getDomNodes(editable)[0] as Element;
-                        expect(domEditable.innerHTML).to.equal('a<b><i>b</i></b>c');
+                        expect(domEditable.innerHTML).to.equal('a<i><b>b</b></i>c');
 
                         const renderer = editor.plugins.get(Renderer);
                         const rendered = await renderer.render<DomObject>('dom/object', editable);
@@ -2471,20 +2471,20 @@ describe('DomLayout', () => {
                             rendered && 'children' in rendered && rendered.children,
                         ).to.deep.equal(textNodes);
 
-                        expect(mutationNumber).to.equal(6, 'add <b>, move <i>, 3 toolbar update');
+                        expect(mutationNumber).to.equal(6, 'add <b>, move text, 3 toolbar update');
 
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
-                            tag: 'B',
+                            tag: 'I',
                             children: [
                                 {
-                                    tag: 'I',
+                                    tag: 'B',
                                     children: [{ text: 'b' }],
                                 },
                             ],
                         });
                     },
-                    contentAfter: 'a[<b><i>b]</i></b>c',
+                    contentAfter: 'a[<i><b>b]</b></i>c',
                 });
             });
             it('should remove the first char in an execBatch', async () => {
