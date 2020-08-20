@@ -45,44 +45,6 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
             TableCellDomObjectRenderer,
             TableSectionAttributesDomObjectModifierRenderer,
         ],
-        shortcuts: [
-            {
-                pattern: 'CTRL+<Slash>',
-                commandId: 'addRowBelow',
-            },
-            {
-                pattern: 'CTRL+SHIFT+<Slash>',
-                commandId: 'addRowAbove',
-            },
-            {
-                pattern: 'CTRL+<Equal>',
-                commandId: 'addColumnAfter',
-            },
-            {
-                pattern: 'CTRL+SHIFT+<Equal>',
-                commandId: 'addColumnBefore',
-            },
-            {
-                pattern: 'CTRL+SHIFT+DELETE',
-                commandId: 'deleteRow',
-            },
-            {
-                pattern: 'CTRL+SHIFT+BACKSPACE',
-                commandId: 'deleteColumn',
-            },
-            {
-                pattern: 'CTRL+ALT+SHIFT+DELETE',
-                commandId: 'deleteTable',
-            },
-            {
-                pattern: 'CTRL+<Period>',
-                commandId: 'mergeCells',
-            },
-            {
-                pattern: 'CTRL+SHIFT+<Period>',
-                commandId: 'unmergeCells',
-            },
-        ],
         components: [
             {
                 id: 'TableButton',
