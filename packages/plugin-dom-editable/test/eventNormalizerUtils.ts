@@ -47,6 +47,15 @@ export interface TestInputEvent {
     defaultPrevented?: boolean;
 }
 
+export interface TestMouseEvent {
+    type: 'mousedown' | 'click' | 'mouseup' | 'mousemove';
+    targetId: number;
+    button: number;
+    detail: number;
+    clientX: number;
+    clientY: number;
+}
+
 export interface RemovedNodesTargetMutation {
     nodeId: number;
 }
@@ -93,6 +102,7 @@ export interface TestSelectionEvent {
 }
 
 export type TestEvent =
+    | TestMouseEvent
     | TestKeyboardEvent
     | TestCompositionEvent
     | TestInputEvent
@@ -291,7 +301,10 @@ function getEditableElement(): Element {
  *
  * @param eventStackList All the stack that have been recorded.
  */
-export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
+export async function triggerEvents(
+    eventStackList: TestEvent[][],
+    concurency = false,
+): Promise<void> {
     const addedNodes: Node[] = [];
     const nodeIndexGenerator = new NodeIndexGenerator(getEditableElement());
     for (const eventStack of eventStackList) {
@@ -361,6 +374,14 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                         selectionEvent.focus.offset,
                     );
                 }
+            } else if (
+                testEvent.type === 'mousedown' ||
+                testEvent.type === 'mouseup' ||
+                testEvent.type === 'mousemove' ||
+                testEvent.type === 'click'
+            ) {
+                const { type, targetId, ...options } = testEvent;
+                triggerEvent(nodeIndexGenerator.getNode(targetId), type, options);
             } else {
                 const { type, ...options } = testEvent;
                 if (!(keyEventPrevented && ['keydown', 'keypress', 'keyup'].includes(type))) {
@@ -373,10 +394,13 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                 }
             }
         }
-        await nextTick();
-        // The normalizer in some cases need two ticks to aggregate all
-        // informations (e.g. Safari).
-        await nextTick();
+        // When simulating concurency, do not wait the nextTick.
+        if (concurency === false) {
+            await nextTick();
+            // The normalizer in some cases need two ticks to aggregate all
+            // informations (e.g. Safari).
+            await nextTick();
+        }
     }
 }
 
