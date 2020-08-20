@@ -57,6 +57,8 @@ import { Theme } from '../plugin-theme/src/Theme';
 import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
 import { Button } from '../plugin-button/src/Button';
+import { DevTools } from './odoo-integration';
+import { BootstrapButton } from '../plugin-bootstrap-button/src/BootstrapButton';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -155,6 +157,8 @@ export class OdooWebsiteEditor extends JWEditor {
                 [History],
                 [Iframe],
                 [Button],
+                [BootstrapButton],
+                [DevTools],
                 ...(options.plugins || []),
             ],
         });
