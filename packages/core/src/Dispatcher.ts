@@ -16,6 +16,27 @@ export interface PartialCommandParams {
 export type CommandHandler = (args) => void;
 export type CommandHook = (params: CommandParams, commandId: string) => void;
 
+function sleep(ms = 1000) {
+    const time = Date.now();
+    while (Date.now() < time + ms) {
+        true;
+    }
+    console.log('finish sleep');
+}
+
+document.addEventListener(
+    'keydown',
+    e => {
+        if (e.key === 'a') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            sleep(4000);
+        }
+    },
+    true,
+);
+
 export class Dispatcher {
     __nextHandlerTokenID = 0;
     editor: JWEditor;
@@ -50,6 +71,7 @@ export class Dispatcher {
 
             // Call command handler.
             const result = await command.handler(args);
+            // sleep();
 
             await this.dispatchHooks(commandId, args);
 
