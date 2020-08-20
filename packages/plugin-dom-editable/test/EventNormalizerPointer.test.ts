@@ -2465,6 +2465,12 @@ describe('utils', () => {
                     expect(ctx.eventBatches).to.deep.equal(batchEvents);
                 });
             });
+
+            describe('to organise', () => {
+                it('pointer mousedown inside, move outside, external event', async () => {});
+                it('pointer mousedown inside, mouseup outside, external event', async () => {});
+                it('contextmenu selectall outside the editor', async () => {});
+            });
         });
     });
 });
