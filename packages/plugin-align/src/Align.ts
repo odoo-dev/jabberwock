@@ -27,28 +27,6 @@ export class Align<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T
         },
     };
     loadables: Loadables<Keymap & Layout> = {
-        shortcuts: [
-            {
-                pattern: 'Ctrl+Shift+L',
-                commandId: 'align',
-                commandArgs: { type: AlignType.LEFT },
-            },
-            {
-                pattern: 'Ctrl+Shift+E',
-                commandId: 'align',
-                commandArgs: { type: AlignType.CENTER },
-            },
-            {
-                pattern: 'Ctrl+Shift+R',
-                commandId: 'align',
-                commandArgs: { type: AlignType.RIGHT },
-            },
-            {
-                pattern: 'Ctrl+Shift+J',
-                commandId: 'align',
-                commandArgs: { type: AlignType.JUSTIFY },
-            },
-        ],
         components: [
             {
                 id: 'AlignLeftButton',
