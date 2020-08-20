@@ -1,8 +1,8 @@
-import { Format } from '../../core/src/Format';
+import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { VersionableObject } from '../../core/src/Memory/VersionableObject';
 import { ModifierPreserve } from '../../core/src/Modifier';
 
-export class BootstrapButtonFormat extends Format {
+export class BootstrapButtonNode extends ContainerNode {
     htmlTag = 'A';
     preserve = new VersionableObject({
         after: true,
