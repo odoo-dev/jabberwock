@@ -55,11 +55,11 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             const isAfterLineBreak = previousSibling instanceof LineBreakNode;
             const preservedModifiers = modifiers.filter(mod => {
                 if (isAfterLineBreak) {
-                    return mod.preserve.lineBreak;
+                    return mod.preserveAfterLineBreak;
                 } else if (previousSibling) {
-                    return mod.preserve.after;
+                    return mod.preserveAfterNode;
                 } else {
-                    return mod.preserve.paragraphBreak;
+                    return mod.preserveAfterParagraphBreak;
                 }
             });
             if (preservedModifiers.length) {
