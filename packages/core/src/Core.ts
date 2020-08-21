@@ -80,7 +80,19 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             // Basic case: remove the node directly preceding the range.
             const previousSibling = range.start.previousSibling();
             if (previousSibling && range.mode.is(previousSibling, RuleProperty.EDITABLE)) {
-                previousSibling.removeBackward();
+                if (previousSibling instanceof AtomicNode) {
+                    previousSibling.removeBackward();
+                } else {
+                    const startContainer = range.startContainer;
+                    const index = startContainer.childVNodes.indexOf(range.start);
+                    let node: VNode = startContainer.childVNodes[index];
+                    while (node && node instanceof AtomicNode) {
+                        previousSibling.append(node);
+                        // The index does not need to be incremented because the
+                        // line above just removed one node from the container.
+                        node = startContainer.childVNodes[index];
+                    }
+                }
             } else if (
                 range.mode.is(range.startContainer, RuleProperty.BREAKABLE) &&
                 range.mode.is(range.startContainer, RuleProperty.EDITABLE)

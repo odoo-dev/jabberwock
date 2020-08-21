@@ -87,6 +87,18 @@ describe('VDocument', () => {
                             '<table><tbody><tr><td>[]<br></td><td>abc</td></tr></tbody></table>',
                     });
                 });
+                it('should merge the following inline text node', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>abc</p>[]def',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p>abc[]def</p>',
+                    });
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>abc</p>[]def<p>ghi</p>',
+                        stepFunction: deleteBackward,
+                        contentAfter: '<p>abc[]def</p><p>ghi</p>',
+                    });
+                });
             });
             describe('Line breaks', () => {
                 describe('Single', () => {
