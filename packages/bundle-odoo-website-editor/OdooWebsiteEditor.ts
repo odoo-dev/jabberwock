@@ -53,7 +53,6 @@ import { Input } from '../plugin-input/src/Input';
 import { FontSize } from '../plugin-font-size/src/FontSize';
 import { History } from '../plugin-history/src/History';
 import { Iframe } from '../plugin-iframe/src/Iframe';
-import { Theme } from '../plugin-theme/src/Theme';
 import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
 import { Button } from '../plugin-button/src/Button';
@@ -234,6 +233,8 @@ export class OdooWebsiteEditor extends JWEditor {
             source: options.source.firstElementChild as HTMLElement,
         });
         this.configure(Table, {
+            minRowCount: 3,
+            minColumnCount: 3,
             inlineUI: true,
         });
 
