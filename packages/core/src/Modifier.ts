@@ -13,17 +13,11 @@ interface ModifierConstructor {
 export interface Modifier {
     constructor: ModifierConstructor & this;
 }
-export interface ModifierPreserve {
-    after: boolean; // True to preserve modifier after the node that holds it.
-    paragraphBreak: boolean; // True to preserve modifier after a paragraph break.
-    lineBreak: boolean; // True to preserve modifier after a line break.
-}
 export class Modifier extends VersionableObject {
-    preserve: ModifierPreserve = new VersionableObject({
-        after: true,
-        paragraphBreak: true,
-        lineBreak: true,
-    }) as ModifierPreserve;
+    preserveAfterNode = true; // True to preserve modifier after the node that holds it.
+    preserveAfterParagraphBreak = true; // True to preserve modifier after a paragraph break.
+    preserveAfterLineBreak = true; // True to preserve modifier after a line break.
+
     get name(): string {
         return '';
     }

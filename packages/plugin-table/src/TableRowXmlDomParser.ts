@@ -3,7 +3,6 @@ import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { TableRowNode } from './TableRowNode';
 import { nodeName } from '../../utils/src/utils';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { Modifiers } from '../../core/src/Modifiers';
 
 export class TableSectionAttributes extends Attributes {}
 

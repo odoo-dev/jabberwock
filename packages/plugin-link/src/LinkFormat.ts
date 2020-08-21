@@ -1,16 +1,11 @@
 import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { VersionableObject } from '../../core/src/Memory/VersionableObject';
-import { ModifierPreserve } from '../../core/src/Modifier';
 
 export class LinkFormat extends Format {
+    preserveAfterParagraphBreak = false;
+
     constructor(url = '#', target = '') {
         super('A');
-        this.preserve = new VersionableObject({
-            after: true,
-            paragraphBreak: false,
-            lineBreak: true,
-        }) as ModifierPreserve;
         this.url = url;
         if (target) {
             this.target = target;

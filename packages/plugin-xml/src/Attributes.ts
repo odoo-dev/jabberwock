@@ -1,19 +1,14 @@
-import { Modifier, ModifierPreserve } from '../../core/src/Modifier';
+import { Modifier } from '../../core/src/Modifier';
 import { CssStyle } from './CssStyle';
 import { ClassList } from './ClassList';
 import { makeVersionable } from '../../core/src/Memory/Versionable';
-import { VersionableObject } from '../../core/src/Memory/VersionableObject';
 
 export class Attributes extends Modifier {
     private _record: Record<string, string>;
     style = new CssStyle();
     // Avoid copiying FontAwesome classes on paragraph break.
     // TODO : need to be improved to better take care of color classes, etc.
-    preserve = new VersionableObject({
-        after: true,
-        paragraphBreak: false,
-        lineBreak: true,
-    }) as ModifierPreserve;
+    preserveAfterParagraphBreak = false;
     classList = new ClassList();
     constructor(attributes?: Attributes | NamedNodeMap | Record<string, string>) {
         super();
