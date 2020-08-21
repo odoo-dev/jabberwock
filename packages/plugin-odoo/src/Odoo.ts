@@ -19,6 +19,8 @@ import { ImageNode } from '../../plugin-image/src/ImageNode';
 import { VRange } from '../../core/src/VRange';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
+import { InsertTableParams } from '../../plugin-table/src/Table';
+import { TableNode } from '../../plugin-table/src/TableNode';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -295,6 +297,17 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         },
         setImageClass: {
             handler: this.setImageClass,
+        },
+    };
+    commandHooks = {
+        insertTable: async (params: InsertTableParams): Promise<void> => {
+            if (params.rowCount && params.columnCount) {
+                const range = params.context.range;
+                const table = range.start.previousSibling();
+                if (table && table instanceof TableNode) {
+                    table.modifiers.get(Attributes).classList.add('table table-bordered');
+                }
+            }
         },
     };
 
