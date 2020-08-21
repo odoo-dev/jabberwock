@@ -304,8 +304,10 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             if (params.rowCount && params.columnCount) {
                 const range = params.context.range;
                 const table = range.start.previousSibling();
-                if (table && table instanceof TableNode) {
-                    table.modifiers.get(Attributes).classList.add('table table-bordered');
+                if (table instanceof TableNode) {
+                    const attributes = table.modifiers.get(Attributes);
+                    attributes.classList.add('table table-bordered');
+                    attributes.style.set('position', 'relative');
                 }
             }
         },
