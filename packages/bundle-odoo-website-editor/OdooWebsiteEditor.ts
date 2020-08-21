@@ -97,6 +97,7 @@ const defaultToolbarLayout = [
     ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
     ['IndentButton', 'OutdentButton'],
     ['OdooLinkButton'],
+    ['TableButton'],
     ['OdooMediaButton'],
 ];
 export class OdooWebsiteEditor extends JWEditor {
