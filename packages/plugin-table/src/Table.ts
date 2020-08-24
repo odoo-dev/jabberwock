@@ -153,8 +153,12 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
             }
         } else {
             const range = params.context.range;
-            if (range.start.parent) {
-                range.start.before(new TableNode(params));
+            range.empty();
+            if (range.startContainer) {
+                const table = new TableNode(params);
+                range.start.before(table);
+                table.firstLeaf().prepend(range.start);
+                range.collapse();
             }
         }
     }

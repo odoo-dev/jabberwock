@@ -22,7 +22,16 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { TableSectionAttributes } from '../src/TableRowXmlDomParser';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { CharNode } from '../../plugin-char/src/CharNode';
+import JWEditor from '../../core/src/JWEditor';
 
+const insertTable = (rowCount: number, columnCount: number) => {
+    return async (editor: JWEditor): Promise<void> => {
+        return editor.execCommand<Table>('insertTable', {
+            rowCount: rowCount,
+            columnCount: columnCount,
+        });
+    };
+};
 let element: Element;
 describePlugin(Table, testEditor => {
     describe('parse and render in the DOM', () => {
@@ -873,6 +882,45 @@ describePlugin(Table, testEditor => {
                 '</table>',
             ].join(''));
             /* eslint-enable prettier/prettier */
+        });
+    });
+    describe('insertTable', () => {
+        it('should insert a table before a paragraph', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>[]abc</p>',
+                stepFunction: insertTable(1, 1),
+                contentAfter: '<table><tbody><tr><td>[]<br></td></tr></tbody></table><p>abc</p>',
+            });
+        });
+        it('should insert a table within a paragraph', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>ab[]cd</p>',
+                stepFunction: insertTable(1, 1),
+                contentAfter:
+                    '<p>ab</p><table><tbody><tr><td>[]<br></td></tr></tbody></table><p>cd</p>',
+            });
+        });
+        it('should insert a table instead of text in a paragraph', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>a[bc]d</p>',
+                stepFunction: insertTable(1, 1),
+                contentAfter:
+                    '<p>a</p><table><tbody><tr><td>[]<br></td></tr></tbody></table><p>d</p>',
+            });
+        });
+        it('should insert a table after a paragraph', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>abc[]</p>',
+                stepFunction: insertTable(1, 1),
+                contentAfter: '<p>abc</p><table><tbody><tr><td>[]<br></td></tr></tbody></table>',
+            });
+        });
+        it('should insert a table instead of an empty paragraph', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p><br>[]</p>',
+                stepFunction: insertTable(1, 1),
+                contentAfter: '<table><tbody><tr><td>[]<br></td></tr></tbody></table>',
+            });
         });
     });
     describe('addRowAbove', () => {
