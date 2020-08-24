@@ -35,7 +35,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 4,
                 insert: 'o',
                 remove: '',
@@ -65,8 +65,10 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getMutatedElements()).to.deep.equal(new Set([text]));
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getMutatedElements(normalizer._mutations)).to.deep.equal(
+                new Set([text]),
+            );
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 9,
                 insert: 'o',
                 remove: '',
@@ -101,8 +103,10 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getMutatedElements()).to.deep.equal(new Set([text]));
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getMutatedElements(normalizer._mutations)).to.deep.equal(
+                new Set([text]),
+            );
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 5,
                 insert: 'hello',
                 remove: 'hell',
@@ -132,7 +136,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 1,
                 insert: 'e',
                 remove: 'i',
@@ -177,7 +181,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 13,
                 insert: 'raths',
                 remove: 'rates',
@@ -203,7 +207,7 @@ describe('utils', () => {
             text.textContent = 'slithy toes';
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 9,
                 insert: '',
                 remove: 'v',
@@ -248,7 +252,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 2,
                 insert: 'brill',
                 remove: 'brillig',
@@ -297,7 +301,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 7,
                 insert: 'toes',
                 remove: 'toves',
@@ -330,7 +334,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 13,
                 insert: 'raths',
                 remove: 'rates',
@@ -405,7 +409,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 13,
                 insert: 'raths',
                 remove: 'rates',
@@ -436,7 +440,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: -1,
                 insert: 'ha ',
                 remove: '',
@@ -467,7 +471,7 @@ describe('utils', () => {
 
             await nextTick();
 
-            expect(normalizer.getCharactersMapping()).to.deep.equal({
+            expect(normalizer.getCharactersMapping(normalizer._mutations)).to.deep.equal({
                 index: 7,
                 insert: ' ',
                 remove: '',

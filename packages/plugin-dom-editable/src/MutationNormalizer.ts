@@ -42,7 +42,9 @@ export class MutationNormalizer {
      * @param charMutations
      * @returns { previous, current }
      */
-    getCharactersMapping(): {
+    getCharactersMapping(
+        mutations: MutationRecord[],
+    ): {
         insert: string;
         remove: string;
         index: number;
@@ -64,7 +66,7 @@ export class MutationNormalizer {
         function isTextNode(target: Node): boolean {
             return target.nodeType === Node.TEXT_NODE || nodeName(target) === 'BR';
         }
-        this._mutations.forEach(record => {
+        mutations.forEach(record => {
             const targetMutation = record.target;
             const targetIsAdded = add.has(targetMutation);
             if (!targetIsAdded) {
@@ -285,9 +287,9 @@ export class MutationNormalizer {
             current: currentLinked,
         };
     }
-    getMutatedElements(): Set<Node> {
+    getMutatedElements(mutations: MutationRecord[]): Set<Node> {
         const elements: Set<Node> = new Set();
-        this._mutations.forEach(MutationRecord => {
+        mutations.forEach(MutationRecord => {
             if (MutationRecord.type === 'characterData') {
                 elements.add(MutationRecord.target);
             } else {

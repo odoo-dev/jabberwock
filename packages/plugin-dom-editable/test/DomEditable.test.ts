@@ -737,6 +737,7 @@ describe('DomEditable', () => {
                 contentBefore: '<div>[]</div>',
                 stepFunction: async editor => {
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const domEditable = editor.plugins.get(DomEditable);
                     const editable = domEngine.components.editable[0];
                     const editableDom = domEngine.getDomNodes(editable)[0] as HTMLElement;
                     const textNode = editableDom.childNodes[0];
@@ -748,6 +749,19 @@ describe('DomEditable', () => {
                     textNode.textContent = 'ab';
                     triggerEvent(editableDom, 'keyup', { key: 'b', code: 'KeyB' });
                     triggerEvent(editableDom, 'input', { data: 'b', inputType: 'insertText' });
+                    domEditable.eventNormalizer.currentStackObservation.mutations = [
+                        {
+                            addedNodes: editableDom.childNodes,
+                            attributeName: null,
+                            attributeNamespace: null,
+                            nextSibling: null,
+                            oldValue: null,
+                            previousSibling: null,
+                            removedNodes: editableDom.childNodes,
+                            target: editableDom,
+                            type: 'childList',
+                        },
+                    ];
                     triggerEvent(editableDom, 'keydown', { key: 'Tab', code: 'Tab' });
                     triggerEvent(editableDom, 'keyup', { key: 'Tab', code: 'Tab' });
                     triggerEvent(editableDom, 'keydown', { key: 'c', code: 'KeyC' });
@@ -804,7 +818,7 @@ describe('DomEditable', () => {
             const params = {
                 context: editor.contextManager.defaultContext,
             };
-            expect(execSpy.args).to.eql([['command-b', params]]);
+            expect(execSpy.args).to.eql([['@focus'], ['command-b', params]]);
         });
         it('should trigger a select all, with an other editor which have a shortcut', async () => {
             editor = new JWEditor();
@@ -873,13 +887,16 @@ describe('DomEditable', () => {
                 context: editor.contextManager.defaultContext,
             };
             expect(execSpy.args).to.eql([
+                ['@focus'],
                 ['command-b', params],
+                ['@blur'],
                 // todo: There should not be a select all in the first editor.
                 // Correct this bug when having two editor at the same time
                 // becomes critical.
                 ['selectAll', {}],
+                ['@focus'],
             ]);
-            expect(execSpy2.args).to.eql([['selectAll', {}]]);
+            expect(execSpy2.args).to.eql([['@focus'], ['@blur'], ['selectAll', {}]]);
 
             await editor.stop();
             await editor2.stop();

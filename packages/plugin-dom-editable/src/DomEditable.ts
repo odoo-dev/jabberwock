@@ -202,6 +202,6 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      * observation to make chain of event properly.
      */
     private _onPreKeydownCommand(): void {
-        this.eventNormalizer.initNextObservation();
+        this.eventNormalizer.processEventTimeouts();
     }
 }

@@ -249,6 +249,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '<div>abc def</div>';
                     const p = ctx.editable.firstChild;
                     const text = p.firstChild;
+                    setDomSelection(p, 0, p, 0);
                     await nextTick();
                     ctx.eventBatches.splice(0);
                     triggerEvent(p, 'touchstart', {
@@ -306,6 +307,21 @@ describe('utils', () => {
                     ];
 
                     const batchEvents: EventBatch[] = [
+                        {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p,
+                                        anchorOffset: 0,
+                                        focusNode: p,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
                         {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
@@ -373,6 +389,21 @@ describe('utils', () => {
                     ];
 
                     const batchEvents: EventBatch[] = [
+                        {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 3,
+                                        focusNode: text,
+                                        focusOffset: 3,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
                         {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
@@ -584,7 +615,7 @@ describe('utils', () => {
                     const firstText = div.firstChild;
                     const textB = b.firstChild;
                     const text = div.childNodes[2];
-                    setDomSelection(text, 2, text, 2);
+                    setDomSelection(text, 0, text, 2);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -1515,6 +1546,21 @@ describe('utils', () => {
                     ];
                     const batchEvents: EventBatch[] = [
                         {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text1,
+                                        anchorOffset: 0,
+                                        focusNode: text1,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
+                        {
                             actions: pointerActions1,
                             mutatedElements: new Set([]),
                         },
@@ -1651,6 +1697,21 @@ describe('utils', () => {
 
                     const batchEvents: EventBatch[] = [
                         {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: text,
+                                        anchorOffset: 1,
+                                        focusNode: text,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
+                        {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
                         },
@@ -1710,6 +1771,21 @@ describe('utils', () => {
 
                     const batchEvents: EventBatch[] = [
                         {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: firstDiv.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: firstDiv.firstChild,
+                                        focusOffset: 1,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
+                        {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
                         },
@@ -1765,6 +1841,21 @@ describe('utils', () => {
 
                     const batchEvents: EventBatch[] = [
                         {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: p.firstChild,
+                                        anchorOffset: 1,
+                                        focusNode: p.firstChild,
+                                        focusOffset: 2,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
+                        {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
                         },
@@ -1819,6 +1910,21 @@ describe('utils', () => {
                     ];
 
                     const batchEvents: EventBatch[] = [
+                        {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: a,
+                                        anchorOffset: 0,
+                                        focusNode: a,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
                         {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
@@ -1890,6 +1996,21 @@ describe('utils', () => {
                     ];
 
                     const batchEvents: EventBatch[] = [
+                        {
+                            actions: [
+                                {
+                                    type: 'setSelection',
+                                    domSelection: {
+                                        anchorNode: svg,
+                                        anchorOffset: 0,
+                                        focusNode: svg,
+                                        focusOffset: 0,
+                                        direction: Direction.FORWARD,
+                                    },
+                                },
+                            ],
+                            mutatedElements: new Set([]),
+                        },
                         {
                             actions: normalizedActions,
                             mutatedElements: new Set([]),
