@@ -1,3 +1,5 @@
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
-export class PreNode extends ContainerNode {}
+export class PreNode extends ContainerNode {
+    mayContainContainers = false;
+}
