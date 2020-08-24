@@ -2471,7 +2471,7 @@ describe('DomLayout', () => {
                             rendered && 'children' in rendered && rendered.children,
                         ).to.deep.equal(textNodes);
 
-                        expect(mutationNumber).to.equal(6, 'add <b>, move <i>, 3 toolbar update');
+                        expect(mutationNumber).to.equal(5, 'add <b>, move <i>, 3 toolbar update');
 
                         const renderedText1 = await renderer.render('dom/object', textNodes[1]);
                         expect(renderedText1).to.deep.equal({
@@ -2501,7 +2501,7 @@ describe('DomLayout', () => {
                             '<div>b</div>',
                         );
                         expect(mutationNumber).to.equal(
-                            4,
+                            2,
                             'update text, update toolbar history button',
                         );
                     },
@@ -2516,7 +2516,7 @@ describe('DomLayout', () => {
                         await editor.execCommand('deleteForward');
                         expect(document.querySelector('jw-test').innerHTML).to.equal('<p>abc</p>');
                         expect(mutationNumber).to.equal(
-                            4,
+                            3,
                             'remove <p>, remove <br>, update toolbar history button',
                         );
                     },
@@ -2533,7 +2533,7 @@ describe('DomLayout', () => {
                             '<p>a<span style="background-color: red;">bc</span>d</p>',
                         );
                         expect(mutationNumber).to.equal(
-                            7,
+                            6,
                             'update text, add <span>, add text, add text, 2 update toolbar',
                         );
                         mutationNumber = 0;
@@ -2559,7 +2559,7 @@ describe('DomLayout', () => {
                             '<p>a<span>b</span>c<span style="color: green;">d</span>e</p>',
                         );
                         expect(mutationNumber).to.equal(
-                            7,
+                            6,
                             'remove 3 formats + remove 2 empty styles, update toolbar',
                         );
                     },
@@ -2587,7 +2587,7 @@ describe('DomLayout', () => {
                             children: [{ tag: 'BR' }],
                         });
                         expect(mutationNumber).to.equal(
-                            4,
+                            3,
                             'add b, move br, update toolbar history button',
                         );
                     },
@@ -2617,7 +2617,7 @@ describe('DomLayout', () => {
                             children: [{ tag: 'BR' }],
                         });
                         expect(mutationNumber).to.equal(
-                            4,
+                            3,
                             'remove br, add b, update toolbar history button',
                         );
 
@@ -2667,7 +2667,7 @@ describe('DomLayout', () => {
                             children: [{ tag: 'BR' }],
                         });
                         expect(mutationNumber).to.equal(
-                            12,
+                            11,
                             'change text, add b, crete text, add text, move br, create text, add text, change text, 3 toolbar changes',
                         );
                     },
@@ -2698,7 +2698,7 @@ describe('DomLayout', () => {
                             children: [{ tag: 'BR' }],
                         });
                         expect(mutationNumber).to.equal(
-                            7,
+                            6,
                             'remove second b, move br, move text, update toolbar history button',
                         );
                     },
