@@ -2,6 +2,11 @@ import { Constructor } from '../../utils/src/utils';
 import { VNode } from './VNodes/VNode';
 import { VersionableObject } from './Memory/VersionableObject';
 
+export enum ModifierLevel {
+    LOW,
+    MEDIUM,
+    HIGH,
+}
 export type ModifierTypeguard<T extends Modifier> = (modifier: Modifier) => modifier is T;
 export type ModifierPredicate<T = Modifier | boolean> = T extends Modifier
     ? Constructor<T> | ModifierTypeguard<T>
@@ -17,6 +22,7 @@ export class Modifier extends VersionableObject {
     preserveAfterNode = true; // True to preserve modifier after the node that holds it.
     preserveAfterParagraphBreak = true; // True to preserve modifier after a paragraph break.
     preserveAfterLineBreak = true; // True to preserve modifier after a line break.
+    level = ModifierLevel.MEDIUM;
 
     get name(): string {
         return '';

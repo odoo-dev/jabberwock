@@ -1,8 +1,10 @@
 import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { ModifierLevel } from '../../core/src/Modifier';
 
 export class LinkFormat extends Format {
     preserveAfterParagraphBreak = false;
+    level = ModifierLevel.HIGH;
 
     constructor(url = '#', target = '') {
         super('A');

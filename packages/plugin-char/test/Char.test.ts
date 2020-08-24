@@ -318,8 +318,8 @@ describePlugin(Char, testEditor => {
                     await testEditor(BasicEditor, {
                         contentBefore: '[]a',
                         stepFunction: async (editor: JWEditor) => {
-                            await toggleFormat(editor, BoldFormat);
                             await toggleFormat(editor, UnderlineFormat);
+                            await toggleFormat(editor, BoldFormat);
                             await insertText(editor, 'b');
                         },
                         contentAfter: '<b><u>b[]</u></b>a',

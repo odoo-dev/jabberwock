@@ -7,7 +7,9 @@ export class Format extends Modifier {
     modifiers = new Modifiers();
     constructor(htmlTag?: string) {
         super();
-        this.htmlTag = htmlTag;
+        if (htmlTag) {
+            this.htmlTag = htmlTag;
+        }
     }
     get name(): string {
         return this.htmlTag.toLowerCase();

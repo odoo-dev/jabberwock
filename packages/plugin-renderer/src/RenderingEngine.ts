@@ -79,6 +79,7 @@ export class RenderingEngine<T = {}> {
     async render(
         nodes: VNode[],
         cache?: RenderingEngineCache<T>,
+        optimizeModifiersRendering?: boolean,
     ): Promise<RenderingEngineCache<T>> {
         if (!cache) {
             cache = new RenderingEngineCache();
@@ -94,6 +95,9 @@ export class RenderingEngine<T = {}> {
                     return nodes.map(node => cache.renderings.get(node));
                 },
             };
+        }
+        if (typeof optimizeModifiersRendering === 'boolean') {
+            cache.optimizeModifiersRendering = optimizeModifiersRendering;
         }
 
         const promises = this.renderBatched(
