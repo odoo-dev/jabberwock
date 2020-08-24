@@ -4,7 +4,7 @@ import { Char } from '../../plugin-char/src/Char';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import {
-    setSelection,
+    setDomSelection,
     nextTick,
     triggerEvent,
     triggerEvents,
@@ -538,7 +538,7 @@ describe('DomShadow', async () => {
                 });
 
                 section.innerHTML = '<div>abcd</div>';
-                setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
+                setDomSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
                 domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 editable = domEngine.components.editable[0].firstChild();
@@ -550,7 +550,7 @@ describe('DomShadow', async () => {
                 let domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 const p = domEditable.firstChild;
                 const text = p.firstChild;
-                setSelection(text, 2, text, 2);
+                setDomSelection(text, 2, text, 2);
                 await nextTick();
 
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
@@ -563,7 +563,7 @@ describe('DomShadow', async () => {
                 const newP = document.createElement('p');
                 domEditable.appendChild(newP);
                 newP.appendChild(text);
-                setSelection(text, 0, text, 0);
+                setDomSelection(text, 0, text, 0);
 
                 triggerEvent(domEditable, 'input', { inputType: 'insertParagraph' });
                 await nextTick();
@@ -593,7 +593,7 @@ describe('DomShadow', async () => {
                 let domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 let p = domEditable.firstChild;
                 let text = p.firstChild;
-                setSelection(text, 2, text, 2);
+                setDomSelection(text, 2, text, 2);
                 await nextTick();
 
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
@@ -608,7 +608,7 @@ describe('DomShadow', async () => {
                 const br = document.createElement('br');
                 p.insertBefore(br, text);
 
-                setSelection(text, 0, text, 0);
+                setDomSelection(text, 0, text, 0);
 
                 triggerEvent(domEditable, 'input', { inputType: 'insertLineBreak' });
                 await nextTick();
@@ -703,7 +703,7 @@ describe('DomShadow', async () => {
                     ctrlKey: true,
                 });
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
-                setSelection(
+                setDomSelection(
                     domEditable.firstChild.firstChild,
                     0,
                     domEditable.lastChild.lastChild,
@@ -737,7 +737,7 @@ describe('DomShadow', async () => {
                     code: 'ArrowLeft',
                 });
                 domEditable = domEngine.getDomNodes(editable)[0] as Element;
-                setSelection(
+                setDomSelection(
                     domEditable.firstChild.firstChild,
                     1,
                     domEditable.firstChild.firstChild,
@@ -1112,7 +1112,7 @@ describe('DomShadow', async () => {
         });
         it('deleteContentBackward (SwiftKey) with special keymap', async () => {
             section.innerHTML = '<div>abcd</div>';
-            setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
+            setDomSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
             const editor = new JWEditor();
             editor.load(Html);
             editor.load(Char);
@@ -1239,8 +1239,8 @@ describe('DomShadow', async () => {
                 clientX: 10,
                 clientY: 10,
             });
-            setSelection(text1, 1, text1, 1);
-            setSelection(text1, 1, text2, 1);
+            setDomSelection(text1, 1, text1, 1);
+            setDomSelection(text1, 1, text2, 1);
             triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             await nextTick();

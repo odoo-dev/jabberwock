@@ -17,10 +17,7 @@ import {
 } from '../../utils/src/testUtils';
 import { Direction } from '../../core/src/VSelection';
 import { DomSelectionDescription } from '../../plugin-dom-editable/src/EventNormalizer';
-import {
-    triggerEvent,
-    setSelection as setDomSelection,
-} from '../../plugin-dom-editable/test/eventNormalizerUtils';
+import { triggerEvent, setDomSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';

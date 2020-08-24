@@ -9,7 +9,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
-import { setSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
+import { setDomSelection } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 import { parseEditable } from '../../utils/src/configuration';
 import { ShadowNode } from '../../plugin-shadow/src/ShadowNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
@@ -205,29 +205,29 @@ describe('FollowRange', async () => {
         const range = container.querySelector('jw-follow-range') as HTMLElement;
 
         const i = container.querySelector('p i');
-        setSelection(i.firstChild, 10, i.firstChild, 10);
+        setDomSelection(i.firstChild, 10, i.firstChild, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('none');
 
-        setSelection(i.firstChild, 10, i.firstChild, 14);
+        setDomSelection(i.firstChild, 10, i.firstChild, 14);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
         expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
         expect(parseInt(range.style.left, 10)).to.be.within(110, 120);
 
-        setSelection(i.firstChild, 10, i.firstChild, 20);
+        setDomSelection(i.firstChild, 10, i.firstChild, 20);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
         expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
         expect(parseInt(range.style.left, 10)).to.be.within(145, 160);
 
-        setSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
+        setDomSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
         expect(parseInt(range.style.top, 10)).to.be.within(40, 50);
         expect(parseInt(range.style.left, 10)).to.be.within(130, 145);
 
-        setSelection(i.firstChild, 20, i.firstChild, 20);
+        setDomSelection(i.firstChild, 20, i.firstChild, 20);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('none');
     });
@@ -301,29 +301,29 @@ describe('FollowRange', async () => {
         const shadowRoot = container.querySelector('jw-shadow').shadowRoot;
 
         const i = shadowRoot.querySelector('p i');
-        setSelection(i.firstChild, 10, i.firstChild, 10);
+        setDomSelection(i.firstChild, 10, i.firstChild, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('none');
 
-        setSelection(i.firstChild, 10, i.firstChild, 14);
+        setDomSelection(i.firstChild, 10, i.firstChild, 14);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
         expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
         expect(parseInt(range.style.left, 10)).to.be.within(110, 120);
 
-        setSelection(i.firstChild, 10, i.firstChild, 20);
+        setDomSelection(i.firstChild, 10, i.firstChild, 20);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
         expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
         expect(parseInt(range.style.left, 10)).to.be.within(145, 160);
 
-        setSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
+        setDomSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
         expect(parseInt(range.style.top, 10)).to.be.within(40, 50);
         expect(parseInt(range.style.left, 10)).to.be.within(130, 145);
 
-        setSelection(i.firstChild, 20, i.firstChild, 20);
+        setDomSelection(i.firstChild, 20, i.firstChild, 20);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('none');
     });

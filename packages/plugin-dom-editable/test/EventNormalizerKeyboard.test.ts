@@ -7,7 +7,7 @@ import {
     testCallbackAfter,
     TestContext,
     triggerEvent,
-    setSelection,
+    setDomSelection,
     nextTick,
     triggerEvents,
     testContentNormalizer,
@@ -378,7 +378,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = testContentNormalizer.helloworld;
                         p = document.querySelector('p');
                         text = p.childNodes[0];
-                        setSelection(text, 5, text, 5);
+                        setDomSelection(text, 5, text, 5);
                         await nextTick();
                         ctx.eventBatches.splice(0);
 
@@ -1233,7 +1233,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 4, text, 4);
+                    setDomSelection(text, 4, text, 4);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -1245,7 +1245,7 @@ describe('utils', () => {
                     });
                     text.textContent = 'hello';
                     triggerEvent(ctx.editable, 'input', { data: 'o', inputType: 'insertText' });
-                    setSelection(text, 5, text, 5);
+                    setDomSelection(text, 5, text, 5);
                     triggerEvent(ctx.editable, 'keydown', { key: 'i', code: 'KeyI' });
                     triggerEvent(ctx.editable, 'keypress', { key: 'i', code: 'KeyI' });
                     triggerEvent(ctx.editable, 'beforeinput', {
@@ -1254,7 +1254,7 @@ describe('utils', () => {
                     });
                     text.textContent = 'helloi';
                     triggerEvent(ctx.editable, 'input', { data: 'i', inputType: 'insertText' });
-                    setSelection(text, 6, text, 6);
+                    setDomSelection(text, 6, text, 6);
                     triggerEvent(ctx.editable, 'keydown', { key: 'Backspace', code: 'Backspace' });
                     triggerEvent(ctx.editable, 'keypress', { key: 'Backspace', code: 'Backspace' });
                     triggerEvent(ctx.editable, 'beforeinput', {
@@ -1262,7 +1262,7 @@ describe('utils', () => {
                     });
                     text.textContent = 'hello';
                     triggerEvent(ctx.editable, 'input', { inputType: 'deleteContentBackward' });
-                    setSelection(text, 5, text, 5);
+                    setDomSelection(text, 5, text, 5);
                     await nextTick();
                     await nextTick();
 
@@ -1297,7 +1297,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '<p>a hello</p>';
                     const p = document.querySelector('p');
                     const text = p.childNodes[0];
-                    setSelection(text, 7, text, 7);
+                    setDomSelection(text, 7, text, 7);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -1325,7 +1325,7 @@ describe('utils', () => {
                     text.textContent = 'a hello ';
                     triggerEvent(ctx.editable, 'input', { data: ' ', inputType: 'insertText' });
                     triggerEvent(ctx.editable, 'keyup', { key: 'Unidentified' });
-                    setSelection(text, 8, text, 8);
+                    setDomSelection(text, 8, text, 8);
                     await nextTick();
                     await nextTick();
 
@@ -1349,7 +1349,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '<p>a hillo</p>';
                     const p = document.querySelector('p');
                     const text = p.childNodes[0];
-                    setSelection(text, 7, text, 7);
+                    setDomSelection(text, 7, text, 7);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -1376,7 +1376,7 @@ describe('utils', () => {
                     text.textContent = 'a hello ';
                     triggerEvent(ctx.editable, 'input', { data: ' ', inputType: 'insertText' });
                     triggerEvent(ctx.editable, 'keyup', { key: 'Unidentified' });
-                    setSelection(text, 8, text, 8);
+                    setDomSelection(text, 8, text, 8);
                     await nextTick();
                     await nextTick();
 
@@ -1417,7 +1417,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 4, text, 4);
+                    setDomSelection(text, 4, text, 4);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -1447,7 +1447,7 @@ describe('utils', () => {
                             ctx.editable.innerHTML = testContentNormalizer.helloworld;
                             p = document.querySelector('p');
                             text = p.childNodes[0];
-                            setSelection(text, 5, text, 5);
+                            setDomSelection(text, 5, text, 5);
                             await nextTick();
                             ctx.eventBatches.splice(0);
 
@@ -2683,7 +2683,7 @@ describe('utils', () => {
                             p = document.querySelector('p');
                             lastText = p.lastChild;
                             b = document.querySelector('b');
-                            setSelection(lastText, 0, lastText, 0);
+                            setDomSelection(lastText, 0, lastText, 0);
                             await nextTick();
                             ctx.eventBatches.splice(0);
 
@@ -3158,7 +3158,7 @@ describe('utils', () => {
                             bChild1 = b.childNodes[1];
                             bChild2 = b.childNodes[2];
 
-                            setSelection(lastText, 1, lastText, 1);
+                            setDomSelection(lastText, 1, lastText, 1);
                             await nextTick();
                             ctx.eventBatches.splice(0);
 
@@ -4021,7 +4021,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = '';
                         ctx.editable.appendChild(p);
                         p.appendChild(text);
-                        setSelection(text, 5, text, 5);
+                        setDomSelection(text, 5, text, 5);
 
                         await nextTick();
                         ctx.eventBatches.splice(0);
@@ -4035,7 +4035,7 @@ describe('utils', () => {
                         });
                         text.textContent = 'hell';
                         triggerEvent(ctx.editable, 'input', {});
-                        setSelection(text, 4, text, 4);
+                        setDomSelection(text, 4, text, 4);
                         await nextTick();
 
                         const keyboardActions: NormalizedAction[] = [
@@ -4065,7 +4065,7 @@ describe('utils', () => {
                             ctx.editable.innerHTML = testContentNormalizer.helloworld;
                             p = document.querySelector('p');
                             text = p.childNodes[0];
-                            setSelection(text, 4, text, 4);
+                            setDomSelection(text, 4, text, 4);
                             await nextTick();
                             ctx.eventBatches.splice(0);
 
@@ -4335,7 +4335,7 @@ describe('utils', () => {
                             ctx.editable.innerHTML = '';
                             ctx.editable.appendChild(p);
                             p.appendChild(text);
-                            setSelection(text, 5, text, 5);
+                            setDomSelection(text, 5, text, 5);
 
                             await nextTick();
                             ctx.eventBatches.splice(0);
@@ -4354,7 +4354,7 @@ describe('utils', () => {
                             triggerEvent(ctx.editable, 'input', {
                                 inputType: 'deleteContentForward',
                             });
-                            setSelection(text, 4, text, 4);
+                            setDomSelection(text, 4, text, 4);
                             await nextTick();
 
                             const batchEvents: EventBatch[] = [
@@ -4813,7 +4813,7 @@ describe('utils', () => {
                             p = document.querySelector('p');
 
                             text = p.childNodes[0];
-                            setSelection(text, 2, text, 2);
+                            setDomSelection(text, 2, text, 2);
 
                             await nextTick();
                             ctx.eventBatches.splice(0);
@@ -5171,7 +5171,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = '<div>abcd</div>';
                         const p = ctx.editable.firstChild;
                         const text = p.firstChild;
-                        setSelection(text, 2, text, 2);
+                        setDomSelection(text, 2, text, 2);
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: 'Enter' });
@@ -5183,7 +5183,7 @@ describe('utils', () => {
                         const newP = document.createElement('p');
                         ctx.editable.appendChild(newP);
                         newP.appendChild(text);
-                        setSelection(text, 0, text, 0);
+                        setDomSelection(text, 0, text, 0);
 
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertParagraph' });
                         await nextTick();
@@ -5201,7 +5201,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = '<div>abcd</div>';
                         const p = ctx.editable.firstChild;
                         const text = p.firstChild;
-                        setSelection(text, 2, text, 2);
+                        setDomSelection(text, 2, text, 2);
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
@@ -5214,7 +5214,7 @@ describe('utils', () => {
                         const newP = document.createElement('p');
                         ctx.editable.appendChild(newP);
                         newP.appendChild(text);
-                        setSelection(text, 0, text, 0);
+                        setDomSelection(text, 0, text, 0);
 
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertParagraph' });
                         await nextTick();
@@ -5240,7 +5240,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = '<div>abc def</div>';
                         const p = ctx.editable.firstChild;
                         const text = p.firstChild as Text;
-                        setSelection(text, 4, text, 4);
+                        setDomSelection(text, 4, text, 4);
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'compositionend', { data: 'def' });
@@ -5257,7 +5257,7 @@ describe('utils', () => {
                         const newP = document.createElement('p');
                         ctx.editable.appendChild(newP);
                         newP.appendChild(text);
-                        setSelection(text, 0, text, 0);
+                        setDomSelection(text, 0, text, 0);
 
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertParagraph' });
                         triggerEvent(ctx.editable, 'compositionstart', { data: '' });
@@ -5286,7 +5286,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = '<div>abc def</div>';
                         const p = ctx.editable.firstChild;
                         const text = p.firstChild as Text;
-                        setSelection(text, 3, text, 3);
+                        setDomSelection(text, 3, text, 3);
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'compositionend', { data: 'abc' });
@@ -5305,7 +5305,7 @@ describe('utils', () => {
                         text.textContent = 'def';
                         text.textContent = '\u00A0def';
 
-                        setSelection(text, 0, text, 0);
+                        setDomSelection(text, 0, text, 0);
 
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertParagraph' });
 
@@ -5332,7 +5332,7 @@ describe('utils', () => {
                         ctx.editable.innerHTML = '<div>abcd</div>';
                         const p = ctx.editable.firstChild;
                         const text = p.firstChild;
-                        setSelection(text, 2, text, 2);
+                        setDomSelection(text, 2, text, 2);
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: 'Enter' });
@@ -5343,7 +5343,7 @@ describe('utils', () => {
                         text.textContent = 'cd';
                         const br = document.createElement('br');
                         p.insertBefore(br, text);
-                        setSelection(text, 0, text, 0);
+                        setDomSelection(text, 0, text, 0);
 
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertLineBreak' });
                         await nextTick();
@@ -5369,12 +5369,12 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 4, text, 4);
+                    setDomSelection(text, 4, text, 4);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
                     triggerEvent(ctx.editable, 'keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
-                    setSelection(text, 3, text, 3);
+                    setDomSelection(text, 3, text, 3);
                     await nextTick();
                     await nextTick();
 
@@ -5424,7 +5424,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 4, text, 4);
+                    setDomSelection(text, 4, text, 4);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -5433,7 +5433,7 @@ describe('utils', () => {
                         code: 'ArrowLeft',
                         shiftKey: true,
                     });
-                    setSelection(text, 4, text, 3);
+                    setDomSelection(text, 4, text, 3);
                     await nextTick();
                     await nextTick();
 
@@ -5464,7 +5464,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 3, text, 3);
+                    setDomSelection(text, 3, text, 3);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -5474,7 +5474,7 @@ describe('utils', () => {
                         shiftKey: true,
                         ctrlKey: true,
                     });
-                    setSelection(text, 3, text, 5);
+                    setDomSelection(text, 3, text, 5);
                     await nextTick();
                     await nextTick();
 
@@ -5504,7 +5504,7 @@ describe('utils', () => {
             describe('select all', () => {
                 it('ctrl + a (ubuntu chrome)', async () => {
                     ctx.editable.innerHTML = '<div>a</div><div>b</div><div>c</div>';
-                    setSelection(
+                    setDomSelection(
                         ctx.editable.childNodes[1].firstChild,
                         1,
                         ctx.editable.childNodes[1].firstChild,
@@ -5525,7 +5525,7 @@ describe('utils', () => {
                         code: 'KeyQ',
                         ctrlKey: true,
                     });
-                    setSelection(
+                    setDomSelection(
                         ctx.editable.firstChild.firstChild,
                         0,
                         ctx.editable.lastChild.lastChild,
@@ -5549,7 +5549,7 @@ describe('utils', () => {
                 });
                 it('ctrl + a on content finished by br (ubuntu chrome)', async () => {
                     ctx.editable.innerHTML = '<div>a</div><div>b</div><div>c<br/><br/></div>';
-                    setSelection(
+                    setDomSelection(
                         ctx.editable.childNodes[1].firstChild,
                         1,
                         ctx.editable.childNodes[1].firstChild,
@@ -5570,7 +5570,7 @@ describe('utils', () => {
                         code: 'KeyQ',
                         ctrlKey: true,
                     });
-                    setSelection(
+                    setDomSelection(
                         ctx.editable.firstChild.firstChild,
                         0,
                         ctx.editable.lastChild.lastChild.previousSibling,
@@ -5594,7 +5594,7 @@ describe('utils', () => {
                 });
                 it('ctrl + a (safari)', async () => {
                     ctx.editable.innerHTML = '<div>a</div><div>b</div><div>c</div>';
-                    setSelection(
+                    setDomSelection(
                         ctx.editable.childNodes[1].firstChild,
                         1,
                         ctx.editable.childNodes[1].firstChild,
@@ -5622,7 +5622,7 @@ describe('utils', () => {
                     });
                     await nextTick();
                     await nextTick();
-                    setSelection(
+                    setDomSelection(
                         ctx.editable.firstChild.firstChild,
                         0,
                         ctx.editable.lastChild.lastChild,
@@ -5655,7 +5655,7 @@ describe('utils', () => {
                     const text2 = div.childNodes[2];
                     const br2 = div.childNodes[3];
                     const text3 = div.childNodes[4];
-                    setSelection(text1, 1, text3, 2);
+                    setDomSelection(text1, 1, text3, 2);
                     await nextTick();
 
                     ctx.eventBatches.splice(0);
@@ -5677,7 +5677,7 @@ describe('utils', () => {
                     div.removeChild(br2);
                     (text3 as Text).textContent = 'c';
                     triggerEvent(div, 'input', { inputType: 'deleteByCut' });
-                    setSelection(text3, 0, text3, 0);
+                    setDomSelection(text3, 0, text3, 0);
                     await nextTick();
                     await nextTick();
 
@@ -5703,7 +5703,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '<div>abc</div>';
                     const p = ctx.editable.firstChild;
                     const text = p.firstChild;
-                    setSelection(text, 1, text, 1);
+                    setDomSelection(text, 1, text, 1);
                     await nextTick();
 
                     ctx.eventBatches.splice(0);
@@ -5744,7 +5744,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 4, text, 4);
+                    setDomSelection(text, 4, text, 4);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -5755,7 +5755,7 @@ describe('utils', () => {
                     });
                     triggerEvent(ctx.editable, 'beforeinput', { inputType: 'historyUndo' });
                     text.textContent = 'hell';
-                    setSelection(text, 3, text, 3);
+                    setDomSelection(text, 3, text, 3);
                     triggerEvent(ctx.editable, 'input', { inputType: 'historyUndo' });
                     await nextTick();
                     await nextTick();
@@ -5779,7 +5779,7 @@ describe('utils', () => {
                     ctx.editable.innerHTML = '';
                     ctx.editable.appendChild(p);
                     p.appendChild(text);
-                    setSelection(text, 1, text, 4);
+                    setDomSelection(text, 1, text, 4);
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
@@ -5801,7 +5801,7 @@ describe('utils', () => {
                     const b = document.createElement('b');
                     p.insertBefore(b, text3);
                     b.appendChild(text3);
-                    setSelection(text3, 0, text3, 3);
+                    setDomSelection(text3, 0, text3, 3);
                     triggerEvent(ctx.editable, 'input', { inputType: 'formatBold' });
                     await nextTick();
                     await nextTick();
