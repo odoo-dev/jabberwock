@@ -303,8 +303,8 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         insertTable: async (params: InsertTableParams): Promise<void> => {
             if (params.rowCount && params.columnCount) {
                 const range = params.context.range;
-                const table = range.start.previousSibling();
-                if (table instanceof TableNode) {
+                const table = range.start.ancestor(TableNode);
+                if (table) {
                     const attributes = table.modifiers.get(Attributes);
                     attributes.classList.add('table table-bordered');
                     attributes.style.set('position', 'relative');
