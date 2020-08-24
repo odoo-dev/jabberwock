@@ -13,8 +13,8 @@ export class TableCellNode extends ContainerNode {
     breakable = false;
     header: boolean;
     // Only the `managerCell` setter should modify the following private keys.
-    __managerCell: TableCellNode;
-    __managedCells = new VersionableSet<TableCellNode>();
+    private __managerCell: TableCellNode;
+    private __managedCells = new VersionableSet<TableCellNode>();
 
     constructor(params?: TableCellNodeParams) {
         super(params);

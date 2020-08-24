@@ -230,4 +230,16 @@ export class TableNode extends VElement {
         }
         this.append(...rows);
     }
+    /**
+     * Remove managment of colspan & rowspan for the remove cell.
+     *
+     * @override
+     */
+    _removeAtIndex(index: number): void {
+        const row = this.childVNodes[index];
+        if (row instanceof TableRowNode) {
+            row.children(TableCellNode).forEach(cell => cell.unmerge());
+        }
+        super._removeAtIndex(index);
+    }
 }
