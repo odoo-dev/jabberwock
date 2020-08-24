@@ -86,8 +86,8 @@ export class DefaultHtmlDomRenderer extends NodeRenderer<Node[]> {
             }
         } else {
             domNode = document.createDocumentFragment();
-            for (const domNode of domObject.dom) {
-                domNode.appendChild(domNode);
+            for (const domObjectNode of domObject.dom) {
+                domNode.appendChild(domObjectNode);
             }
         }
         return domNode;
