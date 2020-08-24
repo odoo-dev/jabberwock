@@ -43,7 +43,8 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
 
         // Add buttons.
         const table = this.engine.editor.plugins.get(Table);
-        if (table.inlineUI && this.engine.editor.selection.range.isIn(cell)) {
+        const range = this.engine.editor.selection.range;
+        if (table.inlineUI && range.isCollapsed() && range.isIn(cell)) {
             const barContainer = document.createElement('bar-container');
             barContainer.innerHTML = tableEditTemplate;
             const editBar = barContainer.firstElementChild;
