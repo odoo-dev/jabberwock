@@ -1,5 +1,6 @@
 import { VElement } from '../../core/src/VNodes/VElement';
 import { TableNode } from './TableNode';
+import { TableCellNode } from './TableCellNode';
 
 export class TableRowNode extends VElement {
     breakable = false;
@@ -42,5 +43,17 @@ export class TableRowNode extends VElement {
         return this.ancestor(TableNode)
             .children(TableRowNode)
             .indexOf(this);
+    }
+    /**
+     * Remove managment of colspan & rowspan for the remove cell.
+     *
+     * @override
+     */
+    _removeAtIndex(index: number): void {
+        const cell = this.childVNodes[index];
+        if (cell instanceof TableCellNode) {
+            cell.unmerge();
+        }
+        super._removeAtIndex(index);
     }
 }
