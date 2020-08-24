@@ -3,6 +3,8 @@ import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { isBlock } from '../../utils/src/isBlock';
 import { nodeName } from '../../utils/src/utils';
+import { isTextNode } from '../../utils/src/Dom';
+import { removeFormattingSpace } from '../../utils/src/formattingSpace';
 
 export class LineBreakXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
@@ -38,9 +40,27 @@ export class LineBreakXmlDomParser extends AbstractParser<Node> {
      */
     _isInvisibleBR(node: Node): boolean {
         // Search for another non-block cousin in the same block parent.
-        while (node && !node.nextSibling && node.parentNode && !isBlock(node.parentNode)) {
+        while (
+            node &&
+            !this._nextVisibleSibling(node) &&
+            node.parentNode &&
+            !isBlock(node.parentNode)
+        ) {
             node = node.parentNode;
         }
-        return !node || !node.nextSibling || isBlock(node.nextSibling);
+        const nextVisibleSibling = this._nextVisibleSibling(node);
+        return !node || !nextVisibleSibling || isBlock(nextVisibleSibling);
+    }
+    /**
+     * Return the given node's next sibling that is not pure formatting space.
+     *
+     * @param node
+     */
+    _nextVisibleSibling(node: Node): Node {
+        let sibling = node.nextSibling;
+        while (sibling && isTextNode(sibling) && !removeFormattingSpace(sibling).length) {
+            sibling = sibling.nextSibling;
+        }
+        return sibling;
     }
 }

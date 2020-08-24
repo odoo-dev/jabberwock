@@ -216,6 +216,7 @@ async function testSpec(editor: JWEditor, spec: TestEditorSpec): Promise<void> {
  * Return a description of a selection from analysing the position of the
  * characters representing the selection within a test container.
  * Parsing the selection removes these characters from the test container.
+ * TODO: do not remove formatting space in the testContainer in place.
  *
  * @param testContainer
  */

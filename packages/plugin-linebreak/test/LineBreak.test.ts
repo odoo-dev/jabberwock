@@ -36,6 +36,20 @@ describePlugin(LineBreak, testEditor => {
             expect(result instanceof Array).to.be.true;
             expect(result.length).to.equal(0);
         });
+        it('should not parse a placeholder BR node (with whitespace)', async () => {
+            const container = document.createElement('div');
+            container.innerHTML = `
+            <p>
+                <br>
+            </p>
+            `;
+            const p = container.firstElementChild;
+            const editor = new BasicEditor();
+            await editor.start();
+            const parser = editor.plugins.get(Parser).engines['dom/html'];
+            const parsedVNodes = await parser.parse(p);
+            expect(parsedVNodes[0].childVNodes.length).to.equal(0);
+        });
         it('should parse two BR node as one line break', async () => {
             const p = document.createElement('p');
             const br1 = document.createElement('br');
@@ -56,7 +70,7 @@ describePlugin(LineBreak, testEditor => {
         });
     });
     describe('parse & render', () => {
-        it('2 <br> into a paragraph', async () => {
+        it('should parse and render 2 <br> into a paragraph', async () => {
             class Custom extends BasicEditor {
                 constructor(params?: { editable?: HTMLElement }) {
                     super(params);
@@ -84,6 +98,15 @@ describePlugin(LineBreak, testEditor => {
             await testEditor(Custom, {
                 contentBefore: '<p><br><br></p>',
                 contentAfter: '<p><br><br></p>',
+            });
+        });
+        it('should parse and render a paragraph with a placeholder BR', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `
+                <p>
+                    <br>
+                </p>`,
+                contentAfter: '<p><br></p>',
             });
         });
     });
