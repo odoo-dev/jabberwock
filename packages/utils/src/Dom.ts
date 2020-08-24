@@ -48,5 +48,5 @@ export function nodeLength(node: Node): number {
  * @param node
  */
 export function isTextNode(node: Node): node is Text {
-    return node.nodeName === '#text';
+    return node.nodeType === Node.TEXT_NODE;
 }
