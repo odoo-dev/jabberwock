@@ -278,6 +278,7 @@ interface CurrentStackObservations {
         paste?: DataTransferDetails;
         keyboardSelectAll?: CustomEvent;
     };
+    mutations: MutationRecord[];
 }
 
 /**
@@ -412,11 +413,6 @@ export class EventNormalizer {
      */
     _initialCaretPosition: CaretPosition;
     /**
-     * Set to true when `_onSelectionChange`. If set, don't process
-     * `_onContextMenu`.
-     */
-    _selectionHasChanged: boolean;
-    /**
      * Whether the current dragging operation started from inside the editable.
      * False if the dragging started outside of the editable.
      */
@@ -431,41 +427,21 @@ export class EventNormalizer {
         shiftKey: false,
     };
     /**
-     * The current selection has to be observed as a result of a mousedown being
-     * triggered. However, this cannot be done at the time of the mousedown
-     * itself since the browser hasn't updated the selection in the DOM yet.
-     * This observation is thus deferred inside a `setTimeout`. If the browser
-     * gets overloaded, it might fire the timeout after other events have
-     * happened, thus rendering the observation meaningless since the selection
-     * would have changed yet again. The observation timeout is stored in this
-     * variable in order to manually fire its execution when an event that might
-     * change the selection is triggered before the browser executed the timer.
+     * The current selection has to be observed as a result of a mousedown,
+     * mousemove or mouseup or a nagivation key being triggered. However, this
+     * cannot be done at the time of the mousedown itself since the browser
+     * hasn't updated the selection in the DOM yet.  This observation is thus
+     * deferred inside a `setTimeout`. If the browser gets overloaded, it might
+     * fire the timeout after other events have happened, thus rendering the
+     * observation meaningless since the selection would have changed yet again.
+     * The observation timeout is stored in this variable in order to manually
+     * fire its execution when an event that might change the selection is
+     * triggered before the browser executed the timer.
      */
-    _pointerSelectionTimeout: Timeout<EventBatch>;
+    _selectionTimeouts: Timeout<EventBatch>[] = [];
+
     /**
-     * The current selection has to be observed as a result of a nagivation key
-     * being pressed. However, this cannot be done at the time of the keydown
-     * itself since the browser hasn't updated the selection in the DOM yet.
-     * This observation is thus deferred inside a `setTimeout`. If the browser
-     * gets overloaded, it might fire the timeout after other events have
-     * happened, thus rendering the observation meaningless since the selection
-     * would have changed yet again. The observation timeout is stored in this
-     * variable in order to manually fire its execution when an event that might
-     * change the selection is triggered before the browser executed the timer.
-     */
-    _keyboardSelectionTimeout: Timeout<EventBatch>;
-    /**
-     * The current selection has to be observed as a result of a nagivation key
-     * being pressed. However, this cannot be done at the time of the keydown
-     * itself since the browser hasn't updated the selection in the DOM yet.
-     * This observation is thus deferred inside a `setTimeout`. If the browser
-     * gets overloaded, it will trigger all the subsequent events in the same
-     * event stack, thus preventing the observation of the selection between
-     * multiple keys. Since navigation keys are irrelevant for spell-checking
-     * keyboard concerns, the current stack can be processed as soon as a
-     * navigation key is pressed instead of continuing to batch them together.
-     * The previous stack timeout is stored in this variable in order to
-     * manually fire its execution when a navigation key is pressed.
+     * This stack represent aggregated event registred through `_registerEvent`.
      */
     _stackTimeout: Timeout<EventBatch>;
     /**
@@ -482,20 +458,30 @@ export class EventNormalizer {
     private _swiftKeyDeleteWordSelectionCache?: DomSelectionDescription[] = [];
 
     /**
+     * Track if the mouse is currently down regardless of wether the mouse is in
+     * the editable or not.
+     */
+    private _mousedown = false;
+    /**
+     * Record the last position of the event mousemove
+     */
+    private _lastMoveEvent: PositionEvent;
+    private _lastAction: NormalizedAction;
+    /**
      *
      * @param _isInEditable Callback to check if the node is in editable.
-     * @param _triggerEventBatch Callback to trigger for each user action.
+     * @param _triggerEventBatchOutside Callback to trigger for each user action.
      */
     constructor(
         private _isInEditable: (node: Node) => boolean,
-        private _triggerEventBatch: TriggerEventBatchCallback,
+        private _triggerEventBatchOutside: TriggerEventBatchCallback,
         private forwardEvent: {
             keydown: (event: KeyboardEvent) => void;
         },
         private root: Document | ShadowRoot = document,
     ) {
         this._shadowNormalizers.set(root, this);
-        this.initNextObservation();
+        this._sliceEventStack();
 
         this._bindEvent(root, 'keydown', forwardEvent.keydown, true);
 
@@ -508,11 +494,13 @@ export class EventNormalizer {
         this._bindEvent(root.ownerDocument || root, 'selectionchange', this._onSelectionChange);
         this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
         this._bindEvent(root, 'mousedown', this._onPointerDown);
+        this._bindEvent(root, 'mousemove', this._onPointerMove);
         this._bindEvent(root, 'touchstart', this._onPointerDown);
         this._bindEvent(root, 'load-iframe', this._onEventEnableNormalizer);
         this._bindEvent(root, 'mousedown', this._onEventEnableNormalizer);
         this._bindEvent(root, 'touchstart', this._onEventEnableNormalizer);
         this._bindEvent(root, 'mouseup', this._onPointerUp);
+        this._bindEvent(root, 'touchmove', this._onPointerMove);
         this._bindEvent(root, 'touchend', this._onPointerUp);
         this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEventInEditable(root, 'keypress', this._onKeyDownOrKeyPress);
@@ -545,6 +533,22 @@ export class EventNormalizer {
         );
         this._triggerEventBatch = null;
         this._isInEditable = null;
+    }
+    /**
+     * When an event will happen outside the editor in concurency settings, we
+     * might need to capture the selection before the external event happen.
+     * Otherwise the external event could be triggered on a wrong selection.
+     * Also, we need to slick the `_currentStackObservation` to let characters
+     * typed after the external command being sent after the external command.
+     */
+    signalPostExternalEvent(): void {
+        // Set to fale because it will not be a selectAll
+        this._followsPointerAction = false;
+        this._sliceEventStack();
+        // When the external event will be triggered, we do not know what kind
+        // of change it has made in the document. We save the information by
+        // setting the lastAction being undefined.
+        this._lastAction = undefined;
     }
 
     //--------------------------------------------------------------------------
@@ -636,19 +640,15 @@ export class EventNormalizer {
      * @see _processEvents
      */
     _registerEvent(ev: EventToProcess): void {
-        // See comment on `_keyboardSelectionTimeout`.
-        if (this._keyboardSelectionTimeout?.pending) {
-            this._keyboardSelectionTimeout.fire();
-        }
-        // See comment on `_pointerSelectionTimeout`.
-        if (this._pointerSelectionTimeout?.pending) {
-            this._pointerSelectionTimeout.fire();
-        }
+        this._checkMoveEvent();
+        this._triggerSelectionTimeouts();
 
         const isNavigationEvent =
             ev instanceof KeyboardEvent && ev.type === 'keydown' && navigationKey.has(ev.key);
 
         if (isNavigationEvent) {
+            // We might need to trigger selection event before the navigation.
+            this._sliceEventStack();
             // Manually triggering the processing of the current stack at this
             // point forces the rendering in the DOM of the result of the
             // observed events. This ensures that the new selection that is
@@ -661,31 +661,13 @@ export class EventNormalizer {
             // TODO: no rendering in editable can happen before the analysis of
             // the selection. There should be a mechanism here that can be used
             // by the normalizer to block the rendering until this resolves.
-            const currentDomSelection = this._getSelection();
-            this._keyboardSelectionTimeout = new Timeout<EventBatch>(
+            const keyboardSelectionTimeout = new Timeout<EventBatch>(
                 async (): Promise<EventBatch> => {
-                    const newDomSelection = this._getSelection();
-                    const collapsed =
-                        newDomSelection.anchorNode === newDomSelection.focusNode &&
-                        newDomSelection.anchorOffset === newDomSelection.focusOffset;
-
-                    let domSelection;
-                    if (collapsed && !this._isInEditable(newDomSelection.anchorNode)) {
-                        // Prevent a collapsed selection outside the editable
-                        // context: keep the current selection.
-                        domSelection = currentDomSelection;
-                    } else {
-                        domSelection = newDomSelection;
-                    }
-                    const setSelectionAction: SetSelectionAction = {
-                        type: 'setSelection',
-                        domSelection: domSelection,
-                    };
-                    return { actions: [setSelectionAction], mutatedElements: new Set([]) };
+                    return this._getSelectionBatchOnce();
                 },
             );
-            this._triggerEventBatch(this._keyboardSelectionTimeout.promise);
-            this.initNextObservation();
+            this._triggerEventBatch(keyboardSelectionTimeout.promise);
+            this._selectionTimeouts.push(keyboardSelectionTimeout);
         } else {
             if (this.currentStackObservation._events.length === 0) {
                 // The queue is not initialized or has been reset, so this is a
@@ -697,6 +679,7 @@ export class EventNormalizer {
 
                 // Start observing mutations.
                 this._mutationNormalizer.start();
+                stack.mutations = this._mutationNormalizer._mutations;
 
                 // All events of this tick will be processed in the next one.
                 this._stackTimeout = new Timeout<EventBatch>(
@@ -787,7 +770,11 @@ export class EventNormalizer {
         const dropEvent = currentStackObservation._eventsMap.drop;
         const pasteEvent = currentStackObservation._eventsMap.paste;
 
-        const compositionData = this._getCompositionData(compositionEvent, inputEvent);
+        const compositionData = this._getCompositionData(
+            currentStackObservation.mutations,
+            compositionEvent,
+            inputEvent,
+        );
 
         const isGoogleKeyboardBackspace =
             compositionData &&
@@ -840,7 +827,9 @@ export class EventNormalizer {
         const isVirtualKeyboard = compositionEvent && key && key.length !== 1;
 
         // Compute the set of mutated elements accross all observed events.
-        const mutatedElements = this._mutationNormalizer.getMutatedElements();
+        const mutatedElements = this._mutationNormalizer.getMutatedElements(
+            currentStackObservation.mutations,
+        );
         this._mutationNormalizer.stop();
 
         // When the browser trigger multiples keydown at once, for each keydown
@@ -856,6 +845,7 @@ export class EventNormalizer {
         if (currentStackObservation._multiKeyStack.length > 1 && possibleMultiKeydown) {
             currentStackObservation._multiKeyStack.map(keydownMap => {
                 const keyboardAction = this._getKeyboardAction(
+                    currentStackObservation.mutations,
                     keydownMap.keydown.key,
                     (keydownMap.input && keydownMap.input.inputType) || '',
                     !!mutatedElements.size,
@@ -885,6 +875,7 @@ export class EventNormalizer {
             ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard)
         ) {
             const keyboardAction = this._getKeyboardAction(
+                currentStackObservation.mutations,
                 key,
                 inputType,
                 !!mutatedElements.size,
@@ -918,7 +909,7 @@ export class EventNormalizer {
             normalizedActions.push(historyAction);
         }
 
-        this.initNextObservation();
+        this.signalPostExternalEvent();
 
         if (normalizedActions.length > 0) {
             const batch: EventBatch = {
@@ -934,18 +925,29 @@ export class EventNormalizer {
     }
 
     /**
-     * Set the next observation.
+     * When the system is under pressure, the events will be triggered on the
+     * same tick. We need reset the normalizer stack `currentStackObservation`
+     * check if there was a move event before and trigger all the timeout.
      */
-    initNextObservation(): void {
-        this._followsPointerAction = false;
+    _sliceEventStack(check = true): void {
+        if (check) this._checkMoveEvent();
+        this._triggerSelectionTimeouts();
+
+        // See comment on `_stackTimeout`.
+        if (this._stackTimeout?.pending) {
+            this._stackTimeout.fire();
+        }
+
         this.currentStackObservation = {
             _events: [],
             _multiKeyStack: [],
             _eventsMap: {},
+            mutations: undefined,
         };
     }
 
     _getCompositionData(
+        mutations: MutationRecord[],
         compositionEvent: CompositionEvent | undefined,
         inputEvent: InputEvent | undefined,
     ): CompositionData | undefined {
@@ -964,11 +966,11 @@ export class EventNormalizer {
                 compositionDataString += ' ';
             }
 
-            return this._getCompositionFromString(compositionDataString);
+            return this._getCompositionFromString(mutations, compositionDataString);
         } else if (inputEvent && inputEvent.inputType === 'insertReplacementText') {
             // safari trigger an input with 'insertReplacementText' when it
             // correct a word.
-            return this._getCompositionFromString(inputEvent.data);
+            return this._getCompositionFromString(mutations, inputEvent.data);
         }
     }
 
@@ -1002,6 +1004,7 @@ export class EventNormalizer {
      * @param isMultiKey
      */
     _getKeyboardAction(
+        mutations: MutationRecord[],
         key: string,
         inputType: string,
         hasMutatedElements: boolean,
@@ -1010,14 +1013,13 @@ export class EventNormalizer {
         | InsertLineBreakAction
         | InsertParagraphBreakAction
         | InsertTextAction
-        | SetSelectionAction
         | DeleteWordAction
         | DeleteHardLineAction
         | DeleteContentAction {
         const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
         if (isInsertOrRemoveAction) {
             if (key === 'Backspace' || key === 'Delete') {
-                return this._getRemoveAction(key, inputType, keydownEvent);
+                return this._getRemoveAction(mutations, key, inputType, keydownEvent);
             } else if (key === 'Enter') {
                 if (inputType === 'insertLineBreak') {
                     const insertLineBreakAction: InsertLineBreakAction = {
@@ -1156,8 +1158,11 @@ export class EventNormalizer {
      * the word change "b" to "c" instead of "a b" to "a c".
      *
      */
-    _getCompositionFromString(compositionData: string): CompositionData {
-        const charMap = this._mutationNormalizer.getCharactersMapping();
+    _getCompositionFromString(
+        mutations: MutationRecord[],
+        compositionData: string,
+    ): CompositionData {
+        const charMap = this._mutationNormalizer.getCharactersMapping(mutations);
 
         // The goal of this function is to precisely find what was inserted by
         // a keyboard supporting spell-checking and suggestions.
@@ -1328,6 +1333,7 @@ export class EventNormalizer {
      *
      */
     _getRemoveAction(
+        mutations: MutationRecord[],
         key: string,
         inputType: string,
         keydownEvent: KeyboardEvent,
@@ -1343,7 +1349,7 @@ export class EventNormalizer {
         this._swiftKeyDeleteWordSelectionCache.length = 0;
 
         // Get characterMapping to retrieve which word has been deleted.
-        const characterMapping = this._mutationNormalizer.getCharactersMapping();
+        const characterMapping = this._mutationNormalizer.getCharactersMapping(mutations);
 
         const isCollapsed =
             selection &&
@@ -1409,15 +1415,14 @@ export class EventNormalizer {
         return node.nodeType === Node.TEXT_NODE || nodeName(node) === 'BR';
     }
     /**
-     * Get the current selection from the DOM. If there is no selection in the
-     * DOM, return a fake one at offset 0 of the editable element.
-     * If an event is given, then the selection must be at least partially
-     * contained in the target of the event, otherwise it means it took no
-     * part in it. In this case, return the caret position instead.
+     * Get the current selection from the DOM. If an event is given, then the
+     * selection must be at least partially contained in the target of the
+     * event, otherwise it means it took no part in it. In this case, return the
+     * selection from the caret position.
      *
      * @param [ev]
      */
-    _getSelection(ev?: PositionEvent): DomSelectionDescription {
+    _getSelection(ev?: PositionEvent): DomSelectionDescription | undefined {
         let selectionDescription: DomSelectionDescription;
         let target: Node;
         let root: Document | ShadowRoot;
@@ -1435,16 +1440,7 @@ export class EventNormalizer {
             : root.ownerDocument.getSelection();
 
         let forward: boolean;
-        if (!selection || selection.rangeCount === 0) {
-            // No selection in the DOM. Create a fake one.
-            selectionDescription = {
-                anchorNode: document.body,
-                anchorOffset: 0,
-                focusNode: document.body,
-                focusOffset: 0,
-                direction: Direction.FORWARD,
-            };
-        } else {
+        if (selection && selection.rangeCount !== 0) {
             // The selection direction is sorely missing from the DOM api.
             const nativeRange = selection.getRangeAt(0);
             if (selection.anchorNode === selection.focusNode) {
@@ -1468,6 +1464,7 @@ export class EventNormalizer {
         if (target instanceof Node) {
             const caretPosition = this._getEventCaretPosition(ev);
             if (
+                selectionDescription &&
                 !target.contains(selectionDescription.anchorNode) &&
                 !target.contains(selectionDescription.focusNode) &&
                 caretPosition.offsetNode === target
@@ -1662,25 +1659,7 @@ export class EventNormalizer {
      * @param {MouseEvent} ev
      */
     _onContextMenu(ev: MouseEvent): void {
-        if (this._pointerSelectionTimeout?.pending) {
-            this._pointerSelectionTimeout.fire();
-        }
-        this._pointerSelectionTimeout = new Timeout(() => {
-            if (!this._selectionHasChanged || this._currentlySelectingAll) {
-                return { actions: [] };
-            }
-            this._initialCaretPosition = this._getEventCaretPosition(ev);
-            const setSelectionAction: SetSelectionAction = {
-                type: 'setSelection',
-                domSelection: this._getSelection(ev),
-            };
-            this._selectionHasChanged = false;
-            return {
-                actions: [setSelectionAction],
-                mutatedElements: new Set([]),
-            };
-        });
-        this._triggerEventBatch(this._pointerSelectionTimeout.promise);
+        this._makePointerEvent(this._getPositionEvent(ev));
         // The _clickedInEditable property is used to assess whether the user is
         // currently changing the selection by using the mouse. If the context
         // menu ends up opening, the user is definitely not selecting.
@@ -1695,6 +1674,10 @@ export class EventNormalizer {
         this._updateModifiersKeys(ev);
         this._registerEvent(ev);
         const selection = this._getSelection();
+        if (!selection) {
+            this._initialCaretPosition = undefined;
+            return;
+        }
         const [offsetNode, offset] = targetDeepest(selection.anchorNode, selection.anchorOffset);
         this._initialCaretPosition = { offsetNode, offset };
     }
@@ -1711,11 +1694,13 @@ export class EventNormalizer {
         const positionEvent = this._getPositionEvent(ev);
         const target = this._getEventTarget(positionEvent);
         const caretPosition = this._getEventCaretPosition(positionEvent);
+        this._mousedown = true;
         if (target && this._isInEditable(caretPosition.offsetNode)) {
             this._mousedownInEditable = true;
             this._initialCaretPosition = caretPosition;
-            this._selectionHasChanged = false;
             this._followsPointerAction = true;
+
+            this._makePointerEvent(this._getPositionEvent(ev));
         } else {
             this._mousedownInEditable = false;
             this._initialCaretPosition = undefined;
@@ -1726,42 +1711,33 @@ export class EventNormalizer {
      *
      * @param ev
      */
-    _onPointerUp(ev: MouseEvent): void {
-        // Don't trigger events on the editable if the click was done outside of
-        // the editable itself or on something else than an element.
-        if (this._mousedownInEditable && ev.target instanceof Element) {
-            try {
-                // When the users clicks in the DOM, the range is set in the next
-                // tick. The observation of the resulting range must thus be delayed
-                // to the next tick as well. Store the data we have now before it
-                // gets invalidated by the redrawing of the DOM.
-                this._initialCaretPosition = this._getEventCaretPosition(ev);
-                this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
-                    return this._analyzeSelectionChange(this._getPositionEvent(ev));
-                });
-                this._triggerEventBatch(this._pointerSelectionTimeout.promise);
-            } catch (e) {
-                this._mousedownInEditable = false;
-                this._initialCaretPosition = undefined;
-            }
-        } else if (ev.target instanceof Element && !!ev.target.closest('[contentEditable=true]')) {
-            // When within a contenteditable element but in a non-editable
-            // context, prevent a collapsed selection by removing all ranges.
-            // TODO: remove them from the VDocument as well.
-            this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
-                const selection = this._getSelection();
-                const collapsed =
-                    selection.anchorNode === selection.focusNode &&
-                    selection.anchorOffset === selection.focusOffset;
-                const target = this._getClosestElement(selection.focusNode);
-                if (collapsed && !!target.closest('[contentEditable=true]')) {
-                    document.getSelection().removeAllRanges();
-                }
-                return {
-                    actions: [],
-                };
-            });
-            this._triggerEventBatch(this._pointerSelectionTimeout.promise);
+    _onPointerUp(ev: MouseEvent | TouchEvent): void {
+        this._lastMoveEvent = undefined;
+        this._mousedown = false;
+        this._makePointerEvent(this._getPositionEvent(ev));
+    }
+    /**
+     * When the pointer move and a click was previously in the editable, set
+     * the variable _lastMoveEvent. See `_checkMoveEvent`.
+     */
+    _onPointerMove(ev: MouseEvent | TouchEvent): void {
+        if (this._mousedown && this._mousedownInEditable) {
+            this._lastMoveEvent = this._getPositionEvent(ev);
+        }
+    }
+    /**
+     *  We need to check the move event for two case that happend directly after
+     *  a mousemove:
+     *  - An external event happen and the selection could have changed.
+     *    Therefore, we need to set the position before the external event
+     *    happen.
+     *  - A keyboardevent happen and we need to send the last position of the
+     *    pointer.
+     */
+    _checkMoveEvent(): void {
+        if (this._lastMoveEvent) {
+            this._makePointerEvent(this._lastMoveEvent, false);
+            this._lastMoveEvent = undefined;
         }
     }
     /**
@@ -1769,19 +1745,32 @@ export class EventNormalizer {
      *
      * @param ev
      */
-    _analyzeSelectionChange(ev: PositionEvent): EventBatch {
+    _getSelectionBatchOnce(ev?: PositionEvent): EventBatch {
         const eventBatch = {
             actions: [],
             mutatedElements: new Set([]),
         };
-        if (this._selectionHasChanged) {
+
+        const selection = this._getSelection(ev);
+        if (selection) {
+            const selectionAction = this._getSelectionAction(selection);
+            if (selectionAction) eventBatch.actions.push(selectionAction);
+        }
+
+        return eventBatch;
+    }
+
+    /**
+     * Get a new selection action only if it differ from the last one.
+     */
+    _getSelectionAction(selection: DomSelectionDescription): SetSelectionAction | undefined {
+        if (this._isLastSelectionDifferent(selection)) {
             const setSelectionAction: SetSelectionAction = {
                 type: 'setSelection',
-                domSelection: this._getSelection(ev),
+                domSelection: selection,
             };
-            eventBatch.actions.push(setSelectionAction);
+            return setSelectionAction;
         }
-        return eventBatch;
     }
     /**
      * Return a node's parent if it's not an instance of `Element`.
@@ -1864,6 +1853,10 @@ export class EventNormalizer {
             ev.preventDefault();
         }
         const clipboard = ev.clipboardData;
+
+        const selection = this._getSelection();
+        if (!selection) return;
+
         const pasteEvent: DataTransferDetails = {
             type: ev.type as 'cut' | 'paste',
             'text/plain': clipboard.getData('text/plain'),
@@ -1871,7 +1864,7 @@ export class EventNormalizer {
             'text/uri-list': clipboard.getData('text/uri-list'),
             files: [],
             originalEvent: ev,
-            selection: this._getSelection(),
+            selection: selection,
             caretPosition: this._initialCaretPosition,
             draggingFromEditable: false,
         };
@@ -1907,6 +1900,7 @@ export class EventNormalizer {
             return;
         }
         const selection = this._getSelection();
+        if (!selection) return;
 
         this._swiftKeyDeleteWordSelectionCache.push(selection);
 
@@ -1916,20 +1910,13 @@ export class EventNormalizer {
             keydownEvent.type === 'keydown' &&
             navigationKey.has(keydownEvent.key);
         if (isNavEvent) {
-            const setSelectionAction: SetSelectionAction = {
-                type: 'setSelection',
-                domSelection: selection,
-            };
-            this.initNextObservation();
-            this._triggerEventBatch(
-                new Promise((resolve): void => {
-                    setTimeout(() => {
-                        resolve({ actions: [setSelectionAction] });
-                    });
-                }),
-            );
+            const navTimeout = new Timeout<EventBatch>(() => {
+                const selectionBatch = this._getSelectionBatchOnce();
+                return selectionBatch;
+            });
+            this._triggerEventBatch(navTimeout.promise);
+            this._selectionTimeouts.push(navTimeout);
         } else {
-            this._selectionHasChanged = true;
             // This heuristic protects against a costly `_isSelectAll` call.
             const modifiedKeyEvent = this._modifierKeys.ctrlKey || this._modifierKeys.metaKey;
             const heuristic = modifiedKeyEvent || this._followsPointerAction;
@@ -1994,12 +1981,116 @@ export class EventNormalizer {
         if (root && !this._shadowNormalizers.get(root)) {
             const eventNormalizer = new EventNormalizer(
                 this._isInEditable,
-                this._triggerEventBatch,
+                this._triggerEventBatchOutside,
                 this.forwardEvent,
                 root,
             );
             this._shadowNormalizers.set(root, eventNormalizer);
         }
+    }
+
+    /**
+     * Trigger all selection timeouts. If there is more than one timeout, fire
+     * all the previous one with an empty batch as the last selection is the one
+     * that count.
+     */
+    _triggerSelectionTimeouts(): void {
+        const lastTimeout = this._selectionTimeouts.pop();
+        const emptyBatch: EventBatch = {
+            actions: [],
+        };
+        for (const timeout of this._selectionTimeouts) {
+            if (timeout.pending) {
+                timeout.fire(emptyBatch);
+            }
+        }
+        lastTimeout?.fire();
+        this._selectionTimeouts = [];
+    }
+
+    /**
+     * Make a pointer event under some condition.
+     */
+    _makePointerEvent(ev: PositionEvent, check = true): void {
+        // Don't trigger events on the editable if the click was done outside of
+        // the editable itself or on something else than an element.
+        if (this._mousedownInEditable && ev.target instanceof Element) {
+            try {
+                this._sliceEventStack(check);
+
+                // When the users clicks in the DOM, the range is set in the next
+                // tick. The observation of the resulting range must thus be delayed
+                // to the next tick as well. Store the data we have now before it
+                // gets invalidated by the redrawing of the DOM.
+                this._initialCaretPosition = this._getEventCaretPosition(ev);
+                const pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+                    const selectionBatch = this._getSelectionBatchOnce(ev);
+                    return selectionBatch;
+                });
+                this._triggerEventBatch(pointerSelectionTimeout.promise);
+                this._selectionTimeouts.push(pointerSelectionTimeout);
+            } catch (e) {
+                this._mousedownInEditable = false;
+                this._initialCaretPosition = undefined;
+            }
+        } else if (ev.target instanceof Element && !!ev.target.closest('[contentEditable=true]')) {
+            // When within a contenteditable element but in a non-editable
+            // context, prevent a collapsed selection by removing all ranges.
+            // TODO: remove them from the VDocument as well.
+            const pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+                const selection = this._getSelection();
+                if (selection) {
+                    const collapsed =
+                        selection.anchorNode === selection.focusNode &&
+                        selection.anchorOffset === selection.focusOffset;
+                    const target = this._getClosestElement(selection.focusNode);
+                    if (collapsed && !!target.closest('[contentEditable=true]')) {
+                        document.getSelection().removeAllRanges();
+                    }
+                }
+                return {
+                    actions: [],
+                };
+            });
+            this._triggerEventBatch(pointerSelectionTimeout.promise);
+            this._selectionTimeouts.push(pointerSelectionTimeout);
+        }
+    }
+    /**
+     * Middleware betwen the `_triggerEventBatchOutside` to always capture the
+     * last action being done when sending a batch.
+     */
+    _triggerEventBatch(batchPromise: Promise<EventBatch>): void {
+        this._triggerEventBatchOutside(
+            batchPromise.then(batch => {
+                if (batch.actions.length) {
+                    this._lastAction = batch.actions[batch.actions.length - 1];
+                }
+                return batch;
+            }),
+        );
+    }
+
+    /**
+     * Check wether the last action is a selection and the selection is the
+     * different than the one provided.
+     */
+    private _isLastSelectionDifferent(selection: DomSelectionDescription): boolean {
+        const lastSelection =
+            this._lastAction &&
+            this._lastAction.type === 'setSelection' &&
+            this._lastAction.domSelection;
+        if (
+            !lastSelection ||
+            selection.anchorNode !== lastSelection.anchorNode ||
+            selection.anchorOffset !== lastSelection.anchorOffset ||
+            selection.direction !== lastSelection.direction ||
+            selection.focusNode !== lastSelection.focusNode ||
+            selection.focusOffset !== lastSelection.focusOffset
+        ) {
+            return true;
+        }
+        return false;
     }
 
     /**

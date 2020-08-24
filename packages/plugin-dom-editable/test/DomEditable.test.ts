@@ -737,6 +737,7 @@ describe('DomEditable', () => {
                 contentBefore: '<div>[]</div>',
                 stepFunction: async editor => {
                     const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const domEditable = editor.plugins.get(DomEditable);
                     const editable = domEngine.components.editable[0];
                     const editableDom = domEngine.getDomNodes(editable)[0] as HTMLElement;
                     const textNode = editableDom.childNodes[0];
@@ -748,6 +749,19 @@ describe('DomEditable', () => {
                     textNode.textContent = 'ab';
                     triggerEvent(editableDom, 'keyup', { key: 'b', code: 'KeyB' });
                     triggerEvent(editableDom, 'input', { data: 'b', inputType: 'insertText' });
+                    domEditable.eventNormalizer.currentStackObservation.mutations = [
+                        {
+                            addedNodes: editableDom.childNodes,
+                            attributeName: null,
+                            attributeNamespace: null,
+                            nextSibling: null,
+                            oldValue: null,
+                            previousSibling: null,
+                            removedNodes: editableDom.childNodes,
+                            target: editableDom,
+                            type: 'childList',
+                        },
+                    ];
                     triggerEvent(editableDom, 'keydown', { key: 'Tab', code: 'Tab' });
                     triggerEvent(editableDom, 'keyup', { key: 'Tab', code: 'Tab' });
                     triggerEvent(editableDom, 'keydown', { key: 'c', code: 'KeyC' });

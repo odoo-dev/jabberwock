@@ -20,14 +20,14 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         },
     };
     commandHooks = {
-        '@commandMatch': this._initNextObservation,
+        '@commandMatch': this._onCommandMatch,
     };
 
     eventNormalizer: EventNormalizer;
 
     constructor(editor: JWEditor, configuration: T) {
         super(editor, configuration);
-        this._initNextObservation = this._initNextObservation.bind(this);
+        this._onCommandMatch = this._onCommandMatch.bind(this);
     }
 
     async start(): Promise<void> {
@@ -199,7 +199,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
      * When a new event is triggered by a keypress, we need to init a new
      * observation to make chain of event properly.
      */
-    private _initNextObservation(): void {
-        this.eventNormalizer.initNextObservation();
+    private _onCommandMatch(): void {
+        this.eventNormalizer.signalPostExternalEvent();
     }
 }
