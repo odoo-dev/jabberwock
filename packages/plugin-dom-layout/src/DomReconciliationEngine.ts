@@ -1534,6 +1534,10 @@ export class DomReconciliationEngine {
             }
             if (domNodes.length) {
                 if (domObject.tag) {
+                    const swapNode = domNodes.find(domNode => domNode.contains(parentDomNode));
+                    if (swapNode) {
+                        parentDomNode.parentNode.removeChild(parentDomNode);
+                    }
                     this._insertDomChildren(domNodes, parentDomNode, parentDomNode.firstChild);
                 } else {
                     newNode = true;

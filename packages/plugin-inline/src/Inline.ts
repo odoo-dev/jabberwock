@@ -99,7 +99,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                 if (!this.cache.modifiers) {
                     this.cache.modifiers = new Modifiers();
                 }
-                this.cache.modifiers.append(new FormatClass());
+                this.cache.modifiers.prepend(FormatClass);
             }
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);

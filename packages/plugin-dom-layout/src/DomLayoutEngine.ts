@@ -195,6 +195,7 @@ export class DomLayoutEngine extends LayoutEngine {
         const cache = (this._rendererCache = await engine.render(
             updatedNodes,
             this._rendererCache,
+            !!this._rendererCache,
         ));
 
         this._domReconciliationEngine.update(

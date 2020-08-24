@@ -510,7 +510,142 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 renderingUnits.push(this._createUnit(cache, node, rendered));
             }
         }
+        if (cache.optimizeModifiersRendering) {
+            this._optimizeModifiersRendering(cache, renderingUnits);
+        }
+
         return renderingUnits;
+    }
+    /**
+     * The modifiers will be sorted to be rendererd with the minimum of tag and keep the hight
+     * modifier level.
+     *
+     * Eg: change this (without space of course):
+     *      <b>
+     *          <i>
+     *              _
+     *              <a href="#">__</a>
+     *          </i>
+     *          <a href="#">_</a>
+     *          <i>
+     *              <a href="#">__</a>
+     *          </i>
+     *      </b>
+     * Into this to keep the link:
+     *      <b>
+     *          <i>_</i>
+     *          <a href="#">
+     *              <i>__</i>
+     *              _
+     *              <i>__</i>
+     *          </a>
+     *      </b>
+     *
+     * @param cache
+     * @param renderingUnits
+     */
+    private _optimizeModifiersRendering(
+        cache: RenderingEngineCache<DomObject>,
+        renderingUnits: RenderingBatchUnit[],
+    ): void {
+        // Clone to use pop after and create the intervales.
+        const unitToModifiers = new Map<RenderingBatchUnit, Modifier[]>();
+        for (const renderingUnit of renderingUnits) {
+            if (renderingUnit) {
+                unitToModifiers.set(renderingUnit, [...renderingUnit[1]]);
+            }
+        }
+
+        // Group by same modifier, then order the modifiers and take care of the level.
+        // Create modifiers interval (Modifier, level, index begin, index end).
+        const intervals: [Modifier[], number, number, number][] = [];
+        for (let i = 0; i < renderingUnits.length; i++) {
+            const renderingUnit = renderingUnits[i];
+            const unitModifiers = unitToModifiers.get(renderingUnit);
+            if (unitModifiers) {
+                while (unitModifiers.length) {
+                    // Take the first modifier and group.
+                    const modifierToSort = unitModifiers.pop();
+                    const level = modifierToSort.level;
+                    if (!level) {
+                        continue;
+                    }
+                    const modifiers: Modifier[] = [modifierToSort];
+                    const groupIndexes: number[] = [0];
+
+                    let next: RenderingBatchUnit;
+                    let nextIndex = i + 1;
+                    while ((next = renderingUnits[nextIndex]) && unitToModifiers.get(next)) {
+                        const modifierIndex = unitToModifiers
+                            .get(next)
+                            .findIndex(modifier =>
+                                this._modifierIsSameAs(cache, modifierToSort, modifier),
+                            );
+                        if (modifierIndex === -1) {
+                            break;
+                        } else {
+                            const modifier = unitToModifiers.get(next)[modifierIndex];
+                            groupIndexes.push(next[1].indexOf(modifier));
+                            modifiers.push(modifier);
+                            unitToModifiers.get(next).splice(modifierIndex, 1);
+                            nextIndex++;
+                        }
+                    }
+                    intervals.push([modifiers, level, i, nextIndex - 1]);
+                }
+            }
+        }
+
+        // Split interval if break an interval with greatest level.
+        for (let i = 0; i < intervals.length; i++) {
+            const self = intervals[i];
+            // Use the same length because the newest are already splitted for this loop.
+            const len = intervals.length;
+            for (let u = 0; u < len; u++) {
+                if (u === i) {
+                    continue;
+                }
+                const other = intervals[u];
+                if (
+                    self[1] > other[1] ||
+                    (self[1] === other[1] && self[3] - self[2] > other[3] - other[2])
+                ) {
+                    // If greatest level or greatest number of VNodes split other modifiers.
+                    if (self[2] > other[2] && self[2] <= other[3] && self[3] > other[3]) {
+                        intervals.push([
+                            other[0].splice(0, other[3] - self[2] + 1),
+                            other[1],
+                            self[2],
+                            other[3],
+                        ]);
+                        other[3] = self[2] - 1;
+                    } else if (self[3] >= other[2] && self[3] < other[3] && self[2] < other[2]) {
+                        intervals.push([
+                            other[0].splice(0, self[3] - other[2] + 1),
+                            other[1],
+                            other[2],
+                            self[3],
+                        ]);
+                        other[2] = self[3] + 1;
+                    }
+                }
+            }
+        }
+
+        // Sort by largest interval.
+        intervals.sort((a, b) => a[3] - a[2] - b[3] + b[2]);
+
+        // Sort the modifiers in unit from the interval order.
+        for (const interval of intervals) {
+            const nodes = [];
+            for (let i = interval[2]; i <= interval[3]; i++) {
+                const modifer = interval[0][i - interval[2]];
+                const modifiers = renderingUnits[i][1];
+                modifiers.splice(modifiers.indexOf(modifer), 1);
+                modifiers.unshift(modifer);
+                nodes.push(renderingUnits[i][0]);
+            }
+        }
     }
     private _createUnit(
         cache: RenderingEngineCache<DomObject>,

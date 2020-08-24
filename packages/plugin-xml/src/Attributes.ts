@@ -1,9 +1,10 @@
-import { Modifier } from '../../core/src/Modifier';
+import { Modifier, ModifierLevel } from '../../core/src/Modifier';
 import { CssStyle } from './CssStyle';
 import { ClassList } from './ClassList';
 import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export class Attributes extends Modifier {
+    level = ModifierLevel.LOW;
     private _record: Record<string, string>;
     style = new CssStyle();
     // Avoid copiying FontAwesome classes on paragraph break.

@@ -73,4 +73,6 @@ export class RenderingEngineCache<T> {
 
     // Worker send to renderers method 'render'.
     worker?: RenderingEngineWorker<T>;
+
+    optimizeModifiersRendering = true;
 }
