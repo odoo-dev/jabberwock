@@ -5,7 +5,7 @@ import { EventBatch, NormalizedAction, ModifierKeys } from '../src/EventNormaliz
 import {
     testCallbackAfter,
     TestContext,
-    setSelection,
+    setDomSelection,
     nextTick,
     testCallbackBefore,
 } from './eventNormalizerUtils';
@@ -81,7 +81,7 @@ describe('utils', () => {
                 const cdTextNode = ctx.editable.childNodes[1].childNodes[0];
                 ctx.normalizer._initialCaretPosition = { offsetNode: abTextNode, offset: 1 };
                 ctx.normalizer._followsPointerAction = true;
-                setSelection(abTextNode, 0, cdTextNode, 2);
+                setDomSelection(abTextNode, 0, cdTextNode, 2);
                 await nextTick();
                 await nextTick();
 
@@ -110,7 +110,7 @@ describe('utils', () => {
                         if (x === 0 && y === 2) {
                             break;
                         }
-                        setSelection(abTextNode, x, cdTextNode, y);
+                        setDomSelection(abTextNode, x, cdTextNode, y);
                         await nextTick();
                         await nextTick();
                     }

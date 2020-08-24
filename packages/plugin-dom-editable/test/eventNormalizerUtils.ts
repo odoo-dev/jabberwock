@@ -186,7 +186,7 @@ export function triggerEvent(
     currentElement.dispatchEvent(ev);
     return ev;
 }
-export function setSelection(
+export function setDomSelection(
     startContainer: Node,
     startOffset: number,
     endContainer: Node,
@@ -354,7 +354,7 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
             } else if (testEvent.type === 'selection') {
                 if (testEvent.anchor.nodeId) {
                     const selectionEvent = testEvent;
-                    setSelection(
+                    setDomSelection(
                         nodeIndexGenerator.getNode(selectionEvent.anchor.nodeId),
                         selectionEvent.anchor.offset,
                         nodeIndexGenerator.getNode(selectionEvent.focus.nodeId),

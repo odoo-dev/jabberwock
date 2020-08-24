@@ -5,7 +5,7 @@ import { Char } from '../../plugin-char/src/Char';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { DomEditable } from '../../plugin-dom-editable/src/DomEditable';
 import {
-    setSelection,
+    setDomSelection,
     nextTick,
     triggerEvent,
     triggerEvents,
@@ -534,8 +534,8 @@ describe('Iframe', async () => {
                 clientX: 10,
                 clientY: 10,
             });
-            setSelection(text1, 1, text1, 1);
-            setSelection(text1, 1, text1, 1);
+            setDomSelection(text1, 1, text1, 1);
+            setDomSelection(text1, 1, text1, 1);
             triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             await nextTick();
@@ -615,8 +615,8 @@ describe('Iframe', async () => {
                 clientX: 30,
                 clientY: 25,
             });
-            setSelection(text1, 1, text1, 1);
-            setSelection(text1, 1, text2, 4);
+            setDomSelection(text1, 1, text1, 1);
+            setDomSelection(text1, 1, text2, 4);
             triggerEvent(p1, 'click', { button: 2, detail: 0, clientX: 30, clientY: 25 });
             triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 30, clientY: 40 });
             await nextTick();
@@ -672,7 +672,7 @@ describe('Iframe', async () => {
                 componentZones: [['editable', ['main']]],
             });
             section.innerHTML = '<div>abcd</div>';
-            setSelection(section.firstChild.firstChild, 2, section.lastChild.firstChild, 2);
+            setDomSelection(section.firstChild.firstChild, 2, section.lastChild.firstChild, 2);
 
             editor.configure(Keymap, { platform: Platform.PC });
             await editor.start();

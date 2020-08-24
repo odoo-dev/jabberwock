@@ -4,7 +4,7 @@ import { DomEditable } from '../src/DomEditable';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Char } from '../../plugin-char/src/Char';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
-import { setSelection, nextTick, triggerEvent, triggerEvents } from './eventNormalizerUtils';
+import { setDomSelection, nextTick, triggerEvent, triggerEvents } from './eventNormalizerUtils';
 import { Keymap, Platform } from '../../plugin-keymap/src/Keymap';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
@@ -29,7 +29,7 @@ export async function selectAllWithKeyA(container: HTMLElement | ShadowRoot): Pr
         ctrlKey: true,
     });
     if (!ev.defaultPrevented) {
-        setSelection(
+        setDomSelection(
             container.querySelector('[contenteditable]').firstChild.firstChild,
             0,
             container.querySelector('[contenteditable]').lastChild.lastChild,
@@ -142,7 +142,7 @@ describe('DomEditable', () => {
 
             section.ownerDocument.getSelection().removeAllRanges();
             section.innerHTML = '<p>abcdef</p>';
-            setSelection(section.firstChild.firstChild, 1, section.firstChild.firstChild, 2);
+            setDomSelection(section.firstChild.firstChild, 1, section.firstChild.firstChild, 2);
 
             await editor.start();
             renderTextualSelection();
@@ -175,13 +175,13 @@ describe('DomEditable', () => {
                     componentZones: [['editable', ['main']]],
                 });
                 section.innerHTML = '<div>abcd</div>';
-                setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
+                setDomSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
                 await editor.start();
             });
             it('enter in the middle of the word', async () => {
                 const p = container.querySelector('section').firstChild;
                 const text = p.firstChild;
-                setSelection(text, 2, text, 2);
+                setDomSelection(text, 2, text, 2);
                 await nextTick();
                 triggerEvent(container.querySelector('section'), 'keydown', {
                     key: 'Enter',
@@ -197,7 +197,7 @@ describe('DomEditable', () => {
                 const newP = document.createElement('p');
                 container.querySelector('section').appendChild(newP);
                 newP.appendChild(text);
-                setSelection(text, 0, text, 0);
+                setDomSelection(text, 0, text, 0);
 
                 triggerEvent(container.querySelector('section'), 'input', {
                     inputType: 'insertParagraph',
@@ -227,7 +227,7 @@ describe('DomEditable', () => {
             it('shift + enter in the middle of a word', async () => {
                 const p = container.querySelector('section').firstChild;
                 const text = p.firstChild;
-                setSelection(text, 2, text, 2);
+                setDomSelection(text, 2, text, 2);
                 await nextTick();
                 triggerEvent(container.querySelector('section'), 'keydown', {
                     key: 'Enter',
@@ -242,7 +242,7 @@ describe('DomEditable', () => {
                 text.textContent = 'cd';
                 const br = document.createElement('br');
                 p.insertBefore(br, text);
-                setSelection(text, 0, text, 0);
+                setDomSelection(text, 0, text, 0);
 
                 triggerEvent(container.querySelector('section'), 'input', {
                     inputType: 'insertLineBreak',
@@ -348,7 +348,7 @@ describe('DomEditable', () => {
                     key: 'ArrowLeft',
                     code: 'ArrowLeft',
                 });
-                setSelection(
+                setDomSelection(
                     container.querySelector('section').firstChild.firstChild,
                     1,
                     container.querySelector('section').firstChild.firstChild,
@@ -836,7 +836,7 @@ describe('DomEditable', () => {
         });
         it('deleteContentBackward (SwiftKey) with special keymap', async () => {
             section.innerHTML = '<div>abcd</div>';
-            setSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
+            setDomSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
             editor = new JWEditor();
             editor.load(Html);
             editor.load(Char);
@@ -950,8 +950,8 @@ describe('DomEditable', () => {
                 clientX: 10,
                 clientY: 10,
             });
-            setSelection(text1, 1, text1, 1);
-            setSelection(text1, 1, text2, 1);
+            setDomSelection(text1, 1, text1, 1);
+            setDomSelection(text1, 1, text2, 1);
             triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
             triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
 
