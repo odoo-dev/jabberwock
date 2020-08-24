@@ -771,7 +771,7 @@ describe('Iframe', async () => {
             const params = {
                 context: editor.contextManager.defaultContext,
             };
-            expect(execSpy.args).to.eql([['command-b', params]]);
+            expect(execSpy.args).to.eql([['@focus'], ['command-b', params]]);
             await editor.stop();
         });
     });
