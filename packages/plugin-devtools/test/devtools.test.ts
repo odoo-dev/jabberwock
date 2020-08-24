@@ -21,6 +21,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { QWeb } from '@odoo/owl';
 import { parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
+import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 
 let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
@@ -60,6 +61,7 @@ describe('Plugin: DevTools', () => {
         editor.load(Italic);
         editor.load(Underline);
         editor.load(Paragraph);
+        editor.load(LineBreak);
         editor.load(DevTools);
         editor.load(DomEditable);
         editor.configure(DomLayout, {
@@ -227,6 +229,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tbody>' +
                 '<devtools-tr><devtools-td>breakable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>htmlTag</devtools-td><devtools-td>"TEST-CONTAINER"</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>mayContainContainers</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
@@ -851,6 +854,7 @@ describe('Plugin: DevTools', () => {
                 'deleteForward',
                 'hide',
                 'insert',
+                'insertLineBreak',
                 'insertParagraphBreak',
                 'insertText',
                 'removeFormat',

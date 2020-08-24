@@ -1,6 +1,7 @@
 import { VElement } from '../../core/src/VNodes/VElement';
 
 export class HeadingNode extends VElement {
+    mayContainContainers = false;
     level: number;
     constructor(params: { level: number }) {
         super({ htmlTag: 'H' + params.level });

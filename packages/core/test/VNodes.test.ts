@@ -21,6 +21,7 @@ import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine
 import { VNode } from '../src/VNodes/VNode';
 import { parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
+import { DividerNode } from '../../plugin-divider/src/DividerNode';
 
 describe('core', () => {
     describe('src', () => {
@@ -903,7 +904,7 @@ describe('core', () => {
                 describe('ancestors', () => {
                     it('should get a list of all ancestors of the node', async () => {
                         await testEditor(BasicEditor, {
-                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            contentBefore: '<div><p>a</p></div><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
                                 const editable = domEngine.components.editable[0];
@@ -911,7 +912,7 @@ describe('core', () => {
                                 const ancestors = a.ancestors();
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
-                                    'HeadingNode: 1',
+                                    'DividerNode',
                                     'VElement',
                                     'ZoneNode: main',
                                     'VElement',
@@ -924,15 +925,13 @@ describe('core', () => {
                     });
                     it('should get a list of all ancestors of the node satisfying the predicate', async () => {
                         await testEditor(BasicEditor, {
-                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            contentBefore: '<div><p>a</p></div><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
                                 const editable = domEngine.components.editable[0];
                                 const a = editable.firstLeaf();
                                 const ancestors = a.ancestors(ancestor => {
-                                    return (
-                                        !(ancestor instanceof HeadingNode) || ancestor.level !== 1
-                                    );
+                                    return !(ancestor instanceof DividerNode);
                                 });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
@@ -950,7 +949,7 @@ describe('core', () => {
                 describe('descendants', () => {
                     it('should get a list of all descendants of the root node ', async () => {
                         await testEditor(BasicEditor, {
-                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            contentBefore: '<div><p>a</p></div><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
                                 const editable = domEngine.components.editable[0];
@@ -958,7 +957,7 @@ describe('core', () => {
                                 expect(
                                     descendants.map(descendant => descendant.name),
                                 ).to.deep.equal([
-                                    'HeadingNode: 1',
+                                    'DividerNode',
                                     'ParagraphNode',
                                     'a',
                                     'HeadingNode: 2',
@@ -969,7 +968,7 @@ describe('core', () => {
                     });
                     it('should get a list of all non-HEADING2 descendants of the root node ', async () => {
                         await testEditor(BasicEditor, {
-                            contentBefore: '<h1><p>a</p></h1><h2>b</h2>',
+                            contentBefore: '<div><p>a</p></div><h2>b</h2>',
                             stepFunction: (editor: JWEditor) => {
                                 const domEngine = editor.plugins.get(Layout).engines.dom;
                                 const editable = domEngine.components.editable[0];
@@ -980,7 +979,7 @@ describe('core', () => {
                                 );
                                 expect(
                                     descendants.map(descendant => descendant.name),
-                                ).to.deep.equal(['HeadingNode: 1', 'ParagraphNode', 'a', 'b']);
+                                ).to.deep.equal(['DividerNode', 'ParagraphNode', 'a', 'b']);
                             },
                         });
                     });

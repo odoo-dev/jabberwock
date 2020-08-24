@@ -5,6 +5,9 @@ import { VersionableArray } from '../Memory/VersionableArray';
 
 export class ContainerNode extends AbstractNode {
     readonly childVNodes: VNode[] = new VersionableArray<VNode>();
+    // Set to false if the container is not allowed to have other containers as
+    // children.
+    mayContainContainers = true;
 
     //--------------------------------------------------------------------------
     // Browsing children.
@@ -318,15 +321,40 @@ export class ContainerNode extends AbstractNode {
      * VNode's parent, holding marker nodes into account.
      */
     _insertAtIndex(child: VNode, index: number): void {
-        if (child.parent) {
-            const currentIndex = child.parent.childVNodes.indexOf(child);
-            if (index && child.parent === this && currentIndex < index) {
-                index--;
+        // TODO: checking `this.parent` is a hack so it will go directly to
+        // `else` when parsing.
+        if (this.parent && !this.mayContainContainers && child instanceof ContainerNode) {
+            if (!this.parent) {
+                console.warn(
+                    `Cannot insert a container within a ${this.name}. ` +
+                        'This container having no parent, can also not be split.',
+                );
+                return;
             }
-            child.parent.removeChild(child);
+            if (this.hasChildren()) {
+                const childAtIndex = this.childVNodes[index];
+                const duplicate = childAtIndex && this.splitAt(childAtIndex);
+                if (!this.hasChildren()) {
+                    this.replaceWith(child);
+                } else if (duplicate && !duplicate.hasChildren()) {
+                    duplicate.replaceWith(child);
+                } else {
+                    this.after(child);
+                }
+            } else {
+                this.replaceWith(child);
+            }
+        } else {
+            if (child.parent) {
+                const currentIndex = child.parent.childVNodes.indexOf(child);
+                if (index && child.parent === this && currentIndex < index) {
+                    index--;
+                }
+                child.parent.removeChild(child);
+            }
+            this.childVNodes.splice(index, 0, child);
+            child.parent = this;
         }
-        this.childVNodes.splice(index, 0, child);
-        child.parent = this;
     }
     /**
      * Remove the nth child from this node.
