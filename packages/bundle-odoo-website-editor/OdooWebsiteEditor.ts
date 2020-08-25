@@ -59,8 +59,8 @@ import { Button } from '../plugin-button/src/Button';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
-    location: [Node, DomZonePosition];
-    customCommands: Record<CommandIdentifier, CommandImplementation>;
+    location?: [Node, DomZonePosition];
+    customCommands?: Record<CommandIdentifier, CommandImplementation>;
     afterRender?: Function;
     snippetMenuElement?: HTMLElement;
     snippetManipulators?: HTMLElement;
@@ -102,7 +102,7 @@ export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOptions) {
         super();
         class CustomPlugin extends JWPlugin {
-            commands = Object.assign(options.customCommands);
+            commands = Object.assign(options.customCommands || {});
         }
 
         this.configure({
