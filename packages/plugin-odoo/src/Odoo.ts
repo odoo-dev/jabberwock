@@ -63,7 +63,7 @@ const imageClassesLabels = {
 function getSingleImage(range: VRange): ImageNode | undefined {
     const next = range.start.nextLeaf();
     if (next instanceof ImageNode) {
-        const prev = range.end.nextLeaf();
+        const prev = range.end.previousLeaf();
         if (prev === next) {
             return next;
         }
