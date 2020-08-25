@@ -14,6 +14,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 import { RuleProperty } from '../../core/src/Mode';
+import { isTextVisible } from '../../utils/src/utils';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -28,6 +29,7 @@ function headingButton(level: number): ComponentDefinition {
                 label: 'Heading' + level,
                 commandId: 'applyHeadingStyle',
                 commandArgs: { level: level } as HeadingParams,
+                visible: isTextVisible,
                 selected: (editor: JWEditor): boolean => {
                     const range = editor.selection.range;
                     const startIsHeading = range.start.closest(HeadingNode)?.level === level;
@@ -80,6 +82,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                         label: 'Paragraph',
                         commandId: 'applyHeadingStyle',
                         commandArgs: { level: 0 } as HeadingParams,
+                        visible: isTextVisible,
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             if (range.start.parent) {

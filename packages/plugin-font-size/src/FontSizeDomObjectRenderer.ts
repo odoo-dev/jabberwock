@@ -6,6 +6,7 @@ import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/D
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
+import { isTextVisible } from '../../utils/src/utils';
 
 export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
@@ -20,6 +21,19 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
         super._onCommit(node, input);
         const editor = this.engine.editor;
         const range = editor.selection.range;
+
+        // Hide the input if the range is not in text.
+        // TODO: create a ActionableInputNode for this, that way the button
+        // group can be hidden as well.
+        const domVisible = input.style.display !== 'none';
+        const visible = isTextVisible(editor);
+        if (visible !== domVisible) {
+            if (visible) {
+                input.style.display = 'inline-block';
+            } else {
+                input.style.setProperty('display', 'none', 'important');
+            }
+        }
 
         let next = range.start.nextSibling(CharNode);
         if (next) {
@@ -56,7 +70,7 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
                 }
             }
         } else {
-            input.style.display = 'none';
+            input.style.setProperty('display', 'none', 'important');
         }
         input.value = fontSize || '';
     }

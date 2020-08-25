@@ -4,7 +4,7 @@ import { Format } from '../../core/src/Format';
 import { Modifier } from '../../core/src/Modifier';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { InlineNode } from './InlineNode';
-import { Constructor } from '../../utils/src/utils';
+import { Constructor, isTextVisible } from '../../utils/src/utils';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Modifiers } from '../../core/src/Modifiers';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
@@ -48,6 +48,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         label: 'Remove format',
                         commandId: 'removeFormat',
                         commandArgs: {} as RemoveFormatParams,
+                        visible: isTextVisible,
                         selected: (): boolean => false,
                         modifiers: [new Attributes({ class: 'fa fa-eraser fa-fw' })],
                     });
