@@ -5161,8 +5161,8 @@ describe('DomLayout', () => {
                     'second change',
                 );
                 expect(mutationNumber).to.equal(
-                    6,
-                    'add {section}, move {article}, remove {div, head, content, foot}',
+                    8,
+                    'add {section}, move {article}, remove {div, head, content, foot, a, b}',
                 );
 
                 mutationNumber = 0;

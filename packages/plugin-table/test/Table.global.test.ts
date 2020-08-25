@@ -324,6 +324,139 @@ describePlugin(Table, testEditor => {
                     /* eslint-enable prettier/prettier */
                 });
             });
+            it('should remove a rowspan cells and line', async () => {
+                await testEditor(BasicEditor, {
+                    /* eslint-disable prettier/prettier */
+                    contentBefore: [
+                        '<table>',
+                            '<tr>',
+                                '<td>(1, 0)[</td>',
+                                '<td>(1, 1)</td>',
+                                '<td rowspan="2">(1, 2)</td>',
+                                '<td>(1, 3)</td>',
+                            '</tr>',
+                            '<tr>',
+                                '<td>(2, 0)</td>',
+                                '<td>(2, 1)</td>',
+                                '<td>(2, 3)</td>',
+                            '</tr>',
+                            '<tr>',
+                                '<td>(3, 0)</td>',
+                                '<td>(3, 1)</td>',
+                                '<td>(3, 2)</td>',
+                                '<td>](3, 3)</td>',
+                            '</tr>',
+                        '</table>',
+                    ].join(''),
+                    stepFunction: async (editor: JWEditor): Promise<void> => {
+                        await editor.execCommand<Core>('deleteForward');
+                    },
+                    contentAfter: [
+                        '<table>',
+                            '<tbody>',
+                                '<tr>',
+                                    '<td>(1, 0)[]</td>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                '</tr>',
+                                '<tr>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                    '<td>(3, 3)</td>',
+                                '</tr>',
+                            '</tbody>',
+                        '</table>',
+                    ].join(''),
+                    /* eslint-enable prettier/prettier */
+                });
+            });
+            it('should remove a rowspan cells and line (trigger events)', async () => {
+                await testEditor(BasicEditor, {
+                    /* eslint-disable prettier/prettier */
+                    contentBefore: [
+                        '<table>',
+                            '<tr>',
+                                '<td>(1, 0)[</td>',
+                                '<td>(1, 1)</td>',
+                                '<td rowspan="2">(1, 2)</td>',
+                                '<td>(1, 3)</td>',
+                            '</tr>',
+                            '<tr>',
+                                '<td>(2, 0)</td>',
+                                '<td>(2, 1)</td>',
+                                '<td>(2, 3)</td>',
+                            '</tr>',
+                            '<tr>',
+                                '<td>(3, 0)</td>',
+                                '<td>(3, 1)</td>',
+                                '<td>(3, 2)</td>',
+                                '<td>](3, 3)</td>',
+                            '</tr>',
+                        '</table>',
+                    ].join(''),
+                    stepFunction: async (): Promise<void> => {
+                        const table = document.querySelector('table');
+                        const td = table.querySelector('td');
+
+                        triggerEvent(td, 'keydown', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                        });
+                        triggerEvent(td, 'keypress', {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                        });
+                        triggerEvent(td, 'beforeinput', {
+                            inputType: 'deleteContentBackward',
+                        });
+
+                        const tr1 = table.querySelector('tr');
+                        const tr2 = table.querySelector('tr:nth-child(2)');
+                        const tr3 = table.querySelector('tr:nth-child(3)');
+
+                        tr1.querySelector('td:nth-child(2)').firstChild.remove();
+                        tr1.querySelector('td:nth-child(3)').firstChild.remove();
+                        // tr1.querySelector('td:nth-child(3)').removeAttribute('rowspan');
+                        tr1.querySelector('td:nth-child(4)').firstChild.remove();
+
+                        tr2.querySelector('td').firstChild.remove();
+                        tr2.querySelector('td:nth-child(2)').firstChild.remove();
+                        tr2.querySelector('td:nth-child(3)').firstChild.remove();
+
+                        tr3.querySelector('td').firstChild.remove();
+                        tr3.querySelector('td:nth-child(2)').firstChild.remove();
+                        tr3.querySelector('td:nth-child(3)').firstChild.remove();
+
+                        tr2.remove();
+
+                        triggerEvent(td, 'input', { inputType: 'deleteContentBackward' });
+                        setDomSelection(td.firstChild, 6, td.firstChild, 6);
+
+                        await nextTick();
+                    },
+                    contentAfter: [
+                        '<table>',
+                            '<tbody>',
+                                '<tr>',
+                                    '<td>(1, 0)[]</td>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                '</tr>',
+                                '<tr>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                    '<td><br></td>',
+                                    '<td>(3, 3)</td>',
+                                '</tr>',
+                            '</tbody>',
+                        '</table>',
+                    ].join(''),
+                    /* eslint-enable prettier/prettier */
+                });
+            });
         });
     });
 });
