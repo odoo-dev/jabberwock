@@ -80,8 +80,8 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
     }
 
     /**
-     * Update button rendering after the command if the value of selected or
-     * enabled change.
+     * Update button rendering after the command if the value of selected,
+     * enabled or visible changed.
      */
     protected _updateActionables(): void {
         const pluginConfig = this.engine.editor.plugins.get(DomLayout).configuration;

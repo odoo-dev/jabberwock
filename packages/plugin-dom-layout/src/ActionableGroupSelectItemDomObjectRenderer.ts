@@ -18,13 +18,13 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean => node.ancestors(ActionableGroupNode).length >= 2;
 
-    actionableNodes = new Map<ActionableNode, HTMLElement>();
+    actionableGroupSelectItemNodes = new Map<ActionableNode, HTMLElement>();
 
     constructor(engine: DomObjectRenderingEngine) {
         super(engine);
         this.engine.editor.dispatcher.registerCommandHook(
             '@commit',
-            this._updateActionables.bind(this),
+            this._updateActionableGroupSelectItems.bind(this),
         );
     }
 
@@ -53,12 +53,12 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
                         }
                     };
                     select.addEventListener('change', handler);
-                    this.actionableNodes.set(item, el);
+                    this.actionableGroupSelectItemNodes.set(item, el);
                 },
                 detach: (el: HTMLOptionElement): void => {
                     const select = el.closest('select') || el.parentElement;
                     select.removeEventListener('change', handler);
-                    this.actionableNodes.delete(item);
+                    this.actionableGroupSelectItemNodes.delete(item);
                 },
             };
             domObject = domObjectActionable;
@@ -110,17 +110,18 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
     }
 
     /**
-     * Update option rendering after the command if the value of selected or
-     * enabled change.
+     * Update option rendering after the command if the value of selected,
+     * enabled or visible changed.
      *
-     * @param aactionable
+     * @param actionable
      * @param element
      */
-    protected _updateActionables(): void {
-        for (const [aactionable, element] of this.actionableNodes) {
+    protected _updateActionableGroupSelectItems(): void {
+        for (const [actionable, element] of this.actionableGroupSelectItemNodes) {
             const editor = this.engine.editor;
-            const select = aactionable.selected(editor);
-            const enable = aactionable.enabled(editor);
+            const select = actionable.selected(editor);
+            const enable = actionable.enabled(editor);
+            const visible = !!actionable.visible(editor);
             const attrSelected = element.getAttribute('selected');
             if (select.toString() !== attrSelected) {
                 if (select) {
@@ -136,6 +137,14 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
                     element.removeAttribute('disabled');
                 } else {
                     element.setAttribute('disabled', 'true');
+                }
+            }
+            const domVisible = element.style.display !== 'none';
+            if (visible !== domVisible) {
+                if (visible) {
+                    element.style.display = 'inline-block';
+                } else {
+                    element.style.display = 'none';
                 }
             }
         }
