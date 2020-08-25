@@ -9,11 +9,14 @@ import { OdooVideo } from '../../packages/plugin-odoo-video/src/OdooVideo';
 
 import '../../packages/plugin-toolbar/assets/Toolbar.css';
 import '../utils/fontawesomeAssets';
+import { OdooWebsiteEditor } from '../../packages/bundle-odoo-website-editor/OdooWebsiteEditor';
 
 const target = document.getElementById('wrapper');
 target.innerHTML = template;
 
-const editor = new BasicEditor({ editable: target });
+const editor = new OdooWebsiteEditor({
+    source: target,
+});
 editor.load(FontAwesome);
 editor.load(DevTools);
 editor.configure(DomLayout, {
@@ -33,6 +36,7 @@ editor.configure(Toolbar, {
                 'PreButton',
             ],
         ],
+        ['FontSizeInput'],
         ['BoldButton', 'ItalicButton', 'UnderlineButton'],
         ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
         ['OrderedListButton', 'UnorderedListButton'],
