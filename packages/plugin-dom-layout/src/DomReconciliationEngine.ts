@@ -193,18 +193,14 @@ export class DomReconciliationEngine {
                 }
             }
         }
+
         for (const id of removeObjects) {
             const object = this._objects[id];
-            if (!object.parent && removeObjects.includes(id)) {
-                object.parent = null;
-                for (const childId of object.children) {
-                    const child = this._objects[childId];
-                    if (
-                        (!child.parent || child.parent === id) &&
-                        !removeObjects.includes(childId)
-                    ) {
-                        removeObjects.push(childId);
-                    }
+            for (const childId of object.children) {
+                const child = this._objects[childId];
+                if ((!child.parent || child.parent === id) && !removeObjects.includes(childId)) {
+                    object.parent = null;
+                    removeObjects.push(childId);
                 }
             }
         }
@@ -254,7 +250,7 @@ export class DomReconciliationEngine {
         // Unvalidate object linked to domNodesToRedraw;
         for (const domNode of domNodesToRedraw) {
             const id = this._fromDom.get(domNode);
-            if (id) {
+            if (id && !removeObjects.includes(id)) {
                 if (this._diff[id]) {
                     this._diff[id].askCompleteRedrawing = true;
                 } else if (this._objects[id]) {
