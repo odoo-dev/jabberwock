@@ -1744,6 +1744,7 @@ export class EventNormalizer {
                 // gets invalidated by the redrawing of the DOM.
                 this._initialCaretPosition = this._getEventCaretPosition(ev);
                 this._pointerSelectionTimeout = new Timeout<EventBatch>(() => {
+                    if (ev.defaultPrevented) return { actions: [] };
                     return this._analyzeSelectionChange(ev);
                 });
                 this._triggerEventBatch(this._pointerSelectionTimeout.promise);

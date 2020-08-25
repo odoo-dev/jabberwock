@@ -12,18 +12,20 @@ export class ImageDomObjectRenderer extends NodeRenderer<DomObject> {
     predicate = ImageNode;
 
     async render(node: ImageNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
-        const select = (): void => {
-            this.engine.editor.execCommand(() => {
-                this.engine.editor.selection.select(node, node);
-            });
+        const select = async (ev: Event): Promise<void> => {
+            ev.preventDefault();
+            const selectImage = async (): Promise<void> => {
+                return this.engine.editor.selection.select(node, node);
+            };
+            await this.engine.editor.execCommand(selectImage);
         };
         const image: DomObject = {
             tag: 'IMG',
             attach: (el: HTMLElement): void => {
-                el.addEventListener('click', select);
+                el.addEventListener('mouseup', select, true);
             },
             detach: (el: HTMLElement): void => {
-                el.removeEventListener('click', select);
+                el.removeEventListener('mouseup', select, true);
             },
         };
         const isSelected = this.engine.editor.selection.range.selectedNodes(
