@@ -419,6 +419,12 @@ export class JWEditor {
                     throw error;
                 }
                 console.error(error);
+
+                await this.dispatcher.dispatchHooks('@error', {
+                    message: error.message,
+                    stack: error.stack,
+                });
+
                 const failedSlice = this.memory.sliceKey;
 
                 // When an error occurs, we go back to part of the functional memory.
@@ -435,6 +441,12 @@ export class JWEditor {
                     if (this._stage !== EditorStage.EDITION) {
                         throw revertError;
                     }
+
+                    await this.dispatcher.dispatchHooks('@error', {
+                        message: error.message,
+                        stack: error.stack,
+                    });
+
                     console.error(revertError);
                 }
             }
