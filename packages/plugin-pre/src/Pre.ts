@@ -12,6 +12,7 @@ import { PreSeparatorDomObjectRenderer } from './PreSeparatorDomObjectRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import { isTextVisible } from '../../utils/src/utils';
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -30,6 +31,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
                         name: 'pre',
                         label: 'Pre',
                         commandId: 'applyPreStyle',
+                        visible: isTextVisible,
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             const startPre = !!range.start.closest(PreNode);

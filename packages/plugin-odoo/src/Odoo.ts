@@ -23,6 +23,7 @@ import { InsertTableParams } from '../../plugin-table/src/Table';
 import { TableNode } from '../../plugin-table/src/TableNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { HeadingParams } from '../../plugin-heading/src/Heading';
+import { isTextVisible } from '../../utils/src/utils';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -70,7 +71,7 @@ function getSingleImage(range: VRange): ImageNode | undefined {
     }
 }
 /**
- * Check if there is at exactly one image within the editor range
+ * Check if there is exactly one image within the editor range
  */
 function isImageVisible(editor: JWEditor): boolean {
     return !!getSingleImage(editor.selection.range);
@@ -141,6 +142,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'textcolorpicker',
                         label: 'Text Color picker',
                         commandId: 'openTextColorPicker',
+                        visible: isTextVisible,
                         modifiers: [
                             new Attributes({ class: 'fa fa-font fa-fw dropdown-toggle' }),
                             new Attributes({ 'data-toggle': 'dropdown' }),
@@ -164,6 +166,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'backgroundcolorpicker',
                         label: 'Background Color picker',
                         commandId: 'openBackgroundColorPicker',
+                        visible: isTextVisible,
                         modifiers: [
                             new Attributes({ class: 'fa fa-paint-brush fa-fw dropdown-toggle' }),
                             new Attributes({ 'data-toggle': 'dropdown' }),

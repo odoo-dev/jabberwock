@@ -1,5 +1,6 @@
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
+import JWEditor from '../../core/src/JWEditor';
 
 export type Constructor<T> = new (...args) => T;
 
@@ -106,6 +107,13 @@ export function distinct<T>(array: Array<T>): Array<T> {
  */
 export function nodeName(node: Node): string {
     return node.nodeName.toUpperCase();
+}
+
+/**
+ * Check if the editor range has text.
+ */
+export function isTextVisible(editor: JWEditor): boolean {
+    return editor.selection.range.targetedNodes().some(node => node.textContent.length);
 }
 
 export function getDocument(node: Node): Document | ShadowRoot {
