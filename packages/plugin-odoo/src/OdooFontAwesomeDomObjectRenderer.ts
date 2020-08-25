@@ -13,16 +13,21 @@ export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRender
         const domObject: DomObject = await super.render(node, worker);
         if (domObject && 'children' in domObject) {
             const fa = domObject.children[1];
+
+            const dbclickCallback = () => {
+                const params = { image: node };
+                this.engine.editor.execCommand('openMedia', params);
+            };
             if ('tag' in fa) {
                 const savedAttach = fa.attach;
                 fa.attach = (el: HTMLElement): void => {
                     if (savedAttach) {
                         savedAttach(el);
                     }
-                    el.addEventListener('dblclick', () => {
-                        const params = { image: node };
-                        this.engine.editor.execCommand('openMedia', params);
-                    });
+                    el.addEventListener('dblclick', dbclickCallback);
+                };
+                fa.detach = (el: HTMLElement): void => {
+                    el.removeEventListener('dblclick', dbclickCallback);
                 };
             }
         }
