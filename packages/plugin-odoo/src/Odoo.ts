@@ -21,6 +21,8 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 import { InsertTableParams } from '../../plugin-table/src/Table';
 import { TableNode } from '../../plugin-table/src/TableNode';
+import { CharNode } from '../../plugin-char/src/CharNode';
+import { HeadingParams } from '../../plugin-heading/src/Heading';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -309,6 +311,11 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     attributes.classList.add('table table-bordered');
                     attributes.style.set('position', 'relative');
                 }
+            }
+        },
+        applyHeadingStyle: async (params: HeadingParams): Promise<void> => {
+            for (const node of params.context.range.targetedNodes(CharNode)) {
+                node.modifiers.get(Attributes).style.remove('font-size');
             }
         },
     };
