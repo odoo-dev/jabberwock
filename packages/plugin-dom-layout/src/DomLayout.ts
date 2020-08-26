@@ -22,7 +22,9 @@ import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSel
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { RuleProperty } from '../../core/src/Mode';
-import { isContentEditable } from '../../utils/src/utils';
+import { isContentEditable, nodeName } from '../../utils/src/utils';
+
+const FocusAndBlurEvents = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart'];
 
 export interface DomLayoutConfig extends JWPluginConfig {
     location?: [Node, DomZonePosition];
@@ -55,15 +57,36 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         '@commit': this._redraw,
     };
 
+    focusedNode: Node;
+    private _debounce: number;
+
     constructor(editor: JWEditor, configuration: T) {
         super(editor, configuration);
         this.loadables.layoutEngines.push(DomLayoutEngine);
         this.processKeydown = this.processKeydown.bind(this);
+        let debounceEvent: Event;
+        const debouncedCheckFocusChanged = this._checkFocusChanged.bind(this);
+        this._checkFocusChanged = (ev: Event): void => {
+            if (debounceEvent && 'tagName' in debounceEvent.target) {
+                return;
+            }
+            clearTimeout(this._debounce);
+            debounceEvent = ev;
+            this._debounce = setTimeout(() => {
+                clearTimeout(this._debounce);
+                debounceEvent = null;
+                debouncedCheckFocusChanged(ev);
+            });
+        };
     }
 
     async start(): Promise<void> {
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        FocusAndBlurEvents.forEach(eventName => {
+            window.addEventListener(eventName, this._checkFocusChanged, true);
+            window.addEventListener(eventName + '-iframe', this._checkFocusChanged, true);
+        });
         for (const component of this.configuration.components || []) {
             domLayoutEngine.loadComponent(component);
         }
@@ -76,9 +99,16 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         domLayoutEngine.location = this.configuration.location;
         await domLayoutEngine.start();
         window.addEventListener('keydown', this.processKeydown, true);
+        window.addEventListener('keydown-iframe', this.processKeydown, true);
     }
     async stop(): Promise<void> {
+        clearTimeout(this._debounce);
+        FocusAndBlurEvents.forEach(eventName => {
+            window.removeEventListener(eventName, this._checkFocusChanged, true);
+            window.removeEventListener(eventName + '-iframe', this._checkFocusChanged, true);
+        });
         window.removeEventListener('keydown', this.processKeydown, true);
+        window.removeEventListener('keydown-iframe', this.processKeydown, true);
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom;
         await domLayoutEngine.stop();
@@ -96,11 +126,20 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
      * @param event
      */
     async processKeydown(event: KeyboardEvent): Promise<CommandIdentifier> {
+        if (
+            this.focusedNode &&
+            ['INPUT', 'SELECT', 'TEXTAREA'].includes(nodeName(this.focusedNode))
+        ) {
+            // Don't process if use write into an input, select or textarea.
+            return;
+        }
         // If target == null we bypass the editable zone check.
         // This should only occurs when we receive an inferredKeydownEvent
         // created from an InputEvent send by a mobile device.
-        if (event.target && !this.isInEditable(event.target as Node)) {
-            // Don't process keydown if the user is outside the current editor editable Zone.
+        if (!this.focusedNode && event.target && !this.isInEditable(event.target as Node)) {
+            // Don't process keydown if the user is outside the current editor editable Zone and
+            // the current event does not target an editable node (for testing or external methods
+            // and library).
             return;
         }
         const keymap = this.dependencies.get(Keymap);
@@ -182,5 +221,51 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         await domLayoutEngine.redraw(params.changesLocations);
+    }
+    private _checkFocusChanged(ev: Event): void {
+        const layout = this.dependencies.get(Layout);
+        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        let focus: Node;
+
+        if (document.activeElement instanceof HTMLIFrameElement) {
+            const doc = document.activeElement.contentDocument;
+            const domSelection = doc.getSelection();
+            if (domSelection.anchorNode.nodeName === 'BODY') {
+                if (domSelection.anchorNode.contains(this.focusedNode)) {
+                    // On chrome, when the user  mousedown and grow the selection,
+                    // then value of getSelection() doesn't change. We keep the
+                    // previous selection if it's inside the current iframe.
+                    focus = this.focusedNode;
+                } else if (domLayoutEngine.getNodes(document.activeElement).length) {
+                    focus = document.activeElement;
+                }
+            } else if (domLayoutEngine.getNodes(domSelection.anchorNode).length) {
+                focus = domSelection.anchorNode;
+            } else if (domLayoutEngine.getNodes(doc.activeElement).length) {
+                focus = doc.activeElement;
+            } else if (domLayoutEngine.getNodes(document.activeElement).length) {
+                focus = doc.activeElement;
+            }
+        } else {
+            const domSelection = document.getSelection();
+            if (
+                (document.activeElement === domSelection.anchorNode ||
+                    document.activeElement.contains(domSelection.anchorNode)) &&
+                domLayoutEngine.getNodes(domSelection.anchorNode).length
+            ) {
+                focus = domSelection.anchorNode;
+            } else if (domLayoutEngine.getNodes(document.activeElement).length) {
+                focus = document.activeElement;
+            } else if (ev.target && domLayoutEngine.getNodes(ev.target as Node).length) {
+                focus = ev.target as Node;
+            }
+        }
+
+        if (focus && !this.focusedNode) {
+            this.editor.dispatcher.dispatch('@focus');
+        } else if (!focus && this.focusedNode) {
+            this.editor.dispatcher.dispatch('@blur');
+        }
+        this.focusedNode = focus;
     }
 }

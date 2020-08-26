@@ -36,7 +36,9 @@ export class Dispatcher {
     async dispatch(commandId: CommandIdentifier, params: CommandParams = {}): Promise<void> {
         const commands = this.commands[commandId];
         if (!commands) {
-            console.warn(`Command '${commandId}' not found.`);
+            if (commandId[0] !== '@') {
+                console.warn(`Command '${commandId}' not found.`);
+            }
             return;
         }
 
