@@ -284,6 +284,18 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     return [button];
                 },
             },
+            {
+                id: 'OdooDescriptionActionable',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'describe-image',
+                        label: 'Description',
+                        commandId: 'describeImage',
+                        visible: isImageVisible,
+                    });
+                    return [button];
+                },
+            },
         ],
         componentZones: [
             ['OdooLinkButton', ['actionables']],
