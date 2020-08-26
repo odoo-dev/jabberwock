@@ -24,6 +24,7 @@ import { TableNode } from '../../plugin-table/src/TableNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { HeadingParams } from '../../plugin-heading/src/Heading';
 import { isTextVisible } from '../../utils/src/utils';
+import { NoteEditableXmlDomParser } from './NoteEditableXmlDomParser';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -99,7 +100,7 @@ export interface SetImageClassParams extends CommandParams {
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
-        parsers: [OdooStructureXmlDomParser, OdooTranslationXmlDomParser],
+        parsers: [NoteEditableXmlDomParser, OdooStructureXmlDomParser, OdooTranslationXmlDomParser],
         renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
         components: [
             {
