@@ -7,7 +7,6 @@ import { InsertTextParams } from '../../plugin-char/src/Char';
 import { VSelectionParams } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
-import { JWEditor } from '../../core/src/JWEditor';
 import { RelativePosition, Point, VNode } from '../../core/src/VNodes/VNode';
 import { VRange } from '../../core/src/VRange';
 import { RuleProperty } from '../../core/src/Mode';

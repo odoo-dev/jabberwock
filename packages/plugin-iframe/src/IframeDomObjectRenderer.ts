@@ -8,6 +8,16 @@ import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { nodeName } from '../../utils/src/utils';
 
+const EventForwarded = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart', 'keydown'];
+const forwardEventOutsideIframe = (ev: FocusEvent): void => {
+    const customEvent = new CustomEvent(ev.type + '-iframe', {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+    });
+    (ev.currentTarget as Window).frameElement.dispatchEvent(customEvent);
+};
+
 export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
@@ -82,7 +92,8 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                                         iframe.contentWindow.close();
 
                                         setTimeout((): void => {
-                                            const doc = iframe.contentWindow.document;
+                                            const win = iframe.contentWindow;
+                                            const doc = win.document;
                                             // Remove all attribute from the shadow container.
                                             for (const attr of [...wrap.attributes]) {
                                                 wrap.removeAttribute(attr.name);
@@ -98,6 +109,18 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                                                 cancelable: true,
                                             });
                                             iframe.dispatchEvent(customEvent);
+                                            EventForwarded.forEach(eventName => {
+                                                win.addEventListener(
+                                                    eventName,
+                                                    forwardEventOutsideIframe,
+                                                    true,
+                                                );
+                                                win.addEventListener(
+                                                    eventName + '-iframe',
+                                                    forwardEventOutsideIframe,
+                                                    true,
+                                                );
+                                            });
                                         });
                                     } else {
                                         setTimeout(loadWithPreloadedMeta);
@@ -107,11 +130,16 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                         }
                     },
                     detach: (iframe: HTMLIFrameElement): void => {
-                        if (!iframe.src) {
-                            const body = iframe.contentWindow?.document.body;
-                            if (body) {
-                                iframe.append(...body.childNodes);
-                            }
+                        if (!iframe.src && iframe.contentWindow) {
+                            const win = iframe.contentWindow;
+                            EventForwarded.forEach(eventName => {
+                                win.removeEventListener(eventName, forwardEventOutsideIframe, true);
+                                win.removeEventListener(
+                                    eventName + '-iframe',
+                                    forwardEventOutsideIframe,
+                                    true,
+                                );
+                            });
                         }
                         iframe.removeEventListener('load', onload);
                     },
