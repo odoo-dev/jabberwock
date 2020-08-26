@@ -56,6 +56,7 @@ import { Iframe } from '../plugin-iframe/src/Iframe';
 import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
 import { Button } from '../plugin-button/src/Button';
+import { DocumentIcon } from '../plugin-document-icon/src/DocumentIcon';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -132,6 +133,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [FontSize],
                 [Link],
                 [FontAwesome],
+                [DocumentIcon],
                 [Divider],
                 [Image],
                 [Subscript],

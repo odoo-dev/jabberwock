@@ -12,7 +12,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OdooStructureXmlDomParser } from './OdooStructureXmlDomParser';
 import { OdooImageDomObjectRenderer } from './OdooImageDomObjectRenderer';
-import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
+import { OdooDocumentIconDomObjectRenderer } from './OdooDocumentIconDomObjectRenderer';
 import { OdooTranslationXmlDomParser } from './OdooTranslationXmlDomParser';
 import { DividerNode } from '../../plugin-divider/src/DividerNode';
 import { ImageNode } from '../../plugin-image/src/ImageNode';
@@ -21,6 +21,7 @@ import { CommandParams } from '../../core/src/Dispatcher';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 import { InsertTableParams } from '../../plugin-table/src/Table';
 import { TableNode } from '../../plugin-table/src/TableNode';
+import { OdooFontAwesomeDomObjectRenderer } from './OdooFontAwesomeDomObjectRenderer';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -97,7 +98,11 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     static dependencies = [Inline, Link, Xml];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
         parsers: [OdooStructureXmlDomParser, OdooTranslationXmlDomParser],
-        renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
+        renderers: [
+            OdooImageDomObjectRenderer,
+            OdooDocumentIconDomObjectRenderer,
+            OdooFontAwesomeDomObjectRenderer,
+        ],
         components: [
             {
                 id: 'OdooLinkButton',

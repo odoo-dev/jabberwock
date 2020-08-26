@@ -1,5 +1,5 @@
+import { FontAwesome } from './../src/FontAwesome';
 import { describePlugin } from '../../utils/src/testUtils';
-import { FontAwesome } from '../src/FontAwesome';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 import { Core } from '../../core/src/Core';
