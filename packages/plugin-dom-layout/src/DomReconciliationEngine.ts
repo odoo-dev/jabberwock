@@ -9,7 +9,6 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
 import { isTextNode } from '../../utils/src/Dom';
-import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -394,8 +393,14 @@ export class DomReconciliationEngine {
         const nodes: VNode[] = [];
         while (!object && domNode) {
             object = this._objects[this._fromDom.get(domNode)];
-            const locations = object && this._locations.get(object.object);
-            const items = object && (locations.length ? locations : this._items.get(object.object));
+            let items: Array<VNode | Modifier> = [];
+            while (object && items && !items.length) {
+                items = this._locations.get(object.object);
+                if (!items?.length) {
+                    items = this._items.get(object.object);
+                }
+                object = this._objects[object.parent];
+            }
             if (items?.length) {
                 for (const item of items) {
                     if (item instanceof AbstractNode) {
@@ -403,14 +408,16 @@ export class DomReconciliationEngine {
                     }
                 }
             } else {
-                if (domNode.previousSibling) {
-                    domNode = domNode.previousSibling;
+                if (domNode.nodeType === domNode.DOCUMENT_FRAGMENT_NODE) {
+                    domNode = (domNode as ShadowRoot).host;
+                } else if (domNode.nodeType === domNode.DOCUMENT_NODE) {
+                    domNode = (domNode as Document).defaultView.frameElement;
                 } else {
                     domNode = domNode.parentNode;
                 }
             }
         }
-        return nodes;
+        return [...new Set(nodes)];
     }
 
     /**
