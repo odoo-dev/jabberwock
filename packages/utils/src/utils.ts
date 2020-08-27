@@ -110,10 +110,25 @@ export function nodeName(node: Node): string {
 }
 
 /**
- * Check if the editor range has text.
+ * Check if the editor selection is in a textual context, meaning that it either
+ * contains text or is collapsed (in which case text can be inserted).
  */
-export function isTextVisible(editor: JWEditor): boolean {
-    return editor.selection.range.targetedNodes().some(node => node.textContent.length);
+export function isInTextualContext(editor: JWEditor): boolean {
+    const range = editor.selection.range;
+    if (range.isCollapsed()) {
+        return true;
+    } else {
+        const end = range.end.nextLeaf();
+        let node = range.start.nextLeaf();
+        while (node && node !== end) {
+            if (node.textContent.length) {
+                return true;
+            } else {
+                node = node.nextLeaf();
+            }
+        }
+        return false;
+    }
 }
 
 export function getDocument(node: Node): Document | ShadowRoot {

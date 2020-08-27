@@ -13,7 +13,7 @@ import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { isTextVisible } from '../../utils/src/utils';
+import { isInTextualContext } from '../../utils/src/utils';
 
 export type IndentParams = CommandParams;
 export type OutdentParams = CommandParams;
@@ -50,7 +50,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         name: 'indent',
                         label: 'Indent',
                         commandId: 'indent',
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         modifiers: [new Attributes({ class: 'fa fa-indent fa-fw' })],
                     });
                     return [button];
@@ -63,7 +63,7 @@ export class Indent<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         name: 'outdent',
                         label: 'Outdent',
                         commandId: 'outdent',
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         modifiers: [new Attributes({ class: 'fa fa-outdent fa-fw' })],
                     });
                     return [button];

@@ -6,7 +6,7 @@ import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/D
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
-import { isTextVisible } from '../../utils/src/utils';
+import { isInTextualContext } from '../../utils/src/utils';
 
 export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
@@ -26,7 +26,7 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
         // TODO: create a ActionableInputNode for this, that way the button
         // group can be hidden as well.
         const domVisible = input.style.display !== 'none';
-        const visible = isTextVisible(editor);
+        const visible = isInTextualContext(editor);
         if (visible !== domVisible) {
             if (visible) {
                 input.style.display = 'inline-block';
