@@ -44,7 +44,7 @@ import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { parseElement } from '../../utils/src/configuration';
+import { parseElement, parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 import { ChangesLocations } from '../../core/src/Memory/Memory';
@@ -2786,9 +2786,12 @@ describe('DomLayout', () => {
                         {
                             id: 'aaa',
                             async render(editor: JWEditor): Promise<VNode[]> {
-                                [div] = await editor.plugins
-                                    .get(Parser)
-                                    .parse('text/html', '<div><p>abcdef</p><p>123456</p></div>');
+                                const domContainer = document.createElement('div');
+                                domContainer.innerHTML = '<div><p>abcdef</p><p>123456</p></div>';
+                                [div] = await parseEditable(
+                                    editor,
+                                    domContainer.firstChild as HTMLElement,
+                                );
                                 return [div];
                             },
                         },
@@ -2817,7 +2820,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcd</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcd</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1);
@@ -2841,7 +2844,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcd</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcd</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(0);
@@ -2862,7 +2865,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>cdef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>cdef</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1);
@@ -2883,7 +2886,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abef</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1);
@@ -2905,7 +2908,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abef</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
@@ -2934,7 +2937,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>aef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>aef</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect([...pDom.childNodes]).to.deep.equal([text, text3], 'Use the same texts');
@@ -2958,7 +2961,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abef</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
@@ -2985,7 +2988,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abxef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abxef</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1);
@@ -3008,7 +3011,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdz</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdz</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1);
@@ -3030,7 +3033,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcxxxdef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcxxxdef</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -3041,7 +3044,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcxxdef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcxxdef</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P> (2)');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text (2)');
@@ -3128,7 +3131,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdef123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdef123456</p></div></jw-editor>',
                 );
 
                 await nextTick();
@@ -3149,7 +3152,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(!!text.parentNode).to.equal(false);
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p><br></p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(2, 'add <br>, remove text');
@@ -3165,7 +3168,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p><br></p><p>123456</p></div></jw-editor>',
                 );
 
                 const p2 = div.lastChild();
@@ -3176,14 +3179,14 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text2).to.equal(true, 'Use same text');
 
                 expect(mutationNumber).to.equal(4, 'add text; remove <br>; remove <p> & text');
             });
-            it('should merge to paragraphs with selection', async () => {
+            it('should merge two paragraphs with selection', async () => {
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
 
@@ -3197,13 +3200,13 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdef123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdef123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 renderTextualSelection();
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdef[]123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdef[]123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(3, 'update text; remove <p> & text');
@@ -3224,7 +3227,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdefgh</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdefgh</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1, 'update text');
@@ -3245,7 +3248,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcd</p><p>ef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcd</p><p>ef</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
@@ -3312,7 +3315,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p><b>abcdef</b></p><p><b>123456</b></p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p><b>abcdef</b></p><p><b>123456</b></p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild.firstChild).to.equal(text);
@@ -3333,7 +3336,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><b><p>abcdef</p><p>123456</p></b></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><b><p>abcdef</p><p>123456</p></b></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
 
@@ -3364,7 +3367,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p><b>abcd</b></p><p><b>ef</b></p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p><b>abcd</b></p><p><b>ef</b></p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === dBold).to.equal(true, 'Use same bold');
@@ -3387,7 +3390,7 @@ describe('DomLayout', () => {
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abc<br>def</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abc<br>def</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(3, 'update text; add <br> & text');
@@ -3408,7 +3411,7 @@ describe('DomLayout', () => {
                 await editor.execCommand(() => {
                     lineBreak.remove();
                     expect(container.innerHTML).to.equal(
-                        '<jw-editor><div><p>abc<br>def</p><p>123456</p></div></jw-editor>',
+                        '<jw-editor><div contenteditable="true"><p>abc<br>def</p><p>123456</p></div></jw-editor>',
                     );
                 });
 
@@ -3417,7 +3420,7 @@ describe('DomLayout', () => {
                 expect(pDom.childNodes.length).to.equal(2);
                 expect(pDom.firstChild === text).to.equal(true, 'Use same text');
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdef</p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(1, 'remove <br>');
@@ -3444,7 +3447,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p><br></p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(pDom.childNodes.length).to.equal(1);
@@ -3466,7 +3469,7 @@ describe('DomLayout', () => {
                 expect(location).to.deep.equal([pDom, 0], 'location with a new marker');
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p><br></p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p><br></p><p>123456</p></div></jw-editor>',
                 );
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
@@ -3524,7 +3527,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>a<b>bc</b>def</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>a<b>bc</b>def</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(mutationNumber).to.equal(
@@ -3551,7 +3554,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p>abcdef</p><p>123456</p></div></jw-editor>',
+                    '<jw-editor><div contenteditable="true"><p>abcdef</p><p>123456</p></div></jw-editor>',
                 );
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
                 expect(mutationNumber).to.equal(
