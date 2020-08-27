@@ -15,7 +15,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
-import { distinct, isTextVisible } from '../../utils/src/utils';
+import { distinct, isInTextualContext } from '../../utils/src/utils';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
@@ -108,7 +108,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle ordered list',
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.ORDERED } as ListParams,
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             const startIsList = List.isInList(ListType.ORDERED, range.start);
@@ -131,7 +131,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle unordered list',
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.UNORDERED } as ListParams,
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             const startIsList = List.isInList(ListType.UNORDERED, range.start);
@@ -154,7 +154,7 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle checkbox list',
                         commandId: 'toggleList',
                         commandArgs: { type: ListType.CHECKLIST } as ListParams,
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             const startIsList = List.isInList(ListType.CHECKLIST, range.start);

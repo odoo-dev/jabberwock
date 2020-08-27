@@ -9,7 +9,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
-import { isTextVisible } from '../../utils/src/utils';
+import { isInTextualContext } from '../../utils/src/utils';
 
 export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline];
@@ -31,7 +31,7 @@ export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
                         label: 'Toggle underline',
                         commandId: 'toggleFormat',
                         commandArgs: { FormatClass: UnderlineFormat } as FormatParams,
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             if (range.isCollapsed()) {

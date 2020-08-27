@@ -23,7 +23,7 @@ import { InsertTableParams } from '../../plugin-table/src/Table';
 import { TableNode } from '../../plugin-table/src/TableNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { HeadingParams } from '../../plugin-heading/src/Heading';
-import { isTextVisible } from '../../utils/src/utils';
+import { isInTextualContext } from '../../utils/src/utils';
 import { NoteEditableXmlDomParser } from './NoteEditableXmlDomParser';
 
 export enum OdooPaddingClasses {
@@ -143,7 +143,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'textcolorpicker',
                         label: 'Text Color picker',
                         commandId: 'openTextColorPicker',
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         modifiers: [
                             new Attributes({ class: 'fa fa-font fa-fw dropdown-toggle' }),
                             new Attributes({ 'data-toggle': 'dropdown' }),
@@ -167,7 +167,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'backgroundcolorpicker',
                         label: 'Background Color picker',
                         commandId: 'openBackgroundColorPicker',
-                        visible: isTextVisible,
+                        visible: isInTextualContext,
                         modifiers: [
                             new Attributes({ class: 'fa fa-paint-brush fa-fw dropdown-toggle' }),
                             new Attributes({ 'data-toggle': 'dropdown' }),
