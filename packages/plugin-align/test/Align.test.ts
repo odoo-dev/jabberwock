@@ -30,7 +30,8 @@ describePlugin(Align, testEditor => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><div contenteditable="false"><p>c[]d</p></div>',
                     stepFunction: (editor: JWEditor) => align(AlignType.LEFT)(editor),
-                    contentAfter: '<p>ab</p><div contenteditable="false"><p>c[]d</p></div>',
+                    // The selection was removed because it's in a non-editable node.
+                    contentAfter: '<p>ab</p><div contenteditable="false"><p>cd</p></div>',
                 });
             });
             it('should not change align style of a non-editable node', async () => {
@@ -46,7 +47,8 @@ describePlugin(Align, testEditor => {
                             return context.execCommand<Align>('align', { type: AlignType.LEFT });
                         });
                     },
-                    contentAfter: '<p>ab</p><p style="text-align: right;">c[]d</p>',
+                    // The selection was removed because it's in a non-editable node.
+                    contentAfter: '<p>ab</p><p style="text-align: right;">cd</p>',
                 });
             });
             it('should align several paragraphs left', async () => {

@@ -16,12 +16,13 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { VElement } from '../../core/src/VNodes/VElement';
-import { flat } from '../../utils/src/utils';
+import { flat, isContentEditable } from '../../utils/src/utils';
 import { Modifier } from '../../core/src/Modifier';
 import { RenderingEngineCache } from '../../plugin-renderer/src/RenderingEngineCache';
 import { ChangesLocations } from '../../core/src/Memory/Memory';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
+import { RuleProperty } from '../../core/src/Mode';
 
 export type DomPoint = [Node, number];
 export type DomLayoutLocation = [Node, DomZonePosition];
@@ -566,6 +567,20 @@ export class DomLayoutEngine extends LayoutEngine {
      */
     private _renderSelection(): void {
         const selection = this.editor.selection;
+        const range = selection.range;
+        if (selection.range.isCollapsed()) {
+            // Prevent rendering a collapsed selection in a non-editable context.
+            const target =
+                range.start.previousSibling() || range.end.nextSibling() || range.startContainer;
+            const isEditable = this.editor.mode.is(target, RuleProperty.EDITABLE);
+            const isInMain = target.ancestor(
+                node => node instanceof ZoneNode && node.managedZones.includes('main'),
+            );
+            if ((!isEditable && !isContentEditable(target)) || !isInMain) {
+                document.getSelection().removeAllRanges();
+                return;
+            }
+        }
         const domNodes = this._domReconciliationEngine.toDom(selection.anchor.parent);
         if (!domNodes.length) {
             document.getSelection().removeAllRanges();
