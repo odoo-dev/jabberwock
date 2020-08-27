@@ -26,7 +26,11 @@ export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRender
                     }
                     el.addEventListener('dblclick', dbclickCallback);
                 };
+                const savedDetach = fa.detach;
                 fa.detach = (el: HTMLElement): void => {
+                    if (savedDetach) {
+                        savedDetach(el);
+                    }
                     el.removeEventListener('dblclick', dbclickCallback);
                 };
             }
