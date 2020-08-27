@@ -8,13 +8,16 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CheckingContext } from '../../core/src/ContextManager';
 import { InsertParagraphBreakParams } from '../../core/src/Core';
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 import { RuleProperty } from '../../core/src/Mode';
 import { isInTextualContext } from '../../utils/src/utils';
+import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
+import { Paragraph } from '../../plugin-paragraph/src/Paragraph';
+import { Pre } from '../../plugin-pre/src/Pre';
+import { PreNode } from '../../plugin-pre/src/PreNode';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -47,6 +50,7 @@ function headingButton(level: number): ComponentDefinition {
 }
 
 export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
+    static dependencies = [Paragraph, Pre];
     commands = {
         applyHeadingStyle: {
             handler: this.applyHeadingStyle,
@@ -131,7 +135,12 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
      * @param params
      */
     applyHeadingStyle(params: HeadingParams): void {
-        for (const node of params.context.range.targetedNodes(ContainerNode)) {
+        for (const node of params.context.range.targetedNodes(
+            node =>
+                node instanceof HeadingNode ||
+                node instanceof ParagraphNode ||
+                node instanceof PreNode,
+        )) {
             const heading = this._createHeadingContainer(params.level);
             heading.modifiers = node.modifiers.clone();
             node.replaceWith(heading);
@@ -147,7 +156,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         const range = params.context.range;
         const heading = range.targetedNodes(HeadingNode)[0];
         const duplicate = heading.splitAt(range.start);
-        const newContainer = new this.editor.configuration.defaults.Container();
+        const newContainer = new ParagraphNode();
         duplicate.replaceWith(newContainer);
     }
 
@@ -162,7 +171,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
      */
     _createHeadingContainer(level: number): VNode {
         if (level === 0) {
-            return new this.editor.configuration.defaults.Container();
+            return new ParagraphNode();
         } else {
             return new HeadingNode({ level: level });
         }

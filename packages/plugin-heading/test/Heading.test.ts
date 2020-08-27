@@ -52,6 +52,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<p>[ab</p><h2>]cd</h2>',
                 });
             });
+            it('should not turn a div into a heading 0', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(0),
+                    contentAfter: '<div>[ab]</div>',
+                });
+            });
         });
         describe('level 1', () => {
             it('should turn a paragraph into a heading 1', async () => {
@@ -80,6 +87,13 @@ describePlugin(Heading, testEditor => {
                     contentBefore: '<p>[ab</p><h2>]cd</h2>',
                     stepFunction: applyHeadingStyle(1),
                     contentAfter: '<h1>[ab</h1><h2>]cd</h2>',
+                });
+            });
+            it('should not turn a div into a heading 1', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(1),
+                    contentAfter: '<div>[ab]</div>',
                 });
             });
         });
@@ -112,6 +126,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<h2>[ab</h2><h1>]cd</h1>',
                 });
             });
+            it('should not turn a div into a heading 2', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(2),
+                    contentAfter: '<div>[ab]</div>',
+                });
+            });
         });
         describe('level 3', () => {
             it('should turn a heading 1 into a heading 3', async () => {
@@ -140,6 +161,13 @@ describePlugin(Heading, testEditor => {
                     contentBefore: '<p>[ab</p><h1>]cd</h1>',
                     stepFunction: applyHeadingStyle(3),
                     contentAfter: '<h3>[ab</h3><h1>]cd</h1>',
+                });
+            });
+            it('should not turn a div into a heading 3', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(3),
+                    contentAfter: '<div>[ab]</div>',
                 });
             });
         });
@@ -172,6 +200,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<h4>[ab</h4><h1>]cd</h1>',
                 });
             });
+            it('should not turn a div into a heading 4', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(4),
+                    contentAfter: '<div>[ab]</div>',
+                });
+            });
         });
         describe('level 5', () => {
             it('should turn a heading 1 into a heading 5', async () => {
@@ -202,6 +237,13 @@ describePlugin(Heading, testEditor => {
                     contentAfter: '<h5>[ab</h5><h1>]cd</h1>',
                 });
             });
+            it('should not turn a div into a heading 5', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(5),
+                    contentAfter: '<div>[ab]</div>',
+                });
+            });
         });
         describe('level 6', () => {
             it('should turn a heading 1 into a heading 6', async () => {
@@ -230,6 +272,13 @@ describePlugin(Heading, testEditor => {
                     contentBefore: '<p>[ab</p><h1>]cd</h1>',
                     stepFunction: applyHeadingStyle(6),
                     contentAfter: '<h6>[ab</h6><h1>]cd</h1>',
+                });
+            });
+            it('should not turn a div into a heading 6', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[ab]</div>',
+                    stepFunction: applyHeadingStyle(6),
+                    contentAfter: '<div>[ab]</div>',
                 });
             });
         });
