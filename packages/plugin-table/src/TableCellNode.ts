@@ -13,8 +13,8 @@ export class TableCellNode extends ContainerNode {
     breakable = false;
     header: boolean;
     // Only the `managerCell` setter should modify the following private keys.
-    private __managerCell: TableCellNode;
-    private __managedCells = new VersionableSet<TableCellNode>();
+    private _managerCell: TableCellNode;
+    private _managedCells = new VersionableSet<TableCellNode>();
 
     constructor(params?: TableCellNodeParams) {
         super(params);
@@ -63,13 +63,13 @@ export class TableCellNode extends ContainerNode {
      * Return the cell that manages this cell, if any.
      */
     get managerCell(): TableCellNode {
-        return this.__managerCell;
+        return this._managerCell;
     }
     /**
      * Return the set of cells that this cell manages.
      */
     get managedCells(): Set<TableCellNode> {
-        return new Set(this.__managedCells);
+        return new Set(this._managedCells);
     }
     /**
      * Return the computed column span of this cell, in function of its managed
@@ -136,16 +136,16 @@ export class TableCellNode extends ContainerNode {
         const otherTable = newManager.ancestor(TableNode);
         if (!(newManager instanceof TableCellNode) || thisTable !== otherTable) return;
 
-        this.__managerCell = newManager;
+        this._managerCell = newManager;
         newManager.manage(this);
     }
     /**
      * Unmerge this cell from its manager.
      */
     unmerge(): void {
-        const manager = this.__managerCell;
+        const manager = this._managerCell;
         if (manager) {
-            this.__managerCell = null;
+            this._managerCell = null;
             // If we just removed this cell's manager, also remove this cell
             // from the old manager's managed cells.
             manager.unmanage(this);
@@ -159,7 +159,7 @@ export class TableCellNode extends ContainerNode {
      * @param cell
      */
     manage(cell: TableCellNode): void {
-        this.__managedCells.add(cell);
+        this._managedCells.add(cell);
 
         // Copy the manager's modifiers and properties.
         cell.modifiers = this.modifiers.clone();
@@ -197,7 +197,7 @@ export class TableCellNode extends ContainerNode {
      * @param cell
      */
     unmanage(cell: TableCellNode): void {
-        this.__managedCells.delete(cell);
+        this._managedCells.delete(cell);
 
         // Ensure reciprocity.
         if (cell.managerCell === this) {
