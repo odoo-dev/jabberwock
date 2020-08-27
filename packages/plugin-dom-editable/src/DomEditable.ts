@@ -84,8 +84,10 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
                 const params: InsertTextParams = { text: action.text };
                 return ['insertText', params];
             }
-            case 'selectAll':
-                return ['selectAll', {}];
+            case 'selectAll': {
+                const domLayout = this.dependencies.get(DomLayout);
+                return domLayout.focusedNode ? ['selectAll', {}] : null;
+            }
             case 'setSelection': {
                 const layout = this.dependencies.get(Layout);
                 const domLayoutEngine = layout.engines.dom as DomLayoutEngine;

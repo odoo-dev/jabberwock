@@ -107,15 +107,17 @@ export class DomReconciliationEngine {
             }
             const nodes = this._items.get(domObject);
             for (const linkedNode of nodes) {
-                const ids = this._renderedNodes.get(linkedNode);
-                if (ids) {
-                    for (const id of ids) {
-                        if (!oldObjects.has(id)) {
-                            const object = this._objects[id].object;
-                            this._rendererTreated.delete(object);
-                            this._objectIds.delete(object);
-                            this._renderedIds.delete(id);
-                            oldObjects.add(id);
+                if (linkedNode instanceof AbstractNode) {
+                    const ids = this._renderedNodes.get(linkedNode);
+                    if (ids) {
+                        for (const id of ids) {
+                            if (!oldObjects.has(id)) {
+                                const object = this._objects[id].object;
+                                this._rendererTreated.delete(object);
+                                this._objectIds.delete(object);
+                                this._renderedIds.delete(id);
+                                oldObjects.add(id);
+                            }
                         }
                     }
                 }

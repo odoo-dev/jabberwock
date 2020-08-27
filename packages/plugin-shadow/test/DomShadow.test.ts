@@ -686,9 +686,17 @@ describe('DomShadow', async () => {
                 triggerEvent(domEditable, 'mousedown', {
                     button: 2,
                     detail: 1,
-                    clientX: 10,
-                    clientY: 10,
+                    clientX: 20,
+                    clientY: 20,
                 });
+                setDomSelection(
+                    domEditable.firstChild.firstChild,
+                    0,
+                    domEditable.lastChild.lastChild,
+                    4,
+                );
+                await nextTick();
+
                 triggerEvent(domEditable, 'keydown', {
                     key: 'Control',
                     code: 'ControlLeft',

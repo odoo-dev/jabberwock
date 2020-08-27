@@ -25,6 +25,7 @@ export async function selectAllWithKeyA(container: HTMLElement | ShadowRoot): Pr
         container.querySelector('[contenteditable]').firstChild.firstChild,
         0,
     );
+    await nextTick();
     triggerEvent(container.querySelector('[contenteditable]'), 'keydown', {
         key: 'Control',
         code: 'ControlLeft',
@@ -886,17 +887,8 @@ describe('DomEditable', () => {
             const params = {
                 context: editor.contextManager.defaultContext,
             };
-            expect(execSpy.args).to.eql([
-                ['@focus'],
-                ['command-b', params],
-                ['@blur'],
-                // todo: There should not be a select all in the first editor.
-                // Correct this bug when having two editor at the same time
-                // becomes critical.
-                ['selectAll', {}],
-                ['@focus'],
-            ]);
-            expect(execSpy2.args).to.eql([['@focus'], ['@blur'], ['selectAll', {}]]);
+            expect(execSpy.args).to.eql([['@focus'], ['command-b', params], ['@blur']]);
+            expect(execSpy2.args).to.eql([['@focus'], ['selectAll', {}]]);
 
             await editor.stop();
             await editor2.stop();
