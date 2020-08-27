@@ -2,6 +2,7 @@ import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { FontAwesomeDomObjectRenderer } from '../../plugin-fontawesome/src/FontAwesomeDomObjectRenderer';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { RelativePosition } from '../../core/src/VNodes/VNode';
 
 export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRenderer {
     predicate = FontAwesomeNode;
@@ -14,11 +15,16 @@ export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRender
         if (domObject && 'children' in domObject) {
             const fa = domObject.children[1];
 
-            const dbclickCallback = () => {
-                const params = { image: node };
-                this.engine.editor.execCommand('openMedia', params);
-            };
             if ('tag' in fa) {
+                const dbclickCallback = () => {
+                    const params = {
+                        image: node,
+                        origin: 'fontAwesomeDoubleClick',
+                        htmlClass: fa.attributes.class,
+                    };
+                    this.engine.editor.execCommand('openMedia', params);
+                };
+
                 const savedAttach = fa.attach;
                 fa.attach = (el: HTMLElement): void => {
                     if (savedAttach) {
