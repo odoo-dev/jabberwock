@@ -1508,6 +1508,14 @@ describe('VDocument', () => {
                             '<p><span><b>ab</b></span></p><p><span><b>[]cd</b></span></p>',
                     });
                 });
+                it('should split a paragraph at its end, with a paragraph after it, and both have the same class', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p class="a">a[]</p><p class="a"><br></p>',
+                        stepFunction: insertParagraphBreak,
+                        contentAfter:
+                            '<p class="a">a</p><p class="a">[]<br></p><p class="a"><br></p>',
+                    });
+                });
             });
         });
         describe('Selection not collapsed', () => {
