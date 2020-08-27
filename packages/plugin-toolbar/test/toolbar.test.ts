@@ -95,7 +95,7 @@ describe('Toolbar', async () => {
                 '<jw-toolbar><jw-group><span class="label">label</span></jw-group></jw-toolbar>',
             );
         });
-        it('should display the bold button in the toolbar form "actionables" zone', async () => {
+        it('should display the bold button in the toolbar from "actionables" zone', async () => {
             editor.load(Bold);
             editor.load(DomLayout, {
                 components: [
@@ -119,8 +119,8 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<jw-button name="removeFormat" title="Remove format" class="fa fa-eraser fa-fw" aria-pressed="false"></jw-button>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="removeFormat" title="Remove format" class="fa fa-eraser fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
@@ -157,7 +157,7 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
@@ -171,7 +171,7 @@ describe('Toolbar', async () => {
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -199,13 +199,15 @@ describe('Toolbar', async () => {
             editor.configure(Toolbar, { layout: [[['BoldButton']]] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<select>',
+                    '<select style="display: none;">',
                     '<option></option>',
-                    '<option value="bold" class="fa fa-bold fa-fw">Toggle bold</option>',
+                    '<option value="bold" class="fa fa-bold fa-fw" style="display: none;">Toggle bold</option>',
                     '</select>',
                     '</jw-group>',
                     '</jw-toolbar>',
@@ -217,14 +219,16 @@ describe('Toolbar', async () => {
             editor.configure(Toolbar, { layout: [[[['BoldButton']]]] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<select>',
+                    '<select style="display: none;">',
                     '<option></option>',
                     '<optgroup>',
-                    '<option value="bold" class="fa fa-bold fa-fw">Toggle bold</option>',
+                    '<option value="bold" class="fa fa-bold fa-fw" style="display: none;">Toggle bold</option>',
                     '</optgroup>',
                     '</select>',
                     '</jw-group>',
@@ -238,12 +242,14 @@ describe('Toolbar', async () => {
             editor.configure(Toolbar, { layout: [['BoldButton', 'ItalicButton']] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
-                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
+                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -255,13 +261,15 @@ describe('Toolbar', async () => {
             editor.configure(Toolbar, { layout: [['BoldButton', 'custom label', 'ItalicButton']] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '<span class="label">custom label</span>',
-                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
@@ -271,11 +279,13 @@ describe('Toolbar', async () => {
             editor.configure(Toolbar, { layout: [[['label']]] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<select>',
+                    '<select style="display: none;">',
                     '<option></option>',
                     '<option class="label" disabled="true">label</option>',
                     '</select>',
@@ -284,7 +294,7 @@ describe('Toolbar', async () => {
                 ].join(''),
             );
         });
-        it('should display a seperator button in the toolbar', async () => {
+        it('should display a separator button in the toolbar', async () => {
             editor.load(Bold);
             editor.load(Italic);
             editor.configure(Toolbar, { layout: ['BoldButton', '|', 'ItalicButton'] });
@@ -293,53 +303,57 @@ describe('Toolbar', async () => {
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '<jw-separator role="separator"></jw-separator>',
-                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-toolbar>',
                 ].join(''),
             );
         });
-        it('should display a seperator button in the toolbar group', async () => {
+        it('should display a separator button in the toolbar group', async () => {
             editor.load(Bold);
             editor.load(Italic);
             editor.configure(Toolbar, { layout: [['BoldButton', '|', 'ItalicButton']] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '<jw-separator role="separator"></jw-separator>',
-                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false"></jw-button>',
+                    '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
             );
         });
-        it('should display a seperator button in the toolbar group select', async () => {
+        it('should display a separator button in the toolbar group select', async () => {
             editor.load(Bold);
             editor.load(Italic);
             editor.configure(Toolbar, { layout: [[['BoldButton', '|', 'ItalicButton']]] });
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                     '<jw-group>',
-                    '<select>',
+                    '<select style="display: none;">',
                     '<option></option>',
-                    '<option value="bold" class="fa fa-bold fa-fw">Toggle bold</option>',
+                    '<option value="bold" class="fa fa-bold fa-fw" style="display: none;">Toggle bold</option>',
                     '<option role="separator" disabled="true"></option>',
-                    '<option value="italic" class="fa fa-italic fa-fw">Toggle italic</option>',
+                    '<option value="italic" class="fa fa-italic fa-fw" style="display: none;">Toggle italic</option>',
                     '</select>',
                     '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
             );
         });
-        it('should display not display an empty group', async () => {
+        it('should not display an empty group', async () => {
             editor.configure(Toolbar, {
                 layout: [[[]], '|', []],
             });
@@ -384,33 +398,35 @@ describe('Toolbar', async () => {
             await editor.start();
             const toolbar = container.querySelector('jw-toolbar');
 
+            // TODO: ensure the group also disappears when all its components
+            // are display none.
             /* eslint-disable prettier/prettier */
             expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
                 [
                     '<jw-toolbar>',
                         '<jw-group>',
-                            '<select>',
+                            '<select style="display: none;">',
                                 '<option></option>',
-                                '<option value="paragraph" class="p" selected="true">Paragraph</option>',
-                                '<option value="heading1" class="h1">Heading1</option>',
-                                '<option value="heading2" class="h2">Heading2</option>',
+                                '<option value="paragraph" class="p" selected="true" style="display: none;">Paragraph</option>',
+                                '<option value="heading1" class="h1" style="display: none;">Heading1</option>',
+                                '<option value="heading2" class="h2" style="display: none;">Heading2</option>',
                                 '<option class="label" disabled="true">custom label in select</option>',
-                                '<option value="heading6" class="h6">Heading6</option>',
-                                '<option value="pre" class="pre">Pre</option>',
+                                '<option value="heading6" class="h6" style="display: none;">Heading6</option>',
+                                '<option value="pre" class="pre" style="display: none;">Pre</option>',
                             '</select>',
                         '</jw-group>',
                         '<jw-separator role="separator"></jw-separator>',
-                        '<jw-button name="heading1" class="h1" aria-pressed="false">Heading1</jw-button>',
+                        '<jw-button name="heading1" class="h1" aria-pressed="false" style="display: none;">Heading1</jw-button>',
                         '<jw-group>',
-                            '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false"></jw-button>',
-                            '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false"></jw-button>',
-                            '<jw-button name="underline" title="Toggle underline" class="fa fa-underline fa-fw" aria-pressed="false"></jw-button>',
+                            '<jw-button name="bold" title="Toggle bold" class="fa fa-bold fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
+                            '<jw-button name="italic" title="Toggle italic" class="fa fa-italic fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
+                            '<jw-button name="underline" title="Toggle underline" class="fa fa-underline fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                         '</jw-group>',
                         '<span class="label">custom label</span>',
                         '<jw-group>',
-                            '<jw-button name="indent" title="Indent" class="fa fa-indent fa-fw" aria-pressed="false"></jw-button>',
+                            '<jw-button name="indent" title="Indent" class="fa fa-indent fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                             '<jw-separator role="separator"></jw-separator>',
-                            '<jw-button name="outdent" title="Outdent" class="fa fa-outdent fa-fw" aria-pressed="false"></jw-button>',
+                            '<jw-button name="outdent" title="Outdent" class="fa fa-outdent fa-fw" aria-pressed="false" style="display: none;"></jw-button>',
                         '</jw-group>',
                     '</jw-toolbar>',
                 ].join(''),
