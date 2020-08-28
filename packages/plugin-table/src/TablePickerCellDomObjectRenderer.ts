@@ -111,7 +111,7 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
                 });
             }
         };
-        const onClick = async (ev: Event): Promise<void> => {
+        const onPickCell = async (ev: Event): Promise<void> => {
             const cell = ev.target as Element;
             await this.engine.editor.execCommand('insertTable', {
                 rowCount: cell.getAttribute('data-rowCount'),
@@ -121,11 +121,11 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
 
         domObject.attach = (el: HTMLTableCellElement): void => {
             el.addEventListener('mouseover', onMouseOver);
-            el.addEventListener('click', onClick);
+            el.addEventListener('mouseup', onPickCell);
         };
         domObject.detach = (el: HTMLTableCellElement): void => {
             el.removeEventListener('mouseover', onMouseOver);
-            el.removeEventListener('click', onClick);
+            el.removeEventListener('mouseup', onPickCell);
         };
         return domObject;
     }
