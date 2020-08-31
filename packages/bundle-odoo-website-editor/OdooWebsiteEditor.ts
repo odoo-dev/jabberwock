@@ -56,6 +56,7 @@ import { Iframe } from '../plugin-iframe/src/Iframe';
 import { ThemeNode } from '../plugin-theme/src/ThemeNode';
 import { DevicePreview } from '../plugin-device-preview/src/DevicePreview';
 import { Button } from '../plugin-button/src/Button';
+import { Loadables } from '../core/src/JWEditor';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -160,6 +161,16 @@ export class OdooWebsiteEditor extends JWEditor {
         this.configure(Toolbar, {
             layout: [...(options.toolbarLayout || defaultToolbarLayout)],
         });
+        const loadables: Loadables<Keymap> = {
+            shortcuts: [
+                {
+                    pattern: 'CTRL+K',
+                    selector: [(node: VNode): boolean => !Link.isLink(node)],
+                    commandId: 'openLinkDialog',
+                },
+            ],
+        };
+        this.load(loadables);
 
         const defaultTemplate = `
         <t-dialog><t t-zone="default"/></t-dialog>
