@@ -74,7 +74,7 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
      */
     _mapButton(referenceCell: TableCellNode, deleteTable: HTMLElement, commandId: string): void {
         deleteTable.addEventListener(
-            'click',
+            'mouseup',
             async (): Promise<void> =>
                 this.engine.editor.execWithRange(VRange.at(referenceCell), commandId),
         );
