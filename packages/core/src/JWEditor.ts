@@ -517,7 +517,7 @@ export class JWEditor {
             );
             await this.dispatcher.dispatchHooks('@commit', {
                 changesLocations: changesLocations,
-                commandNames: commandNames,
+                commandNames: [...commandNames],
             });
             clearTimeout(timeout);
         } catch (error) {
