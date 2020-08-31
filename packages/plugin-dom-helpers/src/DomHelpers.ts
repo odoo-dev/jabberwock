@@ -244,7 +244,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         position?: RelativePosition,
     ): Promise<VNode[]> {
         let parsedNodes: VNode[];
-        await context.execCommand(async () => {
+        const domHelpersInsertHtml = async (): Promise<void> => {
             let nodes: VNode[];
             if (domNode) {
                 nodes = this.getNodes(domNode);
@@ -274,8 +274,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
                         nodes[nodes.length - 1].append(parsedNode);
                     }
                     break;
+                default:
+                    break;
             }
-        });
+        };
+        await context.execCommand(domHelpersInsertHtml);
         return parsedNodes;
     }
     /**
