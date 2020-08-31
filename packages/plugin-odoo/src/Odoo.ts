@@ -25,6 +25,7 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { HeadingParams } from '../../plugin-heading/src/Heading';
 import { isInTextualContext } from '../../utils/src/utils';
 import { NoteEditableXmlDomParser } from './NoteEditableXmlDomParser';
+import { SpanFormat } from '../../plugin-span/src/SpanFormat';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -331,6 +332,10 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         },
         applyHeadingStyle: async (params: HeadingParams): Promise<void> => {
             for (const node of params.context.range.targetedNodes(CharNode)) {
+                node.modifiers
+                    .get(SpanFormat)
+                    .modifiers.get(Attributes)
+                    .style.remove('font-size');
                 node.modifiers.get(Attributes).style.remove('font-size');
             }
         },
