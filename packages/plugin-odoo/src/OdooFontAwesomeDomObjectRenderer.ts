@@ -17,11 +17,19 @@ export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRender
 
             if ('tag' in fa) {
                 const dbclickCallback = () => {
+                    const faZoomClassRegex = RegExp('fa-[0-9]x');
+                    function filterUnwantedClasses(className) {
+                        return !className.startsWith('fa') || faZoomClassRegex.test(className);
+                    }
+                    // Customize the look and behavior of the media modal when
+                    // the origin of the media modal is a FA icon double click
                     const params = {
-                        image: node,
-                        origin: 'fontAwesomeDoubleClick',
-                        htmlClass: fa.attributes.class,
+                        noImages: true,
+                        noDocuments: true,
+                        noVideos: true,
+                        htmlClass: [...fa.attributes.class].filter(filterUnwantedClasses).join(' '),
                     };
+
                     this.engine.editor.execCommand('openMedia', params);
                 };
 
