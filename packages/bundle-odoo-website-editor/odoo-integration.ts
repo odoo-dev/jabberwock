@@ -1,5 +1,5 @@
 import { BasicEditor } from '../bundle-basic-editor/BasicEditor';
-import { DevTools } from '../plugin-devtools/src/DevTools';
+// import { DevTools } from '../plugin-devtools/src/DevTools';
 import { OdooWebsiteEditor } from './OdooWebsiteEditor';
 import { VRange } from '../core/src/VRange';
 import { DomLayoutEngine } from '../plugin-dom-layout/src/DomLayoutEngine';
@@ -22,7 +22,7 @@ import { VElement } from '../core/src/VNodes/VElement';
 export {
     OdooWebsiteEditor,
     BasicEditor,
-    DevTools,
+    // DevTools,
     Layout,
     DomLayoutEngine,
     Renderer,
