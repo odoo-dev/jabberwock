@@ -95,7 +95,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 async render(): Promise<ActionableNode[]> {
                     const button = new ActionableNode({
                         name: 'unlink',
-                        label: 'Remove italic',
+                        label: 'Remove link',
                         commandId: 'unlink',
                         enabled: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
