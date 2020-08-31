@@ -7,14 +7,17 @@ import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
 import { nodeName } from '../../../utils/src/utils';
 import { hooks } from '@odoo/owl';
+import { ProcessKeydownParams } from '../../../plugin-dom-layout/src/DomLayout';
 
-////////////////////////////// todo: use API ///////////////////////////////////
+const keystrokeDiv = document.createElement('div');
+keystrokeDiv.id = 'keys_log';
 
 interface DevToolsState {
     closed: boolean; // Are the devtools open?
     height: number; // In px
     currentTab: string; // Name of the current tab
     commands: Array<[CommandIdentifier, CommandParams]>;
+    displayKeystrokes: boolean;
 }
 
 export class DevToolsComponent<T = {}> extends OwlComponent<T> {
@@ -33,18 +36,34 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
         currentTab: 'inspector',
         height: 300,
         commands: [], // Stack of all commands executed since init.
+        displayKeystrokes: false,
     };
-    localStorage = ['closed', 'currentTab', 'height'];
+    localStorage = ['closed', 'currentTab', 'height', 'displayKeystrokes'];
     // For resizing/opening (see toggleClosed)
     _heightOnLastMousedown: number;
 
     async willStart(): Promise<void> {
         this.env.editor.dispatcher.registerCommandHook('*', this.addCommand.bind(this));
         this.env.editor.dispatcher.registerCommandHook('@commit', this.render.bind(this));
+        this.env.editor.dispatcher.registerCommandHook(
+            '@layout-keydown',
+            this.displayKeystroke.bind(this),
+        );
         return super.willStart();
+    }
+    async mounted(): Promise<void> {
+        if (this.state.displayKeystrokes) {
+            if (!document.getElementById('keys_log')) {
+                document.body.appendChild(keystrokeDiv);
+            }
+        }
+        return super.mounted();
     }
     willUnmount(): void {
         this.state.commands = [];
+        if (this.state.displayKeystrokes && keystrokeDiv.parentNode === document.body) {
+            document.body.removeChild(keystrokeDiv);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -68,6 +87,45 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
     inspectDom(): void {
         this.state.currentTab = 'inspector';
         (this.inspectorRef.comp as InspectorComponent)?.inspectDom();
+    }
+    /**
+     * Toggle display keystrokes.
+     */
+    toggleKeystrokes(): void {
+        this.state.displayKeystrokes = !this.state.displayKeystrokes;
+        if (this.state.displayKeystrokes) {
+            if (!document.getElementById('keys_log')) {
+                document.body.appendChild(keystrokeDiv);
+            }
+        } else if (keystrokeDiv.parentNode === document.body) {
+            document.body.removeChild(keystrokeDiv);
+        }
+    }
+    /**
+     * Display the key hit on the screen.
+     *
+     * @param params
+     */
+    displayKeystroke(params: ProcessKeydownParams): void {
+        if (!this.state.displayKeystrokes) return;
+        const ev = params.event;
+        keystrokeDiv.textContent = '';
+        keystrokeDiv.className = '';
+        if (['Control', 'Alt', 'Shift', 'Meta'].includes(ev.key)) {
+            keystrokeDiv.className = 'has-key';
+            keystrokeDiv.textContent = `'${ev.key}'`;
+        } else if (ev.key) {
+            keystrokeDiv.className = 'has-key';
+            const keyModifiers = [
+                ev.metaKey ? 'Meta+' : false,
+                ev.ctrlKey ? 'Ctrl+' : false,
+                ev.shiftKey ? 'Shift+' : false,
+                ev.altKey ? 'Alt+' : false,
+            ]
+                .filter(mod => mod)
+                .join('');
+            keystrokeDiv.textContent = `${keyModifiers}'${ev.key}'`;
+        }
     }
     /**
      * Add the recent dispatching of the given command with the given arguments.
