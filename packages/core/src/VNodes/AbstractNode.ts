@@ -310,6 +310,8 @@ export abstract class AbstractNode extends EventMixin {
     }
     /**
      * Return the nodes adjacent to this VNode that satisfy the given predicate.
+     * Note: include this VNode within the return value, in order of appearance
+     * (if it satisfies the given predicate).
      */
     adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
     adjacents(predicate?: Predicate): VNode[];
@@ -319,6 +321,9 @@ export abstract class AbstractNode extends EventMixin {
         while (sibling && sibling.test(predicate)) {
             adjacents.unshift(sibling);
             sibling = sibling.previousSibling();
+        }
+        if (this.test(predicate)) {
+            adjacents.push(this as VNode);
         }
         sibling = this.nextSibling();
         while (sibling && sibling.test(predicate)) {

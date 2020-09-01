@@ -452,10 +452,10 @@ describe('core', () => {
                 });
                 describe('adjacents', () => {
                     it('should return the adjacent nodes', async () => {
-                        expect(h1.adjacents()).to.deep.equal([a, c, p]);
+                        expect(h1.adjacents()).to.deep.equal([a, h1, c, p]);
                         expect(h1.adjacents(CharNode)).to.deep.equal([a, c]);
-                        expect(b.adjacents()).to.deep.equal([], 'siblings without the markers');
-                        expect(root.adjacents()).to.deep.equal([]);
+                        expect(b.adjacents()).to.deep.equal([b], 'siblings without the markers');
+                        expect(root.adjacents()).to.deep.equal([root]);
                     });
                     it('should return the adjacent nodes', async () => {
                         const container = new ContainerNode();
@@ -473,8 +473,8 @@ describe('core', () => {
                         container.append(h3);
                         const e = new CharNode({ char: 'e' });
                         container.append(e);
-                        expect(c.adjacents()).to.deep.equal([a, h2, b, d, h3, e]);
-                        expect(c.adjacents(CharNode)).to.deep.equal([b, d]);
+                        expect(c.adjacents()).to.deep.equal([a, h2, b, c, d, h3, e]);
+                        expect(c.adjacents(CharNode)).to.deep.equal([b, c, d]);
                     });
                 });
                 describe('firstChild', () => {
