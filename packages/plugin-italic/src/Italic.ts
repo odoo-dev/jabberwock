@@ -35,10 +35,7 @@ export class Italic<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             if (range.isCollapsed()) {
-                                const pluginInline = editor.plugins.get(Inline);
-                                return !!pluginInline
-                                    .getCurrentModifiers(range)
-                                    ?.find(ItalicFormat);
+                                return !!range.modifiers?.find(ItalicFormat);
                             } else {
                                 const startIsFormated = !!range.start
                                     .nextSibling(InlineNode)

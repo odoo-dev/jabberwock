@@ -72,7 +72,7 @@ describePlugin(Link, testEditor => {
                     contentAfter: '<p>a<a href="url">labelb</a></p><p>[]c</p>',
                 });
             });
-            it('should insert a link and write a character a new <p> and another character', async () => {
+            it('should insert a link and write a character, a new <p> and another character', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[]d</p>',
                     stepFunction: async editor => {

@@ -35,8 +35,7 @@ export class Bold<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             if (range.isCollapsed()) {
-                                const pluginInline = editor.plugins.get(Inline);
-                                return !!pluginInline.getCurrentModifiers(range)?.find(BoldFormat);
+                                return !!range.modifiers?.find(BoldFormat);
                             } else {
                                 const startIsFormated = !!range.start
                                     .nextSibling(InlineNode)

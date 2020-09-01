@@ -35,10 +35,7 @@ export class Underline<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
                         selected: (editor: JWEditor): boolean => {
                             const range = editor.selection.range;
                             if (range.isCollapsed()) {
-                                const pluginInline = editor.plugins.get(Inline);
-                                return !!pluginInline
-                                    .getCurrentModifiers(range)
-                                    ?.find(UnderlineFormat);
+                                return !!range.modifiers?.find(UnderlineFormat);
                             } else {
                                 const startIsFormated = !!range.start
                                     .nextSibling(InlineNode)
