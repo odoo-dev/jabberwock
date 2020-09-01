@@ -40,17 +40,17 @@ describePlugin(Link, testEditor => {
                     contentAfter: '<p>a<a href="url">label[]</a>c</p>',
                 });
             });
-            it('should insert a link and write a character at the end of the link', async () => {
+            it('should insert a link and write a character after the link', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[]c</p>',
                     stepFunction: async editor => {
                         await insertLink(editor);
                         await insertText(editor, 'b');
                     },
-                    contentAfter: '<p>a<a href="url">labelb[]</a>c</p>',
+                    contentAfter: '<p>a<a href="url">label</a>b[]c</p>',
                 });
             });
-            it('should write two characters in the link', async () => {
+            it('should write two characters after the link', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[]d</p>',
                     stepFunction: async editor => {
@@ -58,10 +58,10 @@ describePlugin(Link, testEditor => {
                         await insertText(editor, 'b');
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p>a<a href="url">labelbc[]</a>d</p>',
+                    contentAfter: '<p>a<a href="url">label</a>bc[]d</p>',
                 });
             });
-            it('should insert a link and write a character at the end of the link then create a new <p>', async () => {
+            it('should insert a link and write a character after the link then create a new <p>', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[]c</p>',
                     stepFunction: async editor => {
@@ -69,7 +69,7 @@ describePlugin(Link, testEditor => {
                         await insertText(editor, 'b');
                         await insertParagraphBreak(editor);
                     },
-                    contentAfter: '<p>a<a href="url">labelb</a></p><p>[]c</p>',
+                    contentAfter: '<p>a<a href="url">label</a>b</p><p>[]c</p>',
                 });
             });
             it('should insert a link and write a character, a new <p> and another character', async () => {
@@ -81,7 +81,7 @@ describePlugin(Link, testEditor => {
                         await insertParagraphBreak(editor);
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p>a<a href="url">labelb</a></p><p>c[]d</p>',
+                    contentAfter: '<p>a<a href="url">label</a>b</p><p>c[]d</p>',
                 });
             });
             it.skip('should insert a link and write a character at the end of the link then insert a <br>', async () => {
@@ -118,14 +118,14 @@ describePlugin(Link, testEditor => {
                     contentAfter: '<p>a<a href="url">bc[]</a>d</p>',
                 });
             });
-            it('should set the link on two existing characters, loose range and add a character', async () => {
+            it('should set the link on two existing characters, lose range and add a character', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[bc]e</p>',
                     stepFunction: async editor => {
                         await convertToLink(editor);
                         await insertText(editor, 'd');
                     },
-                    contentAfter: '<p>a<a href="url">bcd[]</a>e</p>',
+                    contentAfter: '<p>a<a href="url">bc</a>d[]e</p>',
                 });
             });
         });
@@ -252,7 +252,7 @@ describePlugin(Link, testEditor => {
                 stepFunction: async editor => {
                     await insertText(editor, 'c');
                 },
-                contentAfter: '<p>a<a href="exist"><span>bc[]</span></a>d</p>',
+                contentAfter: '<p>a<span><a href="exist">b</a>c[]</span>d</p>',
             });
         });
         it('should parse correctly a span inside a Link then add a char 2', async () => {
@@ -270,25 +270,25 @@ describePlugin(Link, testEditor => {
                 stepFunction: async editor => {
                     await insertText(editor, 'd');
                 },
-                contentAfter: '<p>a<a href="exist"><span>b</span>cd[]</a>e</p>',
+                contentAfter: '<p>a<a href="exist"><span>b</span>c</a>d[]e</p>',
             });
         });
-        it('should add a character in the link', async () => {
+        it('should add a character after the link', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a<a href="exist">b[]</a>d</p>',
                 stepFunction: async editor => {
                     await insertText(editor, 'c');
                 },
-                contentAfter: '<p>a<a href="exist">bc[]</a>d</p>',
+                contentAfter: '<p>a<a href="exist">b</a>c[]d</p>',
             });
         });
-        it('should add a character in the link if range just after link', async () => {
+        it('should add a character after the link if range just after link', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a<a href="exist">b</a>[]d</p>',
                 stepFunction: async editor => {
                     await insertText(editor, 'c');
                 },
-                contentAfter: '<p>a<a href="exist">bc[]</a>d</p>',
+                contentAfter: '<p>a<a href="exist">b</a>c[]d</p>',
             });
         });
         it('should add a character in the link after a br tag', async () => {
