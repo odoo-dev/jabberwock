@@ -13,18 +13,12 @@ import { Loadables } from '../../core/src/JWEditor';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
-import { makeVersionable } from '../../core/src/Memory/Versionable';
 import { VRange } from '../../core/src/VRange';
 
 export interface FormatParams extends CommandParams {
     FormatClass: Constructor<Format>;
 }
 export type RemoveFormatParams = CommandParams;
-
-interface InlineCache {
-    modifiers: Modifiers | null;
-    style: CssStyle | null;
-}
 
 export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -34,9 +28,6 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         removeFormat: {
             handler: this.removeFormat,
         },
-    };
-    commandHooks = {
-        setSelection: this.resetCache,
     };
     loadables: Loadables<Renderer & Layout> = {
         components: [
@@ -58,22 +49,6 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         ],
         componentZones: [['RemoveFormatButton', ['actionables']]],
     };
-    /**
-     * When applying a modifier on a collapsed range, cache the calculation of
-     * the modifier in the following property. This value is reset each time the
-     * range changes in a document.
-     */
-    cache: InlineCache = makeVersionable({
-        modifiers: undefined,
-        style: undefined,
-    });
-
-    start(): Promise<void> {
-        this.editor.memory.attach(this.cache);
-        this.getCurrentModifiers();
-        this.getCurrentStyle();
-        return super.start();
-    }
 
     //--------------------------------------------------------------------------
     // Public
@@ -89,17 +64,14 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
         const FormatClass = params.FormatClass;
 
         if (range.isCollapsed()) {
-            if (!this.cache.modifiers) {
-                this.cache.modifiers = this.getCurrentModifiers(range);
-            }
-            const format = this.cache.modifiers?.find(FormatClass);
+            const format = range.modifiers?.find(FormatClass);
             if (format) {
-                this.cache.modifiers.remove(format);
+                range.modifiers.remove(format);
             } else {
-                if (!this.cache.modifiers) {
-                    this.cache.modifiers = new Modifiers();
+                if (!range.modifiers) {
+                    range.modifiers = new Modifiers();
                 }
-                this.cache.modifiers.prepend(FormatClass);
+                range.modifiers.prepend(FormatClass);
             }
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
@@ -137,10 +109,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
     }
     isAllFormat(FormatClass: Constructor<Modifier>, range = this.editor.selection.range): boolean {
         if (range.isCollapsed()) {
-            if (!this.cache.modifiers) {
-                return !!this.getCurrentModifiers(range)?.find(FormatClass);
-            }
-            return !!this.cache.modifiers.find(FormatClass);
+            return !!range.modifiers?.find(FormatClass);
         } else {
             const selectedInlines = range.selectedNodes(InlineNode);
             for (const char of selectedInlines) {
@@ -150,65 +119,6 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             }
             return !!selectedInlines.length;
         }
-    }
-    /**
-     * Get the modifiers for the next insertion.
-     */
-    getCurrentModifiers(range?: VRange): Modifiers | null {
-        const storeInCache = !range;
-        range = range || this.editor.selection.range;
-        if (this.cache.modifiers === undefined || range !== this.editor.selection.range) {
-            let inlineToCopyModifiers: VNode;
-            if (range.isCollapsed()) {
-                // TODO: LineBreakNode should have the formats as well.
-                inlineToCopyModifiers =
-                    range.start.previousSibling(node => !(node instanceof LineBreakNode)) ||
-                    range.start.nextSibling();
-            } else {
-                inlineToCopyModifiers = range.start.nextSibling();
-            }
-            let modifiers: Modifiers = null;
-            if (inlineToCopyModifiers && inlineToCopyModifiers instanceof InlineNode) {
-                modifiers = inlineToCopyModifiers.modifiers.clone();
-            }
-            if (storeInCache) {
-                this.cache.modifiers = modifiers;
-            }
-            return modifiers;
-        } else {
-            return this.cache.modifiers;
-        }
-    }
-    /**
-     * Get the styles for the next insertion.
-     */
-    getCurrentStyle(range?: VRange): CssStyle | null {
-        const storeInCache = !range;
-        range = range || this.editor.selection.range;
-        if (this.cache.style === undefined || range !== this.editor.selection.range) {
-            let inlineToCopyStyle: VNode;
-            if (range.isCollapsed()) {
-                inlineToCopyStyle = range.start.previousSibling() || range.start.nextSibling();
-            } else {
-                inlineToCopyStyle = range.start.nextSibling();
-            }
-            let style: CssStyle = null;
-            if (inlineToCopyStyle && inlineToCopyStyle instanceof InlineNode) {
-                style = inlineToCopyStyle.modifiers.find(Attributes)?.style.clone() || null;
-            }
-            if (storeInCache) {
-                this.cache.style = style;
-            }
-            return style;
-        }
-        return this.cache.style;
-    }
-    /**
-     * Each time the selection changes, we reset its format and style.
-     */
-    resetCache(): void {
-        this.cache.modifiers = undefined;
-        this.cache.style = undefined;
     }
     /**
      * Remove the formatting of the nodes in the range.

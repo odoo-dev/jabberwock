@@ -8,8 +8,6 @@ import { Modifiers } from '../../core/src/Modifiers';
 import { Loadables } from '../../core/src/JWEditor';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
-import { Attributes } from '../../plugin-xml/src/Attributes';
-import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 
 export interface InsertTextParams extends CommandParams {
     text: string;
@@ -47,55 +45,31 @@ export class Char<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     insertText(params: InsertTextParams): void {
         const range = params.context.range;
         const text = params.text;
-        const inline = this.editor.plugins.get(Inline);
-        let modifiers = inline.getCurrentModifiers(range);
-        // Ony preserved modifiers are applied at the start of a container.
-        if (modifiers && range.isCollapsed()) {
-            const previousSibling = range.start.previousSibling();
-            const isAfterLineBreak = previousSibling instanceof LineBreakNode;
-            const preservedModifiers = modifiers.filter(mod => {
-                if (isAfterLineBreak) {
-                    return mod.preserveAfterLineBreak;
-                } else if (previousSibling) {
-                    return mod.preserveAfterNode;
-                } else {
-                    return mod.preserveAfterParagraphBreak;
-                }
-            });
-            if (preservedModifiers.length) {
-                modifiers = new Modifiers(...preservedModifiers);
-            } else if (!previousSibling) {
-                modifiers = null;
-            }
-        }
-        if (params.formats) {
-            if (!modifiers) {
-                modifiers = new Modifiers();
-            }
-            modifiers.set(...params.formats.map(format => format.clone()));
-        }
-        const style = inline.getCurrentStyle(range);
         // Remove the contents of the range if needed.
         if (!range.isCollapsed()) {
             range.empty();
         }
+        if (params.formats) {
+            range.modifiers.set(...params.formats.map(format => format.clone()));
+        }
         // Split the text into CHAR nodes and insert them at the range.
         const characters = text.split('');
         const charNodes = characters.map(char => {
-            if (modifiers) {
-                return new CharNode({ char: char, modifiers: modifiers.clone() });
+            if (range.modifiers.length) {
+                return new CharNode({ char: char, modifiers: range.modifiers.clone() });
             } else {
                 return new CharNode({ char: char });
             }
         });
         charNodes.forEach(charNode => {
-            if (style?.length) {
-                charNode.modifiers.get(Attributes).style = style;
-            }
             range.start.before(charNode);
         });
         if (params.select && charNodes.length) {
             this.editor.selection.select(charNodes[0], charNodes[charNodes.length - 1]);
+        }
+        if (params.formats) {
+            // Invalidate the cache.
+            range.modifiers = undefined;
         }
     }
 }

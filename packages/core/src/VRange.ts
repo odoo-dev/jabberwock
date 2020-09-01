@@ -7,7 +7,9 @@ import { ContainerNode } from './VNodes/ContainerNode';
 import { AbstractNode } from './VNodes/AbstractNode';
 import { TableCellNode } from '../../plugin-table/src/TableCellNode';
 import { Mode, RuleProperty } from './Mode';
+import { Modifiers } from './Modifiers';
 import JWEditor from './JWEditor';
+import { SeparatorNode } from './VNodes/SeparatorNode';
 
 interface VRangeOptions {
     temporary?: boolean;
@@ -22,6 +24,15 @@ export class VRange {
      * when necessary.
      */
     temporary: boolean;
+    /**
+     * Modifiers applied to the range will affect the rendering of range.start.
+     * It works as a sort of a cache for the current editing modifiers. Using
+     * the `modifiers` property of the start node would be too dangerous as any
+     * command might erroneously push modifiers in there without realizing they
+     * just messed with the cache. This value is reset each time the range
+     * changes in a document.
+     */
+    private _modifiers: Modifiers | undefined;
     private readonly _mode: Mode | undefined;
 
     /**
@@ -107,6 +118,20 @@ export class VRange {
 
     get mode(): Mode {
         return this._mode || this.editor.mode;
+    }
+
+    /**
+     * Each time the selection changes, we reset its format and style.
+     * Get the modifiers for the next insertion.
+     */
+    get modifiers(): Modifiers {
+        if (this._modifiers === undefined) {
+            this._updateModifiers();
+        }
+        return this._modifiers;
+    }
+    set modifiers(modifiers: Modifiers | undefined) {
+        this._modifiers = modifiers;
     }
 
     //--------------------------------------------------------------------------
@@ -298,6 +323,7 @@ export class VRange {
         } else {
             reference.before(this.start);
         }
+        this.modifiers = undefined;
     }
     /**
      * Set the range's end point (in traversal order) at the given location,
@@ -324,6 +350,7 @@ export class VRange {
         } else {
             reference.after(this.end);
         }
+        this.modifiers = undefined;
     }
     /**
      * Extend this range in such a way that it includes the given node.
@@ -411,6 +438,8 @@ export class VRange {
      * nodes between start and end.
      */
     empty(): void {
+        // Compute the current modifiers so they are preserved after empty.
+        this._updateModifiers();
         const removableNodes = this.selectedNodes(node => {
             // TODO: Replace Table check with complex table selection support.
             return this.mode.is(node, RuleProperty.EDITABLE) && !(node instanceof TableCellNode);
@@ -482,5 +511,48 @@ export class VRange {
      */
     _isUnbreakable(node: VNode): boolean {
         return !this.mode.is(node, RuleProperty.BREAKABLE);
+    }
+    /**
+     * Update the `_modifiers` cache by recomputing their current state based on
+     * the surroundings of the current range.
+     */
+    private _updateModifiers(): void {
+        let nodeToCopyModifiers: VNode;
+        if (this.isCollapsed()) {
+            // TODO: SeparatorNode should have the formats as well.
+            nodeToCopyModifiers =
+                this.start.previousSibling(node => !(node instanceof SeparatorNode)) ||
+                this.start.nextSibling();
+        } else {
+            nodeToCopyModifiers = this.start.nextSibling();
+        }
+        let modifiers: Modifiers = new Modifiers();
+        if (nodeToCopyModifiers) {
+            modifiers = nodeToCopyModifiers.modifiers.clone();
+        }
+        if (this.isCollapsed()) {
+            // Only preserved modifiers are applied at the start of a container.
+            const previousSibling = this.start.previousSibling();
+            const nextSibling = this.end.nextSibling();
+            const isAfterLineBreak = previousSibling instanceof SeparatorNode;
+            const preservedModifiers = modifiers?.filter(mod => {
+                if (isAfterLineBreak) {
+                    return mod.preserveAfterLineBreak;
+                } else if (previousSibling) {
+                    return (
+                        mod.preserveAfterNode ||
+                        nextSibling?.modifiers?.some(otherMod => otherMod.isSameAs(mod))
+                    );
+                } else {
+                    return mod.preserveAfterParagraphBreak;
+                }
+            });
+            if (preservedModifiers?.length) {
+                modifiers = new Modifiers(...preservedModifiers);
+            } else {
+                modifiers = new Modifiers();
+            }
+        }
+        this._modifiers = modifiers;
     }
 }

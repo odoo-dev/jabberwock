@@ -227,7 +227,7 @@ describePlugin(TextColor, testEditor => {
                         '<p style="color: red;">a<span style="color: black;">b[]</span>c</p>',
                 });
             });
-            it('should write two characters in black background', async () => {
+            it('should write two characters in black', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="color: red">a[]d</p>',
                     stepFunction: async editor => {

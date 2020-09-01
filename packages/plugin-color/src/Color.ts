@@ -7,6 +7,7 @@ import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
+import { Modifiers } from '../../core/src/Modifiers';
 
 export interface ColorParams extends CommandParams {
     color?: string; // css-valid color name
@@ -16,7 +17,6 @@ export interface ColorConfig extends JWPluginConfig {
 }
 
 export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
-    static dependencies = [Inline];
     styleName: string; // css-valid style property name (eg: 'background-color')
 
     //--------------------------------------------------------------------------
@@ -48,14 +48,21 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
      */
     color(params: ColorParams): void {
         const color = params.color;
-        if (params.context.range.isCollapsed()) {
+        const range = params.context.range;
+        if (range.isCollapsed()) {
             // Set the style cache.
-            const inline = this.dependencies.get(Inline);
+            if (!range.modifiers) {
+                range.modifiers = new Modifiers();
+            }
+            const currentCache = range.modifiers.find(Attributes)?.style;
             // Convert CssStyle class into a true object for spread operator.
-            const currentCache = inline.cache.style ? inline.cache.style.toJSON() : {};
-            inline.cache.style = new CssStyle({ ...currentCache, [this.styleName]: color });
+            const currentCacheObject = currentCache?.toJSON() || {};
+            range.modifiers.get(Attributes).style = new CssStyle({
+                ...currentCacheObject,
+                [this.styleName]: color,
+            });
         } else {
-            let selectedNodes = params.context.range.selectedNodes();
+            let selectedNodes = range.selectedNodes();
             selectedNodes = selectedNodes.filter(node => !selectedNodes.includes(node.parent));
             // Color the highest ancestor.
             for (const node of selectedNodes) {
@@ -104,17 +111,15 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
         const hasColor = this.hasColor.bind(this);
 
         if (range.isCollapsed()) {
-            const inline = this.dependencies.get(Inline);
-
             if (range.start.ancestor(hasColor)) {
                 // Set the color style cache to the default color.
-                if (!inline.cache.style) {
-                    inline.cache.style = new CssStyle();
+                if (!range.modifiers) {
+                    range.modifiers = new Modifiers();
                 }
-                inline.cache.style.set(this.styleName, defaultColor);
-            } else if (inline.cache.style) {
+                range.modifiers.get(Attributes).style.set(this.styleName, defaultColor);
+            } else if (range.modifiers?.find(Attributes)?.style.length) {
                 // Unset the color style cache.
-                inline.cache.style.remove(this.styleName);
+                range.modifiers?.find(Attributes).style.remove(this.styleName);
             }
         } else {
             for (const node of params.context.range.selectedNodes()) {
