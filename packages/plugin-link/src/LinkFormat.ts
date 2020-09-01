@@ -3,6 +3,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { ModifierLevel } from '../../core/src/Modifier';
 
 export class LinkFormat extends Format {
+    preserveAfterNode = false;
     preserveAfterParagraphBreak = false;
     level = ModifierLevel.HIGH;
 
