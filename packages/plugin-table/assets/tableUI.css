@@ -18,30 +18,3 @@ table.table-picker td {
 table.table-picker td.highlight {
     background-color: #875A7B;
 }
-
-jw-toolbar.table-edit {
-    width: fit-content;
-    position: absolute;
-    background-color: white;
-    color: white;
-    -webkit-box-shadow: 2px 2px 5px 0px rgba(0,0,0,.4);
-    -moz-box-shadow: 2px 2px 5px 0px rgba(0,0,0,.4);
-    box-shadow: 2px 2px 5px 0px rgba(0,0,0,.4);
-    display: inline-block;
-    margin-top: -70px;
-}
-jw-toolbar.table-edit jw-button {
-    padding: 5px;
-    display: inline-block;
-    border: none;
-}
-jw-toolbar.table-edit jw-button:hover {
-    background-color: #f1f3f4;
-}
-jw-toolbar.table-edit jw-divider {
-    border-right: 1px solid;
-    opacity: 0.25;
-    color: black;
-    display: inline-block;
-    height: 27px;
-}

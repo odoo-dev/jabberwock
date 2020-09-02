@@ -7,11 +7,12 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TableSectionAttributes } from './TableRowXmlDomParser';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { Predicate } from '../../core/src/VNodes/VNode';
 
 export class TableDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
-    predicate = TableNode;
+    predicate: Predicate = TableNode;
 
     /**
      * Render the TableNode along with its contents (TableRowNodes).

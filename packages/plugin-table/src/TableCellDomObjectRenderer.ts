@@ -3,12 +3,8 @@ import { TableCellNode } from './TableCellNode';
 import {
     DomObjectRenderingEngine,
     DomObject,
-    DomObjectNative,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { VRange } from '../../core/src/VRange';
-import { Table } from './Table';
 import { TableNode } from './TableNode';
-import tableEditTemplate from '../assets/tableEdit.xml';
 
 export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -41,42 +37,6 @@ export class TableCellDomObjectRenderer extends NodeRenderer<DomObject> {
             domObject.attributes.rowspan = cell.rowspan.toString();
         }
 
-        // Add buttons.
-        const table = this.engine.editor.plugins.get(Table);
-        const range = this.engine.editor.selection.range;
-        if (table.inlineUI && range.isCollapsed() && range.isIn(cell)) {
-            const barContainer = document.createElement('bar-container');
-            barContainer.innerHTML = tableEditTemplate;
-            const editBar = barContainer.firstElementChild;
-            domObject.children.push({ dom: [editBar] });
-
-            this._mapButton(cell, editBar.querySelector('#deleteTable'), 'deleteTable');
-            this._mapButton(cell, editBar.querySelector('#addRowAbove'), 'addRowAbove');
-            this._mapButton(cell, editBar.querySelector('#addRowBelow'), 'addRowBelow');
-            this._mapButton(cell, editBar.querySelector('#deleteRow'), 'deleteRow');
-            this._mapButton(cell, editBar.querySelector('#addColumnBefore'), 'addColumnBefore');
-            this._mapButton(cell, editBar.querySelector('#addColumnAfter'), 'addColumnAfter');
-            this._mapButton(cell, editBar.querySelector('#deleteColumn'), 'deleteColumn');
-        }
         return domObject;
-    }
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    /**
-     * Map a button to a command.
-     *
-     * @param referenceCell
-     * @param selector
-     * @param commandId
-     */
-    _mapButton(referenceCell: TableCellNode, deleteTable: HTMLElement, commandId: string): void {
-        deleteTable.addEventListener(
-            'mouseup',
-            async (): Promise<void> =>
-                this.engine.editor.execWithRange(VRange.at(referenceCell), commandId),
-        );
     }
 }

@@ -29,6 +29,7 @@ import { SpanFormat } from '../../plugin-span/src/SpanFormat';
 import { OdooParallaxSpanXmlDomParser } from './OdooParallaxSpanXmlDomParser';
 import { isInPre, Pre } from '../../plugin-pre/src/Pre';
 import { isInBlockquote, Blockquote } from '../../plugin-blockquote/src/Blockquote';
+import { OdooTableDomObjectRenderer } from './OdooTableDomObjectRenderer';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -129,7 +130,11 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             OdooTranslationXmlDomParser,
             OdooParallaxSpanXmlDomParser,
         ],
-        renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
+        renderers: [
+            OdooImageDomObjectRenderer,
+            OdooFontAwesomeDomObjectRenderer,
+            OdooTableDomObjectRenderer,
+        ],
         components: [
             {
                 id: 'OdooLinkButton',
