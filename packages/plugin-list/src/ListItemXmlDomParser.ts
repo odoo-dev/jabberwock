@@ -5,6 +5,7 @@ import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Modifiers } from '../../core/src/Modifiers';
+import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 
 export class ListItemAttributes extends Attributes {}
 
@@ -35,7 +36,7 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
         const Container = this.engine.editor.configuration.defaults.Container;
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];
-            const parsedChild = await this.engine.parse(domChild);
+            let parsedChild = await this.engine.parse(domChild);
             if (parsedChild.length) {
                 if (this._isInlineListItem(domChild)) {
                     // Contiguous inline elements in a list item should be
@@ -49,6 +50,18 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     }
                     inlinesContainer.append(...parsedChild);
                 } else {
+                    const temporaryChilds = [];
+                    // Ensure the pragraph node are preserve inside list items
+                    for (let child of parsedChild) {
+                        if (child.test(ParagraphNode)) {
+                            const newParagraphNode = new ParagraphNode();
+                            newParagraphNode.append(child);
+                            child = newParagraphNode;
+                        }
+                        temporaryChilds.push(child);
+                    }
+                    parsedChild = temporaryChilds;
+
                     if (inlinesContainer && !['UL', 'OL'].includes(nodeName(domChild))) {
                         inlinesContainer.append(...parsedChild);
                     } else {

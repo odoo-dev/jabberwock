@@ -93,6 +93,31 @@ describePlugin(List, testEditor => {
                     contentAfter:
                         '<ul class="checklist"><li toto="1" class="unchecked">a</li><li toto="1" class="checked">a</li></ul>',
                 });
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<ul class="checklist"><li toto="1"><p>a</p></li><li toto="1" class="checked"><p>a</p></li></ul>',
+                    contentAfter:
+                        '<ul class="checklist"><li toto="1" class="unchecked"><p>a</p></li><li toto="1" class="checked"><p>a</p></li></ul>',
+                });
+            });
+            it('should parse an attribute on li', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<ul class="checklist"><li toto="1"><p class="bc">a</p></li></ul>',
+                    contentAfter:
+                        '<ul class="checklist"><li toto="1" class="unchecked"><p class="bc">a</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul class="checklist"><li toto="1"><p id="bc">a</p></li></ul>',
+                    contentAfter:
+                        '<ul class="checklist"><li toto="1" class="unchecked"><p id="bc">a</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<ul class="checklist"><li toto="1"><p data-custom="bc">a</p></li></ul>',
+                    contentAfter:
+                        '<ul class="checklist"><li toto="1" class="unchecked"><p data-custom="bc">a</p></li></ul>',
+                });
             });
             it('should parse a checked class on empty checklist item (without any content/container)', async () => {
                 await testEditor(BasicEditor, {
@@ -405,6 +430,46 @@ describePlugin(List, testEditor => {
                 engine.register(LinkXmlDomParser);
                 engine.register(SuperscriptXmlDomParser);
             });
+            it.skip('should keep span inside li', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><span>ab</span></li></ul>',
+                    contentAfter: '<ul><li><span>ab</span></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><span>ab</span><span>cd</span></li></ul>',
+                    contentAfter: '<ul><li><span>ab</span><span>cd</span></li></ul>',
+                });
+            });
+            it('should keep p inside li', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><p>ab</p></li></ul>',
+                    contentAfter: '<ul><li><p>ab</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><p>ab</p><p>cd</p></li></ul>',
+                    contentAfter: '<ul><li><p>ab</p><p>cd</p></li></ul>',
+                });
+            });
+            it('should keep div inside li', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><div>ab</div></li></ul>',
+                    contentAfter: '<ul><li><div>ab</div></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><div>ab</div><div>cd</div></li></ul>',
+                    contentAfter: '<ul><li><div>ab</div><div>cd</div></li></ul>',
+                });
+            });
+            it('should keep mixed tag inside li', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><div>ab</div><p>cd</p><span>ef</span></li></ul>',
+                    contentAfter: '<ul><li><div>ab</div><p>cd</p><span>ef</span></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><span>ab</span><p>cd</p><span>ef</span></li></ul>',
+                    contentAfter: '<ul><li><span>ab</span><p>cd</p><span>ef</span></li></ul>',
+                });
+            });
             it('should parse a complex list', async () => {
                 const element = document.createElement('div');
                 element.innerHTML = [
@@ -471,10 +536,26 @@ describePlugin(List, testEditor => {
 
                 const li1_1 = li1.children()[1];
                 expect(li1_1.toString()).to.equal('ParagraphNode');
-                expect(li1_1.children().length).to.equal(3);
-                expect(li1_1.children()[0].toString()).to.equal('a');
-                expect(li1_1.children()[1].toString()).to.equal('.');
-                expect(li1_1.children()[2].toString()).to.equal('b');
+                expect(li1_1.children().length).to.equal(1);
+                expect(li1_1.firstChild().children().length).to.equal(3);
+                expect(
+                    li1_1
+                        .firstChild()
+                        .children()[0]
+                        .toString(),
+                ).to.equal('a');
+                expect(
+                    li1_1
+                        .firstChild()
+                        .children()[1]
+                        .toString(),
+                ).to.equal('.');
+                expect(
+                    li1_1
+                        .firstChild()
+                        .children()[2]
+                        .toString(),
+                ).to.equal('b');
 
                 const li1_2 = li1.children()[2];
                 expect(li1_2.toString()).to.equal('HeadingNode: 1');
@@ -523,10 +604,26 @@ describePlugin(List, testEditor => {
 
                 const li3_1 = li3.children()[1];
                 expect(li3_1.toString()).to.equal('ParagraphNode');
-                expect(li3_1.children().length).to.equal(3);
-                expect(li3_1.children()[0].toString()).to.equal('b');
-                expect(li3_1.children()[1].toString()).to.equal('.');
-                expect(li3_1.children()[2].toString()).to.equal('2');
+                expect(li3_1.children().length).to.equal(1);
+                expect(li3_1.firstChild().children().length).to.equal(3);
+                expect(
+                    li3_1
+                        .firstChild()
+                        .children()[0]
+                        .toString(),
+                ).to.equal('b');
+                expect(
+                    li3_1
+                        .firstChild()
+                        .children()[1]
+                        .toString(),
+                ).to.equal('.');
+                expect(
+                    li3_1
+                        .firstChild()
+                        .children()[2]
+                        .toString(),
+                ).to.equal('2');
 
                 const li3_2 = li3.children()[2];
                 expect(li3_2.toString()).to.equal('HeadingNode: 1');
@@ -574,17 +671,17 @@ describePlugin(List, testEditor => {
                     '    <li>\n',
                     '        <h1>heading</h1> \n',
                     '        <span>a \n',
-                                '<a href="a"><sup><i><b>b</b></i></sup></a> \n',
-                                '<a href="b"><sup><i><b>c</b></i></sup></a>',
-                            '</span> \n',
-                            '<span>d \n',
-                                '<i>e</i> \n',
-                                'f \n',
-                                '<a href="c">g</a> \n',
-                                '<a href="d"">h</a>',
-                            '</span>',
+                    '<a href="a"><sup><i><b>b</b></i></sup></a> \n',
+                    '<a href="b"><sup><i><b>c</b></i></sup></a>',
+                    '</span> \n',
+                    '<span>d \n',
+                    '<i>e</i> \n',
+                    'f \n',
+                    '<a href="c">g</a> \n',
+                    '<a href="d"">h</a>',
+                    '</span>',
                     '    </li>',
-                    '</ol>'
+                    '</ol>',
                 ].join('');
                 /* eslint-enable prettier/prettier */
                 const node = (await engine.parse(element))[0];
@@ -2153,8 +2250,8 @@ describePlugin(List, testEditor => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<ul><li><p>[]a</p></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
-                            contentAfter: '<ul><li>[]<br></li></ul>',
+                            // Paragraphs in list items should be kep.
+                            contentAfter: '<ul><li><p>[]<br></p></li></ul>',
                         });
                     });
                     it('should merge a list item with its next list item', async () => {
@@ -2344,9 +2441,9 @@ describePlugin(List, testEditor => {
                             contentBefore:
                                 '<ul class="checklist"><li class="checked"><p>[]a</p></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
+                            // Paragraphs in list items should be kep.
                             contentAfter:
-                                '<ul class="checklist"><li class="checked">[]<br></li></ul>',
+                                '<ul class="checklist"><li class="checked"><p>[]<br></p></li></ul>',
                         });
                     });
                     it('should merge a checklist item with its next list item', async () => {
@@ -2579,15 +2676,15 @@ describePlugin(List, testEditor => {
                             contentBefore:
                                 '<ul><li><p>abc</p></li><li><p>def[]</p><p>ghi</p></li><li><p>klm</p></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
-                            contentAfter: '<ul><li>abc</li><li>def[]ghi</li><li>klm</li></ul>',
+                            // Paragraphs in list items should be kep.
+                            contentAfter:
+                                '<ul><li><p>abc</p></li><li><p>def[]ghi</p></li><li><p>klm</p></li></ul>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore:
                                 '<ul><li><h1>abc</h1></li><li><h2>def[]</h2><h3>ghi</h3></li><li><h4>klm</h4></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
-                            // Headings aren't, as they do provide extra information.
+                            // Headings also as they do provide extra information.
                             contentAfter:
                                 '<ul><li><h1>abc</h1></li><li><h2>def[]ghi</h2></li><li><h4>klm</h4></li></ul>',
                         });
@@ -2604,10 +2701,9 @@ describePlugin(List, testEditor => {
                             contentBefore:
                                 '<ul><li><p>abc</p></li><li><p><b>de</b>fg[]</p><p><b>hij</b>klm</p></li><li><p>nop</p></li></ul>',
                             stepFunction: deleteForward,
-                            // Two paragraphs in a list item = Two list items.
-                            // Paragraphs in list items are treated as nonsense.
+                            // Paragraphs in list items should be kep.
                             contentAfter:
-                                '<ul><li>abc</li><li><b>de</b>fg[]<b>hij</b>klm</li><li>nop</li></ul>',
+                                '<ul><li><p>abc</p></li><li><p><b>de</b>fg[]<b>hij</b>klm</p></li><li><p>nop</p></li></ul>',
                         });
                     });
                     it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
@@ -2653,16 +2749,15 @@ describePlugin(List, testEditor => {
                             contentBefore:
                                 '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="unchecked"><p>def[]</p><p>ghi</p></li><li class="checked"><p>klm</p></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
+                            // Paragraphs in list items should be kep.
                             contentAfter:
-                                '<ul class="checklist"><li class="checked">abc</li><li class="unchecked">def[]ghi</li><li class="checked">klm</li></ul>',
+                                '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="unchecked"><p>def[]ghi</p></li><li class="checked"><p>klm</p></li></ul>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore:
                                 '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="checked"><h2>def[]</h2><h3>ghi</h3></li><li class="checked"><h4>klm</h4></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
-                            // Headings aren't, as they do provide extra information.
+                            // Headings also, as they do provide extra information.
                             contentAfter:
                                 '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="checked"><h2>def[]ghi</h2></li><li class="checked"><h4>klm</h4></li></ul>',
                         });
@@ -2672,7 +2767,7 @@ describePlugin(List, testEditor => {
                             contentBefore:
                                 '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="unchecked"><h2>def[]</h2><h3>ghi</h3></li><li class="checked"><h4>klm</h4></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
+                            // Paragraphs in list items should be kep.
                             // unchecked folowed by checked
                             contentAfter:
                                 '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="unchecked"><h2>def[]ghi</h2></li><li class="checked"><h4>klm</h4></li></ul>',
@@ -2681,7 +2776,7 @@ describePlugin(List, testEditor => {
                             contentBefore:
                                 '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="checked"><h2>def[]</h2><h3>ghi</h3></li><li class="unchecked"><h4>klm</h4></li></ul>',
                             stepFunction: deleteForward,
-                            // Paragraphs in list items are treated as nonsense.
+                            // Paragraphs in list items should be kep.
                             // checked folowed by unchecked
                             contentAfter:
                                 '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="checked"><h2>def[]ghi</h2></li><li class="unchecked"><h4>klm</h4></li></ul>',
@@ -2727,9 +2822,9 @@ describePlugin(List, testEditor => {
                                 '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="unchecked"><p><b>de</b>fg[]</p><p><b>hij</b>klm</p></li><li class="checked"><p>nop</p></li></ul>',
                             stepFunction: deleteForward,
                             // Two paragraphs in a checklist item = Two list items.
-                            // Paragraphs in list items are treated as nonsense.
+                            // Paragraphs in list items should be kep.
                             contentAfter:
-                                '<ul class="checklist"><li class="checked">abc</li><li class="unchecked"><b>de</b>fg[]<b>hij</b>klm</li><li class="checked">nop</li></ul>',
+                                '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="unchecked"><p><b>de</b>fg[]<b>hij</b>klm</p></li><li class="checked"><p>nop</p></li></ul>',
                         });
                     });
                     it('should merge a paragraph starting with bold text into a checklist item with ending without formatting', async () => {
@@ -3521,8 +3616,8 @@ describePlugin(List, testEditor => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><p>a[]</p></li></ol>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ol><li>[]<br></li></ol>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ol><li><p>[]<br></p></li></ol>',
                             });
                         });
                         it('should merge a list item with its previous list item', async () => {
@@ -3859,15 +3954,16 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ol><li><p>abc</p></li><li><p>def</p><p>[]ghi</p></li><li><p>klm</p></li></ol>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ol><li>abc</li><li>def[]ghi</li><li>klm</li></ol>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter:
+                                    '<ol><li><p>abc</p></li><li><p>def[]ghi</p></li><li><p>klm</p></li></ol>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li><h1>abc</h1></li><li><h2>def</h2><h3>[]ghi</h3></li><li><h4>klm</h4></li></ol>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                // Headings aren't, as they do provide extra information.
+                                // Paragraphs in list items should be kep.
+                                // Headings also, as they do provide extra information.
                                 contentAfter:
                                     '<ol><li><h1>abc</h1></li><li><h2>def[]ghi</h2></li><li><h4>klm</h4></li></ol>',
                             });
@@ -3885,9 +3981,9 @@ describePlugin(List, testEditor => {
                                     '<ol><li><p>abc</p></li><li><p><b>de</b>fg</p><p><b>[]hij</b>klm</p></li><li><p>nop</p></li></ol>',
                                 stepFunction: deleteBackward,
                                 // Two paragraphs in a list item = Two list items.
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ol><li>abc</li><li><b>de</b>fg[]<b>hij</b>klm</li><li>nop</li></ol>',
+                                    '<ol><li><p>abc</p></li><li><p><b>de</b>fg[]<b>hij</b>klm</p></li><li><p>nop</p></li></ol>',
                             });
                         });
                         it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
@@ -3955,8 +4051,8 @@ describePlugin(List, testEditor => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ul><li><p>a[]</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>[]<br></li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ul><li><p>[]<br></p></li></ul>',
                             });
                         });
                         it('should merge a list item with its previous list item', async () => {
@@ -4229,15 +4325,16 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul><li><p>abc</p></li><li><p>def</p><p>[]ghi</p></li><li><p>klm</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>abc</li><li>def[]ghi</li><li>klm</li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter:
+                                    '<ul><li><p>abc</p></li><li><p>def[]ghi</p></li><li><p>klm</p></li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li><h1>abc</h1></li><li><h2>def</h2><h3>[]ghi</h3></li><li><h4>klm</h4></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                // Headings aren't, as they do provide extra information.
+                                // Paragraphs in list items should be kep.
+                                // Headings also, as they do provide extra information.
                                 contentAfter:
                                     '<ul><li><h1>abc</h1></li><li><h2>def[]ghi</h2></li><li><h4>klm</h4></li></ul>',
                             });
@@ -4255,9 +4352,9 @@ describePlugin(List, testEditor => {
                                     '<ul><li><p>abc</p></li><li><p><b>de</b>fg</p><p><b>[]hij</b>klm</p></li><li><p>nop</p></li></ul>',
                                 stepFunction: deleteBackward,
                                 // Two paragraphs in a list item = Two list items.
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ul><li>abc</li><li><b>de</b>fg[]<b>hij</b>klm</li><li>nop</li></ul>',
+                                    '<ul><li><p>abc</p></li><li><p><b>de</b>fg[]<b>hij</b>klm</p></li><li><p>nop</p></li></ul>',
                             });
                         });
                         it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
@@ -4344,9 +4441,9 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked"><p>a[]</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ul class="checklist"><li class="checked">[]<br></li></ul>',
+                                    '<ul class="checklist"><li class="checked"><p>[]<br></p></li></ul>',
                             });
                         });
                         it('should merge a list item with its previous list item', async () => {
@@ -4781,16 +4878,16 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="checked"><p>def</p><p>[]ghi</p></li><li class="checked"><p>klm</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ul class="checklist"><li class="checked">abc</li><li class="checked">def[]ghi</li><li class="checked">klm</li></ul>',
+                                    '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="checked"><p>def[]ghi</p></li><li class="checked"><p>klm</p></li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="checked"><h2>def</h2><h3>[]ghi</h3></li><li class="checked"><h4>klm</h4></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                // Headings aren't, as they do provide extra information.
+                                // Paragraphs in list items should be kep.
+                                // Headings also, as they do provide extra information.
                                 contentAfter:
                                     '<ul class="checklist"><li class="checked"><h1>abc</h1></li><li class="checked"><h2>def[]ghi</h2></li><li class="checked"><h4>klm</h4></li></ul>',
                             });
@@ -4808,9 +4905,9 @@ describePlugin(List, testEditor => {
                                     '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="checked"><p><b>de</b>fg</p><p><b>[]hij</b>klm</p></li><li class="checked"><p>nop</p></li></ul>',
                                 stepFunction: deleteBackward,
                                 // Two paragraphs in a list item = Two list items.
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ul class="checklist"><li class="checked">abc</li><li class="checked"><b>de</b>fg[]<b>hij</b>klm</li><li class="checked">nop</li></ul>',
+                                    '<ul class="checklist"><li class="checked"><p>abc</p></li><li class="checked"><p><b>de</b>fg[]<b>hij</b>klm</p></li><li class="checked"><p>nop</p></li></ul>',
                             });
                         });
                         it('should merge a paragraph starting with bold text into a list item with ending without formatting', async () => {
@@ -4842,23 +4939,23 @@ describePlugin(List, testEditor => {
                                 contentAfter: '<ul><li>a[]b</li></ul>',
                             });
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li>a</li></ul><ol><li><p>[]b</p></li></ol>',
+                                contentBefore: '<ul><li>x</li></ul><ol><li><p>[]y</p></li></ol>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>a[]b</li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ul><li>x[]y</li></ul>',
                             });
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><p>a</p></li></ul><ol><li>[]b</li></ol>',
+                                contentBefore: '<ul><li><p>u</p></li></ul><ol><li>[]v</li></ol>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>a[]b</li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ul><li><p>u[]v</p></li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li><p>a</p></li></ul><ol><li><p>[]b</p></li></ol>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>a[]b</li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ul><li><p>a[]b</p></li></ul>',
                             });
                         });
                         it('should merge an ordered list item that is in an unordered list item into a non-indented list item', async () => {
@@ -4938,21 +5035,21 @@ describePlugin(List, testEditor => {
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li>a</li></ol><ul><li><p>[]b</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter: '<ol><li>a[]b</li></ol>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore: '<ol><li><p>a</p></li></ol><ul><li>[]b</li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ol><li>a[]b</li></ol>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ol><li><p>a[]b</p></li></ol>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ol><li><p>a</p></li></ol><ul><li><p>[]b</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ol><li>a[]b</li></ol>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ol><li><p>a[]b</p></li></ol>',
                             });
                         });
                         it('should merge an unordered list item that is in an ordered list item into a non-indented list item', async () => {
@@ -5049,22 +5146,22 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul><li>a</li></ul><ul class="checklist"><li><p>[]b</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter: '<ul><li>a[]b</li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li><p>a</p></li></ul><ul class="checklist"><li>[]b</li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>a[]b</li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ul><li><p>a[]b</p></li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul><li><p>a</p></li></ul><ul class="checklist"><li><p>[]b</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
-                                contentAfter: '<ul><li>a[]b</li></ul>',
+                                // Paragraphs in list items should be kep.
+                                contentAfter: '<ul><li><p>a[]b</p></li></ul>',
                             });
                         });
                         it('should merge an checklist list item that is in an unordered list item into a non-indented list item', async () => {
@@ -5147,7 +5244,7 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked">a</li></ul><ul><li><p>[]b</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
                                     '<ul class="checklist"><li class="checked">a[]b</li></ul>',
                             });
@@ -5155,17 +5252,17 @@ describePlugin(List, testEditor => {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked"><p>a</p></li></ul><ul><li>[]b</li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ul class="checklist"><li class="checked">a[]b</li></ul>',
+                                    '<ul class="checklist"><li class="checked"><p>a[]b</p></li></ul>',
                             });
                             await testEditor(BasicEditor, {
                                 contentBefore:
                                     '<ul class="checklist"><li class="checked"><p>a</p></li></ul><ul><li><p>[]b</p></li></ul>',
                                 stepFunction: deleteBackward,
-                                // Paragraphs in list items are treated as nonsense.
+                                // Paragraphs in list items should be kep.
                                 contentAfter:
-                                    '<ul class="checklist"><li class="checked">a[]b</li></ul>',
+                                    '<ul class="checklist"><li class="checked"><p>a[]b</p></li></ul>',
                             });
                         });
                         it('should merge an unordered list item that is in an checklist list item into a non-indented list item', async () => {
@@ -5897,14 +5994,14 @@ describePlugin(List, testEditor => {
                         });
                         it('should remove a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><p>[]<br></p></li></ol>',
+                                contentBefore: '<ol><li>[]<br></li></ol>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
                         });
                         it('should remove a list set to bold', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ol><li><p><b>[]<br></b></p></li></ol>',
+                                contentBefore: '<ol><li><b>[]<br></b></li></ol>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
@@ -6043,14 +6140,14 @@ describePlugin(List, testEditor => {
                         });
                         it('should remove a list', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><p>[]<br></p></li></ul>',
+                                contentBefore: '<ul><li>[]<br></li></ul>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
                         });
                         it('should remove a list set to bold', async () => {
                             await testEditor(BasicEditor, {
-                                contentBefore: '<ul><li><p><b>[]<br></b></p></li></ul>',
+                                contentBefore: '<ul><li><b>[]<br></b></li></ul>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
@@ -6216,7 +6313,7 @@ describePlugin(List, testEditor => {
                         it('should remove a checklist', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul class="checklist"><li class="checked"><p>[]<br></p></li></ul>',
+                                    '<ul class="checklist"><li class="checked">[]<br></li></ul>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
@@ -6224,7 +6321,7 @@ describePlugin(List, testEditor => {
                         it('should remove a checklist set to bold', async () => {
                             await testEditor(BasicEditor, {
                                 contentBefore:
-                                    '<ul class="checklist"><li class="checked"><p><b>[]<br></b></p></li></ul>',
+                                    '<ul class="checklist"><li class="checked"><b>[]<br></b></li></ul>',
                                 stepFunction: insertParagraphBreak,
                                 contentAfter: '<p>[]<br></p>',
                             });
