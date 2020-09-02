@@ -19,6 +19,7 @@ import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { OdooFieldNode } from '../plugin-odoo-field/src/OdooFieldNode';
 import { VElement } from '../core/src/VNodes/VElement';
+import { Parser } from '../plugin-parser/src/Parser';
 
 export {
     OdooWebsiteEditor,
@@ -42,4 +43,5 @@ export {
     OdooTranslationFormat,
     Inline,
     DomHelpers,
+    Parser,
 };

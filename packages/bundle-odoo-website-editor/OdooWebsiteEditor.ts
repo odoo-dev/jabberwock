@@ -70,6 +70,7 @@ interface OdooWebsiteEditorOptions {
     snippetMenuElement?: HTMLElement;
     snippetManipulators?: HTMLElement;
     interface?: string;
+    devicePreview?: boolean;
     templates?: {
         components: ComponentDefinition[];
         templateConfigurations: Record<TemplateName, TemplateConfiguration>;
@@ -233,7 +234,6 @@ export class OdooWebsiteEditor extends JWEditor {
                 {
                     id: 'editable',
                     render: async (editor: JWEditor): Promise<VNode[]> => {
-                        const theme = new ThemeNode();
                         let contents: VNode[];
                         if (typeof options.source === 'string') {
                             contents = await editor.plugins
@@ -242,8 +242,13 @@ export class OdooWebsiteEditor extends JWEditor {
                         } else {
                             contents = await parseEditable(editor, options.source);
                         }
-                        theme.append(...contents);
-                        return [theme];
+                        if (options.devicePreview) {
+                            const theme = new ThemeNode();
+                            theme.append(...contents);
+                            return [theme];
+                        } else {
+                            return contents;
+                        }
                     },
                 },
             ],
@@ -266,13 +271,15 @@ export class OdooWebsiteEditor extends JWEditor {
             inlineUI: true,
         });
 
-        this.configure(DevicePreview, {
-            getTheme(editor: JWEditor) {
-                const layout = editor.plugins.get(Layout);
-                const domLayout = layout.engines.dom;
-                return domLayout.components.editable[0] as ThemeNode;
-            },
-        });
+        if (options.devicePreview) {
+            this.configure(DevicePreview, {
+                getTheme(editor: JWEditor) {
+                    const layout = editor.plugins.get(Layout);
+                    const domLayout = layout.engines.dom;
+                    return domLayout.components.editable[0] as ThemeNode;
+                },
+            });
+        }
 
         if (options.mode) {
             this.configure({
@@ -280,6 +287,7 @@ export class OdooWebsiteEditor extends JWEditor {
             });
             this.configure({ mode: options.mode.id });
         }
+
         if (options.templates) {
             this.configure(Template, {
                 components: options.templates.components,

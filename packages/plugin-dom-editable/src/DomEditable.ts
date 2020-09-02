@@ -91,10 +91,13 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             case 'setSelection': {
                 const layout = this.dependencies.get(Layout);
                 const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
-                const vSelectionParams: VSelectionParams = {
-                    vSelection: domLayoutEngine.parseSelection(action.domSelection),
-                };
-                return ['setSelection', vSelectionParams];
+                const vSelection = domLayoutEngine.parseSelection(action.domSelection);
+                if (vSelection) {
+                    const vSelectionParams: VSelectionParams = { vSelection };
+                    return ['setSelection', vSelectionParams];
+                } else {
+                    return;
+                }
             }
             case 'insertParagraphBreak':
                 return ['insertParagraphBreak', {}];
