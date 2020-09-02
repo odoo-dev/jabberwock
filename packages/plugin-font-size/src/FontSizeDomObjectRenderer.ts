@@ -51,7 +51,6 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
 
         let fontSize = next?.modifiers.find(Attributes)?.style?.get('font-size');
 
-        input.style.display = 'block';
         if (fontSize) {
             fontSize = parseInt(fontSize, 10).toString();
         } else if (next) {
@@ -69,8 +68,6 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
                     ).toString();
                 }
             }
-        } else {
-            input.style.setProperty('display', 'none', 'important');
         }
         input.value = fontSize || '';
     }
