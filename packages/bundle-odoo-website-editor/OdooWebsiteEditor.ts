@@ -61,13 +61,14 @@ import { Loadables } from '../core/src/JWEditor';
 import { Mail } from '../plugin-mail/src/Mail';
 import { Theme, ThemeComponent } from '../plugin-theme/src/Theme';
 import { Template, TemplateName, TemplateConfiguration } from '../plugin-template/src/Template';
-import { Attributes } from './odoo-integration';
+import { ZoneNode } from '../plugin-layout/src/ZoneNode';
+import { DividerNode } from '../plugin-divider/src/DividerNode';
+import { Attributes } from '../plugin-xml/src/Attributes';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
     location?: [Node, DomZonePosition];
     customCommands?: Record<CommandIdentifier, CommandImplementation>;
-    afterRender?: Function;
     snippetMenuElement?: HTMLElement;
     snippetManipulators?: HTMLElement;
     interface?: string;
@@ -233,28 +234,30 @@ export class OdooWebsiteEditor extends JWEditor {
                     },
                 },
                 {
-                    id: 'editable',
-                    render: async (editor: JWEditor): Promise<VNode[]> => {
-                        let contents: VNode[];
-                        if (typeof options.source === 'string') {
-                            contents = await editor.plugins
-                                .get(Parser)
-                                .parse('text/html', options.source);
-                            for (const content of contents) {
-                                content.editable = false;
-                                content.editable = false;
-                                content.breakable = false;
-                                content.modifiers.get(Attributes).set('contentEditable', 'true');
-                            }
-                        } else {
-                            contents = await parseEditable(editor, options.source);
-                        }
+                    id: 'main',
+                    render: async (): Promise<VNode[]> => {
+                        const div = new DividerNode();
+                        div.modifiers.get(Attributes).set('contentEditable', 'true');
+                        div.modifiers.get(Attributes).classList.add('note-editable');
+                        div.modifiers.get(Attributes).style.set('width', '100%');
+                        const zone = new ZoneNode({ managedZones: ['editable'] });
+                        zone.editable = true;
+                        div.append(zone);
                         if (options.devicePreview) {
                             const theme = new ThemeNode();
-                            theme.append(...contents);
+                            theme.append(div);
                             return [theme];
+                        }
+                        return [div];
+                    },
+                },
+                {
+                    id: 'editable',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        if (typeof options.source === 'string') {
+                            return editor.plugins.get(Parser).parse('text/html', options.source);
                         } else {
-                            return contents;
+                            return parseEditable(editor, options.source);
                         }
                     },
                 },
@@ -263,7 +266,6 @@ export class OdooWebsiteEditor extends JWEditor {
                 ['main_template', ['root']],
                 ['snippet_menu', ['main_sidebar']],
                 ['snippetManipulators', ['snippetManipulators']],
-                ['editable', ['main']],
             ],
             location: options.location,
             pressedActionablesClassName: 'active',
@@ -283,7 +285,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 getTheme(editor: JWEditor) {
                     const layout = editor.plugins.get(Layout);
                     const domLayout = layout.engines.dom;
-                    return domLayout.components.editable[0] as ThemeNode;
+                    return domLayout.components.main[0] as ThemeNode;
                 },
             });
         }
