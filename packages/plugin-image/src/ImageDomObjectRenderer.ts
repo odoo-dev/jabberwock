@@ -5,11 +5,12 @@ import {
     DomObject,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { Predicate } from '../../core/src/VNodes/VNode';
 
 export class ImageDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
-    predicate = ImageNode;
+    predicate: Predicate = ImageNode;
 
     async render(node: ImageNode, worker: RenderingEngineWorker<DomObject>): Promise<DomObject> {
         const select = async (ev: Event): Promise<void> => {
