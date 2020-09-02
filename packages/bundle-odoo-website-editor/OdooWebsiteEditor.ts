@@ -61,6 +61,7 @@ import { Loadables } from '../core/src/JWEditor';
 import { Mail } from '../plugin-mail/src/Mail';
 import { Theme, ThemeComponent } from '../plugin-theme/src/Theme';
 import { Template, TemplateName, TemplateConfiguration } from '../plugin-template/src/Template';
+import { Attributes } from './odoo-integration';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -239,6 +240,12 @@ export class OdooWebsiteEditor extends JWEditor {
                             contents = await editor.plugins
                                 .get(Parser)
                                 .parse('text/html', options.source);
+                            for (const content of contents) {
+                                content.editable = false;
+                                content.editable = false;
+                                content.breakable = false;
+                                content.modifiers.get(Attributes).set('contentEditable', 'true');
+                            }
                         } else {
                             contents = await parseEditable(editor, options.source);
                         }
