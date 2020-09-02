@@ -28,9 +28,11 @@ export class DefaultHtmlTextParser extends AbstractParser<string> {
 
     async parse(item: string): Promise<VNode[]> {
         const domParser = new DOMParser();
-        const template = item.replace(autoCloseRegExp, match =>
-            match[match.length - 2] === '/' ? match : match.slice(0, -1) + '/>',
-        );
+        const template = item
+            .replace(autoCloseRegExp, match =>
+                match[match.length - 2] === '/' ? match : match.slice(0, -1) + '/>',
+            )
+            .replace(/&/g, '&amp;');
         const xmlDoc = domParser.parseFromString('<t>' + template + '</t>', 'text/xml');
         const parser = this.engine.editor.plugins.get(Parser);
         return parser.parse('dom/xml', ...xmlDoc.firstChild.childNodes);

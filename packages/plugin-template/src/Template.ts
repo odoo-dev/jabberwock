@@ -113,8 +113,8 @@ export class Template<T extends TemplateConfig = TemplateConfig> extends JWPlugi
         const layout = this.dependencies.get(Layout);
         const templateConfigurations = this.configuration.templateConfigurations;
         for (const templateName in templateConfigurations) {
+            const config = templateConfigurations[templateName];
             for (const engine of Object.values(layout.engines)) {
-                const config = templateConfigurations[templateName];
                 const zones = engine.root
                     .descendants(ZoneNode)
                     .filter(zone => zone.managedZones.includes(config.zoneId));
