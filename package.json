@@ -8,7 +8,7 @@
     "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-examples.config.js",
     "build-odoo": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-odoo.config.js",
     "build:odoo": "npm run build:odoo:js; npm run build:odoo:bundle;",
-    "build:odoo:js": "rm -rf build/odoo; mkdir -p build/odoo; cp -ru packages build/odoo; tsc --target esnext --module es6 --outDir build/odoo/packages",
+    "build:odoo:js": "rm -rf build/odoo; mkdir -p build/odoo; cp -ru packages build/odoo; find build/odoo -name '*.ts' | xargs rm; tsc --target esnext --module es6 --outDir build/odoo/packages",
     "build:odoo:bundle": "rm -rf build/rollup; rollup -c rollup.config.js",
     "perf": "karma start --include-files test/**/*.perf.ts",
     "coverage": "karma start --coverage",
