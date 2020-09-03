@@ -283,7 +283,7 @@ export class DomLayoutEngine extends LayoutEngine {
                     }
                 }
             }
-            const filterd = this._filterInRoot([...remove]);
+            const filterd = this._filterInRoot(new Set(remove));
             for (const node of filterd.remove) {
                 update.delete(node);
                 remove.add(node);
@@ -360,6 +360,7 @@ export class DomLayoutEngine extends LayoutEngine {
                                     if (child) {
                                         if (!add.has(child)) {
                                             update.add(child);
+                                            mayBeAlreadyRemoved.push(child);
                                         }
                                         if (changes[i - 1] !== index - 1) {
                                             const previous = child.previousSibling();
@@ -369,12 +370,16 @@ export class DomLayoutEngine extends LayoutEngine {
                                                 !update.has(previous)
                                             ) {
                                                 updatedSiblings.add(previous);
+                                                mayBeAlreadyRemoved.push(previous);
                                             }
                                         }
                                         if (changes[i + 1] !== index + 1) {
                                             const next = child.nextSibling();
                                             if (next && !add.has(next) && !update.has(next)) {
-                                                if (next) updatedSiblings.add(next);
+                                                if (next) {
+                                                    updatedSiblings.add(next);
+                                                    mayBeAlreadyRemoved.push(next);
+                                                }
                                             }
                                         }
                                     } else {
@@ -383,6 +388,7 @@ export class DomLayoutEngine extends LayoutEngine {
                                             const last = children[children.length - 1];
                                             if (last && !add.has(last) && !update.has(last)) {
                                                 updatedSiblings.add(last);
+                                                mayBeAlreadyRemoved.push(last);
                                             }
                                         }
                                     }
@@ -401,11 +407,12 @@ export class DomLayoutEngine extends LayoutEngine {
                 }
             }
 
-            for (const node of this._filterInRoot(mayBeAlreadyRemoved).remove) {
+            for (const node of this._filterInRoot(new Set(mayBeAlreadyRemoved)).remove) {
                 update.delete(node);
                 remove.add(node);
-                update.delete(node);
+                add.delete(node);
                 needSiblings.delete(node);
+                updatedSiblings.delete(node);
             }
 
             // If any change invalidate the siblings.
@@ -534,33 +541,37 @@ export class DomLayoutEngine extends LayoutEngine {
         // Render nodes.
         return update;
     }
-    private _filterInRoot(nodes: VNode[]): { keep: Set<VNode>; remove: Set<VNode> } {
-        const inRoot = new Set<VNode>();
+    private _filterInRoot(nodes: Set<VNode>): { keep: Set<VNode>; remove: Set<VNode> } {
+        const inRoot = new Set<VNode>([this.root]);
         const notRoot = new Set<VNode>();
         const nodesInRoot = new Set<VNode>();
         const nodesInNotRoot = new Set<VNode>();
         for (const node of nodes) {
             const parents: VNode[] = [];
             let ancestor = node;
-            while (ancestor && !notRoot.has(ancestor)) {
-                if (ancestor === this.root || inRoot.has(ancestor)) {
+            while (ancestor) {
+                parents.push(ancestor);
+                if (inRoot.has(ancestor)) {
                     // The VNode is in the domLayout.
                     nodesInRoot.add(node);
-                    for (const parent of parents) {
-                        inRoot.add(parent);
-                    }
                     break;
                 }
-                parents.push(ancestor);
                 ancestor = ancestor.parent;
-                if (!ancestor || !ancestor.id) {
+                if (!ancestor || !ancestor.id || notRoot.has(ancestor)) {
                     // A VNode without an id does not exist yet/anymore in the
                     // current memory slice.
                     // The VNode is not in the domLayout.
                     nodesInNotRoot.add(node);
-                    for (const parent of parents) {
-                        notRoot.add(parent);
-                    }
+                    break;
+                }
+            }
+            if (nodesInRoot.has(node)) {
+                for (const parent of parents) {
+                    inRoot.add(parent);
+                }
+            } else {
+                for (const parent of parents) {
+                    notRoot.add(parent);
                 }
             }
         }
