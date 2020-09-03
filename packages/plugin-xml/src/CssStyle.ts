@@ -63,8 +63,8 @@ export class CssStyle extends VersionableObject {
             .map(style => style.trim())
             .filter(style => style.length)
             .reduce((accumulator, value) => {
-                const [key, v] = value.split(':');
-                style[key.trim()] = v.trim();
+                const [key, ...v] = value.split(':');
+                style[key.trim()] = v.join(':').trim();
                 return accumulator;
             }, style);
     }
