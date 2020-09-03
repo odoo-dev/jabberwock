@@ -26,6 +26,7 @@ import { HeadingParams } from '../../plugin-heading/src/Heading';
 import { isInTextualContext } from '../../utils/src/utils';
 import { NoteEditableXmlDomParser } from './NoteEditableXmlDomParser';
 import { SpanFormat } from '../../plugin-span/src/SpanFormat';
+import { OdooParallaxSpanXmlDomParser } from './OdooParallaxSpanXmlDomParser';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -101,7 +102,12 @@ export interface SetImageClassParams extends CommandParams {
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
-        parsers: [NoteEditableXmlDomParser, OdooStructureXmlDomParser, OdooTranslationXmlDomParser],
+        parsers: [
+            NoteEditableXmlDomParser,
+            OdooStructureXmlDomParser,
+            OdooTranslationXmlDomParser,
+            OdooParallaxSpanXmlDomParser,
+        ],
         renderers: [OdooImageDomObjectRenderer, OdooFontAwesomeDomObjectRenderer],
         components: [
             {
