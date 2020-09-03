@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { JWEditor } from '../../core/src/JWEditor';
 import { Char } from '../../plugin-char/src/Char';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { FollowRange } from '../src/FollowRange';
 import { Layout } from '../../plugin-layout/src/Layout';
@@ -65,8 +65,8 @@ describe('FollowRange', async () => {
                 {
                     id: 'aaa',
                     async render(): Promise<VNode[]> {
-                        const div = new VElement({ htmlTag: 'div' });
-                        const area = new VElement({ htmlTag: 'area' });
+                        const div = new TagNode({ htmlTag: 'div' });
+                        const area = new TagNode({ htmlTag: 'area' });
                         div.append(area);
                         return [div];
                     },
@@ -74,7 +74,7 @@ describe('FollowRange', async () => {
                 {
                     id: 'bbb',
                     async render(): Promise<VNode[]> {
-                        return [new VElement({ htmlTag: 'section' })];
+                        return [new TagNode({ htmlTag: 'section' })];
                     },
                 },
             ],
@@ -120,7 +120,7 @@ describe('FollowRange', async () => {
                 {
                     id: 'custom',
                     async render(): Promise<VNode[]> {
-                        return [new VElement({ htmlTag: 'section' })];
+                        return [new TagNode({ htmlTag: 'section' })];
                     },
                 },
             ],

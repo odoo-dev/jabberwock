@@ -3,7 +3,7 @@ import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { HtmlDomParsingEngine, HtmlNode } from '../../plugin-html/src/HtmlDomParsingEngine';
 import { ShadowNode } from './ShadowNode';
 import { nodeName } from '../../utils/src/utils';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
 export class ShadowHtmlDomParser extends AbstractParser<Node> {
     static id = HtmlDomParsingEngine.id;
@@ -27,7 +27,7 @@ export class ShadowHtmlDomParser extends AbstractParser<Node> {
         if (nodeName(item) === 'JW-SHADOW') {
             return [shadow];
         } else {
-            const element = new VElement({ htmlTag: nodeName(item) });
+            const element = new TagNode({ htmlTag: nodeName(item) });
             const attributes = this.engine.parseAttributes(item);
             if (attributes.length) {
                 element.modifiers.append(attributes);

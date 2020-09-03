@@ -1,6 +1,6 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
-export class BlockquoteNode extends VElement {
+export class BlockquoteNode extends TagNode {
     constructor() {
         super({ htmlTag: 'BLOCKQUOTE' });
     }

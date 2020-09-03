@@ -1,6 +1,6 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
-export class HeadingNode extends VElement {
+export class HeadingNode extends TagNode {
     mayContainContainers = false;
     level: number;
     constructor(params: { level: number }) {

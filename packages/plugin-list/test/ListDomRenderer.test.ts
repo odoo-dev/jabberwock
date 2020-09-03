@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { ListNode, ListType } from '../src/ListNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 import { Modifiers } from '../../core/src/Modifiers';
@@ -26,67 +26,67 @@ describe('ListDomRenderer', () => {
         it('should render a complex list', async () => {
             /**
              * ListNode: UL                 motherList
-             *      VElement: P             p1
+             *      TagNode: P             p1
              *          a
              *      ListNode: UL            ul
-             *          VElement: P         p2
+             *          TagNode: P         p2
              *              a.a             ('.' is bold)
-             *          VElement: P         p3
+             *          TagNode: P         p3
              *              a.b
-             *          VElement: H1        h1
+             *          TagNode: H1        h1
              *              a.c
-             *          VElement: P         p4
+             *          TagNode: P         p4
              *              a.d
              *          ListNode: UL        ul2
-             *              VElement: P     p5
+             *              TagNode: P     p5
              *                  a.d.a
-             *      VElement: P             p6
+             *      TagNode: P             p6
              *          b
              *      ListNode: OL            ol
-             *          VElement: P         p7
+             *          TagNode: P         p7
              *              b.1
-             *          VElement: P         p8
+             *          TagNode: P         p8
              *              b.2
-             *          VElement: H1        h12
+             *          TagNode: H1        h12
              *              b.3
-             *          VElement: P         p9
+             *          TagNode: P         p9
              *              b.4
              */
             const root = new ContainerNode();
             const motherList = new ListNode({ listType: ListType.UNORDERED });
             root.append(motherList);
 
-            const p1 = new VElement({ htmlTag: 'P' });
+            const p1 = new TagNode({ htmlTag: 'P' });
             p1.append(new CharNode({ char: 'a' }));
             motherList.append(p1);
 
             const ul = new ListNode({ listType: ListType.UNORDERED });
-            const p2 = new VElement({ htmlTag: 'P' });
+            const p2 = new TagNode({ htmlTag: 'P' });
             p2.append(new CharNode({ char: 'a' }));
             p2.append(new CharNode({ char: '.', modifiers: new Modifiers(BoldFormat) }));
             p2.append(new CharNode({ char: 'a' }));
             ul.append(p2);
 
-            const p3 = new VElement({ htmlTag: 'P' });
+            const p3 = new TagNode({ htmlTag: 'P' });
             p3.append(new CharNode({ char: 'a' }));
             p3.append(new CharNode({ char: '.' }));
             p3.append(new CharNode({ char: 'b' }));
             ul.append(p3);
 
-            const h1 = new VElement({ htmlTag: 'H1' });
+            const h1 = new TagNode({ htmlTag: 'H1' });
             h1.append(new CharNode({ char: 'a' }));
             h1.append(new CharNode({ char: '.' }));
             h1.append(new CharNode({ char: 'c' }));
             ul.append(h1);
 
-            const p4 = new VElement({ htmlTag: 'P' });
+            const p4 = new TagNode({ htmlTag: 'P' });
             p4.append(new CharNode({ char: 'a' }));
             p4.append(new CharNode({ char: '.' }));
             p4.append(new CharNode({ char: 'd' }));
             ul.append(p4);
 
             const ul2 = new ListNode({ listType: ListType.UNORDERED });
-            const p5 = new VElement({ htmlTag: 'P' });
+            const p5 = new TagNode({ htmlTag: 'P' });
             p5.append(new CharNode({ char: 'a' }));
             p5.append(new CharNode({ char: '.' }));
             p5.append(new CharNode({ char: 'd' }));
@@ -96,27 +96,27 @@ describe('ListDomRenderer', () => {
             ul.append(ul2);
             motherList.append(ul);
 
-            const p6 = new VElement({ htmlTag: 'P' });
+            const p6 = new TagNode({ htmlTag: 'P' });
             p6.append(new CharNode({ char: 'b' }));
             motherList.append(p6);
 
             const ol = new ListNode({ listType: ListType.ORDERED });
-            const p7 = new VElement({ htmlTag: 'P' });
+            const p7 = new TagNode({ htmlTag: 'P' });
             p7.append(new CharNode({ char: 'b' }));
             p7.append(new CharNode({ char: '.' }));
             p7.append(new CharNode({ char: '1' }));
             ol.append(p7);
-            const p8 = new VElement({ htmlTag: 'P' });
+            const p8 = new TagNode({ htmlTag: 'P' });
             p8.append(new CharNode({ char: 'b' }));
             p8.append(new CharNode({ char: '.' }));
             p8.append(new CharNode({ char: '2' }));
             ol.append(p8);
-            const h12 = new VElement({ htmlTag: 'H1' });
+            const h12 = new TagNode({ htmlTag: 'H1' });
             h12.append(new CharNode({ char: 'b' }));
             h12.append(new CharNode({ char: '.' }));
             h12.append(new CharNode({ char: '3' }));
             ol.append(h12);
-            const p9 = new VElement({ htmlTag: 'P' });
+            const p9 = new TagNode({ htmlTag: 'P' });
             p9.append(new CharNode({ char: 'b' }));
             p9.append(new CharNode({ char: '.' }));
             p9.append(new CharNode({ char: '4' }));

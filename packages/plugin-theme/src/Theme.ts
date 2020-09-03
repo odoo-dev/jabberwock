@@ -11,7 +11,7 @@ import { ThemeNode } from './ThemeNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
 export interface ThemeComponent extends ComponentDefinition {
     label?: string;
@@ -49,8 +49,8 @@ export class Theme<T extends ThemeConfig = ThemeConfig> extends JWPlugin<T> {
     themes: Record<string, ThemeComponent> = {
         default: {
             id: 'default',
-            async render(): Promise<VElement[]> {
-                return [new VElement({ htmlTag: 'T-PLACEHOLDER' })];
+            async render(): Promise<TagNode[]> {
+                return [new TagNode({ htmlTag: 'T-PLACEHOLDER' })];
             },
             label: 'Theme: Default',
         },

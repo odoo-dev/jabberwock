@@ -6,7 +6,7 @@ import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { Toolbar } from '../../plugin-toolbar/src/Toolbar';
 import { click, nextTickFrame } from '../../utils/src/testUtils';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
@@ -119,10 +119,10 @@ describe('Template', () => {
                 {
                     id: 'editable',
                     async render(): Promise<VNode[]> {
-                        const section = new VElement({ htmlTag: 'SECTION' });
+                        const section = new TagNode({ htmlTag: 'SECTION' });
                         const sectionZone = new ZoneNode({ managedZones: ['section'] });
                         section.append(sectionZone);
-                        const div = new VElement({ htmlTag: 'DIV' });
+                        const div = new TagNode({ htmlTag: 'DIV' });
                         const divZone = new ZoneNode({ managedZones: ['content'] });
                         div.append(divZone);
                         return [section, div];
@@ -172,10 +172,10 @@ describe('Template', () => {
                 {
                     id: 'editable',
                     async render(): Promise<VNode[]> {
-                        const section = new VElement({ htmlTag: 'SECTION' });
+                        const section = new TagNode({ htmlTag: 'SECTION' });
                         const sectionZone = new ZoneNode({ managedZones: ['section'] });
                         section.append(sectionZone);
-                        const div = new VElement({ htmlTag: 'DIV' });
+                        const div = new TagNode({ htmlTag: 'DIV' });
                         const divZone = new ZoneNode({ managedZones: ['content'] });
                         div.append(divZone);
                         return [section, div];
@@ -218,10 +218,10 @@ describe('Template', () => {
                 {
                     id: 'editable',
                     async render(): Promise<VNode[]> {
-                        const section = new VElement({ htmlTag: 'SECTION' });
+                        const section = new TagNode({ htmlTag: 'SECTION' });
                         const sectionZone = new ZoneNode({ managedZones: ['section'] });
                         section.append(sectionZone);
-                        const div = new VElement({ htmlTag: 'DIV' });
+                        const div = new TagNode({ htmlTag: 'DIV' });
                         const divZone = new ZoneNode({ managedZones: ['content'] });
                         div.append(divZone);
                         return [section, div];
@@ -274,7 +274,7 @@ describe('Template', () => {
                     id: 'editable',
                     async render(editor: JWEditor): Promise<VNode[]> {
                         const zone = new ZoneNode({ managedZones: ['content'] });
-                        const article = new VElement({ htmlTag: 'ARTICLE' });
+                        const article = new TagNode({ htmlTag: 'ARTICLE' });
                         zone.append(article);
                         editor.selection.setAt(article, RelativePosition.INSIDE);
                         return [zone];
@@ -349,7 +349,7 @@ describe('Template', () => {
                     id: 'editable',
                     async render(editor: JWEditor): Promise<VNode[]> {
                         const zone = new ZoneNode({ managedZones: ['content'] });
-                        const article = new VElement({ htmlTag: 'ARTICLE' });
+                        const article = new TagNode({ htmlTag: 'ARTICLE' });
                         zone.append(article);
                         editor.selection.setAt(article, RelativePosition.INSIDE);
                         return [zone];
@@ -372,7 +372,7 @@ describe('Template', () => {
                     id: 'editable',
                     async render(editor: JWEditor): Promise<VNode[]> {
                         const zone = new ZoneNode({ managedZones: ['content'] });
-                        const article = new VElement({ htmlTag: 'ARTICLE' });
+                        const article = new TagNode({ htmlTag: 'ARTICLE' });
                         zone.append(article);
                         editor.selection.setAt(article, RelativePosition.INSIDE);
                         return [zone];

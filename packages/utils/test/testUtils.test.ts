@@ -3,7 +3,7 @@ import { testEditor } from '../src/testUtils';
 import JWEditor from '../../core/src/JWEditor';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
@@ -44,7 +44,7 @@ describe('core', () => {
                             const editable = domEngine.components.editable[0];
                             expect(editable instanceof FragmentNode).to.be.true;
                             expect(editable.children().length).to.equal(1);
-                            const p = editable.children()[0] as VElement;
+                            const p = editable.children()[0] as TagNode;
                             expect(p.htmlTag).to.equal('P');
                             expect(p.children().length).to.equal(1);
                             expect(p.children()[0] instanceof CharNode).to.be.true;

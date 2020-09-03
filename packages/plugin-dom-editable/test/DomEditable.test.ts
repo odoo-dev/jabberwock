@@ -13,7 +13,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable, createEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { CharNode } from '../../plugin-char/src/CharNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
@@ -1018,7 +1018,7 @@ describe('DomEditable', () => {
             await nextTick();
 
             const sectionNode = editor.selection.anchor.ancestor(
-                node => node instanceof VElement && node.htmlTag === 'SECTION',
+                node => node instanceof TagNode && node.htmlTag === 'SECTION',
             );
             expect(!!sectionNode).to.equal(true);
             expect(editor.selection.anchor.previous()?.id).to.equal(

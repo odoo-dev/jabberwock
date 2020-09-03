@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { LineBreakNode } from '../src/LineBreakNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreak } from '../src/LineBreak';
 import { describePlugin } from '../../utils/src/testUtils';
@@ -127,7 +127,7 @@ describePlugin(LineBreak, testEditor => {
         });
         describe('locate', () => {
             it('should locate where to set the selection marker at end', async () => {
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 const a = new CharNode({ char: 'a' });
                 p.append(a);
                 const lineBreak = new LineBreakNode();
@@ -138,7 +138,7 @@ describePlugin(LineBreak, testEditor => {
                 expect(lineBreak.locate(doc.childNodes[2], 0)).to.deep.equal([lineBreak, 'AFTER']);
             });
             it('should locate where to set the selection marker inside string', async () => {
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 const a = new CharNode({ char: 'a' });
                 p.append(a);
                 const lineBreak = new LineBreakNode();

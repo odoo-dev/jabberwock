@@ -18,7 +18,7 @@ import { Inline } from '../plugin-inline/src/Inline';
 import { DomHelpers } from '../plugin-dom-helpers/src/DomHelpers';
 import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { OdooFieldNode } from '../plugin-odoo-field/src/OdooFieldNode';
-import { VElement } from '../core/src/VNodes/VElement';
+import { TagNode } from '../core/src/VNodes/TagNode';
 import { Parser } from '../plugin-parser/src/Parser';
 
 export {
@@ -35,8 +35,8 @@ export {
     LinkFormat,
     Attributes,
     ContainerNode,
-    VElement,
     DividerNode,
+    TagNode,
     OdooStructureNode,
     OdooField,
     OdooFieldNode,

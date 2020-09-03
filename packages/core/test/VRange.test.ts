@@ -3,7 +3,7 @@ import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import JWEditor from '../src/JWEditor';
 import { expect } from 'chai';
-import { VElement } from '../src/VNodes/VElement';
+import { TagNode } from '../src/VNodes/TagNode';
 import { VRange } from '../src/VRange';
 import { RelativePosition } from '../src/VNodes/VNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
@@ -81,8 +81,8 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc]</p>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.selectedNodes()).to.deep.equal([
                             ...children,
@@ -96,12 +96,12 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc</p><h1>def]</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const pChildren = p.children();
                         const h1 = editor.selection.range.endContainer;
-                        expect(h1 instanceof VElement).to.be.true;
-                        expect((h1 as VElement).htmlTag).to.equal('H1');
+                        expect(h1 instanceof TagNode).to.be.true;
+                        expect((h1 as TagNode).htmlTag).to.equal('H1');
                         const h1Children = h1.children();
                         expect(editor.selection.range.selectedNodes()).to.deep.equal([
                             ...pChildren,
@@ -147,8 +147,8 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc</p><h1>]def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.selectedNodes()).to.deep.equal([
                             ...children,
@@ -177,8 +177,8 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc]</p><h1>def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.traversedNodes()).to.deep.equal(children);
                     },
@@ -189,12 +189,12 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc</p><h1>def]</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const pChildren = p.children();
                         const h1 = editor.selection.range.endContainer;
-                        expect(h1 instanceof VElement).to.be.true;
-                        expect((h1 as VElement).htmlTag).to.equal('H1');
+                        expect(h1 instanceof TagNode).to.be.true;
+                        expect((h1 as TagNode).htmlTag).to.equal('H1');
                         const h1Children = h1.children();
                         expect(editor.selection.range.traversedNodes()).to.deep.equal([
                             ...pChildren,
@@ -242,12 +242,12 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc</p><h1>]def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         const h1 = editor.selection.range.endContainer;
-                        expect(h1 instanceof VElement).to.be.true;
-                        expect((h1 as VElement).htmlTag).to.equal('H1');
+                        expect(h1 instanceof TagNode).to.be.true;
+                        expect((h1 as TagNode).htmlTag).to.equal('H1');
                         expect(editor.selection.range.traversedNodes()).to.deep.equal([
                             ...children,
                             h1,
@@ -329,8 +329,8 @@ describe('VRange', () => {
                     contentBefore: '<p>[abc</p><h1>]def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.targetedNodes()).to.deep.equal([
                             p,
@@ -389,8 +389,8 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc[</p>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.selectedNodes()).to.deep.equal([
                             ...children,
@@ -404,12 +404,12 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc</p><h1>def[</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const pChildren = p.children();
                         const h1 = editor.selection.range.endContainer;
-                        expect(h1 instanceof VElement).to.be.true;
-                        expect((h1 as VElement).htmlTag).to.equal('H1');
+                        expect(h1 instanceof TagNode).to.be.true;
+                        expect((h1 as TagNode).htmlTag).to.equal('H1');
                         const h1Children = h1.children();
                         expect(editor.selection.range.selectedNodes()).to.deep.equal([
                             ...pChildren,
@@ -455,8 +455,8 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc</p><h1>[def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.selectedNodes()).to.deep.equal([
                             ...children,
@@ -493,8 +493,8 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc[</p><h1>def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.traversedNodes()).to.deep.equal(children);
                     },
@@ -505,12 +505,12 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc</p><h1>def[</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const pChildren = p.children();
                         const h1 = editor.selection.range.endContainer;
-                        expect(h1 instanceof VElement).to.be.true;
-                        expect((h1 as VElement).htmlTag).to.equal('H1');
+                        expect(h1 instanceof TagNode).to.be.true;
+                        expect((h1 as TagNode).htmlTag).to.equal('H1');
                         const h1Children = h1.children();
                         expect(editor.selection.range.traversedNodes()).to.deep.equal([
                             ...pChildren,
@@ -558,12 +558,12 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc</p><h1>[def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         const h1 = editor.selection.range.endContainer;
-                        expect(h1 instanceof VElement).to.be.true;
-                        expect((h1 as VElement).htmlTag).to.equal('H1');
+                        expect(h1 instanceof TagNode).to.be.true;
+                        expect((h1 as TagNode).htmlTag).to.equal('H1');
                         expect(editor.selection.range.traversedNodes()).to.deep.equal([
                             ...children,
                             h1,
@@ -663,8 +663,8 @@ describe('VRange', () => {
                     contentBefore: '<p>]abc</p><h1>[def</h1>',
                     stepFunction: async (editor: JWEditor) => {
                         const p = editor.selection.range.startContainer;
-                        expect(p instanceof VElement).to.be.true;
-                        expect((p as VElement).htmlTag).to.equal('P');
+                        expect(p instanceof TagNode).to.be.true;
+                        expect((p as TagNode).htmlTag).to.equal('P');
                         const children = p.children();
                         expect(editor.selection.range.targetedNodes()).to.deep.equal([
                             p,
@@ -690,13 +690,13 @@ describe('VRange', () => {
     });
     describe('isCollapsed', () => {
         let editor: JWEditor;
-        let p: VElement;
+        let p: TagNode;
         beforeEach(async () => {
             editor = new JWEditor();
             await editor.start();
-            const div = new VElement({ htmlTag: 'DIV' });
+            const div = new TagNode({ htmlTag: 'DIV' });
             div.editable = true;
-            p = new VElement({ htmlTag: 'P' });
+            p = new TagNode({ htmlTag: 'P' });
             div.append(p);
             const a = new CharNode({ char: 'A' });
             p.append(a);

@@ -6,7 +6,7 @@ import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Layout } from '../../plugin-layout/src/Layout';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { Toolbar } from '../../plugin-toolbar/src/Toolbar';
 import { click } from '../../utils/src/testUtils';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
@@ -73,7 +73,7 @@ describe('Theme', () => {
                 {
                     id: 'editable',
                     async render(editor: JWEditor): Promise<VNode[]> {
-                        const article = new VElement({ htmlTag: 'ARTICLE' });
+                        const article = new TagNode({ htmlTag: 'ARTICLE' });
                         editor.selection.setAt(article, RelativePosition.INSIDE);
                         return [article];
                     },

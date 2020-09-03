@@ -7,7 +7,7 @@ import { nodeLength } from './utils';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Direction, VSelectionDescription } from '../../core/src/VSelection';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
 export async function parseElement(editor: JWEditor, element: HTMLElement): Promise<VNode[]> {
     const parser = editor.plugins.get(Parser);
@@ -153,7 +153,7 @@ export async function parseEditable(
 }
 
 export async function createEditable(editor: JWEditor, autofocus = false): Promise<VNode[]> {
-    const root = new VElement({ htmlTag: 'jw-editable' });
+    const root = new TagNode({ htmlTag: 'jw-editable' });
     // Semantic elements are inline by default.
     // We need to guarantee it's a block so it can contain
     // other blocks.

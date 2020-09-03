@@ -1,8 +1,8 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { TableRowNode } from './TableRowNode';
 import { TableCellNode } from './TableCellNode';
 
-export class TableNode extends VElement {
+export class TableNode extends TagNode {
     breakable = false;
     constructor(params?: { rowCount?: number; columnCount?: number }) {
         super({ htmlTag: 'TABLE' });

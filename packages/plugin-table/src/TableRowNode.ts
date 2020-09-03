@@ -1,8 +1,8 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { TableNode } from './TableNode';
 import { TableCellNode } from './TableCellNode';
 
-export class TableRowNode extends VElement {
+export class TableRowNode extends TagNode {
     breakable = false;
     header: boolean;
     constructor(params?: { header: boolean }) {

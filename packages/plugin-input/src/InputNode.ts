@@ -1,4 +1,4 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import JWEditor from '../../core/src/JWEditor';
 
 export interface InputNodeParams {
@@ -8,7 +8,7 @@ export interface InputNodeParams {
     change?: (editor: JWEditor) => void;
 }
 
-export class InputNode extends VElement {
+export class InputNode extends TagNode {
     value: string;
     inputName: string;
     inputType: string;
