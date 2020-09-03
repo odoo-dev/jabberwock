@@ -44,7 +44,7 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
         let li: DomObjectElement;
         // The node was wrapped in a "LI" but needs to be rendered as well.
         if ('tag' in rendering && rendering.tag === 'P' && !rendering.shadowRoot) {
-            // Direct ListNode's VElement children "P" are rendered as "LI"
+            // Direct ListNode's TagNode children "P" are rendered as "LI"
             // while other nodes will be rendered inside the "LI".
             li = rendering;
             li.tag = 'LI';

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { testEditor, renderTextualSelection } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { CharXmlDomParser } from '../../plugin-char/src/CharXmlDomParser';
@@ -42,7 +42,7 @@ describe('utils', () => {
                 const nodes = await parser.parse(element);
                 expect(nodes.length).to.equal(1);
                 expect(nodes[0].childVNodes.length).to.equal(1);
-                const p = nodes[0].childVNodes[0] as VElement;
+                const p = nodes[0].childVNodes[0] as TagNode;
                 expect(p.htmlTag).to.equal('P');
                 expect(p.children().length).to.equal(1);
                 expect(p.children()[0] instanceof CharNode).to.be.true;
@@ -71,7 +71,7 @@ describe('utils', () => {
                 element.innerHTML = '<p>a<i>b<b>c</b>d</i></p>';
                 const [node] = await parser.parse(element);
                 expect(node.childVNodes.length).to.equal(1);
-                const p = node.childVNodes[0] as VElement;
+                const p = node.childVNodes[0] as TagNode;
                 expect(p.htmlTag).to.equal('P');
                 expect(p.children().length).to.equal(4);
                 const a = p.children()[0] as CharNode;

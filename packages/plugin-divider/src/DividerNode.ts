@@ -1,6 +1,6 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
-export class DividerNode extends VElement {
+export class DividerNode extends TagNode {
     constructor() {
         super({ htmlTag: 'DIV' });
     }

@@ -4,7 +4,7 @@ import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { DomLayout } from '../src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { Char } from '../../plugin-char/src/Char';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { MarkerNode } from '../../core/src/VNodes/MarkerNode';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
@@ -298,13 +298,13 @@ describe('DomLayout', () => {
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
         });
         it('should add 2 templates after & after the target (use VNode)', async () => {
-            const a = new VElement({ htmlTag: 'a-a' });
-            a.append(new VElement({ htmlTag: 'p' }));
+            const a = new TagNode({ htmlTag: 'a-a' });
+            a.append(new TagNode({ htmlTag: 'p' }));
             a.append(new ZoneNode({ managedZones: ['main'] }));
             a.append(new ZoneNode({ managedZones: ['default'] }));
 
-            const b = new VElement({ htmlTag: 'b-b' });
-            b.append(new VElement({ htmlTag: 'p' }));
+            const b = new TagNode({ htmlTag: 'b-b' });
+            b.append(new TagNode({ htmlTag: 'p' }));
 
             const editor = new JWEditor();
             editor.load(Char);
@@ -642,8 +642,8 @@ describe('DomLayout', () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 async render(): Promise<VNode[]> {
-                    const element = new VElement({ htmlTag: 'jw-test' });
-                    element.append(new VElement({ htmlTag: 'p' }));
+                    const element = new TagNode({ htmlTag: 'jw-test' });
+                    element.append(new TagNode({ htmlTag: 'p' }));
                     return [element];
                 },
             };
@@ -667,8 +667,8 @@ describe('DomLayout', () => {
             const Component: ComponentDefinition = {
                 id: 'test',
                 async render(): Promise<VNode[]> {
-                    const element = new VElement({ htmlTag: 'jw-test' });
-                    element.append(new VElement({ htmlTag: 'p' }));
+                    const element = new TagNode({ htmlTag: 'jw-test' });
+                    element.append(new TagNode({ htmlTag: 'p' }));
                     return [element];
                 },
             };
@@ -777,8 +777,8 @@ describe('DomLayout', () => {
             await editor.stop();
         });
         it('node inside the layout should return the vNodes', async () => {
-            const element = new VElement({ htmlTag: 'jw-test' });
-            const pNode = new VElement({ htmlTag: 'p' });
+            const element = new TagNode({ htmlTag: 'jw-test' });
+            const pNode = new TagNode({ htmlTag: 'p' });
             element.append(pNode);
             const Component: ComponentDefinition = {
                 id: 'test',
@@ -812,12 +812,12 @@ describe('DomLayout', () => {
             editor.configure(DomLayout, { location: [target, 'replace'] });
             await editor.start();
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            expect(engine.getDomNodes(new VElement({ htmlTag: 'p' }))).to.deep.equal([]);
+            expect(engine.getDomNodes(new TagNode({ htmlTag: 'p' }))).to.deep.equal([]);
             await editor.stop();
         });
         it('node inside the layout should return the DOM nodes', async () => {
-            const element = new VElement({ htmlTag: 'jw-test' });
-            const pNode = new VElement({ htmlTag: 'p' });
+            const element = new TagNode({ htmlTag: 'jw-test' });
+            const pNode = new TagNode({ htmlTag: 'p' });
             element.append(pNode);
             const Component: ComponentDefinition = {
                 id: 'test',
@@ -1460,8 +1460,8 @@ describe('DomLayout', () => {
 
                 document.getSelection().removeAllRanges();
 
-                const element = new VElement({ htmlTag: 'div' });
-                const p = new VElement({ htmlTag: 'p' });
+                const element = new TagNode({ htmlTag: 'div' });
+                const p = new TagNode({ htmlTag: 'p' });
 
                 await editor.execCommand(() => {
                     element.append(p);
@@ -1987,7 +1987,7 @@ describe('DomLayout', () => {
 
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
-                const area = new VElement({ htmlTag: 'area' });
+                const area = new TagNode({ htmlTag: 'area' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -2047,7 +2047,7 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const divDom = container.getElementsByTagName('div')[1];
                 const div = engine.getNodes(divDom)[0];
-                const area = new VElement({ htmlTag: 'area' });
+                const area = new TagNode({ htmlTag: 'area' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -2206,7 +2206,7 @@ describe('DomLayout', () => {
 
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
-                const area = new VElement({ htmlTag: 'area' });
+                const area = new TagNode({ htmlTag: 'area' });
 
                 target.remove();
                 await nextTick();
@@ -2273,7 +2273,7 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const divDom = container.getElementsByTagName('div')[1];
                 const p = engine.getNodes(divDom)[0];
-                const area = new VElement({ htmlTag: 'area' });
+                const area = new TagNode({ htmlTag: 'area' });
 
                 divDom.remove();
                 await nextTick();
@@ -2331,7 +2331,7 @@ describe('DomLayout', () => {
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const divDom = container.getElementsByTagName('div')[0];
                 const p = engine.getNodes(divDom)[0];
-                const area = new VElement({ htmlTag: 'area' });
+                const area = new TagNode({ htmlTag: 'area' });
 
                 divDom.remove();
                 await nextTick();
@@ -3239,7 +3239,7 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const f = p.children()[5];
                 const e = p.children()[4];
-                const newP = new VElement({ htmlTag: 'P' });
+                const newP = new TagNode({ htmlTag: 'P' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -3358,7 +3358,7 @@ describe('DomLayout', () => {
 
                 const f = p.children()[5];
                 const e = p.children()[4];
-                const newP = new VElement({ htmlTag: 'P' });
+                const newP = new TagNode({ htmlTag: 'P' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -3729,7 +3729,7 @@ describe('DomLayout', () => {
 
                 const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
                 const b = engine.getNodes(container.getElementsByTagName('p')[0].firstChild)[1];
-                const area = new VElement({ htmlTag: 'area' });
+                const area = new TagNode({ htmlTag: 'area' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -3760,7 +3760,7 @@ describe('DomLayout', () => {
                 const Component: ComponentDefinition = {
                     id: 'test',
                     async render(): Promise<VNode[]> {
-                        const div = new VElement({ htmlTag: 'DIV' });
+                        const div = new TagNode({ htmlTag: 'DIV' });
                         div.append(new CharNode({ char: 'a' }));
                         return [div];
                     },
@@ -4149,7 +4149,7 @@ describe('DomLayout', () => {
                 const text = pDom.firstChild;
 
                 const b = engine.getNodes(pDom.firstChild)[1];
-                const area = new VElement({ htmlTag: 'custom' });
+                const area = new TagNode({ htmlTag: 'custom' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -4171,7 +4171,7 @@ describe('DomLayout', () => {
                 await editor.stop();
             });
             it('should redraw a wrapped item', async () => {
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 p.append(new CharNode({ char: 'a' }));
 
                 const Component: ComponentDefinition = {
@@ -4195,7 +4195,7 @@ describe('DomLayout', () => {
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
 
-                const area = new VElement({ htmlTag: 'custom' });
+                const area = new TagNode({ htmlTag: 'custom' });
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -4214,7 +4214,7 @@ describe('DomLayout', () => {
                 await editor.stop();
             });
             it('should redraw a unwrapped item', async () => {
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 p.append(new CharNode({ char: 'a' }));
 
                 const Component: ComponentDefinition = {
@@ -4238,7 +4238,7 @@ describe('DomLayout', () => {
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
 
-                const area = new VElement({ htmlTag: 'custom' });
+                const area = new TagNode({ htmlTag: 'custom' });
 
                 await editor.execCommand(() => {
                     p.wrap(area);
@@ -4259,7 +4259,7 @@ describe('DomLayout', () => {
                 await editor.stop();
             });
             it('should redraw the wrapped layoutContainer children', async () => {
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 p.append(new CharNode({ char: 'a' }));
 
                 const Component: ComponentDefinition = {
@@ -4284,7 +4284,7 @@ describe('DomLayout', () => {
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
 
-                const area = new VElement({ htmlTag: 'custom' });
+                const area = new TagNode({ htmlTag: 'custom' });
 
                 await editor.execCommand(() => {
                     engine.root
@@ -4306,7 +4306,7 @@ describe('DomLayout', () => {
                 await editor.stop();
             });
             it('should redraw the unwrapped layoutContainer children', async () => {
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 p.append(new CharNode({ char: 'a' }));
 
                 const Component: ComponentDefinition = {
@@ -4331,7 +4331,7 @@ describe('DomLayout', () => {
                 const pDom = container.querySelector('p');
                 const text = pDom.firstChild;
 
-                const area = new VElement({ htmlTag: 'custom' });
+                const area = new TagNode({ htmlTag: 'custom' });
                 const layoutContainer = engine.root.firstChild();
                 const layoutchild = layoutContainer.firstChild();
 
@@ -5083,7 +5083,7 @@ describe('DomLayout', () => {
                     layout = 0;
                 }
                 const custom = new CustomNode();
-                const article = new VElement({ htmlTag: 'ARTICLE' });
+                const article = new TagNode({ htmlTag: 'ARTICLE' });
                 custom.append(article);
 
                 class CustomDomObjectRenderer extends NodeRenderer<DomObject> {
@@ -5722,7 +5722,7 @@ describe('DomLayout', () => {
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
-                    const p2 = new VElement({ htmlTag: 'P' });
+                    const p2 = new TagNode({ htmlTag: 'P' });
                     const attributes2 = new Attributes();
                     attributes2.set('class', 'aaa');
                     p2.modifiers.prepend(attributes2);
@@ -5941,8 +5941,8 @@ describe('DomLayout', () => {
                     {
                         id: 'aaa',
                         async render(): Promise<VNode[]> {
-                            const area = new VElement({ htmlTag: 'div' });
-                            area.append(new VElement({ htmlTag: 'area' }));
+                            const area = new TagNode({ htmlTag: 'div' });
+                            area.append(new TagNode({ htmlTag: 'area' }));
                             return [area];
                         },
                     },

@@ -1,12 +1,12 @@
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { OdooFieldInfo } from './OdooField';
 import { makeVersionable } from '../../core/src/Memory/Versionable';
 
-export class OdooFieldNode<T extends OdooFieldInfo = OdooFieldInfo> extends VElement {
+export class OdooFieldNode<T extends OdooFieldInfo = OdooFieldInfo> extends TagNode {
     fieldInfo: T;
 
     constructor(
-        params: ConstructorParameters<typeof VElement>[0] & {
+        params: ConstructorParameters<typeof TagNode>[0] & {
             fieldInfo: T;
         },
     ) {

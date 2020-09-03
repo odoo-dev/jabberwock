@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import JWEditor from '../../core/src/JWEditor';
 import { LineBreak } from '../src/LineBreak';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { LineBreakNode } from '../src/LineBreakNode';
 import { DomObjectRenderer } from '../../plugin-renderer-dom-object/src/DomObjectRenderer';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
@@ -24,7 +24,7 @@ describe('LineBreakDomRenderer', () => {
         });
         it('should render an ending lineBreak', async () => {
             const root = new ContainerNode();
-            const p = new VElement({ htmlTag: 'fake-p' });
+            const p = new TagNode({ htmlTag: 'fake-p' });
             const lineBreak = new LineBreakNode();
             p.append(lineBreak);
             root.append(p);
@@ -41,10 +41,10 @@ describe('LineBreakDomRenderer', () => {
         });
         it('should render a lineBreak with node after', async () => {
             const root = new ContainerNode();
-            const p = new VElement({ htmlTag: 'FAKE-P' });
+            const p = new TagNode({ htmlTag: 'FAKE-P' });
             const lineBreak = new LineBreakNode();
             p.append(lineBreak);
-            const c = new VElement({ htmlTag: 'FAKE-CHAR' });
+            const c = new TagNode({ htmlTag: 'FAKE-CHAR' });
             p.append(c);
             root.append(p);
             const renderer = editor.plugins.get(Renderer);

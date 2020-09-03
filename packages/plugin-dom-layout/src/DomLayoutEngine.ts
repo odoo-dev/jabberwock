@@ -15,7 +15,7 @@ import {
     DomObject,
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { flat, isContentEditable } from '../../utils/src/utils';
 import { Modifier } from '../../core/src/Modifier';
 import { RenderingEngineCache } from '../../plugin-renderer/src/RenderingEngineCache';
@@ -44,7 +44,7 @@ export class DomLayoutEngine extends LayoutEngine {
     defaultRootComponent: ComponentDefinition = {
         id: 'editor',
         async render(): Promise<VNode[]> {
-            const editor = new VElement({ htmlTag: 'JW-EDITOR' });
+            const editor = new TagNode({ htmlTag: 'JW-EDITOR' });
             editor.append(new ZoneNode({ managedZones: ['main'] }));
             editor.append(new ZoneNode({ managedZones: ['default'] }));
             return [editor];

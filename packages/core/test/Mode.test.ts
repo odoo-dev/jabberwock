@@ -3,7 +3,7 @@ import { ContainerNode } from '../src/VNodes/ContainerNode';
 import { expect } from 'chai';
 import { ModeDefinition, Mode, RuleProperty } from '../src/Mode';
 import { VRange } from '../src/VRange';
-import { VElement } from '../src/VNodes/VElement';
+import { TagNode } from '../src/VNodes/TagNode';
 import { testEditor } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 
@@ -92,7 +92,7 @@ describe('core', () => {
                     {
                         selector: [
                             (node): boolean =>
-                                node instanceof VElement && node.htmlTag === 'UNBREAKABLE-NODE',
+                                node instanceof TagNode && node.htmlTag === 'UNBREAKABLE-NODE',
                         ],
                         properties: {
                             breakable: {

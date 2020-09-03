@@ -17,7 +17,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { ShadowNode } from '../src/ShadowNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { Html } from '../../plugin-html/src/Html';
@@ -58,7 +58,7 @@ describe('DomShadow', async () => {
 
                 await editor.stop();
 
-                expect(node instanceof VElement && node.htmlTag).to.equal('DIV');
+                expect(node instanceof TagNode && node.htmlTag).to.equal('DIV');
                 const shadow = node.firstChild();
                 expect(shadow instanceof ShadowNode).to.equal(true);
                 expect(shadow.firstChild()).to.equal(undefined);
@@ -80,7 +80,7 @@ describe('DomShadow', async () => {
 
                 const shadow = node.firstChild();
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
                 expect(section.firstChild() instanceof CharNode).to.equal(true);
             });
             it('should parse a template with <t-shadow> with style tag', async () => {
@@ -106,7 +106,7 @@ describe('DomShadow', async () => {
                     '* { color: red; }',
                 );
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a template with <t-shadow> with link tag', async () => {
                 const editor = new JWEditor();
@@ -147,7 +147,7 @@ describe('DomShadow', async () => {
                     '{rel: "help", href: "/help/"}',
                 );
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a template with <t-shadow> with style and link tag', async () => {
                 const editor = new JWEditor();
@@ -187,7 +187,7 @@ describe('DomShadow', async () => {
                     '{rel: "stylesheet", href: "#href2"}',
                 );
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
             });
         });
         describe('parse dom/html', async () => {
@@ -208,9 +208,9 @@ describe('DomShadow', async () => {
 
                 await editor.stop();
 
-                expect(node instanceof VElement && node.htmlTag).to.equal('DIV');
+                expect(node instanceof TagNode && node.htmlTag).to.equal('DIV');
                 const article = node.firstChild();
-                expect(article instanceof VElement && article.htmlTag).to.equal('ARTICLE');
+                expect(article instanceof TagNode && article.htmlTag).to.equal('ARTICLE');
                 const shadow = article.firstChild();
                 expect(shadow instanceof ShadowNode).to.equal(true);
                 expect(shadow.firstChild()).to.equal(undefined);
@@ -238,7 +238,7 @@ describe('DomShadow', async () => {
                 const shadow = node.firstChild();
                 expect(shadow instanceof ShadowNode).to.equal(true);
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
                 expect(section.firstChild() instanceof CharNode).to.equal(true);
             });
             it('should parse a HtmlDocument with shadow container which have content', async () => {
@@ -264,7 +264,7 @@ describe('DomShadow', async () => {
                 const shadow = node.firstChild().firstChild();
                 expect(shadow instanceof ShadowNode).to.equal(true);
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
                 expect(section.firstChild() instanceof CharNode).to.equal(true);
             });
             it('should parse a HtmlDocument with shadow container with style tag', async () => {
@@ -297,7 +297,7 @@ describe('DomShadow', async () => {
                     '* { color: red; }',
                 );
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a HtmlDocument with shadow container with link tag', async () => {
                 const editor = new JWEditor();
@@ -348,7 +348,7 @@ describe('DomShadow', async () => {
                     '{rel: "help", href: "/help/"}',
                 );
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
             });
             it('should parse a HtmlDocument with shadow container with style and link tag', async () => {
                 const editor = new JWEditor();
@@ -398,7 +398,7 @@ describe('DomShadow', async () => {
                     '{rel: "stylesheet", href: "#href2"}',
                 );
                 const section = shadow.firstChild();
-                expect(section instanceof VElement && section.htmlTag).to.equal('SECTION');
+                expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
             });
         });
     });
@@ -1255,7 +1255,7 @@ describe('DomShadow', async () => {
             await nextTick();
 
             const sectionNode = editor.selection.anchor.ancestor(
-                node => node instanceof VElement && node.htmlTag === 'SECTION',
+                node => node instanceof TagNode && node.htmlTag === 'SECTION',
             );
             expect(!!sectionNode).to.equal(true);
             expect(editor.selection.anchor.previous()?.id).to.equal(

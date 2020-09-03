@@ -1,7 +1,7 @@
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { FragmentNode } from '../../core/src/VNodes/FragmentNode';
-import { VElement } from '../../core/src/VNodes/VElement';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 import { DomObjectRenderingEngine, DomObject } from './DomObjectRenderingEngine';
 import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
@@ -12,7 +12,7 @@ export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
     async render(node: VNode): Promise<DomObject> {
         let domObject: DomObject;
         if (node.tangible) {
-            if (node instanceof VElement && node.htmlTag[0] !== '#') {
+            if (node instanceof TagNode && node.htmlTag[0] !== '#') {
                 domObject = {
                     tag: node.htmlTag,
                     children: await this.engine.renderChildren(node),

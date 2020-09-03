@@ -688,10 +688,10 @@ describe('Plugin: DevTools', () => {
             ).to.deep.equal([
                 'ZoneNode: root',
                 'LayoutContainer',
-                'VElement',
-                'VElement',
+                'TagNode',
+                'TagNode',
                 'ZoneNode: main',
-                'VElement',
+                'TagNode',
                 'ParagraphNode',
                 'i.i',
             ]);
@@ -707,10 +707,10 @@ describe('Plugin: DevTools', () => {
             ).to.deep.equal([
                 'ZoneNode: root',
                 'LayoutContainer',
-                'VElement',
-                'VElement',
+                'TagNode',
+                'TagNode',
                 'ZoneNode: main',
-                'VElement',
+                'TagNode',
                 'ParagraphNode',
                 'u.u',
             ]);

@@ -3,7 +3,7 @@ import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { HeadingNode } from '../../plugin-heading/src/HeadingNode';
 import { MarkerNode } from '../src/VNodes/MarkerNode';
-import { VElement } from '../src/VNodes/VElement';
+import { TagNode } from '../src/VNodes/TagNode';
 import { FragmentNode } from '../src/VNodes/FragmentNode';
 import { JWPlugin, JWPluginConfig } from '../src/JWPlugin';
 import JWEditor from '../src/JWEditor';
@@ -26,11 +26,11 @@ import { DividerNode } from '../../plugin-divider/src/DividerNode';
 describe('core', () => {
     describe('src', () => {
         describe('VNodes', () => {
-            describe('VElement', () => {
+            describe('TagNode', () => {
                 describe('constructor', () => {
                     it('should create an unknown element', async () => {
                         for (let i = 1; i <= 6; i++) {
-                            const vNode = new VElement({ htmlTag: 'UNKNOWN-ELEMENT' });
+                            const vNode = new TagNode({ htmlTag: 'UNKNOWN-ELEMENT' });
                             expect(vNode instanceof AtomicNode).to.equal(false);
                             expect(vNode.htmlTag).to.equal('UNKNOWN-ELEMENT');
                         }
@@ -38,7 +38,7 @@ describe('core', () => {
                 });
                 describe('clone', () => {
                     it('should duplicate a SimpleElementNode', async () => {
-                        const vNode = new VElement({ htmlTag: 'P' });
+                        const vNode = new TagNode({ htmlTag: 'P' });
                         const copy = vNode.clone();
                         expect(copy).to.not.equal(vNode);
                         expect(copy.htmlTag).to.equal('P');
@@ -72,7 +72,7 @@ describe('core', () => {
                 const root = new FragmentNode();
                 const a = new CharNode({ char: 'a' });
                 root.append(a);
-                const h1 = new VElement({ htmlTag: 'H1' });
+                const h1 = new TagNode({ htmlTag: 'H1' });
                 root.append(h1);
                 const b = new CharNode({ char: 'b' });
                 h1.append(b);
@@ -80,11 +80,11 @@ describe('core', () => {
                 h1.prepend(marker1);
                 const c = new CharNode({ char: 'c' });
                 root.append(c);
-                const p = new VElement({ htmlTag: 'P' });
+                const p = new TagNode({ htmlTag: 'P' });
                 root.append(p);
                 const d = new CharNode({ char: 'd' });
                 p.append(d);
-                const pp = new VElement({ htmlTag: 'P' });
+                const pp = new TagNode({ htmlTag: 'P' });
                 p.append(pp);
                 const e = new CharNode({ char: 'e' });
                 pp.append(e);
@@ -106,7 +106,7 @@ describe('core', () => {
                 describe('toString', () => {
                     it('should display an understandable rendering', async () => {
                         const root = new FragmentNode();
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
                         const a = new CharNode({ char: 'a' });
                         p.append(a);
@@ -133,7 +133,7 @@ describe('core', () => {
                 });
                 describe('locate', () => {
                     it('should locate where to set the selection at end', async () => {
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         p.append(new ContainerNode());
                         p.append(new LineBreakNode());
                         p.append(new ContainerNode());
@@ -149,7 +149,7 @@ describe('core', () => {
                         ]);
                     });
                     it('should locate where to set the selection inside string', async () => {
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         const a = new CharNode({ char: 'a' });
                         p.append(a);
                         const vNode = new ContainerNode();
@@ -272,11 +272,11 @@ describe('core', () => {
                         const root = new FragmentNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
-                        const h1 = new VElement({ htmlTag: 'H1' });
+                        const h1 = new TagNode({ htmlTag: 'H1' });
                         root.append(h1);
                         const b = new CharNode({ char: 'b' });
                         h1.append(b);
-                        const cite = new VElement({ htmlTag: 'CITE' });
+                        const cite = new TagNode({ htmlTag: 'CITE' });
                         h1.append(cite);
                         const x = new CharNode({ char: 'x' });
                         cite.append(x);
@@ -284,11 +284,11 @@ describe('core', () => {
                         h1.prepend(tail);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
                         const d = new CharNode({ char: 'd' });
                         p.append(d);
-                        const pp = new VElement({ htmlTag: 'P' });
+                        const pp = new TagNode({ htmlTag: 'P' });
                         p.append(pp);
                         const e = new CharNode({ char: 'e' });
                         pp.append(e);
@@ -383,11 +383,11 @@ describe('core', () => {
                         const root = new FragmentNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
-                        const h1 = new VElement({ htmlTag: 'H1' });
+                        const h1 = new TagNode({ htmlTag: 'H1' });
                         root.append(h1);
                         const b = new CharNode({ char: 'b' });
                         h1.append(b);
-                        const cite = new VElement({ htmlTag: 'CITE' });
+                        const cite = new TagNode({ htmlTag: 'CITE' });
                         h1.append(cite);
                         const x = new CharNode({ char: 'x' });
                         cite.append(x);
@@ -395,11 +395,11 @@ describe('core', () => {
                         h1.prepend(tail);
                         const c = new CharNode({ char: 'c' });
                         root.append(c);
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
                         const d = new CharNode({ char: 'd' });
                         p.append(d);
-                        const pp = new VElement({ htmlTag: 'P' });
+                        const pp = new TagNode({ htmlTag: 'P' });
                         p.append(pp);
                         const e = new CharNode({ char: 'e' });
                         pp.append(e);
@@ -502,7 +502,7 @@ describe('core', () => {
                         ).to.equal(a);
                         expect(
                             root.firstChild(vNode => {
-                                return vNode instanceof VElement;
+                                return vNode instanceof TagNode;
                             }),
                         ).to.equal(h1);
                     });
@@ -529,7 +529,7 @@ describe('core', () => {
                         ).to.equal(c);
                         expect(
                             root.lastChild(vNode => {
-                                return vNode instanceof VElement;
+                                return vNode instanceof TagNode;
                             }),
                         ).to.equal(p);
                     });
@@ -913,10 +913,10 @@ describe('core', () => {
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
                                     'DividerNode',
-                                    'VElement',
+                                    'TagNode',
                                     'ZoneNode: main',
-                                    'VElement',
-                                    'VElement',
+                                    'TagNode',
+                                    'TagNode',
                                     'LayoutContainer',
                                     'ZoneNode: root',
                                 ]);
@@ -935,10 +935,10 @@ describe('core', () => {
                                 });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
                                     'ParagraphNode',
-                                    'VElement',
+                                    'TagNode',
                                     'ZoneNode: main',
-                                    'VElement',
-                                    'VElement',
+                                    'TagNode',
+                                    'TagNode',
                                     'LayoutContainer',
                                     'ZoneNode: root',
                                 ]);
@@ -1116,7 +1116,7 @@ describe('core', () => {
                 describe('splitAt', () => {
                     it('should split a paragraph', async () => {
                         const root = new FragmentNode();
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
                         const a = new CharNode({ char: 'a' });
                         p.append(a);
@@ -1130,7 +1130,7 @@ describe('core', () => {
                     });
                     it('should split a paragraph with markers', async () => {
                         const root = new FragmentNode();
-                        const p = new VElement({ htmlTag: 'P' });
+                        const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
                         const a = new CharNode({ char: 'a' });
                         p.append(a);
