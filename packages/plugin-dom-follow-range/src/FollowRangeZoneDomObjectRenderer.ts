@@ -65,6 +65,7 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
         const selectionIsInEditable =
             !!selection &&
             selection.anchorNode &&
+            selection.anchorNode.parentElement &&
             selection.anchorNode.parentElement.closest('[contenteditable="true"]');
 
         // If the selection goes into an input inside the jw-follow-range, do nothing.

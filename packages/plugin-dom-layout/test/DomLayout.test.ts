@@ -49,6 +49,9 @@ import { Html } from '../../plugin-html/src/Html';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 import { ChangesLocations } from '../../core/src/Memory/Memory';
 import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
+import { DividerNode } from '../../plugin-divider/src/DividerNode';
+import { ImageNode } from '../../plugin-image/src/ImageNode';
+import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -1940,6 +1943,63 @@ describe('DomLayout', () => {
                     console.error = logError;
                 },
                 contentAfter: '<section><br></section>',
+            });
+        });
+        it('should use the selection remove an ancestor of the selection', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<div><p>abcdef</p></div>',
+                stepFunction: async (editor: JWEditor) => {
+                    let nbError = 0;
+                    const logError = console.error;
+                    console.error = (...args): void => {
+                        nbError++;
+                        logError.call(console, ...args);
+                    };
+
+                    const engine = editor.plugins.get(Layout).engines.dom;
+                    const div = engine.components.editable[0].firstChild();
+                    let newDiv: DividerNode;
+                    await editor.execCommand(() => {
+                        newDiv = new DividerNode();
+                        div.after(newDiv);
+                        const d = new DividerNode();
+                        newDiv.append(d);
+                        const newImage = new ImageNode();
+                        d.append(newImage);
+                        const newP = new ParagraphNode();
+                        d.append(newP);
+                        newP.append(new CharNode({ char: '1' }));
+                        newP.append(new CharNode({ char: '2' }));
+                        newP.append(new CharNode({ char: '3' }));
+                    });
+                    await editor.execCommand('setSelection', {
+                        vSelection: {
+                            anchorNode: newDiv.firstLeaf(),
+                            anchorPosition: RelativePosition.BEFORE,
+                            focusNode: newDiv.firstLeaf(),
+                            focusPosition: RelativePosition.AFTER,
+                            direction: Direction.FORWARD,
+                        },
+                    });
+                    await editor.execCommand(() => newDiv.remove());
+
+                    await editor.execCommand(async context => {
+                        newDiv.firstChild().editable = true;
+                        await context.execCommand('setSelection', {
+                            vSelection: {
+                                anchorNode: div.firstLeaf(),
+                                anchorPosition: RelativePosition.BEFORE,
+                                focusNode: div.firstLeaf(),
+                                focusPosition: RelativePosition.AFTER,
+                                direction: Direction.FORWARD,
+                            },
+                        });
+                    });
+
+                    console.error = logError;
+                    expect(nbError).to.be.equal(0, 'No error found');
+                },
+                contentAfter: '<div><p>[a]bcdef</p></div>',
             });
         });
     });
