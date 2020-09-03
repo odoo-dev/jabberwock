@@ -2139,6 +2139,50 @@ describe('core', () => {
 
                     expect(memory._proxies[obj[memoryProxyPramsKey].ID]).to.deep.equal(undefined);
                 });
+                it('rollback before the node are linked', () => {
+                    const memory = new Memory();
+                    const object = makeVersionable({
+                        a: null as number,
+                        b: 1,
+                    });
+                    memory.create('0');
+                    memory.switchTo('0');
+                    memory.create('1');
+                    memory.switchTo('1');
+                    memory.attach(object);
+                    memory.create('2');
+                    memory.switchTo('2');
+                    object.a = 2;
+                    memory.create('3');
+                    memory.switchTo('3');
+                    object.b = 3;
+
+                    memory.switchTo('0');
+                    expect(object).to.deep.equal({});
+                });
+                it('rollback before his parent are linked', () => {
+                    const memory = new Memory();
+                    const array = new VersionableArray();
+                    const object = makeVersionable({
+                        a: null as number,
+                        b: 1,
+                    });
+                    memory.create('0');
+                    memory.switchTo('0');
+                    memory.attach(array);
+                    memory.create('1');
+                    memory.switchTo('1');
+                    array.push(object);
+                    memory.create('2');
+                    memory.switchTo('2');
+                    object.a = 2;
+                    memory.create('3');
+                    memory.switchTo('3');
+                    object.b = 3;
+
+                    memory.switchTo('0');
+                    expect(object).to.deep.equal({});
+                });
             });
 
             describe('snapshot', () => {
