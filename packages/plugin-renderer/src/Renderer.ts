@@ -66,6 +66,9 @@ export class Renderer<T extends JWPluginConfig = JWPluginConfig> extends JWPlugi
     loadRenderers(renderers: Array<RendererConstructor | ModifierRendererConstructor>): void {
         renderers = [...renderers].reverse() as RendererConstructor[];
         for (const RendererClass of renderers) {
+            if (!RendererClass.id) {
+                throw new Error('Missing rendering engine ID.');
+            }
             for (const id in this.engines) {
                 const renderingEngine = this.engines[id];
                 const supportedTypes = [id, ...renderingEngine.constructor.extends];
