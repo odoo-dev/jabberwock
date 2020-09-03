@@ -7,6 +7,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Format } from '../../core/src/Format';
+import { elementFromPoint } from '../../utils/src/polyfill';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------
@@ -317,6 +318,12 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         }
         return domNodes;
     }
+    /**
+     * Return the DOM Node(s) from a position, including DOM into shadow.
+     *
+     * @param node
+     */
+    elementFromPoint = elementFromPoint;
 
     //--------------------------------------------------------------------------
     // Private

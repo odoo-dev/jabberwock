@@ -195,7 +195,6 @@ export class OdooWebsiteEditor extends JWEditor {
                         <t t-zone="tools"/>
                     </div>
                     <div class="d-flex flex-grow-1 overflow-auto">
-                        <t t-zone="snippetManipulators"/>
                         <t t-zone="main"/>
                     </div>
                 </div>
@@ -243,6 +242,10 @@ export class OdooWebsiteEditor extends JWEditor {
                         const zone = new ZoneNode({ managedZones: ['editable'] });
                         zone.editable = true;
                         div.append(zone);
+                        const snippetManipulators = new ZoneNode({
+                            managedZones: ['snippetManipulators'],
+                        });
+                        div.append(snippetManipulators);
                         if (options.devicePreview) {
                             const theme = new ThemeNode();
                             theme.append(div);
