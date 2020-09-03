@@ -1,10 +1,11 @@
 import { JWPlugin, JWPluginConfig } from './JWPlugin';
 import JWEditor from './JWEditor';
 import { CommandParams } from './Dispatcher';
-import { VSelectionDescription } from './VSelection';
+import { VSelectionDescription, Direction } from './VSelection';
 import { VNode, RelativePosition } from './VNodes/VNode';
 import { RuleProperty } from './Mode';
 import { AtomicNode } from './VNodes/AtomicNode';
+import { VRange } from './VRange';
 
 export type InsertParagraphBreakParams = CommandParams;
 export type DeleteBackwardParams = CommandParams;
@@ -12,6 +13,11 @@ export type DeleteForwardParams = CommandParams;
 
 export interface InsertParams extends CommandParams {
     node: VNode;
+}
+
+export interface DeleteWordParams extends CommandParams {
+    text: string;
+    direction: Direction;
 }
 
 export interface VSelectionParams extends CommandParams {
@@ -35,6 +41,9 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         },
         deleteForward: {
             handler: this.deleteForward,
+        },
+        deleteWord: {
+            handler: this.deleteWord,
         },
     };
 
@@ -183,6 +192,52 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             }
         } else {
             range.empty();
+        }
+    }
+    async deleteWord(params: DeleteWordParams): Promise<void> {
+        const range = params.context.range;
+        if (params.direction === Direction.FORWARD) {
+            const text = Array.from(params.text);
+            if (text[text.length - 1] === ' ') {
+                // TODO: The normalizer should be able to detect where to put
+                // the space according to the range and the removal direction.
+                // Make sure to handle a space _before_ the word.
+                text.unshift(text.pop());
+            }
+            let end: VNode = range.end;
+            while (end && text.length) {
+                const next = end.nextSibling();
+                if (next?.textContent === text.shift()) {
+                    end = next;
+                }
+            }
+            const context = {
+                range: new VRange(this.editor, VRange.selecting(range.start, end), {
+                    temporary: true,
+                }),
+            };
+            await params.context.execCommand<Core>('deleteForward', { context });
+        } else {
+            let start: VNode = range.start;
+            const text = Array.from(params.text);
+            if (text[0] === ' ') {
+                // TODO: The normalizer should be able to detect where to put
+                // the space according to the range and the removal direction.
+                // Make sure to treat a space _before_ the word.
+                text.push(text.shift());
+            }
+            while (start && text.length) {
+                const previous = start.previousSibling();
+                if (previous?.textContent === text.pop()) {
+                    start = previous;
+                }
+            }
+            const context = {
+                range: new VRange(this.editor, VRange.selecting(start, range.end), {
+                    temporary: true,
+                }),
+            };
+            await params.context.execCommand<Core>('deleteBackward', { context });
         }
     }
     /**

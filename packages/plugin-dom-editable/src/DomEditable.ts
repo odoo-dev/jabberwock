@@ -4,12 +4,11 @@ import { Direction } from '../../core/src/VSelection';
 import { EventNormalizer, EventBatch, NormalizedAction } from './EventNormalizer';
 import { CommandIdentifier, CommandParams } from '../../core/src/Dispatcher';
 import { InsertTextParams } from '../../plugin-char/src/Char';
-import { VSelectionParams } from '../../core/src/Core';
+import { VSelectionParams, DeleteWordParams } from '../../core/src/Core';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
-import { RelativePosition, VNode } from '../../core/src/VNodes/VNode';
+import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { JWEditor } from '../../core/src/JWEditor';
-import { VRange } from '../../core/src/VRange';
 import { RuleProperty } from '../../core/src/Mode';
 
 export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -101,58 +100,13 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             }
             case 'insertParagraphBreak':
                 return ['insertParagraphBreak', {}];
-            case 'deleteWord':
-                if (action.direction === Direction.FORWARD) {
-                    const text = Array.from(action.text);
-                    if (text[text.length - 1] === ' ') {
-                        // Make sure to handle a space _before_ the word.
-                        text.unshift(text.pop());
-                    }
-                    let end: VNode = this.editor.selection.range.end;
-                    while (end && text.length) {
-                        const next = end.nextSibling();
-                        if (next?.textContent === text.shift()) {
-                            end = next;
-                        }
-                    }
-                    return [
-                        'deleteForward',
-                        {
-                            context: {
-                                range: new VRange(
-                                    this.editor,
-                                    VRange.selecting(this.editor.selection.range.start, end),
-                                    { temporary: true },
-                                ),
-                            },
-                        },
-                    ];
-                } else {
-                    let start: VNode = this.editor.selection.range.start;
-                    const text = Array.from(action.text);
-                    if (text[0] === ' ') {
-                        // Make sure to treat a space _before_ the word.
-                        text.push(text.shift());
-                    }
-                    while (start && text.length) {
-                        const previous = start.previousSibling();
-                        if (previous?.textContent === text.pop()) {
-                            start = previous;
-                        }
-                    }
-                    return [
-                        'deleteBackward',
-                        {
-                            context: {
-                                range: new VRange(
-                                    this.editor,
-                                    VRange.selecting(start, this.editor.selection.range.end),
-                                    { temporary: true },
-                                ),
-                            },
-                        },
-                    ];
-                }
+            case 'deleteWord': {
+                const params: DeleteWordParams = {
+                    direction: action.direction,
+                    text: action.text,
+                };
+                return ['deleteWord', params];
+            }
             case 'deleteContent': {
                 if (action.direction === Direction.FORWARD) {
                     return ['deleteForward', {}];

@@ -852,6 +852,7 @@ describe('Plugin: DevTools', () => {
             expect(Array.from(subpanel.childNodes).map((n: Node) => n.textContent)).to.deep.equal([
                 'deleteBackward',
                 'deleteForward',
+                'deleteWord',
                 'hide',
                 'insert',
                 'insertLineBreak',
@@ -906,7 +907,7 @@ describe('Plugin: DevTools', () => {
                 ),
             ).to.deep.equal(['@commit', 'insertText', '@commit', 'setSelection']);
         });
-        it('should select "hide"', async () => {
+        it('should select "deleteWord"', async () => {
             await openDevTools();
             await click(
                 wrapper
@@ -928,7 +929,7 @@ describe('Plugin: DevTools', () => {
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
-                '<devtools-about><devtools-type>Command</devtools-type> hide</devtools-about>';
+                '<devtools-about><devtools-type>Command</devtools-type> deleteWord</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should select "deleteForward" with arrow', async () => {
@@ -958,7 +959,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-about><devtools-type>Command</devtools-type> deleteForward</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
-        it('should select "hide" with arrow', async () => {
+        it('should select "deleteWord" with arrow', async () => {
             await openDevTools();
             await click(
                 wrapper
@@ -982,7 +983,7 @@ describe('Plugin: DevTools', () => {
 
             const about = wrapper.querySelector('jw-devtools devtools-info devtools-about');
             const aResult =
-                '<devtools-about><devtools-type>Command</devtools-type> hide</devtools-about>';
+                '<devtools-about><devtools-type>Command</devtools-type> deleteWord</devtools-about>';
             expect(about.outerHTML).to.equal(aResult);
         });
         it('should not change the selection with other key', async () => {
