@@ -1,6 +1,6 @@
 import { CaretPosition } from '../../plugin-dom-editable/src/EventNormalizer';
 import { targetDeepest } from './Dom';
-import { getDocument } from './utils';
+import { getDocument, nodeName } from './utils';
 
 export function elementFromPoint(
     x: number,
@@ -23,6 +23,14 @@ export function elementFromPoint(
                     break;
                 }
             }
+        }
+        if (nodeName(element) === 'IFRAME') {
+            const rect = element.getBoundingClientRect();
+            return elementFromPoint(
+                x - rect.x,
+                y - rect.y,
+                (element as HTMLIFrameElement).contentDocument,
+            );
         }
         return element;
     }

@@ -9,12 +9,47 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { nodeName } from '../../utils/src/utils';
 
 const EventForwarded = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart', 'keydown'];
-const forwardEventOutsideIframe = (ev: FocusEvent): void => {
-    const customEvent = new CustomEvent(ev.type + '-iframe', {
-        bubbles: true,
-        composed: true,
-        cancelable: true,
-    });
+const forwardEventOutsideIframe = (ev: Event): void => {
+    let customEvent: Event;
+    if (ev.type === 'mousedown') {
+        const iframe = (ev as MouseEvent).view.frameElement;
+        const rect = iframe.getBoundingClientRect();
+        customEvent = new MouseEvent(ev.type + '-iframe', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            clientX: (ev as MouseEvent).clientX + rect.x,
+            clientY: (ev as MouseEvent).clientY + rect.y,
+        });
+    } else if (ev.type === 'touchstart') {
+        const iframe = (ev as TouchEvent).view.frameElement;
+        const rect = iframe.getBoundingClientRect();
+        customEvent = new MouseEvent('mousedown-iframe', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            clientX: (ev as TouchEvent).touches[0].clientX + rect.x,
+            clientY: (ev as TouchEvent).touches[0].clientY + rect.y,
+        });
+    } else if (ev.type === 'keydown') {
+        customEvent = new KeyboardEvent('keydown-iframe', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            altKey: (ev as KeyboardEvent).altKey,
+            ctrlKey: (ev as KeyboardEvent).ctrlKey,
+            shiftKey: (ev as KeyboardEvent).shiftKey,
+            metaKey: (ev as KeyboardEvent).metaKey,
+            key: (ev as KeyboardEvent).key,
+            code: (ev as KeyboardEvent).code,
+        });
+    } else {
+        customEvent = new CustomEvent(ev.type + '-iframe', {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+        });
+    }
     (ev.currentTarget as Window).frameElement.dispatchEvent(customEvent);
 };
 
