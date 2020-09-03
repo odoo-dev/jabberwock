@@ -149,8 +149,10 @@ export class JWEditor {
         }
 
         // create memory
-        this.memoryInfo = makeVersionable({ commandNames: [], uiCommand: false });
         this.memory = new Memory();
+        this.memory.attach(this.selection.range.start);
+        this.memory.attach(this.selection.range.end);
+        this.memoryInfo = makeVersionable({ commandNames: [], uiCommand: false });
         this.memory.attach(this.memoryInfo);
         this.memory.create(this._memoryID.toString());
 

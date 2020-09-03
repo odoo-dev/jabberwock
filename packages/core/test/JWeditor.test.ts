@@ -7,6 +7,10 @@ import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { VRange } from '../src/VRange';
 import { Char } from '../../plugin-char/src/Char';
+import { RelativePosition } from '../src/VNodes/VNode';
+import { Direction } from '../src/VSelection';
+import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
+import { CharNode } from '../../plugin-char/src/CharNode';
 
 describe('core', () => {
     describe('JWEditor', () => {
@@ -265,6 +269,51 @@ describe('core', () => {
                         });
                     },
                     contentAfter: '<div>cab[]</div>',
+                });
+            });
+        });
+        describe('Memory', () => {
+            it('should use the selection after switch memory slice before the first selection', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>abcdef</p>',
+                    stepFunction: async (editor: JWEditor) => {
+                        const engine = editor.plugins.get(Layout).engines.dom;
+                        const sliceKey = editor.memory.sliceKey;
+                        const p = engine.components.editable[0].firstChild();
+                        let newP: ParagraphNode;
+                        await editor.execCommand(() => {
+                            newP = new ParagraphNode();
+                            newP.append(new CharNode({ char: '1' }));
+                            p.after(newP);
+                        });
+                        await editor.execCommand('setSelection', {
+                            vSelection: {
+                                anchorNode: newP.firstLeaf(),
+                                anchorPosition: RelativePosition.BEFORE,
+                                focusNode: newP.lastLeaf(),
+                                focusPosition: RelativePosition.AFTER,
+                                direction: Direction.FORWARD,
+                            },
+                        });
+                        await editor.execCommand(() => {
+                            editor.memory.switchTo(sliceKey);
+                        });
+                        await editor.execCommand(() => {
+                            newP = new ParagraphNode();
+                            newP.append(new CharNode({ char: '2' }));
+                            p.after(newP);
+                        });
+                        await editor.execCommand('setSelection', {
+                            vSelection: {
+                                anchorNode: newP.firstLeaf(),
+                                anchorPosition: RelativePosition.BEFORE,
+                                focusNode: newP.lastLeaf(),
+                                focusPosition: RelativePosition.AFTER,
+                                direction: Direction.FORWARD,
+                            },
+                        });
+                    },
+                    contentAfter: '<p>abcdef</p><p>[2]</p>',
                 });
             });
         });
