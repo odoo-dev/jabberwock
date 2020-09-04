@@ -25,7 +25,7 @@ export class Code<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Toggle Code view',
                         commandId: 'toggleCodeView',
                         selected: (): boolean => this.active,
-                        modifiers: [new Attributes({ class: 'fas fa-code fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-code fa-fw' })],
                     });
                     return [button];
                 },
