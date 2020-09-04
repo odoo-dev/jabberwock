@@ -1,8 +1,9 @@
 import { Direction } from '../../core/src/VSelection';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint, elementFromPoint } from '../../utils/src/polyfill';
-import { targetDeepest } from '../../utils/src/Dom';
-import { nodeName, getDocument } from '../../utils/src/utils';
+import { targetDeepest, isTextNode } from '../../utils/src/Dom';
+import { nodeName, getDocument, nodeLength } from '../../utils/src/utils';
+import { removeFormattingSpace } from '../../utils/src/formattingSpace';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -14,6 +15,7 @@ const navigationKey = new Set([
     'End',
     'Home',
 ]);
+const trailingSpace = /\s*$/g;
 
 export interface DomSelectionDescription {
     readonly anchorNode: Node;
@@ -1549,16 +1551,20 @@ export class EventNormalizer {
         // Look for visible nodes in editable that would be outside the range.
         const startInsideEditable = this._isInEditable(startContainer);
         const endInsideEditable = this._isInEditable(endContainer);
+        const endLength = isTextNode(endContainer)
+            ? removeFormattingSpace(endContainer).replace(trailingSpace, '').length
+            : nodeLength(endContainer);
         if (startInsideEditable && endInsideEditable) {
             return (
                 startOffset === 0 &&
                 this._isAtVisibleEdge(startContainer, 'start') &&
+                endOffset >= endLength &&
                 this._isAtVisibleEdge(endContainer, 'end')
             );
         } else if (startInsideEditable) {
             return startOffset === 0 && this._isAtVisibleEdge(startContainer, 'start');
         } else if (endInsideEditable) {
-            return this._isAtVisibleEdge(endContainer, 'end');
+            return endOffset >= endLength && this._isAtVisibleEdge(endContainer, 'end');
         } else {
             return true;
         }

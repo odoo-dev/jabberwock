@@ -1442,7 +1442,7 @@ describe('utils', () => {
                     await nextTick();
                     expect(ctx.eventBatches).to.deep.equal([]);
                 });
-                it('wrong mouse select all without event 2 (ubuntu chrome)', async () => {
+                it.skip('wrong mouse select all without event 2 (ubuntu chrome)', async () => {
                     ctx.editable.innerHTML =
                         '<div>a</div><div>b</div><div>c<br/><br/><i>text</i></div>';
                     const p1 = ctx.editable.firstChild;
