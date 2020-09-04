@@ -511,7 +511,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'compositionstart', {});
                     triggerEvent(ctx.editable, 'compositionupdate', { data: 'hillo' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
@@ -567,7 +567,7 @@ describe('utils', () => {
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'raths',
                         inputType: 'insertReplacementText',
                     });
@@ -622,7 +622,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'compositionstart', {});
                     triggerEvent(ctx.editable, 'compositionupdate', { data: 'chris' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'Christophe',
                         inputType: 'insertCompositionText',
                     });
@@ -701,7 +701,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'compositionupdate', { data: '' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
                     triggerEvent(ctx.editable, 'compositionstart', {});
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'ha',
                         inputType: 'insertCompositionText',
                     });
@@ -713,7 +713,7 @@ describe('utils', () => {
                     });
                     triggerEvent(ctx.editable, 'compositionend', { data: 'ha' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: ' ',
                         inputType: 'insertText',
                     });
@@ -763,7 +763,7 @@ describe('utils', () => {
                     ctx.eventBatches.splice(0);
                     triggerEvent(ctx.editable, 'compositionend', { data: 'aXc' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'deleteContentBackward',
                     });
                     text.textContent = 'c def';
@@ -772,7 +772,7 @@ describe('utils', () => {
                     // use a setTimeout, the mutation stack is the same.
                     triggerEvent(ctx.editable, 'input', { inputType: 'deleteContentBackward' });
                     setDomSelection(text, 1, text, 1);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'deleteContentBackward',
                     });
                     text.textContent = ' def';
@@ -780,7 +780,7 @@ describe('utils', () => {
                     text.textContent = ' def';
                     triggerEvent(ctx.editable, 'input', { inputType: 'deleteContentBackward' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'insertText',
                         data: 'aXc',
                     });
@@ -828,20 +828,20 @@ describe('utils', () => {
                     ctx.eventBatches.splice(0);
                     triggerEvent(ctx.editable, 'compositionend', { data: 'abc' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'deleteContentBackward',
                     });
                     text.textContent = 'c def';
                     triggerEvent(ctx.editable, 'input', { inputType: 'deleteContentBackward' });
                     setDomSelection(text, 1, text, 1);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'deleteContentBackward',
                     });
                     text.textContent = ' def';
                     text.textContent = ' def';
                     triggerEvent(ctx.editable, 'input', { inputType: 'deleteContentBackward' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'insertText',
                         data: 'abc',
                     });
@@ -892,7 +892,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'compositionupdate', { data: '' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
                     triggerEvent(ctx.editable, 'compositionstart', { data: '' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
@@ -908,7 +908,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'keyup', { key: 'Unidentified' });
                     triggerEvent(ctx.editable, 'compositionend', { data: 'hello' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: ' ',
                         inputType: 'insertText',
                     });
@@ -977,7 +977,7 @@ describe('utils', () => {
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'insertReplacementText',
                     });
                     text.textContent = 'a brill b';
@@ -1041,7 +1041,7 @@ describe('utils', () => {
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         inputType: 'insertReplacementText',
                     });
                     text.textContent = 'a  b';
@@ -1096,7 +1096,7 @@ describe('utils', () => {
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'toes',
                         inputType: 'insertReplacementText',
                     });
@@ -1144,7 +1144,7 @@ describe('utils', () => {
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'brill',
                         inputType: 'insertReplacementText',
                     });
@@ -1201,7 +1201,7 @@ describe('utils', () => {
 
                     await nextTick();
                     ctx.eventBatches.splice(0);
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'toes',
                         inputType: 'insertReplacementText',
                     });

@@ -157,11 +157,12 @@ export class JWEditor {
         this.memory.create(this._memoryID.toString());
 
         // Start all plugins in the first memory slice.
-        await this.execCommand(async () => {
+        const startPlugins = async (): Promise<void> => {
             for (const plugin of this.plugins.values()) {
                 await plugin.start();
             }
-        });
+        };
+        await this.execCommand(startPlugins);
         this._stage = EditorStage.EDITION;
     }
 

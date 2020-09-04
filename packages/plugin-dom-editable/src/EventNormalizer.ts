@@ -476,16 +476,16 @@ export class EventNormalizer {
      */
     constructor(
         private _isInEditable: (node: Node) => boolean,
+        private _isInEditor: (node: Node) => boolean,
         private _triggerEventBatchOutside: TriggerEventBatchCallback,
-        private forwardEvent: {
-            keydown: (event: KeyboardEvent) => void;
-        },
         private root: Document | ShadowRoot = document,
+        shadowNormalizers?: Map<Document | ShadowRoot, EventNormalizer>,
     ) {
-        this._shadowNormalizers.set(root, this);
-        this._processEventsUpUntilMoveEvent();
+        if (shadowNormalizers) {
+            this._shadowNormalizers = shadowNormalizers;
+        }
 
-        this._bindEvent(root, 'keydown', forwardEvent.keydown, true);
+        this._processEventsUpUntilMoveEvent();
 
         this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
         this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
@@ -530,9 +530,11 @@ export class EventNormalizer {
     destroy(): void {
         this._mutationNormalizer.destroy();
         this._unbindEvents();
-        this._shadowNormalizers.forEach(
-            eventNormalizer => eventNormalizer !== this && eventNormalizer.destroy(),
-        );
+        const eventNormalisers = [...this._shadowNormalizers.values()];
+        this._shadowNormalizers.clear();
+        for (const eventNormalizer of eventNormalisers) {
+            eventNormalizer.destroy();
+        }
         this._triggerEventBatch = null;
         this._isInEditable = null;
     }
@@ -576,8 +578,12 @@ export class EventNormalizer {
     ): void {
         const boundListener = (ev: EventToProcess): void => {
             if ('target' in ev) {
-                const doc = (ev.target as Node).ownerDocument;
-                if (doc !== this.root && doc !== this.root.ownerDocument) {
+                const evTarget = ev.target as Element;
+                if (
+                    evTarget.shadowRoot &&
+                    this._shadowNormalizers.has(evTarget.shadowRoot) &&
+                    (ev.currentTarget as Node).contains(ev.target as Node)
+                ) {
                     return;
                 }
             }
@@ -589,7 +595,7 @@ export class EventNormalizer {
             listener: boundListener,
             capture: capture,
         });
-        target.addEventListener(type, boundListener, true);
+        target.addEventListener(type, boundListener, capture);
     }
     /**
      * Filter event from editable.
@@ -601,7 +607,7 @@ export class EventNormalizer {
      * @param listener to call when the even occurs on the target
      */
     _bindEventInEditable(target: Document | ShadowRoot, type: string, listener: Function): void {
-        const boundListener = (ev: EventToProcess): void => {
+        const boundEditableListener = (ev: EventToProcess): void => {
             let eventTarget = 'target' in ev && (ev.target as Node);
             if (
                 eventTarget instanceof Element &&
@@ -625,7 +631,7 @@ export class EventNormalizer {
                 }
             }
         };
-        this._bindEvent(target, type, boundListener);
+        this._bindEvent(target, type, boundEditableListener);
     }
     /**
      * Unbind all events bound by calls to _bindEvent.
@@ -1508,6 +1514,7 @@ export class EventNormalizer {
         let startOffset = selection.anchorOffset;
         let endContainer = selection.focusNode;
         let endOffset = selection.focusOffset;
+        const doc = startContainer.ownerDocument;
 
         // The selection might still be on a node which has since been removed.
         let invalidStart = true;
@@ -1515,7 +1522,7 @@ export class EventNormalizer {
         while (domNode && invalidStart) {
             if (domNode instanceof ShadowRoot) {
                 domNode = domNode.host;
-            } else if (document.body.contains(domNode)) {
+            } else if (doc.body.contains(domNode)) {
                 invalidStart = false;
             } else {
                 domNode = domNode.parentNode;
@@ -1526,7 +1533,7 @@ export class EventNormalizer {
         while (domNode && invalidEnd) {
             if (domNode instanceof ShadowRoot) {
                 domNode = domNode.host;
-            } else if (document.body.contains(domNode)) {
+            } else if (doc.body.contains(domNode)) {
                 invalidEnd = false;
             } else {
                 domNode = domNode.parentNode;
@@ -1914,16 +1921,20 @@ export class EventNormalizer {
             // normaliser bind event on document.
             return;
         }
+
+        if (!this.root.contains(this.root.getSelection().anchorNode)) {
+            return;
+        }
+
         const selection = this._getSelection();
-        if (!selection) return;
+        if (!selection) {
+            return;
+        }
 
         this._swiftKeyDeleteWordSelectionCache.push(selection);
 
         const keydownEvent = this.currentStackObservation._eventsMap.keydown;
-        const isNavEvent =
-            keydownEvent instanceof KeyboardEvent &&
-            keydownEvent.type === 'keydown' &&
-            navigationKey.has(keydownEvent.key);
+        const isNavEvent = keydownEvent?.type === 'keydown' && navigationKey.has(keydownEvent.key);
         if (isNavEvent) {
             const navTimeout = new Timeout<EventBatch>(() => {
                 const selectionBatch = this._getSelectionBatchOnce();
@@ -1976,7 +1987,7 @@ export class EventNormalizer {
      *
      * @param {MouseEvent} ev
      */
-    _onEventEnableNormalizer(ev: MouseEvent | TouchEvent): void {
+    _onEventEnableNormalizer(ev: MouseEvent | TouchEvent | CustomEvent): void {
         this._enableNormalizer(ev.target as Element);
     }
     /**
@@ -1993,12 +2004,13 @@ export class EventNormalizer {
             (el instanceof HTMLIFrameElement &&
                 (!el.src || el.src === window.location.href) &&
                 el.contentWindow.document);
-        if (root && !this._shadowNormalizers.get(root)) {
+        if (root && !this._shadowNormalizers.get(root) && this._isInEditor(el)) {
             const eventNormalizer = new EventNormalizer(
                 this._isInEditable,
+                this._isInEditor,
                 this._triggerEventBatchOutside,
-                this.forwardEvent,
                 root,
+                this._shadowNormalizers,
             );
             this._shadowNormalizers.set(root, eventNormalizer);
         }
@@ -2019,7 +2031,9 @@ export class EventNormalizer {
                 timeout.fire(emptyBatch);
             }
         }
-        lastTimeout?.fire();
+        if (lastTimeout) {
+            lastTimeout.fire();
+        }
         this._selectionTimeouts = [];
     }
 

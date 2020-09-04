@@ -331,6 +331,8 @@ describe('utils', () => {
                     document.body.removeChild(container);
 
                     expect(value).to.deep.equal('cde');
+
+                    await editor.stop();
                 });
             });
         });

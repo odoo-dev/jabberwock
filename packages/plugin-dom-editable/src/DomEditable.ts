@@ -33,10 +33,8 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
         const domLayout = this.dependencies.get(DomLayout);
         this.eventNormalizer = new EventNormalizer(
             domLayout.isInEditable.bind(domLayout),
+            domLayout.isInEditor.bind(domLayout),
             this._onNormalizedEvent.bind(this),
-            {
-                keydown: domLayout.processKeydown,
-            },
         );
     }
     async stop(): Promise<void> {

@@ -191,6 +191,18 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         );
     }
 
+    /**
+     * Return true if the target node is inside a Jabberwock's editor componant.
+     *
+     * @param target: Node
+     */
+    isInEditor(target: Node): boolean {
+        const layout = this.dependencies.get(Layout);
+        const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+        target = this._getDeepestTarget(target);
+        return !!domLayoutEngine.getNodes(target)?.length;
+    }
+
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
@@ -228,35 +240,66 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         await domLayoutEngine.redraw(params.changesLocations);
     }
-    private _checkFocusChanged(ev: Event): void {
+    private _checkFocusChanged(ev: UIEvent): void {
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
         let focus: Node;
 
+        let iframe: HTMLIFrameElement;
         if (document.activeElement instanceof HTMLIFrameElement) {
-            const doc = document.activeElement.contentDocument;
-            const domSelection = doc.getSelection();
+            iframe = document.activeElement;
+        } else if ('nodeName' in ev.target && nodeName(ev.target as Node) === 'IFRAME') {
+            iframe = ev.target as HTMLIFrameElement;
+        }
+
+        let root: ShadowRoot | Document = document;
+        const shadow = (ev.target as Element).shadowRoot;
+        if (shadow) {
+            root = shadow;
+        }
+
+        if (iframe) {
+            const iframeDoc = iframe.contentDocument;
+            const domSelection = iframeDoc.getSelection();
             if (domSelection.anchorNode.nodeName === 'BODY') {
                 if (domSelection.anchorNode.contains(this.focusedNode)) {
                     // On chrome, when the user  mousedown and grow the selection,
                     // then value of getSelection() doesn't change. We keep the
                     // previous selection if it's inside the current iframe.
                     focus = this.focusedNode;
-                } else if (domLayoutEngine.getNodes(document.activeElement).length) {
-                    focus = document.activeElement;
+                } else if (domLayoutEngine.getNodes(iframe).length) {
+                    focus = iframe;
                 }
             } else if (domLayoutEngine.getNodes(domSelection.anchorNode).length) {
                 focus = domSelection.anchorNode;
-            } else if (domLayoutEngine.getNodes(doc.activeElement).length) {
-                focus = doc.activeElement;
-            } else if (domLayoutEngine.getNodes(document.activeElement).length) {
-                focus = doc.activeElement;
+            } else if (domLayoutEngine.getNodes(iframeDoc.activeElement).length) {
+                focus = iframeDoc.activeElement;
+            } else if (domLayoutEngine.getNodes(iframe).length) {
+                focus = iframeDoc.activeElement;
             }
         } else {
-            const domSelection = document.getSelection();
+            const domSelection = root.getSelection();
+            if (ev.type === 'selectionchange' && !domSelection.anchorNode) {
+                // When the dom are redrawed, the selection can be removed, it's not a blur/focus.
+                return;
+            }
+            let ancestor = domSelection.anchorNode;
+            while (
+                ancestor &&
+                ancestor.parentNode &&
+                ancestor !== document.activeElement &&
+                ancestor !== root.activeElement
+            ) {
+                if (ancestor.parentNode.nodeType === ancestor.DOCUMENT_FRAGMENT_NODE) {
+                    ancestor = (ancestor.parentNode as ShadowRoot).host;
+                } else if (ancestor.parentNode.nodeType === ancestor.DOCUMENT_NODE) {
+                    ancestor = (ancestor.parentNode as Document).defaultView.frameElement;
+                } else {
+                    ancestor = ancestor.parentNode;
+                }
+            }
             if (
-                (document.activeElement === domSelection.anchorNode ||
-                    document.activeElement.contains(domSelection.anchorNode)) &&
+                (ancestor === root.activeElement || ancestor === document.activeElement) &&
                 domLayoutEngine.getNodes(domSelection.anchorNode).length
             ) {
                 focus = domSelection.anchorNode;
