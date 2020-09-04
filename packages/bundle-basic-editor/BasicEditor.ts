@@ -50,6 +50,7 @@ import { Code } from '../plugin-code/src/Code';
 import { FontSize } from '../plugin-font-size/src/FontSize';
 import { Button } from '../plugin-button/src/Button';
 import { HorizontalRule } from '../plugin-horizontal-rule/src/HorizontalRule';
+import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
 
 export class BasicEditor extends JWEditor {
     constructor(params?: { editable?: HTMLElement }) {
@@ -83,6 +84,7 @@ export class BasicEditor extends JWEditor {
                 [Bold],
                 [Italic],
                 [Underline],
+                [Strikethrough],
                 [Link],
                 [Divider],
                 [HorizontalRule],
