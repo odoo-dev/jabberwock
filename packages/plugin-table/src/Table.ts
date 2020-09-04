@@ -13,7 +13,7 @@ import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { TableCellNode } from './TableCellNode';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { TableNode } from './TableNode';
-import { distinct } from '../../utils/src/utils';
+import { distinct, isInTextualContext } from '../../utils/src/utils';
 import { TableRowNode } from './TableRowNode';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
@@ -55,6 +55,7 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
                         name: 'tableButton',
                         label: 'Pick the size of the table you want to insert',
                         commandId: 'insertTable',
+                        visible: isInTextualContext,
                         selected: (editor: JWEditor): boolean =>
                             editor.plugins.get(Table).isTablePickerOpen,
                         modifiers: [new Attributes({ class: 'fa fa-table fa-fw' })],
