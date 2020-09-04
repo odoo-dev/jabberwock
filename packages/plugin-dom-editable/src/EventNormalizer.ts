@@ -2109,16 +2109,16 @@ export class EventNormalizer {
      * Retrieve a `PointerEventPosition` from a` MouseEvent` or a `TouchEvent`.
      */
     _getPointerEventPosition(ev: MouseEvent | TouchEvent): PointerEventPosition {
-        return {
-            x:
-                ev.constructor.name === 'TouchEvent'
-                    ? (ev as TouchEvent).touches[0].clientX
-                    : (ev as MouseEvent).clientX,
-            y:
-                ev.constructor.name === 'TouchEvent'
-                    ? (ev as TouchEvent).touches[0].clientY
-                    : (ev as MouseEvent).clientY,
-            target: ev.target,
-        };
+        let x: number;
+        let y: number;
+        if (ev.constructor.name === 'TouchEvent') {
+            const change = (ev as TouchEvent).touches[0] || (ev as TouchEvent).changedTouches[0];
+            x = change.clientX;
+            y = change.clientY;
+        } else {
+            x = (ev as MouseEvent).clientX;
+            y = (ev as MouseEvent).clientY;
+        }
+        return { x, y, target: ev.target };
     }
 }
