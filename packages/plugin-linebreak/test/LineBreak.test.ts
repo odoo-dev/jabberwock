@@ -25,7 +25,7 @@ describePlugin(LineBreak, testEditor => {
             await editor.start();
         });
         afterEach(() => {
-            editor.stop();
+            return editor.stop();
         });
         it('should not parse a placeholder BR node', async () => {
             const p = document.createElement('p');
@@ -49,6 +49,7 @@ describePlugin(LineBreak, testEditor => {
             const parser = editor.plugins.get(Parser).engines['dom/html'];
             const parsedVNodes = await parser.parse(p);
             expect(parsedVNodes[0].childVNodes.length).to.equal(0);
+            await editor.stop();
         });
         it('should parse two BR node as one line break', async () => {
             const p = document.createElement('p');

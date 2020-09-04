@@ -17,6 +17,7 @@ import { TagNode } from '../../core/src/VNodes/TagNode';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
+import { nodeLength } from '../../utils/src/utils';
 
 export async function selectAllWithKeyA(container: HTMLElement | ShadowRoot): Promise<void> {
     setDomSelection(
@@ -39,11 +40,12 @@ export async function selectAllWithKeyA(container: HTMLElement | ShadowRoot): Pr
         ctrlKey: true,
     });
     if (!ev.defaultPrevented) {
+        const last = container.querySelector('[contenteditable]').lastChild.lastChild;
         setDomSelection(
             container.querySelector('[contenteditable]').firstChild.firstChild,
             0,
-            container.querySelector('[contenteditable]').lastChild.lastChild,
-            4,
+            last,
+            nodeLength(last),
         );
     }
     await nextTick();
@@ -197,7 +199,7 @@ describe('DomEditable', () => {
                     key: 'Enter',
                     code: 'Enter',
                 });
-                triggerEvent(container.querySelector('section'), 'beforeInput', {
+                triggerEvent(container.querySelector('section'), 'beforeinput', {
                     inputType: 'insertParagraph',
                 });
 
@@ -243,7 +245,7 @@ describe('DomEditable', () => {
                     key: 'Enter',
                     code: 'Enter',
                 });
-                triggerEvent(container.querySelector('section'), 'beforeInput', {
+                triggerEvent(container.querySelector('section'), 'beforeinput', {
                     inputType: 'insertLineBreak',
                 });
 

@@ -9,10 +9,24 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { nodeName } from '../../utils/src/utils';
 
 const EventForwarded = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart', 'keydown'];
-const forwardEventOutsideIframe = (ev: Event): void => {
+const forwardEventOutsideIframe = (ev: UIEvent): void => {
+    const target = ev.target as Node;
     let customEvent: Event;
+    let win: Window;
+    if (target.nodeType === target.DOCUMENT_NODE) {
+        win = (target as Document).defaultView;
+    } else if ('ownerDocument' in target) {
+        win = target.ownerDocument.defaultView;
+    } else if ('ownerDocument' in ev.currentTarget) {
+        win = (ev.currentTarget as Node).ownerDocument.defaultView;
+    } else if ((ev.currentTarget as Window).self === ev.currentTarget) {
+        win = ev.currentTarget as Window;
+    } else if ('view' in ev) {
+        win = ev.view;
+    }
+
+    const iframe = win.frameElement;
     if (ev.type === 'mousedown') {
-        const iframe = (ev as MouseEvent).view.frameElement;
         const rect = iframe.getBoundingClientRect();
         customEvent = new MouseEvent(ev.type + '-iframe', {
             bubbles: true,
@@ -22,7 +36,6 @@ const forwardEventOutsideIframe = (ev: Event): void => {
             clientY: (ev as MouseEvent).clientY + rect.y,
         });
     } else if (ev.type === 'touchstart') {
-        const iframe = (ev as TouchEvent).view.frameElement;
         const rect = iframe.getBoundingClientRect();
         customEvent = new MouseEvent('mousedown-iframe', {
             bubbles: true,
@@ -50,7 +63,7 @@ const forwardEventOutsideIframe = (ev: Event): void => {
             cancelable: true,
         });
     }
-    (ev.currentTarget as Window).frameElement.dispatchEvent(customEvent);
+    iframe.dispatchEvent(customEvent);
 };
 
 export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {

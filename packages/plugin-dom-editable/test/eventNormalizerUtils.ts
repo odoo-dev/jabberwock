@@ -46,6 +46,15 @@ export interface TestInputEvent {
     inputType?: string;
     defaultPrevented?: boolean;
 }
+export interface TestMouseEvent {
+    type: 'mousedown' | 'click' | 'mouseup';
+    nodeId: number;
+    clientX?: number;
+    clientY?: number;
+    button?: number;
+    detail?: number;
+    defaultPrevented?: boolean;
+}
 
 export interface RemovedNodesTargetMutation {
     nodeId: number;
@@ -96,6 +105,7 @@ export type TestEvent =
     | TestKeyboardEvent
     | TestCompositionEvent
     | TestInputEvent
+    | TestMouseEvent
     | TestMutationEvent
     | TestSelectionEvent;
 
@@ -114,37 +124,56 @@ class SimulatedInputEvent extends InputEvent {
     }
 }
 
-const eventTypes: Record<string, new (name: string, options: object) => Event> = {
-    'pointer': MouseEvent,
-    'contextmenu': MouseEvent,
-    'select': MouseEvent,
-    'wheel': MouseEvent,
-    'click': MouseEvent,
-    'dblclick': MouseEvent,
-    'mousedown': MouseEvent,
-    'mouseenter': MouseEvent,
-    'mouseleave': MouseEvent,
-    'mousemove': MouseEvent,
-    'mouseout': MouseEvent,
-    'mouseover': MouseEvent,
-    'mouseup': MouseEvent,
-    'compositionstart': CompositionEvent,
-    'compositionend': CompositionEvent,
-    'compositionupdate': CompositionEvent,
-    'input': SimulatedInputEvent,
-    'beforeinput': SimulatedInputEvent,
-    'keydown': KeyboardEvent,
-    'keypress': KeyboardEvent,
-    'keyup': KeyboardEvent,
-    'dragstart': DragEvent,
-    'dragend': DragEvent,
-    'drop': DragEvent,
-    'beforecut': ClipboardEvent,
-    'cut': ClipboardEvent,
-    'paste': ClipboardEvent,
-    'touchstart': TouchEvent,
-    'touchend': TouchEvent,
+type DOMWindow = Window & {
+    MouseEvent: MouseEvent;
+    CompositionEvent: CompositionEvent;
+    KeyboardEvent: KeyboardEvent;
+    DragEvent: DragEvent;
+    ClipboardEvent: ClipboardEvent;
+    TouchEvent: TouchEvent;
 };
+
+function getEventConstructor(
+    win: Window,
+    type: string,
+): new (name: string, options: object) => Event {
+    const domWindow = win as DOMWindow;
+    const eventTypes = {
+        'pointer': domWindow.MouseEvent,
+        'contextmenu': domWindow.MouseEvent,
+        'select': domWindow.MouseEvent,
+        'wheel': domWindow.MouseEvent,
+        'click': domWindow.MouseEvent,
+        'dblclick': domWindow.MouseEvent,
+        'mousedown': domWindow.MouseEvent,
+        'mouseenter': domWindow.MouseEvent,
+        'mouseleave': domWindow.MouseEvent,
+        'mousemove': domWindow.MouseEvent,
+        'mouseout': domWindow.MouseEvent,
+        'mouseover': domWindow.MouseEvent,
+        'mouseup': domWindow.MouseEvent,
+        'compositionstart': domWindow.CompositionEvent,
+        'compositionend': domWindow.CompositionEvent,
+        'compositionupdate': domWindow.CompositionEvent,
+        'input': SimulatedInputEvent,
+        'beforeinput': SimulatedInputEvent,
+        'keydown': domWindow.KeyboardEvent,
+        'keypress': domWindow.KeyboardEvent,
+        'keyup': domWindow.KeyboardEvent,
+        'dragstart': domWindow.DragEvent,
+        'dragend': domWindow.DragEvent,
+        'drop': domWindow.DragEvent,
+        'beforecut': domWindow.ClipboardEvent,
+        'cut': domWindow.ClipboardEvent,
+        'paste': domWindow.ClipboardEvent,
+        'touchstart': domWindow.TouchEvent,
+        'touchend': domWindow.TouchEvent,
+    };
+    if (!eventTypes[type]) {
+        throw new Error('The event "' + type + '" is not implemented for the tests.');
+    }
+    return eventTypes[type];
+}
 
 /**
  * Trigger events natively on the specified target.
@@ -177,8 +206,8 @@ export function triggerEvent(
         },
         options,
     );
-    const EventClass = eventTypes[eventName] || Event;
-    if (EventClass === ClipboardEvent && !('clipboardData' in options)) {
+    const EventClass = getEventConstructor(el.ownerDocument.defaultView, eventName);
+    if (EventClass.name === 'ClipboardEvent' && !('clipboardData' in options)) {
         throw new Error('Wrong test');
     }
     const ev = new EventClass(eventName, options);
@@ -268,10 +297,10 @@ export class NodeIndexGenerator {
 /**
  * Search in dom (including shadow element) the contenteditable=true.
  */
-function getEditableElement(): Element {
-    let editableElement = document.querySelector('[contentEditable=true]');
+function getEditableElement(container: Element | Document = document): Element {
+    let editableElement = container.querySelector('[contentEditable=true]');
     if (!editableElement) {
-        const els = [...document.querySelectorAll('jw-shadow, iframe')];
+        const els = [...container.querySelectorAll('jw-shadow, iframe')];
         while (!editableElement && els.length) {
             const el = els.pop();
             if (el instanceof HTMLIFrameElement) {
@@ -291,9 +320,12 @@ function getEditableElement(): Element {
  *
  * @param eventStackList All the stack that have been recorded.
  */
-export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void> {
+export async function triggerEvents(
+    eventStackList: TestEvent[][],
+    container: Element | Document = document,
+): Promise<void> {
     const addedNodes: Node[] = [];
-    const nodeIndexGenerator = new NodeIndexGenerator(getEditableElement());
+    const nodeIndexGenerator = new NodeIndexGenerator(getEditableElement(container));
     for (const eventStack of eventStackList) {
         let keyEventPrevented = false;
         for (const testEvent of eventStack) {
@@ -361,11 +393,16 @@ export async function triggerEvents(eventStackList: TestEvent[][]): Promise<void
                         selectionEvent.focus.offset,
                     );
                 }
+            } else if (['mousedown', 'click', 'mouseup'].includes(testEvent.type)) {
+                const { type, ...options } = testEvent as TestMouseEvent;
+                const target = nodeIndexGenerator.getNode(options.nodeId);
+                delete options.nodeId;
+                triggerEvent(target, type, options as TriggerNativeEventsOption);
             } else {
                 const { type, ...options } = testEvent;
                 if (!(keyEventPrevented && ['keydown', 'keypress', 'keyup'].includes(type))) {
                     const event = triggerEvent(
-                        getEditableElement(),
+                        getEditableElement(container),
                         type,
                         options as TriggerNativeEventsOption,
                     );
@@ -410,16 +447,14 @@ export function testCallbackBefore(): TestContext {
         (domNode: Node) => {
             return editable === domNode || editable.contains(domNode);
         },
+        (domNode: Node) => {
+            return editable === domNode || editable.contains(domNode);
+        },
         async function(batchPromise: Promise<EventBatch>): Promise<void> {
             const batch = await batchPromise;
             if (batch.actions.length > 0) {
                 eventBatchs.push(await batch);
             }
-        },
-        {
-            keydown: (): void => {
-                return;
-            },
         },
     );
     return {

@@ -1305,7 +1305,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'compositionstart', {});
                     triggerEvent(ctx.editable, 'compositionupdate', { data: 'hello' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
@@ -1318,7 +1318,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'keyup', { key: 'Unidentified' });
                     triggerEvent(ctx.editable, 'compositionend', { data: 'hello' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: ' ',
                         inputType: 'insertText',
                     });
@@ -1356,7 +1356,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'compositionstart', {});
                     triggerEvent(ctx.editable, 'compositionupdate', { data: 'hillo' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: 'hello',
                         inputType: 'insertCompositionText',
                     });
@@ -1369,7 +1369,7 @@ describe('utils', () => {
                     triggerEvent(ctx.editable, 'keyup', { key: 'Unidentified' });
                     triggerEvent(ctx.editable, 'compositionend', { data: 'hello' });
                     triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified' });
-                    triggerEvent(ctx.editable, 'beforeInput', {
+                    triggerEvent(ctx.editable, 'beforeinput', {
                         data: ' ',
                         inputType: 'insertText',
                     });
@@ -5175,7 +5175,7 @@ describe('utils', () => {
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: 'Enter' });
-                        triggerEvent(ctx.editable, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
 
                         const newText = document.createTextNode('ab');
                         p.insertBefore(newText, text);
@@ -5206,7 +5206,7 @@ describe('utils', () => {
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'keypress', { key: 'Enter', code: '' });
-                        triggerEvent(ctx.editable, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
 
                         const newText = document.createTextNode('ab');
                         p.insertBefore(newText, text);
@@ -5248,7 +5248,7 @@ describe('utils', () => {
                         triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'keypress', { key: 'Enter', code: '' });
-                        triggerEvent(ctx.editable, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
 
                         text.textContent = 'abc def';
                         const newText = document.createTextNode('abc\u00A0');
@@ -5294,7 +5294,7 @@ describe('utils', () => {
                         triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'keypress', { key: 'Enter', code: '' });
-                        triggerEvent(ctx.editable, 'beforeInput', { inputType: 'insertParagraph' });
+                        triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
 
                         const newText = document.createTextNode('abc');
                         p.insertBefore(newText, text);
@@ -5336,7 +5336,7 @@ describe('utils', () => {
                         await nextTick();
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: 'Enter' });
-                        triggerEvent(ctx.editable, 'beforeInput', { inputType: 'insertLineBreak' });
+                        triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertLineBreak' });
 
                         const newText = document.createTextNode('ab');
                         p.insertBefore(newText, text);
