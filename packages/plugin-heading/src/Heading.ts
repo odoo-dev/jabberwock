@@ -18,6 +18,7 @@ import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 import { Paragraph } from '../../plugin-paragraph/src/Paragraph';
 import { Pre } from '../../plugin-pre/src/Pre';
 import { PreNode } from '../../plugin-pre/src/PreNode';
+import { BlockquoteNode } from '../../plugin-blockquote/src/BlockquoteNode';
 
 export interface HeadingParams extends CommandParams {
     level: number;
@@ -139,7 +140,8 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             node =>
                 node instanceof HeadingNode ||
                 node instanceof ParagraphNode ||
-                node instanceof PreNode,
+                node instanceof PreNode ||
+                node instanceof BlockquoteNode,
         )) {
             const heading = this._createHeadingContainer(params.level);
             heading.modifiers = node.modifiers.clone();
