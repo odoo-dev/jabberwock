@@ -83,8 +83,8 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
             const size = container.getBoundingClientRect();
             const range = selection.getRangeAt(0);
             const box = range.getBoundingClientRect();
-            container.style.top = window.scrollY + box.top - size.height + 'px';
-            let leftPosition = box.left + (box.width - size.width) / 2;
+            container.style.top = window.scrollY + box.bottom + size.height / 2 + 'px';
+            let leftPosition = box.left + (box.width - size.width) * 0.3;
             leftPosition = Math.max(0, leftPosition);
             container.style.left = leftPosition + 'px';
         } else if (container.style.display !== 'none') {
