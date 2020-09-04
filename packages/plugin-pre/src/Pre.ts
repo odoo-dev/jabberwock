@@ -13,6 +13,16 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { isInTextualContext } from '../../utils/src/utils';
+import { VRange } from '../../core/src/VRange';
+
+export function isInPre(range: VRange): boolean {
+    const startPre = !!range.start.closest(PreNode);
+    if (!startPre || range.isCollapsed()) {
+        return startPre;
+    } else {
+        return !!range.end.closest(PreNode);
+    }
+}
 
 export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     commands = {
@@ -33,13 +43,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
                         commandId: 'applyPreStyle',
                         visible: isInTextualContext,
                         selected: (editor: JWEditor): boolean => {
-                            const range = editor.selection.range;
-                            const startPre = !!range.start.closest(PreNode);
-                            if (!startPre || range.isCollapsed()) {
-                                return startPre;
-                            } else {
-                                return !!range.end.closest(PreNode);
-                            }
+                            return isInPre(editor.selection.range);
                         },
                         modifiers: [new Attributes({ class: 'pre' })],
                     });
