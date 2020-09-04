@@ -243,7 +243,11 @@ export class OdooWebsiteEditor extends JWEditor {
                     id: 'editable',
                     render: async (editor: JWEditor): Promise<VNode[]> => {
                         if (typeof options.source === 'string') {
-                            return editor.plugins.get(Parser).parse('text/html', options.source);
+                            let source: string = options.source;
+                            if (!source.length) {
+                                source = '<p><br></p>';
+                            }
+                            return editor.plugins.get(Parser).parse('text/html', source);
                         } else {
                             return parseEditable(editor, options.source);
                         }
