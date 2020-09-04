@@ -85,32 +85,15 @@ interface OdooWebsiteEditorOptions {
 }
 
 const defaultToolbarLayout = [
+    ['BoldButton', 'ItalicButton', 'UnderlineButton', 'StrikethroughButton'],
     [
-        [
-            'ParagraphButton',
-            'Heading1Button',
-            'Heading2Button',
-            'Heading3Button',
-            'Heading4Button',
-            'Heading5Button',
-            'Heading6Button',
-            'PreButton',
-        ],
+        'OdooHeading1ToggleButton',
+        'OdooHeading2ToggleButton',
+        'OdooPreToggleButton',
+        'OdooBlockquoteToggleButton',
     ],
-    ['FontSizeInput'],
-    [
-        'BoldButton',
-        'ItalicButton',
-        'UnderlineButton',
-        'OdooTextColorButton',
-        'OdooBackgroundColorButton',
-        'RemoveFormatButton',
-    ],
-    ['AlignLeftButton', 'AlignCenterButton', 'AlignRightButton', 'AlignJustifyButton'],
-    ['OrderedListButton', 'UnorderedListButton', 'ChecklistButton'],
-    ['IndentButton', 'OutdentButton'],
-    ['OdooLinkButton'],
-    ['OdooMediaButton'],
+    ['UnorderedListButton', 'ChecklistButton'],
+    ['OdooLinkToggleButton'],
 ];
 export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOptions) {
