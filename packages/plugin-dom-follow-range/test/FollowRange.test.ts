@@ -212,20 +212,20 @@ describe('FollowRange', async () => {
         setDomSelection(i.firstChild, 10, i.firstChild, 14);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
-        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
+        expect(parseInt(range.style.top, 10)).to.be.within(135, 145);
         expect(parseInt(range.style.left, 10)).to.be.within(110, 120);
 
         setDomSelection(i.firstChild, 10, i.firstChild, 20);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
-        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
-        expect(parseInt(range.style.left, 10)).to.be.within(145, 160);
+        expect(parseInt(range.style.top, 10)).to.be.within(135, 145);
+        expect(parseInt(range.style.left, 10)).to.be.within(125, 135);
 
         setDomSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
-        expect(parseInt(range.style.top, 10)).to.be.within(40, 50);
-        expect(parseInt(range.style.left, 10)).to.be.within(130, 145);
+        expect(parseInt(range.style.top, 10)).to.be.within(135, 145);
+        expect(parseInt(range.style.left, 10)).to.be.within(80, 90);
 
         setDomSelection(i.firstChild, 20, i.firstChild, 20);
         await waitToolbarRedraw();
@@ -308,20 +308,20 @@ describe('FollowRange', async () => {
         setDomSelection(i.firstChild, 10, i.firstChild, 14);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
-        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
+        expect(parseInt(range.style.top, 10)).to.be.within(135, 145);
         expect(parseInt(range.style.left, 10)).to.be.within(110, 120);
 
         setDomSelection(i.firstChild, 10, i.firstChild, 20);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
-        expect(parseInt(range.style.top, 10)).to.be.within(80, 90);
-        expect(parseInt(range.style.left, 10)).to.be.within(145, 160);
+        expect(parseInt(range.style.top, 10)).to.be.within(135, 145);
+        expect(parseInt(range.style.left, 10)).to.be.within(130, 140);
 
         setDomSelection(i.firstChild, 10, i.previousSibling.previousSibling.previousSibling, 10);
         await waitToolbarRedraw();
         expect(range.style.display).to.equal('');
-        expect(parseInt(range.style.top, 10)).to.be.within(40, 50);
-        expect(parseInt(range.style.left, 10)).to.be.within(130, 145);
+        expect(parseInt(range.style.top, 10)).to.be.within(135, 145);
+        expect(parseInt(range.style.left, 10)).to.be.within(80, 90);
 
         setDomSelection(i.firstChild, 20, i.firstChild, 20);
         await waitToolbarRedraw();
