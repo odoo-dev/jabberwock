@@ -64,6 +64,7 @@ import { Template, TemplateName, TemplateConfiguration } from '../plugin-templat
 import { ZoneNode } from '../plugin-layout/src/ZoneNode';
 import { DividerNode } from '../plugin-divider/src/DividerNode';
 import { Attributes } from '../plugin-xml/src/Attributes';
+import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -141,6 +142,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Bold],
                 [Italic],
                 [Underline],
+                [Strikethrough],
                 [Input],
                 [FontSize],
                 [Link],
