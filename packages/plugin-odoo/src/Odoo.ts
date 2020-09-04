@@ -6,7 +6,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import JWEditor, { Loadables } from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { Link } from '../../plugin-link/src/Link';
+import { Link, isInLink, LinkParams } from '../../plugin-link/src/Link';
 import { Xml } from '../../plugin-xml/src/Xml';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
@@ -22,11 +22,13 @@ import { ComponentDefinition } from '../../plugin-layout/src/LayoutEngine';
 import { InsertTableParams } from '../../plugin-table/src/Table';
 import { TableNode } from '../../plugin-table/src/TableNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
-import { HeadingParams } from '../../plugin-heading/src/Heading';
+import { HeadingParams, isInHeading, Heading } from '../../plugin-heading/src/Heading';
 import { isInTextualContext } from '../../utils/src/utils';
 import { NoteEditableXmlDomParser } from './NoteEditableXmlDomParser';
 import { SpanFormat } from '../../plugin-span/src/SpanFormat';
 import { OdooParallaxSpanXmlDomParser } from './OdooParallaxSpanXmlDomParser';
+import { isInPre, Pre } from '../../plugin-pre/src/Pre';
+import { isInBlockquote, Blockquote } from '../../plugin-blockquote/src/Blockquote';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -99,6 +101,25 @@ export interface SetImageClassParams extends CommandParams {
     className: OdooImageClasses;
 }
 
+function odooHeadingToggleButton(level: number): ComponentDefinition {
+    return {
+        id: 'OdooHeading' + level + 'ToggleButton',
+        async render(): Promise<ActionableNode[]> {
+            const button = new ActionableNode({
+                name: 'heading' + level,
+                label: 'H' + level,
+                commandId: 'toggleHeadingStyle',
+                commandArgs: { level: level } as HeadingParams,
+                visible: isInTextualContext,
+                selected: (editor: JWEditor): boolean => {
+                    return isInHeading(editor.selection.range, level);
+                },
+            });
+            return [button];
+        },
+    };
+}
+
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Inline, Link, Xml];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
@@ -125,6 +146,21 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                                 node instanceof InlineNode &&
                                 !!node.modifiers.find(LinkFormat)
                             );
+                        },
+                        modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'OdooLinkToggleButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'link',
+                        label: 'Toggle link',
+                        commandId: 'toggleLinkWithDialog',
+                        selected: (editor: JWEditor): boolean => {
+                            return isInLink(editor.selection.range);
                         },
                         modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
                     });
@@ -304,6 +340,38 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     return [button];
                 },
             },
+            ...[1, 2, 3, 4, 5, 6].map(odooHeadingToggleButton),
+            {
+                id: 'OdooPreToggleButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'pre',
+                        label: '<>',
+                        commandId: 'togglePreStyle',
+                        visible: isInTextualContext,
+                        selected: (editor: JWEditor): boolean => {
+                            return isInPre(editor.selection.range);
+                        },
+                    });
+                    return [button];
+                },
+            },
+            {
+                id: 'OdooBlockquoteToggleButton',
+                async render(): Promise<ActionableNode[]> {
+                    const button = new ActionableNode({
+                        name: 'blockquote',
+                        label: 'Blockquote',
+                        commandId: 'toggleBlockquoteStyle',
+                        visible: isInTextualContext,
+                        selected: (editor: JWEditor): boolean => {
+                            return isInBlockquote(editor.selection.range);
+                        },
+                        modifiers: [new Attributes({ class: 'fa fa-quote-right fa-fw' })],
+                    });
+                    return [button];
+                },
+            },
         ],
         componentZones: [
             ['OdooLinkButton', ['actionables']],
@@ -322,6 +390,18 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         },
         setImageClass: {
             handler: this.setImageClass,
+        },
+        toggleHeadingStyle: {
+            handler: this.toggleHeadingStyle,
+        },
+        togglePreStyle: {
+            handler: this.togglePreStyle,
+        },
+        toggleBlockquoteStyle: {
+            handler: this.toggleBlockquoteStyle,
+        },
+        toggleLinkWithDialog: {
+            handler: this.toggleLinkWithDialog,
         },
     };
     commandHooks = {
@@ -376,6 +456,58 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             classList.toggle(params.className);
         }
     }
+    /**
+     * Change the formatting of the nodes in given range to Heading, or to the
+     * default container if they are already in the given heading level.
+     *
+     * @param params
+     */
+    async toggleHeadingStyle(params: HeadingParams): Promise<void> {
+        return params.context.execCommand<Heading>('applyHeadingStyle', {
+            level: isInHeading(params.context.range, params.level) ? 0 : params.level,
+        });
+    }
+    /**
+     * Change the formatting of the nodes in given range to Pre, or to the
+     * default container if they are already in Pre.
+     *
+     * @param params
+     */
+    async togglePreStyle(params: CommandParams): Promise<void> {
+        if (isInPre(params.context.range)) {
+            return params.context.execCommand<Heading>('applyHeadingStyle', {
+                level: 0,
+            });
+        } else {
+            return params.context.execCommand<Pre>('applyPreStyle');
+        }
+    }
+    /**
+     * Change the formatting of the nodes in given range to Blockquote, or to
+     * the default container if they are already in Blockquote.
+     *
+     * @param params
+     */
+    async toggleBlockquoteStyle(params: CommandParams): Promise<void> {
+        if (isInBlockquote(params.context.range)) {
+            return params.context.execCommand<Heading>('applyHeadingStyle', {
+                level: 0,
+            });
+        } else {
+            return params.context.execCommand<Blockquote>('applyBlockquoteStyle');
+        }
+    }
+    async toggleLinkWithDialog(params: LinkParams): Promise<void> {
+        if (isInLink(params.context.range)) {
+            return params.context.execCommand<Link>('unlink');
+        } else {
+            return params.context.execCommand('openLinkDialog');
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
 
     _makeImagePaddingComponent(
         componentId: string,
