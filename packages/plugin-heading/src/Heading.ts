@@ -19,11 +19,20 @@ import { Paragraph } from '../../plugin-paragraph/src/Paragraph';
 import { Pre } from '../../plugin-pre/src/Pre';
 import { PreNode } from '../../plugin-pre/src/PreNode';
 import { BlockquoteNode } from '../../plugin-blockquote/src/BlockquoteNode';
+import { VRange } from '../../core/src/VRange';
 
 export interface HeadingParams extends CommandParams {
     level: number;
 }
 
+export function isInHeading(range: VRange, level: number): boolean {
+    const startIsHeading = range.start.closest(HeadingNode)?.level === level;
+    if (!startIsHeading || range.isCollapsed()) {
+        return startIsHeading;
+    } else {
+        return range.end.closest(HeadingNode)?.level === level;
+    }
+}
 function headingButton(level: number): ComponentDefinition {
     return {
         id: 'Heading' + level + 'Button',
@@ -35,13 +44,7 @@ function headingButton(level: number): ComponentDefinition {
                 commandArgs: { level: level } as HeadingParams,
                 visible: isInTextualContext,
                 selected: (editor: JWEditor): boolean => {
-                    const range = editor.selection.range;
-                    const startIsHeading = range.start.closest(HeadingNode)?.level === level;
-                    if (!startIsHeading || range.isCollapsed()) {
-                        return startIsHeading;
-                    } else {
-                        return range.end.closest(HeadingNode)?.level === level;
-                    }
+                    return isInHeading(editor.selection.range, level);
                 },
                 modifiers: [new Attributes({ class: 'h' + level })],
             });

@@ -20,6 +20,7 @@ import { OwlNode } from '../../plugin-owl/src/OwlNode';
 import { LinkComponent } from './components/LinkComponent';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { BootstrapButtonLinkMailObjectModifierRenderer } from './BootstrapButtonLinkMailObjectModifierRenderer';
+import { VRange } from '../../core/src/VRange';
 
 export interface LinkParams extends CommandParams {
     label?: string;
@@ -29,6 +30,10 @@ export interface LinkParams extends CommandParams {
      * Could be "_blank", "_self" ,"_parent", "_top" or the framename.
      */
     target?: string;
+}
+export function isInLink(range: VRange): boolean {
+    const node = range.start.nextSibling() || range.start.previousSibling();
+    return node && node instanceof InlineNode && !!node.modifiers.find(LinkFormat);
 }
 
 export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
@@ -80,13 +85,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Insert link',
                         commandId: 'link',
                         selected: (editor: JWEditor): boolean => {
-                            const range = editor.selection.range;
-                            const node = range.start.nextSibling() || range.start.previousSibling();
-                            return (
-                                node &&
-                                node instanceof InlineNode &&
-                                !!node.modifiers.find(LinkFormat)
-                            );
+                            return isInLink(editor.selection.range);
                         },
                         modifiers: [new Attributes({ class: 'fa fa-link fa-fw' })],
                     });
@@ -101,13 +100,7 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         label: 'Remove link',
                         commandId: 'unlink',
                         enabled: (editor: JWEditor): boolean => {
-                            const range = editor.selection.range;
-                            const node = range.start.nextSibling() || range.start.previousSibling();
-                            return (
-                                node &&
-                                node instanceof InlineNode &&
-                                !!node.modifiers.find(LinkFormat)
-                            );
+                            return isInLink(editor.selection.range);
                         },
                         modifiers: [new Attributes({ class: 'fa fa-unlink fa-fw' })],
                     });
