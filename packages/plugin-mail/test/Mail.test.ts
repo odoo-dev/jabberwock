@@ -52,10 +52,9 @@ describePlugin(Mail, testEditor => {
                     // with mac, the base hase the same layout but the base64 is different.
                     result.replace(/data:image\/png;base64,[^"]+/gi, 'data:image/png;base64,'),
                 ).to.equal(
-                    testMailResult.replace(
-                        /data:image\/png;base64,[^"]+/gi,
-                        'data:image/png;base64,',
-                    ),
+                    testMailResult
+                        .trim()
+                        .replace(/data:image\/png;base64,[^"]+/gi, 'data:image/png;base64,'),
                 );
             },
             contentAfter: '<jw-shadow></jw-shadow>',
