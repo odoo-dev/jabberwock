@@ -443,7 +443,7 @@ describe('VDocument', () => {
                             await deleteForward(editor);
                             await deleteForward(editor);
                         },
-                        contentAfter: '<p><span><b>a[]</b></span><br><span><b>cde</b></span></p>',
+                        contentAfter: '<p><span><b>a[]<br>cde</b></span></p>',
                     });
                 });
             });
@@ -1108,7 +1108,7 @@ describe('VDocument', () => {
                             await deleteBackward(editor);
                             await deleteBackward(editor);
                         },
-                        contentAfter: '<p><span><b>ab</b></span><br><span><b>[]de</b></span></p>',
+                        contentAfter: '<p><span><b>ab<br>[]de</b></span></p>',
                     });
                 });
             });
