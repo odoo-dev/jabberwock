@@ -741,8 +741,7 @@ describe('DomShadow', async () => {
 
                 expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll');
 
-                let domEditable = domEngine.getDomNodes(editable)[0] as Element;
-                domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
                     '<section contenteditable="true"><div>abcd</div></section>',
                 );
@@ -819,8 +818,7 @@ describe('DomShadow', async () => {
 
                 expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll');
 
-                let domEditable = domEngine.getDomNodes(editable)[0] as Element;
-                domEditable = domEngine.getDomNodes(editable)[0] as Element;
+                const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
                     '<section contenteditable="true"><div>abcd</div></section>',
                 );

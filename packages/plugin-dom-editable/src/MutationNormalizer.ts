@@ -16,19 +16,24 @@ export class MutationNormalizer {
      * The MutationObserver used by the normalizer to watch the nodes that are
      * being modified since the normalizer creation until it is drestroyed.
      */
-    _observer: MutationObserver;
+    _observers: MutationObserver[] = [];
 
     _listen: boolean;
     _mutations: MutationRecord[];
 
-    constructor(el: Element = document.body) {
-        this._observer = new MutationObserver(this._onMutation.bind(this));
-        this._observer.observe(el, {
+    constructor(node: Node = document.body) {
+        // todo adtape test and remove this
+        this.attach(node);
+    }
+    attach(node: Node): void {
+        const observer = new MutationObserver(this._onMutation.bind(this));
+        observer.observe(node, {
             characterDataOldValue: true, // add old text value on changes
             characterData: true, // monitor text content changes
             childList: true, // monitor child nodes addition or removal
             subtree: true, // extend monitoring to all children of the target
         });
+        this._observers.push(observer);
     }
     start(): void {
         this._listen = true;
@@ -308,7 +313,9 @@ export class MutationNormalizer {
      *
      */
     destroy(): void {
-        this._observer.disconnect();
+        for (const observer of this._observers) {
+            observer.disconnect();
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -330,7 +337,8 @@ export class MutationNormalizer {
                 let node = charMutation.target;
                 while (
                     node &&
-                    (!(node instanceof Element) || !node.getAttribute('contentEditable'))
+                    (node.nodeType !== Node.ELEMENT_NODE ||
+                        !(node as Element).getAttribute('contentEditable'))
                 ) {
                     charParented.add(node);
                     node = node.parentNode;
@@ -338,7 +346,8 @@ export class MutationNormalizer {
                 let first = obj.nodes[0];
                 while (
                     first &&
-                    (!(first instanceof Element) || !first.getAttribute('contentEditable'))
+                    (first.nodeType !== Node.ELEMENT_NODE ||
+                        !(first as Element).getAttribute('contentEditable'))
                 ) {
                     if (charParented.has(first.previousSibling)) {
                         obj.chars = charMutation[type] + obj.chars;

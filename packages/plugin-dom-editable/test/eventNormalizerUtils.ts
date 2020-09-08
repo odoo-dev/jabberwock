@@ -199,10 +199,11 @@ export function triggerEvent(
     }
     options = Object.assign(
         {
-            view: window,
+            view: el.ownerDocument.defaultView,
             bubbles: true,
             composed: true,
             cancelable: true,
+            isTrusted: true,
         },
         options,
     );

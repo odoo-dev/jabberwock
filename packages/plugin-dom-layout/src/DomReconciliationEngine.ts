@@ -406,9 +406,9 @@ export class DomReconciliationEngine {
                     }
                 }
             } else {
-                if (domNode.nodeType === domNode.DOCUMENT_FRAGMENT_NODE) {
+                if (domNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
                     domNode = (domNode as ShadowRoot).host;
-                } else if (domNode.nodeType === domNode.DOCUMENT_NODE) {
+                } else if (domNode.nodeType === Node.DOCUMENT_NODE) {
                     domNode = (domNode as Document).defaultView.frameElement;
                 } else {
                     domNode = domNode.parentNode;

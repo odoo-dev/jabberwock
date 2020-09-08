@@ -392,7 +392,7 @@ export class EventNormalizer {
      * The MutationNormalizer used by the normalizer to watch the nodes that are
      * being modified since the normalizer creation until it is drestroyed.
      */
-    _mutationNormalizer: MutationNormalizer;
+    _mutationNormalizer = new MutationNormalizer();
 
     currentStackObservation: CurrentStackObservations;
 
@@ -441,24 +441,20 @@ export class EventNormalizer {
      * triggered before the browser executed the timer.
      */
     _selectionTimeouts: Timeout<EventBatch>[] = [];
-
     /**
      * This stack represent aggregated event registred through `_registerEvent`.
      */
     _stackTimeout: Timeout<EventBatch>;
-    /**
-     * Map of the shadow dom event normalizer.
-     * If an event is triggered inside a shadow dom, we instanciate a new
-     * EventNormalizer in the shadow dom.
-     */
-    private _shadowNormalizers = new Map<Document | ShadowRoot, EventNormalizer>();
     /**
      * This is a cache of the selection state used only for determining whether
      * a particular deleteContent is actually a deleteWord using the SwiftKey
      * mobile keyboard or not.
      */
     private _swiftKeyDeleteWordSelectionCache?: DomSelectionDescription[] = [];
-
+    /**
+     * Normalised document and shadow root.
+     */
+    private _normalizedRoot = new Set<Document | ShadowRoot>();
     /**
      * Track if the mouse is currently down regardless of wether the mouse is in
      * the editable or not.
@@ -478,47 +474,11 @@ export class EventNormalizer {
         private _isInEditable: (node: Node) => boolean,
         private _isInEditor: (node: Node) => boolean,
         private _triggerEventBatchOutside: TriggerEventBatchCallback,
-        private root: Document | ShadowRoot = document,
-        shadowNormalizers?: Map<Document | ShadowRoot, EventNormalizer>,
     ) {
-        if (shadowNormalizers) {
-            this._shadowNormalizers = shadowNormalizers;
-        }
-
         this._processEventsUpUntilMoveEvent();
-
-        this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
-        this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
-        this._bindEventInEditable(root, 'compositionend', this._registerEvent);
-        this._bindEventInEditable(root, 'beforeinput', this._registerEvent);
-        this._bindEventInEditable(root, 'input', this._registerEvent);
-
-        this._bindEvent(root.ownerDocument || root, 'selectionchange', this._onSelectionChange);
-        this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
-        this._bindEvent(root, 'mousedown', this._onPointerDown);
-        this._bindEvent(root, 'mousemove', this._onPointerMove);
-        this._bindEvent(root, 'touchstart', this._onPointerDown);
-        this._bindEvent(root, 'load-iframe', this._onEventEnableNormalizer);
-        this._bindEvent(root, 'mousedown', this._onEventEnableNormalizer);
-        this._bindEvent(root, 'touchstart', this._onEventEnableNormalizer);
-        this._bindEvent(root, 'mouseup', this._onPointerUp);
-        this._bindEvent(root, 'touchmove', this._onPointerMove);
-        this._bindEvent(root, 'touchend', this._onPointerUp);
-        this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
-        this._bindEventInEditable(root, 'keypress', this._onKeyDownOrKeyPress);
-        this._bindEvent(root, 'onkeyup', this._updateModifiersKeys);
-
-        this._bindEventInEditable(root, 'cut', this._onClipboard);
-        this._bindEventInEditable(root, 'paste', this._onClipboard);
-        this._bindEventInEditable(root, 'dragstart', this._onDragStart);
-        this._bindEventInEditable(root, 'drop', this._onDrop);
-
-        this._mutationNormalizer = new MutationNormalizer(
-            root instanceof Document ? root.body : root.lastElementChild,
-        );
-
+        this._bindDocumentEvent(document);
         // Create EventNormalizer for all already loaded iframes.
-        for (const iframe of root.querySelectorAll('iframe')) {
+        for (const iframe of document.querySelectorAll('iframe')) {
             this._enableNormalizer(iframe);
         }
     }
@@ -529,12 +489,8 @@ export class EventNormalizer {
      */
     destroy(): void {
         this._mutationNormalizer.destroy();
+        this._normalizedRoot.clear();
         this._unbindEvents();
-        const eventNormalisers = [...this._shadowNormalizers.values()];
-        this._shadowNormalizers.clear();
-        for (const eventNormalizer of eventNormalisers) {
-            eventNormalizer.destroy();
-        }
         this._triggerEventBatch = null;
         this._isInEditable = null;
     }
@@ -562,6 +518,54 @@ export class EventNormalizer {
     //--------------------------------------------------------------------------
 
     /**
+     * Handler for document, iframe document or shadow dom.
+     * If an event is triggered inside a shadow dom or an iframe, we add
+     * handler in the shadow dom.
+     *
+     * @param root
+     */
+    private _bindDocumentEvent(root: Document | ShadowRoot): void {
+        this._normalizedRoot.add(root);
+
+        this._bindEvent(
+            root.nodeType === Node.DOCUMENT_NODE ? root : root,
+            'selectionchange',
+            this._onSelectionChange,
+        );
+
+        this._bindEvent(root, 'load-iframe', this._onEventEnableNormalizer, true);
+        this._bindEvent(root, 'mousedown', this._onEventEnableNormalizer, true);
+        this._bindEvent(root, 'touchstart', this._onEventEnableNormalizer, true);
+
+        this._bindEvent(root, 'mousedown', this._onPointerDown);
+        this._bindEvent(root, 'mousemove', this._onPointerMove);
+        this._bindEvent(root, 'touchstart', this._onPointerDown);
+        this._bindEvent(root, 'mouseup', this._onPointerUp);
+        this._bindEvent(root, 'touchmove', this._onPointerMove);
+        this._bindEvent(root, 'touchend', this._onPointerUp);
+        this._bindEvent(root, 'onkeyup', this._updateModifiersKeys);
+
+        this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
+        this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
+        this._bindEventInEditable(root, 'keypress', this._onKeyDownOrKeyPress);
+
+        this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
+        this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
+        this._bindEventInEditable(root, 'compositionend', this._registerEvent);
+        this._bindEventInEditable(root, 'beforeinput', this._registerEvent);
+        this._bindEventInEditable(root, 'input', this._registerEvent);
+
+        this._bindEventInEditable(root, 'cut', this._onClipboard);
+        this._bindEventInEditable(root, 'paste', this._onClipboard);
+        this._bindEventInEditable(root, 'dragstart', this._onDragStart);
+        this._bindEventInEditable(root, 'drop', this._onDrop);
+
+        this._mutationNormalizer.attach(
+            root.nodeType === Node.DOCUMENT_NODE ? (root as Document).body : root,
+        );
+    }
+
+    /**
      * Bind the occurence of given even type on the given target element to the
      * given listener function. See _unbindEvents to unbind all events bound by
      * calling this function.
@@ -581,7 +585,7 @@ export class EventNormalizer {
                 const evTarget = ev.target as Element;
                 if (
                     evTarget.shadowRoot &&
-                    this._shadowNormalizers.has(evTarget.shadowRoot) &&
+                    this._normalizedRoot.has(evTarget.shadowRoot) &&
                     (ev.currentTarget as Node).contains(ev.target as Node)
                 ) {
                     return;
@@ -610,10 +614,10 @@ export class EventNormalizer {
         const boundEditableListener = (ev: EventToProcess): void => {
             let eventTarget = 'target' in ev && (ev.target as Node);
             if (
-                eventTarget instanceof Element &&
-                (eventTarget.shadowRoot || nodeName(eventTarget) === 'IFRAME')
+                eventTarget.nodeType === Node.ELEMENT_NODE &&
+                ((eventTarget as Element).shadowRoot || nodeName(eventTarget) === 'IFRAME')
             ) {
-                this._enableNormalizer(eventTarget);
+                this._enableNormalizer(eventTarget as Element);
             } else {
                 if (eventTarget && ev.constructor.name === 'MouseEvent') {
                     eventTarget = this._getEventTarget(
@@ -658,7 +662,7 @@ export class EventNormalizer {
         this._triggerSelectionTimeouts();
 
         const isNavigationEvent =
-            ev instanceof KeyboardEvent && ev.type === 'keydown' && navigationKey.has(ev.key);
+            ev.type === 'keydown' && navigationKey.has((ev as KeyboardEvent).key);
 
         if (isNavigationEvent) {
             // We might need to trigger selection event before the navigation.
@@ -712,7 +716,7 @@ export class EventNormalizer {
                 // In the multiple key case, a 'keydown' is always the first
                 // event triggered between the three (keydown, keypress, input).
                 // So we create a new map each time a 'keydown' is registred.
-                if (ev instanceof KeyboardEvent && ev.type === 'keydown') {
+                if (ev.type === 'keydown') {
                     this.currentStackObservation._multiKeyStack.push({});
 
                     // Drop any selection that is not the last one before input.
@@ -1478,7 +1482,7 @@ export class EventNormalizer {
         // contained in the target of the event, otherwise it means it took no
         // part in it. In this case, consider the caret position instead.
         // This can happen when target is an input or a contenteditable=false.
-        if (target instanceof Node) {
+        if (target && target.nodeType) {
             const caretPosition = this._getEventCaretPosition(ev);
             if (
                 selectionDescription &&
@@ -1520,8 +1524,8 @@ export class EventNormalizer {
         let invalidStart = true;
         let domNode = startContainer;
         while (domNode && invalidStart) {
-            if (domNode instanceof ShadowRoot) {
-                domNode = domNode.host;
+            if (domNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && (domNode as ShadowRoot).host) {
+                domNode = (domNode as ShadowRoot).host;
             } else if (doc.body.contains(domNode)) {
                 invalidStart = false;
             } else {
@@ -1531,8 +1535,8 @@ export class EventNormalizer {
         let invalidEnd = true;
         domNode = endContainer;
         while (domNode && invalidEnd) {
-            if (domNode instanceof ShadowRoot) {
-                domNode = domNode.host;
+            if (domNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && (domNode as ShadowRoot).host) {
+                domNode = (domNode as ShadowRoot).host;
             } else if (doc.body.contains(domNode)) {
                 invalidEnd = false;
             } else {
@@ -1800,7 +1804,7 @@ export class EventNormalizer {
      * @param node
      */
     _getClosestElement(node: Node): Element {
-        return node instanceof Element ? node : node.parentElement;
+        return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
     }
     /**
      * If the drag start event is observed by the normalizer, it means the
@@ -1922,10 +1926,6 @@ export class EventNormalizer {
             return;
         }
 
-        if (!this.root.contains(this.root.getSelection().anchorNode)) {
-            return;
-        }
-
         const selection = this._getSelection();
         if (!selection) {
             return;
@@ -2001,18 +2001,12 @@ export class EventNormalizer {
     private _enableNormalizer(el: Element): void {
         const root =
             el.shadowRoot ||
-            (el instanceof HTMLIFrameElement &&
-                (!el.src || el.src === window.location.href) &&
-                el.contentWindow.document);
-        if (root && !this._shadowNormalizers.get(root) && this._isInEditor(el)) {
-            const eventNormalizer = new EventNormalizer(
-                this._isInEditable,
-                this._isInEditor,
-                this._triggerEventBatchOutside,
-                root,
-                this._shadowNormalizers,
-            );
-            this._shadowNormalizers.set(root, eventNormalizer);
+            (nodeName(el) === 'IFRAME' &&
+                (!(el as HTMLIFrameElement).src ||
+                    (el as HTMLIFrameElement).src === window.location.href) &&
+                (el as HTMLIFrameElement).contentWindow.document);
+        if (root && !this._normalizedRoot.has(root) && this._isInEditor(el)) {
+            this._bindDocumentEvent(root);
         }
     }
 
@@ -2043,7 +2037,8 @@ export class EventNormalizer {
     _preProcessPointerEvent(pointerEventPosition: PointerEventPosition, check = true): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        if (this._mousedownInEditable && pointerEventPosition.target instanceof Element) {
+        const nodeType = (pointerEventPosition.target as Node)?.nodeType;
+        if (this._mousedownInEditable && nodeType === Node.ELEMENT_NODE) {
             try {
                 this._processEventsUpUntilMoveEvent(check);
 
@@ -2063,8 +2058,8 @@ export class EventNormalizer {
                 this._initialCaretPosition = undefined;
             }
         } else if (
-            pointerEventPosition.target instanceof Element &&
-            !!pointerEventPosition.target.closest('[contentEditable=true]')
+            nodeType === Node.ELEMENT_NODE &&
+            !!(pointerEventPosition.target as Element).closest('[contentEditable=true]')
         ) {
             // When within a contenteditable element but in a non-editable
             // context, prevent a collapsed selection by removing all ranges.
