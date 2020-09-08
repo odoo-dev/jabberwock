@@ -244,7 +244,7 @@ export class OdooWebsiteEditor extends JWEditor {
                     render: async (editor: JWEditor): Promise<VNode[]> => {
                         if (typeof options.source === 'string') {
                             let source: string = options.source;
-                            if (!source.length) {
+                            if (!source.length && !options.templates) {
                                 source = '<p><br></p>';
                             }
                             return editor.plugins.get(Parser).parse('text/html', source);
