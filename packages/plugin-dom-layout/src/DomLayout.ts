@@ -290,9 +290,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
                 ancestor !== document.activeElement &&
                 ancestor !== root.activeElement
             ) {
-                if (ancestor.parentNode.nodeType === ancestor.DOCUMENT_FRAGMENT_NODE) {
+                if (ancestor.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
                     ancestor = (ancestor.parentNode as ShadowRoot).host;
-                } else if (ancestor.parentNode.nodeType === ancestor.DOCUMENT_NODE) {
+                } else if (ancestor.parentNode.nodeType === Node.DOCUMENT_NODE) {
                     ancestor = (ancestor.parentNode as Document).defaultView.frameElement;
                 } else {
                     ancestor = ancestor.parentNode;

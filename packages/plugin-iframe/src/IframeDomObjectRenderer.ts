@@ -13,7 +13,7 @@ const forwardEventOutsideIframe = (ev: UIEvent): void => {
     const target = ev.target as Node;
     let customEvent: Event;
     let win: Window;
-    if (target.nodeType === target.DOCUMENT_NODE) {
+    if (target.nodeType === Node.DOCUMENT_NODE) {
         win = (target as Document).defaultView;
     } else if ('ownerDocument' in target) {
         win = target.ownerDocument.defaultView;
@@ -21,8 +21,8 @@ const forwardEventOutsideIframe = (ev: UIEvent): void => {
         win = (ev.currentTarget as Node).ownerDocument.defaultView;
     } else if ((ev.currentTarget as Window).self === ev.currentTarget) {
         win = ev.currentTarget as Window;
-    } else if ('view' in ev) {
-        win = ev.view;
+    } else {
+        win = ev.view || (ev.target as Window);
     }
 
     const iframe = win.frameElement;
@@ -63,6 +63,25 @@ const forwardEventOutsideIframe = (ev: UIEvent): void => {
             cancelable: true,
         });
     }
+
+    const preventDefault = customEvent.preventDefault.bind(customEvent);
+    customEvent.preventDefault = (): void => {
+        ev.preventDefault();
+        preventDefault();
+    };
+
+    const stopPropagation = customEvent.stopPropagation.bind(customEvent);
+    customEvent.stopPropagation = (): void => {
+        ev.stopPropagation();
+        stopPropagation();
+    };
+
+    const stopImmediatePropagation = customEvent.stopImmediatePropagation.bind(customEvent);
+    customEvent.stopImmediatePropagation = (): void => {
+        ev.stopImmediatePropagation();
+        stopImmediatePropagation();
+    };
+
     iframe.dispatchEvent(customEvent);
 };
 
