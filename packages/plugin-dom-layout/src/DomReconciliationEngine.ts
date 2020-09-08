@@ -1,5 +1,5 @@
 import { VNode, Point, RelativePosition } from '../../core/src/VNodes/VNode';
-import { nodeName, nodeLength, FlattenUnion, flat } from '../../utils/src/utils';
+import { nodeName, nodeLength, FlattenUnion, flat, isInstanceOf } from '../../utils/src/utils';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { DomPoint } from './DomLayoutEngine';
@@ -8,7 +8,6 @@ import {
     DomObjectAttributes,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
-import { isTextNode } from '../../utils/src/Dom';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -229,7 +228,7 @@ export class DomReconciliationEngine {
                 for (const domNode of old.dom) {
                     if (this._fromDom.get(domNode) === id) {
                         this._fromDom.delete(domNode);
-                        if (domNode instanceof Element) {
+                        if (isInstanceOf(domNode, Element)) {
                             domNode.remove();
                         } else {
                             allOldDomNodes.push(domNode);
@@ -406,10 +405,10 @@ export class DomReconciliationEngine {
                     }
                 }
             } else {
-                if (domNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-                    domNode = (domNode as ShadowRoot).host;
-                } else if (domNode.nodeType === Node.DOCUMENT_NODE) {
-                    domNode = (domNode as Document).defaultView.frameElement;
+                if (isInstanceOf(domNode, ShadowRoot)) {
+                    domNode = domNode.host;
+                } else if (isInstanceOf(domNode, Document)) {
+                    domNode = domNode.defaultView.frameElement;
                 } else {
                     domNode = domNode.parentNode;
                 }
@@ -453,7 +452,7 @@ export class DomReconciliationEngine {
         // equal to the length of the container. In order to retrieve the last
         // descendent, we need to make sure we target an existing node, ie. an
         // existing index.
-        if (!isTextNode(domNode) && offset >= nodeLength(container)) {
+        if (!isInstanceOf(domNode, Text) && offset >= nodeLength(container)) {
             forceAfter = true;
             offset = container.childNodes.length - 1;
             while (container.childNodes.length) {
@@ -513,7 +512,7 @@ export class DomReconciliationEngine {
         }
 
         // For domObjectText, add the previous text length as offset.
-        if (object.object.text && isTextNode(domNode)) {
+        if (object.object.text && isInstanceOf(domNode, Text)) {
             const texts = object.dom as Text[];
             let index = texts.indexOf(domNode);
             while (index > 0) {
@@ -698,7 +697,7 @@ export class DomReconciliationEngine {
             } else {
                 domNode = domNodes[0];
             }
-            if (domNode.nodeType === Node.TEXT_NODE) {
+            if (isInstanceOf(domNode, Text)) {
                 offset = domNode.textContent.length;
             } else {
                 // Char nodes have their offset in the corresponding text nodes
@@ -808,7 +807,7 @@ export class DomReconciliationEngine {
             let havePlaceholder = false;
 
             for (const domNode of domNodes) {
-                if (domNode instanceof Element) {
+                if (isInstanceOf(domNode, Element)) {
                     if (nodeName(domNode) === 'JW-DOMOBJECT-VNODE') {
                         havePlaceholder = true;
                         placeholders[domNode.id] = domNode;
@@ -886,7 +885,7 @@ export class DomReconciliationEngine {
             while (allNodes.length) {
                 const domNode = allNodes.pop();
                 allDomNodes.push(domNode);
-                if (domNode instanceof Element) {
+                if (isInstanceOf(domNode, Element)) {
                     allNodes.push(...domNode.childNodes);
                 }
             }
@@ -1752,14 +1751,14 @@ export class DomReconciliationEngine {
         let textNode: Text;
         if (object.parentDomNode) {
             for (const domNode of object.parentDomNode.childNodes) {
-                if (isTextNode(domNode) && this.isAvailableNode(id, domNode)) {
+                if (isInstanceOf(domNode, Text) && this.isAvailableNode(id, domNode)) {
                     textNode = domNode;
                 }
             }
         }
         if (!textNode && diff) {
             for (const domNode of diff.dom) {
-                if (isTextNode(domNode) && this.isAvailableNode(id, domNode)) {
+                if (isInstanceOf(domNode, Text) && this.isAvailableNode(id, domNode)) {
                     textNode = domNode;
                 }
             }
@@ -1770,7 +1769,7 @@ export class DomReconciliationEngine {
             let text = textNode;
             while (
                 text.previousSibling &&
-                isTextNode(text.previousSibling) &&
+                isInstanceOf(text.previousSibling, Text) &&
                 this.isAvailableNode(id, text.previousSibling)
             ) {
                 text = text.previousSibling;
@@ -1779,7 +1778,7 @@ export class DomReconciliationEngine {
             text = textNode;
             while (
                 text.nextSibling &&
-                isTextNode(text.nextSibling) &&
+                isInstanceOf(text.nextSibling, Text) &&
                 this.isAvailableNode(id, text.nextSibling)
             ) {
                 text = text.nextSibling;

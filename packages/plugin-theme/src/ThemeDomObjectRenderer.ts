@@ -6,6 +6,7 @@ import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ThemeNode } from './ThemeNode';
 import { Theme } from './Theme';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { isInstanceOf } from '../../utils/src/utils';
 
 export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -42,7 +43,8 @@ export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
                 if (!placeholderFound) {
                     for (const domNode of domObject.dom) {
                         const placeholder =
-                            domNode instanceof Element && domNode.querySelector('T-PLACEHOLDER');
+                            isInstanceOf(domNode, Element) &&
+                            domNode.querySelector('T-PLACEHOLDER');
                         if (placeholder) {
                             for (const child of theme.children()) {
                                 placeholder.parentNode.insertBefore(

@@ -1,3 +1,5 @@
+import { isInstanceOf } from './utils';
+
 /**
  * Return the deepest child of a given container at a given offset, and its
  * adapted offset.
@@ -8,7 +10,7 @@
 export function targetDeepest(container: Node, offset: number): [Node, number] {
     while (container.hasChildNodes()) {
         let childNodes: NodeListOf<ChildNode>;
-        if (container instanceof Element && container.shadowRoot) {
+        if (isInstanceOf(container, Element) && container.shadowRoot) {
             childNodes = container.shadowRoot.childNodes;
         } else {
             childNodes = container.childNodes;
@@ -32,21 +34,11 @@ export function targetDeepest(container: Node, offset: number): [Node, number] {
  * @param node
  */
 export function nodeLength(node: Node): number {
-    if (node.nodeType === Node.TEXT_NODE) {
+    if (isInstanceOf(node, Text)) {
         return node.nodeValue.length;
-    } else if (node instanceof Element && node.shadowRoot) {
+    } else if (isInstanceOf(node, Element) && node.shadowRoot) {
         return node.shadowRoot.childNodes.length;
     } else {
         return node.childNodes.length;
     }
-}
-
-/**
- * Return if the node is a text node. Don't use instance of to allow iframe
- * uses.
- *
- * @param node
- */
-export function isTextNode(node: Node): node is Text {
-    return node.nodeType === Node.TEXT_NODE;
 }

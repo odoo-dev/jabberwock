@@ -3,7 +3,7 @@ import { DomMap } from './DomMap';
 import JWEditor from '../../core/src/JWEditor';
 import { VNode, RelativePosition, Point } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
-import { nodeLength } from './utils';
+import { nodeLength, isInstanceOf } from './utils';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { Direction, VSelectionDescription } from '../../core/src/VSelection';
 import { Attributes } from '../../plugin-xml/src/Attributes';
@@ -85,7 +85,7 @@ export async function parseElement(editor: JWEditor, element: HTMLElement): Prom
 
             // Get the VNodes matching the container.
             let reference: VNode;
-            if (container.nodeType === Node.TEXT_NODE) {
+            if (isInstanceOf(container, Text)) {
                 // The reference is the index-th match (eg.: text split into chars).
                 reference = forceAfter ? nodes[nodes.length - 1] : nodes[index];
             } else {

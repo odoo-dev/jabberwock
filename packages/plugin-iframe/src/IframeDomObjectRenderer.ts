@@ -6,21 +6,24 @@ import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { IframeNode } from './IframeNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { nodeName } from '../../utils/src/utils';
+import { nodeName, isInstanceOf } from '../../utils/src/utils';
 
 const EventForwarded = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart', 'keydown'];
 const forwardEventOutsideIframe = (ev: UIEvent): void => {
-    const target = ev.target as Node;
+    const target = ev.target;
     let customEvent: Event;
     let win: Window;
-    if (target.nodeType === Node.DOCUMENT_NODE) {
-        win = (target as Document).defaultView;
-    } else if ('ownerDocument' in target) {
+    if (isInstanceOf(target, Document)) {
+        win = target.defaultView;
+    } else if (isInstanceOf(target, Node)) {
         win = target.ownerDocument.defaultView;
-    } else if ('ownerDocument' in ev.currentTarget) {
-        win = (ev.currentTarget as Node).ownerDocument.defaultView;
-    } else if ((ev.currentTarget as Window).self === ev.currentTarget) {
-        win = ev.currentTarget as Window;
+    } else if (isInstanceOf(ev.currentTarget, Node)) {
+        win = ev.currentTarget.ownerDocument.defaultView;
+    } else if (
+        isInstanceOf(ev.currentTarget, Window) &&
+        ev.currentTarget.self === ev.currentTarget
+    ) {
+        win = ev.currentTarget;
     } else {
         win = ev.view || (ev.target as Window);
     }

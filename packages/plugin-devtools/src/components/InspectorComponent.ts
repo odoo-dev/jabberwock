@@ -7,7 +7,7 @@ import { Layout } from '../../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../../plugin-dom-layout/src/DomLayoutEngine';
 import { caretPositionFromPoint } from '../../../utils/src/polyfill';
 import { CharNode } from '../../../plugin-char/src/CharNode';
-import { nodeName } from '../../../utils/src/utils';
+import { isInstanceOf } from '../../../utils/src/utils';
 
 const hoverStyle = 'box-shadow: inset 0 0 0 100vh rgba(95, 146, 204, 0.5); cursor: pointer;';
 
@@ -154,8 +154,8 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
 
     private async _onInspectorMouseEnter(ev: MouseEvent): Promise<void> {
         const el = ev.target as Element;
-        if (nodeName(el) === 'IFRAME') {
-            const doc = (ev.target as HTMLIFrameElement).contentWindow?.document;
+        if (isInstanceOf(el, HTMLIFrameElement)) {
+            const doc = el.contentWindow?.document;
             if (doc) {
                 this.inspectDom(doc);
             }
@@ -183,7 +183,9 @@ export class InspectorComponent extends OwlComponent<InspectorComponentProps> {
             (ev.target as Node).ownerDocument,
         )) {
             for (const domNode of this.domEngine.getDomNodes(node)) {
-                const element = domNode instanceof HTMLElement ? domNode : domNode.parentElement;
+                const element = isInstanceOf(domNode, HTMLElement)
+                    ? domNode
+                    : domNode.parentElement;
                 if (!elements.includes(element)) {
                     elements.push(element);
                 }

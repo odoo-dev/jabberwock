@@ -1,4 +1,5 @@
 import { EventBatch, EventNormalizer } from '../src/EventNormalizer';
+import { isInstanceOf } from '../../utils/src/utils';
 
 /**
  * This mapping exist to ease the tests of the normalizer.
@@ -192,7 +193,7 @@ export function triggerEvent(
         console.warn('Impossible to trigger an event on an undefined node.');
         return;
     }
-    const currentElement = el instanceof Element ? el : el.parentNode;
+    const currentElement = isInstanceOf(el, Element) ? el : el.parentNode;
     if (!currentElement.parentNode) {
         console.warn('Impossible to trigger an event on a node out of the DOM.');
         return;

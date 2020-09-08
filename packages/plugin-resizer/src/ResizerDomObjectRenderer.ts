@@ -7,6 +7,7 @@ import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
+import { isInstanceOf } from '../../utils/src/utils';
 
 export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -44,8 +45,9 @@ export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
         if (!this.targetToResize) return;
 
         const startHeight = this.targetToResize.clientHeight;
-        const startY: number =
-            event instanceof MouseEvent ? event.pageY : event.targetTouches[0].pageY; // Y position of the mousedown
+        const startY: number = isInstanceOf(event, MouseEvent)
+            ? event.pageY
+            : event.targetTouches[0].pageY; // Y position of the mousedown
 
         /**
          * Perform the resizing on every mouse mouvement.
@@ -53,7 +55,9 @@ export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
          * @param e
          */
         const doResize = (e: MouseEvent | TouchEvent): void => {
-            const currentY: number = e instanceof MouseEvent ? e.pageY : e.targetTouches[0].pageY;
+            const currentY: number = isInstanceOf(e, MouseEvent)
+                ? e.pageY
+                : e.targetTouches[0].pageY;
             const offset: number = currentY - startY;
             this._resizeTargetHeight(startHeight + offset);
         };

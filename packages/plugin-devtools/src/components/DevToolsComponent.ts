@@ -5,7 +5,7 @@ import { PluginsComponent } from './PluginsComponent';
 import { ModesComponent } from './ModesComponent';
 import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { CommandIdentifier, CommandParams } from '../../../core/src/Dispatcher';
-import { nodeName } from '../../../utils/src/utils';
+import { nodeName, isInstanceOf } from '../../../utils/src/utils';
 import { hooks } from '@odoo/owl';
 
 ////////////////////////////// todo: use API ///////////////////////////////////
@@ -86,8 +86,9 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
         if (this.state.closed) {
             return; // Do not resize if the DevTools are closed
         }
-        const startY: number =
-            event instanceof MouseEvent ? event.pageY : event.targetTouches[0].pageY; // Y position of the mousedown
+        const startY: number = isInstanceOf(event, MouseEvent)
+            ? event.pageY
+            : event.targetTouches[0].pageY; // Y position of the mousedown
 
         /**
          * Perform the resizing on every mouse mouvement
@@ -95,8 +96,9 @@ export class DevToolsComponent<T = {}> extends OwlComponent<T> {
          * @param ev
          */
         const doResize = (ev: MouseEvent | TouchEvent): void => {
-            const currentY: number =
-                ev instanceof MouseEvent ? ev.pageY : ev.targetTouches[0].pageY;
+            const currentY: number = isInstanceOf(ev, MouseEvent)
+                ? ev.pageY
+                : ev.targetTouches[0].pageY;
             const offset: number = startY - currentY;
             this.state.height = this._heightOnLastMousedown + offset;
         };

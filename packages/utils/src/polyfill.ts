@@ -1,6 +1,6 @@
 import { CaretPosition } from '../../plugin-dom-editable/src/EventNormalizer';
 import { targetDeepest } from './Dom';
-import { getDocument, nodeName } from './utils';
+import { getDocument, isInstanceOf } from './utils';
 
 export function elementFromPoint(
     x: number,
@@ -24,13 +24,9 @@ export function elementFromPoint(
                 }
             }
         }
-        if (nodeName(element) === 'IFRAME') {
+        if (isInstanceOf(element, HTMLIFrameElement)) {
             const rect = element.getBoundingClientRect();
-            return elementFromPoint(
-                x - rect.x,
-                y - rect.y,
-                (element as HTMLIFrameElement).contentDocument,
-            );
+            return elementFromPoint(x - rect.x, y - rect.y, element.contentDocument);
         }
         return element;
     }
@@ -104,7 +100,7 @@ function caretPositionFromPointInShadowDom(
     // Find the nearest node leaf.
     for (const leaf of leafs) {
         let box: DOMRect;
-        if (leaf instanceof Element) {
+        if (isInstanceOf(leaf, Element)) {
             box = leaf.getBoundingClientRect();
         } else {
             range.setStart(leaf, 0);
@@ -119,7 +115,7 @@ function caretPositionFromPointInShadowDom(
         let newDistY: number;
         if (box.y <= y && box.y + box.height >= y) {
             newDistY = 0;
-            if (leaf.nodeType === Node.TEXT_NODE) {
+            if (isInstanceOf(leaf, Text)) {
                 currentOffset = getNearestCharOffset(x, y, leaf);
                 range.setStart(leaf, currentOffset);
                 range.setEnd(leaf, currentOffset);

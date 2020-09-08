@@ -1,5 +1,6 @@
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { Metadata } from '../../plugin-metadata/src/Metadata';
+import { isInstanceOf } from '../../utils/src/utils';
 
 type StyleCache = {
     selector: string;
@@ -17,7 +18,7 @@ export class Stylesheet<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      * @returns {Object} css property name -> css property value
      */
     getStyleFromCSSRules(node: Node): Record<string, string> {
-        const el = node instanceof Element ? node : node.parentElement;
+        const el = isInstanceOf(node, Element) ? node : node.parentElement;
         return this.getFilteredStyleFromCSSRules(
             selector => el.matches(selector),
             node.ownerDocument,
