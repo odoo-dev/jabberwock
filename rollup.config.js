@@ -8,7 +8,6 @@ export default {
         format: 'iife',
         name: 'jabberwock',
         extend: true,
-        external: ['@odoo/owl', 'owl'],
         globals: { '@odoo/owl': 'owl' },
         banner: "odoo.define('web_editor.jabberwock', (function(require) {\n'use strict';",
         footer: 'return this.jabberwock;\n}).bind(window));',
