@@ -1,6 +1,7 @@
 <jw-editor>
     <t-range><t t-zone="tools"/></t-range>
     <jw-header><t t-zone="tools"/></jw-header>
+    <t-actionbar/>
     <jw-body><t t-zone="main"/></jw-body>
     <jw-footer>
         <t t-zone="status"/>
