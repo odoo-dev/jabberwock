@@ -9,7 +9,7 @@ export interface Parser<T = {}> {
     constructor: ParserConstructor<T>;
 }
 export type ParserConstructor<T = {}> = {
-    new (...args): Parser<T>;
+    new (engine: ParsingEngine): Parser<T>;
     id: ParsingIdentifier;
 };
 
