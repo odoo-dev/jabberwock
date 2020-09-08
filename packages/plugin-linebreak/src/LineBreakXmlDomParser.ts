@@ -2,8 +2,7 @@ import { LineBreakNode } from './LineBreakNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { isBlock } from '../../utils/src/isBlock';
-import { nodeName } from '../../utils/src/utils';
-import { isTextNode } from '../../utils/src/Dom';
+import { nodeName, isInstanceOf } from '../../utils/src/utils';
 import { removeFormattingSpace } from '../../utils/src/formattingSpace';
 
 export class LineBreakXmlDomParser extends AbstractParser<Node> {
@@ -58,7 +57,7 @@ export class LineBreakXmlDomParser extends AbstractParser<Node> {
      */
     _nextVisibleSibling(node: Node): Node {
         let sibling = node.nextSibling;
-        while (sibling && isTextNode(sibling) && !removeFormattingSpace(sibling).length) {
+        while (sibling && isInstanceOf(sibling, Text) && !removeFormattingSpace(sibling).length) {
             sibling = sibling.nextSibling;
         }
         return sibling;

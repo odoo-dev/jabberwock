@@ -1,5 +1,5 @@
 import { isBlock } from './isBlock';
-import { nodeName } from './utils';
+import { nodeName, isInstanceOf } from './utils';
 
 const spaceBeforeNewline = /([ \t])*(\n)/g;
 const spaceAfterNewline = /(\n)([ \t])*/g;
@@ -82,7 +82,7 @@ export function removeFormattingSpace(node: Node): string {
  */
 function _followsInlineSpace(node: Node): boolean {
     let sibling = node && node.previousSibling;
-    if (_isTextNode(node) && !sibling) {
+    if (isInstanceOf(node, Text) && !sibling) {
         sibling = node.parentElement.previousSibling;
     }
     if (!sibling || isBlock(sibling)) return false;
@@ -139,7 +139,7 @@ function _isBlockEdge(node: Node, side: 'start' | 'end'): boolean {
 
     // Move up to the first block ancestor
     let ancestor = node;
-    while (ancestor && (_isTextNode(ancestor) || !_isSegment(ancestor))) {
+    while (ancestor && (isInstanceOf(ancestor, Text) || !_isSegment(ancestor))) {
         ancestorsUpToBlock.push(ancestor);
         ancestor = ancestor.parentElement;
     }
@@ -151,19 +151,11 @@ function _isBlockEdge(node: Node, side: 'start' | 'end'): boolean {
         let sibling = ancestor[siblingSide];
         while (
             sibling &&
-            _isTextNode(sibling) &&
+            isInstanceOf(sibling, Text) &&
             sibling.textContent.match(onlyTabsSpacesAndNewLines)
         ) {
             sibling = sibling[siblingSide];
         }
         return !sibling;
     });
-}
-/**
- * Return true if the given node is a text node, false otherwise.
- *
- * @param node to check
- */
-function _isTextNode(node: Node): boolean {
-    return node.nodeType === Node.TEXT_NODE;
 }

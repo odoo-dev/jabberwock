@@ -13,6 +13,7 @@ import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable } from './configuration';
 import { Html } from '../../plugin-html/src/Html';
+import { isInstanceOf } from './utils';
 
 export interface TestEditorSpec {
     contentBefore: string;
@@ -230,7 +231,7 @@ function _parseTextualSelection(testContainer: Node): DomSelectionDescription {
     let node = testContainer;
     while (node && !(anchorNode && focusNode)) {
         let next: Node;
-        if (node.nodeType === Node.TEXT_NODE) {
+        if (isInstanceOf(node, Text)) {
             // Look for special characters in the text content and remove them.
             const anchorIndex = node.textContent.indexOf(ANCHOR_CHAR);
             node.textContent = node.textContent.replace(ANCHOR_CHAR, '');
@@ -368,7 +369,7 @@ export function renderTextualSelection(): void {
  * @param offset
  */
 function _insertCharAt(char: string, container: Node, offset: number): void {
-    if (container.nodeType === Node.TEXT_NODE) {
+    if (isInstanceOf(container, Text)) {
         const startValue = container.nodeValue;
         container.nodeValue =
             startValue.slice(0, offset) + char + startValue.slice(offset, startValue.length);

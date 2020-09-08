@@ -86,8 +86,7 @@ export function toUnicode(string: string): string {
  * @param node
  */
 export function nodeLength(node: Node): number {
-    const isTextNode = node.nodeType === Node.TEXT_NODE;
-    const content = isTextNode ? node.nodeValue : node.childNodes;
+    const content = isInstanceOf(node, Text) ? node.nodeValue : node.childNodes;
     return content.length;
 }
 
@@ -141,6 +140,19 @@ export function getDocument(node: Node): Document | ShadowRoot {
         }
     }
     return root || document;
+}
+
+export function isInstanceOf<C extends Constructor<InstanceType<C>>>(
+    instance,
+    Class: C,
+): instance is InstanceType<C> {
+    if (instance instanceof Class) return true;
+    let proto = Object.getPrototypeOf(instance);
+    while (proto) {
+        if (proto.constructor.name === Class.name) return true;
+        proto = Object.getPrototypeOf(proto);
+    }
+    return false;
 }
 
 // Flattens two union types into a single type with optional values

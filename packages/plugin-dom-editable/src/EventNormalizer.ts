@@ -1,8 +1,8 @@
 import { Direction } from '../../core/src/VSelection';
 import { MutationNormalizer } from './MutationNormalizer';
 import { caretPositionFromPoint, elementFromPoint } from '../../utils/src/polyfill';
-import { targetDeepest, isTextNode } from '../../utils/src/Dom';
-import { nodeName, getDocument, nodeLength } from '../../utils/src/utils';
+import { targetDeepest } from '../../utils/src/Dom';
+import { nodeName, getDocument, nodeLength, isInstanceOf } from '../../utils/src/utils';
 import { removeFormattingSpace } from '../../utils/src/formattingSpace';
 
 const navigationKey = new Set([
@@ -527,11 +527,7 @@ export class EventNormalizer {
     private _bindDocumentEvent(root: Document | ShadowRoot): void {
         this._normalizedRoot.add(root);
 
-        this._bindEvent(
-            root.nodeType === Node.DOCUMENT_NODE ? root : root,
-            'selectionchange',
-            this._onSelectionChange,
-        );
+        this._bindEvent(root, 'selectionchange', this._onSelectionChange);
 
         this._bindEvent(root, 'load-iframe', this._onEventEnableNormalizer, true);
         this._bindEvent(root, 'mousedown', this._onEventEnableNormalizer, true);
@@ -560,9 +556,7 @@ export class EventNormalizer {
         this._bindEventInEditable(root, 'dragstart', this._onDragStart);
         this._bindEventInEditable(root, 'drop', this._onDrop);
 
-        this._mutationNormalizer.attach(
-            root.nodeType === Node.DOCUMENT_NODE ? (root as Document).body : root,
-        );
+        this._mutationNormalizer.attach(isInstanceOf(root, Document) ? root.body : root);
     }
 
     /**
@@ -614,19 +608,15 @@ export class EventNormalizer {
         const boundEditableListener = (ev: EventToProcess): void => {
             let eventTarget = 'target' in ev && (ev.target as Node);
             if (
-                eventTarget.nodeType === Node.ELEMENT_NODE &&
-                ((eventTarget as Element).shadowRoot || nodeName(eventTarget) === 'IFRAME')
+                isInstanceOf(eventTarget, Element) &&
+                (eventTarget.shadowRoot || nodeName(eventTarget) === 'IFRAME')
             ) {
-                this._enableNormalizer(eventTarget as Element);
+                this._enableNormalizer(eventTarget);
             } else {
-                if (eventTarget && ev.constructor.name === 'MouseEvent') {
-                    eventTarget = this._getEventTarget(
-                        this._getPointerEventPosition(ev as MouseEvent),
-                    );
-                } else if (eventTarget && ev.constructor.name === 'TouchEvent') {
-                    eventTarget = this._getEventTarget(
-                        this._getPointerEventPosition(ev as TouchEvent),
-                    );
+                if (eventTarget && isInstanceOf(ev, MouseEvent)) {
+                    eventTarget = this._getEventTarget(this._getPointerEventPosition(ev));
+                } else if (eventTarget && isInstanceOf(ev, TouchEvent)) {
+                    eventTarget = this._getEventTarget(this._getPointerEventPosition(ev));
                 } else if (this._isInEditable(eventTarget)) {
                     eventTarget = eventTarget?.ownerDocument.getSelection().focusNode;
                 }
@@ -1433,7 +1423,7 @@ export class EventNormalizer {
      * @param node
      */
     _isTextualNode(node: Node): boolean {
-        return node.nodeType === Node.TEXT_NODE || nodeName(node) === 'BR';
+        return isInstanceOf(node, Text) || nodeName(node) === 'BR';
     }
     /**
      * Get the current selection from the DOM. If an event is given, then the
@@ -1524,8 +1514,8 @@ export class EventNormalizer {
         let invalidStart = true;
         let domNode = startContainer;
         while (domNode && invalidStart) {
-            if (domNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && (domNode as ShadowRoot).host) {
-                domNode = (domNode as ShadowRoot).host;
+            if (isInstanceOf(domNode, ShadowRoot) && domNode.host) {
+                domNode = domNode.host;
             } else if (doc.body.contains(domNode)) {
                 invalidStart = false;
             } else {
@@ -1535,8 +1525,8 @@ export class EventNormalizer {
         let invalidEnd = true;
         domNode = endContainer;
         while (domNode && invalidEnd) {
-            if (domNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && (domNode as ShadowRoot).host) {
-                domNode = (domNode as ShadowRoot).host;
+            if (isInstanceOf(domNode, ShadowRoot) && domNode.host) {
+                domNode = domNode.host;
             } else if (doc.body.contains(domNode)) {
                 invalidEnd = false;
             } else {
@@ -1562,7 +1552,7 @@ export class EventNormalizer {
         // Look for visible nodes in editable that would be outside the range.
         const startInsideEditable = this._isInEditable(startContainer);
         const endInsideEditable = this._isInEditable(endContainer);
-        const endLength = isTextNode(endContainer)
+        const endLength = isInstanceOf(endContainer, Text)
             ? removeFormattingSpace(endContainer).replace(trailingSpace, '').length
             : nodeLength(endContainer);
         if (startInsideEditable && endInsideEditable) {
@@ -1804,7 +1794,7 @@ export class EventNormalizer {
      * @param node
      */
     _getClosestElement(node: Node): Element {
-        return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+        return isInstanceOf(node, Element) ? node : node.parentElement;
     }
     /**
      * If the drag start event is observed by the normalizer, it means the
@@ -2001,10 +1991,9 @@ export class EventNormalizer {
     private _enableNormalizer(el: Element): void {
         const root =
             el.shadowRoot ||
-            (nodeName(el) === 'IFRAME' &&
-                (!(el as HTMLIFrameElement).src ||
-                    (el as HTMLIFrameElement).src === window.location.href) &&
-                (el as HTMLIFrameElement).contentWindow.document);
+            (isInstanceOf(el, HTMLIFrameElement) &&
+                (!el.src || el.src === window.location.href) &&
+                el.contentWindow.document);
         if (root && !this._normalizedRoot.has(root) && this._isInEditor(el)) {
             this._bindDocumentEvent(root);
         }
@@ -2037,8 +2026,7 @@ export class EventNormalizer {
     _preProcessPointerEvent(pointerEventPosition: PointerEventPosition, check = true): void {
         // Don't trigger events on the editable if the click was done outside of
         // the editable itself or on something else than an element.
-        const nodeType = (pointerEventPosition.target as Node)?.nodeType;
-        if (this._mousedownInEditable && nodeType === Node.ELEMENT_NODE) {
+        if (this._mousedownInEditable && isInstanceOf(pointerEventPosition.target, Element)) {
             try {
                 this._processEventsUpUntilMoveEvent(check);
 
@@ -2058,8 +2046,8 @@ export class EventNormalizer {
                 this._initialCaretPosition = undefined;
             }
         } else if (
-            nodeType === Node.ELEMENT_NODE &&
-            !!(pointerEventPosition.target as Element).closest('[contentEditable=true]')
+            isInstanceOf(pointerEventPosition.target, Element) &&
+            !!pointerEventPosition.target.closest('[contentEditable=true]')
         ) {
             // When within a contenteditable element but in a non-editable
             // context, prevent a collapsed selection by removing all ranges.
@@ -2126,13 +2114,13 @@ export class EventNormalizer {
     _getPointerEventPosition(ev: MouseEvent | TouchEvent): PointerEventPosition {
         let x: number;
         let y: number;
-        if (ev.constructor.name === 'TouchEvent') {
-            const change = (ev as TouchEvent).touches[0] || (ev as TouchEvent).changedTouches[0];
+        if (isInstanceOf(ev, TouchEvent)) {
+            const change = ev.touches[0] || ev.changedTouches[0];
             x = change.clientX;
             y = change.clientY;
         } else {
-            x = (ev as MouseEvent).clientX;
-            y = (ev as MouseEvent).clientY;
+            x = ev.clientX;
+            y = ev.clientY;
         }
         return { x, y, target: ev.target };
     }

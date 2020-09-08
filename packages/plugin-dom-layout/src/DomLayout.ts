@@ -22,7 +22,7 @@ import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSel
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { RuleProperty } from '../../core/src/Mode';
-import { isContentEditable, nodeName } from '../../utils/src/utils';
+import { isContentEditable, nodeName, isInstanceOf } from '../../utils/src/utils';
 
 const FocusAndBlurEvents = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart'];
 
@@ -246,22 +246,21 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         let focus: Node;
 
         let iframe: HTMLIFrameElement;
-        if (document.activeElement instanceof HTMLIFrameElement) {
+        if (isInstanceOf(document.activeElement, HTMLIFrameElement)) {
             iframe = document.activeElement;
-        } else if ('nodeName' in ev.target && nodeName(ev.target as Node) === 'IFRAME') {
-            iframe = ev.target as HTMLIFrameElement;
+        } else if (isInstanceOf(ev.target, HTMLIFrameElement)) {
+            iframe = ev.target;
         }
 
         let root: ShadowRoot | Document = document;
-        const shadow = (ev.target as Element).shadowRoot;
-        if (shadow) {
-            root = shadow;
+        if (isInstanceOf(ev.target, Element) && ev.target.shadowRoot) {
+            root = ev.target.shadowRoot;
         }
 
         if (iframe) {
             const iframeDoc = iframe.contentDocument;
             const domSelection = iframeDoc.getSelection();
-            if (domSelection.anchorNode.nodeName === 'BODY') {
+            if (isInstanceOf(domSelection.anchorNode, HTMLBodyElement)) {
                 if (domSelection.anchorNode.contains(this.focusedNode)) {
                     // On chrome, when the user  mousedown and grow the selection,
                     // then value of getSelection() doesn't change. We keep the
@@ -290,10 +289,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
                 ancestor !== document.activeElement &&
                 ancestor !== root.activeElement
             ) {
-                if (ancestor.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-                    ancestor = (ancestor.parentNode as ShadowRoot).host;
-                } else if (ancestor.parentNode.nodeType === Node.DOCUMENT_NODE) {
-                    ancestor = (ancestor.parentNode as Document).defaultView.frameElement;
+                if (isInstanceOf(ancestor.parentNode, ShadowRoot)) {
+                    ancestor = ancestor.parentNode.host;
+                } else if (isInstanceOf(ancestor.parentNode, Document)) {
+                    ancestor = ancestor.parentNode.defaultView.frameElement;
                 } else {
                     ancestor = ancestor.parentNode;
                 }

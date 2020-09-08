@@ -7,6 +7,7 @@ import { FollowRangeZoneNode } from './FollowRangeZoneNode';
 import { targetDeepest } from '../../utils/src/Dom';
 
 import '../assets/FollowRange.css';
+import { isInstanceOf } from '../../utils/src/utils';
 
 export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -57,7 +58,7 @@ export class FollowRangeZoneDomObjectRenderer extends NodeRenderer<DomObject> {
                 selection.anchorOffset === selection.focusOffset;
             if (selection.rangeCount && isCollapsed) {
                 const [el] = targetDeepest(selection.anchorNode, selection.anchorOffset);
-                if (el instanceof Element && el.shadowRoot) {
+                if (isInstanceOf(el, Element) && el.shadowRoot) {
                     doc = el.shadowRoot;
                 }
             }

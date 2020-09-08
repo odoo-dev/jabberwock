@@ -1,4 +1,4 @@
-import { nodeName } from '../../utils/src/utils';
+import { nodeName, isInstanceOf } from '../../utils/src/utils';
 
 interface CharMutation {
     old?: string;
@@ -69,7 +69,7 @@ export class MutationNormalizer {
             return texts;
         }
         function isTextNode(target: Node): boolean {
-            return target.nodeType === Node.TEXT_NODE || nodeName(target) === 'BR';
+            return isInstanceOf(target, Text) || nodeName(target) === 'BR';
         }
         mutations.forEach(record => {
             const targetMutation = record.target;
@@ -97,10 +97,9 @@ export class MutationNormalizer {
                         textMutations.push({
                             target: child,
                             old: '',
-                            current:
-                                child.nodeType === Node.TEXT_NODE
-                                    ? child.textContent.replace(/\u00A0/g, ' ')
-                                    : '\n',
+                            current: isInstanceOf(child, Text)
+                                ? child.textContent.replace(/\u00A0/g, ' ')
+                                : '\n',
                         });
                     });
                 });
@@ -120,10 +119,9 @@ export class MutationNormalizer {
                         }
                         textMutations.push({
                             target: child,
-                            old:
-                                child.nodeType === Node.TEXT_NODE
-                                    ? child.textContent.replace(/\u00A0/g, ' ')
-                                    : '\n',
+                            old: isInstanceOf(child, Text)
+                                ? child.textContent.replace(/\u00A0/g, ' ')
+                                : '\n',
                             current: '',
                         });
                     });
@@ -337,8 +335,7 @@ export class MutationNormalizer {
                 let node = charMutation.target;
                 while (
                     node &&
-                    (node.nodeType !== Node.ELEMENT_NODE ||
-                        !(node as Element).getAttribute('contentEditable'))
+                    (!isInstanceOf(node, Element) || !node.getAttribute('contentEditable'))
                 ) {
                     charParented.add(node);
                     node = node.parentNode;
@@ -346,8 +343,7 @@ export class MutationNormalizer {
                 let first = obj.nodes[0];
                 while (
                     first &&
-                    (first.nodeType !== Node.ELEMENT_NODE ||
-                        !(first as Element).getAttribute('contentEditable'))
+                    (!isInstanceOf(first, Element) || !first.getAttribute('contentEditable'))
                 ) {
                     if (charParented.has(first.previousSibling)) {
                         obj.chars = charMutation[type] + obj.chars;

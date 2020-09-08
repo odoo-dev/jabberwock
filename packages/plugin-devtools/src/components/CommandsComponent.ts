@@ -2,7 +2,7 @@ import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { CommandIdentifier } from '../../../core/src/Dispatcher';
 import { CommandParams } from '../../../core/src/Dispatcher';
 import { CommandImplementation } from '../../../core/src/Dispatcher';
-import { nodeName, flat } from '../../../utils/src/utils';
+import { nodeName, flat, isInstanceOf } from '../../../utils/src/utils';
 import { Keymap, Mapping } from '../../../plugin-keymap/src/Keymap';
 import { argsRepr } from '../utils';
 
@@ -41,7 +41,7 @@ export class CommandsComponent extends OwlComponent<CommandsProps> {
      * @param value
      */
     formatPayloadValue(value: Node | string | boolean | number | object): string {
-        if (value && value instanceof Node && nodeName(value)) {
+        if (value && isInstanceOf(value, Node) && nodeName(value)) {
             return '<' + nodeName(value).toLowerCase() + '>';
         }
         if (value instanceof Array) {
