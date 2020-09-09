@@ -32,7 +32,7 @@ export class DefaultHtmlTextParser extends AbstractParser<string> {
             .replace(autoCloseRegExp, match =>
                 match[match.length - 2] === '/' ? match : match.slice(0, -1) + '/>',
             )
-            .replace(/&/g, '&amp;');
+            .replace(/&nbsp;/g, '\u00A0');
         const xmlDoc = domParser.parseFromString('<t>' + template + '</t>', 'text/xml');
         const parser = this.engine.editor.plugins.get(Parser);
         return parser.parse('dom/xml', ...xmlDoc.firstChild.childNodes);
