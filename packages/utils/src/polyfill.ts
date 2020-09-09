@@ -52,7 +52,9 @@ export function caretPositionFromPoint(
     root = getDocument(element);
     if (root.caretPositionFromPoint) {
         caretPosition = root.caretPositionFromPoint(x, y);
-    } else if (root instanceof ShadowRoot) {
+        // Fire fox can return an object with offsetNode = null
+    }
+    if (!caretPosition?.offsetNode && root instanceof ShadowRoot) {
         // Find the nearest node leaf or char in leaf.
         const position = caretPositionFromPointInShadowDom(x, y, element);
         if (position) {
@@ -61,15 +63,15 @@ export function caretPositionFromPoint(
                 offset: position.offset,
             };
         }
-    } else {
+    }
+    if (!caretPosition?.offsetNode && root.caretRangeFromPoint) {
         const caretRange = root.caretRangeFromPoint(x, y);
         caretPosition = caretRange && {
             offsetNode: caretRange.startContainer,
             offset: caretRange.startOffset,
         };
     }
-
-    if (caretPosition) {
+    if (caretPosition?.offsetNode) {
         const [offsetNode, offset] = targetDeepest(caretPosition.offsetNode, caretPosition.offset);
         return { offsetNode, offset };
     }
