@@ -1,8 +1,3 @@
-import { VersionableObject } from '../../core/src/Memory/VersionableObject';
-import { VersionableArray } from '../../core/src/Memory/VersionableArray';
-import { makeVersionable } from '../../core/src/Memory/Versionable';
-import { VersionableSet } from '../../core/src/Memory/VersionableSet';
-
 /**
  * Abstract class to add event mechanism.
  */

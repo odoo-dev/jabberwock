@@ -11,6 +11,7 @@ import { ActionBarXmlDomParser } from './ActionBarXmlDomParser';
 import { ActionBarDomObjectRenderer } from './ActionBarDomObjectRenderer';
 import { CommandParams } from '../../core/src/Dispatcher';
 import { setSelection } from '../../utils/src/testUtils';
+import { MarkerNode } from '../../core/src/VNodes/MarkerNode';
 
 export interface ActionItem {
     name: string;
@@ -55,6 +56,8 @@ export class ActionBar<T extends CommandBarConfig = CommandBarConfig> extends JW
     availableActions = new ReactiveValue<ActionItem[]>([]);
     private _opened = false;
     private _actions: T['actions'];
+    private _initialNode: MarkerNode;
+    private _lastNode: MarkerNode;
 
     constructor(public editor: JWEditor, public configuration: Partial<T> = {}) {
         super(editor, configuration);
@@ -75,7 +78,14 @@ export class ActionBar<T extends CommandBarConfig = CommandBarConfig> extends JW
             const isSlash = beforeStart instanceof CharNode && beforeStart.char === '/';
             // If there is no previous sibling before start, it means beforeStart is
             // the first node of the container.
-            if (range.isCollapsed() && isSlash && !beforeStart.previousSibling()) {
+            if (range.isCollapsed() && isSlash) {
+                console.log('open');
+                const firstMarker = new MarkerNode();
+                beforeStart.parent.insertBefore(firstMarker, beforeStart);
+                this._initialNode = firstMarker;
+                const lastMarker = new MarkerNode();
+                beforeStart.parent.insertAfter(lastMarker, beforeStart);
+                this._lastNode = lastMarker;
                 this._opened = true;
                 this.availableActions.set(this._actions);
             }
@@ -83,27 +93,36 @@ export class ActionBar<T extends CommandBarConfig = CommandBarConfig> extends JW
     }
 
     private _check(params: CommandParams): void {
-        console.warn('check');
-        const range = this.editor.selection.range;
-        const chars: string[] = [];
-        let node: VNode = range.end;
-        while ((node = node.previousSibling())) {
-            if (node instanceof CharNode) chars.unshift(node.char);
-        }
-        const term = chars.slice(1).join('');
+        if (this._opened) {
+            console.warn('check');
+            // const range = this.editor.selection.range;
 
-        const actions = this._actions.filter(a => a.name.startsWith(term));
+            const chars: string[] = [];
+            let index = this._initialNode.parent.childVNodes.indexOf(this._initialNode) + 1;
+            const allNodes = this._initialNode.parent.childVNodes;
+            let node: VNode;
+            while ((node = allNodes[index])) {
+                if (node instanceof CharNode) chars.push(node.char);
+                index++;
+            }
+            const term = chars.slice(1).join('');
+            const termFuzzyRegex = term.split('').join('.*');
 
-        if (!actions.length) {
-            this.close();
-            console.log('close');
-        } else {
-            this.availableActions.set(actions);
+            const actions = this._actions.filter(a => a.name.match(termFuzzyRegex));
+
+            if (!actions.length) {
+                this.close();
+                console.log('close');
+            } else {
+                this.availableActions.set(actions);
+            }
         }
     }
 
     close(): void {
         this._opened = false;
+        this._initialNode.remove();
+        this._lastNode.remove();
         this.availableActions.set([]);
     }
     // _openCommandBar(): void {
