@@ -146,6 +146,7 @@ export function isInstanceOf<C extends Constructor<InstanceType<C>>>(
     instance,
     Class: C,
 ): instance is InstanceType<C> {
+    if (!instance || !Class) return false;
     if (instance instanceof Class) return true;
     let proto = Object.getPrototypeOf(instance);
     while (proto) {

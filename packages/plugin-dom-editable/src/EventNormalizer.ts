@@ -613,6 +613,7 @@ export class EventNormalizer {
             ) {
                 this._enableNormalizer(eventTarget);
             } else {
+                const TouchEvent = window.TouchEvent; // Add the reference for firefox.
                 if (eventTarget && isInstanceOf(ev, MouseEvent)) {
                     eventTarget = this._getEventTarget(this._getPointerEventPosition(ev));
                 } else if (eventTarget && isInstanceOf(ev, TouchEvent)) {
@@ -2112,6 +2113,7 @@ export class EventNormalizer {
      * Retrieve a `PointerEventPosition` from a` MouseEvent` or a `TouchEvent`.
      */
     _getPointerEventPosition(ev: MouseEvent | TouchEvent): PointerEventPosition {
+        const TouchEvent = window.TouchEvent; // Add the reference for firefox.
         let x: number;
         let y: number;
         if (isInstanceOf(ev, TouchEvent)) {
