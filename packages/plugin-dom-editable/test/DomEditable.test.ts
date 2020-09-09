@@ -193,8 +193,6 @@ describe('DomEditable', () => {
             it('enter in the middle of the word', async () => {
                 const p = container.querySelector('section').firstChild;
                 const text = p.firstChild;
-                setDomSelection(text, 2, text, 2);
-                await nextTick();
                 triggerEvent(container.querySelector('section'), 'keydown', {
                     key: 'Enter',
                     code: 'Enter',
@@ -239,8 +237,6 @@ describe('DomEditable', () => {
             it('shift + enter in the middle of a word', async () => {
                 const p = container.querySelector('section').firstChild;
                 const text = p.firstChild;
-                setDomSelection(text, 2, text, 2);
-                await nextTick();
                 triggerEvent(container.querySelector('section'), 'keydown', {
                     key: 'Enter',
                     code: 'Enter',
@@ -279,6 +275,118 @@ describe('DomEditable', () => {
                     anchorOffset: 2,
                     focusNode: container.querySelector('section').firstChild,
                     focusOffset: 2,
+                });
+            });
+            it.skip('enter at the end of the word (firefox)', async () => {
+                await triggerEvents([
+                    [
+                        // The browser focus must be triggererd before the test (after the iframe loading).
+                        {
+                            'type': 'mousedown',
+                            'nodeId': 1,
+                            'button': 2,
+                            'detail': 1,
+                            'clientX': 10,
+                            'clientY': 50,
+                        },
+                        {
+                            'type': 'selection',
+                            'focus': { 'nodeId': 2, 'offset': 4 },
+                            'anchor': { 'nodeId': 2, 'offset': 4 },
+                        },
+                        {
+                            'type': 'click',
+                            'nodeId': 1,
+                            'button': 2,
+                            'detail': 1,
+                            'clientX': 50,
+                            'clientY': 10,
+                        },
+                        {
+                            'type': 'mouseup',
+                            'nodeId': 1,
+                            'button': 2,
+                            'detail': 1,
+                            'clientX': 50,
+                            'clientY': 10,
+                        },
+                    ],
+                    [
+                        { 'type': 'keydown', 'key': 'Enter', 'code': 'Enter' },
+                        { 'type': 'beforeinput', 'inputType': 'insertParagraph' },
+                        {
+                            'type': 'mutation',
+                            'mutationType': 'childList',
+                            'textContent': 'abcd',
+                            'targetId': 1,
+                            'addedNodes': [
+                                {
+                                    'parentId': 1,
+                                    'nodeValue': '<br>',
+                                    'nodeType': 1,
+                                    'previousSiblingId': 2,
+                                },
+                            ],
+                        },
+                        {
+                            'type': 'mutation',
+                            'mutationType': 'childList',
+                            'textContent': 'abcd',
+                            'targetId': 0,
+                            'addedNodes': [
+                                {
+                                    'parentId': 0,
+                                    'nodeValue': '<div></div>',
+                                    'nodeType': 1,
+                                    'previousSiblingId': null,
+                                },
+                            ],
+                        },
+                        {
+                            'type': 'mutation',
+                            'mutationType': 'childList',
+                            'textContent': '',
+                            'targetId': 1,
+                            'removedNodes': [{ 'nodeId': 2 }],
+                        },
+                        {
+                            'type': 'mutation',
+                            'mutationType': 'childList',
+                            'textContent': 'abcd',
+                            'targetId': 4,
+                            'addedNodes': [
+                                {
+                                    'parentId': 4,
+                                    'nodeId': 2,
+                                    'previousSiblingId': null,
+                                },
+                            ],
+                        },
+                        {
+                            'type': 'selection',
+                            'focus': { 'nodeId': 3, 'offset': 0 },
+                            'anchor': { 'nodeId': 3, 'offset': 0 },
+                        },
+                    ],
+                ]);
+
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('insertParagraphBreak');
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><section contenteditable="true">' +
+                        '<div>abcd</div><div><br></div>' +
+                        '</section></jw-editor>',
+                );
+                const domSelection = section.ownerDocument.getSelection();
+                expect({
+                    anchorNode: domSelection.anchorNode,
+                    anchorOffset: domSelection.anchorOffset,
+                    focusNode: domSelection.focusNode,
+                    focusOffset: domSelection.focusOffset,
+                }).to.deep.equal({
+                    anchorNode: container.querySelector('section').lastChild.lastChild,
+                    anchorOffset: 0,
+                    focusNode: container.querySelector('section').lastChild.lastChild,
+                    focusOffset: 0,
                 });
             });
             it('should insert char in a word', async () => {
