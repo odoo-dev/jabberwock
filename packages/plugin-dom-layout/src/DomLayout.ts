@@ -12,7 +12,6 @@ import {
 import { DomObjectRenderer } from '../../plugin-renderer-dom-object/src/DomObjectRenderer';
 import { ZoneDomObjectRenderer } from './ZoneDomObjectRenderer';
 import { ZoneXmlDomParser } from './ZoneXmlDomParser';
-import { LayoutContainerDomObjectRenderer } from './LayoutContainerDomObjectRenderer';
 import { ZoneIdentifier, ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CommandIdentifier } from '../../core/src/Dispatcher';
@@ -39,7 +38,6 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
         renderers: [
             ZoneDomObjectRenderer,
-            LayoutContainerDomObjectRenderer,
             ActionableGroupSelectItemDomObjectRenderer,
             ActionableGroupDomObjectRenderer,
             ActionableDomObjectRenderer,

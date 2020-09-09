@@ -31,9 +31,7 @@ describe('LineBreakDomRenderer', () => {
             const renderer = editor.plugins.get(Renderer);
             const element = await renderer.render<Node[]>('dom/html', root);
             if (expect(element).to.exist) {
-                const domElement = element[0];
-                expect(domElement.childNodes.length).to.equal(1);
-                const domP = domElement.firstChild;
+                const domP = element[0];
                 expect(domP.childNodes.length).to.equal(2);
                 expect(nodeName(domP.firstChild)).to.equal('BR');
                 expect(nodeName(domP.lastChild)).to.equal('BR');
@@ -50,9 +48,7 @@ describe('LineBreakDomRenderer', () => {
             const renderer = editor.plugins.get(Renderer);
             const element = await renderer.render<Node[]>('dom/html', root);
             if (expect(element).to.exist) {
-                const domElement = element[0];
-                expect(domElement.childNodes.length).to.equal(1);
-                const domP = domElement.firstChild;
+                const domP = element[0];
                 expect(nodeName(domP)).to.equal('FAKE-P');
                 expect(domP.childNodes.length).to.equal(2);
                 expect(nodeName(domP.firstChild)).to.equal('BR');

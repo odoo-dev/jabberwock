@@ -127,7 +127,7 @@ describe('ListDomRenderer', () => {
             const rendered = await renderer.render<Node[]>('dom/html', root);
             if (expect(rendered).to.exist) {
                 /* eslint-disable prettier/prettier */
-                expect(rendered[0].innerHTML).to.equal([
+                expect(rendered[0].outerHTML).to.equal([
                     '<ul>',
                         '<li>a</li>',
                         '<li style="list-style: none;">',
