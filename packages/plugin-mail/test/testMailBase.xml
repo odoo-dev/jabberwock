@@ -35,6 +35,12 @@
     article#toto {
         text-align: right;
     }
+    selector > for > non#existent > parent.child > tests {
+        color: red;
+    }
+    selector for non-existent parent-child tests {
+        color: red;
+    }
 </style>
 <hr/>
 <h1 style="font-size: 50px;">Jabberwocky <span class="fa fa-clock fa-fw"></span></h1>

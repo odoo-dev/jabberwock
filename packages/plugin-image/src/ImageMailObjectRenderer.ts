@@ -22,8 +22,8 @@ export class ImageMailObjectRenderer extends NodeRenderer<DomObject> {
 
         // Center image on Outlook.
         if (
-            imgObject.attributes.class.has('mx-auto') &&
-            imgObject.attributes.class.has('d-block')
+            imgObject.attributes?.class.has('mx-auto') &&
+            imgObject.attributes?.class.has('d-block')
         ) {
             return {
                 tag: 'P',

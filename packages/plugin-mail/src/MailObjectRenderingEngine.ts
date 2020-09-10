@@ -343,7 +343,7 @@ export class MailObjectRenderingEngine extends DomObjectRenderingEngine {
                 part = parts.pop();
                 for (const origin of availableOrigin) {
                     const ancestor = origins[origins.indexOf(origin) + 1];
-                    if (this._basicSelectorMatchesDomObject(ancestor, part)) {
+                    if (ancestor && this._basicSelectorMatchesDomObject(ancestor, part)) {
                         newOrigins.push(ancestor);
                     }
                 }
@@ -351,7 +351,7 @@ export class MailObjectRenderingEngine extends DomObjectRenderingEngine {
                 for (const origin of availableOrigin) {
                     const ancestors = origins.slice(origins.indexOf(origin) + 1);
                     for (const ancestor of ancestors) {
-                        if (this._basicSelectorMatchesDomObject(ancestor, part)) {
+                        if (ancestor && this._basicSelectorMatchesDomObject(ancestor, part)) {
                             newOrigins.push(ancestor);
                         }
                     }
