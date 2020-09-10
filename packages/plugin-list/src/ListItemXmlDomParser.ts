@@ -13,6 +13,8 @@ import { PreNode } from '../../plugin-pre/src/PreNode';
 
 export class ListItemAttributes extends Attributes {}
 
+const SUB_LISTS_TAGS = ['OL', 'UL'];
+
 export class ListItemXmlDomParser extends AbstractParser<Node> {
     static id = XmlDomParsingEngine.id;
     engine: XmlDomParsingEngine;
@@ -38,11 +40,16 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
             itemModifiers.append(attributes);
         }
         const Container = this.engine.editor.configuration.defaults.Container;
+        const isInline = children.map(child => this._isInlineListItem(child));
+        // Wrap inline nodes if the LI only contains inline nodes or sublists.
+        const wrapInlines = children.every((child: Node, index: number) => {
+            return isInline[index] || SUB_LISTS_TAGS.includes(nodeName(child));
+        });
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];
             const parsedChild = await this.engine.parse(domChild);
             if (parsedChild.length) {
-                if (this._isInlineListItem(domChild)) {
+                if (isInline[childIndex] && wrapInlines) {
                     // Contiguous inline elements in a list item should be
                     // wrapped together in a base container.
                     if (!inlinesContainer) {
@@ -54,14 +61,16 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                     }
                     inlinesContainer.append(...parsedChild);
                 } else {
-                    if (inlinesContainer && !['UL', 'OL'].includes(nodeName(domChild))) {
+                    if (inlinesContainer && !SUB_LISTS_TAGS.includes(nodeName(domChild))) {
                         inlinesContainer.append(...parsedChild);
                     } else {
                         inlinesContainer = null; // Close the inlinesContainer.
-                        for (const child of parsedChild) {
-                            const attributes = itemModifiers.get(Attributes);
-                            attributes.remove('value');
-                            child.modifiers.set(new ListItemAttributes(attributes));
+                        if (!isInline[childIndex]) {
+                            for (const child of parsedChild) {
+                                const attributes = itemModifiers.get(Attributes);
+                                attributes.remove('value');
+                                child.modifiers.set(new ListItemAttributes(attributes));
+                            }
                         }
                         nodes.push(...parsedChild);
                     }
