@@ -5,6 +5,11 @@ import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Modifiers } from '../../core/src/Modifiers';
+import { ListNode } from './ListNode';
+import { DividerNode } from '../../plugin-divider/src/DividerNode';
+import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
+import { HeadingNode } from '../../plugin-heading/src/HeadingNode';
+import { PreNode } from '../../plugin-pre/src/PreNode';
 
 export class ListItemAttributes extends Attributes {}
 
@@ -63,18 +68,38 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                 }
             }
         }
-        // A list item with children but whose parsing returned nothing should
-        // be parsed as an empty base container. Eg: <li><br/></li>: li has a
-        // child so it will not return [] above (and therefore be ignored), but
-        // br will parse to nothing because it's a placeholder br, not a real
-        // line break. We cannot ignore that li because it does in fact exist so
-        // we parse it as an empty base container.
-        if (nodes.length) {
-            return nodes;
-        } else {
+
+        if (nodes.length === 0) {
+            // A list item with children but whose parsing returned nothing
+            // should be parsed as an empty base container. Eg: <li><br/></li>:
+            // li has a child so it will not return [] above (and therefore be
+            // ignored), but br will parse to nothing because it's a placeholder
+            // br, not a real line break. We cannot ignore that li because it
+            // does in fact exist so we parse it as an empty base container.
             const container = new Container();
             container.modifiers.append(new ListItemAttributes(itemModifiers.get(Attributes)));
+            container.append(...nodes);
             return [container];
+        } else if (
+            (nodes.length === 1 &&
+                // TODO: we need some sort of PhrasingContainer class for this.
+                (nodes[0] instanceof ParagraphNode ||
+                    nodes[0] instanceof HeadingNode ||
+                    nodes[0] instanceof PreNode)) ||
+            nodes.filter(node => node instanceof ListNode).length > 0
+        ) {
+            // Having a sub-list is also a special case where the sub lits gets
+            // its own list item rather than wrapping in a container.
+            // TODO: We should not remove the P we actually parsed it as is.
+            return nodes;
+        } else {
+            // A list item with different container children is represented by
+            // a DividerNode.
+            // TODO: we need a default FlowContainer constructor.
+            const divider = new DividerNode();
+            divider.modifiers.append(new ListItemAttributes(attributes));
+            divider.append(...nodes);
+            return [divider];
         }
     }
 
