@@ -307,12 +307,13 @@ export class OdooWebsiteEditor extends JWEditor {
     /**
      * Get the value by rendering the "editable" component of the editor.
      */
-    async getValue<T>(format = HtmlDomRenderingEngine.id): Promise<T> {
+    async getValue<T>(format = HtmlDomRenderingEngine.id): Promise<void | T> {
         const renderer = this.plugins.get(Renderer);
         const layout = this.plugins.get(Layout);
         const domLayout = layout.engines.dom;
-        const editable = domLayout.components.editable[0];
-        const nodes = await renderer.render<T>(format, editable);
-        return nodes && nodes[0];
+        const editable = domLayout.root.firstDescendant(
+            node => node instanceof ZoneNode && node.managedZones.includes('editable'),
+        );
+        return renderer.render<T>(format, editable);
     }
 }
