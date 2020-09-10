@@ -42,9 +42,11 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
         const Container = this.engine.editor.configuration.defaults.Container;
         const isInline = children.map(child => this._isInlineListItem(child));
         // Wrap inline nodes if the LI only contains inline nodes or sublists.
-        const wrapInlines = children.every((child: Node, index: number) => {
-            return isInline[index] || SUB_LISTS_TAGS.includes(nodeName(child));
-        });
+        const allInline = isInline.every(isChildInline => isChildInline);
+        const hasSubList = children.some(child => SUB_LISTS_TAGS.includes(nodeName(child)));
+        // Having a sublist will trigger a split of the content of the li to
+        // allow multi indentation, so in this case a wrap is required.
+        const wrapInlines = allInline || hasSubList;
         for (let childIndex = 0; childIndex < children.length; childIndex++) {
             const domChild = children[childIndex];
             const parsedChild = await this.engine.parse(domChild);

@@ -725,6 +725,78 @@ describePlugin(List, testEditor => {
                     contentAfter: '<ul><li><div>a</div>b</li></ul>',
                 });
             });
+            it('should wrap inline despite having a container sibling if there is a sublist', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: unformat(`
+                        <ul>
+                            <li>li</li>
+                            <li>
+                                text+div+ul
+                                <div>div</div>
+                                <ul>
+                                    <li>li1</li>
+                                    <li>
+                                        text+ul
+                                        <ul>
+                                            <li>1.1</li>
+                                            <li>1.2</li>
+                                            <li>1.3</li>
+                                        </ul>
+                                    </li>
+                                    <li>li2</li>
+                                    <li>
+                                        text+div
+                                        <div>div1</div>
+                                        <div>div2</div>
+                                    </li>
+                                    <li>li3</li>
+                                    <li>
+                                        text+p
+                                        <p>p1</p>
+                                        <p>p2</p>
+                                    </li>
+                                    <li>li4</li>
+                                </ul>
+                                <li>after_ul</li>
+                            </li>
+                        </ul>`),
+                    contentAfter: unformat(`
+                        <ul>
+                            <li>li</li>
+                            <li>
+                                text+div+ul
+                                <div>div</div>
+                            </li>
+                            <li style="list-style: none;">
+                                <ul>
+                                    <li>li1</li>
+                                    <li>text+ul</li>
+                                    <li style="list-style: none;">
+                                        <ul>
+                                            <li>1.1</li>
+                                            <li>1.2</li>
+                                            <li>1.3</li>
+                                        </ul>
+                                    </li>
+                                    <li>li2</li>
+                                    <li>
+                                        text+div
+                                        <div>div1</div>
+                                        <div>div2</div>
+                                    </li>
+                                    <li>li3</li>
+                                    <li>
+                                        text+p
+                                        <p>p1</p>
+                                        <p>p2</p>
+                                    </li>
+                                    <li>li4</li>
+                                </ul>
+                            </li>
+                            <li>after_ul</li>
+                        </ul>`),
+                });
+            });
         });
     });
     describe('toggleList', () => {
