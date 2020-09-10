@@ -7,6 +7,7 @@ import { ThemeNode } from './ThemeNode';
 import { Theme } from './Theme';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 import { isInstanceOf } from '../../utils/src/utils';
+import { Renderer } from '../../plugin-renderer/src/Renderer';
 
 export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -17,7 +18,10 @@ export class ThemeDomObjectRenderer extends NodeRenderer<DomObject> {
         const themePlugin = this.engine.editor.plugins.get(Theme);
         const component = themePlugin.themes[themeNode.themeName];
         const nodes = await component.render(this.engine.editor);
-        const cache = await this.engine.render(nodes);
+        const domObjectRenderingEngine = this.engine.editor.plugins.get(Renderer).engines[
+            DomObjectRenderingEngine.id
+        ] as DomObjectRenderingEngine;
+        const cache = await domObjectRenderingEngine.render(nodes);
         const domObjects = nodes.map(node => cache.renderings.get(node));
         for (const domObject of domObjects) {
             await this._resolvePlaceholder(themeNode, domObject, cache.worker);

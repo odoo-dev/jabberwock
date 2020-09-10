@@ -14,7 +14,7 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
     engine: MailObjectRenderingEngine;
     predicate = FontAwesomeNode;
 
-    fontLoader: Record<string, Promise<void>> = {};
+    fontLoader: Record<string, Promise<HTMLCanvasElement>> = {};
 
     constructor(engine: RenderingEngine<DomObject>) {
         super(engine);
@@ -41,10 +41,8 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
             styleFromRules.current['font-size'] || styleFromRules.inherit['font-size'] || '14px',
             10,
         );
-        const weight = parseInt(
-            styleFromRules.current['font-weight'] || styleFromRules.inherit['font-weight'] || '400',
-            10,
-        );
+        const weight =
+            styleFromRules.current['font-weight'] || styleFromRules.inherit['font-weight'] || 400;
 
         // Get the current font from the css stylesheet.
         const iconName = [...fontawesome.attributes.class].find(className =>
@@ -55,16 +53,16 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
             selector.includes(iconName + '::before'),
         );
         const font = styleFont.content.charCodeAt(1);
-        const fontFamily = styleFromRules.current['font-family']?.slice(1, -1);
-        if (!fontFamily) {
-            return { children: [] };
-        }
+        let fontFamily = styleFromRules.current['font-family'];
 
-        await this._loadFont(fontFamily);
+        if (!fontFamily) {
+            console.warn('Impossible to render FontAwesome: missing font-family from stylesheet.');
+        } else if (fontFamily[0] === '"') {
+            fontFamily = fontFamily.slice(1, -1);
+        }
 
         const imgStyle = {
             'border-style': 'none',
-            'max-width': '100%',
             'vertical-align': 'text-top',
             'height': 'auto',
             'width': 'auto',
@@ -78,7 +76,7 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
         }
 
         // Create image instead of the font for mail client.
-        const className = [...fontawesome.attributes.class].join('');
+        const className = [...fontawesome.attributes.class].join(' ');
         let style = '';
         for (const key in fontawesome.attributes.style) {
             style += key + ':' + fontawesome.attributes.style[key] + ';';
@@ -87,7 +85,7 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
         const iconObject: DomObject = {
             tag: 'IMG',
             attributes: Object.assign({}, fontawesome.attributes, {
-                'src': this._fontToBase64(fontFamily, font, size, color, weight),
+                'src': await this._fontToBase64(fontFamily, font, size, color, weight),
                 // odoo url: '/web_editor/font_to_img/' + font + '/' + window.encodeURI(color) + '/' + size,
                 'data-fontname': iconName,
                 'data-charcode': font.toString(),
@@ -116,7 +114,7 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
      *
      * @param fontFamily
      */
-    private async _loadFont(fontFamily: string): Promise<void> {
+    private async _loadFont(fontFamily: string): Promise<HTMLCanvasElement> {
         if (!this.fontLoader[fontFamily]) {
             // Preload the font into canvas.
             const fontChar = String.fromCharCode(61770);
@@ -131,7 +129,11 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
             // to only take one rendering pass (16ms) but it might take more if
             // the computer is overloaded. We arbitrarily choose to wait for 3
             // rendering passes (>48ms).
-            this.fontLoader[fontFamily] = new Promise(r => setTimeout(r, 50));
+            this.fontLoader[fontFamily] = new Promise(r =>
+                setTimeout(() => {
+                    r(canvas);
+                }, 50),
+            );
         }
         return this.fontLoader[fontFamily];
     }
@@ -144,15 +146,15 @@ export class FontAwesomeMailObjectRenderer extends NodeRenderer<DomObject> {
      * @param color
      * @param weight
      */
-    private _fontToBase64(
+    private async _fontToBase64(
         fontFamily: string,
         font: number,
         fontSize = 14,
         color = '#000000',
-        weight = 400,
-    ): string {
+        weight: number | string = 400,
+    ): Promise<string> {
         const fontChar = String.fromCharCode(font);
-        const canvas = document.createElement('canvas');
+        const canvas = await this._loadFont(fontFamily);
         const ctx = canvas.getContext('2d');
 
         canvas.width = fontSize * 2;
