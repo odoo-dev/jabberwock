@@ -94,7 +94,13 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 pattern: 'Backspace',
                 selector: [List.isListItem],
                 check: (context: CheckingContext): boolean => {
-                    return !context.range.start.previousSibling();
+                    const range = context.range;
+                    const [listItem] = context.selector;
+                    return (
+                        range.isCollapsed() &&
+                        (!listItem.hasChildren() ||
+                            listItem.firstLeaf() === range.start.nextSibling())
+                    );
                 },
                 commandId: 'outdent',
             },
