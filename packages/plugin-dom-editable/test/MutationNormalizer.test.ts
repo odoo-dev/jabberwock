@@ -15,6 +15,7 @@ describe('utils', () => {
             root = document.createElement('root');
             document.body.appendChild(root);
             normalizer = new MutationNormalizer();
+            normalizer.attach(root);
         });
         after(() => {
             document.body.removeChild(root);

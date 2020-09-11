@@ -2616,7 +2616,7 @@ describe('core', () => {
                     memory.create('base');
                     memory.switchTo('base');
 
-                    for (let i = 0; i < 40; i++) {
+                    for (let i = 0; i < 260; i++) {
                         memory.create('base-' + i);
                         memory.switchTo('base-' + i);
 
@@ -2645,7 +2645,7 @@ describe('core', () => {
                     memory.switchTo('test-0');
                     array.push(1);
 
-                    for (let i = 1; i < 40; i++) {
+                    for (let i = 1; i < 260; i++) {
                         memory.create('test-' + i);
                         memory.switchTo('test-' + i);
 
@@ -2668,7 +2668,7 @@ describe('core', () => {
                 });
                 it('should get the changed index in array when replace item', () => {
                     const array = new VersionableArray();
-                    for (let i = 0; i < 40; i++) {
+                    for (let i = 0; i < 260; i++) {
                         array.push(1);
                     }
                     const memory = new Memory();
@@ -2676,7 +2676,7 @@ describe('core', () => {
                     memory.create('base');
                     memory.switchTo('base');
 
-                    for (let i = 0; i < 40; i++) {
+                    for (let i = 0; i < 260; i++) {
                         memory.create('base-' + i);
                         memory.switchTo('base-' + i);
 
@@ -2692,6 +2692,68 @@ describe('core', () => {
                                 move: [],
                                 remove: [],
                                 update: [[array, [i]]],
+                            },
+                            'index: ' + i,
+                        );
+                    }
+                });
+                it('should get the changed index in array when insert one item', () => {
+                    const array = new VersionableArray();
+                    for (let i = 0; i < 260; i++) {
+                        array.push(1);
+                    }
+                    const memory = new Memory();
+                    memory.attach(array);
+                    memory.create('base');
+                    memory.switchTo('base');
+
+                    for (let i = 0; i < 260; i++) {
+                        memory.create('base-' + i);
+                        memory.switchTo('base-' + i);
+
+                        memory.create('test-' + i);
+                        memory.switchTo('test-' + i);
+
+                        array.splice(20, 0, 2);
+
+                        const diff = memory.getChangesLocations('test-' + i, 'base-' + i);
+                        expect(diff).to.deep.equal(
+                            {
+                                add: [],
+                                move: [],
+                                remove: [],
+                                update: [[array, [20]]],
+                            },
+                            'index: ' + i,
+                        );
+                    }
+                });
+                it('should get the changed index in array when remove one item', () => {
+                    const array = new VersionableArray();
+                    for (let i = 0; i < 300; i++) {
+                        array.push(1);
+                    }
+                    const memory = new Memory();
+                    memory.attach(array);
+                    memory.create('base');
+                    memory.switchTo('base');
+
+                    for (let i = 0; i < 260; i++) {
+                        memory.create('base-' + i);
+                        memory.switchTo('base-' + i);
+
+                        memory.create('test-' + i);
+                        memory.switchTo('test-' + i);
+
+                        array.splice(20, 1);
+
+                        const diff = memory.getChangesLocations('test-' + i, 'base-' + i);
+                        expect(diff).to.deep.equal(
+                            {
+                                add: [],
+                                move: [],
+                                remove: [],
+                                update: [[array, [20]]],
                             },
                             'index: ' + i,
                         );
