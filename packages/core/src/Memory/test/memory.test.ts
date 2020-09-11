@@ -2427,7 +2427,7 @@ describe('core', () => {
                 });
             });
 
-            describe('root & path', () => {
+            describe('root & path & changes', () => {
                 it('link to memory & markAsDiffRoot', () => {
                     const obj = makeVersionable({
                         toto: {
@@ -2608,6 +2608,94 @@ describe('core', () => {
                             [obj.toto.titi.tata, ['m']],
                         ],
                     });
+                });
+                it('should get the changed index in array when add item', () => {
+                    const array = new VersionableArray();
+                    const memory = new Memory();
+                    memory.attach(array);
+                    memory.create('base');
+                    memory.switchTo('base');
+
+                    for (let i = 0; i < 40; i++) {
+                        memory.create('base-' + i);
+                        memory.switchTo('base-' + i);
+
+                        memory.create('test-' + i);
+                        memory.switchTo('test-' + i);
+
+                        array.push(1);
+
+                        const diff = memory.getChangesLocations('test-' + i, 'base-' + i);
+                        expect(diff).to.deep.equal(
+                            {
+                                add: [],
+                                move: [],
+                                remove: [],
+                                update: [[array, [i]]],
+                            },
+                            'index: ' + i,
+                        );
+                    }
+                });
+                it('should get the changed index in array when add item x 2', () => {
+                    const array = new VersionableArray();
+                    const memory = new Memory();
+                    memory.attach(array);
+                    memory.create('test-0');
+                    memory.switchTo('test-0');
+                    array.push(1);
+
+                    for (let i = 1; i < 40; i++) {
+                        memory.create('test-' + i);
+                        memory.switchTo('test-' + i);
+
+                        array.push(1);
+
+                        const diff = memory.getChangesLocations('test-' + i, 'test-' + (i - 1));
+                        expect(diff).to.deep.equal(
+                            {
+                                add: [],
+                                move: [],
+                                remove: [],
+                                update: [
+                                    [array, [i - 1]],
+                                    [array, [i]], // TODO: merge diff array indexes
+                                ],
+                            },
+                            'index: ' + i,
+                        );
+                    }
+                });
+                it('should get the changed index in array when replace item', () => {
+                    const array = new VersionableArray();
+                    for (let i = 0; i < 40; i++) {
+                        array.push(1);
+                    }
+                    const memory = new Memory();
+                    memory.attach(array);
+                    memory.create('base');
+                    memory.switchTo('base');
+
+                    for (let i = 0; i < 40; i++) {
+                        memory.create('base-' + i);
+                        memory.switchTo('base-' + i);
+
+                        memory.create('test-' + i);
+                        memory.switchTo('test-' + i);
+
+                        array[i] = 2;
+
+                        const diff = memory.getChangesLocations('test-' + i, 'base-' + i);
+                        expect(diff).to.deep.equal(
+                            {
+                                add: [],
+                                move: [],
+                                remove: [],
+                                update: [[array, [i]]],
+                            },
+                            'index: ' + i,
+                        );
+                    }
                 });
             });
         });

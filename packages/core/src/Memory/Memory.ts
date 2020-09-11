@@ -368,11 +368,11 @@ export class Memory {
                     const params = proxy[memoryProxyPramsKey] as ArrayParams;
                     const uniqIDs = params.uniqIDs;
                     const len = uniqIDs.length;
-                    const half = len;
+                    const half = Math.ceil(len / 2);
                     const indexes: number[] = [];
                     for (const i in memoryItem.patch) {
                         let index = half;
-                        let step = index + 1;
+                        let step = half;
                         while (step) {
                             const value = uniqIDs[index];
                             if (value === i) {
@@ -388,9 +388,14 @@ export class Memory {
                                     index = len - 1;
                                 }
                             }
-                            step = (step / 2) | 0;
-                            if (step === 0 && value > i && uniqIDs[index] < i) {
-                                index++;
+                            if (step > 1) {
+                                step = Math.ceil(step / 2);
+                            } else {
+                                const value = uniqIDs[index];
+                                step = 0;
+                                if (value < i && uniqIDs[index + 1] > i) {
+                                    index++;
+                                }
                             }
                         }
                         if (!indexes.includes(index)) {
