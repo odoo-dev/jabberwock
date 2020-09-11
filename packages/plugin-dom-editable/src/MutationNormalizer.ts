@@ -21,10 +21,6 @@ export class MutationNormalizer {
     _listen: boolean;
     _mutations: MutationRecord[];
 
-    constructor(node: Node = document.body) {
-        // todo adtape test and remove this
-        this.attach(node);
-    }
     attach(node: Node): void {
         const observer = new MutationObserver(this._onMutation.bind(this));
         observer.observe(node, {
