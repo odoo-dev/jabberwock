@@ -887,9 +887,7 @@ describe('DomEditable', () => {
                     // wait for the event to be processed in the next tick
                     await nextTick();
                     // wait for the last event in the editor mutex to finish
-                    await new Promise(resolve => {
-                        editor.execCommand(resolve);
-                    });
+                    await editor.execCommand(() => {});
                 },
                 contentAfter: '<div>ab\u2003cd[]</div>',
             });

@@ -14,8 +14,9 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { triggerEvents } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 
-const insertLineBreak = async (editor: JWEditor): Promise<void> =>
+const insertLineBreak = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<LineBreak>('insertLineBreak');
+};
 
 describePlugin(LineBreak, testEditor => {
     describe('parse', () => {

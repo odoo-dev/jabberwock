@@ -41,9 +41,16 @@ export interface CommitParams extends CommandParams {
 }
 
 export type ExecCommandFunction = <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
-    commandName: C | ((context: Context) => Promise<void> | void),
+    commandName: C | ((context: Context) => void | Promise<void>),
     params?: CommandParamsType<P, C>,
-) => Promise<void>;
+) => Promise<ExecCommandResult>;
+
+export type ExecCommandResult = void | {
+    error: {
+        name: string;
+        message: string;
+    };
+};
 
 export interface ExecutionContext {
     execCommand: ExecCommandFunction;
@@ -67,6 +74,7 @@ export interface JWEditorConfig {
     };
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
     loadables?: Loadables;
+    deadlockTimeout?: number;
 }
 
 export interface PluginMap extends Map<typeof JWPlugin, JWPlugin> {
@@ -86,6 +94,7 @@ export class JWEditor {
         },
         plugins: [],
         loadables: {},
+        deadlockTimeout: 10000,
     };
     memory: Memory;
     memoryInfo: { commandNames: string[]; uiCommand: boolean };
@@ -334,7 +343,9 @@ export class JWEditor {
         }
     }
 
-    async nextEventMutex(next: (execCommand: ExecCommandFunction) => void): Promise<void> {
+    async nextEventMutex(
+        next: (execCommand: ExecCommandFunction) => void,
+    ): Promise<ExecCommandResult> {
         return (this._mutex = this._mutex.then(
             next.bind(undefined, this._withOpenMemory.bind(this)),
         ));
@@ -347,7 +358,9 @@ export class JWEditor {
      *
      * @param callback
      */
-    async execCommand(callback: (context: Context) => Promise<void> | void): Promise<void>;
+    async execCommand(
+        callback: (context: Context) => Promise<void> | void,
+    ): Promise<ExecCommandResult>;
     /**
      * Execute the given command.
      *
@@ -357,7 +370,7 @@ export class JWEditor {
     async execCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
         commandName: C,
         params?: CommandParamsType<P, C>,
-    ): Promise<void>;
+    ): Promise<ExecCommandResult>;
     /**
      * Execute the command or arbitrary code in `callback` in memory.
      * The call to execCommand are executed into a mutex. Every plugin can
@@ -372,7 +385,7 @@ export class JWEditor {
     async execCommand<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
         commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         return this.nextEventMutex(async () => {
             return this._withOpenMemory(commandName, params);
         });
@@ -392,7 +405,7 @@ export class JWEditor {
         commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
         mode?: Mode,
-    ): Promise<void>;
+    ): Promise<ExecCommandResult>;
     /**
      * Execute a command on a temporary range corresponding to the given
      * boundary points. The range is automatically destroyed afterwards.
@@ -405,7 +418,7 @@ export class JWEditor {
         bounds: [Point, Point],
         callback: (context: Context) => Promise<void> | void,
         mode?: Mode,
-    ): Promise<void>;
+    ): Promise<ExecCommandResult>;
     async execWithRange<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
         bounds: [Point, Point],
         commandName: C | ((context: Context) => Promise<void> | void),
@@ -465,7 +478,7 @@ export class JWEditor {
     private async _withOpenMemory<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
         commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         if (!this.memory.isFrozen()) {
             console.error(
                 'You are trying to call the external editor' +
@@ -474,13 +487,7 @@ export class JWEditor {
             );
             return;
         }
-        const timeout = setTimeout(() => {
-            console.warn(
-                'An execCommand call is taking more than 10 seconds to finish. It might be caused by a deadlock.\n' +
-                    'Verify that you do not call editor.execCommand inside another editor.execCommand.',
-            );
-        }, 10000);
-
+        let execCommandTimeout: number;
         // Switch to the next memory slice (unfreeze the memory).
         const origin = this.memory.sliceKey;
         const memorySlice = this._memoryID.toString();
@@ -490,23 +497,38 @@ export class JWEditor {
         let commandNames = this.memoryInfo.commandNames;
 
         try {
-            // Execute command.
-            if (typeof commandName === 'function') {
-                const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
-                this.memoryInfo.commandNames.push(name);
-                await commandName(this.contextManager.defaultContext);
-                if (this.memory.sliceKey !== memorySlice) {
-                    // Override by the current commandName if the slice changed.
-                    commandNames = [name];
+            const exec = async (): Promise<void> => {
+                // Execute command.
+                if (typeof commandName === 'function') {
+                    const name = '@custom' + (commandName.name ? ':' + commandName.name : '');
+                    this.memoryInfo.commandNames.push(name);
+                    await commandName(this.contextManager.defaultContext);
+                    if (this.memory.sliceKey !== memorySlice) {
+                        // Override by the current commandName if the slice changed.
+                        commandNames = [name];
+                    }
+                } else {
+                    this.memoryInfo.commandNames.push(commandName);
+                    await this.dispatcher.dispatch(commandName, params);
+                    if (this.memory.sliceKey !== memorySlice) {
+                        // Override by the current commandName if the slice changed.
+                        commandNames = [commandName];
+                    }
                 }
-            } else {
-                this.memoryInfo.commandNames.push(commandName);
-                await this.dispatcher.dispatch(commandName, params);
-                if (this.memory.sliceKey !== memorySlice) {
-                    // Override by the current commandName if the slice changed.
-                    commandNames = [commandName];
-                }
-            }
+            };
+
+            await new Promise((resolve, reject) => {
+                execCommandTimeout = window.setTimeout(() => {
+                    reject({
+                        name: 'deadlock',
+                        message:
+                            'An execCommand call is taking more than 10 seconds to finish. It might be caused by a deadlock.\n' +
+                            'Verify that you do not call editor.execCommand inside another editor.execCommand, ' +
+                            'or that a command does not resolve the returned promise.',
+                    });
+                }, this.configuration.deadlockTimeout);
+                exec().then(resolve, reject);
+            });
 
             // Prepare nex slice and freeze the memory.
             this._memoryID++;
@@ -522,9 +544,9 @@ export class JWEditor {
                 changesLocations: changesLocations,
                 commandNames: [...commandNames],
             });
-            clearTimeout(timeout);
+            clearTimeout(execCommandTimeout);
         } catch (error) {
-            clearTimeout(timeout);
+            clearTimeout(execCommandTimeout);
             if (this._stage !== EditorStage.EDITION) {
                 throw error;
             }
@@ -559,6 +581,13 @@ export class JWEditor {
 
                 console.error(revertError);
             }
+
+            return {
+                error: {
+                    name: error.name,
+                    message: error.message,
+                },
+            };
         }
     }
     /**

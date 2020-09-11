@@ -3,7 +3,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { InlineNode } from '../../plugin-inline/src/InlineNode';
 import { LinkFormat } from '../../plugin-link/src/LinkFormat';
 import { Attributes } from '../../plugin-xml/src/Attributes';
-import JWEditor, { Loadables } from '../../core/src/JWEditor';
+import JWEditor, { Loadables, ExecCommandResult } from '../../core/src/JWEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { Inline } from '../../plugin-inline/src/Inline';
 import { Link, isInLink, LinkParams } from '../../plugin-link/src/Link';
@@ -467,7 +467,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      *
      * @param params
      */
-    async toggleHeadingStyle(params: HeadingParams): Promise<void> {
+    async toggleHeadingStyle(params: HeadingParams): Promise<ExecCommandResult> {
         return params.context.execCommand<Heading>('applyHeadingStyle', {
             level: isInHeading(params.context.range, params.level) ? 0 : params.level,
         });
@@ -478,7 +478,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      *
      * @param params
      */
-    async togglePreStyle(params: CommandParams): Promise<void> {
+    async togglePreStyle(params: CommandParams): Promise<ExecCommandResult> {
         if (isInPre(params.context.range)) {
             return params.context.execCommand<Heading>('applyHeadingStyle', {
                 level: 0,
@@ -493,7 +493,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
      *
      * @param params
      */
-    async toggleBlockquoteStyle(params: CommandParams): Promise<void> {
+    async toggleBlockquoteStyle(params: CommandParams): Promise<ExecCommandResult> {
         if (isInBlockquote(params.context.range)) {
             return params.context.execCommand<Heading>('applyHeadingStyle', {
                 level: 0,
@@ -502,7 +502,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             return params.context.execCommand<Blockquote>('applyBlockquoteStyle');
         }
     }
-    async toggleLinkWithDialog(params: LinkParams): Promise<void> {
+    async toggleLinkWithDialog(params: LinkParams): Promise<ExecCommandResult> {
         if (isInLink(params.context.range)) {
             return params.context.execCommand<Link>('unlink');
         } else {

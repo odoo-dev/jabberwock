@@ -7,8 +7,9 @@ import JWEditor from '../../core/src/JWEditor';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 
 const applyHeadingStyle = (level: number) => {
-    return async (editor: JWEditor): Promise<void> =>
+    return async (editor: JWEditor): Promise<void> => {
         await editor.execCommand<Heading>('applyHeadingStyle', { level: level });
+    };
 };
 
 describePlugin(Heading, testEditor => {
@@ -287,7 +288,9 @@ describePlugin(Heading, testEditor => {
         it('should insert a new paragraph after the heading', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<h1>abc[]</h1>',
-                stepFunction: async editor => editor.execCommand('insertParagraphBreak'),
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                },
                 contentAfter: '<h1>abc</h1><p>[]<br></p>',
             });
         });
@@ -314,7 +317,9 @@ describePlugin(Heading, testEditor => {
                     editor.configure({ mode: 'unbreakable' });
                 },
                 contentBefore: '<h1>abc[]</h1>',
-                stepFunction: async editor => editor.execCommand('insertParagraphBreak'),
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                },
                 contentAfter: '<h1>abc<br>[]<br></h1>',
             });
         });

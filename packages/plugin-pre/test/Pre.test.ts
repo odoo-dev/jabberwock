@@ -6,17 +6,22 @@ import { Core } from '../../core/src/Core';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
 import { Heading } from '../../plugin-heading/src/Heading';
 
-const deleteForward = async (editor: JWEditor): Promise<void> =>
+const deleteForward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteForward');
-const deleteBackward = async (editor: JWEditor): Promise<void> =>
+};
+const deleteBackward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteBackward');
-const insertLineBreak = async (editor: JWEditor): Promise<void> =>
+};
+const insertLineBreak = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<LineBreak>('insertLineBreak');
-const applyPreStyle = async (editor: JWEditor): Promise<void> =>
+};
+const applyPreStyle = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Pre>('applyPreStyle');
+};
 const applyHeadingStyle = (level: number) => {
-    return async (editor: JWEditor): Promise<void> =>
+    return async (editor: JWEditor): Promise<void> => {
         await editor.execCommand<Heading>('applyHeadingStyle', { level: level });
+    };
 };
 
 describePlugin(Pre, testEditor => {

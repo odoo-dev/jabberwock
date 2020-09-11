@@ -353,7 +353,7 @@ describePlugin(Inline, testEditor => {
                     await testEditor(CustomEditor, {
                         contentBefore: 'a<x><w>b[]</w></x><w><x>cd</x></w>',
                         stepFunction: async (editor: JWEditor) => {
-                            return editor.execCommand<Char>('insertText', { text: '0' });
+                            await editor.execCommand<Char>('insertText', { text: '0' });
                         },
                         contentAfter: 'a<x><w>b0[]cd</w></x>',
                     });
@@ -363,7 +363,7 @@ describePlugin(Inline, testEditor => {
                         contentBefore:
                             '<i>__</i><b><i>_<a href="#">__</a></i><a href="#">_[]</a><i><a href="#">__</a>_</i></b>',
                         stepFunction: async (editor: JWEditor) => {
-                            return editor.execCommand<Char>('insertText', { text: '0' });
+                            await editor.execCommand<Char>('insertText', { text: '0' });
                         },
                         contentAfter:
                             '<i>__</i><b><i>_</i><a href="#"><i>__</i>_0[]<i>__</i></a><i>_</i></b>',

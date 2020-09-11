@@ -1,4 +1,4 @@
-import { ExecutionContext } from './../../core/src/JWEditor';
+import { ExecutionContext, ExecCommandResult } from './../../core/src/JWEditor';
 import { JWPlugin, JWPluginConfig } from '../../core/src/JWPlugin';
 import { VNode, RelativePosition } from '../../core/src/VNodes/VNode';
 import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
@@ -23,7 +23,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         context: ExecutionContext,
         domNode: Node | Node[],
         className: string | string[],
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersAddClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
@@ -41,7 +41,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         context: ExecutionContext,
         domNode: Node | Node[],
         className: string | string[],
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersRemoveClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
@@ -63,7 +63,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         context: ExecutionContext,
         domNode: Node | Node[],
         className: string,
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersToggleClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
             for (const node of this.getNodes(domNode)) {
@@ -82,7 +82,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         domNode: Node | Node[],
         name: string,
         value: string,
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersSetAttribute = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).set(name, value);
@@ -99,7 +99,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         context: ExecutionContext,
         domNode: Node | Node[],
         attributes: { [key: string]: string },
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersUpdateAttribute = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.modifiers.get(Attributes).clear();
@@ -121,7 +121,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         name: string,
         value: string,
         important?: boolean,
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersSetStyle = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 value = important ? value + ' !important' : value;
@@ -139,7 +139,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         context: ExecutionContext,
 
         domNode: Node | Node[],
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersRemove = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.remove();
@@ -156,7 +156,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         context: ExecutionContext,
 
         domNode: Node | Node[],
-    ): Promise<void> {
+    ): Promise<ExecCommandResult> {
         const domHelpersEmpty = async (): Promise<void> => {
             for (const node of this.getNodes(domNode)) {
                 node.empty();
@@ -169,7 +169,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async replace(context: ExecutionContext, domNodes: Node | Node[], html: string): Promise<void> {
+    async replace(
+        context: ExecutionContext,
+        domNodes: Node | Node[],
+        html: string,
+    ): Promise<ExecCommandResult> {
         const domHelpersReplace = async (): Promise<void> => {
             const nodes = this.getNodes(domNodes);
             const parsedNodes = await this._parseHtmlString(html);
@@ -188,7 +192,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async wrap(context: ExecutionContext, domContainer: Node, html: string): Promise<void> {
+    async wrap(
+        context: ExecutionContext,
+        domContainer: Node,
+        html: string,
+    ): Promise<ExecCommandResult> {
         const domHelpersWrap = async (): Promise<void> => {
             const container = this.getNodes(domContainer)[0];
             if (!(container instanceof ContainerNode)) {
@@ -208,7 +216,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async moveBefore(context: ExecutionContext, fromDomNode: Node, toDomNode: Node): Promise<void> {
+    async moveBefore(
+        context: ExecutionContext,
+        fromDomNode: Node,
+        toDomNode: Node,
+    ): Promise<ExecCommandResult> {
         const domHelpersMoveBefore = async (): Promise<void> => {
             const toNode = this.getNodes(toDomNode)[0];
             for (const fromNode of this.getNodes(fromDomNode)) {
@@ -222,7 +234,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      *
      * @param params
      */
-    async moveAfter(context: ExecutionContext, fromDomNode: Node, toDomNode: Node): Promise<void> {
+    async moveAfter(
+        context: ExecutionContext,
+        fromDomNode: Node,
+        toDomNode: Node,
+    ): Promise<ExecCommandResult> {
         const domHelpersMoveAfter = async (): Promise<void> => {
             const toNodes = this.getNodes(toDomNode);
             const toNode = toNodes[toNodes.length - 1];

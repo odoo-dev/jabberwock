@@ -10,10 +10,12 @@ import { Layout } from '../../plugin-layout/src/Layout';
 const deleteForward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteForward');
 };
-const deleteBackward = async (editor: JWEditor): Promise<void> =>
+const deleteBackward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteBackward');
-const insertParagraphBreak = async (editor: JWEditor): Promise<void> =>
+};
+const insertParagraphBreak = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('insertParagraphBreak');
+};
 
 describe('VDocument', () => {
     // Note: implementing a test for deleteForward, make sure to implement
@@ -577,14 +579,14 @@ describe('VDocument', () => {
                 });
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[bc</p><p>de]f</p>',
-                    stepFunction: (editor: JWEditor) => {
+                    stepFunction: async (editor: JWEditor) => {
                         const pluginLayout = editor.plugins.get(Layout);
                         const domEngine = pluginLayout.engines.dom;
                         const editable = domEngine.components.editable[0];
-                        return editor.execCommand(context => {
+                        await editor.execCommand(async context => {
                             editable.firstChild().breakable = false;
                             editable.lastChild().breakable = false;
-                            return context.execCommand('deleteBackward');
+                            await context.execCommand('deleteBackward');
                         });
                     },
                     contentAfter: '<p>a[]</p><p>f</p>',

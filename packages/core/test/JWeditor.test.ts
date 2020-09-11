@@ -271,6 +271,46 @@ describe('core', () => {
                     contentAfter: '<div>cab[]</div>',
                 });
             });
+            it('should rollback for each error', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>ab[]</div>',
+                    stepFunction: async editor => {
+                        const result = await editor.execCommand(async context => {
+                            await context.execCommand<Char>('insertText', { text: 'c' });
+                        });
+                        expect(result && result.error).to.deep.equal(undefined);
+                    },
+                    contentAfter: '<div>abc[]</div>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>ab[]</div>',
+                    stepFunction: async editor => {
+                        const result = await editor.execCommand(async context => {
+                            await context.execCommand<Char>('insertText', { text: 'c' });
+                            throw new Error('error test');
+                        });
+                        expect(result && result.error).to.deep.equal({
+                            message: 'error test',
+                            name: 'Error',
+                        });
+                    },
+                    contentAfter: '<div>ab[]</div>',
+                });
+            });
+            it('should return an error message when have a deadlock', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>ab[]</div>',
+                    stepFunction: async editor => {
+                        editor.configuration.deadlockTimeout = 100;
+                        const result = await editor.execCommand(async context => {
+                            await context.execCommand<Char>('insertText', { text: 'c' });
+                            await new Promise(r => setTimeout(r, 200));
+                        });
+                        expect(result && result.error?.name).to.equal('deadlock');
+                    },
+                    contentAfter: '<div>ab[]</div>',
+                });
+            });
         });
         describe('Memory', () => {
             it('should use the selection after switch memory slice before the first selection', async () => {

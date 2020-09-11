@@ -4,8 +4,9 @@ import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
 
 const setFontSize = (size: number) => {
-    return async (editor: JWEditor): Promise<void> =>
+    return async (editor: JWEditor): Promise<void> => {
         await editor.execCommand<FontSize>('setFontSize', { value: size });
+    };
 };
 
 describePlugin(FontSize, testEditor => {
