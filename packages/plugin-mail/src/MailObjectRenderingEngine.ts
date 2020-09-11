@@ -55,8 +55,8 @@ export class MailObjectRenderingEngine extends DomObjectRenderingEngine {
     ): Promise<RenderingEngineCache<DomObject>> {
         cache = cache || new MailRenderingEngineCache(this);
 
-        if (!nodes.find(node => !cache.renderings.get(node))) {
-            return cache;
+        if (!nodes.find(node => !cache.renderingPromises.get(node))) {
+            return super.render(nodes, cache);
         }
 
         const ancestors = new Set<VNode>(nodes);

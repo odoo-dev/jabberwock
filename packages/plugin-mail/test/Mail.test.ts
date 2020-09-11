@@ -60,4 +60,19 @@ describePlugin(Mail, testEditor => {
             contentAfter: '<jw-shadow></jw-shadow>',
         });
     });
+    it('should render a list into a mail format', async () => {
+        await testEditor(MailEditor, {
+            contentBefore: '<t-shadow><ul><li>a</li></ul></t-shadow>',
+            stepFunction: async editor => {
+                const [editable] = editor.plugins.get(Layout).engines.dom.components.editable;
+                const shadowNode = editable.firstChild();
+                const htmls = await editor.plugins
+                    .get(Renderer)
+                    .render<string>('text/mail', shadowNode.childVNodes);
+                const result = htmls && htmls.filter(html => html.length).join('\n');
+                expect(result).to.equal('<ul><li>a</li></ul>');
+            },
+            contentAfter: '<jw-shadow></jw-shadow>',
+        });
+    });
 });
