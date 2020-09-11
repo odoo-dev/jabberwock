@@ -126,12 +126,10 @@ export class ListDomObjectRenderer extends NodeRenderer<DomObject> {
                 if (ev.offsetX < 0) {
                     ev.stopImmediatePropagation();
                     ev.preventDefault();
-                    this.engine.editor.execCommand(() => {
-                        return this.engine.editor.execWithRange<List>(
-                            VRange.at(listItem.firstChild() || listItem),
-                            'toggleChecked',
-                        );
-                    });
+                    this.engine.editor.execWithRange<List>(
+                        VRange.at(listItem.firstChild() || listItem),
+                        'toggleChecked',
+                    );
                 }
             };
             li.attach = (el: HTMLElement): void => {

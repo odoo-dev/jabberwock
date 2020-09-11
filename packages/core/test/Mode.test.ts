@@ -109,7 +109,9 @@ describe('core', () => {
                         editor.configure({ mode: 'unbreakable' });
                     },
                     contentBefore: '<unbreakable-node>a[]b</unbreakable-node>',
-                    stepFunction: async editor => editor.execCommand('insertParagraphBreak'),
+                    stepFunction: async editor => {
+                        await editor.execCommand('insertParagraphBreak');
+                    },
                     contentAfter: '<unbreakable-node>a<br>[]b</unbreakable-node>',
                 });
             });
@@ -120,7 +122,9 @@ describe('core', () => {
                         editor.configure({ mode: 'unbreakable' });
                     },
                     contentBefore: '<unbreakable-node><p>ab[cd</p></unbreakable-node><p>ef]gh</p>',
-                    stepFunction: async editor => editor.execCommand('deleteForward'),
+                    stepFunction: async editor => {
+                        await editor.execCommand('deleteForward');
+                    },
                     contentAfter: '<unbreakable-node><p>ab[]</p></unbreakable-node><p>gh</p>',
                 });
             });
@@ -131,7 +135,9 @@ describe('core', () => {
                         editor.configure({ mode: 'unbreakable' });
                     },
                     contentBefore: '<p>ab[cd</p><unbreakable-node><p>ef]gh</p></unbreakable-node>',
-                    stepFunction: async editor => editor.execCommand('deleteBackward'),
+                    stepFunction: async editor => {
+                        await editor.execCommand('deleteBackward');
+                    },
                     contentAfter: '<p>ab[]</p><unbreakable-node><p>gh</p></unbreakable-node>',
                 });
             });
@@ -143,7 +149,9 @@ describe('core', () => {
                     },
                     contentBefore:
                         '<unbreakable><h1>ab</h1><p>[]cd</p><unbreakable>ef</unbreakable></unbreakable>',
-                    stepFunction: async editor => editor.execCommand('deleteBackward'),
+                    stepFunction: async editor => {
+                        await editor.execCommand('deleteBackward');
+                    },
                     contentAfter:
                         '<unbreakable><h1>ab[]cd</h1><unbreakable>ef</unbreakable></unbreakable>',
                 });

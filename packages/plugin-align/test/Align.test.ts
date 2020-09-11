@@ -37,14 +37,14 @@ describePlugin(Align, testEditor => {
             it('should not change align style of a non-editable node', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>ab</p><p style="text-align: right;">c[]d</p>',
-                    stepFunction: (editor: JWEditor) => {
+                    stepFunction: async (editor: JWEditor) => {
                         const domLayout = editor.plugins.get(Layout);
                         const domEngine = domLayout.engines.dom;
                         const editable = domEngine.components.editable[0];
                         const root = editable;
-                        return editor.execCommand(context => {
+                        await editor.execCommand(async context => {
                             root.lastChild().editable = false;
-                            return context.execCommand<Align>('align', { type: AlignType.LEFT });
+                            await context.execCommand<Align>('align', { type: AlignType.LEFT });
                         });
                     },
                     // The selection was removed because it's in a non-editable node.

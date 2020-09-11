@@ -34,11 +34,9 @@ export class OdooTableDomObjectRenderer extends TableDomObjectRenderer {
             `;
             const links = dopdown.querySelectorAll('.dropdown-menu a');
             for (const link of links) {
-                link.addEventListener(
-                    'click',
-                    async (): Promise<void> =>
-                        this.engine.editor.execCommand((link as HTMLElement).dataset.commandId),
-                );
+                link.addEventListener('click', (): void => {
+                    this.engine.editor.execCommand((link as HTMLElement).dataset.commandId);
+                });
             }
 
             let positionable: Positionable;

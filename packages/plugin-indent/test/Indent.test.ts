@@ -5,10 +5,12 @@ import { VRange } from '../../core/src/VRange';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
 
-const indent = async (editor: JWEditor): Promise<void> =>
+const indent = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Indent>('indent');
-const outdent = async (editor: JWEditor): Promise<void> =>
+};
+const outdent = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Indent>('outdent');
+};
 
 describePlugin(Indent, testEditor => {
     describe('List', () => {

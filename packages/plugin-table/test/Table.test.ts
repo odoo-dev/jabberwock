@@ -26,7 +26,7 @@ import JWEditor from '../../core/src/JWEditor';
 
 const insertTable = (rowCount: number, columnCount: number) => {
     return async (editor: JWEditor): Promise<void> => {
-        return editor.execCommand<Table>('insertTable', {
+        await editor.execCommand<Table>('insertTable', {
             rowCount: rowCount,
             columnCount: columnCount,
         });

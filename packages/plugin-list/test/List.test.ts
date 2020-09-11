@@ -25,12 +25,15 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
 
-const deleteForward = async (editor: JWEditor): Promise<void> =>
+const deleteForward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteForward');
-const deleteBackward = async (editor: JWEditor): Promise<void> =>
+};
+const deleteBackward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteBackward');
-const insertParagraphBreak = async (editor: JWEditor): Promise<void> =>
+};
+const insertParagraphBreak = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('insertParagraphBreak');
+};
 const insertLineBreak = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('insert', {
         node: new LineBreakNode(),

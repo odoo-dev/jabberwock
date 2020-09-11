@@ -1805,9 +1805,9 @@ describe('DomLayout', () => {
                     const editable = domEngine.components.editable[0];
                     const renderer = editor.plugins.get(Renderer);
                     const br = editable.children()[2];
-                    await editor.execCommand(context => {
+                    await editor.execCommand(async context => {
                         new BoldFormat().applyTo(br);
-                        return context.execCommand<Inline>('toggleFormat', {
+                        await context.execCommand<Inline>('toggleFormat', {
                             FormatClass: BoldFormat,
                         });
                     });
@@ -2707,12 +2707,12 @@ describe('DomLayout', () => {
                         const renderer = editor.plugins.get(Renderer);
                         const br = editable.children()[2];
 
-                        await editor.execCommand(context => {
+                        await editor.execCommand(async context => {
                             new BoldFormat().applyTo(br);
 
                             mutationNumber = 0;
 
-                            return context.execCommand<Inline>('toggleFormat', {
+                            await context.execCommand<Inline>('toggleFormat', {
                                 FormatClass: BoldFormat,
                             });
                         });
