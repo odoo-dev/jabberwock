@@ -12,6 +12,7 @@ import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
+import { triggerEvents } from '../../plugin-dom-editable/test/eventNormalizerUtils';
 
 const insertLineBreak = async (editor: JWEditor): Promise<void> =>
     await editor.execCommand<LineBreak>('insertLineBreak');
@@ -485,6 +486,141 @@ describePlugin(LineBreak, testEditor => {
                         stepFunction: insertLineBreak,
                         contentAfter: '<p><br>[]<br></p>',
                     });
+                });
+            });
+        });
+        describe('updates + DOM updates', () => {
+            it('should insert a linebreak at the end then add a char', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>aaa[]</p>',
+                    stepFunction: async (): Promise<void> => {
+                        // insertLineBreak
+                        await triggerEvents([
+                            [
+                                {
+                                    'type': 'keydown',
+                                    'key': 'Shift',
+                                    'code': 'ShiftLeft',
+                                    'shiftKey': true,
+                                },
+                            ],
+                            [
+                                { 'type': 'keydown', 'key': 'Enter', 'code': '', shiftKey: true },
+                                { 'type': 'keypress', 'key': 'Enter', 'code': '', shiftKey: true },
+                                { 'type': 'beforeinput', 'inputType': 'insertLineBreak' },
+                                {
+                                    'type': 'mutation',
+                                    'mutationType': 'childList',
+                                    'textContent': 'aaa',
+                                    'targetId': 1,
+                                    'addedNodes': [
+                                        {
+                                            'parentId': 1,
+                                            'nodeValue': '<br>',
+                                            'nodeType': 1,
+                                            'previousSiblingId': 2,
+                                        },
+                                    ],
+                                },
+                                {
+                                    'type': 'selection',
+                                    'focus': { 'nodeId': 2, 'offset': 3 },
+                                    'anchor': { 'nodeId': 2, 'offset': 3 },
+                                },
+                                { 'type': 'input', 'inputType': 'insertLineBreak' },
+                            ],
+                            [{ 'type': 'keyup', 'key': 'Enter', 'code': '', shiftKey: true }],
+                            [
+                                {
+                                    'type': 'keyup',
+                                    'key': 'Shift',
+                                    'code': 'ShiftLeft',
+                                    shiftKey: false,
+                                },
+                            ],
+                        ]);
+                        // insert char
+                        await triggerEvents([
+                            [
+                                { 'type': 'keydown', 'key': 's', 'code': 's' },
+                                { 'type': 'keypress', 'key': 's', 'code': 's' },
+                                { 'type': 'beforeinput', 'data': 's', 'inputType': 'insertText' },
+                                {
+                                    'type': 'mutation',
+                                    'mutationType': 'childList',
+                                    'textContent': 'aaa',
+                                    'targetId': 1,
+                                    'removedNodes': [{ 'nodeId': 4 }],
+                                },
+                                {
+                                    'type': 'mutation',
+                                    'mutationType': 'childList',
+                                    'textContent': 'aaa',
+                                    'targetId': 1,
+                                    'addedNodes': [
+                                        {
+                                            'parentId': 1,
+                                            'nodeValue': 's',
+                                            'nodeType': 1,
+                                            'previousSiblingId': 3,
+                                        },
+                                    ],
+                                },
+                                {
+                                    'type': 'selection',
+                                    'focus': { 'nodeId': 5, 'offset': 1 },
+                                    'anchor': { 'nodeId': 5, 'offset': 1 },
+                                },
+                                { 'type': 'input', 'data': 's', 'inputType': 'insertText' },
+                            ],
+                            [{ 'type': 'keyup', 'key': 's', 'code': 's' }],
+                        ]);
+                    },
+                    contentAfter: '<p>aaa<br>s[]</p>',
+                });
+            });
+            it('should remove the last char', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>aaa<br>s[]</p><h1>Table examples</h1>',
+                    stepFunction: async (): Promise<void> => {
+                        // backspace
+                        await triggerEvents([
+                            [
+                                { 'type': 'keydown', 'key': 'Backspace', 'code': 'Backspace' },
+                                { 'type': 'beforeinput', 'inputType': 'deleteContentBackward' },
+                                {
+                                    'type': 'mutation',
+                                    'mutationType': 'characterData',
+                                    'textContent': '',
+                                    'targetId': 4,
+                                },
+                                {
+                                    'type': 'mutation',
+                                    'mutationType': 'childList',
+                                    'textContent': 'aaa',
+                                    'targetId': 1,
+                                    'removedNodes': [{ 'nodeId': 4 }],
+                                },
+                                {
+                                    'type': 'mutation',
+                                    'mutationType': 'childList',
+                                    'textContent': 'aaa',
+                                    'targetId': 1,
+                                    'addedNodes': [
+                                        {
+                                            'parentId': 1,
+                                            'nodeValue': '<br>',
+                                            'nodeType': 1,
+                                            'previousSiblingId': 3,
+                                        },
+                                    ],
+                                },
+                                { 'type': 'input', 'inputType': 'deleteContentBackward' },
+                            ],
+                            [{ 'type': 'keyup', 'key': 'Backspace', 'code': 'Backspace' }],
+                        ]);
+                    },
+                    contentAfter: '<p>aaa<br>[]<br></p><h1>Table examples</h1>',
                 });
             });
         });

@@ -1376,7 +1376,7 @@ export class DomReconciliationEngine {
             if (domNode) {
                 if (diff.askCompleteRedrawing) {
                     for (const attr of domNode.attributes) {
-                        const value = domObject.attributes[attr.name];
+                        const value = domObject.attributes?.[attr.name];
                         if (typeof value === 'undefined') {
                             domNode.removeAttribute(attr.name);
                         }
