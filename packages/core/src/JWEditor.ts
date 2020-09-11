@@ -102,10 +102,6 @@ export class JWEditor {
     selection: VSelection;
     loaders: Record<string, Loader> = {};
     private _mutex = Promise.resolve();
-    // Use a set so that when asynchronous functions are called we ensure that
-    // each command batch is waited for.
-    preventRenders: Set<Function> = new Set();
-    enableRender = true;
     modes: Record<ModeIdentifier, Mode> = {
         default: new Mode({
             id: 'default',
