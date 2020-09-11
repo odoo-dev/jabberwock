@@ -307,13 +307,30 @@ export class OdooWebsiteEditor extends JWEditor {
     /**
      * Get the value by rendering the "editable" component of the editor.
      */
-    async getValue<T>(format = HtmlDomRenderingEngine.id): Promise<void | T> {
-        const renderer = this.plugins.get(Renderer);
-        const layout = this.plugins.get(Layout);
-        const domLayout = layout.engines.dom;
-        const editable = domLayout.root.firstDescendant(
-            node => node instanceof ZoneNode && node.managedZones.includes('editable'),
-        );
-        return renderer.render<T>(format, editable);
+    async getValue<T>(
+        format = HtmlDomRenderingEngine.id,
+        deadlockTimeout = 5000,
+    ): Promise<void | T> {
+        let timeout: number;
+        return new Promise((resolve, reject) => {
+            timeout = window.setTimeout(() => {
+                reject({
+                    name: 'deadlock',
+                    message:
+                        'Editor getValue call is taking too long. It might be caused by a deadlock.',
+                });
+            }, deadlockTimeout);
+            const renderer = this.plugins.get(Renderer);
+            const layout = this.plugins.get(Layout);
+            const domLayout = layout.engines.dom;
+            const editable = domLayout.root.firstDescendant(
+                node => node instanceof ZoneNode && node.managedZones.includes('editable'),
+            );
+            const promise = renderer.render<T>(format, editable);
+            promise.then(value => {
+                clearTimeout(timeout);
+                resolve(value);
+            }, reject);
+        });
     }
 }
