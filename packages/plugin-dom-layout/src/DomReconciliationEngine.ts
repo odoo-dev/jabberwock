@@ -681,7 +681,11 @@ export class DomReconciliationEngine {
             let index = 0;
             while (offset >= domNodes[index].textContent.length) {
                 offset -= domNodes[index].textContent.length;
-                index++;
+                if (domNodes[index + 1]) {
+                    index++;
+                } else {
+                    break;
+                }
             }
             domNode = domNodes[index];
             if (position === RelativePosition.AFTER) {
