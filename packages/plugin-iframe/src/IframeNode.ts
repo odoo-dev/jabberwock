@@ -7,7 +7,7 @@ export interface IframeNodeParams {
 export class IframeNode extends ContainerNode {
     editable = false;
     breakable = false;
-    src: string;
+    src?: string;
     constructor(params?: IframeNodeParams) {
         super();
         if (params?.src) {
