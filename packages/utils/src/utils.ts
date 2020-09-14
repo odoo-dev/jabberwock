@@ -105,7 +105,7 @@ export function distinct<T>(array: Array<T>): Array<T> {
  * @param node
  */
 export function nodeName(node: Node): string {
-    return node.nodeName.toUpperCase();
+    return node?.nodeName.toUpperCase();
 }
 
 /**
