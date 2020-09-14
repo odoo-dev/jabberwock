@@ -277,7 +277,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
                 focus = iframeDoc.activeElement;
             }
         } else {
-            const domSelection = root.getSelection();
+            const domSelection = root.getSelection
+                ? root.getSelection()
+                : root.ownerDocument.getSelection();
             if (ev.type === 'selectionchange' && !domSelection.anchorNode) {
                 // When the dom are redrawed, the selection can be removed, it's not a blur/focus.
                 return;

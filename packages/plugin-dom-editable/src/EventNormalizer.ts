@@ -533,15 +533,17 @@ export class EventNormalizer {
         this._bindEvent(root, 'mousedown', this._onEventEnableNormalizer, true);
         this._bindEvent(root, 'touchstart', this._onEventEnableNormalizer, true);
 
-        this._bindEvent(root, 'mousedown', this._onPointerDown);
-        this._bindEvent(root, 'mousemove', this._onPointerMove);
-        this._bindEvent(root, 'touchstart', this._onPointerDown);
-        this._bindEvent(root, 'mouseup', this._onPointerUp);
-        this._bindEvent(root, 'touchmove', this._onPointerMove);
-        this._bindEvent(root, 'touchend', this._onPointerUp);
-        this._bindEvent(root, 'onkeyup', this._updateModifiersKeys);
+        if (isInstanceOf(root, Document)) {
+            this._bindEvent(root, 'mousedown', this._onPointerDown);
+            this._bindEvent(root, 'mousemove', this._onPointerMove);
+            this._bindEvent(root, 'touchstart', this._onPointerDown);
+            this._bindEvent(root, 'mouseup', this._onPointerUp);
+            this._bindEvent(root, 'touchmove', this._onPointerMove);
+            this._bindEvent(root, 'touchend', this._onPointerUp);
+            this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
+        }
 
-        this._bindEventInEditable(root, 'contextmenu', this._onContextMenu);
+        this._bindEvent(root, 'onkeyup', this._updateModifiersKeys);
         this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEventInEditable(root, 'keypress', this._onKeyDownOrKeyPress);
 
@@ -574,19 +576,7 @@ export class EventNormalizer {
         listener: Function,
         capture = true,
     ): void {
-        const boundListener = (ev: EventToProcess): void => {
-            if ('target' in ev) {
-                const evTarget = ev.target as Element;
-                if (
-                    evTarget.shadowRoot &&
-                    this._normalizedRoot.has(evTarget.shadowRoot) &&
-                    (ev.currentTarget as Node).contains(ev.target as Node)
-                ) {
-                    return;
-                }
-            }
-            listener.call(this, ev);
-        };
+        const boundListener = listener.bind(this);
         this._eventListeners.push({
             target: target,
             type: type,

@@ -511,7 +511,7 @@ describe('Iframe', async () => {
             return editor && editor.stop();
         });
         it('mouse setRange (ubuntu chrome)', async () => {
-            section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
+            section.innerHTML = '<p>aaaaa</p><p>bbbbb</p><p>ccccc<br/><br/></p>';
             await editor.start();
             await waitIframeLoading();
 
@@ -530,12 +530,12 @@ describe('Iframe', async () => {
                         'button': 2,
                         'detail': 1,
                         'clientX': 10,
-                        'clientY': 10,
+                        'clientY': 36,
                     },
                     {
                         'type': 'selection',
-                        'focus': { 'nodeId': 3, 'offset': 1 },
-                        'anchor': { 'nodeId': 3, 'offset': 1 },
+                        'focus': { 'nodeId': 4, 'offset': 1 },
+                        'anchor': { 'nodeId': 4, 'offset': 1 },
                     },
                     {
                         'type': 'click',
@@ -543,7 +543,7 @@ describe('Iframe', async () => {
                         'button': 2,
                         'detail': 1,
                         'clientX': 10,
-                        'clientY': 10,
+                        'clientY': 36,
                     },
                     {
                         'type': 'mouseup',
@@ -551,7 +551,7 @@ describe('Iframe', async () => {
                         'button': 2,
                         'detail': 1,
                         'clientX': 10,
-                        'clientY': 10,
+                        'clientY': 36,
                     },
                 ],
             ]);
@@ -644,12 +644,12 @@ describe('Iframe', async () => {
                         'button': 2,
                         'detail': 1,
                         'clientX': 10,
-                        'clientY': 10,
+                        'clientY': 36,
                     },
                     {
                         'type': 'selection',
-                        'focus': { 'nodeId': 3, 'offset': 1 },
-                        'anchor': { 'nodeId': 3, 'offset': 1 },
+                        'focus': { 'nodeId': 1, 'offset': 1 },
+                        'anchor': { 'nodeId': 1, 'offset': 1 },
                     },
                     {
                         'type': 'click',
@@ -657,7 +657,7 @@ describe('Iframe', async () => {
                         'button': 2,
                         'detail': 1,
                         'clientX': 10,
-                        'clientY': 10,
+                        'clientY': 36,
                     },
                     {
                         'type': 'mouseup',
@@ -665,7 +665,7 @@ describe('Iframe', async () => {
                         'button': 2,
                         'detail': 1,
                         'clientX': 10,
-                        'clientY': 10,
+                        'clientY': 36,
                     },
                 ],
             ]);
@@ -679,14 +679,16 @@ describe('Iframe', async () => {
                         'nodeId': 1,
                         'button': 2,
                         'detail': 1,
-                        'clientX': 30,
-                        'clientY': 25,
+                        'clientX': 10,
+                        'clientY': 10,
                     },
                     {
                         'type': 'selection',
                         'focus': { 'nodeId': 2, 'offset': 1 },
                         'anchor': { 'nodeId': 2, 'offset': 1 },
                     },
+                ],
+                [
                     {
                         'type': 'selection',
                         'focus': { 'nodeId': 4, 'offset': 4 },
@@ -697,16 +699,16 @@ describe('Iframe', async () => {
                         'nodeId': 1,
                         'button': 2,
                         'detail': 1,
-                        'clientX': 30,
-                        'clientY': 25,
+                        'clientX': 34,
+                        'clientY': 36,
                     },
                     {
                         'type': 'mouseup',
                         'nodeId': 1,
                         'button': 2,
                         'detail': 1,
-                        'clientX': 30,
-                        'clientY': 40,
+                        'clientX': 34,
+                        'clientY': 36,
                     },
                 ],
             ]);
@@ -743,7 +745,8 @@ describe('Iframe', async () => {
                 focusOffset: 4,
             });
 
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection');
+            // setSelection when mousedown, setSelection when finished to select
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,setSelection');
         });
         it('should insert char in a word', async () => {
             section.innerHTML = '<div>abcd</div>';
