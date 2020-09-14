@@ -17,6 +17,7 @@ export interface OdooFieldDefinition {
 }
 
 export interface OdooFieldInfo extends OdooFieldDefinition {
+    readonly originalValue: string;
     value: ReactiveValue<string>;
     isValid: ReactiveValue<boolean>;
 }
@@ -63,6 +64,7 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
 
             const reactiveOdooField = makeVersionable({
                 ...field,
+                originalValue: value,
                 value: reactiveValue,
                 isValid,
             });
