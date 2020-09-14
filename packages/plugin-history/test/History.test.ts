@@ -7,6 +7,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { RelativePosition } from '../../core/src/VNodes/VNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
+import { TagNode } from '../../core/src/VNodes/TagNode';
 
 describePlugin(History, testEditor => {
     describe('undo', () => {
@@ -87,6 +88,61 @@ describePlugin(History, testEditor => {
                     await click(undoButton);
                 },
                 contentAfter: '<p>abcX[]def</p>',
+            });
+        });
+        it('should undo removed container and children', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>abc[]</p><section><article>X</article></section><p>def</p>',
+                stepFunction: async (editor: JWEditor) => {
+                    await editor.execCommand(() => {
+                        const x = editor.selection.anchor.previousLeaf();
+                        editor.selection.setAt(x);
+                    });
+                    await editor.execCommand(() => {
+                        editor.selection.anchor.parent.nextSibling().remove();
+                    });
+
+                    const editable = document.querySelector('[contenteditable=true]');
+                    expect(editable.innerHTML).to.deep.equal('<p>abc</p><p>def</p>');
+
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
+                    await click(undoButton);
+                },
+                contentAfter: '<p>ab[]c</p><section><article>X</article></section><p>def</p>',
+            });
+        });
+        it('should undo removed container and children (few commands)', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>abc[]</p><p>def</p>',
+                stepFunction: async (editor: JWEditor) => {
+                    await editor.execCommand(() => {
+                        const p = editor.selection.anchor.parent;
+                        const section = new TagNode({ htmlTag: 'section' });
+                        p.after(section);
+                        const article = new TagNode({ htmlTag: 'article' });
+                        section.append(article);
+                        article.append(new CharNode({ char: 'X' }));
+                    });
+
+                    const editable = document.querySelector('[contenteditable=true]');
+                    expect(editable.innerHTML).to.deep.equal(
+                        '<p>abc</p><section><article>X</article></section><p>def</p>',
+                    );
+
+                    await editor.execCommand(() => {
+                        const x = editor.selection.anchor.previousLeaf();
+                        editor.selection.setAt(x);
+                    });
+                    await editor.execCommand(() => {
+                        editor.selection.anchor.parent.nextSibling().remove();
+                    });
+
+                    expect(editable.innerHTML).to.deep.equal('<p>abc</p><p>def</p>');
+
+                    const undoButton = document.querySelector('jw-button[name="undo"]');
+                    await click(undoButton);
+                },
+                contentAfter: '<p>ab[]c</p><section><article>X</article></section><p>def</p>',
             });
         });
     });
