@@ -7,6 +7,9 @@ import { IframeNode } from './IframeNode';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { nodeName, isInstanceOf } from '../../utils/src/utils';
+import { Attributes } from '../../plugin-xml/src/Attributes';
+import { DomObjectElement } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
 const EventForwarded = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart', 'keydown'];
 const forwardEventOutsideIframe = (ev: UIEvent): void => {
@@ -93,7 +96,18 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
     engine: DomObjectRenderingEngine;
     predicate = IframeNode;
 
-    async render(iframeNode: IframeNode): Promise<DomObject> {
+    async render(
+        iframeNode: IframeNode,
+        worker: RenderingEngineWorker<DomObject>,
+    ): Promise<DomObject> {
+        if (iframeNode.src) {
+            const object: DomObjectElement = {
+                tag: 'IFRAME',
+            };
+            this.engine.renderAttributes(Attributes, iframeNode, object, worker);
+            object.attributes.src = iframeNode.src;
+            return object;
+        }
         let onload: () => void;
         const children: VNode[] = [];
         iframeNode.childVNodes.forEach(child => {

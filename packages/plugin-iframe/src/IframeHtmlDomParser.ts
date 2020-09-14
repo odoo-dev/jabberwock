@@ -19,7 +19,11 @@ export class IframeHtmlDomParser extends AbstractParser<Node> {
      * @param item
      */
     async parse(item: HTMLIFrameElement): Promise<VNode[]> {
-        const iframe = new IframeNode();
+        const iframe = new IframeNode({ src: item.src });
+        const attributes = this.engine.parseAttributes(item);
+        if (attributes.length) {
+            iframe.modifiers.append(attributes);
+        }
         const childNodes = item.src
             ? []
             : (Array.from(item.contentWindow?.document.body?.childNodes || []) as HtmlNode[]);
