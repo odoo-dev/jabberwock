@@ -250,6 +250,21 @@ export class DomLayoutEngine extends LayoutEngine {
                 updatedModifiers.add(object);
             }
         }
+        // Add re-inserted nodes (after unfo for eg) for redrawing it.
+        // Can be marked as moved because its elements still contain references.
+        for (const object of diff.move) {
+            if (
+                object instanceof AbstractNode &&
+                object.parent &&
+                !add.has(object as VNode) &&
+                !cache?.renderings.get(object as VNode)
+            ) {
+                add.add(object as VNode);
+                for (const child of object.descendants()) {
+                    add.add(child);
+                }
+            }
+        }
 
         for (const node of add) {
             if (!node.parent) {

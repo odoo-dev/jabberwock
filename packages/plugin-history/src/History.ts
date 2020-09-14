@@ -95,16 +95,7 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         if (!this._memoryKeys.includes(sliceKey)) {
             const commands = commitParams.commandNames;
             if (commands.length === 1 && commands[0] === 'setSelection') {
-                if (this._memoryStep > this._memoryKeys.length - 1) {
-                    // After an undo, don't replace history for setSelection.
-                    return;
-                }
-                const prevCommand = this._memoryCommands[this._memoryStep];
-                if (prevCommand && prevCommand.length === 1 && prevCommand[0] === 'setSelection') {
-                    // Concat setSelection.
-                    this._memoryKeys[this._memoryStep] = sliceKey;
-                    return;
-                }
+                return;
             } else if (this.editor.memoryInfo.uiCommand) {
                 return;
             }
