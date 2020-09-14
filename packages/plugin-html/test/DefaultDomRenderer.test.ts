@@ -10,6 +10,25 @@ import { Parser } from '../../plugin-parser/src/Parser';
 
 describe('Html', () => {
     describe('parser', () => {
+        it('should parse autoclose tags', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<img src="toto">',
+                contentAfter: '<img src="toto">',
+            });
+        });
+        it('should parse autoclose tags use text/html parser', async () => {
+            const editor = new BasicEditor();
+            editor.load(Html);
+            await editor.start();
+            const parser = editor.plugins.get(Parser);
+            const nodes = await parser.parse('text/html', '<img src="toto">');
+
+            const renderer = editor.plugins.get(Renderer);
+            const rootItem = await renderer.render<Node[]>('dom/html', nodes[0]);
+
+            expect(rootItem).to.exist;
+            expect((rootItem[0] as Element).outerHTML).to.equal('<img src="toto">');
+        });
         it('should parse special attribute and content', async () => {
             await testEditor(BasicEditor, {
                 contentBefore:
@@ -34,6 +53,32 @@ describe('Html', () => {
             expect(rootItem).to.exist;
             expect((rootItem[0] as Element).outerHTML).to.equal(
                 '<div>&lt;poulet&gt; kot kot &lt;/poulet&gt; <span data="1 < 2" tutu="b &nbsp; a">toto</span>&nbsp; a</div>',
+            );
+        });
+        it('should parse special attribute and content (2)', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore:
+                    '<b>a</b> "<div>b</div><a href="?debug=&amp;t=" title="<span data=&quot;view&quot;> mode </span>">toto</a> <img title="<b data=&quot;view&quot;>a</b>">',
+                contentAfter:
+                    '<b>a</b> "<div>b</div><a href="?debug=&amp;t=" title="<span data=&quot;view&quot;> mode </span>">toto</a> <img title="<b data=&quot;view&quot;>a</b>">',
+            });
+        });
+        it('should parse special attribute and content use text/html parser (2)', async () => {
+            const editor = new BasicEditor();
+            editor.load(Html);
+            await editor.start();
+            const parser = editor.plugins.get(Parser);
+            const nodes = await parser.parse(
+                'text/html',
+                '<p><b>a</b> "<div>b</div><a href="?debug=&amp;t=" title="<span data=&quot;view&quot;> mode </span>">toto</a> <img title="<b data=&quot;view&quot;>a</b>"></p>',
+            );
+
+            const renderer = editor.plugins.get(Renderer);
+            const rootItem = await renderer.render<Node[]>('dom/html', nodes[0]);
+
+            expect(rootItem).to.exist;
+            expect((rootItem[0] as Element).outerHTML).to.equal(
+                '<p><b>a</b> "<div>b</div><a href="?debug=&amp;t=" title="<span data=&quot;view&quot;> mode </span>">toto</a> <img title="<b data=&quot;view&quot;>a</b>"></p>',
             );
         });
     });
