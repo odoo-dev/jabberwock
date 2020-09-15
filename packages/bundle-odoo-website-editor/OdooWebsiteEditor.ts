@@ -85,7 +85,14 @@ interface OdooWebsiteEditorOptions {
 }
 
 const defaultToolbarLayout = [
-    ['BoldButton', 'ItalicButton', 'UnderlineButton', 'StrikethroughButton'],
+    [
+        'BoldButton',
+        'ItalicButton',
+        'UnderlineButton',
+        'StrikethroughButton',
+        'OdooTextColorButton',
+        'OdooBackgroundColorButton',
+    ],
     [
         'OdooHeading1ToggleButton',
         'OdooHeading2ToggleButton',
