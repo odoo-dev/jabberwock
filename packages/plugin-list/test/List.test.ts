@@ -24,6 +24,7 @@ import { SuperscriptXmlDomParser } from '../../plugin-superscript/src/Superscrip
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { VNode } from '../../core/src/VNodes/VNode';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 const deleteForward = async (editor: JWEditor): Promise<void> => {
     await editor.execCommand<Core>('deleteForward');
@@ -5955,6 +5956,107 @@ describePlugin(List, testEditor => {
                             });
                         });
                     });
+                });
+            });
+            it('shoud merge list item in the previous breakable sibling', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: unformat(`
+                        <p>a[bc</p>
+                        <ol>
+                            <li>d]ef</li>
+                            <li>ghi</li>
+                        </ol>`),
+                    stepFunction: deleteBackward,
+                    contentAfter: unformat(`
+                        <p>a[]ef</p>
+                        <ol>
+                            <li>ghi</li>
+                        </ol>`),
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: unformat(`
+                        <div>
+                            <p>a[bc</p>
+                        </div>
+                        <ol>
+                            <li>d]ef</li>
+                            <li>ghi</li>
+                        </ol>`),
+                    stepFunction: deleteBackward,
+                    contentAfter: unformat(`
+                        <div>
+                            <p>a[]ef</p>
+                        </div>
+                        <ol>
+                            <li>ghi</li>
+                        </ol>`),
+                });
+            });
+            it('shoud not merge list item in the previous unbreakable sibling', async () => {
+                class UnbreakableClassEditor extends BasicEditor {
+                    async start(): Promise<void> {
+                        this.configure({
+                            modes: [
+                                {
+                                    id: '.unbreakable',
+                                    rules: [
+                                        {
+                                            selector: [
+                                                (node: VNode): boolean => {
+                                                    const attributes = node.modifiers.find(
+                                                        Attributes,
+                                                    );
+                                                    return (
+                                                        attributes &&
+                                                        attributes.classList.has('unbreakable')
+                                                    );
+                                                },
+                                            ],
+                                            properties: {
+                                                breakable: { value: false },
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                            mode: '.unbreakable',
+                        });
+                        await super.start();
+                    }
+                }
+                await testEditor(UnbreakableClassEditor, {
+                    contentBefore: unformat(`
+                        <p class="unbreakable">a[bc</p>
+                        <ol>
+                            <li>d]ef</li>
+                            <li>ghi</li>
+                        </ol>`),
+                    stepFunction: deleteBackward,
+                    contentAfter: unformat(`
+                        <p class="unbreakable">a[]</p>
+                        <ol>
+                            <li>ef</li>
+                            <li>ghi</li>
+                        </ol>`),
+                });
+                await testEditor(UnbreakableClassEditor, {
+                    contentBefore: unformat(`
+                        <div class="unbreakable">
+                            <p>a[bc</p>
+                        </div>
+                        <ol>
+                            <li>d]ef</li>
+                            <li>ghi</li>
+                        </ol>`),
+                    stepFunction: deleteBackward,
+                    contentAfter: unformat(`
+                        <div class="unbreakable">
+                            <p>a[]</p>
+                        </div>
+                        <ol>
+                            <li>ef</li>
+                            <li>ghi</li>
+                        </ol>`),
                 });
             });
         });

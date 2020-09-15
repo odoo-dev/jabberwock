@@ -453,35 +453,41 @@ export class VRange {
         // doesn't traverse an unbreakable node.
         if (this.startContainer !== this.endContainer) {
             const commonAncestor = this.start.commonAncestor(this.end);
-            let ancestor = this.endContainer.parent;
-            while (ancestor && ancestor !== commonAncestor) {
-                if (
-                    ancestor.children().length > 1 &&
-                    this.endContainer.parent === ancestor &&
-                    this.mode.is(ancestor, RuleProperty.BREAKABLE)
-                ) {
-                    ancestor.splitAt(this.endContainer);
-                }
-                if (
-                    this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
-                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
-                    this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
-                    this.mode.is(this.endContainer, RuleProperty.EDITABLE)
-                ) {
-                    this.endContainer.mergeWith(ancestor);
-                }
-                ancestor = ancestor.parent;
-            }
-            const traversedUnbreakables = this.traversedNodes(this._isUnbreakable.bind(this));
             const unbreakableStartAncestor = this.start.ancestor(this._isUnbreakable.bind(this));
+            const traversedUnbreakables = this.traversedNodes(this._isUnbreakable.bind(this));
             if (
                 unbreakableStartAncestor &&
                 !this.end.ancestor(node => node === unbreakableStartAncestor)
             ) {
                 traversedUnbreakables.unshift(unbreakableStartAncestor);
             }
+            let ancestor = this.endContainer.parent;
+            while (ancestor && ancestor !== commonAncestor) {
+                if (
+                    traversedUnbreakables.length === 0 &&
+                    ancestor.children().length > 1 &&
+                    this.endContainer.parent === ancestor &&
+                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
+                    this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
+                    this.mode.is(this.startContainer, RuleProperty.BREAKABLE)
+                ) {
+                    ancestor.splitAt(this.endContainer);
+                }
+                if (
+                    traversedUnbreakables.length === 0 &&
+                    this.mode.is(this.endContainer, RuleProperty.EDITABLE) &&
+                    this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
+                    this.mode.is(ancestor, RuleProperty.EDITABLE) &&
+                    this.mode.is(ancestor, RuleProperty.BREAKABLE) &&
+                    this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
+                    this.mode.is(this.startContainer, RuleProperty.BREAKABLE)
+                ) {
+                    this.endContainer.mergeWith(ancestor);
+                }
+                ancestor = ancestor.parent;
+            }
             if (
-                !traversedUnbreakables.length &&
+                traversedUnbreakables.length === 0 &&
                 this.mode.is(this.startContainer, RuleProperty.BREAKABLE) &&
                 this.mode.is(this.endContainer, RuleProperty.BREAKABLE) &&
                 this.mode.is(this.startContainer, RuleProperty.EDITABLE) &&
