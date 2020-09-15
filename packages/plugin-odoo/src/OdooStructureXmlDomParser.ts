@@ -32,6 +32,10 @@ export class OdooStructureXmlDomParser extends AbstractParser {
         odooStructure.modifiers.append(this.engine.parseAttributes(item));
         const children = await this.engine.parse(...item.childNodes);
         odooStructure.append(...children);
+
+        odooStructure.on('childList', () => {
+            odooStructure.dirty = true;
+        });
         return [odooStructure];
     }
 }

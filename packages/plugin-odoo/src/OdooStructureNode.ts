@@ -14,14 +14,5 @@ export class OdooStructureNode extends TagNode {
         super(params);
         this.xpath = params.xpath;
         this.viewId = params.viewId;
-        // Don't trigger the first change as it comes from parsing.
-        let firstChange = false;
-        this.on('childList', () => {
-            if (!firstChange) {
-                firstChange = true;
-                return;
-            }
-            this.dirty = true;
-        });
     }
 }
