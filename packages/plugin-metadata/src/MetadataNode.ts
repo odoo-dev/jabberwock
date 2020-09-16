@@ -16,4 +16,14 @@ export class MetadataNode extends MarkerNode {
     get name(): string {
         return this.constructor.name + ': ' + this.htmlTag;
     }
+
+    /**
+     * Return a new VNode with the same type and attributes as this VNode.
+     */
+    clone(params?: {}): this {
+        const defaults: ConstructorParameters<typeof MetadataNode>[0] = {
+            htmlTag: this.htmlTag,
+        };
+        return super.clone({ ...defaults, ...params });
+    }
 }

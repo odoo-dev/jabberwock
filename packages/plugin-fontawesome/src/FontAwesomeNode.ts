@@ -14,4 +14,15 @@ export class FontAwesomeNode extends InlineNode {
         this.htmlTag = params.htmlTag;
         this.faClasses = params.faClasses;
     }
+
+    /**
+     * Return a new VNode with the same type and attributes as this VNode.
+     */
+    clone(params?: {}): this {
+        const defaults: ConstructorParameters<typeof FontAwesomeNode>[0] = {
+            htmlTag: this.htmlTag,
+            faClasses: this.faClasses,
+        };
+        return super.clone({ ...defaults, ...params });
+    }
 }
