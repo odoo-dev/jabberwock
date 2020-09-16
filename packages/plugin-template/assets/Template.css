@@ -21,6 +21,7 @@ jw-templates > jw-label {
     font-weight: 600;
 }
 jw-templates jw-template {
+    position: relative;
     padding: 10px 10px;
     margin: 0;
     float: left;
