@@ -23,11 +23,10 @@ export class TableCellMailObjectRenderer extends NodeRenderer<DomObject> {
 
         // Text-align inheritance does not seem to get past <td> elements.
         const textAlign =
-            cellObject.attributes.style?.['text-align'] || styleFromRules.current['text-align'];
+            cellObject.attributes?.style?.['text-align'] || styleFromRules.current['text-align'];
         if (!textAlign || (textAlign === 'inherit' && styleFromRules.inherit['text-align'])) {
-            if (!cellObject.attributes.style) {
-                cellObject.attributes.style = {};
-            }
+            cellObject.attributes = cellObject.attributes || {};
+            cellObject.attributes.style = cellObject.attributes.style || {};
             cellObject.attributes.style['text-align'] = styleFromRules.inherit['text-align'];
         }
 
