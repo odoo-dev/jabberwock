@@ -20,6 +20,7 @@ import { OdooField } from '../plugin-odoo-field/src/OdooField';
 import { OdooFieldNode } from '../plugin-odoo-field/src/OdooFieldNode';
 import { TagNode } from '../core/src/VNodes/TagNode';
 import { Parser } from '../plugin-parser/src/Parser';
+import { FontAwesomeNode } from '../plugin-fontawesome/src/FontAwesomeNode';
 
 export {
     OdooWebsiteEditor,
@@ -44,4 +45,5 @@ export {
     Inline,
     DomHelpers,
     Parser,
+    FontAwesomeNode,
 };
