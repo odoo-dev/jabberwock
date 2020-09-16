@@ -8,6 +8,9 @@ import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { Format } from '../../core/src/Format';
 import { elementFromPoint } from '../../utils/src/polyfill';
+import { VRange } from '../../core/src/VRange';
+import { InsertTextParams, Char } from '../../plugin-char/src/Char';
+import { Context } from '../../core/src/ContextManager';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     //--------------------------------------------------------------------------
@@ -184,6 +187,34 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             for (const node of nodes) {
                 node.remove();
             }
+        };
+        return context.execCommand(domHelpersReplace);
+    }
+    /**
+     * Replace a DOM node or a list of DOM nodes with the given text content.
+     *
+     * @param params
+     */
+    async text(
+        context: ExecutionContext,
+        domNodes: Node | Node[],
+        text: string,
+    ): Promise<ExecCommandResult> {
+        const domHelpersReplace = async (context: Context): Promise<void> => {
+            const nodes = this.getNodes(domNodes);
+            const range = new VRange(
+                this.editor,
+                [
+                    [nodes[0], RelativePosition.BEFORE],
+                    [nodes[nodes.length - 1], RelativePosition.AFTER],
+                ],
+                { temporary: true },
+            );
+            const insertTextParams: InsertTextParams = {
+                context: { range },
+                text: text,
+            };
+            context.execCommand<Char>('insertText', insertTextParams);
         };
         return context.execCommand(domHelpersReplace);
     }
