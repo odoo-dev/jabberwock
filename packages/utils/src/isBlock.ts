@@ -60,16 +60,20 @@ export function isBlock(node: Node): boolean {
     let result: boolean;
     if (node instanceof Element) {
         const tagName = nodeName(node);
-        // every custom jw-* node will be considered as blocks
+        // Every custom jw-* node will be considered as blocks.
         if (tagName.startsWith('JW-') || tagName === 'T') {
             return true;
+        }
+        // The node might not be in the DOM, in which case it has no CSS values.
+        if (window.document !== node.ownerDocument) {
+            return blockTagNames.includes(tagName);
         }
         // We won't call `getComputedStyle` more than once per node.
         let style = computedStyles.get(node);
         if (!style) {
             style = window.getComputedStyle(node);
+            computedStyles.set(node, style);
         }
-        // The node might not be in the DOM, in which case it has no CSS values.
         if (style.display) {
             result = !style.display.includes('inline') && style.display !== 'contents';
         } else {
