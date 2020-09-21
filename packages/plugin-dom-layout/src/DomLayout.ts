@@ -312,9 +312,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         }
 
         if (focus && !this.focusedNode) {
-            this.editor.dispatcher.dispatch('@focus');
+            this.editor.dispatcher.dispatchHooks('@focus');
         } else if (!focus && this.focusedNode) {
-            this.editor.dispatcher.dispatch('@blur');
+            this.editor.dispatcher.dispatchHooks('@blur');
         }
         this.focusedNode = focus;
     }
