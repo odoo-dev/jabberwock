@@ -219,28 +219,60 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         return context.execCommand(domHelpersReplace);
     }
     /**
-     * Wrap the given HTML content within a DOM container.
+     * Wrap the given DOM node within the given HTML.
      *
      * @param params
      */
     async wrap(
         context: ExecutionContext,
-        domContainer: Node,
-        html: string,
+        domNode: Node,
+        containerHtml: string,
     ): Promise<ExecCommandResult> {
         const domHelpersWrap = async (): Promise<void> => {
-            const container = this.getNodes(domContainer)[0];
+            const container = this.getNodes(domNode)[0];
             if (!(container instanceof ContainerNode)) {
                 throw new Error(
                     'The provided container must be a ContainerNode in the Jabberwock structure.',
                 );
             }
-            const parsedNodes = await this._parseHtmlString(html);
+            const parsedNodes = await this._parseHtmlString(containerHtml);
             for (const parsedNode of parsedNodes) {
                 container.wrap(parsedNode);
             }
         };
         return context.execCommand(domHelpersWrap);
+    }
+    /**
+     * Wrap the given DOM node's contents as deep as possible within the given HTML.
+     *
+     * @param params
+     */
+    async wrapContents(
+        context: ExecutionContext,
+        domNode: Node,
+        containerHtml: string,
+    ): Promise<VNode> {
+        let wrapper: VNode;
+        const domHelpersWrapContents = async (): Promise<void> => {
+            const container = this.getNodes(domNode)[0];
+            if (!(container instanceof ContainerNode)) {
+                throw new Error(
+                    'The provided container must be a ContainerNode in the Jabberwock structure.',
+                );
+            }
+            const parsedNodes = await this._parseHtmlString(containerHtml);
+            const contents = container.children();
+            for (const parsedNode of parsedNodes) {
+                container.prepend(parsedNode);
+                const descendant = parsedNode.lastDescendant(ContainerNode) || parsedNode;
+                if (descendant instanceof ContainerNode) {
+                    descendant.append(...contents);
+                }
+                wrapper = parsedNode;
+            }
+        };
+        await context.execCommand(domHelpersWrapContents);
+        return wrapper;
     }
     /**
      * Move a DOM Node before another.
