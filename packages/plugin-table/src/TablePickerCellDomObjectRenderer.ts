@@ -121,11 +121,11 @@ export class TablePickerCellDomObjectRenderer extends NodeRenderer<DomObject> {
 
         domObject.attach = (el: HTMLTableCellElement): void => {
             el.addEventListener('mouseover', onMouseOver);
-            el.addEventListener('mouseup', onPickCell);
+            el.addEventListener('mousedown', onPickCell);
         };
         domObject.detach = (el: HTMLTableCellElement): void => {
             el.removeEventListener('mouseover', onMouseOver);
-            el.removeEventListener('mouseup', onPickCell);
+            el.removeEventListener('mousedown', onPickCell);
         };
         return domObject;
     }
