@@ -30,6 +30,7 @@ import { OdooParallaxSpanXmlDomParser } from './OdooParallaxSpanXmlDomParser';
 import { isInPre, Pre } from '../../plugin-pre/src/Pre';
 import { isInBlockquote, Blockquote } from '../../plugin-blockquote/src/Blockquote';
 import { OdooTableDomObjectRenderer } from './OdooTableDomObjectRenderer';
+import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -49,7 +50,7 @@ const paddingClassesLabels = {
 
 const paddingClasses = Object.keys(paddingClassesLabels);
 
-export enum OdooImageClasses {
+enum OdooImageClasses {
     ROUNDED = 'rounded',
     ROUNDED_CIRCLE = 'rounded-circle',
     SHADOW = 'shadow',
@@ -62,6 +63,19 @@ const imageClassesLabels = {
     [OdooImageClasses.SHADOW]: 'Shadow',
     [OdooImageClasses.IMG_THUMBNAIL]: 'Thumbnail',
 };
+
+enum OdooIconClasses {
+    SPIN = 'fa-spin',
+}
+
+const IconClassesLabels = Object.assign(
+    {
+        [OdooIconClasses.SPIN]: 'Spin',
+    },
+    imageClassesLabels,
+);
+
+type OdooImageOrIconClasses = OdooImageClasses | OdooIconClasses;
 
 /**
  * Get one image targeted within the range.
@@ -77,10 +91,29 @@ function getSingleImage(range: VRange): ImageNode | undefined {
     }
 }
 /**
+ * Get one icon font-awsome targeted within the range.
+ * If more icons are within the range, return undefined.
+ */
+function getSingleIcon(range: VRange): FontAwesomeNode | undefined {
+    const next = range.start.nextLeaf();
+    if (next instanceof FontAwesomeNode) {
+        const prev = range.end.previousLeaf();
+        if (prev === next) {
+            return next;
+        }
+    }
+}
+/**
  * Check if there is exactly one image within the editor range
  */
 function isImageVisible(editor: JWEditor): boolean {
     return !!getSingleImage(editor.selection.range);
+}
+/**
+ * Check if there is exactly one icon font-awsome within the editor range
+ */
+function isIconVisible(editor: JWEditor): boolean {
+    return !!getSingleIcon(editor.selection.range);
 }
 
 export interface SetPaddingParams extends CommandParams {
@@ -100,6 +133,14 @@ export interface SetImageWidthParams extends CommandParams {
 
 export interface SetImageClassParams extends CommandParams {
     className: OdooImageClasses;
+}
+
+export interface SetIconSizeParams extends CommandParams {
+    size: number;
+}
+
+export interface SetIconClassParams extends CommandParams {
+    className: OdooImageOrIconClasses;
 }
 
 function odooHeadingToggleButton(level: number): ComponentDefinition {
@@ -345,6 +386,33 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     return [button];
                 },
             },
+            ...[1, 2, 3, 4, 5].map(level => this._makeIconSizeComponent(level)),
+
+            this._makeIconClassComponent(
+                'OdooIconRoundedActionable',
+                OdooImageClasses.ROUNDED,
+                'fa-square',
+            ),
+            this._makeIconClassComponent(
+                'OdooIconRoundedCircleActionable',
+                OdooImageClasses.ROUNDED_CIRCLE,
+                'fa-circle-o',
+            ),
+            this._makeIconClassComponent(
+                'OdooIconRoundedShadowActionable',
+                OdooImageClasses.SHADOW,
+                'fa-sun-o',
+            ),
+            this._makeIconClassComponent(
+                'OdooIconRoundedThumbnailActionable',
+                OdooImageClasses.IMG_THUMBNAIL,
+                'fa-picture-o',
+            ),
+            this._makeIconClassComponent(
+                'OdooIconSpinThumbnailActionable',
+                OdooIconClasses.SPIN,
+                'fa-refresh',
+            ),
             ...[1, 2, 3, 4, 5, 6].map(odooHeadingToggleButton),
             {
                 id: 'OdooPreToggleButton',
@@ -395,6 +463,12 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         },
         setImageClass: {
             handler: this.setImageClass,
+        },
+        setIconSize: {
+            handler: this.setIconSize,
+        },
+        setIconClass: {
+            handler: this.setIconClass,
         },
         toggleHeadingStyle: {
             handler: this.toggleHeadingStyle,
@@ -456,6 +530,32 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     }
     setImageClass(params: SetImageClassParams): void {
         const image = getSingleImage(params.context.range);
+        if (image) {
+            const classList = image.modifiers.get(Attributes).classList;
+            classList.toggle(params.className);
+        }
+    }
+    setIconSize(params: SetIconSizeParams): void {
+        const icon = getSingleIcon(params.context.range);
+        if (icon) {
+            const className = 'fa-' + params.size + 'x';
+            if (icon.faClasses.includes(className)) {
+                icon.faClasses.splice(icon.faClasses.indexOf(className), 1);
+            } else {
+                for (let i = 1; i <= 5; i++) {
+                    const className = 'fa-' + i + 'x';
+                    if (icon.faClasses.includes(className)) {
+                        icon.faClasses.splice(icon.faClasses.indexOf(className), 1);
+                    }
+                }
+                if (params.size > 1) {
+                    icon.faClasses.push(className);
+                }
+            }
+        }
+    }
+    setIconClass(params: SetImageClassParams): void {
+        const image = getSingleIcon(params.context.range);
         if (image) {
             const classList = image.modifiers.get(Attributes).classList;
             classList.toggle(params.className);
@@ -599,6 +699,66 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     visible: isImageVisible,
                     selected: (editor: JWEditor): boolean => {
                         const image = getSingleImage(editor.selection.range);
+                        if (image) {
+                            const imageAttribute = image.modifiers.get(Attributes);
+                            return imageAttribute.classList.has(className);
+                        }
+                        return false;
+                    },
+                });
+                return [button];
+            },
+        };
+        return component;
+    }
+    _makeIconSizeComponent(level: number): ComponentDefinition {
+        return {
+            id: 'OdooIconSize' + level + 'xButton',
+            async render(): Promise<ActionableNode[]> {
+                const button = new ActionableNode({
+                    name: 'OdooIconSize' + level,
+                    label: level + 'x',
+                    commandId: 'setIconSize',
+                    commandArgs: { size: level } as SetIconSizeParams,
+                    visible: isIconVisible,
+                    selected: (editor: JWEditor): boolean => {
+                        const icon = getSingleIcon(editor.selection.range);
+                        if (icon) {
+                            if (level === 1) {
+                                return (
+                                    !icon.faClasses.includes('fa-2x') &&
+                                    !icon.faClasses.includes('fa-3x') &&
+                                    !icon.faClasses.includes('fa-4x') &&
+                                    !icon.faClasses.includes('fa-5x')
+                                );
+                            }
+                            return icon.faClasses.includes('fa-' + level + 'x');
+                        }
+                        return false;
+                    },
+                });
+                return [button];
+            },
+        };
+    }
+    _makeIconClassComponent(
+        componentId: string,
+        className: OdooImageOrIconClasses,
+        faIcon: string,
+    ): ComponentDefinition {
+        const component: ComponentDefinition = {
+            id: componentId,
+            async render(): Promise<ActionableNode[]> {
+                const params: SetIconClassParams = { className };
+                const button = new ActionableNode({
+                    name: `set-icon-class-${className}`,
+                    label: IconClassesLabels[className],
+                    commandId: 'setIconClass',
+                    commandArgs: params,
+                    modifiers: [new Attributes({ class: `fa ${faIcon} fa-fw` })],
+                    visible: isIconVisible,
+                    selected: (editor: JWEditor): boolean => {
+                        const image = getSingleIcon(editor.selection.range);
                         if (image) {
                             const imageAttribute = image.modifiers.get(Attributes);
                             return imageAttribute.classList.has(className);
