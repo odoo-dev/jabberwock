@@ -171,7 +171,7 @@ export class IframeDomObjectRenderer extends NodeRenderer<DomObject> {
                                         )) {
                                             doc.write(meta.outerHTML);
                                         }
-                                        doc.write('<body></body>');
+                                        doc.write('<body id="jw-iframe"></body>');
                                         doc.write("<script type='application/x-suppress'>");
                                         iframe.contentWindow.close();
 
