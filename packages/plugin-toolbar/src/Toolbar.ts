@@ -9,16 +9,20 @@ import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
 import { Layout } from '../../plugin-layout/src/Layout';
 
 import { ToolbarNode } from './ToolbarNode';
-import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
+import {
+    ActionableGroupNode,
+    ActionableGroupNodeParams,
+} from '../../plugin-layout/src/ActionableGroupNode';
 import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { LabelNode } from '../../plugin-layout/src/LabelNode';
-import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 
 export type ToolbarItem = ActionableNode | string | string[];
 export type ToolbarOptGroup = ToolbarItem[];
 export type ToolbarGroup = Array<ToolbarItem | ToolbarOptGroup>;
-export type ToolbarLayout = Array<ToolbarGroup | string>;
+export type ToolbarLayout = Array<ToolbarGroup | string> | Record<string, ToolbarGroup>;
+
+type ToolbarElementNode = SeparatorNode | ZoneNode | LabelNode | ActionableGroupNode;
 
 export interface ToolbarConfig extends JWPluginConfig {
     layout?: ToolbarLayout;
@@ -34,7 +38,7 @@ export class Toolbar<T extends ToolbarConfig = {}> extends JWPlugin<T> {
                 id: 'toolbar',
                 render: async (): Promise<ToolbarNode[]> => {
                     const toolbar = new ToolbarNode();
-                    this.addToolbarItems(toolbar, this.configuration?.layout || []);
+                    toolbar.append(...this.makeToolbarNodes(this.configuration?.layout || []));
                     return [toolbar];
                 },
             },
@@ -42,30 +46,38 @@ export class Toolbar<T extends ToolbarConfig = {}> extends JWPlugin<T> {
         componentZones: [['toolbar', ['tools']]],
     };
     configuration = { layout: [], ...this.configuration };
-    addToolbarItems(toolbar: ToolbarNode, layout: ToolbarLayout): void;
-    addToolbarItems(group: ActionableGroupNode, layoutGroup: ToolbarGroup | string[]): void;
-    addToolbarItems(
-        node: ToolbarNode | ActionableGroupNode,
-        items: ToolbarLayout | ToolbarGroup | ToolbarOptGroup | string[],
-    ): void {
+
+    makeToolbarNodes(group: ToolbarLayout | ToolbarGroup | ToolbarOptGroup): ToolbarElementNode[] {
+        if (Array.isArray(group)) {
+            const returnItems: ToolbarElementNode[] = [];
+            for (const item of group) {
+                returnItems.push(this.makeToolbarNode(item));
+            }
+            return returnItems;
+        } else {
+            return Object.keys(group).map(name => this.makeToolbarNode(group[name], name));
+        }
+    }
+    makeToolbarNode(item: ToolbarGroup | ToolbarItem): ToolbarElementNode;
+    makeToolbarNode(item: ToolbarGroup, name: string): ActionableGroupNode;
+    makeToolbarNode(item: ToolbarGroup | ToolbarItem, name?: string): ToolbarElementNode {
         const domEngine = this.editor.plugins.get(Layout).engines.dom;
 
-        for (const item of items) {
-            if (typeof item === 'string') {
-                if (item === '|') {
-                    node.append(new SeparatorNode());
-                } else if (domEngine.hasConfiguredComponents(item)) {
-                    node.append(new ZoneNode({ managedZones: [item] }));
-                } else {
-                    node.append(new LabelNode({ label: item }));
-                }
-            } else if (item instanceof AbstractNode) {
-                node.append(node);
+        if (typeof item === 'string') {
+            if (item === '|') {
+                return new SeparatorNode();
+            } else if (domEngine.hasConfiguredComponents(item)) {
+                return new ZoneNode({ managedZones: [item] });
             } else {
-                const group = new ActionableGroupNode();
-                this.addToolbarItems(group, item);
-                node.append(group);
+                return new LabelNode({ label: item });
             }
+        } else if (item instanceof ActionableNode) {
+            return item;
+        } else {
+            const groupParams: ActionableGroupNodeParams = { name };
+            const group = new ActionableGroupNode(groupParams);
+            group.append(...this.makeToolbarNodes(item));
+            return group;
         }
     }
 }

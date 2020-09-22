@@ -95,6 +95,23 @@ describe('Toolbar', async () => {
                 '<jw-toolbar><jw-group><span class="label">label</span></jw-group></jw-toolbar>',
             );
         });
+        it('should display group name from layout configuration', async () => {
+            editor.configure(Toolbar, { layout: { group1: ['label1'], group2: ['label2'] } });
+            await editor.start();
+            const toolbar = container.querySelector('jw-toolbar');
+            expect(toolbar?.outerHTML.replace(/[\s\n]+/g, ' ')).to.equal(
+                [
+                    '<jw-toolbar>',
+                    '<jw-group name="group1">',
+                    '<span class="label">label1</span>',
+                    '</jw-group>',
+                    '<jw-group name="group2">',
+                    '<span class="label">label2</span>',
+                    '</jw-group>',
+                    '</jw-toolbar>',
+                ].join(''),
+            );
+        });
         it('should display the bold button in the toolbar from "actionables" zone', async () => {
             editor.load(Bold);
             editor.load(DomLayout, {

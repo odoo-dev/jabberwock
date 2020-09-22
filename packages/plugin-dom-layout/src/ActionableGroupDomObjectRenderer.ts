@@ -49,6 +49,7 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
     private _renderGroup(group: ActionableGroupNode): DomObject {
         const objectGroup: DomObject = {
             tag: 'JW-GROUP',
+            attributes: { name: group.groupName },
             children: group.children(),
         };
         return objectGroup;
