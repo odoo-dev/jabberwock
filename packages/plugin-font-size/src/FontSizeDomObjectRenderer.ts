@@ -35,28 +35,28 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
             }
         }
 
-        let next = range.start.nextSibling(CharNode);
-        if (next) {
-            // If the end is before the charNode, the charNode is not selected.
-            const childVNodes = next.parent.childVNodes;
-            let index = childVNodes.indexOf(next);
-            let sibling: VNode;
-            while (index && (sibling = childVNodes[index - 1]) && sibling !== range.start) {
-                if (sibling !== range.end) {
-                    next = null;
-                }
-                index--;
+        const next = range.start.nextSibling(CharNode);
+        const prev = range.end.previousSibling(CharNode);
+        let fontSize = '';
+        if (range.isCollapsed()) {
+            fontSize = (next && this._getFontSize(next)) || (prev && this._getFontSize(prev)) || '';
+        } else {
+            const nextFontSize = next && this._getFontSize(next);
+            const prevFontSize = prev && this._getFontSize(prev);
+            if (nextFontSize && nextFontSize === prevFontSize) {
+                fontSize = nextFontSize;
             }
         }
-
-        let fontSize = next?.modifiers.find(Attributes)?.style?.get('font-size');
-
+        input.value = fontSize;
+    }
+    private _getFontSize(charNode: CharNode): string {
+        let fontSize = charNode.modifiers.find(Attributes)?.style?.get('font-size');
         if (fontSize) {
             fontSize = parseInt(fontSize, 10).toString();
-        } else if (next) {
+        } else if (charNode) {
             const layout = this.engine.editor.plugins.get(Layout);
             const domLayout = layout.engines.dom as DomLayoutEngine;
-            const firstDomNode = domLayout.getDomNodes(next)[0];
+            const firstDomNode = domLayout.getDomNodes(charNode)[0];
             let firstDomElement: Element;
             if (firstDomNode) {
                 firstDomElement =
@@ -69,6 +69,6 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
                 }
             }
         }
-        input.value = fontSize || '';
+        return fontSize;
     }
 }
