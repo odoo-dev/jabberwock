@@ -18,7 +18,7 @@ export class ToolbarZoneXmlDomParser extends AbstractParser<Node> {
         const nodes = await this.engine.parse(...item.childNodes);
         toolbar.append(...nodes);
         const toolbarPlugin = this.engine.editor.plugins.get(Toolbar);
-        toolbarPlugin.addToolbarItems(toolbar, toolbarPlugin.configuration?.layout);
+        toolbar.append(...toolbarPlugin.makeToolbarNodes(toolbarPlugin.configuration?.layout));
         return [toolbar];
     }
 }

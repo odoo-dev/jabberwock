@@ -157,7 +157,7 @@ describe('Theme', () => {
             [
                 '<jw-editor>',
                     '<jw-toolbar>',
-                        '<jw-group>',
+                        '<jw-group name="themes">',
                             '<jw-button name="theme-default" aria-pressed="true" class="pressed">Theme: default</jw-button>',
                             '<jw-button name="theme-second" aria-pressed="false">Theme: second</jw-button>',
                             '<jw-button name="theme-third" aria-pressed="false">Super theme</jw-button>',
@@ -175,7 +175,7 @@ describe('Theme', () => {
             [
                 '<jw-editor>',
                     '<jw-toolbar>',
-                        '<jw-group>',
+                        '<jw-group name="themes">',
                             '<jw-button name="theme-default" aria-pressed="false" class="">Theme: default</jw-button>',
                             '<jw-button name="theme-second" aria-pressed="false">Theme: second</jw-button>',
                             '<jw-button name="theme-third" aria-pressed="true" class="pressed">Super theme</jw-button>',

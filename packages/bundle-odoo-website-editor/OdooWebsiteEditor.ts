@@ -84,8 +84,8 @@ interface OdooWebsiteEditorOptions {
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
 }
 
-const defaultToolbarLayout = [
-    [
+const defaultToolbarLayout = {
+    text: [
         'BoldButton',
         'ItalicButton',
         'UnderlineButton',
@@ -93,17 +93,17 @@ const defaultToolbarLayout = [
         'OdooTextColorButton',
         'OdooBackgroundColorButton',
     ],
-    [
+    heading: [
         'OdooHeading1ToggleButton',
         'OdooHeading2ToggleButton',
         'OdooPreToggleButton',
         'OdooBlockquoteToggleButton',
     ],
-    ['UnorderedListButton', 'ChecklistButton'],
-    ['OdooLinkToggleButton'],
-    ['TableButton'],
-    ['OdooMediaButton'],
-];
+    list: ['UnorderedListButton', 'ChecklistButton'],
+    link: ['OdooLinkToggleButton'],
+    table: ['TableButton'],
+    media: ['OdooMediaButton'],
+};
 export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOptions) {
         super();
@@ -166,7 +166,7 @@ export class OdooWebsiteEditor extends JWEditor {
             ],
         });
         this.configure(Toolbar, {
-            layout: [...(options.toolbarLayout || defaultToolbarLayout)],
+            layout: options.toolbarLayout || defaultToolbarLayout,
         });
         const loadables: Loadables<Keymap> = {
             shortcuts: [

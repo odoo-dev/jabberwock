@@ -2,7 +2,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
 
 export interface ActionableGroupNodeParams extends AbstractNodeParams {
-    name: string;
+    name?: string;
 }
 
 export class ActionableGroupNode extends ContainerNode {
