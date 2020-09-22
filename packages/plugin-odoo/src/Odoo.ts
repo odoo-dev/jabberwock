@@ -632,18 +632,18 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                     visible: isImageVisible,
                     selected: (editor: JWEditor): boolean => {
                         const image = getSingleImage(editor.selection.range);
-                        if (image) {
-                            const imageAttribute = image.modifiers.get(Attributes);
+                        const imageAttributes = image?.modifiers.find(Attributes);
+                        if (imageAttributes) {
                             if (className === OdooPaddingClasses.NONE) {
                                 if (
                                     paddingClasses.every(
-                                        className => !imageAttribute.has(className),
+                                        className => !imageAttributes.classList.has(className),
                                     )
                                 ) {
                                     return true;
                                 }
                             } else {
-                                imageAttribute.classList.has(className);
+                                imageAttributes.classList.has(className);
                             }
                         }
                         return false;
