@@ -429,10 +429,10 @@ describe('Keymap', () => {
                     await keydown(domEditable, 'a', {
                         ctrlKey: true,
                     });
-                    const params = {
-                        context: editor.contextManager.defaultContext,
-                    };
-                    expect(execSpy.args).to.eql([['command-b', params]]);
+
+                    expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                        '@preKeydownCommand,command-b,@commit',
+                    );
                 },
             });
         });
@@ -472,10 +472,10 @@ describe('Keymap', () => {
                     await keydown(domEditable, 'a', { ctrlKey: true });
                     domEditable = domEngine.getDomNodes(editable)[0] as Element;
                     await keydown(domEditable, 'b', { ctrlKey: true });
-                    const params = {
-                        context: editor.contextManager.defaultContext,
-                    };
-                    expect(execSpy.args).to.eql([['command-all', params]]);
+
+                    expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                        '@preKeydownCommand,command-all,@commit',
+                    );
                 },
             });
         });
@@ -525,10 +525,10 @@ describe('Keymap', () => {
                     await keydown(domEditable, 'a', { ctrlKey: true });
                     domEditable = domEngine.getDomNodes(editable)[0] as Element;
                     await keydown(domEditable, 'b', { ctrlKey: true });
-                    const params = {
-                        context: editor.contextManager.defaultContext,
-                    };
-                    expect(execSpy.args).to.eql([['command-b', params]]);
+
+                    expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                        '@preKeydownCommand,command-b,@commit',
+                    );
                 },
             });
         });

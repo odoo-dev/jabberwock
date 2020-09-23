@@ -1,4 +1,4 @@
-import JWEditor from './JWEditor';
+import JWEditor, { ExecCommandResult } from './JWEditor';
 import { Context, Contextual } from './ContextManager';
 
 export type CommandIdentifier = string;
@@ -10,7 +10,7 @@ export interface CommandImplementation extends Contextual {
 export interface CommandParams {
     context?: Context;
 }
-export type CommandHandler = (args) => void;
+export type CommandHandler = (args) => ExecCommandResult | Promise<ExecCommandResult>;
 export type CommandHook = (params: CommandParams, commandId: string) => void;
 
 export class Dispatcher {
@@ -33,31 +33,32 @@ export class Dispatcher {
      * @param commandId The identifier of the command.
      * @param params The parameters of the command.
      */
-    async dispatch(commandId: CommandIdentifier, params: CommandParams = {}): Promise<void> {
+    async dispatch(
+        commandId: CommandIdentifier,
+        params: CommandParams = {},
+    ): Promise<ExecCommandResult> {
         const commands = this.commands[commandId];
-        if (!commands) {
-            if (commandId[0] !== '@') {
-                console.warn(`Command '${commandId}' not found.`);
+        let result: ExecCommandResult;
+        if (commands) {
+            const [command, context] = this.editor.contextManager.match(commands, params.context);
+            if (command) {
+                // Update command arguments with the computed execution context.
+                params = { ...params, context };
+
+                // Call command handler.
+                result = await command.handler(params);
             }
-            return;
+        } else if (commandId[0] !== '@') {
+            console.warn(`Command '${commandId}' not found.`);
         }
 
-        const [command, context] = this.editor.contextManager.match(commands, params.context);
-        if (command) {
-            // Update command arguments with the computed execution context.
-            const args = { ...params, context };
+        await this._dispatchHooks(commandId, params);
 
-            // Call command handler.
-            const result = await command.handler(args);
-
-            await this.dispatchHooks(commandId, args);
-
-            if (params.context?.range?.temporary) {
-                params.context.range.remove();
-            }
-
-            return result;
+        if (params.context?.range?.temporary) {
+            params.context.range.remove();
         }
+
+        return result;
     }
 
     /**
@@ -104,7 +105,7 @@ export class Dispatcher {
     /**
      * Dispatch to all registred `commandHooks`.
      */
-    async dispatchHooks(signal: string, args?): Promise<void> {
+    private async _dispatchHooks(signal: string, args?): Promise<void> {
         const hooks = this.commandHooks[signal] || [];
         const globalHooks = this.commandHooks['*'] || [];
         for (const hookCallback of [...hooks, ...globalHooks]) {

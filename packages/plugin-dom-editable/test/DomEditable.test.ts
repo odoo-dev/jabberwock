@@ -922,12 +922,13 @@ describe('DomEditable', () => {
             editor.load(loadables);
             await editor.start();
 
-            const execSpy = spy(editor.dispatcher, 'dispatch');
+            const commands = [];
+            editor.dispatcher.registerCommandHook('*', (none, commandId) => {
+                commands.push(commandId);
+            });
+
             await selectAllWithKeyA(container);
-            const params = {
-                context: editor.contextManager.defaultContext,
-            };
-            expect(execSpy.args).to.eql([['@focus'], ['command-b', params]]);
+            expect(commands.join(',')).to.eql('@focus,@preKeydownCommand,command-b,@commit');
         });
         it('should trigger a select all, with an other editor which have a shortcut', async () => {
             editor = new JWEditor();
@@ -992,11 +993,10 @@ describe('DomEditable', () => {
             await selectAllWithKeyA(container1);
             await selectAllWithKeyA(container2);
 
-            const params = {
-                context: editor.contextManager.defaultContext,
-            };
-            expect(execSpy.args).to.eql([['@focus'], ['command-b', params], ['@blur']]);
-            expect(execSpy2.args).to.eql([['@focus'], ['selectAll', {}]]);
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                '@focus,@preKeydownCommand,command-b,@commit,@blur',
+            );
+            expect(execSpy2.args.map(c => c[0]).join(',')).to.eql('@focus,selectAll,@commit');
 
             await editor.stop();
             await editor2.stop();

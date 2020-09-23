@@ -39,6 +39,10 @@ export interface CommitParams extends CommandParams {
     changesLocations: ChangesLocations;
     commandNames: string[];
 }
+export interface ErrorParams extends CommandParams {
+    message: string;
+    stack: string;
+}
 
 export type ExecCommandFunction = <P extends JWPlugin, C extends Commands<P> = Commands<P>>(
     commandName: C | ((context: Context) => void | Promise<void>),
@@ -536,10 +540,10 @@ export class JWEditor {
                 memorySlice,
                 this.memory.sliceKey,
             );
-            await this.dispatcher.dispatchHooks('@commit', {
+            await this.dispatcher.dispatch('@commit', {
                 changesLocations: changesLocations,
                 commandNames: [...commandNames],
-            });
+            } as CommitParams);
             clearTimeout(execCommandTimeout);
         } catch (error) {
             clearTimeout(execCommandTimeout);
@@ -548,10 +552,10 @@ export class JWEditor {
             }
             console.error(error);
 
-            await this.dispatcher.dispatchHooks('@error', {
+            await this.dispatcher.dispatch('@error', {
                 message: error.message,
                 stack: error.stack,
-            });
+            } as ErrorParams);
 
             const failedSlice = this.memory.sliceKey;
 
@@ -561,19 +565,19 @@ export class JWEditor {
             try {
                 // Send the commit message with a frozen memory.
                 const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
-                await this.dispatcher.dispatchHooks('@commit', {
+                await this.dispatcher.dispatch('@commit', {
                     changesLocations: changesLocations,
                     commandNames: commandNames,
-                });
+                } as CommitParams);
             } catch (revertError) {
                 if (this._stage !== EditorStage.EDITION) {
                     throw revertError;
                 }
 
-                await this.dispatcher.dispatchHooks('@error', {
+                await this.dispatcher.dispatch('@error', {
                     message: error.message,
                     stack: error.stack,
-                });
+                } as ErrorParams);
 
                 console.error(revertError);
             }
