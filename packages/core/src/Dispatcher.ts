@@ -33,9 +33,9 @@ export class Dispatcher {
      * @param commandId The identifier of the command.
      * @param params The parameters of the command.
      */
-    async dispatch(
+    async dispatch<P extends CommandParams>(
         commandId: CommandIdentifier,
-        params: CommandParams = {},
+        params: Partial<P> = {},
     ): Promise<ExecCommandResult> {
         const commands = this.commands[commandId];
         let result: ExecCommandResult;

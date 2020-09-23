@@ -429,7 +429,7 @@ export class JWEditor {
             this.memoryInfo.commandNames.push('@withRange');
             let range: VRange;
             if (typeof commandName === 'function') {
-                range = new VRange(this, bounds, { mode: params as Mode });
+                range = new VRange(this, bounds, { mode: params });
                 this.memoryInfo.commandNames.push(
                     '@custom' + (commandName.name ? ':' + commandName.name : ''),
                 );
@@ -540,10 +540,10 @@ export class JWEditor {
                 memorySlice,
                 this.memory.sliceKey,
             );
-            await this.dispatcher.dispatch('@commit', {
+            await this.dispatcher.dispatch<CommitParams>('@commit', {
                 changesLocations: changesLocations,
                 commandNames: [...commandNames],
-            } as CommitParams);
+            });
             clearTimeout(execCommandTimeout);
         } catch (error) {
             clearTimeout(execCommandTimeout);
@@ -552,10 +552,10 @@ export class JWEditor {
             }
             console.error(error);
 
-            await this.dispatcher.dispatch('@error', {
+            await this.dispatcher.dispatch<ErrorParams>('@error', {
                 message: error.message,
                 stack: error.stack,
-            } as ErrorParams);
+            });
 
             const failedSlice = this.memory.sliceKey;
 
@@ -565,19 +565,19 @@ export class JWEditor {
             try {
                 // Send the commit message with a frozen memory.
                 const changesLocations = this.memory.getChangesLocations(failedSlice, origin);
-                await this.dispatcher.dispatch('@commit', {
+                await this.dispatcher.dispatch<CommitParams>('@commit', {
                     changesLocations: changesLocations,
                     commandNames: commandNames,
-                } as CommitParams);
+                });
             } catch (revertError) {
                 if (this._stage !== EditorStage.EDITION) {
                     throw revertError;
                 }
 
-                await this.dispatcher.dispatch('@error', {
+                await this.dispatcher.dispatch<ErrorParams>('@error', {
                     message: error.message,
                     stack: error.stack,
-                } as ErrorParams);
+                });
 
                 console.error(revertError);
             }
