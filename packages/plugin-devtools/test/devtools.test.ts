@@ -905,7 +905,7 @@ describe('Plugin: DevTools', () => {
                 [...subpanel.querySelectorAll('devtools-td:not(.numbering)')].map(
                     td => td.textContent,
                 ),
-            ).to.deep.equal(['@commit', 'insertText', '@commit', 'setSelection']);
+            ).to.deep.equal(['@commit', 'insertText', '@commit', 'setSelection', '@focus']);
         });
         it('should select "deleteWord"', async () => {
             await openDevTools();

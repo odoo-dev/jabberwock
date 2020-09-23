@@ -155,7 +155,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             event.stopPropagation();
             event.stopImmediatePropagation();
             await Promise.all([
-                this.editor.dispatcher.dispatchHooks('@preKeydownCommand', {}),
+                this.editor.dispatcher.dispatch('@preKeydownCommand', {}),
                 processingContext.execCommand(command.commandId, params),
             ]);
             return command.commandId;
@@ -312,9 +312,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         }
 
         if (focus && !this.focusedNode) {
-            this.editor.dispatcher.dispatchHooks('@focus');
+            this.editor.dispatcher.dispatch('@focus');
         } else if (!focus && this.focusedNode) {
-            this.editor.dispatcher.dispatchHooks('@blur');
+            this.editor.dispatcher.dispatch('@blur');
         }
         this.focusedNode = focus;
     }

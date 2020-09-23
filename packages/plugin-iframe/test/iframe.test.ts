@@ -622,7 +622,7 @@ describe('Iframe', async () => {
                 focusOffset: 1,
             });
 
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection');
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,@commit');
         });
         it('mouse setRange (ubuntu chrome) not colapsed', async () => {
             section.innerHTML = '<p>aaaaa</p><p>bbbbb</p><p>ccccc<br/><br/></p>';
@@ -746,7 +746,9 @@ describe('Iframe', async () => {
             });
 
             // setSelection when mousedown, setSelection when finished to select
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,setSelection');
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                'setSelection,@commit,setSelection,@commit',
+            );
         });
         it('should insert char in a word', async () => {
             section.innerHTML = '<div>abcd</div>';
@@ -1000,7 +1002,7 @@ describe('Iframe', async () => {
                 focusOffset: 1,
             });
 
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection');
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,@commit');
         });
         it('select all: mouse', async () => {
             section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
@@ -1064,7 +1066,7 @@ describe('Iframe', async () => {
                 ],
             ]);
 
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll');
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll,@commit');
         });
         it('select all: ctrl + a', async () => {
             section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
@@ -1122,7 +1124,7 @@ describe('Iframe', async () => {
                 [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft', 'ctrlKey': true }],
             ]);
 
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll');
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll,@commit');
         });
         it('should trigger a shortcut', async () => {
             section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
@@ -1190,7 +1192,9 @@ describe('Iframe', async () => {
                 [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft' }],
             ]);
 
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql('command-b');
+            expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                '@preKeydownCommand,command-b,@commit',
+            );
         });
     });
 });

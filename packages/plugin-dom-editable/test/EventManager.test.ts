@@ -30,9 +30,6 @@ describe('core', () => {
                     },
                     stepFunction: async (editor: BasicEditor) => {
                         const execSpy = spy(editor.dispatcher, 'dispatch');
-                        const params = {
-                            context: editor.contextManager.defaultContext,
-                        };
                         const domEditable = editor.plugins.get(DomEditable);
                         await domEditable._onNormalizedEvent(
                             Promise.resolve({
@@ -47,7 +44,9 @@ describe('core', () => {
                                 },
                             }),
                         );
-                        expect(execSpy.args).to.eql([['fake-command', params]]);
+                        expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                            '@preKeydownCommand,fake-command,@commit',
+                        );
                     },
                 });
             });

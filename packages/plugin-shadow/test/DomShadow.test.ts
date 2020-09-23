@@ -739,7 +739,7 @@ describe('DomShadow', async () => {
                     ],
                 ]);
 
-                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll');
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll,@commit');
 
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -816,7 +816,7 @@ describe('DomShadow', async () => {
                     [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft', 'ctrlKey': true }],
                 ]);
 
-                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll');
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('selectAll,@commit');
 
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -884,7 +884,7 @@ describe('DomShadow', async () => {
                     [{ 'type': 'keyup', 'key': 'ArrowLeft', 'code': 'ArrowLeft' }],
                 ]);
 
-                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection');
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,@commit');
 
                 const domEditable = domEngine.getDomNodes(editable)[0] as Element;
                 expect((domEditable.parentNode as ShadowRoot).innerHTML).to.equal(
@@ -977,7 +977,9 @@ describe('DomShadow', async () => {
                     [{ 'type': 'keyup', 'key': 'Control', 'code': 'ControlLeft' }],
                 ]);
 
-                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('command-b');
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                    '@preKeydownCommand,command-b,@commit',
+                );
             });
             it.skip('deleteWordBackward', async () => {
                 // <CTRL>+<BACKSPACE>
@@ -1608,7 +1610,7 @@ describe('DomShadow', async () => {
                     container,
                 );
 
-                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection');
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,@commit');
 
                 // focus the second editor and trigger arrow
                 await triggerEvents(
@@ -1648,7 +1650,7 @@ describe('DomShadow', async () => {
                     container2,
                 );
 
-                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,@blur');
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql('setSelection,@commit,@blur');
                 expect(editor2.memoryInfo.commandNames.join(',')).to.eql(
                     'setSelection',
                     'focus the second editor',
@@ -1670,7 +1672,7 @@ describe('DomShadow', async () => {
                     container2,
                 );
 
-                expect(execSpy2.args.map(c => c[0]).join(',')).to.eql('setSelection');
+                expect(execSpy2.args.map(c => c[0]).join(',')).to.eql('setSelection,@commit');
 
                 await editor.stop();
                 await editor2.stop();
