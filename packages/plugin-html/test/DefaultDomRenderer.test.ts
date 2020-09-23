@@ -29,6 +29,32 @@ describe('Html', () => {
             expect(rootItem).to.exist;
             expect((rootItem[0] as Element).outerHTML).to.equal('<img src="toto">');
         });
+        it('should parse autoclose and non-autoclose tags', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore:
+                    '<table>\n\t<colgroup><col><col></colgroup>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>aaa</td>\n\t\t</tr>\n\t</tbody>\n</table>',
+                contentAfter:
+                    '<table><colgroup><col><col></colgroup><tbody><tr><td>aaa</td></tr></tbody></table>',
+            });
+        });
+        it('should parse autoclose and non-autoclose tags use text/html parser', async () => {
+            const editor = new BasicEditor();
+            editor.load(Html);
+            await editor.start();
+            const parser = editor.plugins.get(Parser);
+            const nodes = await parser.parse(
+                'text/html',
+                '<table>\n\t<colgroup><col><col></colgroup>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>aaa</td>\n\t\t</tr>\n\t</tbody>\n</table>',
+            );
+
+            const renderer = editor.plugins.get(Renderer);
+            const rootItem = await renderer.render<Node[]>('dom/html', nodes[0]);
+
+            expect(rootItem).to.exist;
+            expect((rootItem[0] as Element).outerHTML).to.equal(
+                '<table><colgroup><col><col></colgroup><tbody><tr><td>aaa</td></tr></tbody></table>',
+            );
+        });
         it('should parse special attribute and content', async () => {
             await testEditor(BasicEditor, {
                 contentBefore:

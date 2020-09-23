@@ -20,7 +20,7 @@ export const autoCloseTag = [
     'TRACK',
     'WBR',
 ];
-const autoCloseRegExp = new RegExp('<((' + autoCloseTag.join('|') + ')[^>]*)>', 'gi');
+const autoCloseRegExp = new RegExp('<((' + autoCloseTag.join('|') + ')(\\s[^>]*)?)>', 'gi');
 
 export class DefaultHtmlTextParser extends AbstractParser<string> {
     static id = 'text/html';
