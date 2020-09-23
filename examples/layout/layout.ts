@@ -173,7 +173,11 @@ editor.configure(Table, {
 const toolbarConfig = editor.configuration.plugins.find(
     config => config[0] === Toolbar,
 )[1] as ToolbarConfig;
-toolbarConfig.layout.push(['ThemeButton'], ['TemplateSelector']);
+if (Array.isArray(toolbarConfig.layout)) {
+    toolbarConfig.layout.push(['ThemeButton'], ['TemplateSelector']);
+} else {
+    Object.assign(toolbarConfig.layout, { theme: ['ThemeButton'], templateSelector: ['TemplateSelector']}));
+}
 editor.configure(Toolbar, toolbarConfig);
 
 editor.start();
