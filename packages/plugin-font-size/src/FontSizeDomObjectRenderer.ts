@@ -43,7 +43,7 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
         } else {
             const nextFontSize = next && this._getFontSize(next);
             const prevFontSize = prev && this._getFontSize(prev);
-            if (nextFontSize && nextFontSize === prevFontSize) {
+            if (nextFontSize && (nextFontSize === prevFontSize || !prevFontSize)) {
                 fontSize = nextFontSize;
             }
         }
