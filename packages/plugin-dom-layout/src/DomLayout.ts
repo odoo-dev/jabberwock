@@ -15,7 +15,7 @@ import { ZoneXmlDomParser } from './ZoneXmlDomParser';
 import { LayoutContainerDomObjectRenderer } from './LayoutContainerDomObjectRenderer';
 import { ZoneIdentifier, ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { CommandIdentifier } from '../../core/src/Dispatcher';
+import { CommandIdentifier, CommandParams } from '../../core/src/Dispatcher';
 import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
 import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRenderer';
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
