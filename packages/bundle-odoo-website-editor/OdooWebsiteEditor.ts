@@ -183,7 +183,6 @@ export class OdooWebsiteEditor extends JWEditor {
         <t-dialog><t t-zone="default"/></t-dialog>
         <div class="wrap_editor d-flex flex-column">
             <div class="d-flex flex-grow-1 flex-row overflow-auto">
-                <t t-zone="main_sidebar"/>
                 <div class="d-flex flex-column o_editor_center">
                     <div class="o_toolbar">
                         <t t-zone="tools"/>
@@ -192,6 +191,7 @@ export class OdooWebsiteEditor extends JWEditor {
                         <t t-zone="main"/>
                     </div>
                 </div>
+                <t t-zone="main_sidebar"/>
             </div>
             <div class="o_debug_zone">
                 <t t-zone="debug"/>
