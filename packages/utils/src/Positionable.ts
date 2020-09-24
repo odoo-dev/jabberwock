@@ -24,15 +24,32 @@ function getBoundingClientRect(elem: HTMLElement): BoundingRect {
 const POSITIONABLE_TAG_NAME = 'jw-positionable';
 const POSITIONED_TAG_NAME = 'jw-positionned';
 
+export enum PositionableVerticalAlignment {
+    TOP = 'TOP',
+    BOTTOM = 'BOTTOM',
+}
+export enum PositionableHorizontalAlignment {
+    LEFT = 'LEFT',
+    RIGHT = 'RIGHT',
+}
+
 interface PositionableOptions {
     /**
      * The element in relative in which we base the position.
      */
-    relativeElement: HTMLElement;
+    relativeElement?: HTMLElement;
     /**
      * The element to position.
      */
     positionedElement: HTMLElement;
+    /**
+     * Vertical alignment.
+     */
+    verticalAlignment?: PositionableVerticalAlignment;
+    /**
+     * Vertical alignment.
+     */
+    horizontalAlignment?: PositionableHorizontalAlignment;
     /**
      * The container into which the box is held. If not provided, A
      * jw-positionable node will be appended in the body.
@@ -40,13 +57,24 @@ interface PositionableOptions {
     container?: HTMLElement;
 }
 export class Positionable {
-    private _relativeElement: PositionableOptions['relativeElement'];
+    private _relativeElement?: PositionableOptions['relativeElement'];
     private _positionedElement: PositionableOptions['positionedElement'];
     private _positionedElementContainer: HTMLElement;
     private _container: HTMLElement;
+    private _verticalAlignment: PositionableOptions['verticalAlignment'];
+    private _horizontalAlignment: PositionableOptions['horizontalAlignment'];
+    private _resizeObserver: ResizeObserver;
+
     constructor(options: PositionableOptions) {
-        this._relativeElement = options.relativeElement;
+        this._resizeObserver = new ResizeObserver(this.resetPositionedElement.bind(this));
+        if (options.relativeElement) {
+            this.resetRelativeElement(options.relativeElement);
+        }
         this._positionedElement = options.positionedElement;
+        this._verticalAlignment = options.verticalAlignment || PositionableVerticalAlignment.TOP;
+        this._horizontalAlignment =
+            options.horizontalAlignment || PositionableHorizontalAlignment.LEFT;
+
         if (options.container) {
             this._container = options.container;
         } else {
@@ -70,21 +98,44 @@ export class Positionable {
         this.bind();
         setTimeout(this.resetPositionedElement.bind(this), 0);
     }
+    resetRelativeElement(element: HTMLElement): void {
+        if (this._relativeElement) {
+            this._resizeObserver.unobserve(this._relativeElement);
+        }
+        this._relativeElement = element;
+        this._resizeObserver.observe(this._relativeElement);
+    }
     resetPositionedElement(): void {
+        if (!this._relativeElement) return;
+
         const coords1 = getBoundingClientRect(this._relativeElement);
         const coords2 = getBoundingClientRect(this._positionedElement);
 
-        // right top position
-        const x = coords1.right - coords2.width;
-        const y = coords1.top - coords2.height;
+        let x: number;
+        let y: number;
+        if (this._verticalAlignment === PositionableVerticalAlignment.TOP) {
+            y = coords1.top - coords2.height;
+        } else {
+            y = coords1.top + coords2.height;
+            console.log('coords1.top:', coords1.top);
+            console.log('coords2.height:', coords2.height);
+            console.log('y', y);
+        }
+        if (this._horizontalAlignment === PositionableHorizontalAlignment.RIGHT) {
+            x = coords1.right - coords2.width;
+        } else {
+            x = coords1.left;
+        }
 
         this._positionedElementContainer.style.left = x + 'px';
         this._positionedElementContainer.style.top = y + 'px';
     }
     bind(): void {
+        console.log('bind');
         document.body.addEventListener('scroll', this._onScroll, true);
     }
     unbind(): void {
+        console.log('unbind');
         document.body.removeEventListener('scroll', this._onScroll, true);
     }
     destroy(): void {
@@ -98,6 +149,7 @@ export class Positionable {
         }
     }
     private _onScroll(): void {
+        console.log('resetpositioned');
         this.resetPositionedElement();
     }
 }

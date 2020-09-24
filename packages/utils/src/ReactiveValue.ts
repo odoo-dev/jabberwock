@@ -1,6 +1,6 @@
-import { EventMixin } from './EventMixin';
+import { EventMixin2 } from './EventMixin2';
 
-export class ReactiveValue<T> extends EventMixin {
+export class ReactiveValue<T> extends EventMixin2 {
     constructor(private _value?: T) {
         super();
     }

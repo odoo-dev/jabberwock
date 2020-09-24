@@ -51,6 +51,7 @@ import { FontSize } from '../plugin-font-size/src/FontSize';
 import { Button } from '../plugin-button/src/Button';
 import { HorizontalRule } from '../plugin-horizontal-rule/src/HorizontalRule';
 import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
+import { ActionBar } from '../plugin-commandbar/src/ActionBar';
 
 export class BasicEditor extends JWEditor {
     constructor(params?: { editable?: HTMLElement }) {
@@ -161,6 +162,22 @@ export class BasicEditor extends JWEditor {
                 ['TableButton'],
                 ['CodeButton'],
                 ['UndoButton', 'RedoButton'],
+            ],
+        });
+        this.configure(ActionBar, {
+            actions: [
+                {
+                    name: 'action1',
+                },
+                {
+                    name: 'action2',
+                },
+                {
+                    name: 'foo',
+                },
+                {
+                    name: 'bar',
+                },
             ],
         });
     }

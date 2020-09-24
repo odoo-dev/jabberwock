@@ -26,7 +26,7 @@ target.innerHTML = template;
 
 const editor = new BasicEditor({ editable: target });
 editor.load(FontAwesome);
-// editor.load(DevTools);
+editor.load(DevTools);
 editor.configure(DomLayout, {
     location: [target, 'replace'],
     components: [
