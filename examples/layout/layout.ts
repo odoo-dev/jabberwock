@@ -176,7 +176,10 @@ const toolbarConfig = editor.configuration.plugins.find(
 if (Array.isArray(toolbarConfig.layout)) {
     toolbarConfig.layout.push(['ThemeButton'], ['TemplateSelector']);
 } else {
-    Object.assign(toolbarConfig.layout, { theme: ['ThemeButton'], templateSelector: ['TemplateSelector']}));
+    Object.assign(toolbarConfig.layout, {
+        theme: ['ThemeButton'],
+        templateSelector: ['TemplateSelector'],
+    });
 }
 editor.configure(Toolbar, toolbarConfig);
 
