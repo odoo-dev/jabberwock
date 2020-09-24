@@ -122,7 +122,7 @@ export class DomLayoutEngine extends LayoutEngine {
     getDomNodes(node: VNode): Node[] {
         return this._domReconciliationEngine.toDom(node);
     }
-    async redraw(params: ChangesLocations): Promise<void> {
+    async redraw(params?: ChangesLocations): Promise<void> {
         if (this._currentlyRedrawing) {
             throw new Error('Double redraw detected');
         }
@@ -193,7 +193,14 @@ export class DomLayoutEngine extends LayoutEngine {
     // Private
     //--------------------------------------------------------------------------
 
-    private async _redraw(params: ChangesLocations): Promise<void> {
+    private async _redraw(
+        params: ChangesLocations = {
+            add: [],
+            move: [],
+            remove: [],
+            update: [],
+        },
+    ): Promise<void> {
         const updatedNodes = [...this._getInvalidNodes(params)];
 
         const layout = this.editor.plugins.get(Renderer);

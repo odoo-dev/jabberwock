@@ -158,6 +158,11 @@ interface HistoryAction {
     type: 'historyUndo' | 'historyRedo';
 }
 
+interface RedrawAction {
+    type: '@redraw';
+    domNodes: Set<Node>;
+}
+
 export type NormalizedAction =
     | InsertTextAction
     | InsertHtmlAction
@@ -170,7 +175,8 @@ export type NormalizedAction =
     | SelectAllAction
     | SetSelectionAction
     | ApplyFormatAction
-    | HistoryAction;
+    | HistoryAction
+    | RedrawAction;
 
 export interface CaretPosition {
     offsetNode: Node;
@@ -613,6 +619,29 @@ export class EventNormalizer {
                 }
                 if (eventTarget && this._isInEditable(eventTarget)) {
                     listener.call(this, ev);
+                } else {
+                    this._mutationNormalizer.start();
+                    this._triggerEventBatch(
+                        new Timeout<EventBatch>(() => {
+                            const actions = [];
+                            if (this._mutationNormalizer._mutations?.length) {
+                                const domNodes = [
+                                    ...this._mutationNormalizer.getMutatedElements(
+                                        this._mutationNormalizer._mutations,
+                                    ),
+                                ].filter(domNode => {
+                                    const element = this._getClosestElement(domNode) as HTMLElement;
+                                    return element?.isContentEditable;
+                                });
+                                actions.push({
+                                    type: '@redraw',
+                                    domNodes: new Set(domNodes),
+                                } as RedrawAction);
+                            }
+                            this._mutationNormalizer.stop();
+                            return { actions };
+                        }).promise,
+                    );
                 }
             }
         };
