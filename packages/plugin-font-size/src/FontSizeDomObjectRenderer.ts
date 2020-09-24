@@ -2,7 +2,11 @@ import { InputDomObjectRenderer } from './../../plugin-input/src/InputDomObjectR
 import { InputNode } from './../../plugin-input/src/InputNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { VNode } from '../../core/src/VNodes/VNode';
-import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import {
+    DomObject,
+    DomObjectElement,
+    DomObjectRenderingEngine,
+} from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
@@ -13,6 +17,26 @@ export class FontSizeDomObjectRenderer extends InputDomObjectRenderer {
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>
         node instanceof InputNode && node.inputName === 'font-size';
+    /**
+     * Render the VNode to the given format.
+     */
+    async render(node: InputNode): Promise<DomObject> {
+        const input = (await super.render(node)) as DomObjectElement;
+        const attach = input.attach;
+        input.attach = (el: HTMLInputElement): void => {
+            attach(el);
+            const domVisible = el.style.display !== 'none';
+            const visible = isInTextualContext(this.engine.editor);
+            if (visible !== domVisible) {
+                if (visible) {
+                    el.style.display = 'inline-block';
+                } else {
+                    el.style.setProperty('display', 'none', 'important');
+                }
+            }
+        };
+        return input;
+    }
 
     /**
      * @override
