@@ -21,6 +21,8 @@ import { OdooFieldNode } from '../plugin-odoo-field/src/OdooFieldNode';
 import { TagNode } from '../core/src/VNodes/TagNode';
 import { Parser } from '../plugin-parser/src/Parser';
 import { FontAwesomeNode } from '../plugin-fontawesome/src/FontAwesomeNode';
+import { SeparatorNode } from '../core/src/VNodes/SeparatorNode';
+import { Format } from '../core/src/Format';
 
 export {
     OdooWebsiteEditor,
@@ -46,4 +48,6 @@ export {
     DomHelpers,
     Parser,
     FontAwesomeNode,
+    SeparatorNode,
+    Format,
 };

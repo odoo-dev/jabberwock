@@ -234,8 +234,10 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'openTextColorPicker',
                         visible: isInTextualContext,
                         modifiers: [
-                            new Attributes({ class: 'fa fa-font fa-fw dropdown-toggle' }),
-                            new Attributes({ 'data-toggle': 'dropdown' }),
+                            new Attributes({
+                                class: 'fa fa-font fa-fw dropdown-toggle',
+                                'data-toggle': 'dropdown',
+                            }),
                         ],
                     });
                     const dropdownContent = new DividerNode();
@@ -258,8 +260,10 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         commandId: 'openBackgroundColorPicker',
                         visible: isInTextualContext,
                         modifiers: [
-                            new Attributes({ class: 'fa fa-paint-brush fa-fw dropdown-toggle' }),
-                            new Attributes({ 'data-toggle': 'dropdown' }),
+                            new Attributes({
+                                class: 'fa fa-paint-brush fa-fw dropdown-toggle',
+                                'data-toggle': 'dropdown',
+                            }),
                         ],
                     });
                     const dropdownContent = new DividerNode();
