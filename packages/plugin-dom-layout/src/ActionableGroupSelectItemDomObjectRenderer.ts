@@ -119,8 +119,8 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
     protected _updateActionableGroupSelectItems(): void {
         for (const [actionable, element] of this.actionableGroupSelectItemNodes) {
             const editor = this.engine.editor;
-            const select = actionable.selected(editor);
-            const enable = actionable.enabled(editor);
+            const select = !!actionable.selected(editor);
+            const enable = !!actionable.enabled(editor);
             const visible = !!actionable.visible(editor);
             const attrSelected = element.getAttribute('selected');
             if (select.toString() !== attrSelected) {
