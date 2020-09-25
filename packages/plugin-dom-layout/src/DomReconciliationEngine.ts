@@ -76,7 +76,7 @@ export class DomReconciliationEngine {
         updatedNodes: VNode[],
         renderings: Map<VNode, DomObject>,
         locations: Map<DomObject, VNode[]>,
-        from: Map<DomObject, Set<VNode | Modifier>>,
+        from: Map<GenericDomObject, Set<VNode | Modifier>>,
         domNodesToRedraw = new Set<Node>(),
     ): void {
         const renderedSet = new Set<DomObject>();
@@ -245,6 +245,17 @@ export class DomReconciliationEngine {
             const i = diffs.findIndex(diff => diff.id === id);
             if (i !== -1) {
                 diffs.splice(i, 1);
+            }
+        }
+
+        // Add locations.
+        for (const diff of diffs) {
+            const object = this._objects[diff.id];
+            const nodes = from.get(object.object);
+            if (nodes) {
+                for (const node of nodes) {
+                    this._fromItem.set(node, diff.id);
+                }
             }
         }
 
