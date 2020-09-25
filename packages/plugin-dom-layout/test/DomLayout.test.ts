@@ -52,6 +52,9 @@ import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
 import { DividerNode } from '../../plugin-divider/src/DividerNode';
 import { ImageNode } from '../../plugin-image/src/ImageNode';
 import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
+import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
+import { VersionableArray } from '../../core/src/Memory/VersionableArray';
+import { FontAwesome } from '../../plugin-fontawesome/src/FontAwesome';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -808,7 +811,7 @@ describe('DomLayout', () => {
             await editor.stop();
         });
     });
-    describe('getItems', () => {
+    describe('getDomNodes', () => {
         it('unknown vNode should return an empty list', async () => {
             const editor = new JWEditor();
             editor.load(Char);
@@ -843,6 +846,43 @@ describe('DomLayout', () => {
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
             const p = container.getElementsByTagName('p')[0] as Node;
             expect(engine.getDomNodes(pNode)).to.deep.equal([p]);
+            await editor.stop();
+        });
+        it('should return the icon DOM nodes', async () => {
+            const element = new TagNode({ htmlTag: 'jw-test' });
+            const pNode = new TagNode({ htmlTag: 'p' });
+            element.append(pNode);
+            const fa = new FontAwesomeNode({
+                htmlTag: 'I',
+                faClasses: new VersionableArray('fa', 'fa-clock'),
+            });
+            pNode.append(fa);
+            const Component: ComponentDefinition = {
+                id: 'test',
+                async render(): Promise<VNode[]> {
+                    return [element];
+                },
+            };
+            class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                loadables: Loadables<Layout> = {
+                    components: [Component],
+                    componentZones: [['test', ['main']]],
+                };
+            }
+            const editor = new JWEditor();
+            editor.load(Char);
+            editor.load(FontAwesome);
+            editor.configure(DomLayout, { location: [target, 'replace'] });
+            editor.load(Plugin);
+            await editor.start();
+
+            const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+            const domFa = container.querySelector('i');
+            expect(engine.getDomNodes(fa)).to.deep.equal([
+                domFa.previousSibling,
+                domFa,
+                domFa.nextSibling,
+            ]);
             await editor.stop();
         });
     });
