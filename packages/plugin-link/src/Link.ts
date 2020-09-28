@@ -17,7 +17,7 @@ import { Owl } from '../../plugin-owl/src/Owl';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { OwlNode } from '../../plugin-owl/src/OwlNode';
-import { LinkComponent } from './components/LinkComponent';
+import { LinkComponent, LinkProps } from './components/LinkComponent';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { BootstrapButtonLinkMailObjectModifierRenderer } from './BootstrapButtonLinkMailObjectModifierRenderer';
 import { VRange } from '../../core/src/VRange';
@@ -123,17 +123,22 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
     async link(params: LinkParams): Promise<void> {
         // If the url is undefined, ask the user to provide one.
         const range = params.context.range;
-        const selectedInlines = range.selectedNodes(InlineNode);
-        const label = params.label || selectedInlines.map(node => node.textContent).join('');
+        const replaceSelection = range.isCollapsed() || !!params.label?.length;
 
-        if (!params.url) {
+        if (!params.url || (replaceSelection && !params.label?.length)) {
+            const selectedInlines = range.selectedNodes(InlineNode);
             const firstLink = selectedInlines.find(node => node.modifiers.find(LinkFormat));
-            const link = firstLink && firstLink.modifiers.find(LinkFormat).clone();
+            const link = firstLink && firstLink.modifiers.find(LinkFormat);
             const url = link?.url || '';
 
             const layout = this.editor.plugins.get(Layout);
             await layout.remove('link');
-            return layout.append('link', undefined, { label: label, url: url });
+            const prop: LinkProps = {
+                replaceSelection: replaceSelection,
+                label: params.label,
+                url: url,
+            };
+            return layout.append('link', undefined, prop);
         }
 
         // Otherwise create a link and insert it.
@@ -141,11 +146,24 @@ export class Link<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         if (params.target) {
             link.modifiers.get(Attributes).set('target', params.target);
         }
-        await params.context.execCommand<Char>('insertText', {
-            text: label || link.url,
-            formats: new Modifiers(link),
-            context: params.context,
-        });
+
+        if (replaceSelection) {
+            await params.context.execCommand<Char>('insertText', {
+                text: params.label || link.url,
+                formats: new Modifiers(link),
+                context: params.context,
+            });
+        } else {
+            const selectedInlines = range.selectedNodes(InlineNode);
+            selectedInlines.forEach(node => {
+                const currentLink = node.modifiers.find(LinkFormat);
+                if (currentLink) {
+                    node.modifiers.remove(currentLink);
+                }
+                node.modifiers.append(link);
+            });
+            range.collapse(range.end);
+        }
     }
     unlink(params: LinkParams): void {
         const range = params.context.range;
