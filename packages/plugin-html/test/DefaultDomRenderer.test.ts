@@ -28,6 +28,7 @@ describe('Html', () => {
 
             expect(rootItem).to.exist;
             expect((rootItem[0] as Element).outerHTML).to.equal('<img src="toto">');
+            await editor.stop();
         });
         it('should parse autoclose and non-autoclose tags', async () => {
             await testEditor(BasicEditor, {
@@ -54,6 +55,7 @@ describe('Html', () => {
             expect((rootItem[0] as Element).outerHTML).to.equal(
                 '<table><colgroup><col><col></colgroup><tbody><tr><td>aaa</td></tr></tbody></table>',
             );
+            await editor.stop();
         });
         it('should parse special attribute and content', async () => {
             await testEditor(BasicEditor, {
@@ -80,6 +82,7 @@ describe('Html', () => {
             expect((rootItem[0] as Element).outerHTML).to.equal(
                 '<div>&lt;poulet&gt; kot kot &lt;/poulet&gt; <span data="1 < 2" tutu="b &nbsp; a">toto</span>&nbsp; a</div>',
             );
+            await editor.stop();
         });
         it('should parse special attribute and content (2)', async () => {
             await testEditor(BasicEditor, {
@@ -106,6 +109,7 @@ describe('Html', () => {
             expect((rootItem[0] as Element).outerHTML).to.equal(
                 '<p><b>a</b> "<div>b</div><a href="?debug=&amp;t=" title="<span data=&quot;view&quot;> mode </span>">toto</a> <img title="<b data=&quot;view&quot;>a</b>"></p>',
             );
+            await editor.stop();
         });
     });
     describe('DefaultDomObjectRenderer', () => {
@@ -126,6 +130,7 @@ describe('Html', () => {
                     node.id +
                     '"><br></containernode></containernode>',
             );
+            await editor.stop();
         });
         it('should render a VNode with style important', async () => {
             const editor = new JWEditor();
@@ -141,6 +146,7 @@ describe('Html', () => {
             expect(rootItem[0].children[0].getAttribute('style')).to.equal(
                 'border-radius: 10px !important;border: 10px !important;',
             );
+            await editor.stop();
         });
     });
 });
