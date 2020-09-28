@@ -238,7 +238,8 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'textcolorpicker',
                         label: 'Text Color picker',
                         commandId: 'openTextColorPicker',
-                        visible: isInTextualContext,
+                        visible: (editor: JWEditor): boolean =>
+                            isInTextualContext(editor) || isIconVisible(editor),
                         modifiers: [
                             new Attributes({
                                 class: 'fa fa-font fa-fw dropdown-toggle',
@@ -264,7 +265,8 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                         name: 'backgroundcolorpicker',
                         label: 'Background Color picker',
                         commandId: 'openBackgroundColorPicker',
-                        visible: isInTextualContext,
+                        visible: (editor: JWEditor): boolean =>
+                            isInTextualContext(editor) || isIconVisible(editor),
                         modifiers: [
                             new Attributes({
                                 class: 'fa fa-paint-brush fa-fw dropdown-toggle',
