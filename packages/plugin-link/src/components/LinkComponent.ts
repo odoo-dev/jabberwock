@@ -3,7 +3,8 @@ import { LinkParams } from '../Link';
 import { Layout } from '../../../plugin-layout/src/Layout';
 import { useState } from '@odoo/owl';
 
-interface LinkProps {
+export interface LinkProps {
+    replaceSelection?: boolean;
     url?: string;
     label?: string;
 }
@@ -12,8 +13,9 @@ export class LinkComponent<T extends LinkProps = {}> extends OwlComponent<T> {
     static components = {};
     static template = 'link';
     state = useState({
+        replaceSelection: !!this.props?.replaceSelection,
         url: this.props?.url || '',
-        label: this.props?.label || '',
+        label: (this.state?.replaceSelection && this.props?.label) || '',
     });
 
     //--------------------------------------------------------------------------

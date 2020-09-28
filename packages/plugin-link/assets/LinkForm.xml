@@ -6,7 +6,7 @@
                 <td><label for="linkUrl">URL </label></td>
                 <td><input type="text" id="linkUrl" name="url" t-model="state.url"/></td>
             </tr>
-            <tr>
+            <tr t-if="state.replaceSelection">
                 <td><label for="linkLabel">Label </label></td>
                 <td><input type="text" id="linkLabel" name="label" t-model="state.label"/></td>
             </tr>

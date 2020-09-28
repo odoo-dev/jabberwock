@@ -128,6 +128,15 @@ describePlugin(Link, testEditor => {
                     contentAfter: '<p>a<a href="url">bc</a>d[]e</p>',
                 });
             });
+            it('should replace selection by a link', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>a[bc]d</p>',
+                    stepFunction: async editor => {
+                        await insertLink(editor);
+                    },
+                    contentAfter: '<p>a<a href="url">label[]</a>d</p>',
+                });
+            });
         });
     });
     describe('remove link', () => {
