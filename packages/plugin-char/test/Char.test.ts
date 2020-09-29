@@ -89,6 +89,10 @@ describePlugin(Char, testEditor => {
                 expect(copy).to.not.equal(c);
                 expect(copy instanceof CharNode).to.equal(true);
                 expect(copy.char).to.equal(c.char);
+                // Remove listeners that get applied on append, to compare
+                // modifiers.
+                copy.modifiers.off('update');
+                c.modifiers.off('update');
                 expect(copy.modifiers).to.deep.equal(c.modifiers);
             });
             it('should duplicate a char with format', async () => {

@@ -1,6 +1,7 @@
 import { VersionableObject } from '../../core/src/Memory/VersionableObject';
+import { EventMixin } from '../../utils/src/EventMixin';
 
-export class ClassList extends VersionableObject {
+export class ClassList extends EventMixin {
     private _classList: Record<string, boolean>;
     constructor(...classList: string[]) {
         super();
@@ -43,12 +44,14 @@ export class ClassList extends VersionableObject {
      * @param className
      */
     parseClassName(className: string): Set<string> {
-        return new Set(
+        const classList = new Set(
             className
                 .trim()
                 .split(/\s+/)
                 .filter(c => c.length),
         );
+        this.trigger('update');
+        return classList;
     }
     /**
      * Return a clone of this list.
@@ -106,6 +109,9 @@ export class ClassList extends VersionableObject {
                 }
             }
         }
+        if (classNames.length) {
+            this.trigger('update');
+        }
     }
     /**
      * Remove the given class(es) from the set.
@@ -122,12 +128,16 @@ export class ClassList extends VersionableObject {
                 }
             }
         }
+        if (classNames.length) {
+            this.trigger('update');
+        }
     }
     /**
      * Clear the set of all its classes.
      */
     clear(): void {
         delete this._classList;
+        this.trigger('update');
     }
     /**
      * Reinitialize the set with a new set of classes (empty if no argument is
@@ -139,6 +149,9 @@ export class ClassList extends VersionableObject {
         delete this._classList;
         for (const className of classList) {
             this.add(className);
+        }
+        if (classList.length) {
+            this.trigger('update');
         }
     }
     /**
@@ -162,6 +175,9 @@ export class ClassList extends VersionableObject {
                     }
                 }
             }
+        }
+        if (classes.length) {
+            this.trigger('update');
         }
     }
 }

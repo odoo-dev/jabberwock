@@ -366,6 +366,7 @@ export class ContainerNode extends AbstractNode {
         if (child.tangible) {
             this.trigger('childList');
         }
+        child.modifiers.off('update');
         child.parent = undefined;
     }
 }

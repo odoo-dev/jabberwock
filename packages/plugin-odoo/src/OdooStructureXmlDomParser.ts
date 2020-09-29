@@ -36,6 +36,9 @@ export class OdooStructureXmlDomParser extends AbstractParser {
         odooStructure.on('childList', () => {
             odooStructure.dirty = true;
         });
+        odooStructure.on('modifierUpdate', () => {
+            odooStructure.dirty = true;
+        });
         return [odooStructure];
     }
 }

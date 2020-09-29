@@ -1,7 +1,7 @@
-import { VersionableObject } from '../../core/src/Memory/VersionableObject';
+import { EventMixin } from '../../utils/src/EventMixin';
 import { makeVersionable } from '../../core/src/Memory/Versionable';
 
-export class CssStyle extends VersionableObject {
+export class CssStyle extends EventMixin {
     private _style: Record<string, string>;
     constructor(style?: string | Record<string, string>) {
         super();
@@ -58,7 +58,7 @@ export class CssStyle extends VersionableObject {
      */
     parseCssText(cssText: string): Record<string, string> {
         const style: Record<string, string> = {};
-        return cssText
+        const css = cssText
             .split(';')
             .map(style => style.trim())
             .filter(style => style.length)
@@ -67,6 +67,8 @@ export class CssStyle extends VersionableObject {
                 style[key.trim()] = v.join(':').trim();
                 return accumulator;
             }, style);
+        this.trigger('update');
+        return css;
     }
     /**
      * Return a clone of this record.
@@ -143,9 +145,14 @@ export class CssStyle extends VersionableObject {
         }
         if (typeof pairsOrName === 'string') {
             this._style[pairsOrName] = value;
+            this.trigger('update');
         } else {
-            for (const name of Object.keys(pairsOrName)) {
+            const names = Object.keys(pairsOrName);
+            for (const name of names) {
                 this._style[name] = pairsOrName[name];
+            }
+            if (names.length) {
+                this.trigger('update');
             }
         }
     }
@@ -160,12 +167,16 @@ export class CssStyle extends VersionableObject {
                 delete this._style[name];
             }
         }
+        if (names.length) {
+            this.trigger('update');
+        }
     }
     /**
      * Clear the record of all its styles.
      */
     clear(): void {
         delete this._style;
+        this.trigger('update');
     }
     /**
      * Reinitialize the record with a new record of styles (empty if no argument
@@ -177,13 +188,16 @@ export class CssStyle extends VersionableObject {
         if (typeof style === 'object') {
             if (Object.keys(style).length) {
                 this._style = makeVersionable(style);
+                this.trigger('update');
             } else {
                 delete this._style;
+                this.trigger('update');
             }
         } else if (style.length) {
             this._style = makeVersionable(this.parseCssText(style));
         } else {
             delete this._style;
+            this.trigger('update');
         }
     }
 }

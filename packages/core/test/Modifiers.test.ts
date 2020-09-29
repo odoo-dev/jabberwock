@@ -422,6 +422,11 @@ describe('core', () => {
                 const modifiers1 = new Modifiers(m1a, m2);
                 modifiers1.set(m1b);
                 const allModifiers = modifiers1.map(id);
+                for (const modifier of allModifiers) {
+                    // Remove listeners that get applied on append, to compare
+                    // modifiers.
+                    modifier.off('update');
+                }
                 expect(allModifiers.length).to.eql(2);
                 expect(allModifiers[0]).to.eql(m1b);
                 expect(allModifiers[1]).to.eql(m2);
@@ -434,6 +439,11 @@ describe('core', () => {
                 const modifiers1 = new Modifiers(m1, m2);
                 modifiers1.set(Modifier1);
                 const allModifiers = modifiers1.map(id);
+                for (const modifier of allModifiers) {
+                    // Remove listeners that get applied on append, to compare
+                    // modifiers.
+                    modifier.off('update');
+                }
                 expect(allModifiers.length).to.eql(2);
                 expect(allModifiers[0]).not.to.equal(m1);
                 expect(allModifiers[0] instanceof Modifier1).to.be.true;
