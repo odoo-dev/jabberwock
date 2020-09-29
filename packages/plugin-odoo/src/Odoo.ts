@@ -31,6 +31,7 @@ import { isInPre, Pre } from '../../plugin-pre/src/Pre';
 import { isInBlockquote, Blockquote } from '../../plugin-blockquote/src/Blockquote';
 import { OdooTableDomObjectRenderer } from './OdooTableDomObjectRenderer';
 import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
+import { Core } from '../../core/src/Core';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -149,6 +150,10 @@ export interface SetIconClassParams extends CommandParams {
     className: OdooImageOrIconClasses;
 }
 
+export interface InsertMediaParams extends CommandParams {
+    element: Element;
+}
+
 function odooHeadingToggleButton(level: number): ComponentDefinition {
     return {
         id: 'OdooHeading' + level + 'ToggleButton',
@@ -169,7 +174,7 @@ function odooHeadingToggleButton(level: number): ComponentDefinition {
 }
 
 export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
-    static dependencies = [Inline, Link, Xml];
+    static dependencies = [Parser, Inline, Link, Xml];
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
         parsers: [
             NoteEditableXmlDomParser,
@@ -509,6 +514,9 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         toggleLinkWithDialog: {
             handler: this.toggleLinkWithDialog,
         },
+        insertMedia: {
+            handler: this.insertMedia,
+        },
     };
     commandHooks = {
         insertTable: async (params: InsertTableParams): Promise<void> => {
@@ -648,6 +656,37 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             return params.context.execCommand<Link>('unlink');
         } else {
             return params.context.execCommand('openLinkDialog');
+        }
+    }
+    async insertMedia(params: InsertMediaParams): Promise<ExecCommandResult> {
+        const media = (await this.editor.plugins.get(Parser).parse('dom/html', params.element))[0];
+        const range = this.editor.selection.range;
+        const oldMedia = getSingleIcon(range) || getSingleImage(range);
+        if (oldMedia) {
+            oldMedia.after(media);
+            const oldMediaAttributes = oldMedia.modifiers.get(Attributes);
+            const mediaAttributes = media.modifiers.find(Attributes);
+            if (mediaAttributes) {
+                for (const key of mediaAttributes.keys()) {
+                    if (key === 'style') {
+                        oldMediaAttributes.style.reset(
+                            Object.assign(
+                                {},
+                                oldMediaAttributes.style.toJSON(),
+                                mediaAttributes.style.toJSON(),
+                            ),
+                        );
+                    } else if (key === 'class') {
+                        oldMediaAttributes.classList.add(...mediaAttributes.classList.items());
+                    } else {
+                        oldMediaAttributes.set(key, mediaAttributes.get(key));
+                    }
+                }
+            }
+            media.modifiers = oldMedia.modifiers;
+            oldMedia.remove();
+        } else {
+            await params.context.execCommand<Core>('insert', { node: media });
         }
     }
 
